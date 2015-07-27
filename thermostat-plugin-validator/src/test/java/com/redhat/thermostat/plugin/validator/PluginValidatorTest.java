@@ -140,6 +140,7 @@ public class PluginValidatorTest {
                 "  <commands>\n" +
                 "    <command>\n" +
                 "      <name>test</name>\n" +
+                "      <summary>just a test</summary>\n" +
                 "      <description>just a test</description>\n" +
                 "      <options>\n" +
                 "        <group>\n" +

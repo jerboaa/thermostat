@@ -55,7 +55,7 @@ import expectj.Spawn;
 public class SystemPluginsTest extends PluginTest {
 
     private static NewCommandPlugin fooPlugin = new NewCommandPlugin("foo",
-            "provides foo command", SYSTEM_PLUGIN_INSTALL_LOCATION);
+            "provides foo command", "provides foo command", SYSTEM_PLUGIN_INSTALL_LOCATION);
     
     @BeforeClass
     public static void setUpOnce() {

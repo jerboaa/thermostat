@@ -97,10 +97,12 @@ public class PluginTest extends IntegrationTest {
     protected static class NewCommandPlugin extends BasicPlugin {
 
         private final String description;
+        private final String summary;
 
-        public NewCommandPlugin(String command, String description, String pluginLocation) {
+        public NewCommandPlugin(String command, String description, String summary, String pluginLocation) {
             super(command, pluginLocation);
             this.description = description;
+            this.summary = summary;
         }
 
         @Override
@@ -113,6 +115,7 @@ public class PluginTest extends IntegrationTest {
                     "  <commands>" +
                     "    <command>" +
                     "      <name>" + getCommandName() + "</name>" +
+                    "      <summary>" + summary + "</summary>" +
                     "      <description>" + description + "</description>" +
                     "      <options>" +
                     "        <option>" +

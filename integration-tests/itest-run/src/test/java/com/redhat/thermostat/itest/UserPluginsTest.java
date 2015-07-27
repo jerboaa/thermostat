@@ -58,7 +58,9 @@ public class UserPluginsTest extends PluginTest {
 
     private static NewCommandPlugin userPlugin = new NewCommandPlugin(
             "user",
-            "a plugin that is provided by the user", USER_PLUGIN_INSTALL_LOCATION);
+            "a plugin that is provided by the user",
+            "a plugin that is provided by the user",
+            USER_PLUGIN_INSTALL_LOCATION);
     private static UnknownExtendsPlugin unknownExtension = new UnknownExtendsPlugin(USER_PLUGIN_HOME + File.separator + "unknown");
 
     @BeforeClass

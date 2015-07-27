@@ -385,19 +385,13 @@ public class PluginConfigurationParser {
             }
         }
 
-        if (summary == null) {
-            logger.warning("plugin " + pluginName + " does not provide a summary for " + name +
-                    ". A summary will be auto-generated.");
-            summary = createSummary(description);
-        }
-
         if (bundles.isEmpty()) {
             logger.warning("plugin " + pluginName  + " provides a new command " + name + " but supplies no bundles");
         }
 
-        if (name == null || description == null || availableInEnvironments.isEmpty()) {
+        if (name == null || summary == null || description == null || availableInEnvironments.isEmpty()) {
             logger.warning("plugin " + pluginName + " provides an incomplete new command: " +
-                    "name='" + name + "', description='" + description + "', options='" + options + "'");
+                    "name='" + name + "', summary='" + summary + ", description='" + description + "', options='" + options + "'");
             return null;
         } else {
             return new NewCommand(name, usage, summary, description, arguments, options, availableInEnvironments, bundles, fileTabCompletionNeeded);
@@ -608,27 +602,6 @@ public class PluginConfigurationParser {
 
         return result;
     }
-
-    private String createSummary(String fullDescription) {
-        int firstDot = fullDescription.indexOf('.');
-        if (firstDot == -1) {
-            return fullDescription;
-        }
-
-        String firstSentence = fullDescription.substring(0, firstDot);
-        String shortDescription = firstSentence.trim();
-        shortDescription = lowerCaseFirstLetter(shortDescription);
-        return shortDescription;
-    }
-
-    private String lowerCaseFirstLetter(String shortDescription) {
-        if (Character.isUpperCase(shortDescription.charAt(0))) {
-            shortDescription = shortDescription.substring(0, 1).toLowerCase()
-                    + shortDescription.substring(1);
-        }
-        return shortDescription;
-    }
-
 
     private static class ConfigurationParserErrorHandler implements ErrorHandler {
 

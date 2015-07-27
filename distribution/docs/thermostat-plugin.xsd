@@ -98,7 +98,7 @@
     <xs:sequence>
       <xs:element ref="name"/>
       <xs:element ref="usage" minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="summary" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="summary"/>
       <xs:element ref="description"/>
       <xs:element ref="arguments" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="options" minOccurs="0" maxOccurs="1"/>

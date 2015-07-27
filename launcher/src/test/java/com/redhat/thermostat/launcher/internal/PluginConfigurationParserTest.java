@@ -131,6 +131,7 @@ public class PluginConfigurationParserTest {
                 "  <commands>\n" +
                 "    <command>\n" +
                 "      <name>test</name>\n" +
+                "      <summary>summary</summary>\n" +
                 "      <description>description</description>\n" +
                 "      <environments>" +
                 "        <environment>shell</environment>" +
@@ -159,6 +160,7 @@ public class PluginConfigurationParserTest {
 
         NewCommand newCommand = newCommands.get(0);
         assertEquals("test", newCommand.getCommandName());
+        assertEquals("summary", newCommand.getSummary());
         assertEquals("description", newCommand.getDescription());
         Options opts = newCommand.getOptions();
         assertTrue(opts.getOptions().isEmpty());
@@ -328,35 +330,6 @@ public class PluginConfigurationParserTest {
     }
 
     @Test
-    public void testFirstSentenceOfDescriptionIsUsedAsTheSummaryIfSummaryIsMissing() throws UnsupportedEncodingException {
-        String config = "<?xml version=\"1.0\"?>\n" +
-                "<plugin>\n" +
-                "  <commands>\n" +
-                "    <command type='provides'>\n" +
-                "      <name>test</name>\n" +
-                "      <description>Some description. Some other long stuff.</description>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
-                "    </command>\n" +
-                "  </commands>\n" +
-                "</plugin>";
-
-        PluginConfiguration result = new PluginConfigurationParser()
-                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
-
-        assertEquals(0, result.getExtendedCommands().size());
-
-        List<NewCommand> newCommands = result.getNewCommands();
-        assertEquals(1, newCommands.size());
-
-        NewCommand command = newCommands.get(0);
-        assertEquals("test", command.getCommandName());
-        assertEquals("some description", command.getSummary());
-    }
-
-    @Test
     public void testNewLinesAreRemovedFromDescription() throws UnsupportedEncodingException {
         String newLine = System.lineSeparator();
         String config = "<?xml version=\"1.0\"?>\n" +
@@ -364,6 +337,7 @@ public class PluginConfigurationParserTest {
                 "  <commands>\n" +
                 "    <command type='provides'>\n" +
                 "      <name>test</name>\n" +
+                "      <summary>summary</summary>\n" +
                 "      <description>  Line 1.  " + newLine + "Line 2. Line 3." + newLine + "Line 4.</description>\n" +
                 "      <environments>" +
                 "        <environment>shell</environment>" +
@@ -393,6 +367,7 @@ public class PluginConfigurationParserTest {
                 "  <commands>\n" +
                 "    <command type='provides'>\n" +
                 "      <name>test</name>\n" +
+                "      <summary>summary</summary>\n" +
                 "      <description>just a test</description>\n" +
                 "      <arguments>\n" +
                 "        <argument>file</argument>\n" +
@@ -437,6 +412,7 @@ public class PluginConfigurationParserTest {
                 "  <commands>\n" +
                 "    <command>\n" +
                 "      <name>test</name>\n" +
+                "      <summary>summary</summary>\n" +
                 "      <description>just a test</description>\n" +
                 "      <options>\n" +
                 "        <group>\n" +
@@ -514,6 +490,7 @@ public class PluginConfigurationParserTest {
                 "  <commands>\n" +
                 "    <command>\n" +
                 "      <name>test</name>\n" +
+                "      <summary>summary</summary>\n" +
                 "      <description>just a test</description>\n" +
                 "      <environments>" +
                 "        <environment>shell</environment>" +
@@ -564,6 +541,7 @@ public class PluginConfigurationParserTest {
                 "  <commands>\n" +
                 "    <command>\n" +
                 "      <name>test</name>\n" +
+                "      <summary>summary</summary>\n" +
                 "      <description>just a test</description>\n" +
                 "      <environments>" +
                 "        <environment>shell</environment>" +
