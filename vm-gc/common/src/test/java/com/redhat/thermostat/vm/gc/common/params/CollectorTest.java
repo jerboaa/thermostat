@@ -34,46 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.client.core;
+package com.redhat.thermostat.vm.gc.common.params;
 
-import java.util.List;
+import org.junit.Test;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.model.IntervalTimeData;
-import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
-public abstract class VmGcView extends BasicView implements UIComponent {
+import static org.junit.Assert.assertTrue;
 
-    public enum UserAction {
-        USER_CHANGED_TIME_RANGE,
+public class CollectorTest {
+
+    private static final String COMMON_NAME = "COMMON_NAME";
+    private static final Set<String> DISTINCT_COLLECTOR_NAMES = new HashSet<>(Arrays.asList("COLLECTOR1", "COLLECTOR2"));
+    private static final JavaVersion JAVA_VERSION = new JavaVersion(new JavaVersion.VersionPoints(1, 8, 0, 45));
+    private static final Set<GcParam> GC_PARAMS = new HashSet<GcParam>() {{
+        add(new GcParam("-XXflag", "Description", new JavaVersion(new JavaVersion.VersionPoints(1, 9, 0, 10))));
+    }};
+    private static final String REFERENCE_URL = "http://example.com";
+    private static final CollectorInfo COLLECTOR_INFO = new CollectorInfo(JAVA_VERSION, COMMON_NAME, DISTINCT_COLLECTOR_NAMES, REFERENCE_URL);
+
+    @Test
+    public void testGetters() {
+        Collector collector = new Collector(COLLECTOR_INFO, GC_PARAMS);
+        assertTrue(COLLECTOR_INFO.toString(), COLLECTOR_INFO.equals(collector.getCollectorInfo()));
+        assertTrue(GC_PARAMS.toString(), GC_PARAMS.equals(collector.getGcParams()));
     }
 
-    public abstract void addUserActionListener(ActionListener<UserAction> listener);
+    @Test(expected = NullPointerException.class)
+    public void testNullCollectorInfoDisallowed() {
+        new Collector(null, GC_PARAMS);
+    }
 
-    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
-
-    public abstract void addChart(String tag, LocalizedString title, String valueUnit);
-
-    public abstract void removeChart(String tag);
-
-    public abstract void addData(String tag, List<IntervalTimeData<Double>> data);
-
-    public abstract void clearData(String tag);
-
-    public abstract void setCollectorInfo(CollectorCommonName commonName, String javaVersion);
-
-    public abstract void setEnableGCAction(boolean enable);
-
-    public abstract void addGCActionListener(ActionListener<GCAction> listener);
-
-    public abstract Duration getUserDesiredDuration();
-
-    public abstract void displayWarning(LocalizedString string);
+    @Test(expected = NullPointerException.class)
+    public void testNullGcParamsDisallowed() {
+        new Collector(COLLECTOR_INFO, null);
+    }
 }
-

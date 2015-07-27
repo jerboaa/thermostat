@@ -53,6 +53,8 @@ public enum LocaleResources {
     GC_UNKNOWN_RESULT,
     GC_STAT_DAO_SERVICE_UNAVAILABLE,
     GC_COMMON_NAME_SUCCESS_MSG,
+    GC_PARAMS_MESSAGE,
+    GC_PARAMS_FAILURE_MESSAGE,
     ;
 
     static final String RESOURCE_BUNDLE =

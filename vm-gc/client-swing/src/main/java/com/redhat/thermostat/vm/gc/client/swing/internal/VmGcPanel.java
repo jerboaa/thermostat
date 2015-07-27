@@ -42,6 +42,7 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -49,16 +50,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 
-import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
-import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -74,6 +77,7 @@ import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
@@ -83,15 +87,22 @@ import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
+import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
+import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
 import com.redhat.thermostat.vm.gc.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
+import com.redhat.thermostat.vm.gc.common.params.GcParam;
+import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;
+import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
 
 public class VmGcPanel extends VmGcView implements SwingComponent {
 
+    private static final Logger logger = LoggingUtils.getLogger(VmGcPanel.class);
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final String GC_ALGO_LABEL_NAME = translator.localize(LocaleResources.VM_GC_CONFIGURED_COLLECTOR).getContents();
 
@@ -101,12 +112,20 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
     private static final int DEFAULT_VALUE = 10;
     private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
-    
+
+    private static final char INFO_CIRCLE_ICON_ID = '\uf05a';
+    private static final int INFO_CIRCLE_ICON_SIZE = 12;
+
     private HeaderPanel visiblePanel = new HeaderPanel();
     private JPanel chartPanelContainer = new JPanel();
     private JPanel containerPanel = new JPanel();
     private JLabel gcAlgoLabelDescr;
     private JLabel commonNameLabel;
+    private JButton gcAlgoInfoButton;
+    private CollectorCommonName collectorCommonName;
+    private JavaVersion javaVersion;
+
+    private GcParamsMapper gcParamsMapper = GcParamsMapper.getInstance();
 
     private ToolbarGCButton toolbarGCButton;
     private RequestGCAction requestGCAction;
@@ -123,6 +142,43 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     public VmGcPanel() {
         super();
 
+        gcAlgoInfoButton = new JButton(new FontAwesomeIcon(INFO_CIRCLE_ICON_ID, INFO_CIRCLE_ICON_SIZE));
+        gcAlgoInfoButton.setVisible(false);
+        gcAlgoInfoButton.setBorderPainted(false);
+        gcAlgoInfoButton.setContentAreaFilled(false);
+        gcAlgoInfoButton.setToolTipText(translator.localize(LocaleResources.VM_GC_INFO_BUTTON_TOOLTIP).getContents());
+        gcAlgoInfoButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if (collectorCommonName == CollectorCommonName.UNKNOWN_COLLECTOR) {
+                    showCollectorInfoErrorDialog(LocaleResources.VM_GC_UNKNOWN_COLLECTOR);
+                    return;
+                }
+                if (javaVersion == null) {
+                    showCollectorInfoErrorDialog(LocaleResources.VM_GC_UNKNOWN_JAVA_VERSION);
+                    return;
+                }
+
+                List<GcParam> params;
+                params = gcParamsMapper.getParams(collectorCommonName, javaVersion);
+                StringBuilder paramsMessage = new StringBuilder();
+                for (GcParam param : params) {
+                    paramsMessage.append(System.lineSeparator()).append(param.getFlag());
+                }
+                JOptionPane optionPane = new JOptionPane();
+                optionPane.setMessageType(JOptionPane.INFORMATION_MESSAGE);
+                String message = translator.localize(LocaleResources.VM_GC_PARAMETERS_MESSAGE,
+                        paramsMessage.toString())
+                        .getContents();
+                optionPane.setMessage(message);
+                JDialog dialog = optionPane.createDialog(gcAlgoInfoButton,
+                        translator.localize(LocaleResources.VM_GC_PARAMETERS_TITLE).getContents());
+                dialog.setModal(false);
+                dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                dialog.setVisible(true);
+            }
+        });
+
         initializePanel();
         gcPanelConstraints = new GridBagConstraints();
         gcPanelConstraints.gridx = 0;
@@ -137,6 +193,18 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         visiblePanel.addToolBarButton(toolbarGCButton);
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
+    }
+
+    private void showCollectorInfoErrorDialog(LocaleResources resource) {
+        String message = translator.localize(resource).getContents();
+        JOptionPane optionPane = new JOptionPane();
+        optionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
+        optionPane.setMessage(message);
+        JDialog dialog = optionPane.createDialog(gcAlgoInfoButton,
+                translator.localize(LocaleResources.VM_GC_PARAMETERS_TITLE).getContents());
+        dialog.setModal(true);
+        dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        dialog.setVisible(true);
     }
 
     @Override
@@ -201,6 +269,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         this.commonNameLabel = new JLabel(""); // intentionally empty string
         commonPanel.add(gcAlgoLabelDescr);
         commonPanel.add(commonNameLabel);
+        commonPanel.add(gcAlgoInfoButton);
         return commonPanel;
     }
 
@@ -346,16 +415,27 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         });
     }
 
+
     @Override
-    public void setCommonCollectorName(final CollectorCommonName commonName) {
+    public void setCollectorInfo(final CollectorCommonName commonName, final String rawJavaVersion) {
         // only set values if we are able to show more info about the in-use
         // GC-algo.
+        this.collectorCommonName = commonName;
+        JavaVersion javaVersion;
+        try {
+            javaVersion = JavaVersion.fromString(rawJavaVersion);
+        } catch (JavaVersion.InvalidJavaVersionFormatException | IllegalArgumentException e) {
+            logger.warning(translator.localize(LocaleResources.VM_GC_ERROR_CANNOT_PARSE_JAVA_VERSION, rawJavaVersion).getContents());
+            javaVersion = null;
+        }
+        this.javaVersion = javaVersion;
         if (commonName != CollectorCommonName.UNKNOWN_COLLECTOR) {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     gcAlgoLabelDescr.setText(GC_ALGO_LABEL_NAME);
-                    commonNameLabel.setText(commonName.getHumanReadableString());
+                    commonNameLabel.setText(collectorCommonName.getHumanReadableString());
+                    gcAlgoInfoButton.setVisible(VmGcPanel.this.javaVersion != null);
                 }
             });
         }

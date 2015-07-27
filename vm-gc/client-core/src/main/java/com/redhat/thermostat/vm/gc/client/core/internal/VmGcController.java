@@ -65,6 +65,7 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
@@ -88,6 +89,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
 
     private final VmGcStatDAO gcDao;
     private final VmMemoryStatDAO memDao;
+    private final VmInfoDAO infoDAO;
     private final AgentInfoDAO agentDAO;
 
     private final Set<String> addedCollectors = new TreeSet<>();
@@ -98,13 +100,14 @@ public class VmGcController implements InformationServiceController<VmRef> {
 
     private long lastSeenTimeStamp;
 
-    public VmGcController(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, AgentInfoDAO agentInfoDAO, VmRef ref, VmGcViewProvider provider, final GCRequest gcRequest) {
+    public VmGcController(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmInfoDAO vmInfoDAO, AgentInfoDAO agentInfoDAO, VmRef ref, VmGcViewProvider provider, final GCRequest gcRequest) {
         this.ref = ref;
         this.view = provider.createView();
         this.timer = appSvc.getTimerFactory().createTimer();
 
         gcDao = vmGcStatDao;
         memDao = vmMemoryStatDao;
+        infoDAO = vmInfoDAO;
         agentDAO = agentInfoDAO;
 
         view.addActionListener(new ActionListener<VmGcView.Action>() {
@@ -192,8 +195,9 @@ public class VmGcController implements InformationServiceController<VmRef> {
 
     private synchronized void doUpdateCollectorData() {
         CollectorCommonName commonName = getCommonName();
-        view.setCommonCollectorName(commonName);
-        
+        String rawJavaVersion = infoDAO.getVmInfo(ref).getJavaVersion();
+        view.setCollectorInfo(commonName, rawJavaVersion);
+
         Map<String, List<IntervalTimeData<Double>>> dataToAdd = new HashMap<>();
         List<VmGcStat> sortedList = gcDao.getLatestVmGcStats(ref, lastSeenTimeStamp);
         Collections.sort(sortedList, new TimeStampedPojoComparator<>());

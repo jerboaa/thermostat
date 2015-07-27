@@ -55,7 +55,7 @@ public class Activator implements BundleActivator {
 
     private final GCCommand gcCommand = new GCCommand(new GCCommandListener());
     private final ShowGcNameCommand showGcNameCmd = new ShowGcNameCommand();
-    
+
     private MultipleServiceTracker showGcNameCmdTracker;
     private MultipleServiceTracker gcCommandDepsServiceTracker;
     private ServiceRegistration gcCommandRegistration;

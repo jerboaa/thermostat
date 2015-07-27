@@ -98,6 +98,12 @@
           <required>true</required>
           <description>the ID of the VM</description>
         </option>
+        <option>
+          <long>with-tunables</long>
+          <short>t</short>
+          <required>false</required>
+          <description>list tunable parameters for the configured GC</description>
+        </option>
       </options>
       <environments>
         <environment>cli</environment>

@@ -53,7 +53,10 @@ import java.util.concurrent.TimeUnit;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -109,6 +112,8 @@ public class VmGcControllerTest {
         gen.setCollector("collector1");
         VmMemoryStat memoryStat = new VmMemoryStat("foo-agent", 1, "vmId", new Generation[] { gen });
 
+        VmInfo vmInfo = new VmInfo("foo", "vm1", 1, 0, 1, "1.8.0_45", "", "", "", "", "", "", "", null, null, null, -1, null);
+
         AgentInformation agentInfo = new AgentInformation("foo");
 
         // Setup DAO
@@ -116,6 +121,8 @@ public class VmGcControllerTest {
         when(vmGcStatDAO.getLatestVmGcStats(isA(VmRef.class), isA(Long.class))).thenReturn(stats);
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         when(vmMemoryStatDAO.getNewestMemoryStat(isA(VmRef.class))).thenReturn(memoryStat);
+        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
+        when(vmInfoDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         when(agentInfoDAO.getAgentInformation(isA(HostRef.class))).thenReturn(agentInfo);
 
@@ -141,7 +148,7 @@ public class VmGcControllerTest {
         // Now start the controller
         VmRef ref = mock(VmRef.class);
 
-        new VmGcController(appSvc, vmMemoryStatDAO, vmGcStatDAO, agentInfoDAO, ref, viewProvider, gcRequest);
+        new VmGcController(appSvc, vmMemoryStatDAO, vmGcStatDAO, vmInfoDAO, agentInfoDAO, ref, viewProvider, gcRequest);
 
         // Extract relevant objects
         viewListener = viewArgumentCaptor.getValue();
@@ -176,7 +183,7 @@ public class VmGcControllerTest {
         timerAction.run();
 
         verify(view).addData(isA(String.class), isA(List.class));
-        verify(view).setCommonCollectorName(eq(CollectorCommonName.CONCURRENT_COLLECTOR));
+        verify(view).setCollectorInfo(eq(CollectorCommonName.CONCURRENT_COLLECTOR), eq("1.8.0_45"));
     }
 
 }

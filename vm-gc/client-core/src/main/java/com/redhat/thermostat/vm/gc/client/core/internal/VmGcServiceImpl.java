@@ -43,6 +43,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
@@ -56,16 +57,18 @@ public class VmGcServiceImpl implements VmGcService {
     private ApplicationService appSvc;
     private VmMemoryStatDAO vmMemoryStatDAO;
     private VmGcStatDAO vmGcStatDAO;
+    private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDAO;
     private VmGcViewProvider viewProvider;
     private GCRequest gcRequest;
     
     public VmGcServiceImpl(ApplicationService appSvc,
-            VmMemoryStatDAO vmMemoryStatDAO, VmGcStatDAO vmGcStatDAO, AgentInfoDAO agentInfoDAO,
+            VmMemoryStatDAO vmMemoryStatDAO, VmGcStatDAO vmGcStatDAO, VmInfoDAO vmInfoDAO, AgentInfoDAO agentInfoDAO,
             VmGcViewProvider viewProvider, GCRequest gcRequest) {
         this.appSvc = appSvc;
         this.vmMemoryStatDAO = vmMemoryStatDAO;
         this.vmGcStatDAO = vmGcStatDAO;
+        this.vmInfoDAO = vmInfoDAO;
         this.agentInfoDAO = agentInfoDAO;
         this.viewProvider = viewProvider;
         this.gcRequest = gcRequest;
@@ -74,7 +77,7 @@ public class VmGcServiceImpl implements VmGcService {
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(
             VmRef ref) {
-        return new VmGcController(appSvc, vmMemoryStatDAO, vmGcStatDAO, agentInfoDAO, ref, viewProvider, gcRequest);
+        return new VmGcController(appSvc, vmMemoryStatDAO, vmGcStatDAO, vmInfoDAO, agentInfoDAO, ref, viewProvider, gcRequest);
     }
 
     @Override

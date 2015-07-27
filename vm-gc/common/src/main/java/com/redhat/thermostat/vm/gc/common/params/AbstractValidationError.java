@@ -34,46 +34,61 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.client.core;
+package com.redhat.thermostat.vm.gc.common.params;
 
-import java.util.List;
+/**
+ *
+ * Exception thrown on XML validation errors of gc-params-mapping.xml files.
+ *
+ */
+public abstract class AbstractValidationError implements ValidationIssue {
 
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.model.IntervalTimeData;
-import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
+    private int lineNumber;
+    private int columnNumber;
+    private String message;
+    private String gcParamsMappingXmlFilePath;
 
-public abstract class VmGcView extends BasicView implements UIComponent {
-
-    public enum UserAction {
-        USER_CHANGED_TIME_RANGE,
+    public AbstractValidationError(int lineNumber, int columnNumber, String message, String gcParamsMappingXmlFilePath) {
+        this.lineNumber = lineNumber;
+        this.columnNumber = columnNumber;
+        this.message = message;
+        this.gcParamsMappingXmlFilePath = gcParamsMappingXmlFilePath;
     }
 
-    public abstract void addUserActionListener(ActionListener<UserAction> listener);
+    @Override
+    public int getLineNumber() {
+        return lineNumber;
+    }
 
-    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
+    @Override
+    public int getColumnNumber() {
+        return columnNumber;
+    }
 
-    public abstract void addChart(String tag, LocalizedString title, String valueUnit);
+    @Override
+    public String getMessage() {
+        return message;
+    }
 
-    public abstract void removeChart(String tag);
+    @Override
+    public String getXmlFilePath() {
+        return gcParamsMappingXmlFilePath;
+    }
 
-    public abstract void addData(String tag, List<IntervalTimeData<Double>> data);
+    public String toString() {
+        String LS = System.getProperty("line.separator");
+        StringBuilder builder = new StringBuilder();
 
-    public abstract void clearData(String tag);
+        builder.append("[").append(getName()).append("]").append(LS);
+        builder.append("   Message: ").append(getMessage()).append(LS);
+        builder.append("   File: ").append(getXmlFilePath()).append(LS);
+        builder.append("   Line number: ").append(getLineNumber()).append(LS);
+        builder.append("   Column number: ").append(getColumnNumber()).append(LS);
 
-    public abstract void setCollectorInfo(CollectorCommonName commonName, String javaVersion);
+        return builder.toString();
 
-    public abstract void setEnableGCAction(boolean enable);
+    }
 
-    public abstract void addGCActionListener(ActionListener<GCAction> listener);
+    public abstract String getName();
 
-    public abstract Duration getUserDesiredDuration();
-
-    public abstract void displayWarning(LocalizedString string);
 }
-

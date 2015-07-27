@@ -36,12 +36,21 @@
 
 package com.redhat.thermostat.vm.gc.command.internal;
 
+import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.matchers.JUnitMatchers.containsString;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Set;
 
+import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper;
+import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;
+import com.redhat.thermostat.vm.gc.common.params.GcParam;
+import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
@@ -57,11 +66,14 @@ import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 public class ShowGcNameCommandTest {
     
     private static final String VM_ID = "foo-id";
-    private Arguments args;
+    private Arguments args, listTunablesArgs;
     
     @Before
     public void setup() {
         args = mock(Arguments.class);
+        listTunablesArgs = mock(Arguments.class);
+        when(listTunablesArgs.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(VM_ID);
+        when(listTunablesArgs.hasArgument("with-tunables")).thenReturn(true);
     }
     
     @Test
@@ -128,6 +140,35 @@ public class ShowGcNameCommandTest {
         Set<String> collectorSet = Sets.newSet("Foo", "Bar");
         String expectedCollectorName = "Unknown Collector";
         doSuccessTest(collectorSet, expectedCollectorName);
+    }
+
+    @Test
+    public void commandSuccessWithShowTunablesFlag() throws CommandException {
+        Set<String> collectorSet = Sets.newSet("PSParallelCompact", "PSScavenge");
+        String expectedCollectorName = "Parallel Collector";
+        ShowGcNameCommand command = new ShowGcNameCommand();
+        VmInfoDAO dao = mock(VmInfoDAO.class);
+        VmInfo fooVmInfo = mock(VmInfo.class);
+        when(fooVmInfo.getVmId()).thenReturn(VM_ID);
+        String mainClass = "com.example.app.Main";
+        when(fooVmInfo.getMainClass()).thenReturn(mainClass);
+        String javaVersion = "1.8.0_45";
+        when(fooVmInfo.getJavaVersion()).thenReturn(javaVersion);
+        when(dao.getVmInfo(any(VmId.class))).thenReturn(fooVmInfo);
+        command.setVmInfo(dao);
+        VmGcStatDAO gcStat = mock(VmGcStatDAO.class);
+        when(gcStat.getDistinctCollectorNames(any(VmId.class))).thenReturn(collectorSet);
+        command.setVmGcStat(gcStat);
+        TestCommandContextFactory testContextFactory = new TestCommandContextFactory();
+        command.run(testContextFactory.createContext(listTunablesArgs));
+        String output = testContextFactory.getOutput();
+        assertThat(output, containsString(expectedCollectorName));
+        assertThat(output, containsString(mainClass));
+        assertThat(output, containsString(VM_ID));
+        for (GcParam param : GcParamsMapper.getInstance().getParams(new GcCommonNameMapper().mapToCommonName(collectorSet), JavaVersion.fromString(javaVersion))) {
+            assertThat(output, containsString(param.getFlag()));
+        }
+        assertThat(output, not(containsString("Unable to show GC tunables")));
     }
     
     private void doSuccessTest(Set<String> collectorMapping, String expectedCollectorName) throws CommandException {

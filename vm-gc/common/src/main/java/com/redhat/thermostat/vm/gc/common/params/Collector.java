@@ -34,46 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.client.core;
+package com.redhat.thermostat.vm.gc.common.params;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.model.IntervalTimeData;
-import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
+import static java.util.Objects.requireNonNull;
 
-public abstract class VmGcView extends BasicView implements UIComponent {
+public class Collector {
 
-    public enum UserAction {
-        USER_CHANGED_TIME_RANGE,
+    private final CollectorInfo collectorInfo;
+    private final Set<GcParam> gcParams;
+
+    public Collector(CollectorInfo collectorInfo, Set<GcParam> gcParams) {
+        this.collectorInfo = requireNonNull(collectorInfo);
+        this.gcParams = new HashSet<>(requireNonNull(gcParams));
     }
 
-    public abstract void addUserActionListener(ActionListener<UserAction> listener);
+    public CollectorInfo getCollectorInfo() {
+        return collectorInfo;
+    }
 
-    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
+    public Set<GcParam> getGcParams() {
+        return gcParams;
+    }
 
-    public abstract void addChart(String tag, LocalizedString title, String valueUnit);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-    public abstract void removeChart(String tag);
+        Collector collector = (Collector) o;
 
-    public abstract void addData(String tag, List<IntervalTimeData<Double>> data);
+        return Objects.equals(collectorInfo, collector.collectorInfo)
+                && Objects.equals(gcParams, collector.gcParams);
+    }
 
-    public abstract void clearData(String tag);
-
-    public abstract void setCollectorInfo(CollectorCommonName commonName, String javaVersion);
-
-    public abstract void setEnableGCAction(boolean enable);
-
-    public abstract void addGCActionListener(ActionListener<GCAction> listener);
-
-    public abstract Duration getUserDesiredDuration();
-
-    public abstract void displayWarning(LocalizedString string);
+    @Override
+    public int hashCode() {
+        return Objects.hash(collectorInfo, gcParams);
+    }
 }
-

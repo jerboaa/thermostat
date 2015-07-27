@@ -37,14 +37,18 @@
 package com.redhat.thermostat.vm.gc.command.internal;
 
 import java.io.PrintStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmId;
@@ -53,14 +57,21 @@ import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.gc.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
+import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.common.params.GcParam;
+import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
 
 public class ShowGcNameCommand extends AbstractCommand {
 
+    private static final Logger logger = LoggingUtils.getLogger(ShowGcNameCommand.class);
+
     // The name as which this command is registered.
     static final String REGISTER_NAME = "show-gc-name";
+    static final String WITH_TUNABLES_FLAG ="with-tunables";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    private static final GcCommonNameMapper mapper = new GcCommonNameMapper();
+    private static final GcCommonNameMapper commonNameMapper = new GcCommonNameMapper();
+    private static final GcParamsMapper paramsMapper = GcParamsMapper.getInstance();
     private CountDownLatch servicesAvailableLatch = new CountDownLatch(2); // vmInfo dao and vmGcStat dao
     private VmInfoDAO vmInfoDao;
     private VmGcStatDAO gcDao;
@@ -77,8 +88,9 @@ public class ShowGcNameCommand extends AbstractCommand {
         requireNonNull(gcDao, translator.localize(LocaleResources.GC_STAT_DAO_SERVICE_UNAVAILABLE));
 
         String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
-        if (vmIdArg == null)
+        if (vmIdArg == null) {
             throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
+        }
 
         VmId vmId = new VmId(vmIdArg);
         VmInfo vmInfo = checkVmExists(vmId, translator.localize(LocaleResources.VM_NOT_FOUND, vmId.get()));
@@ -91,6 +103,13 @@ public class ShowGcNameCommand extends AbstractCommand {
                                       commonName.getHumanReadableString())
                                       .getContents();
         out.println(msg);
+        if (ctx.getArguments().hasArgument(WITH_TUNABLES_FLAG)) {
+            String javaVersion = vmInfo.getJavaVersion();
+            String message = translator.localize(LocaleResources.GC_PARAMS_MESSAGE,
+                    getFormattedParams(commonName, javaVersion))
+                    .getContents();
+            out.println(message);
+        }
     }
     
     void setVmInfo(VmInfoDAO vmInfoDAO) {
@@ -125,6 +144,22 @@ public class ShowGcNameCommand extends AbstractCommand {
         }
         return vmInfo;
     }
+
+    private String getFormattedParams(CollectorCommonName commonName, String javaVersion) {
+        StringBuilder sb = new StringBuilder();
+        List<GcParam> params;
+        try {
+            JavaVersion version = JavaVersion.fromString(javaVersion);
+            params = paramsMapper.getParams(commonName, version);
+        } catch (JavaVersion.InvalidJavaVersionFormatException | IllegalArgumentException e) {
+            logger.warning(translator.localize(LocaleResources.GC_PARAMS_FAILURE_MESSAGE, javaVersion).getContents());
+            params = Collections.emptyList();
+        }
+        for (GcParam param : params) {
+            sb.append(System.lineSeparator()).append(param.getFlag());
+        }
+        return sb.append(System.lineSeparator()).toString();
+    }
     
     /**
      * Finds the common name of the GC algorithm used for a given VM.
@@ -135,7 +170,7 @@ public class ShowGcNameCommand extends AbstractCommand {
         Set<String> distinctCollectors = gcDao.getDistinctCollectorNames(vmId);
         CollectorCommonName commonName = CollectorCommonName.UNKNOWN_COLLECTOR;
         if (distinctCollectors.size() > 0) {
-            commonName = mapper.mapToCommonName(distinctCollectors);
+            commonName = commonNameMapper.mapToCommonName(distinctCollectors);
         }
         return commonName;
     }

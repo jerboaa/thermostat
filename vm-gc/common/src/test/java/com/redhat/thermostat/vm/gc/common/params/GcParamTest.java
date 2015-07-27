@@ -34,46 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.client.core;
+package com.redhat.thermostat.vm.gc.common.params;
 
-import java.util.List;
+import org.junit.Test;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.model.IntervalTimeData;
-import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
+import static org.junit.Assert.assertTrue;
 
-public abstract class VmGcView extends BasicView implements UIComponent {
+public class GcParamTest {
 
-    public enum UserAction {
-        USER_CHANGED_TIME_RANGE,
+    private static final String FLAG = "-XXflag";
+    private static final String DESCRIPTION = "A short description of -XXflag";
+    private static final JavaVersion JAVA_VERSION = new JavaVersion(new JavaVersion.VersionPoints(1, 8, 0, 45));
+
+    @Test
+    public void testGetters() {
+        GcParam param = new GcParam(FLAG, DESCRIPTION, JAVA_VERSION);
+        assertTrue(FLAG, param.getFlag().equals(FLAG));
+        assertTrue(DESCRIPTION, param.getDescription().equals(DESCRIPTION));
+        assertTrue(JAVA_VERSION.toString(), param.getJavaVersion().equals(JAVA_VERSION));
     }
 
-    public abstract void addUserActionListener(ActionListener<UserAction> listener);
+    @Test(expected = NullPointerException.class)
+    public void testNullFlagDisallowed() {
+        new GcParam(null, DESCRIPTION, JAVA_VERSION);
+    }
 
-    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
+    @Test(expected = NullPointerException.class)
+    public void testNullDescriptionDisallowed() {
+        new GcParam(FLAG, null, JAVA_VERSION);
+    }
 
-    public abstract void addChart(String tag, LocalizedString title, String valueUnit);
-
-    public abstract void removeChart(String tag);
-
-    public abstract void addData(String tag, List<IntervalTimeData<Double>> data);
-
-    public abstract void clearData(String tag);
-
-    public abstract void setCollectorInfo(CollectorCommonName commonName, String javaVersion);
-
-    public abstract void setEnableGCAction(boolean enable);
-
-    public abstract void addGCActionListener(ActionListener<GCAction> listener);
-
-    public abstract Duration getUserDesiredDuration();
-
-    public abstract void displayWarning(LocalizedString string);
+    @Test(expected = NullPointerException.class)
+    public void testNullVersionDisallowed() {
+        new GcParam(FLAG, DESCRIPTION, null);
+    }
 }
-

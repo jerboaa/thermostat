@@ -34,46 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.client.core;
+package com.redhat.thermostat.vm.gc.common.params;
 
-import java.util.List;
+import java.util.Objects;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.model.IntervalTimeData;
-import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
+import static java.util.Objects.requireNonNull;
 
-public abstract class VmGcView extends BasicView implements UIComponent {
+public class GcParam {
 
-    public enum UserAction {
-        USER_CHANGED_TIME_RANGE,
+    private final String flag;
+    private final String description;
+    private final JavaVersion javaVersion;
+
+    public GcParam(String flag, String description, JavaVersion javaVersion) {
+        this.flag = requireNonNull(flag);
+        this.description = requireNonNull(description);
+        this.javaVersion = requireNonNull(javaVersion);
     }
 
-    public abstract void addUserActionListener(ActionListener<UserAction> listener);
+    public String getFlag() {
+        return flag;
+    }
 
-    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
+    public String getDescription() {
+        return description;
+    }
 
-    public abstract void addChart(String tag, LocalizedString title, String valueUnit);
+    public JavaVersion getJavaVersion() {
+        return javaVersion;
+    }
 
-    public abstract void removeChart(String tag);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-    public abstract void addData(String tag, List<IntervalTimeData<Double>> data);
+        GcParam gcParam = (GcParam) o;
 
-    public abstract void clearData(String tag);
+        return Objects.equals(flag, gcParam.flag)
+                && Objects.equals(description, gcParam.description)
+                && Objects.equals(javaVersion, gcParam.javaVersion);
+    }
 
-    public abstract void setCollectorInfo(CollectorCommonName commonName, String javaVersion);
-
-    public abstract void setEnableGCAction(boolean enable);
-
-    public abstract void addGCActionListener(ActionListener<GCAction> listener);
-
-    public abstract Duration getUserDesiredDuration();
-
-    public abstract void displayWarning(LocalizedString string);
+    @Override
+    public int hashCode() {
+        return Objects.hash(flag, description, javaVersion);
+    }
 }
-

@@ -43,6 +43,7 @@ import java.util.Objects;
 
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -68,6 +69,7 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
             VmMemoryStatDAO.class,
             VmGcStatDAO.class,
+            VmInfoDAO.class,
             AgentInfoDAO.class,
             GCRequest.class,
             ApplicationService.class,
@@ -82,6 +84,8 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(vmMemoryStatDAO);
                 VmGcStatDAO vmGcStatDAO = (VmGcStatDAO) services.get(VmGcStatDAO.class.getName());
                 Objects.requireNonNull(vmGcStatDAO);
+                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                Objects.requireNonNull(vmInfoDAO);
                 AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 Objects.requireNonNull(agentInfoDAO);
                 GCRequest gcRequest = (GCRequest) services.get(GCRequest.class.getName());
@@ -91,7 +95,7 @@ public class Activator implements BundleActivator {
                 VmGcViewProvider viewProvider = (VmGcViewProvider) services.get(VmGcViewProvider.class.getName());
                 Objects.requireNonNull(viewProvider);
                 
-                VmGcService service = new VmGcServiceImpl(appSvc, vmMemoryStatDAO, vmGcStatDAO, agentInfoDAO, viewProvider, gcRequest);
+                VmGcService service = new VmGcServiceImpl(appSvc, vmMemoryStatDAO, vmGcStatDAO, vmInfoDAO, agentInfoDAO, viewProvider, gcRequest);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, VmGcService.SERVICE_ID);

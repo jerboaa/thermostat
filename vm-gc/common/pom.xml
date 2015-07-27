@@ -53,6 +53,8 @@
         <filtering>true</filtering>
         <excludes>
           <exclude>**/*.png</exclude>
+          <exclude>**/*.xml</exclude>
+          <exclude>**/*.xsd</exclude>
         </excludes>
       </resource>
       <resource>
@@ -60,6 +62,8 @@
         <filtering>false</filtering>
         <includes>
           <include>**/*.png</include>
+          <include>**/*.xml</include>
+          <include>**/*.xsd</include>
         </includes>
       </resource>
     </resources>
@@ -75,10 +79,12 @@
             <Bundle-Activator>com.redhat.thermostat.vm.gc.common.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.vm.gc.common,
-              com.redhat.thermostat.vm.gc.common.model
+              com.redhat.thermostat.vm.gc.common.model,
+              com.redhat.thermostat.vm.gc.common.params
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.vm.gc.common.internal
+              com.redhat.thermostat.vm.gc.common.internal,
+              com.redhat.thermostat.vm.gc.common.locale
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

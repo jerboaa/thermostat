@@ -41,6 +41,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper;
 import org.junit.Test;
 
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;

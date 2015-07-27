@@ -34,46 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.client.core;
+package com.redhat.thermostat.vm.gc.common.params;
 
-import java.util.List;
+/**
+ * Represents XML schema validation issues.
+ *
+ */
+public interface ValidationIssue {
 
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.model.IntervalTimeData;
-import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
+    /**
+     *
+     * @return The line number where the issue occurred.
+     */
+    int getLineNumber();
 
-public abstract class VmGcView extends BasicView implements UIComponent {
+    /**
+     *
+     * @return The column number where the issue occurred.
+     */
+    int getColumnNumber();
 
-    public enum UserAction {
-        USER_CHANGED_TIME_RANGE,
-    }
+    /**
+     *
+     * @return A message describing the issue.
+     */
+    String getMessage();
 
-    public abstract void addUserActionListener(ActionListener<UserAction> listener);
+    /**
+     *
+     * @return The xml file path which caused the issue.
+     */
+    String getXmlFilePath();
 
-    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
-
-    public abstract void addChart(String tag, LocalizedString title, String valueUnit);
-
-    public abstract void removeChart(String tag);
-
-    public abstract void addData(String tag, List<IntervalTimeData<Double>> data);
-
-    public abstract void clearData(String tag);
-
-    public abstract void setCollectorInfo(CollectorCommonName commonName, String javaVersion);
-
-    public abstract void setEnableGCAction(boolean enable);
-
-    public abstract void addGCActionListener(ActionListener<GCAction> listener);
-
-    public abstract Duration getUserDesiredDuration();
-
-    public abstract void displayWarning(LocalizedString string);
 }
 
