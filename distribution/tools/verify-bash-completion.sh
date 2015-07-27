@@ -39,13 +39,10 @@
 # Tests for bash-completion
 
 set -e
-set -x
 
 errors=0
 
 TARGET="$(dirname $0)/../target"
-
-echo "$BASH_VERSION"
 
 # Join the supplied arguments into a single string using the specified separator
 # $1 : the separator
@@ -65,6 +62,16 @@ function __print_completions {
 }
 
 function __init {
+    USER_THERMOSTAT_HOME="$TARGET/bash-completion-test-user-home"
+    echo "Skipping initial thermostat setup..."
+    mkdir -p $USER_THERMOSTAT_HOME/data
+    echo "Exporting custom home..."
+    export USER_THERMOSTAT_HOME
+    touch ${USER_THERMOSTAT_HOME}/data/setup-complete.stamp
+
+    echo "Checking that help works..."
+    ${TARGET}/image/bin/thermostat help >/dev/null
+
     completion_file="${TARGET}/packaging/bash-completion/thermostat-completion"
     source "${completion_file}"
 }
@@ -95,22 +102,11 @@ function __check_completion {
     input=$1
     expected=$2
     expected_pretty=$(echo $expected | __prettify)
-    echo "Testing $input"
-    __find_completion $input
-    # disable debugging output once to grab the actual output we need
-    set +x
     # save completions and any other output separately and check both
     __find_completion $input >${TARGET}/completion.actual 2>${TARGET}/completion.output
-    # enable debugging output to display more information
-    set -x
     actual=$(<${TARGET}/completion.actual)
     actual_pretty=$(echo "$actual" | __prettify)
     output=$(<${TARGET}/completion.output)
-    echo "Input: $input"
-    echo "Completion: $actual"
-    echo "Expected: $expected"
-    echo "Output: $output"
-
     if [[ $actual == $expected && -z $output ]] ; then
         echo "[OK]   '$input' => '$actual_pretty'"
     elif [[ -z $output ]]; then
