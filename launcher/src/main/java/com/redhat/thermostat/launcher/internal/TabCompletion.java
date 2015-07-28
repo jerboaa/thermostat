@@ -40,6 +40,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import jline.console.ConsoleReader;
 import jline.console.completer.Completer;
@@ -55,7 +57,7 @@ public class TabCompletion {
     private static final String LONG_OPTION_PREFIX = "--";
     private static final String SHORT_OPTION_PREFIX = "-";
 
-    public static void setupTabCompletion(ConsoleReader reader, CommandInfoSource commandInfoSource, BundleContext context, StorageState storageState) {
+    public static void setupTabCompletion(ConsoleReader reader, CommandInfoSource commandInfoSource, BundleContext context, StorageState storageState, ClientPreferences prefs) {
         List<String> logLevels = new ArrayList<>();
 
         for (LoggingUtils.LogLevel level : LoggingUtils.LogLevel.values()) {
@@ -78,6 +80,8 @@ public class TabCompletion {
                         setupCompletion(command, option, new IdCompleter(new VmIdsFinder(context), storageState));
                     } else if (option.getLongOpt().equals("agentId")) {
                         setupCompletion(command, option, new IdCompleter(new AgentIdsFinder(context), storageState));
+                    } else if (option.getLongOpt().equals(Arguments.DB_URL_ARGUMENT)) {
+                        setupCompletion(command, option, new DbUrlCompleter(prefs));
                     } else {
                         setupDefaultCompletion(command, option);
                     }

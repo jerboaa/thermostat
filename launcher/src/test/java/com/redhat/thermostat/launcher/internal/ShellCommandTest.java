@@ -50,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 
+import com.redhat.thermostat.common.config.ClientPreferences;
 import jline.TerminalFactory;
 import jline.TerminalFactory.Flavor;
 import jline.TerminalFactory.Type;
@@ -91,6 +92,7 @@ public class ShellCommandTest {
     private ConfigurationInfoSource config;
     private CommandInfoSource infos;
     private File dir;
+    private ClientPreferences prefs;
 
     @Before
     public void setUp() {
@@ -100,8 +102,10 @@ public class ShellCommandTest {
         when(version.getVersionInfo()).thenReturn(VERSION);
         config = mock(ConfigurationInfoSource.class);
 
+        prefs = mock(ClientPreferences.class);
+        when(prefs.getConnectionUrl()).thenReturn("http://127.0.0.1:mockStorage");
         infos = mock(CommandInfoSource.class);
-        cmd = new ShellCommand(bundleContext, version, historyProvider, config);
+        cmd = new ShellCommand(bundleContext, version, historyProvider, config, prefs);
         setupCommandInfoSource();
 
         dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "shellcommand");
@@ -406,6 +410,27 @@ public class ShellCommandTest {
     }
 
     @Test
+    public void testDbUrlOptionCompletes() throws CommandException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        ctxFactory.setInput("validate --dbUrl \t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String usefulOutput = getOutputWithoutIntro(ctxFactory);
+        String tabOutput = getTabOutput(usefulOutput);
+        assertTrue(tabOutput.length() == 0);
+        assertEquals(PROMPT + "validate --dbUrl http://127.0.0.1:mockStorage ", usefulOutput.split("\n")[0]);
+        assertEquals(PROMPT + "exit", usefulOutput.split("\n")[1]);
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
     public void testFullOptionDoesNotTabComplete() throws CommandException {
         ServiceReference ref = mock(ServiceReference.class);
         when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
@@ -577,7 +602,7 @@ public class ShellCommandTest {
         createTempFile(filename + "12345678");
 
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
-        ctxFactory.setInput("validate --dbUrl -d " + dir.getAbsolutePath() + File.separator + "testFil\t\nexit\n");
+        ctxFactory.setInput("validate --fake-option -f " + dir.getAbsolutePath() + File.separator + "testFil\t\nexit\n");
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
@@ -809,9 +834,13 @@ public class ShellCommandTest {
         Option option9 = mock(Option.class);
         when(option9.getLongOpt()).thenReturn("agent");
         when(option9.getOpt()).thenReturn("a");
+        Option option10 = mock(Option.class);
+        when(option10.getLongOpt()).thenReturn("fake-option");
+        when(option10.getOpt()).thenReturn("f");
         optionsList3.add(option7);
         optionsList3.add(option8);
         optionsList3.add(option9);
+        optionsList3.add(option10);
 
         Options options3 = mock(Options.class);
         when(info3.getOptions()).thenReturn(options3);

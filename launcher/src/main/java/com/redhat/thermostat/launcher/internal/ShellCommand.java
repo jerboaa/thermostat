@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.config.ClientPreferences;
 import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
@@ -81,6 +82,7 @@ public class ShellCommand extends AbstractCommand {
     private final ShellPrompt shellPrompt;
     private CommandInfoSource commandInfoSource;
     private final StorageState storageState = new StorageState();
+    private final ClientPreferences prefs;
 
     static class HistoryProvider {
 
@@ -102,14 +104,15 @@ public class ShellCommand extends AbstractCommand {
     }
 
     public ShellCommand(BundleContext context, CommonPaths paths, ConfigurationInfoSource config) {
-        this(context, new Version(), new HistoryProvider(paths), config);
+        this(context, new Version(), new HistoryProvider(paths), config, new ClientPreferences(paths));
     }
 
-    ShellCommand(BundleContext context, Version version, HistoryProvider provider, ConfigurationInfoSource config) {
+    ShellCommand(BundleContext context, Version version, HistoryProvider provider, ConfigurationInfoSource config, ClientPreferences prefs) {
         this.historyProvider = provider;
         this.bundleContext = context;
         this.version = version;
 
+        this.prefs = prefs;
         this.shellPrompt = new ShellPrompt();
 
         try {
@@ -156,7 +159,7 @@ public class ShellCommand extends AbstractCommand {
     private void shellMainLoop(CommandContext ctx, History history, Terminal term) throws IOException, CommandException {
         ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), ctx.getConsole().getOutput(), term);
         if (reader.getCompleters().isEmpty() && commandInfoSource != null) {
-            TabCompletion.setupTabCompletion(reader, commandInfoSource, bundleContext, storageState);
+            TabCompletion.setupTabCompletion(reader, commandInfoSource, bundleContext, storageState, prefs);
         }
         if (history != null) {
             reader.setHistory(history);

@@ -34,19 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
 import java.util.List;
 
-public interface Arguments {
-    @Deprecated
-    static public final String HOST_ID_ARGUMENT = "hostId";
-    static public final String VM_ID_ARGUMENT = "vmId";
-    static public final String AGENT_ID_ARGUMENT = "agentId";
-    static public final String DB_URL_ARGUMENT = "dbUrl";
+import com.redhat.thermostat.common.config.ClientPreferences;
+import jline.console.completer.Completer;
+import jline.console.completer.StringsCompleter;
 
-    List<String> getNonOptionArguments();
-    boolean hasArgument(String name);
-    String getArgument(String name);
+public class DbUrlCompleter implements Completer {
+
+    private final ClientPreferences prefs;
+
+    public DbUrlCompleter(ClientPreferences preferences) {
+        this.prefs = preferences;
+    }
+
+    @Override
+    public int complete(final String buffer, final int cursor, final List<CharSequence> candidates) {
+        String dbUrl = "";
+        if (prefs.getConnectionUrl() != null) {
+            dbUrl = prefs.getConnectionUrl();
+        }
+        StringsCompleter stringsCompleter = new StringsCompleter(dbUrl);
+        return stringsCompleter.complete(buffer, cursor, candidates);
+    }
 }
-

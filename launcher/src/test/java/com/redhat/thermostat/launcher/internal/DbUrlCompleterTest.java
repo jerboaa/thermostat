@@ -34,19 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
+import static junit.framework.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.LinkedList;
 import java.util.List;
 
-public interface Arguments {
-    @Deprecated
-    static public final String HOST_ID_ARGUMENT = "hostId";
-    static public final String VM_ID_ARGUMENT = "vmId";
-    static public final String AGENT_ID_ARGUMENT = "agentId";
-    static public final String DB_URL_ARGUMENT = "dbUrl";
+import com.redhat.thermostat.common.config.ClientPreferences;
+import org.junit.Test;
 
-    List<String> getNonOptionArguments();
-    boolean hasArgument(String name);
-    String getArgument(String name);
+public class DbUrlCompleterTest {
+
+    @Test
+    public void testDbUrlCompleter() {
+        ClientPreferences prefs = mock(ClientPreferences.class);
+        DbUrlCompleter dbUrlCompleter = new DbUrlCompleter(prefs);
+
+        String partialUrl = "https://ip.addr";
+        String fullUrl = partialUrl + "ess.example.com:25813/thermostat/storage";
+        when(prefs.getConnectionUrl()).thenReturn(fullUrl);
+
+        List<CharSequence> candidates = new LinkedList<>();
+        dbUrlCompleter.complete(partialUrl, partialUrl.length(), candidates);
+
+        assertEquals(1, candidates.size());
+        assertEquals(fullUrl, candidates.get(0).toString().trim());
+    }
 }
-
