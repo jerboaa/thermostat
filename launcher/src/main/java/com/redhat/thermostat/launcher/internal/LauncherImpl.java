@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.launcher.GlobalOptions;
 import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -54,7 +55,6 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Version;
@@ -89,7 +89,6 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class LauncherImpl implements Launcher {
 
     private static final String HELP_COMMAND_NAME = "help";
-    private static final String SETUP_SCRIPT_NAME = "thermostat-setup";
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(LauncherImpl.class);
@@ -160,7 +159,12 @@ public class LauncherImpl implements Launcher {
                 if (isThermostatConfigured()) {
                     runCommandFromArguments(args, listeners, inShell);
                 } else {
-                    printSetupHelpMessage();
+                    if (Arrays.asList(args).contains(GlobalOptions.SKIP_SETUP.getOptString())) {
+                        runCommandFromArguments(args, listeners, inShell);
+                    } else {
+                        String[] setupArgs = {"setup"};
+                        runCommandFromArguments(setupArgs, listeners, inShell);
+                    }
                 }
             }
         } catch (NoClassDefFoundError e) {
@@ -185,13 +189,6 @@ public class LauncherImpl implements Launcher {
         }
     }
 
-    private void printSetupHelpMessage() {
-        String userGuideUrl = new ApplicationInfo().getUserGuide();
-        String msg = t.localize(LocaleResources.LAUNCHER_FIRST_LAUNCH_MSG, 
-                                SETUP_SCRIPT_NAME, userGuideUrl).getContents();
-        printAndLogLine(msg);
-    }
-    
     // Log messages might go to a file. Be sure to print to stdout as well.
     private void printAndLogLine(String msg) {
         System.out.println(msg);
@@ -362,7 +359,7 @@ public class LauncherImpl implements Launcher {
     private CommandContext setupCommandContext(Command cmd, Arguments args) throws CommandException {
 
         CommandContext ctx = cmdCtxFactory.createContext(args);
-        
+
         if (cmd.isStorageRequired()) {
 
             ServiceReference dbServiceReference = context.getServiceReference(DbService.class);

@@ -267,6 +267,7 @@
     <module>laf-utils</module>
     <module>thermostat-plugin-validator</module>
     <module>validate-command</module>
+    <module>setup-command</module>
     <module>config</module>
     <!-- development related modules -->
     <module>integration-tests</module>
