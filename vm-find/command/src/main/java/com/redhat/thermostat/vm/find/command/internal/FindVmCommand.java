@@ -189,6 +189,6 @@ public class FindVmCommand extends AbstractCommand {
         setAgentInfoDAO(null);
         setHostInfoDAO(null);
         setVmInfoDAO(null);
-        servicesLatch = new CountDownLatch(2);
+        servicesLatch = new CountDownLatch(3);
     }
 }
