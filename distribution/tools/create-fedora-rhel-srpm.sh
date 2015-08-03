@@ -36,7 +36,7 @@
 #
 #
 # Usage:
-#  ./create-fedora-rhel-srpm.sh [HG_USER]
+#  ./create-fedora-rhel-srpm.sh [RPM_RELEASE] [HG_USER]
 #
 # Creates a source tarball (using create-source-tarball.sh) and 
 # after an SRPM from the fedora/rhel spec file.
@@ -57,10 +57,14 @@ if ! type ${rpmbuild}; then
 fi
 
 if [ $# -eq 1 ]; then
-  hg_user="$1"
+  custom_rpm_release="$1"
 fi
-if [ $# -gt 1 ]; then
-  echo "usage: ./create-fedora-rhel-srpm.sh [HG_USER]" 1>&2
+if [ $# -eq 2 ]; then
+  custom_rpm_release="$1"
+  hg_user="$2"
+fi
+if [ $# -gt 2 ]; then
+  echo "usage: ./create-fedora-rhel-srpm.sh [RPM_RELEASE] [HG_USER]" 1>&2
   exit 1
 fi
 tools_dir="$(dirname $0)"
@@ -102,6 +106,15 @@ major_version=$(echo "${new_version}" | sed 's/\./ /g' | awk '{ print $1}')
 minor_version=$(echo "${new_version}" | sed 's/\./ /g' | awk '{ print $2}')
 micro_version=$(echo "${new_version}" | sed 's/\./ /g' | awk '{ print $3}')
 sed -i "s/__MAJOR__/${major_version}/g;s/__MINOR__/${minor_version}/g;s/__PATCHLEVEL__/${micro_version}/g" "${srpm_tmp_build_dir}"/thermostat.spec
+default_release=$(grep __DEFAULT_RELEASE__ "${srpm_tmp_build_dir}"/thermostat.spec | cut -d' ' -f2)
+# Remove the line with __DEFAULT_RELEASE__ in spec
+sed -i "s/^__DEFAULT_RELEASE__.*$//g" "${srpm_tmp_build_dir}"/thermostat.spec
+if [ "${custom_rpm_release}_" != "_" ]; then
+  rpm_release="${custom_rpm_release}"
+else
+  rpm_release="${default_release}"
+fi
+sed -i "s/__RELEASE__/${rpm_release}/g" "${srpm_tmp_build_dir}"/thermostat.spec
 pushd "${srpm_tmp_build_dir}"
   ${rpmbuild} \
     --define "_sourcedir $(pwd)" \

@@ -1,10 +1,14 @@
 # Do not repack jars
 %global __jar_repack 0
 
+# Allow for setting the RELEASE. Will be removed at SRPM build time.
+__DEFAULT_RELEASE__ 3
+
 # Upstream Thermostat version triplet
 %global major        __MAJOR__
 %global minor        __MINOR__
 %global patchlevel   __PATCHLEVEL__
+%global custom_rel   __RELEASE__
 
 %if 0%{?rhel}
 
@@ -193,7 +197,7 @@ Name:       %{?scl_prefix}thermostat
 Version:    %{major}.%{minor}.%{patchlevel}
 # If building from snapshot out of hg, uncomment and adjust below value as appropriate
 #Release:    0.1.20131122hg%{hgrev}%{?dist}
-Release:    3%{?dist}
+Release:    %{custom_rel}%{?dist}
 Summary:    A monitoring and serviceability tool for OpenJDK
 License:    GPLv2+ with exceptions and OFL
 URL:        http://icedtea.classpath.org/thermostat/
@@ -1039,7 +1043,7 @@ fi
 %{_datadir}/%{pkg_name}/plugins/embedded-web-endpoint
 
 %changelog
-* Fri Jul 24 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-3
+* Fri Jul 24 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-__RELEASE__
 - Merge in EL 6/ EL 7 pieces.
 
 * Wed Jul 01 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-2
