@@ -44,14 +44,14 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -86,34 +86,48 @@ public class VMInfoCommand extends AbstractCommand {
         requireNonNull(vmsDAORef, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
 
-        HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments(), true, false);
-        HostRef host = hostVMArgs.getHost();
-        VmRef vm = hostVMArgs.getVM();
-        AgentInformation agentInfo = agentsDAO.getAgentInformation(host);
         try {
-            if (vm != null) {
-                getAndPrintVMInfo(ctx, agentInfo, vmsDAO, vm);
-            } else {
-                getAndPrintAllVMInfo(ctx, agentInfo, vmsDAO, host);
+            String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
+            String agentIdArg = ctx.getArguments().getArgument(Arguments.AGENT_ID_ARGUMENT);
 
+            AgentId agentId;
+
+            if (vmIdArg != null) {
+                VmId vmId = new VmId(vmIdArg);
+                final VmInfo vmInfo = vmsDAO.getVmInfo(vmId);
+                agentId = new AgentId(vmInfo.getAgentId());
+                AgentInformation agentInfo = agentsDAO.getAgentInformation(agentId);
+                if (agentInfo == null) {
+                    throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, Arguments.VM_ID_ARGUMENT, vmIdArg));
+                }
+                getAndPrintVMInfo(ctx, agentInfo, vmsDAO, vmId);
+            } else if (agentIdArg != null){
+                agentId = new AgentId(agentIdArg);
+                AgentInformation agentInfo = agentsDAO.getAgentInformation(agentId);
+                if (agentInfo == null) {
+                    throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, Arguments.AGENT_ID_ARGUMENT, agentIdArg));
+                }
+                getAndPrintAllVMInfo(ctx, agentInfo, vmsDAO, agentId);
+            } else {
+                throw new CommandException(translator.localize(LocaleResources.ONE_ID_REQUIRED));
             }
         } catch (DAOException ex) {
             ctx.getConsole().getError().println(ex.getMessage());
         } finally {
             context.ungetService(vmsDAORef);
+            context.ungetService(agentsDAORef);
         }
     }
 
-    private void getAndPrintAllVMInfo(CommandContext ctx, AgentInformation agentInfo, VmInfoDAO vmsDAO, HostRef host) {
-        Collection<VmRef> vms = vmsDAO.getVMs(host);
-        for (VmRef vm : vms) {
+    private void getAndPrintAllVMInfo(CommandContext ctx, AgentInformation agentInfo, VmInfoDAO vmsDAO, AgentId agentId) {
+        Collection<VmId> vms = vmsDAO.getVmIds(agentId);
+        for (VmId vm : vms) {
             getAndPrintVMInfo(ctx, agentInfo, vmsDAO, vm);
         }
     }
 
-    private void getAndPrintVMInfo(CommandContext ctx, AgentInformation agentInfo, VmInfoDAO vmsDAO, VmRef vm) {
-
-        VmInfo vmInfo = vmsDAO.getVmInfo(vm);
+    private void getAndPrintVMInfo(CommandContext ctx, AgentInformation agentInfo, VmInfoDAO vmsDAO, VmId vmId) {
+        VmInfo vmInfo = vmsDAO.getVmInfo(vmId);
 
         TableRenderer table = new TableRenderer(2);
         table.printLine(translator.localize(LocaleResources.VM_INFO_VM_ID).getContents(), vmInfo.getVmId());

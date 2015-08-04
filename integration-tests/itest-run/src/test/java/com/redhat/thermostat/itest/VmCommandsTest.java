@@ -114,7 +114,7 @@ public class VmCommandsTest extends IntegrationTest {
     public void testVmInfo() throws Exception {
         Spawn vmInfo = commandAgainstMongo("vm-info");
         // TODO include required options to test meaningfully
-        // handleAuthPrompt(vmInfo, "mongodb://127.0.0.1:27518", "", "");
+        handleAuthPrompt(vmInfo, "mongodb://127.0.0.1:27518", "client-tester", "tester");
         vmInfo.expectClose();
 
         assertNoExceptions(vmInfo.getCurrentStandardOutContents(), vmInfo.getCurrentStandardErrContents());
