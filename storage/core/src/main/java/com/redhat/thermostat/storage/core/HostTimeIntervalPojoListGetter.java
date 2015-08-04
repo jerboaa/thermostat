@@ -51,7 +51,7 @@ public class HostTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends A
 
     public static final String HOST_INTERVAL_QUERY_FORMAT = "QUERY %s WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.TIMESTAMP.getName() + "' > ?l AND '"
+            + Key.TIMESTAMP.getName() + "' >= ?l AND '"
             + Key.TIMESTAMP.getName() + "' < ?l SORT '"
             + Key.TIMESTAMP.getName() + "' DSC";
 
