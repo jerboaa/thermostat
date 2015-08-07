@@ -967,6 +967,7 @@ fi
 %{_datadir}/%{pkg_name}/plugins/storage-profile
 %{_datadir}/%{pkg_name}/plugins/thread
 %{_datadir}/%{pkg_name}/plugins/validate
+%{_datadir}/%{pkg_name}/plugins/setup
 %{_datadir}/%{pkg_name}/plugins/vm-classstat
 %{_datadir}/%{pkg_name}/plugins/vm-cpu
 %{_datadir}/%{pkg_name}/plugins/vm-gc
