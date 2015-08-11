@@ -10,7 +10,8 @@ _thermostat()
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     # Thermostat Options
-    opts="$(${thermostat_install_dir}/bin/thermostat ${thermostat_logging_opts} help | cut -d " " -f 2 | tr '\n' ' ' | cut -d " " -f 3-)"
+    # All valid commands and options are prefixed with a single space
+    opts="$(${thermostat_install_dir}/bin/thermostat ${thermostat_logging_opts} help | grep '^ ' | cut -d " " -f 2 | tr '\n' ' ')"
 
     COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
     return 0

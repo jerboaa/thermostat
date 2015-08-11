@@ -135,6 +135,8 @@ __check_completion "thermostat list-v" "list-vms"
 
 __check_completion "thermostat g" $'gc\ngui'
 
+__check_completion "thermostat o" "object-info"
+
 __check_completion "thermostat web" "web-storage-service"
 
 exit $errors
