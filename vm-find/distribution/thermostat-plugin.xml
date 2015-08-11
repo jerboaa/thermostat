@@ -154,7 +154,7 @@
         <option>
           <long>javahome</long>
           <short>H</short>
-          <argument>homeDirectoryPatch</argument>
+          <argument>homeDirectoryPath</argument>
           <required>false</required>
           <description>the home directory path of the VM. Must be exact match when treated as paths (ie trailing directory separators will match)</description>
         </option>
