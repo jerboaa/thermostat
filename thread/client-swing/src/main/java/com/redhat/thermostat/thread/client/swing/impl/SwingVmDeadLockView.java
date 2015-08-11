@@ -108,6 +108,8 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
 
         actualComponent.add(tabbedPane, c);
 
+        description.setEditable(false);
+
         JScrollPane scrollPane = new JScrollPane(description);
 
         graphical.setLayout(new BorderLayout());
