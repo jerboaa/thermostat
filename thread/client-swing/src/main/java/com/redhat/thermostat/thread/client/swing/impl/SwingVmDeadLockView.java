@@ -52,7 +52,7 @@ import java.util.Objects;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
@@ -75,14 +75,19 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
 
     private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
 
-    private static final int TAB_VISUALIZATION_INDEX = 0;
-    private static final int TAB_RAW_INDEX = 1;
-
     private final JPanel actualComponent = new JPanel();
 
-    private final JTabbedPane tabbedPane = new JTabbedPane();
+    private final JSplitPane deadlockTextAndVisualization = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+
     private final JPanel graphical = new JPanel();
     private final JTextArea description = new JTextArea();
+
+    /**
+     * Whether to set the divider's location. Do this only once to set a sane
+     * initial value but don't change anything after and allow the user to tweak
+     * this as appropriate.
+     */
+    private boolean dividerLocationSet = false;
 
     public SwingVmDeadLockView() {
         actualComponent.setLayout(new GridBagLayout());
@@ -106,18 +111,16 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
         c.weightx = 1;
         c.weighty = 1;
 
-        actualComponent.add(tabbedPane, c);
-
         description.setEditable(false);
 
         JScrollPane scrollPane = new JScrollPane(description);
 
         graphical.setLayout(new BorderLayout());
 
-        final String GRAPHICAL_TAB_TITLE = translate.localize(LocaleResources.DEADLOCK_GRAPHICAL_TAB_TITLE).getContents();
-        tabbedPane.insertTab(GRAPHICAL_TAB_TITLE, null, graphical, null, TAB_VISUALIZATION_INDEX);
-        final String RAW_TAB_TITLE = translate.localize(LocaleResources.DEADLOCK_RAW_TAB_TITLE).getContents();
-        tabbedPane.insertTab(RAW_TAB_TITLE, null, scrollPane, null, TAB_RAW_INDEX);
+        deadlockTextAndVisualization.setLeftComponent(scrollPane);
+        deadlockTextAndVisualization.setRightComponent(graphical);
+
+        actualComponent.add(deadlockTextAndVisualization, c);
 
         new ComponentVisibilityNotifier().initialize(actualComponent, notifier);
     }
@@ -130,10 +133,20 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
 
                 graphical.removeAll();
 
+                if (!dividerLocationSet) {
+                    // 0.7 is chosen empirically to show a bit more of the text than the gui
+                    deadlockTextAndVisualization.setDividerLocation(0.7);
+                    deadlockTextAndVisualization.revalidate();
+                    dividerLocationSet = true;
+                }
+
                 if (parsed != null) {
                     FontMetrics metrics = graphical.getGraphics().getFontMetrics();
                     graphical.add(createGraph(parsed, metrics), BorderLayout.CENTER);
                 }
+
+                graphical.revalidate();
+                graphical.repaint();
 
                 description.setText(rawText);
             }
