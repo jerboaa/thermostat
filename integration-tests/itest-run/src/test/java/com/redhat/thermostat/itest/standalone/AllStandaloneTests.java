@@ -39,6 +39,7 @@ package com.redhat.thermostat.itest.standalone;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import com.redhat.thermostat.itest.AllCommandsResolvableTest;
 import com.redhat.thermostat.itest.CliTest;
 import com.redhat.thermostat.itest.StorageConnectionTest;
 import com.redhat.thermostat.itest.StorageTest;
@@ -95,6 +96,7 @@ import com.redhat.thermostat.itest.VmCommandsTest;
     StorageTest.class,
     VmCommandsTest.class,
     UserPluginsTest.class,
+    AllCommandsResolvableTest.class
 })
 public class AllStandaloneTests {
     // nothing
