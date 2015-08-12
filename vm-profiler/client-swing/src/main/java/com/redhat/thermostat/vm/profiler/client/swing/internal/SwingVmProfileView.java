@@ -53,9 +53,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
@@ -68,11 +66,11 @@ import javax.swing.table.DefaultTableModel;
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
@@ -194,7 +192,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 fireProfileAction(ProfileAction.PROFILE_SELECTED);
             }
         });
-        JScrollPane profileListPane = new JScrollPane(profileList);
+        ThermostatScrollPane profileListPane = new ThermostatScrollPane(profileList);
 
         Vector<String> columnNames = new Vector<>();
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_METHOD).getContents());
