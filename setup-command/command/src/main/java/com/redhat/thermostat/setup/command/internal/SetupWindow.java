@@ -67,13 +67,16 @@ public class SetupWindow {
     private StartView startView;
     private MongoUserSetupView mongoUserSetupView;
     private UserPropertiesView userPropertiesView;
-    private String username = null;
-    private char[] password = null;
+    private String storageUsername = null;
+    private char[] storagePassword = null;
     private boolean showDetailedBlurb = false;
     private ThermostatSetup thermostatSetup;
 
-    private static final String defaultUsername = "mongodevuser";
-    private static final String defaultPassword = "mongodevpassword";
+    private static final String DEFAULT_AGENT_USER = "agent-tester";
+    private static final String DEFAULT_CLIENT_USER = "client-tester";
+    private static final String DEFAULT_USER_PASSWORD = "tester";
+    private static final String DEFAULT_STORAGE_USER = "mongodevuser";
+    private static final String DEFAULT_STORAGE_PASSWORD = "mongodevpassword";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private PrintStream out;
@@ -105,8 +108,8 @@ public class SetupWindow {
     }
 
     private void cleanup() {
-        if (password != null) {
-            Arrays.fill(password, '\0');
+        if (storagePassword != null) {
+            Arrays.fill(storagePassword, '\0');
         }
     }
 
@@ -184,15 +187,15 @@ public class SetupWindow {
         mongoUserSetupView.getDefaultSetupBtn().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                mongoUserSetupView.setUsername(defaultUsername);
-                mongoUserSetupView.setPassword(defaultPassword);
+                mongoUserSetupView.setUsername(DEFAULT_STORAGE_USER);
+                mongoUserSetupView.setPassword(DEFAULT_STORAGE_PASSWORD);
             }
         });
         mongoUserSetupView.getNextBtn().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                username = mongoUserSetupView.getUsername();
-                password = mongoUserSetupView.getPassword();
+                storageUsername = mongoUserSetupView.getUsername();
+                storagePassword = mongoUserSetupView.getPassword();
                 runMongoSetup();
 
                 if (thermostatSetup.isWebAppInstalled()) {
@@ -236,7 +239,7 @@ public class SetupWindow {
                 mongoUserSetupView.disableButtons();
                 userPropertiesView.disableButtons();
                 try {
-                    thermostatSetup.createMongodbUser(username, password);
+                    thermostatSetup.createMongodbUser(storageUsername, storagePassword);
                 } catch (MongodbUserSetupException e) {
                     e.printStackTrace();
                     shutdown();
@@ -294,8 +297,8 @@ public class SetupWindow {
                                 UserRoles.WRITE,
                         };
                     }
-                    thermostatSetup.createThermostatUser(username, password, agentRoles);
-                    thermostatSetup.createThermostatUser(username, password, clientRoles);
+                    thermostatSetup.createThermostatUser(DEFAULT_AGENT_USER, DEFAULT_USER_PASSWORD.toCharArray(), agentRoles);
+                    thermostatSetup.createThermostatUser(DEFAULT_CLIENT_USER, DEFAULT_USER_PASSWORD.toCharArray(), clientRoles);
 
                 } catch (IOException e) {
                     e.printStackTrace();

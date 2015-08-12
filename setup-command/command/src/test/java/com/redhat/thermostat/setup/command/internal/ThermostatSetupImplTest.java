@@ -214,6 +214,11 @@ public class ThermostatSetupImplTest {
         File userDoneFile = new File(userDataDir.toString() + "/mongodb-user-done.stamp");
         File setupCompleteFile = new File(userDataDir.toString() + "/setup-complete.stamp");
 
+        //create path to webapp so web.auth creation is invoked
+        //when ThermostatSetup.createMongodbUser() is called
+        Path webAppPath = thermostatSysHome.resolve("webapp");
+        Files.createDirectories(webAppPath);
+
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -244,6 +249,12 @@ public class ThermostatSetupImplTest {
 
         assertTrue(userDoneFile.exists());
         assertTrue(setupCompleteFile.exists());
+
+        assertTrue(credentialsFile.toFile().exists());
+        String credentialsData = new String(Files.readAllBytes(credentialsFile));
+        assertTrue(credentialsData.contains("storage.username=" + username));
+        assertTrue(credentialsData.contains("storage.password=" + password));
+
         String setupCompleteData = new String(Files.readAllBytes(setupCompleteFile.toPath()));
         assertTrue(setupCompleteData.contains("Created by Thermostat Setup"));
     }
@@ -351,6 +362,10 @@ public class ThermostatSetupImplTest {
 
     @Test
     public void testSetupThermostatUser() throws IOException {
+        String clientUser = "client-tester";
+        String agentUser = "agent-tester";
+        String userPassword = "tester";
+
         String[] agentRoles = new String[] {
                     UserRoles.CMD_CHANNEL_VERIFY,
                     UserRoles.LOGIN,
@@ -378,14 +393,8 @@ public class ThermostatSetupImplTest {
                     UserRoles.WRITE,
         };
 
-        tSetup.createThermostatUser(username, password.toCharArray(), agentRoles);
-        tSetup.createThermostatUser(username, password.toCharArray(), clientRoles);
-
-        //check credentialsFile
-        assertTrue(credentialsFile.toFile().exists());
-        String credentialsData = new String(Files.readAllBytes(credentialsFile));
-        assertTrue(credentialsData.contains("storage.username=" + username));
-        assertTrue(credentialsData.contains("storage.password=" + password));
+        tSetup.createThermostatUser(agentUser, userPassword.toCharArray(), agentRoles);
+        tSetup.createThermostatUser(clientUser, userPassword.toCharArray(), clientRoles);
 
         //check agent credentials file
         assertTrue(userAgentAuth.toFile().exists());

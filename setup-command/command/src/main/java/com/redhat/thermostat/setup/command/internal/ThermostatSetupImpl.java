@@ -70,9 +70,6 @@ public class ThermostatSetupImpl implements ThermostatSetup {
     private static final String USERS_PROPERTIES = "thermostat-users.properties";
     private static final String ROLES_PROPERTIES = "thermostat-roles.properties";
     private static final String MONGO_INPUT_SCRIPT = "/tmp/mongo-input.js";
-    private static final String DEFAULT_AGENT_USER = "agent-tester";
-    private static final String DEFAULT_CLIENT_USER = "client-tester";
-    private static final String DEFAULT_USER_PASSWORD = "tester";
     private static final String THERMOSTAT_AGENT = "thermostat-agent";
     private static final String THERMOSTAT_CLIENT = "thermostat-client";
     private static final String THERMOSTAT_CMDC = "thermostat-cmdc";
@@ -156,6 +153,10 @@ public class ThermostatSetupImpl implements ThermostatSetup {
 
             stopStorage();
 
+            if (isWebAppInstalled()) {
+                writeStorageCredentialsFile(username, password);
+            }
+
             File userDoneFile = new File(this.userDoneFile);
             userDoneFile.createNewFile();
 
@@ -193,6 +194,22 @@ public class ThermostatSetupImpl implements ThermostatSetup {
         return mongoProcess.start().waitFor();
     }
 
+    private void writeStorageCredentialsFile(String username, char[] password) throws MongodbUserSetupException {
+        File credentialsFile = finder.getConfiguration(WEB_AUTH_FILE);
+        Properties credentialProps = new Properties();
+        credentialProps.setProperty("storage.username", username);
+        credentialProps.setProperty("storage.password", String.valueOf(password));
+
+        try {
+            credentialProps.store(new FileOutputStream(credentialsFile), "Storage Credentials");
+        } catch (IOException e) {
+            throw new MongodbUserSetupException("Storing credentials to file " + WEB_AUTH_FILE + " failed!", e);
+        }
+
+        credentialsFile.setReadable(true, false);
+        credentialsFile.setWritable(true, true);
+    }
+
     private void removeTempStampFile() {
         if (setupCompleteFile.exists()) {
             setupCompleteFile.delete();
@@ -201,73 +218,32 @@ public class ThermostatSetupImpl implements ThermostatSetup {
 
     @Override
     public void createThermostatUser(String username, char[] password, String[] roles) throws IOException {
-        File credentialsFile = finder.getConfiguration(WEB_AUTH_FILE);
-        try {
-            Properties credentialProps = new Properties();
-            credentialProps.setProperty("storage.username", username);
-            credentialProps.setProperty("storage.password", String.valueOf(password));
-            credentialProps.store(new FileOutputStream(credentialsFile), "Storage Credentials");
+        List<String> rolesList = Arrays.asList(roles);
 
-            credentialsFile.setReadable(true, false);
-            credentialsFile.setWritable(true, true);
-
-            List<String> rolesList = Arrays.asList(roles);
-
-            if(rolesList.containsAll(Arrays.asList(UserRoles.CLIENT_ROLES))) {
-                createClientUser();
-                setClientRoles(roles);
-            } else if(rolesList.containsAll(Arrays.asList(UserRoles.AGENT_ROLES))) {
-                createAgentUser();
-                setAgentRoles(roles);
-            }
-
-        } catch (IOException e) {
-            throw new IOException("Automatic substitution of file " + WEB_AUTH_FILE + " failed!", e);
+        if (rolesList.containsAll(Arrays.asList(UserRoles.CLIENT_ROLES))) {
+            createClientUser(username, password, roles);
+        } else if (rolesList.containsAll(Arrays.asList(UserRoles.AGENT_ROLES))) {
+            createAgentUser(username, password, roles);
         }
     }
 
-    private void createAgentUser() throws IOException {
+    private void createClientUser(String username, char[] password, String[] roles) throws IOException {
         Properties userProps = new Properties();
         FileOutputStream userStream = new FileOutputStream(finder.getConfiguration(USERS_PROPERTIES), true);
-        userProps.setProperty(DEFAULT_AGENT_USER, DEFAULT_USER_PASSWORD);
-        userProps.store(userStream, "Agent User");
-
-        setAgentCredentials();
-    }
-
-    private void setAgentCredentials() throws IOException {
-        Properties agentProps = new Properties();
-        FileOutputStream agentAuthStream = new FileOutputStream(new File(userAgentAuth));
-        agentProps.setProperty("username", DEFAULT_AGENT_USER);
-        agentProps.setProperty("password", DEFAULT_USER_PASSWORD);
-        agentProps.store(agentAuthStream, "Agent Credentials");
-    }
-
-    private void createClientUser() throws IOException {
-        Properties userProps = new Properties();
-        FileOutputStream userStream = new FileOutputStream(finder.getConfiguration(USERS_PROPERTIES), true);
-        userProps.setProperty(DEFAULT_CLIENT_USER, DEFAULT_USER_PASSWORD);
+        userProps.setProperty(username, String.valueOf(password));
         userProps.store(userStream, "Client User");
+
+        setClientRoles(username, roles);
     }
 
-    private void setAgentRoles(String[] agentRoles) throws IOException {
-        String[] agentUserRoles = new String[] {
-                THERMOSTAT_AGENT
-        };
-        setRoleProperty(DEFAULT_AGENT_USER, agentUserRoles);
-        setRoleProperty(THERMOSTAT_AGENT, agentRoles);
-        FileOutputStream roleStream = new FileOutputStream(finder.getConfiguration(ROLES_PROPERTIES), true);
-        roleProps.store(new PropertiesWriter(roleStream), "Thermostat Agent Roles");
-    }
-
-    private void setClientRoles(String[] clientRoles) throws IOException {
+    private void setClientRoles(String username, String[] clientRoles) throws IOException {
         String[] clientUserRoles = new String[] {
                 THERMOSTAT_CLIENT,
                 THERMOSTAT_CMDC,
                 UserRoles.PURGE
         };
 
-        String[] cmdcRoles = new String[]{
+        String[] cmdcRoles = new String[] {
                 UserRoles.GRANT_CMD_CHANNEL_GARBAGE_COLLECT,
                 UserRoles.GRANT_CMD_CHANNEL_DUMP_HEAP,
                 UserRoles.GRANT_CMD_CHANNEL_GRANT_THREAD_HARVESTER,
@@ -277,7 +253,7 @@ public class ThermostatSetupImpl implements ThermostatSetup {
                 UserRoles.GRANT_CMD_CHANNEL_JMX_TOGGLE_NOTIFICATION,
         };
 
-        setRoleProperty(DEFAULT_CLIENT_USER, clientUserRoles);
+        setRoleProperty(username, clientUserRoles);
         setRoleProperty(THERMOSTAT_CLIENT, clientRoles);
         setRoleProperty(THERMOSTAT_CMDC, cmdcRoles);
 
@@ -285,8 +261,34 @@ public class ThermostatSetupImpl implements ThermostatSetup {
         roleProps.store(new PropertiesWriter(roleStream), "Thermostat Client Roles");
     }
 
+    private void createAgentUser(String username, char[] password, String[] roles) throws IOException {
+        Properties userProps = new Properties();
+        FileOutputStream userStream = new FileOutputStream(finder.getConfiguration(USERS_PROPERTIES), true);
+        userProps.setProperty(username, String.valueOf(password));
+        userProps.store(userStream, "Agent User");
+
+        //set agent credentials
+        Properties agentProps = new Properties();
+        FileOutputStream agentAuthStream = new FileOutputStream(new File(userAgentAuth));
+        agentProps.setProperty("username", username);
+        agentProps.setProperty("password", String.valueOf(password));
+        agentProps.store(agentAuthStream, "Agent Credentials");
+
+        setAgentRoles(username, roles);
+    }
+
+    private void setAgentRoles(String username, String[] agentRoles) throws IOException {
+        String[] agentUserRoles = new String[] {
+                THERMOSTAT_AGENT
+        };
+        setRoleProperty(username, agentUserRoles);
+        setRoleProperty(THERMOSTAT_AGENT, agentRoles);
+        FileOutputStream roleStream = new FileOutputStream(finder.getConfiguration(ROLES_PROPERTIES), true);
+        roleProps.store(new PropertiesWriter(roleStream), "Thermostat Agent Roles");
+    }
+
     private void setRoleProperty(String attribute, String[] roles) throws IOException {
-        if(roleProps == null) {
+        if (roleProps == null) {
             roleProps = new Properties();
         }
         if (roles.length > 0) {

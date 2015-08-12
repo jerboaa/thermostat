@@ -41,8 +41,9 @@ import java.io.IOException;
 public interface ThermostatSetup {
 
     /**
-     * Provided a username and password,
-     * creates a MongodbUser
+     * Creates a Mongodb User and a web.auth
+     * file (if webapp is installed) for the
+     * provided username and password
      *
      * @param username
      * @param password
@@ -51,9 +52,9 @@ public interface ThermostatSetup {
     void createMongodbUser(String username, char[] password) throws MongodbUserSetupException;
 
     /**
-     * Creates web.auth file and sets
-     * users.properties and
-     * roles.properties for a user
+     * Creates entries in the thermostat-users.properties
+     * and thermostat-roles.properties for the provided
+     * username, password and roles
      *
      * @param username
      * @param password
