@@ -225,6 +225,10 @@ public class TreeMapNode {
     public List<TreeMapNode> getChildren() {
         return this.children;
     }
+
+    public boolean isLeaf() {
+        return getChildren().isEmpty();
+    }
     
     /**
      * Set as children list of this object the list given in input.

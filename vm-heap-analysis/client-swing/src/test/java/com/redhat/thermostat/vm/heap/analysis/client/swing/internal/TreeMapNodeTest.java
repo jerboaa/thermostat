@@ -45,6 +45,7 @@ import static org.junit.Assert.assertTrue;
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -97,6 +98,14 @@ public class TreeMapNodeTest {
         assertTrue(1 == node.getChildren().size());
     }
 
+    @Test
+    public final void testIsLeaf() {
+        assertTrue(node.isLeaf());
+        node.addChild(new TreeMapNode(null, 1));
+        assertFalse(node.isLeaf());
+        node.setChildren(Collections.<TreeMapNode>emptyList());
+        assertTrue(node.isLeaf());
+    }
 
     @Test
     public final void testGetAddInfo() {

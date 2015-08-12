@@ -40,6 +40,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -65,6 +66,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
+import com.redhat.thermostat.client.swing.ThermostatSwingCursors;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 
 /**
@@ -584,6 +586,7 @@ public class TreeMapComponent extends JComponent {
             super();
             thisComponent = this;
             addClickListener(this);
+            addMouseListener(this);
         }
 
         @Override
@@ -642,7 +645,9 @@ public class TreeMapComponent extends JComponent {
                     // two middle click: zoom full
                     if (e.getClickCount() == 2) {
                         if (SwingUtilities.isLeftMouseButton(e)) {
-                            zoomIn(getNode());
+                            if (!getNode().isLeaf()) {
+                                zoomIn(getNode());
+                            }
                         } else if (SwingUtilities.isRightMouseButton(e)) {
                             zoomOut();
                         } else {
@@ -655,16 +660,57 @@ public class TreeMapComponent extends JComponent {
         }
 
         /**
+         * Add a mouse motion listener to this component. This allows for the mouse cursor to be changed into a
+         * magnifying glass icon when the cursor enters a zoomable component, and back to a default cursor when it
+         * exits a zoomable component.
+         * @param component the component which will have the mouse motion listener.
+         */
+        private void addMouseListener(final JComponent component) {
+            MouseListener listener = new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    if (getNode().isLeaf()) {
+                        setDefaultCursor();
+                    } else {
+                        setZoomableCursor();
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    if (!getNode().isLeaf()) {
+                        setDefaultCursor();
+                    } else {
+                        setZoomableCursor();
+                    }
+                }
+
+                private void setZoomableCursor() {
+                    component.setCursor(ThermostatSwingCursors.getZoomIconCursor());
+                }
+
+                private void setDefaultCursor() {
+                    component.setCursor(Cursor.getDefaultCursor());
+                }
+            };
+            component.addMouseListener(listener);
+        }
+
+        /**
          * This method gives a darker color to this component and restore the
          * original color to the last selected component.
          */
         private void selectComp() {
             if (lastClicked != null) {
-                lastClicked.setColor(lastClicked.getColor().brighter());
+                if (!lastClicked.getNode().isLeaf()) {
+                    lastClicked.setColor(lastClicked.getColor().brighter());
+                }
                 lastClicked.repaint();
             } 
             lastClicked = thisComponent;
-            setColor(getColor().darker());
+            if (!getNode().isLeaf()) {
+                setColor(getColor().darker());
+            }
             repaint();
         }
     }
