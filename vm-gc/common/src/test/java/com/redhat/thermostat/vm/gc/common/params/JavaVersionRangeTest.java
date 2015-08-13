@@ -38,9 +38,12 @@ package com.redhat.thermostat.vm.gc.common.params;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.vm.gc.common.params.JavaVersionRange.VersionPoints;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class JavaVersionRangeTest {
 
@@ -323,6 +326,57 @@ public class JavaVersionRangeTest {
     @Test(expected = JavaVersionRange.InvalidJavaVersionFormatException.class)
     public void testScoreOnlyAllowedAsFinalSeparator2() {
         JavaVersionRange.fromString("1.2_3.4");
+    }
+    
+    @Test
+    public void canParseCustomBuiltJDKVersion() {
+        testJDKVersion("1.7.0-internal"); // a custom JDK 7 build has this version string
+        testJDKVersion("1.7.0");
+        testJDKVersion("1.8.0");
+        testJDKVersion("1.8.0.55-internal");
+    }
+    
+    @Test
+    public void testVersionPointsFromString() {
+        VersionPoints points = VersionPoints.fromString("1.7.0-internal");
+        assertEquals(1, points.getMajor());
+        assertEquals(7, points.getMinor());
+        assertEquals(0, points.getMicro());
+        assertEquals(0, points.getUpdate());
+        assertEquals("internal", points.getPreRelease());
+        assertEquals("1.7.0.0-internal", points.toString());
+        
+        points = VersionPoints.fromString("1.7.0");
+        assertEquals(1, points.getMajor());
+        assertEquals(7, points.getMinor());
+        assertEquals(0, points.getMicro());
+        assertEquals(0, points.getUpdate());
+        assertEquals("", points.getPreRelease());
+        assertEquals("1.7.0.0", points.toString());
+        
+        points = VersionPoints.fromString("1.8.1_55-b20");
+        assertEquals(1, points.getMajor());
+        assertEquals(8, points.getMinor());
+        assertEquals(1, points.getMicro());
+        assertEquals(55, points.getUpdate());
+        assertEquals("b20", points.getPreRelease());
+        assertEquals("1.8.1.55-b20", points.toString());
+    }
+    
+    @Test(expected = JavaVersionRange.InvalidJavaVersionFormatException.class)
+    public void shouldFailToParseVersionPointsForIrregularVersion() {
+        VersionPoints.fromString("1.7.0|30-internal"); // illegal update separator
+    }
+    
+    private void testJDKVersion(String jdkVersion) {
+        JavaVersionRange version = null;
+        try {
+            version = JavaVersionRange.fromString(jdkVersion);
+            // pass
+        } catch (JavaVersionRange.InvalidJavaVersionFormatException e) {
+            fail("Expected to be able to parse " + jdkVersion);
+        }
+        assertFalse(version.isRange());
     }
 
     private static boolean lessThan(JavaVersionRange a, JavaVersionRange b) {

@@ -54,9 +54,16 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
     private static final String RBRACK = "([\\]\\)])";
     private static final String NUM = "([0-9]+)";
     private static final String DOT = "\\.";
-    private static final String SCORE = "[\\._]";
+    // Allow for '_' and '.' as delimiters; Do *not* use "-" as
+    // delimiter since that is reserved for the pre-release snippet.
+    private static final String UPDATE_DELIMITER = "[._]";
     private static final String COMMA = ",";
-    private static final String SINGLE_VERSION_PATTERN_STRING = NUM + DOT + NUM + DOT + NUM + SCORE + NUM;
+    private static final String UPDATE_PATTERN = UPDATE_DELIMITER + NUM;
+    private static final String OPTIONAL_UPDATE_PATTERN = "(?:" + UPDATE_PATTERN + ")?"; // non-capturing group
+    private static final String PRE_RELEASE_PATTERN = "-([0-9a-zA-Z]+)";
+    private static final String OPTIONAL_PRE_RELEASE_PATTERN = "(?:" + PRE_RELEASE_PATTERN + ")?"; // non-capturing group
+    private static final String OPTIONAL_SUFFIX = "(" + OPTIONAL_UPDATE_PATTERN + OPTIONAL_PRE_RELEASE_PATTERN + ")";
+    private static final String SINGLE_VERSION_PATTERN_STRING = NUM + DOT + NUM + DOT + NUM + OPTIONAL_SUFFIX;
     private static final String VERSION_PATTERN_STRING = LBRACK + "?" + "(" + SINGLE_VERSION_PATTERN_STRING + ")" + RBRACK + "?";
     private static final String RANGE_PATTERN_STRING = LBRACK + "(" + SINGLE_VERSION_PATTERN_STRING + ")?" + COMMA
             + "(" + SINGLE_VERSION_PATTERN_STRING + ")?" + RBRACK;
@@ -93,7 +100,7 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
         if (singleVersionMatcher.matches()) {
             VersionPoints points = VersionPoints.fromString(singleVersionMatcher.group(2));
             String leftBracket = singleVersionMatcher.group(1);
-            String rightBracket = singleVersionMatcher.group(7);
+            String rightBracket = singleVersionMatcher.group(9);
             if (leftBracket == null && rightBracket == null) {
                 return new JavaVersionRange(points);
             } else if (leftBracket != null && rightBracket != null) {
@@ -105,7 +112,7 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
             Matcher rangeVersionMatcher = RANGE_PATTERN.matcher(javaVersionString);
             if (rangeVersionMatcher.matches()) {
                 String lower = rangeVersionMatcher.group(2);
-                String upper = rangeVersionMatcher.group(7);
+                String upper = rangeVersionMatcher.group(9);
                 VersionPoints lowerBound, upperBound;
                 if (lower == null && upper == null) {
                     throw new InvalidJavaVersionFormatException("Cannot specify a range without any bounds");
@@ -120,7 +127,7 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
                     upperBound = VersionPoints.fromString(upper);
                 }
                 String leftBracket = rangeVersionMatcher.group(1);
-                String rightBracket = rangeVersionMatcher.group(12);
+                String rightBracket = rangeVersionMatcher.group(16);
                 return new JavaVersionRange(lowerBound, isInclusive(leftBracket.charAt(0)), upperBound, isInclusive(rightBracket.charAt(0)));
             } else {
                 throw new InvalidJavaVersionFormatException(javaVersionString);
@@ -263,12 +270,18 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
         private final int minor;
         private final int micro;
         private final int update;
-
+        private final String preRelease;
+        
         public VersionPoints(int major, int minor, int micro, int update) {
+            this(major, minor, micro, update, "");
+        }
+
+        private VersionPoints(int major, int minor, int micro, int update, String preReleaseString) {
             this.major = requirePositive(major);
             this.minor = requirePositive(minor);
             this.micro = requirePositive(micro);
             this.update = requirePositive(update);
+            this.preRelease = Objects.requireNonNull(preReleaseString);
         }
 
         static int requirePositive(int i) {
@@ -286,8 +299,29 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
             int major = Integer.parseInt(matcher.group(1));
             int minor = Integer.parseInt(matcher.group(2));
             int micro = Integer.parseInt(matcher.group(3));
-            int update = Integer.parseInt(matcher.group(4));
-            return new VersionPoints(major, minor, micro, update);
+            String optionalSuffix = matcher.group(4); // contains both, update and pre-release
+            String updateStr = matcher.group(5);
+            String preRelease = matcher.group(6);
+            if (isNullOrEmpty(optionalSuffix)) {
+                // Neither update nor pre-release in version string
+                return new VersionPoints(major, minor, micro, 0);
+            }
+            if (isNullOrEmpty(updateStr)) {
+                // No update provided but pre-release given
+                return new VersionPoints(major, minor, micro, 0, preRelease);
+            }
+            if (isNullOrEmpty(preRelease)) {
+                // Update given, but no pre-release
+                int update = Integer.parseInt(updateStr);
+                return new VersionPoints(major, minor, micro, update);
+            }
+            // Both update and pre-release given
+            int update = Integer.parseInt(updateStr);
+            return new VersionPoints(major, minor, micro, update, preRelease);
+        }
+        
+        private static boolean isNullOrEmpty(String matchedString) {
+            return matchedString == null || matchedString.isEmpty();
         }
 
         public int getMajor() {
@@ -304,6 +338,10 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
 
         public int getUpdate() {
             return update;
+        }
+        
+        public String getPreRelease() {
+            return preRelease;
         }
 
         @Override
@@ -346,7 +384,8 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
             return getMajor() + "."
                     + getMinor() + "."
                     + getMicro() + "."
-                    + getUpdate();
+                    + getUpdate() +
+                    (getPreRelease().isEmpty() ? "" : "-" + getPreRelease());
         }
     }
 
