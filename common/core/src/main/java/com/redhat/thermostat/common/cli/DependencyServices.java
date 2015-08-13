@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.client.cli.internal;
+package com.redhat.thermostat.common.cli;
 
 import java.util.HashMap;
 import java.util.Map;

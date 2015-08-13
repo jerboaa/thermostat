@@ -222,8 +222,7 @@ public class FindVmCommandTest {
         FindVmCommand command = new FindVmCommand();
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         when(agentInfoDAO.getAliveAgents()).thenReturn(list);
-        command.setAgentInfoDAO(agentInfoDAO);
-        List<AgentInformation> agentsToSearch = command.getAgentsToSearch(args);
+        List<AgentInformation> agentsToSearch = command.getAgentsToSearch(args, agentInfoDAO);
         assertThat(agentsToSearch, is(equalTo(list)));
     }
 
@@ -236,10 +235,9 @@ public class FindVmCommandTest {
         when(agentInfoDAO.getAliveAgents()).thenReturn(list);
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(foo);
         FindVmCommand command = new FindVmCommand();
-        command.setAgentInfoDAO(agentInfoDAO);
         when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(true);
         when(args.getArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(foo.getAgentId());
-        List<AgentInformation> agentsToSearch = command.getAgentsToSearch(args);
+        List<AgentInformation> agentsToSearch = command.getAgentsToSearch(args, agentInfoDAO);
         assertThat(agentsToSearch, is(equalTo(Collections.singletonList(foo))));
     }
 
@@ -325,20 +323,16 @@ public class FindVmCommandTest {
         Pair<HostInfo, VmInfo> pair3 = new Pair<>(host2, vm3);
         Pair<HostInfo, VmInfo> pair4 = new Pair<>(host3, vm4);
 
-        FindVmCommand command = new FindVmCommand();
-
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         when(agentInfoDAO.getAliveAgents()).thenReturn(agents);
         when(agentInfoDAO.getAgentInformation(agentId1)).thenReturn(agentInfo1);
         when(agentInfoDAO.getAgentInformation(agentId2)).thenReturn(agentInfo2);
         when(agentInfoDAO.getAgentInformation(agentId3)).thenReturn(agentInfo3);
-        command.setAgentInfoDAO(agentInfoDAO);
 
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         when(hostInfoDAO.getHostInfo(agentId1)).thenReturn(host1);
         when(hostInfoDAO.getHostInfo(agentId2)).thenReturn(host2);
         when(hostInfoDAO.getHostInfo(agentId3)).thenReturn(host3);
-        command.setHostInfoDAO(hostInfoDAO);
 
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
         when(vmInfoDAO.getVmIds(agentId1)).thenReturn(vmIds1);
@@ -348,13 +342,13 @@ public class FindVmCommandTest {
         when(vmInfoDAO.getVmInfo(vmId2)).thenReturn(vm2);
         when(vmInfoDAO.getVmInfo(vmId3)).thenReturn(vm3);
         when(vmInfoDAO.getVmInfo(vmId4)).thenReturn(vm4);
-        command.setVmInfoDAO(vmInfoDAO);
 
         Map<String, String> hostMap1 = new HashMap<>();
         HostMatcher hostMatcher1 = new HostMatcher(hostMap1);
         Map<String, String> vmMap1 = new HashMap<>();
         VmMatcher vmMatcher1 = new VmMatcher(vmMap1);
-        List<Pair<HostInfo, VmInfo>> result1 = command.performSearch(agents, hostMatcher1, vmMatcher1);
+        List<Pair<HostInfo, VmInfo>> result1 = FindVmCommand.performSearch(hostInfoDAO, vmInfoDAO,
+                agents, hostMatcher1, vmMatcher1);
         assertThat(result1.size(), is(4));
         for (Pair<HostInfo, VmInfo> pair : Arrays.asList(pair1, pair2, pair3, pair4)) {
             assertThat(result1.contains(pair), is(true));
@@ -366,7 +360,8 @@ public class FindVmCommandTest {
         Map<String, String> vmMap2 = new HashMap<>();
         vmMap2.put("javaversion", "1.8");
         VmMatcher vmMatcher2 = new VmMatcher(vmMap2);
-        List<Pair<HostInfo, VmInfo>> result2 = command.performSearch(agents, hostMatcher2, vmMatcher2);
+        List<Pair<HostInfo, VmInfo>> result2 = FindVmCommand.performSearch(hostInfoDAO, vmInfoDAO,
+                agents, hostMatcher2, vmMatcher2);
         assertThat(result2.size(), is(0));
 
         Map<String, String> hostMap3 = new HashMap<>();
@@ -374,7 +369,8 @@ public class FindVmCommandTest {
         HostMatcher hostMatcher3 = new HostMatcher(hostMap3);
         Map<String, String> vmMap3 = new HashMap<>();
         VmMatcher vmMatcher3 = new VmMatcher(vmMap3);
-        List<Pair<HostInfo, VmInfo>> result3 = command.performSearch(agents, hostMatcher3, vmMatcher3);
+        List<Pair<HostInfo, VmInfo>> result3 = FindVmCommand.performSearch(hostInfoDAO, vmInfoDAO,
+                agents, hostMatcher3, vmMatcher3);
         assertThat(result3.size(), is(3));
         for (Pair<HostInfo, VmInfo> pair : Arrays.asList(pair1, pair2, pair3)) {
             assertThat(result3.contains(pair), is(true));
@@ -386,7 +382,8 @@ public class FindVmCommandTest {
         Map<String, String> vmMap4 = new HashMap<>();
         vmMap4.put("javaversion", "1.8");
         VmMatcher vmMatcher4 = new VmMatcher(vmMap4);
-        List<Pair<HostInfo, VmInfo>> result4 = command.performSearch(agents, hostMatcher4, vmMatcher4);
+        List<Pair<HostInfo, VmInfo>> result4 = FindVmCommand.performSearch(hostInfoDAO, vmInfoDAO,
+                agents, hostMatcher4, vmMatcher4);
         assertThat(result4.size(), is(2));
         for (Pair<HostInfo, VmInfo> pair : Arrays.asList(pair1, pair2)) {
             assertThat(result4.contains(pair), is(true));
@@ -408,23 +405,20 @@ public class FindVmCommandTest {
         when(hostInfoDAO.getHostInfo(barId)).thenReturn(hostInfo2);
         List<AgentInformation> agents = Arrays.asList(foo, bar);
 
-        FindVmCommand command = new FindVmCommand();
-        command.setHostInfoDAO(hostInfoDAO);
-
         HostMatcher allMatcher = new HostMatcher(Collections.<String, String>emptyMap());
-        List<AgentInformation> all = command.filterAgents(agents, allMatcher);
+        List<AgentInformation> all = FindVmCommand.filterAgents(hostInfoDAO, agents, allMatcher);
         assertThat(all, is(equalTo(agents)));
 
         Map<String, String> noneMap = new HashMap<>();
         noneMap.put("hostname", "none-host");
         HostMatcher noneMatcher = new HostMatcher(noneMap);
-        List<AgentInformation> none = command.filterAgents(agents, noneMatcher);
+        List<AgentInformation> none = FindVmCommand.filterAgents(hostInfoDAO, agents, noneMatcher);
         assertThat(none, is(equalTo(Collections.<AgentInformation>emptyList())));
 
         Map<String, String> fooMap = new HashMap<>();
         fooMap.put("hostname", "foo-host");
         HostMatcher fooMatcher = new HostMatcher(fooMap);
-        List<AgentInformation> fooList = command.filterAgents(agents, fooMatcher);
+        List<AgentInformation> fooList = FindVmCommand.filterAgents(hostInfoDAO, agents, fooMatcher);
         assertThat(fooList, is(equalTo(Collections.singletonList(foo))));
     }
 
@@ -460,29 +454,26 @@ public class FindVmCommandTest {
         when(vmInfoDAO.getVmInfo(vmId2)).thenReturn(vmInfo2);
         when(vmInfoDAO.getVmInfo(vmId3)).thenReturn(vmInfo3);
 
-        FindVmCommand command = new FindVmCommand();
-        command.setVmInfoDAO(vmInfoDAO);
-
         VmMatcher allMatcher = new VmMatcher(Collections.<String, String>emptyMap());
-        List<VmInfo> all = command.getMatchingVms(agent, allMatcher);
+        List<VmInfo> all = FindVmCommand.getMatchingVms(vmInfoDAO, agent, allMatcher);
         assertThat(all, is(equalTo(Arrays.asList(vmInfo1, vmInfo2, vmInfo3))));
 
         Map<String, String> userMap = new HashMap<>();
         userMap.put("username", "foo-user");
         VmMatcher userMatcher = new VmMatcher(userMap);
-        List<VmInfo> users = command.getMatchingVms(agent, userMatcher);
+        List<VmInfo> users = FindVmCommand.getMatchingVms(vmInfoDAO, agent, userMatcher);
         assertThat(users, is(equalTo(Collections.singletonList(vmInfo1))));
 
         Map<String, String> versionMap = new HashMap<>();
         versionMap.put("javaversion", "1.8");
         VmMatcher versionMatcher = new VmMatcher(versionMap);
-        List<VmInfo> versions = command.getMatchingVms(agent, versionMatcher);
+        List<VmInfo> versions = FindVmCommand.getMatchingVms(vmInfoDAO, agent, versionMatcher);
         assertThat(versions, is(equalTo(Arrays.asList(vmInfo1, vmInfo2))));
 
         Map<String, String> noneMap = new HashMap<>();
         noneMap.put("javaversion", "1.0");
         VmMatcher noneMatcher = new VmMatcher(noneMap);
-        List<VmInfo> none = command.getMatchingVms(agent, noneMatcher);
+        List<VmInfo> none = FindVmCommand.getMatchingVms(vmInfoDAO, agent, noneMatcher);
         assertThat(none, is(equalTo(Collections.<VmInfo>emptyList())));
     }
 

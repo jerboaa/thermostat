@@ -36,11 +36,18 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
@@ -52,38 +59,25 @@ import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.find.command.locale.LocaleResources;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 public class FindVmCommand extends AbstractCommand {
 
     static final String REGISTER_NAME = "find-vm";
 
     private static final Translate<LocaleResources> translator = LocaleResources.createTranslator();
 
-    private AgentInfoDAO agentInfoDAO;
-    private HostInfoDAO hostInfoDAO;
-    private VmInfoDAO vmInfoDAO;
-    private CountDownLatch servicesLatch = new CountDownLatch(3);
+    private DependencyServices services = new DependencyServices();
     
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        try {
-            servicesLatch.await(500, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_INTERRUPTED));
-        }
 
+        AgentInfoDAO agentInfoDAO = services.getService(AgentInfoDAO.class);
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
+        HostInfoDAO hostInfoDAO = services.getService(HostInfoDAO.class);
         requireNonNull(hostInfoDAO, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
+        VmInfoDAO vmInfoDAO = services.getService(VmInfoDAO.class);
         requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
 
-        List<AgentInformation> agentsToSearch = getAgentsToSearch(ctx.getArguments());
+        List<AgentInformation> agentsToSearch = getAgentsToSearch(ctx.getArguments(), agentInfoDAO);
 
         Map<String, String> hostCriteria = getHostCriteria(ctx.getArguments());
         Map<String, String> vmCriteria = getVmCriteria(ctx.getArguments());
@@ -95,13 +89,14 @@ public class FindVmCommand extends AbstractCommand {
         HostMatcher hostMatcher = new HostMatcher(hostCriteria);
         VmMatcher vmMatcher = new VmMatcher(vmCriteria);
 
-        List<Pair<HostInfo, VmInfo>> results = performSearch(agentsToSearch, hostMatcher, vmMatcher);
+        List<Pair<HostInfo, VmInfo>> results = performSearch(hostInfoDAO, vmInfoDAO,
+                agentsToSearch, hostMatcher, vmMatcher);
 
         ResultsRenderer resultsRenderer = new ResultsRenderer(ctx.getArguments());
         resultsRenderer.print(ctx.getConsole().getOutput(), results);
     }
 
-    List<AgentInformation> getAgentsToSearch(Arguments arguments) {
+    static List<AgentInformation> getAgentsToSearch(Arguments arguments, AgentInfoDAO agentInfoDAO) {
         List<AgentInformation> aliveAgents;
         if (arguments.hasArgument(Arguments.AGENT_ID_ARGUMENT)) {
             AgentId agentId = new AgentId(arguments.getArgument(Arguments.AGENT_ID_ARGUMENT));
@@ -132,11 +127,12 @@ public class FindVmCommand extends AbstractCommand {
         return vmCriteria;
     }
 
-    List<Pair<HostInfo, VmInfo>> performSearch(Iterable<AgentInformation> agents, HostMatcher hostMatcher, VmMatcher vmMatcher) {
+    static List<Pair<HostInfo, VmInfo>> performSearch(HostInfoDAO hostInfoDAO, VmInfoDAO vmInfoDAO,
+            Iterable<AgentInformation> agents, HostMatcher hostMatcher, VmMatcher vmMatcher) {
         List<Pair<HostInfo, VmInfo>> pairs = new ArrayList<>();
-        for (AgentInformation agentInformation : filterAgents(agents, hostMatcher)) {
-            HostInfo hostInfo = getHostInfo(agentInformation);
-            List<VmInfo> matchingVms = getMatchingVms(agentInformation, vmMatcher);
+        for (AgentInformation agentInformation : filterAgents(hostInfoDAO, agents, hostMatcher)) {
+            HostInfo hostInfo = getHostInfo(hostInfoDAO, agentInformation);
+            List<VmInfo> matchingVms = getMatchingVms(vmInfoDAO, agentInformation, vmMatcher);
             for (VmInfo vm : matchingVms) {
                 pairs.add(new Pair<>(hostInfo, vm));
             }
@@ -144,7 +140,7 @@ public class FindVmCommand extends AbstractCommand {
         return pairs;
     }
 
-    List<AgentInformation> filterAgents(Iterable<AgentInformation> agents, HostMatcher hostMatcher) {
+    static List<AgentInformation> filterAgents(HostInfoDAO hostInfoDAO, Iterable<AgentInformation> agents, HostMatcher hostMatcher) {
         List<AgentInformation> list = new ArrayList<>();
         for (AgentInformation agent : agents) {
             HostInfo hostInfo = hostInfoDAO.getHostInfo(new AgentId(agent.getAgentId()));
@@ -155,11 +151,11 @@ public class FindVmCommand extends AbstractCommand {
         return list;
     }
 
-    HostInfo getHostInfo(AgentInformation agentInformation) {
+    static HostInfo getHostInfo(HostInfoDAO hostInfoDAO, AgentInformation agentInformation) {
         return hostInfoDAO.getHostInfo(new AgentId(agentInformation.getAgentId()));
     }
 
-    List<VmInfo> getMatchingVms(AgentInformation agent, VmMatcher vmMatcher) {
+    static List<VmInfo> getMatchingVms(VmInfoDAO vmInfoDAO, AgentInformation agent, VmMatcher vmMatcher) {
         List<VmInfo> list = new ArrayList<>();
         for (VmId vmId : vmInfoDAO.getVmIds(new AgentId(agent.getAgentId()))) {
             VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
@@ -171,24 +167,20 @@ public class FindVmCommand extends AbstractCommand {
     }
 
     public void setAgentInfoDAO(AgentInfoDAO agentInfoDAO) {
-        this.agentInfoDAO = agentInfoDAO;
-        servicesLatch.countDown();
+        services.addService(AgentInfoDAO.class, agentInfoDAO);
     }
 
     public void setHostInfoDAO(HostInfoDAO hostInfoDAO) {
-        this.hostInfoDAO = hostInfoDAO;
-        servicesLatch.countDown();
+        services.addService(HostInfoDAO.class, hostInfoDAO);
     }
 
     public void setVmInfoDAO(VmInfoDAO vmInfoDAO) {
-        this.vmInfoDAO = vmInfoDAO;
-        servicesLatch.countDown();
+        services.addService(VmInfoDAO.class, vmInfoDAO);
     }
 
     public void servicesUnavailable() {
-        setAgentInfoDAO(null);
-        setHostInfoDAO(null);
-        setVmInfoDAO(null);
-        servicesLatch = new CountDownLatch(3);
+        services.removeService(AgentInfoDAO.class);
+        services.removeService(HostInfoDAO.class);
+        services.removeService(VmInfoDAO.class);
     }
 }

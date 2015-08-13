@@ -40,14 +40,13 @@ import java.io.PrintStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -72,17 +71,14 @@ public class ShowGcNameCommand extends AbstractCommand {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final GcCommonNameMapper commonNameMapper = new GcCommonNameMapper();
     private static final GcParamsMapper paramsMapper = GcParamsMapper.getInstance();
-    private CountDownLatch servicesAvailableLatch = new CountDownLatch(2); // vmInfo dao and vmGcStat dao
+    private final DependencyServices services = new DependencyServices();
     private VmInfoDAO vmInfoDao;
     private VmGcStatDAO gcDao;
     
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        try {
-            servicesAvailableLatch.await(500, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_INTERRUPTED));
-        }
+        this.vmInfoDao = services.getService(VmInfoDAO.class);
+        this.gcDao = services.getService(VmGcStatDAO.class);
         
         requireNonNull(vmInfoDao, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         requireNonNull(gcDao, translator.localize(LocaleResources.GC_STAT_DAO_SERVICE_UNAVAILABLE));
@@ -113,19 +109,16 @@ public class ShowGcNameCommand extends AbstractCommand {
     }
     
     void setVmInfo(VmInfoDAO vmInfoDAO) {
-        this.vmInfoDao = vmInfoDAO;
-        servicesAvailableLatch.countDown();
+        services.addService(VmInfoDAO.class, vmInfoDAO);
     }
     
     void setVmGcStat(VmGcStatDAO vmGcStat) {
-        this.gcDao = vmGcStat;
-        servicesAvailableLatch.countDown();
+        services.addService(VmGcStatDAO.class, vmGcStat);
     }
     
     void servicesUnavailable() {
-        this.gcDao = null;
-        this.vmInfoDao = null;
-        servicesAvailableLatch = new CountDownLatch(2);
+        services.removeService(VmInfoDAO.class);
+        services.removeService(VmGcStatDAO.class);
     }
     
     /**

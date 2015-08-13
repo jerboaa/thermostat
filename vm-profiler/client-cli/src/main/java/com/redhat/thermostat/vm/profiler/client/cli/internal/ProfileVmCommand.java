@@ -50,6 +50,7 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
+import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
