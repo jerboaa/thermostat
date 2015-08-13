@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationCache;
@@ -56,6 +57,7 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSel
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -147,9 +149,11 @@ public class ThreadInformationControllerTest {
         ThreadCollector collector = mock(ThreadCollector.class);
         when(collectorFactory.getCollector(ref)).thenReturn(collector);
 
+        ProgressNotifier notifier = mock(ProgressNotifier.class);
+
         controller = new ThreadInformationController(ref, appService, vmInfoDao,
                                                      collectorFactory,
-                                                     viewFactory);
+                                                     viewFactory, notifier);
     }
     
     @Test
@@ -187,9 +191,11 @@ public class ThreadInformationControllerTest {
         ApplicationCache cache = mock(ApplicationCache.class);
         when(appService.getApplicationCache()).thenReturn(cache);
 
+        ProgressNotifier notifier = mock(ProgressNotifier.class);
+
         controller = new ThreadInformationController(ref, appService, vmInfoDao,
                                                      collectorFactory,
-                                                     viewFactory);
+                                                     viewFactory, notifier);
 
         verify(collector).isHarvesterCollecting();
         verify(view, times(1)).setRecording(false, false);

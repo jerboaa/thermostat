@@ -39,14 +39,19 @@ package com.redhat.thermostat.thread.client.controller.impl;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.redhat.thermostat.client.core.progress.ProgressHandle;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.DeadlockParser;
 import com.redhat.thermostat.thread.client.common.DeadlockParser.Information;
@@ -65,14 +70,20 @@ public class VmDeadLockController {
     private VmDeadLockView view;
     private ThreadCollector collector;
     private Timer timer;
+    private ExecutorService executor;
+    private ProgressNotifier notifier;
 
     private final AtomicReference<String> descriptionRef =  new AtomicReference<>("");
     private String previousDeadlockData = null;
 
-    public VmDeadLockController(VmDeadLockView view, ThreadCollector collector, Timer timer) {
+
+    public VmDeadLockController(VmDeadLockView view, ThreadCollector collector, Timer timer,
+            ExecutorService executor, ProgressNotifier notifier) {
         this.view = view;
         this.collector = collector;
         this.timer = timer;
+        this.executor = executor;
+        this.notifier = Objects.requireNonNull(notifier);
     }
 
     public void initialize() {
@@ -81,8 +92,24 @@ public class VmDeadLockController {
             public void actionPerformed(ActionEvent<VmDeadLockViewAction> actionEvent) {
                 switch (actionEvent.getActionId()) {
                 case CHECK_FOR_DEADLOCK:
-                    checkForDeadLock();
-                    updateViewIfNeeded();
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            LocalizedString message = translate.localize(LocaleResources.CHECKING_FOR_DEADLOCKS);
+                            ProgressHandle handle = new ProgressHandle(message);
+                            handle.setIndeterminate(true);
+
+                            notifier.register(handle);
+
+                            handle.runTask(new Runnable() {
+                                @Override
+                                public void run() {
+                                    checkForDeadLock();
+                                    updateViewIfNeeded();
+                                }
+                            });
+                        }
+                    });
                     break;
                 default:
                     break;

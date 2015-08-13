@@ -37,6 +37,7 @@
 package com.redhat.thermostat.thread.client.controller.impl;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -56,6 +57,7 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSel
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView.ThreadAction;
 import com.redhat.thermostat.thread.client.controller.impl.cache.AppCache;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,14 +74,17 @@ public class ThreadInformationController implements InformationServiceController
     private ApplicationService appService;
 
     private AppCache cache;
+    private ProgressNotifier notifier;
 
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        VmInfoDAO vmInfoDao,
                                        ThreadCollectorFactory collectorFactory, 
-                                       ThreadViewProvider viewFactory)
+                                       ThreadViewProvider viewFactory,
+                                       ProgressNotifier notifier)
     {
         this.appService = appService;
         this.ref = ref;
+        this.notifier = notifier;
 
         collector = collectorFactory.getCollector(ref);
 
@@ -153,7 +158,8 @@ public class ThreadInformationController implements InformationServiceController
         TimerFactory tf = appService.getTimerFactory();
 
         VmDeadLockController deadLockController =
-                new VmDeadLockController(view.createDeadLockView(), collector, tf.createTimer());
+                new VmDeadLockController(view.createDeadLockView(), collector, tf.createTimer(),
+                        appService.getApplicationExecutor(), notifier);
         deadLockController.initialize();
 
         ThreadTableView threadTableView = view.createThreadTableView();

@@ -38,6 +38,7 @@ package com.redhat.thermostat.thread.client.controller.impl;
 
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.common.ApplicationCache;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Filter;
@@ -58,16 +59,18 @@ public class ThreadInformationServiceImpl implements ThreadInformationService {
     private VmInfoDAO vmInfoDao;
     private ThreadCollectorFactory collectorFactory;
     private ThreadViewProvider viewFactory;
+    private ProgressNotifier notifier;
 
     public ThreadInformationServiceImpl(ApplicationService appService,
                                         VmInfoDAO vmInfoDao,
                                         ThreadCollectorFactory collectorFactory,
-                                        ThreadViewProvider viewFactory)
+                                        ThreadViewProvider viewFactory, ProgressNotifier notifier)
     {
         this.service = appService;
         this.vmInfoDao = vmInfoDao;
         this.collectorFactory = collectorFactory;
         this.viewFactory = viewFactory;
+        this.notifier = notifier;
     }
     
     @Override
@@ -95,7 +98,8 @@ public class ThreadInformationServiceImpl implements ThreadInformationService {
             controller = new ThreadInformationController(ref, service,
                                                          vmInfoDao,
                                                          collectorFactory,
-                                                         viewFactory);
+                                                         viewFactory,
+                                                         notifier);
             cache.save(key, controller);
         }
         return controller;

@@ -38,6 +38,7 @@ package com.redhat.thermostat.thread.client.controller.impl;
 
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -45,12 +46,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.progress.ProgressHandle;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
@@ -67,6 +71,8 @@ public class VmDeadLockControllerTest {
     private Timer timer;
     private VmDeadLockView view;
     private ThreadCollector collector;
+    private ExecutorService executor;
+    private ProgressNotifier notifier;
 
     private VmDeadLockController controller;
 
@@ -78,7 +84,11 @@ public class VmDeadLockControllerTest {
 
         collector = mock(ThreadCollector.class);
 
-        controller = new VmDeadLockController(view, collector, timer);
+        executor = mock(ExecutorService.class);
+
+        notifier = mock(ProgressNotifier.class);
+
+        controller = new VmDeadLockController(view, collector, timer, executor, notifier);
     }
 
     @Test
@@ -94,6 +104,9 @@ public class VmDeadLockControllerTest {
         VmDeadLockData data = new VmDeadLockData("foo-agent");
         data.setDeadLockDescription(DESCRIPTION);
 
+        ArgumentCaptor<Runnable> executionCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(executor).execute(executionCaptor.capture());
+
         controller.initialize();
 
         ArgumentCaptor<ActionListener> listenerCaptor = (ArgumentCaptor<ActionListener>) ArgumentCaptor.forClass(ActionListener.class);
@@ -104,6 +117,9 @@ public class VmDeadLockControllerTest {
         when(collector.getLatestDeadLockData()).thenReturn(data);
 
         listener.actionPerformed(new ActionEvent<VmDeadLockViewAction>(view, VmDeadLockViewAction.CHECK_FOR_DEADLOCK));
+
+        Runnable deferredTask = executionCaptor.getValue();
+        deferredTask.run();
 
         verify(collector).requestDeadLockCheck();
         verify(view).setDeadLockInformation(null, DESCRIPTION);
@@ -114,6 +130,9 @@ public class VmDeadLockControllerTest {
         VmDeadLockData data = new VmDeadLockData("foo-agent");
         data.setDeadLockDescription(VmDeadLockData.NO_DEADLOCK);
 
+        ArgumentCaptor<Runnable> executionCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(executor).execute(executionCaptor.capture());
+
         controller.initialize();
 
         ArgumentCaptor<ActionListener> listenerCaptor = (ArgumentCaptor<ActionListener>) ArgumentCaptor.forClass(ActionListener.class);
@@ -124,6 +143,9 @@ public class VmDeadLockControllerTest {
         when(collector.getLatestDeadLockData()).thenReturn(data);
 
         listener.actionPerformed(new ActionEvent<VmDeadLockViewAction>(view, VmDeadLockViewAction.CHECK_FOR_DEADLOCK));
+
+        Runnable deferredTask = executionCaptor.getValue();
+        deferredTask.run();
 
         verify(collector).requestDeadLockCheck();
         verify(view).setDeadLockInformation(null, "No Deadlocks Detected.");

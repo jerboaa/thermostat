@@ -45,6 +45,7 @@ public enum LocaleResources {
     WARNING_CANNOT_DISABLE,
     WARNING_CANNOT_ENABLE,
 
+    CHECKING_FOR_DEADLOCKS,
     NO_DEADLOCK_DETECTED,
     ;
 
