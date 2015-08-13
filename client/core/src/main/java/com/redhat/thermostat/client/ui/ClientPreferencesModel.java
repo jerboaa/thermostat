@@ -42,23 +42,12 @@ import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ClientPreferencesModel {
+
     private ClientPreferences prefs;
     private Keyring keyring;
-
-    private String initialUrl;
-    private String initialUsername;
-
     private char[] password;
-    private String url;
-    private String username;
 
     public ClientPreferencesModel(Keyring keyring, ClientPreferences prefs) {
-        initialUrl = prefs.getConnectionUrl();
-        initialUsername = prefs.getUserName();
-
-        this.username = initialUsername;
-        this.url = initialUrl;
-
         this.prefs = prefs;
         this.keyring = keyring;
     }
@@ -72,59 +61,35 @@ public class ClientPreferencesModel {
     }
     
     public String getConnectionUrl() {
-        if (getSaveEntitlements()) {
-            return prefs.getConnectionUrl();
-        }
-        return url;
+        return prefs.getConnectionUrl();
     }
 
     public void setConnectionUrl(String url) {
-        this.url = url;
-        if (getSaveEntitlements()) {
-            prefs.setConnectionUrl(url);
-        }
+        prefs.setConnectionUrl(url);
     }
 
     public char[] getPassword() {
         if (getSaveEntitlements()) {
             return keyring.getPassword(getConnectionUrl(), getUserName());
+        } else {
+            return password;
         }
-        return password;
     }
 
     public String getUserName() {
-        if (getSaveEntitlements()) {
-            return prefs.getUserName();
-        }
-        return username;
+        return prefs.getUserName();
     }
 
     public void setCredentials(String userName, char[] password) {
-        this.username = userName;
+        prefs.setUserName(userName);
         this.password = password;
-
-        if (getSaveEntitlements()) {
-            prefs.setUserName(userName);
-            keyring.savePassword(getConnectionUrl(), userName, password);
-        }
     }
     
     public void flush() throws IOException {
         if (getSaveEntitlements()) {
-            keyring.savePassword(getConnectionUrl(), username, password);
-            prefs.flush();
-        } else {
-            // getSaveEntitlements() should still be written to file, it may have changed.
-            String currentUrl = getConnectionUrl();
-            String currentUser = getUserName();
-            prefs.setConnectionUrl(initialUrl);
-            prefs.setUserName(initialUsername);
-            prefs.flush();
-            prefs.setConnectionUrl(currentUrl);
-            prefs.setUserName(currentUser);
-            
-        }
-        keyring.savePassword(getConnectionUrl(), username, password);
+            keyring.savePassword(getConnectionUrl(), getUserName(), password);
+        } 
+        prefs.flush(); // preferences are always written back on flush()
     }
 
     public ClientPreferences getPreferences() {
