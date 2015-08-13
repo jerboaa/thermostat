@@ -44,14 +44,14 @@ public class GcParamTest {
 
     private static final String FLAG = "-XXflag";
     private static final String DESCRIPTION = "A short description of -XXflag";
-    private static final JavaVersion JAVA_VERSION = new JavaVersion(new JavaVersion.VersionPoints(1, 8, 0, 45));
+    private static final JavaVersionRange JAVA_VERSION = new JavaVersionRange(new JavaVersionRange.VersionPoints(1, 8, 0, 45));
 
     @Test
     public void testGetters() {
         GcParam param = new GcParam(FLAG, DESCRIPTION, JAVA_VERSION);
         assertTrue(FLAG, param.getFlag().equals(FLAG));
         assertTrue(DESCRIPTION, param.getDescription().equals(DESCRIPTION));
-        assertTrue(JAVA_VERSION.toString(), param.getJavaVersion().equals(JAVA_VERSION));
+        assertTrue(JAVA_VERSION.toString(), param.getJavaVersionRange().equals(JAVA_VERSION));
     }
 
     @Test(expected = NullPointerException.class)

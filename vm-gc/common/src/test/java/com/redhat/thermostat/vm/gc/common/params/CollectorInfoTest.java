@@ -45,7 +45,7 @@ import static org.junit.Assert.assertTrue;
 
 public class CollectorInfoTest {
 
-    private static final JavaVersion JAVA_VERSION = new JavaVersion(new JavaVersion.VersionPoints(1, 8, 0, 45));
+    private static final JavaVersionRange JAVA_VERSION = new JavaVersionRange(new JavaVersionRange.VersionPoints(1, 8, 0, 45));
     private static final String COMMON_NAME = "COMMON_NAME";
     private static final Set<String> COLLECTOR_DISTINCT_NAMES = new HashSet<String>() {{
         add("COLLECTOR1");
@@ -56,7 +56,7 @@ public class CollectorInfoTest {
     @Test
     public void testGetters() {
         CollectorInfo collectorInfo = new CollectorInfo(JAVA_VERSION, COMMON_NAME, COLLECTOR_DISTINCT_NAMES, REFERENCE_URL);
-        assertTrue(JAVA_VERSION.toString(), JAVA_VERSION.equals(collectorInfo.getJavaVersion()));
+        assertTrue(JAVA_VERSION.toString(), JAVA_VERSION.equals(collectorInfo.getJavaVersionRange()));
         assertTrue(COMMON_NAME, COMMON_NAME.equals(collectorInfo.getCommonName()));
         assertTrue(COLLECTOR_DISTINCT_NAMES.toString(), COLLECTOR_DISTINCT_NAMES.equals(collectorInfo.getCollectorDistinctNames()));
         assertTrue(REFERENCE_URL, REFERENCE_URL.equals(collectorInfo.getReferenceUrl()));

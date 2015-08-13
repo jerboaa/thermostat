@@ -98,7 +98,7 @@ import com.redhat.thermostat.vm.gc.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
 import com.redhat.thermostat.vm.gc.common.params.GcParam;
 import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
+import com.redhat.thermostat.vm.gc.common.params.JavaVersionRange;
 
 public class VmGcPanel extends VmGcView implements SwingComponent {
 
@@ -123,7 +123,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     private JLabel commonNameLabel;
     private JButton gcAlgoInfoButton;
     private CollectorCommonName collectorCommonName;
-    private JavaVersion javaVersion;
+    private JavaVersionRange javaVersionRange;
 
     private GcParamsMapper gcParamsMapper = GcParamsMapper.getInstance();
 
@@ -154,13 +154,13 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
                     showCollectorInfoErrorDialog(LocaleResources.VM_GC_UNKNOWN_COLLECTOR);
                     return;
                 }
-                if (javaVersion == null) {
+                if (javaVersionRange == null) {
                     showCollectorInfoErrorDialog(LocaleResources.VM_GC_UNKNOWN_JAVA_VERSION);
                     return;
                 }
 
                 List<GcParam> params;
-                params = gcParamsMapper.getParams(collectorCommonName, javaVersion);
+                params = gcParamsMapper.getParams(collectorCommonName, javaVersionRange);
                 StringBuilder paramsMessage = new StringBuilder();
                 for (GcParam param : params) {
                     paramsMessage.append(System.lineSeparator()).append(param.getFlag());
@@ -421,21 +421,21 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         // only set values if we are able to show more info about the in-use
         // GC-algo.
         this.collectorCommonName = commonName;
-        JavaVersion javaVersion;
+        JavaVersionRange javaVersionRange;
         try {
-            javaVersion = JavaVersion.fromString(rawJavaVersion);
-        } catch (JavaVersion.InvalidJavaVersionFormatException | IllegalArgumentException e) {
+            javaVersionRange = JavaVersionRange.fromString(rawJavaVersion);
+        } catch (JavaVersionRange.InvalidJavaVersionFormatException | IllegalArgumentException e) {
             logger.warning(translator.localize(LocaleResources.VM_GC_ERROR_CANNOT_PARSE_JAVA_VERSION, rawJavaVersion).getContents());
-            javaVersion = null;
+            javaVersionRange = null;
         }
-        this.javaVersion = javaVersion;
+        this.javaVersionRange = javaVersionRange;
         if (commonName != CollectorCommonName.UNKNOWN_COLLECTOR) {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     gcAlgoLabelDescr.setText(GC_ALGO_LABEL_NAME);
                     commonNameLabel.setText(collectorCommonName.getHumanReadableString());
-                    gcAlgoInfoButton.setVisible(VmGcPanel.this.javaVersion != null);
+                    gcAlgoInfoButton.setVisible(VmGcPanel.this.javaVersionRange != null);
                 }
             });
         }

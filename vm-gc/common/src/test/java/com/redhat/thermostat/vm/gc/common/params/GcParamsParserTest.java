@@ -57,7 +57,7 @@ public class GcParamsParserTest {
             "        xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 gc-params-mapping.xsd\">\n" +
             "    <collector>\n" +
             "      <collector-info>\n" +
-            "        <version>1.0.0_0:1.8.0_45</version>\n" +
+            "        <version>[1.0.0.0,1.8.0.45]</version>\n" +
             "        <common-name>Garbage-First Collector (G1)</common-name>\n" +
             "        <collector-distinct-names>\n" +
             "          <collector-name>G1 incremental collections</collector-name>\n" +
@@ -68,7 +68,7 @@ public class GcParamsParserTest {
             "        <gc-param>\n" +
             "          <flag>G1ConcMarkStepDurationMillis</flag>\n" +
             "          <description>Description Text</description>\n" +
-            "          <version>1.5.0_31:1.8.0_45</version>" +
+            "          <version>[1.5.0.31,1.8.0.45]</version>" +
             "        </gc-param>\n" +
             "        <gc-param>\n" +
             "          <flag>G1ConcRSHotCardLimit</flag>\n" +
@@ -171,7 +171,7 @@ public class GcParamsParserTest {
             "        xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 gc-params-mapping.xsd\">\n" +
             "    <collector>\n" +
             "      <collector-info>\n" +
-            "        <version>1.0.0_0:1.8.0_45</version>\n" +
+            "        <version>[1.0.0.0,1.8.0.45]</version>\n" +
             "        <common-name>Garbage-First Collector (G1)</common-name>\n" +
             "        <collector-distinct-names>\n" +
             "          <collector-name>G1 incremental collections</collector-name>\n" +
@@ -182,13 +182,13 @@ public class GcParamsParserTest {
             "        <gc-param>\n" +
             "          <flag>G1ConcMarkStepDurationMillis</flag>\n" +
             "          <description>Description Text</description>\n" +
-            "          <version>1.5.0_31:1.8.0_45</version>" +
+            "          <version>[1.5.0.31,1.8.0.45]</version>" +
             "        </gc-param>\n" +
             "      </gc-params>\n" +
             "    </collector>\n" +
             "    <collector>\n" +
             "      <collector-info>\n" +
-            "        <version>1.5.0_31:1.8.0_45</version>\n" +
+            "        <version>[1.5.0.31,1.8.0.45]</version>\n" +
             "        <common-name>Parallel</common-name>\n" +
             "        <collector-distinct-names>\n" +
             "          <collector-name>PSParallelCompact</collector-name>\n" +
@@ -200,13 +200,13 @@ public class GcParamsParserTest {
             "        <gc-param>\n" +
             "          <flag>UseParallelGC</flag>\n" +
             "          <description>Parallel Description Text</description>\n" +
-            "          <version>1.7.0_41:1.8.0_45</version>" +
+            "          <version>[1.7.0.41,1.8.0.45]</version>" +
             "        </gc-param>\n" +
             "      </gc-params>\n" +
             "    </collector>\n" +
             "</gc-params-mapping>";
 
-    private static final JavaVersion G1_VERSION = new JavaVersion(new JavaVersion.VersionPoints(1, 0, 0, 0), new JavaVersion.VersionPoints(1, 8, 0, 45));
+    private static final JavaVersionRange G1_VERSION = new JavaVersionRange(new JavaVersionRange.VersionPoints(1, 0, 0, 0), true, new JavaVersionRange.VersionPoints(1, 8, 0, 45), true);
     private static final String G1_COMMON_NAME = "Garbage-First Collector (G1)";
     private static final Set<String> G1_DISTINCT_NAMES = Collections.singleton("G1 incremental collections");
     private static final String G1_REFERENCE_URL = "http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors";
@@ -215,7 +215,7 @@ public class GcParamsParserTest {
 
     private static final String MARK_STEP_DURATION_MILLIS_FLAG = "G1ConcMarkStepDurationMillis";
     private static final String MARK_STEP_DURATION_MILLIS_DESCRIPTION = "Description Text";
-    private static final JavaVersion MARK_STEP_DURATION_MILLIS_VERSION = new JavaVersion(new JavaVersion.VersionPoints(1, 5, 0, 31), new JavaVersion.VersionPoints(1, 8, 0, 45));
+    private static final JavaVersionRange MARK_STEP_DURATION_MILLIS_VERSION = new JavaVersionRange(new JavaVersionRange.VersionPoints(1, 5, 0, 31), true, new JavaVersionRange.VersionPoints(1, 8, 0, 45), true);
     private static final Set<String> PARALLEL_DISTINCT_NAMES = new HashSet<>(Arrays.asList("PSParallelCompact", "PSScavenge"));
 
     @Test(expected = GcParamsParser.GcParamsParseException.class)
@@ -249,7 +249,7 @@ public class GcParamsParserTest {
     public void testMinimalConfigurationParsesCorrectCollectorVersion() throws UnsupportedEncodingException {
         List<Collector> result = getSingleCollectorResult();
         assertNonEmptyResult(result);
-        assertEquals(result.get(0).getCollectorInfo().getJavaVersion(), G1_VERSION);
+        assertEquals(result.get(0).getCollectorInfo().getJavaVersionRange(), G1_VERSION);
     }
 
     @Test
@@ -272,9 +272,9 @@ public class GcParamsParserTest {
         assertNonEmptyResult(result);
         for (GcParam param : result.get(0).getGcParams()) {
             if (param.getFlag().equals(MARK_STEP_DURATION_MILLIS_FLAG)) {
-                assertEquals(param.getJavaVersion(), MARK_STEP_DURATION_MILLIS_VERSION);
+                assertEquals(param.getJavaVersionRange(), MARK_STEP_DURATION_MILLIS_VERSION);
             } else {
-                assertEquals(param.getJavaVersion(), G1_VERSION);
+                assertEquals(param.getJavaVersionRange(), G1_VERSION);
             }
         }
     }

@@ -50,7 +50,7 @@ import java.util.Set;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper;
 import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;
 import com.redhat.thermostat.vm.gc.common.params.GcParam;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
+import com.redhat.thermostat.vm.gc.common.params.JavaVersionRange;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
@@ -165,7 +165,7 @@ public class ShowGcNameCommandTest {
         assertThat(output, containsString(expectedCollectorName));
         assertThat(output, containsString(mainClass));
         assertThat(output, containsString(VM_ID));
-        for (GcParam param : GcParamsMapper.getInstance().getParams(new GcCommonNameMapper().mapToCommonName(collectorSet), JavaVersion.fromString(javaVersion))) {
+        for (GcParam param : GcParamsMapper.getInstance().getParams(new GcCommonNameMapper().mapToCommonName(collectorSet), JavaVersionRange.fromString(javaVersion))) {
             assertThat(output, containsString(param.getFlag()));
         }
         assertThat(output, not(containsString("Unable to show GC tunables")));

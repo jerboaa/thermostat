@@ -44,20 +44,20 @@ import static java.util.Objects.requireNonNull;
 
 public class CollectorInfo {
 
-    private final JavaVersion javaVersion;
+    private final JavaVersionRange javaVersionRange;
     private final String commonName;
     private final Set<String> collectorDistinctNames;
     private final String referenceUrl;
 
-    public CollectorInfo(JavaVersion javaVersion, String commonName, Set<String> collectorDistinctNames, String referenceUrl) {
-        this.javaVersion = requireNonNull(javaVersion);
+    public CollectorInfo(JavaVersionRange javaVersionRange, String commonName, Set<String> collectorDistinctNames, String referenceUrl) {
+        this.javaVersionRange = requireNonNull(javaVersionRange);
         this.commonName = requireNonNull(commonName);
         this.collectorDistinctNames = new HashSet<>(requireNonNull(collectorDistinctNames));
         this.referenceUrl = requireNonNull(referenceUrl);
     }
 
-    public JavaVersion getJavaVersion() {
-        return javaVersion;
+    public JavaVersionRange getJavaVersionRange() {
+        return javaVersionRange;
     }
 
     public String getCommonName() {
@@ -79,7 +79,7 @@ public class CollectorInfo {
 
         CollectorInfo that = (CollectorInfo) o;
 
-        return Objects.equals(javaVersion, that.javaVersion)
+        return Objects.equals(javaVersionRange, that.javaVersionRange)
                 && Objects.equals(commonName, that.commonName)
                 && Objects.equals(collectorDistinctNames, that.collectorDistinctNames)
                 && Objects.equals(referenceUrl, that.referenceUrl);
@@ -87,6 +87,6 @@ public class CollectorInfo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(javaVersion, commonName, collectorDistinctNames, referenceUrl);
+        return Objects.hash(javaVersionRange, commonName, collectorDistinctNames, referenceUrl);
     }
 }

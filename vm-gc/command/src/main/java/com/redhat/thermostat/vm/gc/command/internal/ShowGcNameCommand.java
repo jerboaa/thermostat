@@ -60,7 +60,7 @@ import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName
 import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.params.GcParam;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
+import com.redhat.thermostat.vm.gc.common.params.JavaVersionRange;
 
 public class ShowGcNameCommand extends AbstractCommand {
 
@@ -149,9 +149,9 @@ public class ShowGcNameCommand extends AbstractCommand {
         StringBuilder sb = new StringBuilder();
         List<GcParam> params;
         try {
-            JavaVersion version = JavaVersion.fromString(javaVersion);
+            JavaVersionRange version = JavaVersionRange.fromString(javaVersion);
             params = paramsMapper.getParams(commonName, version);
-        } catch (JavaVersion.InvalidJavaVersionFormatException | IllegalArgumentException e) {
+        } catch (JavaVersionRange.InvalidJavaVersionFormatException | IllegalArgumentException e) {
             logger.warning(translator.localize(LocaleResources.GC_PARAMS_FAILURE_MESSAGE, javaVersion).getContents());
             params = Collections.emptyList();
         }

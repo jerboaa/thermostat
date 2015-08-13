@@ -50,7 +50,7 @@ import static org.junit.Assert.assertTrue;
 
 public class GcParamsMapperTest {
 
-    public static final JavaVersion JAVA_VERSION = new JavaVersion(new JavaVersion.VersionPoints(1, 8, 0, 45));
+    public static final JavaVersionRange JAVA_VERSION = new JavaVersionRange(new JavaVersionRange.VersionPoints(1, 8, 0, 45));
     private final GcParamsMapper paramsMapper = GcParamsMapper.getInstance();
 
     @Test
@@ -93,9 +93,9 @@ public class GcParamsMapperTest {
     public void testTunableVersionsContainedByCollectorVersions() {
         List<Collector> collectors = paramsMapper.getCollectors();
         for (Collector collector : collectors) {
-            JavaVersion collectorVersion = collector.getCollectorInfo().getJavaVersion();
+            JavaVersionRange collectorVersion = collector.getCollectorInfo().getJavaVersionRange();
             for (GcParam param : collector.getGcParams()) {
-                JavaVersion paramVersion = param.getJavaVersion();
+                JavaVersionRange paramVersion = param.getJavaVersionRange();
                 assertTrue(param.getFlag() + " lower", collectorVersion.contains(paramVersion.getLowerBound()));
                 assertTrue(param.getFlag() + " upper", collectorVersion.contains(paramVersion.getUpperBound()));
             }

@@ -44,12 +44,12 @@ public class GcParam {
 
     private final String flag;
     private final String description;
-    private final JavaVersion javaVersion;
+    private final JavaVersionRange javaVersionRange;
 
-    public GcParam(String flag, String description, JavaVersion javaVersion) {
+    public GcParam(String flag, String description, JavaVersionRange javaVersionRange) {
         this.flag = requireNonNull(flag);
         this.description = requireNonNull(description);
-        this.javaVersion = requireNonNull(javaVersion);
+        this.javaVersionRange = requireNonNull(javaVersionRange);
     }
 
     public String getFlag() {
@@ -60,8 +60,8 @@ public class GcParam {
         return description;
     }
 
-    public JavaVersion getJavaVersion() {
-        return javaVersion;
+    public JavaVersionRange getJavaVersionRange() {
+        return javaVersionRange;
     }
 
     @Override
@@ -77,11 +77,11 @@ public class GcParam {
 
         return Objects.equals(flag, gcParam.flag)
                 && Objects.equals(description, gcParam.description)
-                && Objects.equals(javaVersion, gcParam.javaVersion);
+                && Objects.equals(javaVersionRange, gcParam.javaVersionRange);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(flag, description, javaVersion);
+        return Objects.hash(flag, description, javaVersionRange);
     }
 }

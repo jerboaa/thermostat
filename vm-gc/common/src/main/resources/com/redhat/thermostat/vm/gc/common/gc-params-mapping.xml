@@ -41,7 +41,7 @@
         xsi:schemaLocation="http://icedtea.classpath.org/thermostat/gc-params-mapping/v1.0 gc-params-mapping.xsd">
     <collector>
       <collector-info>
-        <version>1.0.0_0:1.8.0_45</version>
+        <version>[1.0.0.0,]</version>
         <common-name>Serial Collector</common-name>
         <collector-distinct-names>
           <collector-name>MSC</collector-name>
@@ -55,7 +55,7 @@
     </collector>
     <collector>
       <collector-info>
-        <version>1.0.0_0:1.8.0_45</version>
+        <version>[1.0.0.0,]</version>
         <common-name>Garbage-First Collector (G1)</common-name>
         <collector-distinct-names>
           <collector-name>G1 incremental collections</collector-name>
@@ -163,7 +163,7 @@
     </collector>
     <collector>
       <collector-info>
-        <version>1.0.0_0:1.8.0_45</version>
+        <version>[1.0.0.0,]</version>
         <common-name>Parallel Collector</common-name>
         <collector-distinct-names>
           <collector-name>PSParallelCompact</collector-name>
@@ -177,7 +177,7 @@
     </collector>
     <collector>
       <collector-info>
-        <version>1.0.0_0:1.8.0_45</version>
+        <version>[1.0.0.0,]</version>
         <common-name>Concurrent Collector (Concurrent Mark and Sweep)</common-name>
         <collector-distinct-names>
           <collector-name>CMS</collector-name>
@@ -191,7 +191,7 @@
     </collector>
     <collector>
       <collector-info>
-        <version>1.0.0_0:1.8.0_45</version>
+        <version>[1.0.0.0,]</version>
         <common-name>Mark Sweep Compact Collector</common-name>
         <collector-distinct-names>
           <collector-name>MSC</collector-name>

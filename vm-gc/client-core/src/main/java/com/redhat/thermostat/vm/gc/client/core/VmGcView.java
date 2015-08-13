@@ -46,7 +46,6 @@ import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
 
 public abstract class VmGcView extends BasicView implements UIComponent {
 

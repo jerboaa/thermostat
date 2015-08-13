@@ -120,7 +120,7 @@ public class GcParamsParser {
                 if (node.getNodeName().equals(COLLECTOR_INFO_NODE_NAME)) {
                     collectorInfo = parseCollectorInfo(node);
                 } else if (node.getNodeName().equals(GC_PARAMS_NODE_NAME)) {
-                    gcParams = parseGcParams(node, collectorInfo.getJavaVersion());
+                    gcParams = parseGcParams(node, collectorInfo.getJavaVersionRange());
                 }
             }
         }
@@ -128,7 +128,7 @@ public class GcParamsParser {
     }
 
     static CollectorInfo parseCollectorInfo(Node collectorInfoNode) {
-        JavaVersion javaVersion = null;
+        JavaVersionRange javaVersionRange = null;
         String commonName = "";
         Set<String> collectorDistinctNames = Collections.emptySet();
         String referenceUrl = "";
@@ -137,7 +137,7 @@ public class GcParamsParser {
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);
                 if (node.getNodeName().equals(VERSION_NODE_NAME)) {
-                    javaVersion = parseVersion(node);
+                    javaVersionRange = parseVersion(node);
                 } else if (node.getNodeName().equals(COMMON_NAME_NODE_NAME)) {
                     commonName = parseCommonName(node);
                 } else if (node.getNodeName().equals(COLLECTOR_DISTINCT_NAMES_NODE_NAME)) {
@@ -147,19 +147,19 @@ public class GcParamsParser {
                 }
             }
         }
-        return new CollectorInfo(javaVersion, commonName, collectorDistinctNames, referenceUrl);
+        return new CollectorInfo(javaVersionRange, commonName, collectorDistinctNames, referenceUrl);
     }
 
-    static JavaVersion parseVersion(Node versionNode) {
-        JavaVersion javaVersion = null;
+    static JavaVersionRange parseVersion(Node versionNode) {
+        JavaVersionRange javaVersionRange = null;
         if (versionNode.getNodeName().equals(VERSION_NODE_NAME)) {
             try {
-                javaVersion = JavaVersion.fromString(versionNode.getTextContent());
-            } catch (JavaVersion.InvalidJavaVersionFormatException e) {
+                javaVersionRange = JavaVersionRange.fromString(versionNode.getTextContent());
+            } catch (JavaVersionRange.InvalidJavaVersionFormatException e) {
                 throw new GcParamsParseException(e);
             }
         }
-        return javaVersion;
+        return javaVersionRange;
     }
 
     static String parseCommonName(Node commonNameNode) {
@@ -200,24 +200,24 @@ public class GcParamsParser {
         return referenceUrl;
     }
 
-    static Set<GcParam> parseGcParams(Node gcParamsNode, JavaVersion inheritedJavaVersion) {
+    static Set<GcParam> parseGcParams(Node gcParamsNode, JavaVersionRange inheritedJavaVersionRange) {
         Set<GcParam> gcParams = new HashSet<>();
         if (gcParamsNode.getNodeName().equals(GC_PARAMS_NODE_NAME)) {
             NodeList nodes = gcParamsNode.getChildNodes();
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);
                 if (node.getNodeName().equals(GC_PARAM_NODE_NAME)) {
-                    gcParams.add(parseGcParam(node, inheritedJavaVersion));
+                    gcParams.add(parseGcParam(node, inheritedJavaVersionRange));
                 }
             }
         }
         return gcParams;
     }
 
-    static GcParam parseGcParam(Node gcParamNode, JavaVersion inheritedJavaVersion) {
+    static GcParam parseGcParam(Node gcParamNode, JavaVersionRange inheritedJavaVersionRange) {
         String flag = "";
         String description = "";
-        JavaVersion javaVersion = inheritedJavaVersion;
+        JavaVersionRange javaVersionRange = inheritedJavaVersionRange;
         if (gcParamNode.getNodeName().equals(GC_PARAM_NODE_NAME)) {
             NodeList nodes = gcParamNode.getChildNodes();
             for (int i = 0; i < nodes.getLength(); i++) {
@@ -227,11 +227,11 @@ public class GcParamsParser {
                 } else if (node.getNodeName().equals(DESCRIPTION_NODE_NAME)) {
                     description = parseDescription(node);
                 } else if (node.getNodeName().equals(VERSION_NODE_NAME)) {
-                    javaVersion = parseVersion(node);
+                    javaVersionRange = parseVersion(node);
                 }
             }
         }
-        return new GcParam(flag, description, javaVersion);
+        return new GcParam(flag, description, javaVersionRange);
     }
 
     static String parseFlag(Node flagNode) {

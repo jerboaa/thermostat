@@ -111,19 +111,19 @@ public enum GcParamsMapper {
         return new ArrayList<>(paramsMap.values());
     }
 
-    public List<GcParam> getParams(GcCommonNameMapper.CollectorCommonName collectorCommonName, JavaVersion javaVersion) {
+    public List<GcParam> getParams(GcCommonNameMapper.CollectorCommonName collectorCommonName, JavaVersionRange javaVersionRange) {
         Objects.requireNonNull(collectorCommonName);
-        Objects.requireNonNull(javaVersion);
+        Objects.requireNonNull(javaVersionRange);
         if (!paramsMap.containsKey(collectorCommonName)) {
             return Collections.emptyList();
         }
         Collector collector = paramsMap.get(collectorCommonName);
-        if (collector == null || !collector.getCollectorInfo().getJavaVersion().contains(javaVersion)) {
+        if (collector == null || !collector.getCollectorInfo().getJavaVersionRange().contains(javaVersionRange)) {
             return Collections.emptyList();
         }
         List<GcParam> params = new ArrayList<>();
         for (GcParam param : collector.getGcParams()) {
-            if (param.getJavaVersion().contains(javaVersion)) {
+            if (param.getJavaVersionRange().contains(javaVersionRange)) {
                 params.add(param);
             }
         }

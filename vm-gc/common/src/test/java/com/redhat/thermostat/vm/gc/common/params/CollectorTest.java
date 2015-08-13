@@ -48,9 +48,9 @@ public class CollectorTest {
 
     private static final String COMMON_NAME = "COMMON_NAME";
     private static final Set<String> DISTINCT_COLLECTOR_NAMES = new HashSet<>(Arrays.asList("COLLECTOR1", "COLLECTOR2"));
-    private static final JavaVersion JAVA_VERSION = new JavaVersion(new JavaVersion.VersionPoints(1, 8, 0, 45));
+    private static final JavaVersionRange JAVA_VERSION = new JavaVersionRange(new JavaVersionRange.VersionPoints(1, 8, 0, 45));
     private static final Set<GcParam> GC_PARAMS = new HashSet<GcParam>() {{
-        add(new GcParam("-XXflag", "Description", new JavaVersion(new JavaVersion.VersionPoints(1, 9, 0, 10))));
+        add(new GcParam("-XXflag", "Description", new JavaVersionRange(new JavaVersionRange.VersionPoints(1, 9, 0, 10))));
     }};
     private static final String REFERENCE_URL = "http://example.com";
     private static final CollectorInfo COLLECTOR_INFO = new CollectorInfo(JAVA_VERSION, COMMON_NAME, DISTINCT_COLLECTOR_NAMES, REFERENCE_URL);

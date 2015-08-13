@@ -56,7 +56,6 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersion;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
