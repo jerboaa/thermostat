@@ -36,10 +36,45 @@
 
 package com.redhat.thermostat.client.core.progress;
 
+import com.redhat.thermostat.annotations.Service;
+
 /**
+ * Provides graphical progress notification for long-running tasks.
+ * <p>
+ * Use this to notify the user that some long-running task is still running
+ * without either blocking the UI or forcing the user to wait in the same part
+ * of the application.
+ * <p>
+ * Obtain an instance of this via regular means (see {@link Service}) and then
+ * create and {@link #register(ProgressHandle)} an appropriate
+ * {@link ProgressHandle}.
+ * <p>
+ * An example of a simple progress notification that provides an indeterminate
+ * progress while the task is executing:
+ * <pre>
+ * <code>
+ * ProgressNotifier notifier = ... // get an instance
+ * ProgressHandle handle = new ProgressHandle(new LocalizedString("test"));
+ * handle.setIndeterminate(true);
+ * handle.runTask(new Runnable() {
+ *   public void run {
+ *     // actual code to execute
+ *   }
+ * });
+ * </code>
+ * </pre>
  */
+@Service
 public interface ProgressNotifier {
+
+    /**
+     * Register a handle that is used to communicate progress of tasks
+     */
     void register(ProgressHandle handle);
+
+    // FIXME there's no reason to export this method
+    // it's only ever used by implementations.
     boolean hasTasks();
+
 }
 
