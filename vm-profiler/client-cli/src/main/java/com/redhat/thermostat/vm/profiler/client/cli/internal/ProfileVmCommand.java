@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -76,11 +77,13 @@ public class ProfileVmCommand extends AbstractCommand {
     private static final String STATUS_ARGUMENT = "status";
     private static final String SHOW_ARGUMENT = "show";
 
+    private final DependencyServices myServices = new DependencyServices();
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
-        AgentInfoDAO agentInfoDAO = getService(AgentInfoDAO.class);
-        VmInfoDAO vmInfoDAO = getService(VmInfoDAO.class);
+        AgentInfoDAO agentInfoDAO = myServices.getService(AgentInfoDAO.class);
+        VmInfoDAO vmInfoDAO = myServices.getService(VmInfoDAO.class);
 
         String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
         if (vmIdArg == null)
@@ -93,7 +96,7 @@ public class ProfileVmCommand extends AbstractCommand {
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
 
-        RequestQueue requestQueue = getService(RequestQueue.class);
+        RequestQueue requestQueue = myServices.getService(RequestQueue.class);
         requireNonNull(requestQueue, translator.localize(LocaleResources.QUEUE_SERVICE_UNAVAILABLE));
 
         AgentInformation agentInfo = agentInfoDAO.getAgentInformation(agentId);
@@ -184,7 +187,7 @@ public class ProfileVmCommand extends AbstractCommand {
     }
 
     private void showProfilingStatus(Console console, AgentId agentId, VmId vmId) {
-        ProfileDAO dao = getService(ProfileDAO.class);
+        ProfileDAO dao = myServices.getService(ProfileDAO.class);
         ProfileStatusChange latest = dao.getLatestStatus(agentId, vmId);
         boolean profiling = false;
         if (latest != null) {
@@ -200,7 +203,7 @@ public class ProfileVmCommand extends AbstractCommand {
     }
 
     private void showProfilingResults(Console console, AgentId agentId, VmId vmId) {
-        ProfileDAO dao = getService(ProfileDAO.class);
+        ProfileDAO dao = myServices.getService(ProfileDAO.class);
         InputStream data = dao.loadLatestProfileData(agentId, vmId);
         if (data == null) {
             console.getError().println(translator.localize(LocaleResources.PROFILING_DATA_NOT_AVAILABLE).getContents());
@@ -234,34 +237,34 @@ public class ProfileVmCommand extends AbstractCommand {
     }
 
     void setAgentInfoDAO(AgentInfoDAO dao) {
-        addService(AgentInfoDAO.class, dao);
+        myServices.addService(AgentInfoDAO.class, dao);
     }
 
     void unsetAgentInfoDAO() {
-        removeService(AgentInfoDAO.class);
+        myServices.removeService(AgentInfoDAO.class);
     }
 
     void setVmInfoDAO(VmInfoDAO dao) {
-        addService(VmInfoDAO.class, dao);
+        myServices.addService(VmInfoDAO.class, dao);
     }
 
     void unsetVmInfoDAO() {
-        removeService(VmInfoDAO.class);
+        myServices.removeService(VmInfoDAO.class);
     }
 
     void setRequestQueue(RequestQueue queue) {
-        addService(RequestQueue.class, queue);
+        myServices.addService(RequestQueue.class, queue);
     }
 
     void unsetRequestQueue() {
-        removeService(RequestQueue.class);
+        myServices.removeService(RequestQueue.class);
     }
 
     void setProfileDAO(ProfileDAO dao) {
-        addService(ProfileDAO.class, dao);
+        myServices.addService(ProfileDAO.class, dao);
     }
 
     void unsetProfileDAO() {
-        removeService(ProfileDAO.class);
+        myServices.removeService(ProfileDAO.class);
     }
 }

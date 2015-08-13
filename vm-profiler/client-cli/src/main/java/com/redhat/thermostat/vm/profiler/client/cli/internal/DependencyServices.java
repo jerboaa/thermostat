@@ -43,9 +43,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractCommand extends com.redhat.thermostat.common.cli.AbstractCommand {
-
-    // TODO these changes should probably be promoted to the AbstractCommand public API
+/**
+ * Contains dependencies for a command.
+ *
+ * Provides ways to add ({@link #addService(Class, Object)}), remove (
+ * {@link #removeService(Class)}) and fetch ({@link #getService(Class)})
+ * services. Fetching has timeout support.
+ */
+public class DependencyServices {
 
     private Map<Class<?>, BlockingQueue<?>> serviceHolder = new HashMap<>();
 
@@ -56,25 +61,25 @@ public abstract class AbstractCommand extends com.redhat.thermostat.common.cli.A
         return (BlockingQueue<T>) serviceHolder.get(serviceClass);
     }
 
-    protected <T> void addService(Class<T> serviceClass, T item) {
+    /** @throws IllegalArgumentException if service is already added */
+    public <T> void addService(Class<T> serviceClass, T item) {
         Objects.requireNonNull(item);
         BlockingQueue<T> holder = getHolder(serviceClass);
-        try {
-            holder.put(item);
-        } catch (InterruptedException e) {
-            throw new AssertionError("Should not happen");
+        boolean added = holder.offer(item);
+        if (!added) {
+            throw new IllegalArgumentException("service is already being tracked");
         }
     }
 
-    protected <T> void removeService(Class<T> serviceClass) {
+    public <T> void removeService(Class<T> serviceClass) {
         BlockingQueue<T> holder = getHolder(serviceClass);
         if (holder.peek() != null) {
             holder.remove();
         }
     }
 
-    /** @return the service, or <code>null</code> */
-    protected <T> T getService(Class<T> serviceClass) {
+    /** @return the service, or {@code null} */
+    public <T> T getService(Class<T> serviceClass) {
         BlockingQueue<T> holder = getHolder(serviceClass);
         try {
             // a crappy version of peek()-with-timeout

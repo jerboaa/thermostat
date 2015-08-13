@@ -41,37 +41,36 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.CommandException;
-
-public class AbstractCommandTest {
-
-    static class TestCommand extends AbstractCommand {
-        @Override
-        public void run(CommandContext ctx) throws CommandException { /* do nothing */ }
-    }
+public class DependencyServicesTest {
 
     @Test
     public void uninjectedServiceIsNotAvailable() throws Exception {
-        AbstractCommand command = new TestCommand();
+        DependencyServices services = new DependencyServices();
 
-        assertNull(command.getService(Object.class));
+        assertNull(services.getService(Object.class));
     }
 
     @Test
     public void injectedServiceIsAvailable() throws Exception {
-        AbstractCommand command = new TestCommand();
-        command.addService(Object.class, command);
+        DependencyServices services = new DependencyServices();
+        services.addService(Object.class, services);
 
-        assertEquals(command, command.getService(Object.class));
+        assertEquals(services, services.getService(Object.class));
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void injectingSameServiceTwiceIsAnError() {
+        DependencyServices services = new DependencyServices();
+        services.addService(Object.class, services);
+        services.addService(Object.class, services);
     }
 
     @Test
     public void injectedAndRemovedServiceIsNotAvailable() {
-        AbstractCommand command = new TestCommand();
-        command.addService(Object.class, command);
+        DependencyServices services = new DependencyServices();
+        services.addService(Object.class, services);
 
-        command.removeService(Object.class);
-        assertNull(command.getService(Object.class));
+        services.removeService(Object.class);
+        assertNull(services.getService(Object.class));
     }
 }
