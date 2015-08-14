@@ -195,19 +195,18 @@ public class ThermostatSetupImpl implements ThermostatSetup {
     }
 
     private void writeStorageCredentialsFile(String username, char[] password) throws MongodbUserSetupException {
-        File credentialsFile = finder.getConfiguration(WEB_AUTH_FILE);
-        Properties credentialProps = new Properties();
-        credentialProps.setProperty("storage.username", username);
-        credentialProps.setProperty("storage.password", String.valueOf(password));
-
         try {
+            File credentialsFile = finder.getConfiguration(WEB_AUTH_FILE);
+            Properties credentialProps = new Properties();
+            credentialProps.setProperty("storage.username", username);
+            credentialProps.setProperty("storage.password", String.valueOf(password));
             credentialProps.store(new FileOutputStream(credentialsFile), "Storage Credentials");
+
+            credentialsFile.setReadable(true, false);
+            credentialsFile.setWritable(true, true);
         } catch (IOException e) {
             throw new MongodbUserSetupException("Storing credentials to file " + WEB_AUTH_FILE + " failed!", e);
         }
-
-        credentialsFile.setReadable(true, false);
-        credentialsFile.setWritable(true, true);
     }
 
     private void removeTempStampFile() {

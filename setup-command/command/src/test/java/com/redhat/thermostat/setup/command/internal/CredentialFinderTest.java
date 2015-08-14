@@ -46,25 +46,31 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class CredentialFinderTest {
-    private File systemConfigDir = mock(File.class);
-    private File userConfigDir = mock(File.class);
+    private File systemConfigDir;
+    private File userConfigDir;
 
     private File realFile1;
     private File realFile2;
+    private File fileToCreate1;
+    private File fileToCreate2;
 
     private CommonPaths paths;
 
     @Before
     public void setUp() throws IOException {
-        realFile1 = Files.createTempFile("credentialfinder-unit-test", null).toFile();
-        realFile1.createNewFile();
+        systemConfigDir = Files.createTempDirectory("system-config-dir").toFile();
+        userConfigDir = Files.createTempDirectory("user-config-dir").toFile();
+        fileToCreate1 = new File(systemConfigDir.toString(), "does-not-exist");
+        fileToCreate2 = new File(userConfigDir.toString(), "does-not-exist");
 
+        realFile1 = Files.createTempFile("credentialfinder-unit-test", null).toFile();
         realFile2 = Files.createTempFile("credentialfinder-unit-test", null).toFile();
-        realFile2.createNewFile();
 
         paths = mock(CommonPaths.class);
         when(paths.getSystemConfigurationDirectory()).thenReturn(systemConfigDir);
@@ -73,12 +79,14 @@ public class CredentialFinderTest {
 
     @After
     public void tearDown() {
+        systemConfigDir.delete();
+        userConfigDir.delete();
         realFile1.delete();
         realFile2.delete();
     }
 
     @Test
-    public void verifyFileFromUserHomeIsUsedIfSystemHomeIsNotUsable() throws Exception {
+    public void verifyFileFromUserHomeIsUsedIfSystemHomeIsNotUsable() throws IOException {
         CredentialFinder finder = new CredentialFinder(paths) {
             @Override
             File getConfigurationFile(File directory, String name) {
@@ -88,7 +96,7 @@ public class CredentialFinderTest {
                     return realFile1;
                 }
                 throw new AssertionError("Unknown test case");
-            };
+            }
         };
 
         File config = finder.getConfiguration("web.auth");
@@ -109,7 +117,7 @@ public class CredentialFinderTest {
                     return userFile;
                 }
                 throw new AssertionError("Unknown test case");
-            };
+            }
         };
 
         File config = finder.getConfiguration("web.auth");
@@ -127,10 +135,93 @@ public class CredentialFinderTest {
                     return new File("/does-not-exist/really-it-doesn't");
                 }
                 throw new AssertionError("Unknown test case");
-            };
+            }
         };
 
         File config = finder.getConfiguration("web.auth");
         assertEquals(realFile1, config);
+    }
+
+
+    @Test
+    public void verifyFileFromSystemHomeIsUsedIfFileDoesNotExist() throws IOException {
+        CredentialFinder finder = new CredentialFinder(paths) {
+            @Override
+            File getConfigurationFile(File directory, String name) {
+                if (directory == systemConfigDir) {
+                    return fileToCreate1;
+                } else if (directory == userConfigDir) {
+                    return fileToCreate2;
+                }
+                throw new AssertionError("Unknown test case");
+            }
+        };
+
+        File config = finder.getConfiguration("web.auth");
+        assertEquals(fileToCreate1, config);
+    }
+
+    @Test
+    public void verifyFileFromUserHomeIsUsedIfSystemHomeIsNotUsableAndFileDoesNotExist() throws IOException {
+        systemConfigDir.setReadOnly();
+
+        CredentialFinder finder = new CredentialFinder(paths) {
+            @Override
+            File getConfigurationFile(File directory, String name) {
+                if (directory == systemConfigDir) {
+                    return fileToCreate1;
+                } else if (directory == userConfigDir) {
+                    return fileToCreate2;
+                }
+                throw new AssertionError("Unknown test case");
+            }
+        };
+
+        File config = finder.getConfiguration("web.auth");
+        assertEquals(fileToCreate2, config);
+    }
+
+    @Test
+    public void verifyIsNotUsableWhenNotIsFile() throws IOException {
+        File mockFile = mock(File.class);
+        when(mockFile.exists()).thenReturn(true);
+        when(mockFile.isFile()).thenReturn(false);
+        when(mockFile.canRead()).thenReturn(true);
+        when(mockFile.canWrite()).thenReturn(true);
+        CredentialFinder finder = new CredentialFinder(paths);
+
+        assertFalse(finder.isUsable(mockFile));
+    }
+
+    @Test
+    public void verifyIsNotUsableWhenNotCanRead() throws IOException {
+        File mockFile = mock(File.class);
+        when(mockFile.exists()).thenReturn(true);
+        when(mockFile.isFile()).thenReturn(true);
+        when(mockFile.canRead()).thenReturn(false);
+        when(mockFile.canWrite()).thenReturn(true);
+        CredentialFinder finder = new CredentialFinder(paths);
+
+        assertFalse(finder.isUsable(mockFile));
+    }
+
+    @Test
+    public void verifyIsNotUsableWhenNotCanWrite() throws IOException {
+        File mockFile = mock(File.class);
+        when(mockFile.exists()).thenReturn(true);
+        when(mockFile.isFile()).thenReturn(true);
+        when(mockFile.canRead()).thenReturn(true);
+        when(mockFile.canWrite()).thenReturn(false);
+        CredentialFinder finder = new CredentialFinder(paths);
+
+        assertFalse(finder.isUsable(mockFile));
+    }
+
+    @Test
+    public void verifyIsUsableWhenFileDoesNotExistAndHasNoParent() throws IOException {
+        File fileToCreate = new File("does-not-exist");
+        CredentialFinder finder = new CredentialFinder(paths);
+
+        assertTrue(finder.isUsable(fileToCreate));
     }
 }

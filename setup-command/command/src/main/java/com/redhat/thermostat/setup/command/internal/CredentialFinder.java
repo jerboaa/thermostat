@@ -39,6 +39,7 @@ package com.redhat.thermostat.setup.command.internal;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
 import java.io.File;
+import java.io.IOException;
 
 public class CredentialFinder {
 
@@ -48,7 +49,7 @@ public class CredentialFinder {
         this.paths = paths;
     }
 
-    public File getConfiguration(String name) {
+    public File getConfiguration(String name) throws IOException {
         File systemFile = getConfigurationFile(paths.getSystemConfigurationDirectory(), name);
         if (isUsable(systemFile)) {
             return systemFile;
@@ -60,11 +61,20 @@ public class CredentialFinder {
         return null;
     }
 
+    //package-private for testing
     File getConfigurationFile(File directory, String name) {
         return new File(directory, name);
     }
 
-    private boolean isUsable(File file) {
-        return file.isFile() && file.canRead();
+    //package-private for testing
+    boolean isUsable(File file) throws IOException {
+        if (file.exists()) {
+            return file.isFile() && file.canRead() && file.canWrite();
+        } else {
+            //Check that the parent directory is not read-only,
+            //so file can be created
+            File canonicalFile = file.getCanonicalFile();
+            return canonicalFile.getParentFile().canWrite();
+        }
     }
 }
