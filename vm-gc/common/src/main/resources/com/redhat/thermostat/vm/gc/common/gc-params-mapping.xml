@@ -39,168 +39,646 @@
 <gc-params-mapping xmlns="http://icedtea.classpath.org/thermostat/gc-params-mapping/v1.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://icedtea.classpath.org/thermostat/gc-params-mapping/v1.0 gc-params-mapping.xsd">
-    <collector>
-      <collector-info>
-        <version>[1.0.0.0,]</version>
-        <common-name>Serial Collector</common-name>
-        <collector-distinct-names>
-          <collector-name>MSC</collector-name>
-          <collector-name>Copy</collector-name>
-        </collector-distinct-names>
-        <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
-      </collector-info>
-      <gc-params>
 
-      </gc-params>
-    </collector>
-    <collector>
-      <collector-info>
-        <version>[1.0.0.0,]</version>
-        <common-name>Garbage-First Collector (G1)</common-name>
-        <collector-distinct-names>
-          <collector-name>G1 incremental collections</collector-name>
-        </collector-distinct-names>
-        <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
-      </collector-info>
-      <gc-params>
-        <gc-param>
-          <flag>G1ConcMarkStepDurationMillis</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ConcRSHotCardLimit</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ConcRSLogCacheSize</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ConcRefinementGreenZone</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ConcRefinementRedZone</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ConcRefinementServiceIntervalMillis</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ConcRefinementThreads</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ConcRefinementThresholdStep</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ConcRefinementYellowZone</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ConfidencePercent</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1HeapRegionSize</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1HeapWastePercent</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1MixedGCCountTarget</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1RSetRegionEntries</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1RSetScanBlockSize</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1RSetSparseRegionEntries</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1RSetUpdatingPauseTimePercent</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1RefProcDrainInterval</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1ReservePercent</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1SATBBufferEnqueueingThresholdPercent</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1SATBBufferSize</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1UpdateBufferSize</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>G1UseAdaptiveConcRefinement</flag>
-          <description></description>
-        </gc-param>
-        <gc-param>
-          <flag>UseG1GC</flag>
-          <description></description>
-        </gc-param>
-      </gc-params>
-    </collector>
-    <collector>
-      <collector-info>
-        <version>[1.0.0.0,]</version>
-        <common-name>Parallel Collector</common-name>
-        <collector-distinct-names>
-          <collector-name>PSParallelCompact</collector-name>
-          <collector-name>PSScavenge</collector-name>
-        </collector-distinct-names>
-        <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
-      </collector-info>
-      <gc-params>
+  <!-- Reference documentation -->
+  <!-- http://www.oracle.com/technetwork/java/javase/tech/vmoptions-jsp-140102.html -->
+  <!-- http://www.oracle.com/webfolder/technetwork/tutorials/obe/java/G1GettingStarted/index.html -->
+  <!-- http://www.slideshare.net/SimoneBordet/g1-garbage-collector-details-and-tuning -->
+  <!-- http://www.oracle.com/technetwork/articles/java/g1gc-1984535.html -->
+  <!-- http://icedtea.classpath.org/hg/icedtea7-forest/hotspot/file/aea5b566bfab/src/share/vm/gc_implementation/g1/g1_globals.hpp -->
 
-      </gc-params>
-    </collector>
-    <collector>
-      <collector-info>
-        <version>[1.0.0.0,]</version>
-        <common-name>Concurrent Collector (Concurrent Mark and Sweep)</common-name>
-        <collector-distinct-names>
-          <collector-name>CMS</collector-name>
-          <collector-name>PCopy</collector-name>
-        </collector-distinct-names>
-        <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
-      </collector-info>
-      <gc-params>
+  <collector>
+    <collector-info>
+      <version>[1.4.2.0,]</version>
+      <common-name>Serial Collector</common-name>
+      <collector-distinct-names>
+        <collector-name>MSC</collector-name>
+        <collector-name>Copy</collector-name>
+      </collector-distinct-names>
+      <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
+    </collector-info>
+    <gc-params>
+      <gc-param>
+        <flag>UseSerialGC</flag>
+        <description>Use serial garbage collection</description>
+      </gc-param>
+      <gc-param>
+        <flag>ScavengeBeforeFullGC</flag>
+        <description>Do garbage collection on young generations before performing full GC cycles</description>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCOverheadLimit</flag>
+        <description>Limit the proportion of time that the VM will spend in garbage collection before an OutOfMemory
+          error is thrown
+        </description>
+        <version>[1.6.0.0,]</version>
+      </gc-param>
+      <gc-param>
+        <flag>MaxHeapFreeRatio</flag>
+        <description>The maximum percentage of heap size free after a garbage collection cycle to avoid heap
+          shrinking. The default is 70
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>MinHeapFreeRatio</flag>
+        <description>The minimum percentage of heap size free after a garbage collection cycle to avoid heap
+          expansion. The default is 40
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxNewSize</flag>
+        <description>The maximum size of the new generation, in bytes. Since 1.4, this is computed as a function of
+          NewRatio
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxPermSize</flag>
+        <description>The maximum size of the permanent generation, in bytes. Since 5.0, 64-bit VMs are scaled 30%
+          larger
+        </description>
+        <version>[1.4.2.0,1.8.0.0)</version>
+      </gc-param>
+      <gc-param>
+        <flag>NewRatio</flag>
+        <description>Ratio of old and new generation sizes. The default is 2</description>
+      </gc-param>
+      <gc-param>
+        <flag>NewSize</flag>
+        <description>The default size of the new generation, in bytes. Since 5.0, 64-bit VMs are scaled 30% larger
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>SurvivorRatio</flag>
+        <description>Ratio of eden and survivor space. The default is 8</description>
+      </gc-param>
+      <gc-param>
+        <flag>TargetSurvivorRatio</flag>
+        <description>The target percentage of survivor space in use after a scavenge</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGC</flag>
+        <description>Print messages when garbage collection takes place</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCDetails</flag>
+        <description>Print more details in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCTimeStamps</flag>
+        <description>Print timestamps in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCLogFileRotation</flag>
+        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
+          file
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>NumberOfGClogFiles</flag>
+        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>GCLogFileSize</flag>
+        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
+          than or equal to 8K. The default is 8K.
+        </description>
+      </gc-param>
+    </gc-params>
+  </collector>
 
-      </gc-params>
-    </collector>
-    <collector>
-      <collector-info>
-        <version>[1.0.0.0,]</version>
-        <common-name>Mark Sweep Compact Collector</common-name>
-        <collector-distinct-names>
-          <collector-name>MSC</collector-name>
-          <collector-name>PCopy</collector-name>
-        </collector-distinct-names>
-        <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
-      </collector-info>
-      <gc-params>
+  <collector>
+    <collector-info>
+      <version>[1.6.0.14,]</version>
+      <common-name>Garbage-First Collector (G1)</common-name>
+      <collector-distinct-names>
+        <collector-name>G1 incremental collections</collector-name>
+      </collector-distinct-names>
+      <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
+    </collector-info>
+    <gc-params>
+      <gc-param>
+        <flag>UseG1GC</flag>
+        <description>use the G1 Garbage Collector</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxGCPauseMillis</flag>
+        <description>the max GC pause time goal in milliseconds that G1 will attempt to meet. The default is 200
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>InitiatingHeapOccupancyParent</flag>
+        <description>percentage of total heap occupancy at which a GC cycle will be triggered. The default is 45
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>GCPauseIntervalMillis</flag>
+        <description>the time interval over which GC pauses totaling up to MaxGCPauseMillis may take place</description>
+      </gc-param>
+      <gc-param>
+        <flag>NewRatio</flag>
+        <description>ratio of old a new generation sizes. The default is 2</description>
+      </gc-param>
+      <gc-param>
+        <flag>SurvivorRatio</flag>
+        <description>Ratio of eden and survivor space. The default is 8</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxTenuringThreshold</flag>
+        <description>Maximum value for threshold of object tenuring. The default is 15</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxNewSize</flag>
+        <description>The maximum size of the new generation, in bytes. Since 1.4, this is computed as a function of
+          NewRatio
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxPermSize</flag>
+        <description>The maximum size of the permanent generation, in bytes. Since 5.0, 64-bit VMs are scaled 30%
+          larger
+        </description>
+        <version>[1.6.0.14,1.8.0.0)</version>
+      </gc-param>
+      <gc-param>
+        <flag>ParallelGCThreads</flag>
+        <description>The number of threads to use during the parallel phase of GC</description>
+      </gc-param>
+      <gc-param>
+        <flag>ConcGCThreads</flag>
+        <description>The number of concurrent GC threads to use</description>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCOverheadLimit</flag>
+        <description>Limit the proportion of time that the VM will spend in garbage collection before an OutOfMemory
+          error is thrown
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ScavengeBeforeFullGC</flag>
+        <description>Do garbage collection on young generations before performing full GC cycles</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxHeapFreeRatio</flag>
+        <description>The maximum percentage of heap size free after a garbage collection cycle to avoid heap
+          shrinking. The default is 70
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>MinHeapFreeRatio</flag>
+        <description>The minimum percentage of heap size free after a garbage collection cycle to avoid heap
+          expansion. The default is 40
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>NewSize</flag>
+        <description>The default size of the new generation, in bytes. Since 5.0, 64-bit VMs are scaled 30%
+          larger
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>TargetSurvivorRatio</flag>
+        <description>The target percentage of survivor space in use after a scavenge</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConcMarkStepDurationMillis</flag>
+        <description>The target duration of individual concurrent marking steps</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConcRSHotCardLimit</flag>
+        <description>The threshold that defines a "hot card"</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConcRSLogCacheSize</flag>
+        <description>Log base 2 of the size of concurrent Remembered Set "hot card" cache</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConcRefinementGreenZone</flag>
+        <description>The number of update buffers that are left in the queue by the concurrent processing threads</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConcRefinementYellowZone</flag>
+        <description>Number of enqueued update buffers that will trigger concurrent processing</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConcRefinementRedZone</flag>
+        <description>Number of enqueued update buffers that will trigger concurrent processing
+          instead of enqueueing them</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1UseAdaptiveConcRefinement</flag>
+        <description>Select green, yellow, and red zone sizes adaptively to meet the pause time requirements</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConcRefinementServiceIntervalMillis</flag>
+        <description>The last concurrent refinement thread wakes up every specified number of milliseconds to do miscellaneous work</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConcRefinementThreads</flag>
+        <description>The number of threads to use for concurrently updating GC remembered sets. If not set then the default is ParallelGCThreads + 1</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConcRefinementThresholdStep</flag>
+        <description>Each time the remembered set update queue increases by this amount, activate the next refinement thread, if available</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ConfidencePercent</flag>
+        <description>Confidence level for MMU/pause predictions</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1MarkingOverheadPercent</flag>
+        <description>Overhead of concurrent marking</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1UseConcMarkReferenceProcessing</flag>
+        <description>If true, enable reference discovery during concurrent marking and reference processing at the end
+          of remark</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1HeapRegionSize</flag>
+        <description>The size of G1 heap subdivisions. Minimum 1Mb, maximum 32Mb</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1HeapWastePercent</flag>
+        <description>The maximum threshold of heap space which is permitted to be wasted. GC cycles will not take
+          place when the reclaimable space as a percentage is below this threshold. The default is 10 percent</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1MixedGCCountTarget</flag>
+        <description>The number of "mixed" garbage collection cycles to perform after a marking cycle. The default is 8</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1MixedGCLiveThresholdPercent</flag>
+        <description>The percent of "live" objects in old generation regions under which a mixed GC will be performed.
+          The default is 85</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1HeapWastePercent</flag>
+        <description>The threshold percentage of wasted heap space. The default is 5</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1RSetRegionEntries</flag>
+        <description>The maximum number of regions</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1RSetScanBlockSize</flag>
+        <description>Size of a work unit of cards claimed by a worker thread during Remembered Set scanning</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1RSetSparseRegionEntries</flag>
+        <description>Maximum number of entries per region in a sparse table</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1RSetUpdatingPauseTimePercent</flag>
+        <description>A target percentage of time that is allowed to be spent on processing Remembered Set update buffers during the collection pause</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1RefProcDrainInterval</flag>
+        <description>The number of discovered reference objects to process before draining concurrent marking work queues</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ReservePercent</flag>
+        <description>The percentage of amount of heap space reserved to reduce promotion failure. The default is 10</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1SATBBufferEnqueueingThresholdPercent</flag>
+        <description>Before enqueueing them, each mutator thread tries to do some
+          filtering on the SATB buffers it generates. If post-filtering
+          the percentage of retained entries is over this threshold
+          the buffer will be enqueued for processing. A value of 0
+          specifies that mutator threads should not do such filtering</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1SATBBufferSize</flag>
+        <description>Number of entries in a SATB log buffer</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1UpdateBufferSize</flag>
+        <description>Size of an update buffer</description>
+      </gc-param>
+      <gc-param>
+        <flag>G1ExpandByPercentOfAvailable</flag>
+        <description>When expanding, the percentage of uncommitted space to claim</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGC</flag>
+        <description>Print messages when garbage collection takes place</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCDetails</flag>
+        <description>Print more details in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCTimeStamps</flag>
+        <description>Print timestamps in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCLogFileRotation</flag>
+        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
+          file</description>
+      </gc-param>
+      <gc-param>
+        <flag>NumberOfGClogFiles</flag>
+        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.</description>
+      </gc-param>
+      <gc-param>
+        <flag>GCLogFileSize</flag>
+        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
+          than or equal to 8K. The default is 8K.</description>
+      </gc-param>
+    </gc-params>
+  </collector>
 
-      </gc-params>
-    </collector>
+  <collector>
+    <collector-info>
+      <version>[1.4.1.0,]</version>
+      <common-name>Parallel Collector</common-name>
+      <collector-distinct-names>
+        <collector-name>PSParallelCompact</collector-name>
+        <collector-name>PSScavenge</collector-name>
+      </collector-distinct-names>
+      <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
+    </collector-info>
+    <gc-params>
+      <gc-param>
+        <flag>UseParallelGC</flag>
+        <description>Use parallel garbage collection for the young generation</description>
+      </gc-param>
+      <gc-param>
+        <flag>UseParallelOldGC</flag>
+        <description>Use parallel garbage collection for the both the young and old generation (automatically enables UseParallelGC)</description>
+        <version>[1.5.0.6,]</version>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCOverheadLimit</flag>
+        <description>Limit the proportion of time that the VM will spend in garbage collection before an OutOfMemory
+          error is thrown</description>
+        <version>[1.6.0.0,]</version>
+      </gc-param>
+      <gc-param>
+        <flag>ScavengeBeforeFullGC</flag>
+        <description>Do garbage collection on young generations before performing full GC cycles</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxHeapFreeRatio</flag>
+        <description>The maximum percentage of heap size free after a garbage collection cycle to avoid heap
+          shrinking. The default is 70</description>
+      </gc-param>
+      <gc-param>
+        <flag>MinHeapFreeRatio</flag>
+        <description>The minimum percentage of heap size free after a garbage collection cycle to avoid heap
+          expansion. The default is 40</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxNewSize</flag>
+        <description>The maximum size of the new generation, in bytes. Since 1.4, this is computed as a function of
+          NewRatio</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxPermSize</flag>
+        <description>The maximum size of the permanent generation, in bytes. Since 5.0, 64-bit VMs are scaled 30%
+          larger</description>
+        <version>[1.4.1.0,1.8.0.0)</version>
+      </gc-param>
+      <gc-param>
+        <flag>NewRatio</flag>
+        <description>ratio of old a new generation sizes. The default is 2</description>
+      </gc-param>
+      <gc-param>
+        <flag>NewSize</flag>
+        <description>The default size of the new generation, in bytes. Since 5.0, 64-bit VMs are scaled 30% larger</description>
+      </gc-param>
+      <gc-param>
+        <flag>SurvivorRatio</flag>
+        <description>Ratio of eden and survivor space. The default is 8</description>
+      </gc-param>
+      <gc-param>
+        <flag>TargetSurvivorRatio</flag>
+        <description>The target percentage of survivor space in use after a scavenge</description>
+      </gc-param>
+      <gc-param>
+        <flag>ParallelGCThreads</flag>
+        <description>The number of threads to use during the parallel phase of GC</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGC</flag>
+        <description>Print messages when garbage collection takes place</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCDetails</flag>
+        <description>Print more details in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCTimeStamps</flag>
+        <description>Print timestamps in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCLogFileRotation</flag>
+        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
+          file</description>
+      </gc-param>
+      <gc-param>
+        <flag>NumberOfGClogFiles</flag>
+        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.</description>
+      </gc-param>
+      <gc-param>
+        <flag>GCLogFileSize</flag>
+        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
+          than or equal to 8K. The default is 8K.</description>
+      </gc-param>
+    </gc-params>
+  </collector>
+
+  <collector>
+    <collector-info>
+      <version>[1.4.1.0,]</version>
+      <common-name>Concurrent Collector (Concurrent Mark and Sweep)</common-name>
+      <collector-distinct-names>
+        <collector-name>CMS</collector-name>
+        <collector-name>PCopy</collector-name>
+      </collector-distinct-names>
+      <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
+    </collector-info>
+    <gc-params>
+      <gc-param>
+        <flag>UseConcMarkSweepGC</flag>
+        <description>Use the Concurrent Mark and Sweep collector for the old generation</description>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCOverheadLimit</flag>
+        <description>Limit the proportion of time that the VM will spend in garbage collection before an OutOfMemory
+          error is thrown</description>
+        <version>[1.6.0.0,]</version>
+      </gc-param>
+      <gc-param>
+        <flag>ScavengeBeforeFullGC</flag>
+        <description>Do garbage collection on young generations before performing full GC cycles</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxHeapFreeRatio</flag>
+        <description>The maximum percentage of heap size free after a garbage collection cycle to avoid heap
+          shrinking. The default is 70</description>
+      </gc-param>
+      <gc-param>
+        <flag>MinHeapFreeRatio</flag>
+        <description>The minimum percentage of heap size free after a garbage collection cycle to avoid heap
+          expansion. The default is 40</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxNewSize</flag>
+        <description>The maximum size of the new generation, in bytes. Since 1.4, this is computed as a function of
+          NewRatio</description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxPermSize</flag>
+        <description>The maximum size of the permanent generation, in bytes. Since 5.0, 64-bit VMs are scaled 30%
+          larger</description>
+        <version>[1.4.1.0,1.8.0.0)</version>
+      </gc-param>
+      <gc-param>
+        <flag>NewRatio</flag>
+        <description>ratio of old a new generation sizes. The default is 2</description>
+      </gc-param>
+      <gc-param>
+        <flag>NewSize</flag>
+        <description>The default size of the new generation, in bytes. Since 5.0, 64-bit VMs are scaled 30%
+          larger</description>
+      </gc-param>
+      <gc-param>
+        <flag>SurvivorRatio</flag>
+        <description>Ratio of eden and survivor space. The default is 8</description>
+      </gc-param>
+      <gc-param>
+        <flag>TargetSurvivorRatio</flag>
+        <description>The target percentage of survivor space in use after a scavenge</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGC</flag>
+        <description>Print messages when garbage collection takes place</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCDetails</flag>
+        <description>Print more details in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCTimeStamps</flag>
+        <description>Print timestamps in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCLogFileRotation</flag>
+        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
+          file</description>
+      </gc-param>
+      <gc-param>
+        <flag>NumberOfGClogFiles</flag>
+        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.</description>
+      </gc-param>
+      <gc-param>
+        <flag>GCLogFileSize</flag>
+        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
+          than or equal to 8K. The default is 8K.</description>
+      </gc-param>
+    </gc-params>
+  </collector>
+
+  <collector>
+    <collector-info>
+      <version>[1.0.0.0,]</version>
+      <common-name>Mark Sweep Compact Collector</common-name>
+      <collector-distinct-names>
+        <collector-name>MSC</collector-name>
+        <collector-name>PCopy</collector-name>
+      </collector-distinct-names>
+      <url>http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html#available_collectors</url>
+    </collector-info>
+    <gc-params>
+      <gc-param>
+        <flag>UseGCOverheadLimit</flag>
+        <description>Limit the proportion of time that the VM will spend in garbage collection before an OutOfMemory
+          error is thrown
+        </description>
+        <version>[1.6.0.0,]</version>
+      </gc-param>
+      <gc-param>
+        <flag>ScavengeBeforeFullGC</flag>
+        <description>Do garbage collection on young generations before performing full GC cycles</description>
+        <version>[1.4.1.0,]</version>
+      </gc-param>
+      <gc-param>
+        <flag>MaxHeapFreeRatio</flag>
+        <description>The maximum percentage of heap size free after a garbage collection cycle to avoid heap
+          shrinking. The default is 70
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>MinHeapFreeRatio</flag>
+        <description>The minimum percentage of heap size free after a garbage collection cycle to avoid heap
+          expansion. The default is 40
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxNewSize</flag>
+        <description>The maximum size of the new generation, in bytes. Since 1.4, this is computed as a function of
+          NewRatio
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>MaxPermSize</flag>
+        <description>The maximum size of the permanent generation, in bytes. Since 5.0, 64-bit VMs are scaled 30%
+          larger
+        </description>
+        <version>[1.0.0.0,1.8.0.0)</version>
+      </gc-param>
+      <gc-param>
+        <flag>NewRatio</flag>
+        <description>ratio of old a new generation sizes. The default is 2</description>
+      </gc-param>
+      <gc-param>
+        <flag>NewSize</flag>
+        <description>The default size of the new generation, in bytes. Since 5.0, 64-bit VMs are scaled 30%
+          larger
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>SurvivorRatio</flag>
+        <description>Ratio of eden and survivor space. The default is 8</description>
+      </gc-param>
+      <gc-param>
+        <flag>TargetSurvivorRatio</flag>
+        <description>The target percentage of survivor space in use after a scavenge</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGC</flag>
+        <description>Print messages when garbage collection takes place</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCDetails</flag>
+        <description>Print more details in garbage collection messages</description>
+        <version>[1.4.0.0,]</version>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCTimeStamps</flag>
+        <description>Print timestamps in garbage collection messages</description>
+        <version>[1.4.0.0,]</version>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCLogFileRotation</flag>
+        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
+          file
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>NumberOfGClogFiles</flag>
+        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>GCLogFileSize</flag>
+        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
+          than or equal to 8K. The default is 8K.
+        </description>
+      </gc-param>
+    </gc-params>
+  </collector>
+
 </gc-params-mapping>

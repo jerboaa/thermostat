@@ -102,7 +102,7 @@
           <long>with-tunables</long>
           <short>t</short>
           <required>false</required>
-          <description>list tunable parameters for the configured GC</description>
+          <description>list tunable parameters for the configured GC. Intended as hints and guidelines, not an authoritative source</description>
         </option>
       </options>
       <environments>
