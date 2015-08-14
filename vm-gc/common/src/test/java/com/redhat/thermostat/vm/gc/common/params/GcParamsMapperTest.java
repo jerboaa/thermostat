@@ -96,8 +96,8 @@ public class GcParamsMapperTest {
             JavaVersionRange collectorVersion = collector.getCollectorInfo().getJavaVersionRange();
             for (GcParam param : collector.getGcParams()) {
                 JavaVersionRange paramVersion = param.getJavaVersionRange();
-                assertTrue(param.getFlag() + " lower", collectorVersion.contains(paramVersion.getLowerBound()));
-                assertTrue(param.getFlag() + " upper", collectorVersion.contains(paramVersion.getUpperBound()));
+                assertTrue(collector.getCollectorInfo().getCommonName() + " - " + param.getFlag() + " lower", collectorVersion.contains(paramVersion.getLowerBound()));
+                assertTrue(collector.getCollectorInfo().getCommonName() + " - " + param.getFlag() + " upper", collectorVersion.contains(paramVersion.getUpperBound()));
             }
         }
     }
