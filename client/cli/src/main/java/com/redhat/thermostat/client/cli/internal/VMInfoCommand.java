@@ -44,8 +44,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.client.cli.AgentArgument;
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.TableRenderer;
@@ -87,25 +88,23 @@ public class VMInfoCommand extends AbstractCommand {
         VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
 
         try {
-            String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
-            String agentIdArg = ctx.getArguments().getArgument(Arguments.AGENT_ID_ARGUMENT);
+            VmArgument vmArgument = VmArgument.optional(ctx.getArguments());
+            AgentArgument agentArgument = AgentArgument.optional(ctx.getArguments());
+            VmId vmId = vmArgument.getVmId();
+            AgentId agentId = agentArgument.getAgentId();
 
-            AgentId agentId;
-
-            if (vmIdArg != null) {
-                VmId vmId = new VmId(vmIdArg);
+            if (vmId != null) {
                 final VmInfo vmInfo = vmsDAO.getVmInfo(vmId);
                 agentId = new AgentId(vmInfo.getAgentId());
                 AgentInformation agentInfo = agentsDAO.getAgentInformation(agentId);
                 if (agentInfo == null) {
-                    throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, Arguments.VM_ID_ARGUMENT, vmIdArg));
+                    throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, VmArgument.ARGUMENT_NAME, vmId.get()));
                 }
                 getAndPrintVMInfo(ctx, agentInfo, vmsDAO, vmId);
-            } else if (agentIdArg != null){
-                agentId = new AgentId(agentIdArg);
+            } else if (agentId != null){
                 AgentInformation agentInfo = agentsDAO.getAgentInformation(agentId);
                 if (agentInfo == null) {
-                    throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, Arguments.AGENT_ID_ARGUMENT, agentIdArg));
+                    throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, AgentArgument.ARGUMENT_NAME, agentId.get()));
                 }
                 getAndPrintAllVMInfo(ctx, agentInfo, vmsDAO, agentId);
             } else {

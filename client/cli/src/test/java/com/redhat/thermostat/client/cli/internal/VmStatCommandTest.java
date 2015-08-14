@@ -61,9 +61,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.storage.core.AgentId;
@@ -341,7 +341,7 @@ public class VmStatCommandTest {
 
     private SimpleArguments setupArguments() {
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.VM_ID_ARGUMENT, "234");
+        args.addArgument(VmArgument.ARGUMENT_NAME, "234");
         args.addArgument("since", "all");
         return args;
     }

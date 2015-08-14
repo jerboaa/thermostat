@@ -36,49 +36,66 @@
 
 package com.redhat.thermostat.client.cli;
 
-import com.redhat.thermostat.client.cli.internal.LocaleResources;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.storage.core.AgentId;
 
-public class HostVMArguments {
+public class AgentArgumentTest {
 
-    private static final Translate<LocaleResources> tr = LocaleResources.createLocalizer();
+    private AgentId agentId;
 
-    private HostRef host;
-    private VmRef vm;
-
-    public HostVMArguments(Arguments args) throws CommandException {
-        this(args, true, true);
+    @Before
+    public void setup() {
+        agentId = new AgentId("agentId");
     }
 
-    public HostVMArguments(Arguments args, boolean hostRequired, boolean vmRequired) throws CommandException {
-        String hostId = args.getArgument(Arguments.HOST_ID_ARGUMENT);
-        String vmId = args.getArgument(VmArgument.ARGUMENT_NAME);
-        if (hostRequired && hostId == null) {
-            throw new CommandException(tr.localize(LocaleResources.HOSTID_REQUIRED));
-        } else if (hostId == null) {
-            host = null;
-        } else {
-            host = new HostRef(hostId, "dummy");
+    @Test
+    public void testValidRequiredAgentId() throws CommandException {
+        Arguments args = setupArguments();
+        AgentArgument agentArgument = AgentArgument.required(args);
+        assertEquals(agentId, agentArgument.getAgentId());
+    }
+
+    @Test
+    public void testValidNotRequiredAgentId() throws CommandException {
+        Arguments args = setupArguments();
+        AgentArgument agentArgument = AgentArgument.optional(args);
+        assertEquals(agentId, agentArgument.getAgentId());
+    }
+
+    private Arguments setupArguments() {
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument(AgentArgument.ARGUMENT_NAME, agentId.get());
+        return args;
+    }
+
+    @Test
+    public void testNoAgentIdButRequired() {
+        SimpleArguments args = new SimpleArguments();
+
+        try {
+            AgentArgument agentArgument = AgentArgument.required(args);
+            fail("A CommandException should have been thrown.");
+        } catch (CommandException e) {
+            assertEquals("An agentId is required", e.getMessage());
         }
-        if (vmId == null && vmRequired) {
-            throw new CommandException(tr.localize(LocaleResources.VMID_REQUIRED));
-        } else if (vmId == null) {
-            vm = null;
-        } else {
-            vm = new VmRef(host, vmId, -1, "dummy");
+    }
+
+    @Test
+    public void testNoAgentIdButNotRequired() {
+        SimpleArguments args = new SimpleArguments();
+
+        try {
+            AgentArgument agentArgument = AgentArgument.optional(args);
+        } catch (CommandException e) {
+            fail("A CommandException should not have been thrown.");
         }
-    }
-
-    public HostRef getHost() {
-        return host;
-    }
-
-    public VmRef getVM() {
-        return vm;
     }
 }
-

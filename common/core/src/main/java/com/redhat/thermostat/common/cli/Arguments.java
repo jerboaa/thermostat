@@ -41,8 +41,6 @@ import java.util.List;
 public interface Arguments {
     @Deprecated
     static public final String HOST_ID_ARGUMENT = "hostId";
-    static public final String VM_ID_ARGUMENT = "vmId";
-    static public final String AGENT_ID_ARGUMENT = "agentId";
     static public final String DB_URL_ARGUMENT = "dbUrl";
 
     List<String> getNonOptionArguments();

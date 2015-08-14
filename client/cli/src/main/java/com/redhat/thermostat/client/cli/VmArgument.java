@@ -34,42 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.client.cli.internal;
 
+package com.redhat.thermostat.client.cli;
+
+import com.redhat.thermostat.client.cli.internal.LocaleResources;
+import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.VmId;
 
-public enum LocaleResources {
+public class VmArgument {
 
-    VM_SERVICE_UNAVAILABLE,
-    HOST_SERVICE_UNAVAILABLE,
-    AGENT_SERVICE_UNAVAILABLE,
-    QUEUE_SERVICE_UNAVAILABLE,
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    static public final String ARGUMENT_NAME = "vmId";
 
-    COMMAND_EXPECTED,
-    UNKNOWN_COMMAND,
-    INTERRUPTED_WAITING_FOR_RESPONSE,
-    AGENT_NOT_FOUND,
+    private VmId vmId;
 
-    STARTED_PROFILING,
-    ALREADY_PROFILING,
-    UNABLE_TO_START_PROFILING,
-    STOPPED_PROFILING,
-    NOT_PROFILING,
-    UNABLE_TO_STOP_PROFILING,
-    UNABLE_TO_USE_PROFILING,
+    private VmArgument(Arguments args, boolean isRequired) throws CommandException {
+        String vmIdArg = args.getArgument(ARGUMENT_NAME);
+        if (isRequired && vmIdArg == null) {
+            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
+        }
 
-    STATUS_CURRENTLY_PROFILING,
-    STATUS_CURRENTLY_NOT_PROFILING,
+        if (vmIdArg != null) {
+            vmId = new VmId(vmIdArg);
+        }
+    }
 
-    PROFILING_DATA_NOT_AVAILABLE,
-    METHOD_PROFILE_HEADER_PERCENTAGE,
-    METHOD_PROFILE_HEADER_TIME,
-    METHOD_PROFILE_HEADER_NAME,
-    ;
+    public static VmArgument required(Arguments args) throws CommandException {
+        return new VmArgument(args, true);
+    }
 
-    static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";
+    public static VmArgument optional(Arguments args) throws CommandException {
+        return new VmArgument(args, false);
+    }
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    /**
+     * @return The value of vmId stored in this object, which may be null.
+     */
+    public VmId getVmId() {
+        return vmId;
     }
 }

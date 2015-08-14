@@ -45,8 +45,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.client.cli.AgentArgument;
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.TableRenderer;
@@ -55,7 +56,6 @@ import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
@@ -100,27 +100,23 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         requireNonNull(heapDAORef, translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         HeapDAO heapDAO = (HeapDAO) context.getService(heapDAORef);
 
-        String stringVmId = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
-        String stringAgentId = null;
-
-        VmId vmId = null;
+        VmArgument vmArgument = VmArgument.optional(ctx.getArguments());
+        VmId vmId = vmArgument.getVmId();
         AgentId agentId = null;
 
-        if (stringVmId != null) {
-            vmId = new VmId(stringVmId);
-            final VmInfo vmInfo = vmDAO.getVmInfo(vmId);
-
-            stringAgentId = vmInfo.getAgentId();
+        if (vmId != null) {
+            String stringAgentId = vmDAO.getVmInfo(vmId).getAgentId();
+            if (stringAgentId != null) {
+                agentId = new AgentId(stringAgentId);
+            }
         } else {
-            stringAgentId = ctx.getArguments().getArgument(Arguments.AGENT_ID_ARGUMENT);
+            AgentArgument agentArgument = AgentArgument.optional(ctx.getArguments());
+            agentId = agentArgument.getAgentId();
         }
 
-        if (stringAgentId != null)
-            agentId = new AgentId(stringAgentId);
-
-        Set<AgentId> hosts = stringAgentId != null ? Collections.singleton(agentId) : agentDAO.getAgentIds();
+        Set<AgentId> hosts = agentId != null ? Collections.singleton(agentId) : agentDAO.getAgentIds();
         for (AgentId host : hosts) {
-            Set<VmId> vms = stringVmId != null ? Collections.singleton(vmId) : vmDAO.getVmIds(host);
+            Set<VmId> vms = vmId != null ? Collections.singleton(vmId) : vmDAO.getVmIds(host);
             for (VmId vm : vms) {
                 printDumpsForVm(heapDAO, host, vm, renderer);
             }

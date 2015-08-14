@@ -39,8 +39,8 @@ package com.redhat.thermostat.vm.gc.command.internal;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
@@ -80,11 +80,8 @@ public class GCCommand extends AbstractCommand {
         listener.setOut(ctx.getConsole().getOutput());
         listener.setErr(ctx.getConsole().getError());
 
-        String vmId = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
-        if (vmId == null)
-            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
-
-        attemptGC(new VmId(vmId));
+        VmArgument vmArgument = VmArgument.required(ctx.getArguments());
+        attemptGC(vmArgument.getVmId());
     }
 
     private void waitForServices(long timeout) throws CommandException {

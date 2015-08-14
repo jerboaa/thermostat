@@ -52,7 +52,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.client.cli.AgentArgument;
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -139,8 +140,8 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
-        args.addArgument(Arguments.AGENT_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
+        args.addArgument(AgentArgument.ARGUMENT_NAME, AGENT_ID);
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "VM ID:           " + VM_ID + "\n" +
                           "Process ID:      234\n" +
@@ -165,8 +166,8 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
-        args.addArgument(Arguments.AGENT_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
+        args.addArgument(AgentArgument.ARGUMENT_NAME, AGENT_ID);
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "VM ID:           " + VM_ID + "\n" +
                           "Process ID:      234\n" +
@@ -191,8 +192,8 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
-        args.addArgument(Arguments.AGENT_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
+        args.addArgument(AgentArgument.ARGUMENT_NAME, AGENT_ID);
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "VM ID:           " + VM_ID + "\n" +
                           "Process ID:      234\n" +
@@ -212,8 +213,8 @@ public class VMInfoCommandTest {
         context.registerService(AgentInfoDAO.class, agentsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.VM_ID_ARGUMENT, "234");
-        args.addArgument(Arguments.AGENT_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(VmArgument.ARGUMENT_NAME, "234");
+        args.addArgument(AgentArgument.ARGUMENT_NAME, AGENT_ID);
         
         try {
             cmd.run(cmdCtxFactory.createContext(args));
@@ -229,7 +230,7 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.AGENT_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(AgentArgument.ARGUMENT_NAME, AGENT_ID);
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "VM ID:           " + VM_ID + "\n" +
                           "Process ID:      234\n" +
@@ -250,8 +251,8 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.VM_ID_ARGUMENT, "noVm");
-        args.addArgument(Arguments.AGENT_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(VmArgument.ARGUMENT_NAME, "noVm");
+        args.addArgument(AgentArgument.ARGUMENT_NAME, AGENT_ID);
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "Unknown VM ID: noVm\n";
         assertEquals("", cmdCtxFactory.getOutput());
@@ -275,8 +276,8 @@ public class VMInfoCommandTest {
         when(vmsDAO.getVmInfo(vmId)).thenReturn(vmInfo);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
-        args.addArgument(Arguments.AGENT_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
+        args.addArgument(AgentArgument.ARGUMENT_NAME, AGENT_ID);
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "VM ID:           " + stringVmId + "\n" +
                           "Process ID:      234\n" +
@@ -306,8 +307,8 @@ public class VMInfoCommandTest {
         when(vmsDAO.getVmInfo(vmId)).thenReturn(vmInfo);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
-        args.addArgument(Arguments.AGENT_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
+        args.addArgument(AgentArgument.ARGUMENT_NAME, AGENT_ID);
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "VM ID:           " + stringVmId + "\n" +
                           "Process ID:      234\n" +
@@ -328,7 +329,7 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
+        args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "VM ID:           " + VM_ID + "\n" +
                           "Process ID:      234\n" +

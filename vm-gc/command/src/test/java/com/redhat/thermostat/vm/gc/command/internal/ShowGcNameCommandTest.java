@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.gc.command.internal;
 
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.matchers.JUnitMatchers.containsString;
@@ -47,21 +46,22 @@ import static org.mockito.Mockito.when;
 
 import java.util.Set;
 
-import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper;
-import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;
-import com.redhat.thermostat.vm.gc.common.params.GcParam;
-import com.redhat.thermostat.vm.gc.common.params.JavaVersionRange;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.common.params.GcParam;
+import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;
+import com.redhat.thermostat.vm.gc.common.params.JavaVersionRange;
 
 public class ShowGcNameCommandTest {
     
@@ -72,7 +72,7 @@ public class ShowGcNameCommandTest {
     public void setup() {
         args = mock(Arguments.class);
         listTunablesArgs = mock(Arguments.class);
-        when(listTunablesArgs.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(VM_ID);
+        when(listTunablesArgs.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn(VM_ID);
         when(listTunablesArgs.hasArgument("with-tunables")).thenReturn(true);
     }
     
@@ -99,7 +99,7 @@ public class ShowGcNameCommandTest {
     
     @Test
     public void commandFailsWhenVmIdNotFound() {
-        when(args.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(VM_ID);
+        when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn(VM_ID);
         ShowGcNameCommand command = new ShowGcNameCommand();
         VmInfoDAO dao = mock(VmInfoDAO.class);
         when(dao.getVmInfo(new VmId(VM_ID))).thenReturn(null);
@@ -115,7 +115,7 @@ public class ShowGcNameCommandTest {
 
     @Test
     public void commandFailsWhenVmIdIsNull() {
-        when(args.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(null);
+        when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn(null);
         ShowGcNameCommand command = new ShowGcNameCommand();
         command.setVmInfo(mock(VmInfoDAO.class));
         command.setVmGcStat(mock(VmGcStatDAO.class));
@@ -172,7 +172,7 @@ public class ShowGcNameCommandTest {
     }
     
     private void doSuccessTest(Set<String> collectorMapping, String expectedCollectorName) throws CommandException {
-        when(args.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(VM_ID);
+        when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn(VM_ID);
         ShowGcNameCommand command = new ShowGcNameCommand();
         VmInfoDAO dao = mock(VmInfoDAO.class);
         VmInfo fooVmInfo = mock(VmInfo.class);

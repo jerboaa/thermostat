@@ -42,8 +42,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.DependencyServices;
@@ -83,12 +83,8 @@ public class ShowGcNameCommand extends AbstractCommand {
         requireNonNull(vmInfoDao, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         requireNonNull(gcDao, translator.localize(LocaleResources.GC_STAT_DAO_SERVICE_UNAVAILABLE));
 
-        String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
-        if (vmIdArg == null) {
-            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
-        }
-
-        VmId vmId = new VmId(vmIdArg);
+        VmArgument vmArgument = VmArgument.required(ctx.getArguments());
+        VmId vmId = vmArgument.getVmId();
         VmInfo vmInfo = checkVmExists(vmId, translator.localize(LocaleResources.VM_NOT_FOUND, vmId.get()));
         
         PrintStream out = ctx.getConsole().getOutput();

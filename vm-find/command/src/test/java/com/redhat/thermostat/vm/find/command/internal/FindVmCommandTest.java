@@ -36,6 +36,28 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.matchers.JUnitMatchers.containsString;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.client.cli.AgentArgument;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -48,26 +70,6 @@ import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.junit.matchers.JUnitMatchers.containsString;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class FindVmCommandTest {
 
@@ -236,8 +238,8 @@ public class FindVmCommandTest {
         when(agentInfoDAO.getAllAgentInformation()).thenReturn(list);
         when(agentInfoDAO.getAgentInformation(new AgentId("foo"))).thenReturn(foo);
         when(agentInfoDAO.getAgentInformation(new AgentId("bar"))).thenReturn(bar);
-        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(foo.getAgentId());
+        when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(foo.getAgentId());
         List<AgentInformation> agentsToSearch = FindVmCommand.getAgentsToSearch(args, agentInfoDAO);
         assertThat(agentsToSearch, is(equalTo(Collections.singletonList(foo))));
     }
@@ -259,7 +261,7 @@ public class FindVmCommandTest {
 
     @Test(expected = CommandException.class)
     public void testBothAgentIdAndAliveAgentsOnlyArgs() throws CommandException {
-        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(true);
+        when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(true);
 
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
@@ -276,14 +278,14 @@ public class FindVmCommandTest {
 
     @Test(expected = CommandException.class)
     public void testValidateAgentStatusArgumentsThrowsExceptionWhenBothFlagsGiven() throws CommandException {
-        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(true);
+        when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(true);
         FindVmCommand.validateAgentStatusArguments(args);
     }
 
     @Test
     public void testValidateAgentStatusArgumentsShouldNotThrowExceptionOnValidInput() {
-        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(false);
+        when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(false);
         when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(true);
         try {
             FindVmCommand.validateAgentStatusArguments(args);
@@ -294,18 +296,18 @@ public class FindVmCommandTest {
 
     @Test
     public void testValidateAgentStatusArgumentsShouldNotThrowExceptionOnValidInput2() {
-        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(true);
+        when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(false);
         try {
             FindVmCommand.validateAgentStatusArguments(args);
         } catch (CommandException ce) {
-            fail("Exception should not be thrown when only " + Arguments.AGENT_ID_ARGUMENT + " is given. Exception: " + ce.getLocalizedMessage());
+            fail("Exception should not be thrown when only " + AgentArgument.ARGUMENT_NAME + " is given. Exception: " + ce.getLocalizedMessage());
         }
     }
 
     @Test
     public void testValidateAgentStatusArgumentsShouldNotThrowExceptionOnValidInput3() {
-        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(false);
+        when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(false);
         when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(false);
         try {
             FindVmCommand.validateAgentStatusArguments(args);

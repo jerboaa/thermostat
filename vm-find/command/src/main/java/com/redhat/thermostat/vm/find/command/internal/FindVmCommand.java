@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.redhat.thermostat.client.cli.AgentArgument;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -97,8 +98,10 @@ public class FindVmCommand extends AbstractCommand {
     static List<AgentInformation> getAgentsToSearch(Arguments arguments, AgentInfoDAO agentInfoDAO) throws CommandException {
         validateAgentStatusArguments(arguments);
         List<AgentInformation> aliveAgents;
-        if (arguments.hasArgument(Arguments.AGENT_ID_ARGUMENT)) {
-            AgentId agentId = new AgentId(arguments.getArgument(Arguments.AGENT_ID_ARGUMENT));
+        AgentArgument agentArgument = AgentArgument.optional(arguments);
+        AgentId agentId = agentArgument.getAgentId();
+
+        if (agentId != null) {
             aliveAgents = Collections.singletonList(agentInfoDAO.getAgentInformation(agentId));
         } else if (arguments.hasArgument(ALIVE_AGENTS_ONLY_ARGUMENT)) {
             aliveAgents = agentInfoDAO.getAliveAgents();
@@ -109,10 +112,10 @@ public class FindVmCommand extends AbstractCommand {
     }
 
     static void validateAgentStatusArguments(Arguments arguments) throws CommandException {
-        boolean hasAgentIdArgument = arguments.hasArgument(Arguments.AGENT_ID_ARGUMENT);
+        boolean hasAgentIdArgument = arguments.hasArgument(AgentArgument.ARGUMENT_NAME);
         boolean hasAliveAgentsOnlyArgument = arguments.hasArgument(ALIVE_AGENTS_ONLY_ARGUMENT);
         if (hasAgentIdArgument && hasAliveAgentsOnlyArgument) {
-            throw new CommandException(translator.localize(LocaleResources.AGENT_FLAGS_CLASH, Arguments.AGENT_ID_ARGUMENT, ALIVE_AGENTS_ONLY_ARGUMENT));
+            throw new CommandException(translator.localize(LocaleResources.AGENT_FLAGS_CLASH, AgentArgument.ARGUMENT_NAME, ALIVE_AGENTS_ONLY_ARGUMENT));
         }
     }
 

@@ -51,10 +51,10 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
@@ -106,12 +106,8 @@ public class VMStatCommand extends AbstractCommand {
         long currentTime = System.currentTimeMillis();
         long defaultSinceTime = currentTime - TimeUnit.MINUTES.toMillis(10);
 
-        String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
-        if (vmIdArg == null) {
-            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
-        }
-
-        VmId vmId = new VmId(vmIdArg);
+        VmArgument vmArgument = VmArgument.required(ctx.getArguments());
+        VmId vmId = vmArgument.getVmId();
 
         final VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
         AgentId agentId = new AgentId(vmInfo.getAgentId());

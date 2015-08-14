@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.killvm.command;
 
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.killvm.command.internal.ShellVMKilledListener;
@@ -73,11 +73,8 @@ public class KillVMCommand extends AbstractCommand {
         listener.setOut(ctx.getConsole().getOutput());
         listener.setErr(ctx.getConsole().getError());
 
-        String vmId = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
-        if (vmId == null)
-            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
-
-        attemptToKillVM(new VmId(vmId));
+        VmArgument vmArgument = VmArgument.required(ctx.getArguments());
+        attemptToKillVM(vmArgument.getVmId());
     }
 
     private void attemptToKillVM(VmId vmId) throws CommandException {

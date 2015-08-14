@@ -50,6 +50,7 @@ import java.nio.charset.Charset;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -79,7 +80,7 @@ public class SaveHeapDumpToFileCommandTest {
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument(Arguments.HOST_ID_ARGUMENT, "host-id");
-        args.addArgument(Arguments.VM_ID_ARGUMENT, "1");
+        args.addArgument(VmArgument.ARGUMENT_NAME, "1");
         args.addArgument("file", "heap-id-1");
 
         HeapDAO heapDAO = mock(HeapDAO.class);
@@ -95,7 +96,7 @@ public class SaveHeapDumpToFileCommandTest {
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument(Arguments.HOST_ID_ARGUMENT, "host-id");
-        args.addArgument(Arguments.VM_ID_ARGUMENT, "1");
+        args.addArgument(VmArgument.ARGUMENT_NAME, "1");
         args.addArgument("heapId", "heap-id-1");
 
         HeapDAO heapDAO = mock(HeapDAO.class);
@@ -141,7 +142,7 @@ public class SaveHeapDumpToFileCommandTest {
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument(Arguments.HOST_ID_ARGUMENT, "host-id");
-        args.addArgument(Arguments.VM_ID_ARGUMENT, "1");
+        args.addArgument(VmArgument.ARGUMENT_NAME, "1");
         args.addArgument("heapId", "heap-id-1");
         args.addArgument("file", "heap-id-1");
 

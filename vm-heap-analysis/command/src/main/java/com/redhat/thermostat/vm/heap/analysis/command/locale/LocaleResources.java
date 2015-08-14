@@ -51,8 +51,6 @@ public enum LocaleResources {
     HEADER_HEAP_ID,
     HEADER_OBJECT_ID,
     HEADER_OBJECT_TYPE,
-
-    VMID_REQUIRED,
     
     FILE_REQUIRED,
     INVALID_LIMIT,

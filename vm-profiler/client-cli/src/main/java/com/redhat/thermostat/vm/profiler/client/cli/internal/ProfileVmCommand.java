@@ -44,9 +44,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
@@ -86,11 +86,8 @@ public class ProfileVmCommand extends AbstractCommand {
         AgentInfoDAO agentInfoDAO = myServices.getService(AgentInfoDAO.class);
         VmInfoDAO vmInfoDAO = myServices.getService(VmInfoDAO.class);
 
-        String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
-        if (vmIdArg == null)
-            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
-
-        VmId vmId = new VmId(vmIdArg);
+        VmArgument vmArgument = VmArgument.required(ctx.getArguments());
+        VmId vmId = vmArgument.getVmId();
         final VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
         final AgentId agentId = new AgentId(vmInfo.getAgentId());
 
