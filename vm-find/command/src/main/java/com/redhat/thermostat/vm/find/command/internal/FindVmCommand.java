@@ -64,12 +64,12 @@ public class FindVmCommand extends AbstractCommand {
     static final String REGISTER_NAME = "find-vm";
 
     private static final Translate<LocaleResources> translator = LocaleResources.createTranslator();
+    static final String ALIVE_AGENTS_ONLY_ARGUMENT = "alive-agents-only";
 
     private DependencyServices services = new DependencyServices();
     
     @Override
     public void run(CommandContext ctx) throws CommandException {
-
         AgentInfoDAO agentInfoDAO = services.getService(AgentInfoDAO.class);
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         HostInfoDAO hostInfoDAO = services.getService(HostInfoDAO.class);
@@ -77,14 +77,12 @@ public class FindVmCommand extends AbstractCommand {
         VmInfoDAO vmInfoDAO = services.getService(VmInfoDAO.class);
         requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
 
-        List<AgentInformation> agentsToSearch = getAgentsToSearch(ctx.getArguments(), agentInfoDAO);
+        Arguments arguments = ctx.getArguments();
+        List<AgentInformation> agentsToSearch = getAgentsToSearch(arguments, agentInfoDAO);
 
-        Map<String, String> hostCriteria = getHostCriteria(ctx.getArguments());
-        Map<String, String> vmCriteria = getVmCriteria(ctx.getArguments());
-
-        if (hostCriteria.isEmpty() && vmCriteria.isEmpty()) {
-            throw new CommandException(translator.localize(LocaleResources.NO_CRITERIA_GIVEN));
-        }
+        Map<String, String> hostCriteria = getHostCriteria(arguments);
+        Map<String, String> vmCriteria = getVmCriteria(arguments);
+        assertCriteriaGiven(hostCriteria, vmCriteria);
 
         HostMatcher hostMatcher = new HostMatcher(hostCriteria);
         VmMatcher vmMatcher = new VmMatcher(vmCriteria);
@@ -92,19 +90,30 @@ public class FindVmCommand extends AbstractCommand {
         List<Pair<HostInfo, VmInfo>> results = performSearch(hostInfoDAO, vmInfoDAO,
                 agentsToSearch, hostMatcher, vmMatcher);
 
-        ResultsRenderer resultsRenderer = new ResultsRenderer(ctx.getArguments());
+        ResultsRenderer resultsRenderer = new ResultsRenderer(arguments);
         resultsRenderer.print(ctx.getConsole().getOutput(), results);
     }
 
-    static List<AgentInformation> getAgentsToSearch(Arguments arguments, AgentInfoDAO agentInfoDAO) {
+    static List<AgentInformation> getAgentsToSearch(Arguments arguments, AgentInfoDAO agentInfoDAO) throws CommandException {
+        validateAgentStatusArguments(arguments);
         List<AgentInformation> aliveAgents;
         if (arguments.hasArgument(Arguments.AGENT_ID_ARGUMENT)) {
             AgentId agentId = new AgentId(arguments.getArgument(Arguments.AGENT_ID_ARGUMENT));
             aliveAgents = Collections.singletonList(agentInfoDAO.getAgentInformation(agentId));
-        } else {
+        } else if (arguments.hasArgument(ALIVE_AGENTS_ONLY_ARGUMENT)) {
             aliveAgents = agentInfoDAO.getAliveAgents();
+        } else {
+            aliveAgents = agentInfoDAO.getAllAgentInformation();
         }
         return aliveAgents;
+    }
+
+    static void validateAgentStatusArguments(Arguments arguments) throws CommandException {
+        boolean hasAgentIdArgument = arguments.hasArgument(Arguments.AGENT_ID_ARGUMENT);
+        boolean hasAliveAgentsOnlyArgument = arguments.hasArgument(ALIVE_AGENTS_ONLY_ARGUMENT);
+        if (hasAgentIdArgument && hasAliveAgentsOnlyArgument) {
+            throw new CommandException(translator.localize(LocaleResources.AGENT_FLAGS_CLASH, Arguments.AGENT_ID_ARGUMENT, ALIVE_AGENTS_ONLY_ARGUMENT));
+        }
     }
 
     static Map<String, String> getHostCriteria(Arguments arguments) {
@@ -125,6 +134,12 @@ public class FindVmCommand extends AbstractCommand {
             }
         }
         return vmCriteria;
+    }
+
+    static void assertCriteriaGiven(Map<String, String> hostCriteria, Map<String, String> vmCriteria) throws CommandException {
+        if (hostCriteria.isEmpty() && vmCriteria.isEmpty()) {
+            throw new CommandException(translator.localize(LocaleResources.NO_CRITERIA_GIVEN));
+        }
     }
 
     static List<Pair<HostInfo, VmInfo>> performSearch(HostInfoDAO hostInfoDAO, VmInfoDAO vmInfoDAO,

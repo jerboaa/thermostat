@@ -41,7 +41,6 @@ import com.redhat.thermostat.storage.model.VmInfo;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.NoSuchElementException;
 import java.util.regex.PatternSyntaxException;
 
 enum VmCriterion implements CriterionMatcher<VmInfo, String> {

@@ -45,6 +45,7 @@ public enum LocaleResources {
     HOST_SERVICE_UNAVAILABLE,
     VM_SERVICE_UNAVAILABLE,
     NO_CRITERIA_GIVEN,
+    AGENT_FLAGS_CLASH,
     ;
 
     static final String RESOURCE_BUNDLE =

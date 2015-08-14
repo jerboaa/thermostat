@@ -166,7 +166,7 @@ public class FindVmCommandTest {
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
 
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(agentInfoDAO.getAliveAgents()).thenReturn(Collections.singletonList(agent));
+        when(agentInfoDAO.getAllAgentInformation()).thenReturn(Collections.singletonList(agent));
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(agent);
 
         TestCommandContextFactory testCommandContextFactory = new TestCommandContextFactory();
@@ -202,7 +202,7 @@ public class FindVmCommandTest {
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
 
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(agentInfoDAO.getAliveAgents()).thenReturn(Collections.singletonList(agent));
+        when(agentInfoDAO.getAllAgentInformation()).thenReturn(Collections.singletonList(agent));
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(agent);
 
         TestCommandContextFactory testCommandContextFactory = new TestCommandContextFactory();
@@ -217,28 +217,145 @@ public class FindVmCommandTest {
     }
 
     @Test
-    public void testGetAgentsToSearchWithoutAgentIdArg() {
+    public void testGetAgentsToSearchWithoutAgentArgs() throws CommandException {
         List<AgentInformation> list = Arrays.asList(mock(AgentInformation.class), mock(AgentInformation.class));
-        FindVmCommand command = new FindVmCommand();
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(agentInfoDAO.getAliveAgents()).thenReturn(list);
-        List<AgentInformation> agentsToSearch = command.getAgentsToSearch(args, agentInfoDAO);
+        when(agentInfoDAO.getAllAgentInformation()).thenReturn(list);
+        List<AgentInformation> agentsToSearch = FindVmCommand.getAgentsToSearch(args, agentInfoDAO);
         assertThat(agentsToSearch, is(equalTo(list)));
     }
 
     @Test
-    public void testGetAgentsToSearchWithAgentIdArg() {
+    public void testGetAgentsToSearchWithAgentIdArg() throws CommandException {
         AgentInformation foo = new AgentInformation("foo");
+        foo.setAlive(false);
         AgentInformation bar = new AgentInformation("bar");
+        bar.setAlive(true);
         List<AgentInformation> list = Arrays.asList(foo, bar);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(agentInfoDAO.getAliveAgents()).thenReturn(list);
-        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(foo);
-        FindVmCommand command = new FindVmCommand();
+        when(agentInfoDAO.getAllAgentInformation()).thenReturn(list);
+        when(agentInfoDAO.getAgentInformation(new AgentId("foo"))).thenReturn(foo);
+        when(agentInfoDAO.getAgentInformation(new AgentId("bar"))).thenReturn(bar);
         when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(true);
         when(args.getArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(foo.getAgentId());
-        List<AgentInformation> agentsToSearch = command.getAgentsToSearch(args, agentInfoDAO);
+        List<AgentInformation> agentsToSearch = FindVmCommand.getAgentsToSearch(args, agentInfoDAO);
         assertThat(agentsToSearch, is(equalTo(Collections.singletonList(foo))));
+    }
+
+    @Test
+    public void testGetAgentsToSearchWithAliveAgentsOnlyArg() throws CommandException {
+        AgentInformation foo = new AgentInformation("foo");
+        foo.setAlive(false);
+        AgentInformation bar = new AgentInformation("bar");
+        bar.setAlive(true);
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        when(agentInfoDAO.getAliveAgents()).thenReturn(Collections.singletonList(bar));
+        when(agentInfoDAO.getAgentInformation(new AgentId("foo"))).thenReturn(foo);
+        when(agentInfoDAO.getAgentInformation(new AgentId("bar"))).thenReturn(bar);
+        when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(true);
+        List<AgentInformation> agentsToSearch = FindVmCommand.getAgentsToSearch(args, agentInfoDAO);
+        assertThat(agentsToSearch, is(equalTo(Collections.singletonList(bar))));
+    }
+
+    @Test(expected = CommandException.class)
+    public void testBothAgentIdAndAliveAgentsOnlyArgs() throws CommandException {
+        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(true);
+        when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(true);
+
+        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
+        HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+
+        TestCommandContextFactory testCommandContextFactory = new TestCommandContextFactory();
+        FindVmCommand command = new FindVmCommand();
+        command.setVmInfoDAO(vmInfoDAO);
+        command.setAgentInfoDAO(agentInfoDAO);
+        command.setHostInfoDAO(hostInfoDAO);
+        command.run(testCommandContextFactory.createContext(args));
+    }
+
+    @Test(expected = CommandException.class)
+    public void testValidateAgentStatusArgumentsThrowsExceptionWhenBothFlagsGiven() throws CommandException {
+        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(true);
+        when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(true);
+        FindVmCommand.validateAgentStatusArguments(args);
+    }
+
+    @Test
+    public void testValidateAgentStatusArgumentsShouldNotThrowExceptionOnValidInput() {
+        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(false);
+        when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(true);
+        try {
+            FindVmCommand.validateAgentStatusArguments(args);
+        } catch (CommandException ce) {
+            fail("Exception should not be thrown when only " + FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT + " is given. Exception: " + ce.getLocalizedMessage());
+        }
+    }
+
+    @Test
+    public void testValidateAgentStatusArgumentsShouldNotThrowExceptionOnValidInput2() {
+        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(true);
+        when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(false);
+        try {
+            FindVmCommand.validateAgentStatusArguments(args);
+        } catch (CommandException ce) {
+            fail("Exception should not be thrown when only " + Arguments.AGENT_ID_ARGUMENT + " is given. Exception: " + ce.getLocalizedMessage());
+        }
+    }
+
+    @Test
+    public void testValidateAgentStatusArgumentsShouldNotThrowExceptionOnValidInput3() {
+        when(args.hasArgument(Arguments.AGENT_ID_ARGUMENT)).thenReturn(false);
+        when(args.hasArgument(FindVmCommand.ALIVE_AGENTS_ONLY_ARGUMENT)).thenReturn(false);
+        try {
+            FindVmCommand.validateAgentStatusArguments(args);
+        } catch (CommandException ce) {
+            fail("Exception should not be thrown when neither agent flag is given. Exception: " + ce.getLocalizedMessage());
+        }
+    }
+
+    @Test(expected = CommandException.class)
+    public void testAssertCriteriaGivenThrowsExceptionWhenInputsEmpty() throws CommandException {
+        Map<String, String> hostCriteria = new HashMap<>();
+        Map<String, String> vmCriteria = new HashMap<>();
+        FindVmCommand.assertCriteriaGiven(hostCriteria, vmCriteria);
+    }
+
+    @Test
+    public void testAssertCriteriaGivenShouldNotThrowExceptionOnValidInput() {
+        Map<String, String> hostCriteria = new HashMap<>();
+        hostCriteria.put("foo", "bar");
+        Map<String, String> vmCriteria = new HashMap<>();
+        try {
+            FindVmCommand.assertCriteriaGiven(hostCriteria, vmCriteria);
+        } catch (CommandException ce) {
+            fail("Exception should not be thrown when host criteria are given. Exception: " + ce.getLocalizedMessage());
+        }
+    }
+
+    @Test
+    public void testAssertCriteriaGivenShouldNotThrowExceptionOnValidInput2() {
+        Map<String, String> hostCriteria = new HashMap<>();
+        Map<String, String> vmCriteria = new HashMap<>();
+        vmCriteria.put("foo", "bar");
+        try {
+            FindVmCommand.assertCriteriaGiven(hostCriteria, vmCriteria);
+        } catch (CommandException ce) {
+            fail("Exception should not be thrown when vm criteria are given. Exception: " + ce.getLocalizedMessage());
+        }
+    }
+
+    @Test
+    public void testAssertCriteriaGivenShouldNotThrowExceptionOnValidInput3() {
+        Map<String, String> hostCriteria = new HashMap<>();
+        hostCriteria.put("foo", "bar");
+        Map<String, String> vmCriteria = new HashMap<>();
+        vmCriteria.put("foo2", "bar2");
+        try {
+            FindVmCommand.assertCriteriaGiven(hostCriteria, vmCriteria);
+        } catch (CommandException ce) {
+            fail("Exception should not be thrown when host and vm criteria are given. Exception: " + ce.getLocalizedMessage());
+        }
     }
 
     @Test

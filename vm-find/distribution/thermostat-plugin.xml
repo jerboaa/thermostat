@@ -59,7 +59,12 @@
           <short>a</short>
           <argument>id</argument>
           <required>false</required>
-          <description>specify the agent to query. If none specified, then all living agents are queried</description>
+          <description>specify the agent to query. If none specified, then all agents are queried</description>
+        </option>
+        <option>
+          <long>alive-agents-only</long>
+          <required>false</required>
+          <description>specify that only currently alive agents should be queried</description>
         </option>
 
         <!-- Display Options -->

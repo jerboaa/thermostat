@@ -38,8 +38,6 @@ package com.redhat.thermostat.vm.find.command.internal;
 
 import com.redhat.thermostat.storage.model.HostInfo;
 
-import java.util.NoSuchElementException;
-
 enum HostCriterion implements CriterionMatcher<HostInfo, String> {
     HOSTNAME("hostname", new HostnameMatcher()),
     OS_KERNEL("oskernel", new OsKernelMatcher()),
