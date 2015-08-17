@@ -36,9 +36,15 @@
 
 package com.redhat.thermostat.setup.command.internal;
 
-import com.redhat.thermostat.common.ApplicationInfo;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
-import com.redhat.thermostat.shared.locale.Translate;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.LayoutManager;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -51,15 +57,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.LayoutManager;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.common.ApplicationInfo;
+import com.redhat.thermostat.setup.command.locale.LocaleResources;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class StartView extends JPanel implements SetupView {
 
@@ -112,7 +114,7 @@ public class StartView extends JPanel implements SetupView {
                 }
             }
         });
-        JScrollPane scrollPane = new JScrollPane(thermostatBlurb);
+        JScrollPane scrollPane = new ThermostatScrollPane(thermostatBlurb);
         scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         midPanel = new JPanel();

@@ -66,6 +66,7 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -145,15 +146,14 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
 
         JLabel agentLabel = new JLabel(translate.localize(LocaleResources.AGENT_INFO_AGENTS_LIST).getContents());
 
-        JScrollPane scrollPane = new JScrollPane();
-
         listModel = new DefaultListModel<String>();
         agentList = new JList<String>(listModel);
         agentList.setName("agentList");
         agentList.addListSelectionListener(agentChanged);
         agentListPanel.setLayout(new BorderLayout());
 
-        scrollPane.setViewportView(agentList);
+        JScrollPane scrollPane = new ThermostatScrollPane(agentList);
+
         agentListPanel.add(scrollPane);
         agentListPanel.add(agentLabel, BorderLayout.NORTH);
 
@@ -194,7 +194,7 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
         backendsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         backendsTable.getSelectionModel().addListSelectionListener(new BackendSelectionListener());
 
-        JScrollPane backendsTableScollPane = new JScrollPane(backendsTable);
+        JScrollPane backendsTableScollPane = new ThermostatScrollPane(backendsTable);
 
         JLabel backendDescriptionLabel = new JLabel(translate.localize(LocaleResources.AGENT_INFO_BACKEND_DESCRIPTION_LABEL).getContents());
         backendDescription = new ValueField(notAvailable);

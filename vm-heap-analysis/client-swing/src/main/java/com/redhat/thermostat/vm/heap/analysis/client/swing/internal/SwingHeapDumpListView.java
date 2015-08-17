@@ -65,6 +65,7 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionButton;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatThinScrollBar;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -88,12 +89,8 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
         table.setBorder(new EmptyBorder(Constants.THIN_INSETS));
         table.setOpaque(false);
 
-        scrollPane = new JScrollPane(table);
+        scrollPane = new ThermostatScrollPane(table);
         scrollPane.setVerticalScrollBar(new ThermostatThinScrollBar(ThermostatThinScrollBar.VERTICAL));
-        scrollPane.setBorder(new EmptyBorder(Constants.INVISIBLE_INSETS));
-        scrollPane.setViewportBorder(null);
-        scrollPane.getViewport().setOpaque(false);
-        scrollPane.setOpaque(false);
 
         container.add(scrollPane, BorderLayout.CENTER);
 

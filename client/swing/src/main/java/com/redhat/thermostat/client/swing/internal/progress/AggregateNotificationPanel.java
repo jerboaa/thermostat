@@ -36,13 +36,14 @@
 
 package com.redhat.thermostat.client.swing.internal.progress;
 
-import com.redhat.thermostat.client.swing.components.ThermostatThinScrollBar;
-
 import java.awt.BorderLayout;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.client.swing.components.ThermostatThinScrollBar;
 
 @SuppressWarnings("serial")
 public class AggregateNotificationPanel extends JPanel {
@@ -56,17 +57,9 @@ public class AggregateNotificationPanel extends JPanel {
         BoxLayout layout = new BoxLayout(progressBarPane, BoxLayout.Y_AXIS);
         progressBarPane.setLayout(layout);
         
-        JScrollPane scrollPane = new JScrollPane(progressBarPane);
-
+        JScrollPane scrollPane = new ThermostatScrollPane(progressBarPane);
         scrollPane.setVerticalScrollBar(new ThermostatThinScrollBar(ThermostatThinScrollBar.VERTICAL));
         scrollPane.setHorizontalScrollBar(new ThermostatThinScrollBar(ThermostatThinScrollBar.HORIZONTAL));
-
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        
-        scrollPane.setBorder(null);
-        scrollPane.setViewportBorder(null);
-        scrollPane.getViewport().setOpaque(false);
 
         add(scrollPane);        
     }

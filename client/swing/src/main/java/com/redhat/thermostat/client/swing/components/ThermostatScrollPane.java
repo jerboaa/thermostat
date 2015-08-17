@@ -43,13 +43,17 @@ import javax.swing.JScrollPane;
 public class ThermostatScrollPane extends JScrollPane {
 
     public ThermostatScrollPane(JComponent view) {
+        this(view, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+    }
+
+    public ThermostatScrollPane(JComponent view, int vsb, int hsb) {
         super(view);
         
         setVerticalScrollBar(new ThermostatScrollBar(ThermostatThinScrollBar.VERTICAL));
         setHorizontalScrollBar(new ThermostatScrollBar(ThermostatThinScrollBar.HORIZONTAL));
 
-        setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        setVerticalScrollBarPolicy(vsb);
+        setHorizontalScrollBarPolicy(hsb);
         setBorder(null);
         
         setViewportBorder(null);

@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,39 +48,19 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.ButtonGroup;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.GroupLayout;
-import javax.swing.JPopupMenu;
-import javax.swing.JToggleButton;
-import javax.swing.JTree;
-import javax.swing.SwingUtilities;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
-
-import com.redhat.thermostat.client.swing.EdtHelper;
-import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.SearchField;
-import com.redhat.thermostat.client.ui.SearchProvider.SearchAction;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapObjectUI;
-import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
-import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
-
-import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
-
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-
 import javax.swing.JSplitPane;
+import javax.swing.JTextPane;
+import javax.swing.JToggleButton;
+import javax.swing.JTree;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -87,6 +71,20 @@ import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
+
+import com.redhat.thermostat.client.swing.EdtHelper;
+import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.SearchField;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.client.ui.SearchProvider.SearchAction;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapObjectUI;
+import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
+import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 /**
  * A Panel that displays JavaHeapObjects and referrers and references.
@@ -200,8 +198,7 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
             button.addActionListener(treeToggleListener);
         }
 
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(objectTree);
+        JScrollPane scrollPane = new ThermostatScrollPane(objectTree);
 
         splitPane.setLeftComponent(scrollPane);
 

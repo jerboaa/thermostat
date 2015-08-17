@@ -64,6 +64,8 @@ import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.util.mxConstants;
 import com.mxgraph.view.mxGraph;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollBar;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.DeadlockParser;
@@ -113,7 +115,7 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
 
         description.setEditable(false);
 
-        JScrollPane scrollPane = new JScrollPane(description);
+        JScrollPane scrollPane = new ThermostatScrollPane(description);
 
         graphical.setLayout(new BorderLayout());
 
@@ -195,6 +197,9 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
         graphComponent.setTextAntiAlias(true);
         graphComponent.setToolTips(true);
         graphComponent.setConnectable(false);
+
+        graphComponent.setHorizontalScrollBar(new ThermostatScrollBar(ThermostatScrollBar.HORIZONTAL));
+        graphComponent.setVerticalScrollBar(new ThermostatScrollBar(ThermostatScrollBar.VERTICAL));
 
         Map<String, Object> style = graph.getStylesheet().getDefaultVertexStyle();
         style.put(mxConstants.STYLE_LABEL_POSITION, mxConstants.ALIGN_CENTER);

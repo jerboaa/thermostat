@@ -50,6 +50,7 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
@@ -294,7 +295,7 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
                 .addGap(0, 0, Short.MAX_VALUE)
                 .addContainerGap());
 
-        container = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        container = new ThermostatScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         visiblePanel.setContent(container);
     }

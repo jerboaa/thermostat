@@ -54,6 +54,7 @@ import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
@@ -375,7 +376,7 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
 
         visiblePanel.setLayout(gl_visiblePanel);
 
-        scrollPane = new JScrollPane(visiblePanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane = new ThermostatScrollPane(visiblePanel);
     }
     
     @Override

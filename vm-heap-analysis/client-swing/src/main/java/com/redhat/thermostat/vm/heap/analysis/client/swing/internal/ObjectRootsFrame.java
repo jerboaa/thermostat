@@ -59,6 +59,7 @@ import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import com.redhat.thermostat.client.swing.EdtHelper;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -93,7 +94,7 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
 
         JLabel lblNewLabel = new JLabel(translator.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE).getContents());
 
-        JScrollPane scrollPane = new JScrollPane(pathToRootTree);
+        JScrollPane scrollPane = new ThermostatScrollPane(pathToRootTree);
 
         objectDetails = new JTextPane();
         objectDetails.setName(DETAILS_NAME);
