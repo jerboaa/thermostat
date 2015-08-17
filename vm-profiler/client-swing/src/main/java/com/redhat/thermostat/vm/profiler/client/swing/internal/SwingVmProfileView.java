@@ -306,6 +306,14 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         // delete all existing data
         tableModel.setRowCount(0);
 
+        if (results.getMethodInfo().size() == 0) {
+            String noResultsMessage = translator
+                    .localize(LocaleResources.PROFILER_NO_RESULTS)
+                    .getContents();
+            tableModel.addRow(new Object[] { noResultsMessage, null, null });
+            return;
+        }
+
         for (MethodInfo methodInfo: results.getMethodInfo()) {
             Object[] data = new Object[] {
                     methodInfo.name,
