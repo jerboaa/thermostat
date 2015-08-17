@@ -10,6 +10,10 @@ __DEFAULT_RELEASE__ 3
 %global patchlevel   __PATCHLEVEL__
 %global custom_rel   __RELEASE__
 
+# non_bootstrap_build == 1 means add self-BR so that
+# xmvn-subst symlinks correctly
+%global non_bootstrap_build  __NON_BOOTSTRAP_BUILD__
+
 %if 0%{?rhel}
 
 %if 0%{?rhel} <= 6
@@ -241,9 +245,11 @@ Patch3:     0003_rhel_lucene_4.patch
 # which introduces code unavailable in older (2.11) release.
 Patch4:     0004_rhel_mongo-java-driver-2.11.patch
 
-# FIXME: Self-BR in order for xmvn-subst to work for symlinking
-# thermostat deps.
-#BuildRequires: thermostat-webapp = %{version}
+%if 0%{?non_bootstrap_build}
+# Work-around xmvn-subst limitation
+BuildRequires: %{?scl_prefix}thermostat-webapp = %{version}
+%endif
+
 # RHEL 6 does not have virtual provides java-devel >= 1.7
 %if 0%{?is_rhel_6}
 BuildRequires: java-1.7.0-openjdk-devel

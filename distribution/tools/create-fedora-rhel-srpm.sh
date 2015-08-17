@@ -36,10 +36,24 @@
 #
 #
 # Usage:
-#  ./create-fedora-rhel-srpm.sh [RPM_RELEASE] [HG_USER]
+#  ./create-fedora-rhel-srpm.sh [RPM_RELEASE] [NON_BOOT_STRAP_BUILD] [HG_USER]
 #
 # Creates a source tarball (using create-source-tarball.sh) and 
 # after an SRPM from the fedora/rhel spec file.
+#
+# EXAMPLES:
+#
+# Creates an SRPM with default release number, NON_BOOT_STRAP_BUILD=0 and
+# default HG user:
+# $ ./create-fedora-rhel-srpm.sh
+#
+# Creates an SRPM with release number 14, NON_BOOT_STRAP_BUILD=0 and
+# default HG user:
+# $ ./create-fedora-rhel-srpm.sh 14 0
+#
+# Creates an SRPM with release number 14, NON_BOOT_STRAP_BUILD=1 and
+# HG user "Bob Tester <bob@example.com>":
+# $ ./create-fedora-rhel-srpm.sh 14 1 "Bob Tester <bob@example.com>"
 # 
 # The result is placed in distribution/target/srpms
 set -ex
@@ -61,10 +75,15 @@ if [ $# -eq 1 ]; then
 fi
 if [ $# -eq 2 ]; then
   custom_rpm_release="$1"
-  hg_user="$2"
+  non_bootstrap_build="$2"
 fi
-if [ $# -gt 2 ]; then
-  echo "usage: ./create-fedora-rhel-srpm.sh [RPM_RELEASE] [HG_USER]" 1>&2
+if [ $# -eq 3 ]; then
+  custom_rpm_release="$1"
+  non_bootstrap_build="$2"
+  hg_user="$3"
+fi
+if [ $# -gt 3 ]; then
+  echo "usage: ./create-fedora-rhel-srpm.sh [RPM_RELEASE] [NON_BOOT_STRAP_BUILD] [HG_USER]" 1>&2
   exit 1
 fi
 tools_dir="$(dirname $0)"
@@ -72,6 +91,9 @@ results_dir="distribution/target/srpms"
 
 if [ -z "${hg_user}" ]; then
   hg_user="tarball for SRPM"
+fi
+if [ -z "${non_bootstrap_build}" ]; then
+  non_bootstrap_build="0"
 fi
 
 # Create a source tarball via the snapshot invocation
@@ -115,6 +137,7 @@ else
   rpm_release="${default_release}"
 fi
 sed -i "s/__RELEASE__/${rpm_release}/g" "${srpm_tmp_build_dir}"/thermostat.spec
+sed -i "s/__NON_BOOTSTRAP_BUILD__/${non_bootstrap_build}/g" "${srpm_tmp_build_dir}"/thermostat.spec
 pushd "${srpm_tmp_build_dir}"
   ${rpmbuild} \
     --define "_sourcedir $(pwd)" \
