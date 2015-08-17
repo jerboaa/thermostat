@@ -108,7 +108,7 @@ public class ShowGcNameCommandTest {
         try {
             command.run(new TestCommandContextFactory().createContext(args));
         } catch (CommandException e) {
-            assertTrue(e.getMessage().startsWith("VM with ID:"));
+            assertTrue(e.getMessage().startsWith("VM with ID"));
             assertTrue(e.getMessage().endsWith("not found"));
         }
     }

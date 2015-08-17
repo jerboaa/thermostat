@@ -45,12 +45,15 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.model.VmInfo.AliveStatus;
 import com.redhat.thermostat.vm.gc.command.locale.LocaleResources;
 
 public class GCCommand extends AbstractCommand {
@@ -97,10 +100,15 @@ public class GCCommand extends AbstractCommand {
 
         if (result == null) {
             throw new CommandException(translator.localize(LocaleResources.VM_NOT_FOUND, vmId.get()));
-        } else {
-            HostRef dummyRef = new HostRef(result.getAgentId(), "dummy");
-            sendGCRequest(new VmRef(dummyRef, result.getVmId(), result.getVmPid(), result.getVmName()));
         }
+        AgentInformation agentInfo = agentInfoDAO.getAgentInformation(new AgentId(result.getAgentId()));
+        AliveStatus status = result.isAlive(agentInfo);
+        if (status != AliveStatus.RUNNING) {
+            throw new CommandException(translator.localize(LocaleResources.VM_NOT_ALIVE, vmId.get()));
+        }
+        
+        HostRef dummyRef = new HostRef(result.getAgentId(), "dummy");
+        sendGCRequest(new VmRef(dummyRef, result.getVmId(), result.getVmPid(), result.getVmName()));
     }
 
     private void sendGCRequest(VmRef vmRef) throws CommandException {

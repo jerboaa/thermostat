@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.gc.command.internal;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -57,6 +58,7 @@ import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
@@ -87,12 +89,17 @@ public class GCCommandTest {
     public void testPerformGC() throws Exception {
         String vmId = "liveVM";
 
-        VmRef vmRef = new VmRef(new HostRef(null, "dummy"), "liveVM", -1, "dummy");
+        VmRef vmRef = new VmRef(new HostRef("dummy", "dummy"), "liveVM", -1, "dummy");
 
-        VmInfo vmInfo = mock(VmInfo.class);
-        when(vmInfo.getVmPid()).thenReturn(-1);
-        when(vmInfo.getVmId()).thenReturn("liveVM");
-        when(vmInfo.getVmName()).thenReturn("dummy");
+        VmInfo vmInfo = new VmInfo("dummy", "liveVM", -1, 0l, 0l, null, null, null, null, "dummy", "dummy", null, null, null, null, null, 0l, null) {
+            
+            @Override
+            public AliveStatus isAlive(AgentInformation agentInfo) {
+                System.out.println("returning running");
+                return AliveStatus.RUNNING;
+            }
+            
+        };
 
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
 
@@ -118,6 +125,25 @@ public class GCCommandTest {
     public void testPerformGCOnMissingVM() throws Exception {
         String vmId = "nonexistentVM";
 
+        CommandContext context = createVmIdArgs(vmId);
+
+        setServices();
+
+        command.run(context);
+    }
+    
+    @Test(expected = CommandException.class)
+    public void testPerformGCOnNotLivingVM() throws Exception {
+        VmInfo vmInfo = new VmInfo("foo-agent", "my-vm-id", -1, 0l, 0l, null, null, null, null, "dummy", null, null, null, null, null, null, 0l, null) {
+            @Override
+            public AliveStatus isAlive(AgentInformation agentInfo) {
+                return AliveStatus.EXITED;
+            }
+        };
+        String vmId = "my-vm-id";
+        VmId myId = new VmId(vmId);
+        when(vmInfoDAO.getVmInfo(eq(myId))).thenReturn(vmInfo);
+        
         CommandContext context = createVmIdArgs(vmId);
 
         setServices();
