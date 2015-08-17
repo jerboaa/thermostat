@@ -48,9 +48,11 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public enum GcParamsMapper {
@@ -62,6 +64,7 @@ public enum GcParamsMapper {
     private final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private final Logger logger = LoggingUtils.getLogger(GcParamsMapper.class);
     private final Map<GcCommonNameMapper.CollectorCommonName, Collector> paramsMap = new HashMap<>();
+    private final Set<GcParam> commonParams = new HashSet<>();
 
     GcParamsMapper() {
         validateGcParamsMapping();
@@ -97,11 +100,12 @@ public enum GcParamsMapper {
     private void parseGcParamsMapping() {
         try {
             GcParamsParser parser = new GcParamsParser(getXmlStream());
-            List<Collector> collectors = parser.parse();
-            for (Collector collector : collectors) {
+            GcParamsParser.ParseResult parseResult = parser.parse();
+            for (Collector collector : parseResult.getCollectors()) {
                 GcCommonNameMapper commonNameMapper = new GcCommonNameMapper();
                 paramsMap.put(commonNameMapper.mapToCommonName(collector.getCollectorInfo().getCollectorDistinctNames()), collector);
             }
+            commonParams.addAll(parseResult.getGcCommonParams());
         } catch (URISyntaxException | IOException | GcParamsParser.GcParamsParseException e) {
             logger.warning("Failed to parse " + XML_RESOURCE_URL + " : " + e.getLocalizedMessage());
         }
@@ -109,6 +113,10 @@ public enum GcParamsMapper {
 
     List<Collector> getCollectors() {
         return new ArrayList<>(paramsMap.values());
+    }
+
+    Set<GcParam> getCommonParams() {
+        return new HashSet<>(commonParams);
     }
 
     public List<GcParam> getParams(GcCommonNameMapper.CollectorCommonName collectorCommonName, JavaVersionRange javaVersionRange) {
@@ -127,6 +135,7 @@ public enum GcParamsMapper {
                 params.add(param);
             }
         }
+        params.addAll(commonParams);
         return params;
     }
 

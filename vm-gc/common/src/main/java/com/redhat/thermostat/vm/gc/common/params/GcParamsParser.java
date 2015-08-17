@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.gc.common.params;
 
+import com.redhat.thermostat.common.Pair;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -57,6 +58,7 @@ import java.util.Set;
 public class GcParamsParser {
 
     private static final String ROOT_NODE_NAME = "gc-params-mapping";
+    private static final String COMMON_PARAMS_NODE_NAME = "common";
     private static final String COLLECTOR_NODE_NAME = "collector";
     private static final String COLLECTOR_INFO_NODE_NAME = "collector-info";
     private static final String GC_PARAMS_NODE_NAME = "gc-params";
@@ -75,11 +77,11 @@ public class GcParamsParser {
         this.xmlStream = xmlStream;
     }
 
-    public List<Collector> parse() throws GcParamsParseException, IOException {
+    public ParseResult parse() throws GcParamsParseException, IOException {
         return parse(xmlStream);
     }
 
-    static List<Collector> parse(InputStream inputStream) throws GcParamsParseException {
+    static ParseResult parse(InputStream inputStream) throws GcParamsParseException {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setIgnoringComments(true);
@@ -96,18 +98,38 @@ public class GcParamsParser {
         }
     }
 
-    static List<Collector> parseRootElement(Node rootNode) {
+    static ParseResult parseRootElement(Node rootNode) {
         List<Collector> collectors = new ArrayList<>();
+        Set<GcParam> commonParams = new HashSet<>();
         if (rootNode.getNodeName().equals(ROOT_NODE_NAME)) {
             NodeList nodes = rootNode.getChildNodes();
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);
                 if (node.getNodeName().equals(COLLECTOR_NODE_NAME)) {
                     collectors.add(parseCollector(node));
+                } else if (node.getNodeName().equals(COMMON_PARAMS_NODE_NAME)) {
+                    commonParams.addAll(parseCommonParams(node));
                 }
             }
         }
-        return collectors;
+        return new ParseResult(collectors, commonParams);
+    }
+
+    static Set<GcParam> parseCommonParams(Node gcCommonParamsNode) {
+        Set<GcParam> gcCommonParams = new HashSet<>();
+        if (gcCommonParamsNode.getNodeName().equals(COMMON_PARAMS_NODE_NAME)) {
+            NodeList nodes = gcCommonParamsNode.getChildNodes();
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                if (node.getNodeName().equals(GC_PARAMS_NODE_NAME)) {
+                    JavaVersionRange allJavaVersionRange
+                            = new JavaVersionRange(JavaVersionRange.VersionPoints.MINIMUM_VERSION, true,
+                            JavaVersionRange.VersionPoints.MAXIMUM_VERSION, true);
+                    gcCommonParams.addAll(parseGcParams(node, allJavaVersionRange));
+                }
+            }
+        }
+        return gcCommonParams;
     }
 
     static Collector parseCollector(Node collectorNode) {
@@ -248,6 +270,22 @@ public class GcParamsParser {
             description = descriptionNode.getTextContent();
         }
         return description;
+    }
+
+    public static class ParseResult extends Pair<List<Collector>, Set<GcParam>> {
+
+        ParseResult(List<Collector> collectors, Set<GcParam> gcCommonParams) {
+            super(collectors, gcCommonParams);
+        }
+
+        public List<Collector> getCollectors() {
+            return super.getFirst();
+        }
+
+        public Set<GcParam> getGcCommonParams() {
+            return super.getSecond();
+        }
+
     }
 
     private static class GcParamsParserErrorHandler implements ErrorHandler {

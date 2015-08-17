@@ -41,6 +41,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -55,6 +56,18 @@ public class GcParamsParserTest {
     private static final String SINGLE_COLLECTOR_CONFIG = "<gc-params-mapping xmlns=\"http://icedtea.classpath.org/thermostat/gc-params-mapping/v1.0\"\n" +
             "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
             "        xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 gc-params-mapping.xsd\">\n" +
+            "    <common>\n" +
+            "      <gc-params>\n" +
+            "        <gc-param>\n" +
+            "          <flag>PrintGC</flag>\n" +
+            "          <description>Print messages when garbage collection takes place</description>\n" +
+            "        </gc-param>\n" +
+            "        <gc-param>\n" +
+            "          <flag>PrintGCDetails</flag>\n" +
+            "          <description>Print more details in garbage collection messages</description>\n" +
+            "        </gc-param>\n" +
+            "      </gc-params>\n" +
+            "    </common>" +
             "    <collector>\n" +
             "      <collector-info>\n" +
             "        <version>[1.0.0.0,1.8.0.45]</version>\n" +
@@ -169,6 +182,18 @@ public class GcParamsParserTest {
     private static final String TWO_COLLECTOR_CONFIG = "<gc-params-mapping xmlns=\"http://icedtea.classpath.org/thermostat/gc-params-mapping/v1.0\"\n" +
             "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
             "        xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 gc-params-mapping.xsd\">\n" +
+            "    <common>\n" +
+            "      <gc-params>\n" +
+            "        <gc-param>\n" +
+            "          <flag>PrintGC</flag>\n" +
+            "          <description>Print messages when garbage collection takes place</description>\n" +
+            "        </gc-param>\n" +
+            "        <gc-param>\n" +
+            "          <flag>PrintGCDetails</flag>\n" +
+            "          <description>Print more details in garbage collection messages</description>\n" +
+            "        </gc-param>\n" +
+            "      </gc-params>\n" +
+            "    </common>" +
             "    <collector>\n" +
             "      <collector-info>\n" +
             "        <version>[1.0.0.0,1.8.0.45]</version>\n" +
@@ -217,6 +242,10 @@ public class GcParamsParserTest {
     private static final String MARK_STEP_DURATION_MILLIS_DESCRIPTION = "Description Text";
     private static final JavaVersionRange MARK_STEP_DURATION_MILLIS_VERSION = new JavaVersionRange(new JavaVersionRange.VersionPoints(1, 5, 0, 31), true, new JavaVersionRange.VersionPoints(1, 8, 0, 45), true);
     private static final Set<String> PARALLEL_DISTINCT_NAMES = new HashSet<>(Arrays.asList("PSParallelCompact", "PSScavenge"));
+    private static final JavaVersionRange ALL_JAVA_VERSIONS_RANGE = new JavaVersionRange(JavaVersionRange.VersionPoints.MINIMUM_VERSION, true, JavaVersionRange.VersionPoints.MAXIMUM_VERSION, true);
+    private static final GcParam PRINT_GC_COMMON_PARAM = new GcParam("PrintGC", "Print messages when garbage collection takes place", ALL_JAVA_VERSIONS_RANGE);
+    private static final GcParam PRINT_GC_DETAILS_COMMON_PARAM = new GcParam("PrintGCDetails", "Print more details in garbage collection messages", ALL_JAVA_VERSIONS_RANGE);
+    private static final Set<GcParam> COMMON_PARAMS = new HashSet<>(Arrays.asList(PRINT_GC_COMMON_PARAM, PRINT_GC_DETAILS_COMMON_PARAM));
 
     @Test(expected = GcParamsParser.GcParamsParseException.class)
     public void testEmptyConfigurationThrowsException() throws UnsupportedEncodingException {
@@ -227,50 +256,57 @@ public class GcParamsParserTest {
 
     @Test
     public void testMinimalConfigurationParsesOneCollector() throws UnsupportedEncodingException {
-        List<Collector> result = getSingleCollectorResult();
-        assertEquals(1, result.size());
+        GcParamsParser.ParseResult result = getSingleCollectorResult();
+        assertEquals(1, result.getCollectors().size());
+    }
+
+    @Test
+    public void testMinimalConfigurationParsesCorrectCommonParams() throws UnsupportedEncodingException {
+        GcParamsParser.ParseResult result = getSingleCollectorResult();
+        assertNonEmptyResult(result.getGcCommonParams());
+        assertEquals(result.getGcCommonParams(), COMMON_PARAMS);
     }
 
     @Test
     public void testMinimalConfigurationParsesCorrectCollectorName() throws UnsupportedEncodingException {
-        List<Collector> result = getSingleCollectorResult();
-        assertNonEmptyResult(result);
-        assertEquals(result.get(0).getCollectorInfo().getCommonName(), G1_COMMON_NAME);
+        GcParamsParser.ParseResult result = getSingleCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        assertEquals(result.getCollectors().get(0).getCollectorInfo().getCommonName(), G1_COMMON_NAME);
     }
 
     @Test
     public void testMinimalConfigurationParsesCorrectCollectorDistinctNames() throws UnsupportedEncodingException {
-        List<Collector> result = getSingleCollectorResult();
-        assertNonEmptyResult(result);
-        assertEquals(result.get(0).getCollectorInfo().getCollectorDistinctNames(), G1_DISTINCT_NAMES);
+        GcParamsParser.ParseResult result = getSingleCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        assertEquals(result.getCollectors().get(0).getCollectorInfo().getCollectorDistinctNames(), G1_DISTINCT_NAMES);
     }
 
     @Test
     public void testMinimalConfigurationParsesCorrectCollectorVersion() throws UnsupportedEncodingException {
-        List<Collector> result = getSingleCollectorResult();
-        assertNonEmptyResult(result);
-        assertEquals(result.get(0).getCollectorInfo().getJavaVersionRange(), G1_VERSION);
+        GcParamsParser.ParseResult result = getSingleCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        assertEquals(result.getCollectors().get(0).getCollectorInfo().getJavaVersionRange(), G1_VERSION);
     }
 
     @Test
     public void testMinimalConfigurationParsesCorrectReferenceUrl() throws UnsupportedEncodingException {
-        List<Collector> result = getSingleCollectorResult();
-        assertNonEmptyResult(result);
-        assertEquals(result.get(0).getCollectorInfo().getReferenceUrl(), G1_REFERENCE_URL);
+        GcParamsParser.ParseResult result = getSingleCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        assertEquals(result.getCollectors().get(0).getCollectorInfo().getReferenceUrl(), G1_REFERENCE_URL);
     }
 
     @Test
     public void testMinimalConfigurationParsesGcParams() throws UnsupportedEncodingException {
-        List<Collector> result = getSingleCollectorResult();
-        assertNonEmptyResult(result);
-        assertEquals(result.get(0).getGcParams().size(), 24);
+        GcParamsParser.ParseResult result = getSingleCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        assertEquals(result.getCollectors().get(0).getGcParams().size(), 24);
     }
 
     @Test
     public void testMinimalConfigurationParsesGcParamsVersions() throws UnsupportedEncodingException {
-        List<Collector> result = getSingleCollectorResult();
-        assertNonEmptyResult(result);
-        for (GcParam param : result.get(0).getGcParams()) {
+        GcParamsParser.ParseResult result = getSingleCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        for (GcParam param : result.getCollectors().get(0).getGcParams()) {
             if (param.getFlag().equals(MARK_STEP_DURATION_MILLIS_FLAG)) {
                 assertEquals(param.getJavaVersionRange(), MARK_STEP_DURATION_MILLIS_VERSION);
             } else {
@@ -281,9 +317,9 @@ public class GcParamsParserTest {
 
     @Test
     public void testMinimalConfigurationParsesGcParamsDescriptions() throws UnsupportedEncodingException {
-        List<Collector> result = getSingleCollectorResult();
-        assertNonEmptyResult(result);
-        for (GcParam param : result.get(0).getGcParams()) {
+        GcParamsParser.ParseResult result = getSingleCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        for (GcParam param : result.getCollectors().get(0).getGcParams()) {
             if (param.getFlag().equals(MARK_STEP_DURATION_MILLIS_FLAG)) {
                 assertEquals(param.getDescription(), MARK_STEP_DURATION_MILLIS_DESCRIPTION);
             } else {
@@ -293,28 +329,35 @@ public class GcParamsParserTest {
     }
 
     @Test
+    public void testTwoCollectorConfigurationParsesCommonParams() throws UnsupportedEncodingException {
+        GcParamsParser.ParseResult parseResult = getTwoCollectorResult();
+        assertNonEmptyResult(parseResult.getGcCommonParams());
+        assertEquals(parseResult.getGcCommonParams(), COMMON_PARAMS);
+    }
+
+    @Test
     public void testTwoCollectorConfigurationParsesCollectors() throws UnsupportedEncodingException {
-        List<Collector> result = getTwoCollectorResult();
-        assertNonEmptyResult(result);
-        assertEquals(result.size(), 2);
+        GcParamsParser.ParseResult result = getTwoCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        assertEquals(result.getCollectors().size(), 2);
     }
 
     @Test
     public void testTwoCollectorConfigurationParsesCollectorCommonNames() throws UnsupportedEncodingException {
-        List<Collector> result = getTwoCollectorResult();
-        assertNonEmptyResult(result);
-        assertEquals(result.size(), 2);
-        Set<String> commonNames = new HashSet<>(Arrays.asList(result.get(0).getCollectorInfo().getCommonName(),
-                result.get(1).getCollectorInfo().getCommonName()));
+        GcParamsParser.ParseResult result = getTwoCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        assertEquals(result.getCollectors().size(), 2);
+        Set<String> commonNames = new HashSet<>(Arrays.asList(result.getCollectors().get(0).getCollectorInfo().getCommonName(),
+                result.getCollectors().get(1).getCollectorInfo().getCommonName()));
         assertEquals(commonNames, new HashSet<>(Arrays.asList(G1_COMMON_NAME, PARALLEL_COMMON_NAME)));
     }
 
     @Test
     public void testTwoCollectorConfigurationParsesCollectorDistinctNames() throws UnsupportedEncodingException {
-        List<Collector> result = getTwoCollectorResult();
-        assertNonEmptyResult(result);
-        assertEquals(result.size(), 2);
-        for (Collector collector : result) {
+        GcParamsParser.ParseResult result = getTwoCollectorResult();
+        assertNonEmptyResult(result.getCollectors());
+        assertEquals(result.getCollectors().size(), 2);
+        for (Collector collector : result.getCollectors()) {
             if (collector.getCollectorInfo().getCommonName().equals(G1_COMMON_NAME)) {
                 assertEquals(G1_DISTINCT_NAMES, collector.getCollectorInfo().getCollectorDistinctNames());
             } else if (collector.getCollectorInfo().getCommonName().equals(PARALLEL_COMMON_NAME)) {
@@ -326,20 +369,28 @@ public class GcParamsParserTest {
     }
 
     private void assertNonEmptyResult(List<Collector> result) {
+        failIfEmpty(result, "collectors");
+    }
+
+    private void assertNonEmptyResult(Set<GcParam> result) {
+        failIfEmpty(result, "common params");
+    }
+
+    private void failIfEmpty(Collection<?> result, String part) {
         if (result.isEmpty()) {
-            fail("result should not be empty");
+            fail(part + " should not be empty");
         }
     }
 
-    private List<Collector> getSingleCollectorResult() throws UnsupportedEncodingException {
+    private GcParamsParser.ParseResult getSingleCollectorResult() throws UnsupportedEncodingException {
         return parseHelper(SINGLE_COLLECTOR_CONFIG);
     }
 
-    private List<Collector> getTwoCollectorResult() throws UnsupportedEncodingException {
+    private GcParamsParser.ParseResult getTwoCollectorResult() throws UnsupportedEncodingException {
         return parseHelper(TWO_COLLECTOR_CONFIG);
     }
 
-    private List<Collector> parseHelper(String config) throws UnsupportedEncodingException {
+    private GcParamsParser.ParseResult parseHelper(String config) throws UnsupportedEncodingException {
         return GcParamsParser.parse(new ByteArrayInputStream(config.getBytes("UTF-8")));
     }
 

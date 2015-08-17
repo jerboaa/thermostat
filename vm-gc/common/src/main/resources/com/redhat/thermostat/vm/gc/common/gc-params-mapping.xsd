@@ -51,7 +51,16 @@
   <xs:element name="gc-params-mapping">
     <xs:complexType>
       <xs:sequence>
+        <xs:element ref="common" minOccurs="1" maxOccurs="1"/>
         <xs:element ref="collector" minOccurs="1" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="common">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="gc-params" minOccurs="1" maxOccurs="1"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>

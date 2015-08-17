@@ -67,6 +67,14 @@ public class GcParamsMappingValidatorTest {
     public void canValidateGcParamsMappingXMLMultipleTimes() throws Exception {
         try {
             String config = "<v1:gc-params-mapping xmlns:v1=\"http://icedtea.classpath.org/thermostat/gc-params-mapping/v1.0\">\n" +
+                    "  <v1:common>\n" +
+                    "    <v1:gc-params>" +
+                    "      <v1:gc-param>" +
+                    "        <v1:flag>string</v1:flag>" +
+                    "        <v1:description>string</v1:description>" +
+                    "      </v1:gc-param>" +
+                    "     </v1:gc-params>" +
+                    "  </v1:common>" +
                     "  <!--1 or more repetitions:-->\n" +
                     "  <v1:collector>\n" +
                     "    <v1:collector-info>\n" +
@@ -104,6 +112,14 @@ public class GcParamsMappingValidatorTest {
     @Test
     public void validationFailsOnInvalidGcParamsMappingFile() throws Exception {
         String config = "<v1:gc-params-mapping xmlns:v1=\"http://icedtea.classpath.org/thermostat/gc-params-mapping/v1.0\">\n" +
+                "  <v1:common>\n" +
+                "    <v1:gc-params>" +
+                "      <v1:gc-param>" +
+                "        <v1:flag>string</v1:flag>" +
+                "        <v1:description>string</v1:description>" +
+                "      </v1:gc-param>" +
+                "     </v1:gc-params>" +
+                "  </v1:common>" +
                 "  <!--1 or more repetitions:-->\n" +
                 "  <v1:collector>\n" +
                 "    <v1:collector-info>\n" +
@@ -142,6 +158,14 @@ public class GcParamsMappingValidatorTest {
     @Test
     public void canValidateCorrectFile() throws IOException {
         String config = "<v1:gc-params-mapping xmlns:v1=\"http://icedtea.classpath.org/thermostat/gc-params-mapping/v1.0\">\n" +
+                "  <v1:common>\n" +
+                "    <v1:gc-params>" +
+                "      <v1:gc-param>" +
+                "        <v1:flag>string</v1:flag>" +
+                "        <v1:description>string</v1:description>" +
+                "      </v1:gc-param>" +
+                "     </v1:gc-params>" +
+                "  </v1:common>" +
                 "  <v1:collector>\n" +
                 "    <v1:collector-info>\n" +
                 "      <v1:version>1.0.0_0:1.8.0_45</v1:version>\n" +
@@ -175,7 +199,6 @@ public class GcParamsMappingValidatorTest {
         } finally {
             testFile.delete();
         }
-
     }
 
     private File createFile(String fileName, String contents) throws IOException {

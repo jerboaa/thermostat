@@ -47,6 +47,40 @@
   <!-- http://www.oracle.com/technetwork/articles/java/g1gc-1984535.html -->
   <!-- http://icedtea.classpath.org/hg/icedtea7-forest/hotspot/file/aea5b566bfab/src/share/vm/gc_implementation/g1/g1_globals.hpp -->
 
+  <common>
+    <gc-params>
+      <gc-param>
+        <flag>PrintGC</flag>
+        <description>Print messages when garbage collection takes place</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCDetails</flag>
+        <description>Print more details in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>PrintGCTimeStamps</flag>
+        <description>Print timestamps in garbage collection messages</description>
+      </gc-param>
+      <gc-param>
+        <flag>UseGCLogFileRotation</flag>
+        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
+          file
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>NumberOfGClogFiles</flag>
+        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>GCLogFileSize</flag>
+        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
+          than or equal to 8K. The default is 8K.
+        </description>
+      </gc-param>
+    </gc-params>
+  </common>
+
   <collector>
     <collector-info>
       <version>[1.4.2.0,]</version>
@@ -114,35 +148,6 @@
       <gc-param>
         <flag>TargetSurvivorRatio</flag>
         <description>The target percentage of survivor space in use after a scavenge</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGC</flag>
-        <description>Print messages when garbage collection takes place</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCDetails</flag>
-        <description>Print more details in garbage collection messages</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCTimeStamps</flag>
-        <description>Print timestamps in garbage collection messages</description>
-      </gc-param>
-      <gc-param>
-        <flag>UseGCLogFileRotation</flag>
-        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
-          file
-        </description>
-      </gc-param>
-      <gc-param>
-        <flag>NumberOfGClogFiles</flag>
-        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.
-        </description>
-      </gc-param>
-      <gc-param>
-        <flag>GCLogFileSize</flag>
-        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
-          than or equal to 8K. The default is 8K.
-        </description>
       </gc-param>
     </gc-params>
   </collector>
@@ -360,32 +365,6 @@
         <flag>G1ExpandByPercentOfAvailable</flag>
         <description>When expanding, the percentage of uncommitted space to claim</description>
       </gc-param>
-      <gc-param>
-        <flag>PrintGC</flag>
-        <description>Print messages when garbage collection takes place</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCDetails</flag>
-        <description>Print more details in garbage collection messages</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCTimeStamps</flag>
-        <description>Print timestamps in garbage collection messages</description>
-      </gc-param>
-      <gc-param>
-        <flag>UseGCLogFileRotation</flag>
-        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
-          file</description>
-      </gc-param>
-      <gc-param>
-        <flag>NumberOfGClogFiles</flag>
-        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.</description>
-      </gc-param>
-      <gc-param>
-        <flag>GCLogFileSize</flag>
-        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
-          than or equal to 8K. The default is 8K.</description>
-      </gc-param>
     </gc-params>
   </collector>
 
@@ -460,32 +439,6 @@
         <flag>ParallelGCThreads</flag>
         <description>The number of threads to use during the parallel phase of GC</description>
       </gc-param>
-      <gc-param>
-        <flag>PrintGC</flag>
-        <description>Print messages when garbage collection takes place</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCDetails</flag>
-        <description>Print more details in garbage collection messages</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCTimeStamps</flag>
-        <description>Print timestamps in garbage collection messages</description>
-      </gc-param>
-      <gc-param>
-        <flag>UseGCLogFileRotation</flag>
-        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
-          file</description>
-      </gc-param>
-      <gc-param>
-        <flag>NumberOfGClogFiles</flag>
-        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.</description>
-      </gc-param>
-      <gc-param>
-        <flag>GCLogFileSize</flag>
-        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
-          than or equal to 8K. The default is 8K.</description>
-      </gc-param>
     </gc-params>
   </collector>
 
@@ -551,32 +504,6 @@
       <gc-param>
         <flag>TargetSurvivorRatio</flag>
         <description>The target percentage of survivor space in use after a scavenge</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGC</flag>
-        <description>Print messages when garbage collection takes place</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCDetails</flag>
-        <description>Print more details in garbage collection messages</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCTimeStamps</flag>
-        <description>Print timestamps in garbage collection messages</description>
-      </gc-param>
-      <gc-param>
-        <flag>UseGCLogFileRotation</flag>
-        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
-          file</description>
-      </gc-param>
-      <gc-param>
-        <flag>NumberOfGClogFiles</flag>
-        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.</description>
-      </gc-param>
-      <gc-param>
-        <flag>GCLogFileSize</flag>
-        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
-          than or equal to 8K. The default is 8K.</description>
       </gc-param>
     </gc-params>
   </collector>
@@ -646,37 +573,6 @@
       <gc-param>
         <flag>TargetSurvivorRatio</flag>
         <description>The target percentage of survivor space in use after a scavenge</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGC</flag>
-        <description>Print messages when garbage collection takes place</description>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCDetails</flag>
-        <description>Print more details in garbage collection messages</description>
-        <version>[1.4.0.0,]</version>
-      </gc-param>
-      <gc-param>
-        <flag>PrintGCTimeStamps</flag>
-        <description>Print timestamps in garbage collection messages</description>
-        <version>[1.4.0.0,]</version>
-      </gc-param>
-      <gc-param>
-        <flag>UseGCLogFileRotation</flag>
-        <description>Enable GC log file rotation. Requires -Xloggc:filename, which enables logging GC messages to
-          file
-        </description>
-      </gc-param>
-      <gc-param>
-        <flag>NumberOfGClogFiles</flag>
-        <description>The number of rotating log files to use. Must be greater than or equal to 1. The default is 1.
-        </description>
-      </gc-param>
-      <gc-param>
-        <flag>GCLogFileSize</flag>
-        <description>The maximum log file size in bytes after which the log files will be rotated. Must be greater
-          than or equal to 8K. The default is 8K.
-        </description>
       </gc-param>
     </gc-params>
   </collector>
