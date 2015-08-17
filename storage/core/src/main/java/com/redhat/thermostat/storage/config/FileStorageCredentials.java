@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.config;
+package com.redhat.thermostat.storage.config;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,12 +44,12 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import com.redhat.thermostat.agent.locale.LocaleResources;
+import com.redhat.thermostat.storage.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 
-public class AgentStorageCredentials implements StorageCredentials {
+public class FileStorageCredentials implements StorageCredentials {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
@@ -64,19 +64,19 @@ public class AgentStorageCredentials implements StorageCredentials {
     private final int authDataLength;
     private String username;
 
-    public AgentStorageCredentials(File agentAuthFile) {
-        if (agentAuthFile == null) {
-            throw new IllegalArgumentException("agentAuthFile must not be null");
+    public FileStorageCredentials(File authFile) {
+        if (authFile == null) {
+            throw new IllegalArgumentException("auth file must not be null");
         }
         this.testingAuthReader = null;
-        this.authFile = agentAuthFile;
+        this.authFile = authFile;
         newLine = System.lineSeparator();
-        long length = authFile.length();
+        long length = this.authFile.length();
         if (length > Integer.MAX_VALUE || length < 0L) {
             // Unlikely issue with authFile, try to get path to share with user via exception message
             String authPath = "";
             try {
-                authPath = authFile.getCanonicalPath();
+                authPath = this.authFile.getCanonicalPath();
             } catch (IOException e) {
                 authPath = "ERROR_GETTING_CANONICAL_PATH";
             }
@@ -89,21 +89,21 @@ public class AgentStorageCredentials implements StorageCredentials {
     }
 
     // Testing constructor
-    AgentStorageCredentials(Reader agentAuthReader, String lineSeparator) {
-        if (agentAuthReader == null) {
-            throw new IllegalArgumentException("agentAuthReader must not be null");
+    FileStorageCredentials(Reader authReader, String lineSeparator) {
+        if (authReader == null) {
+            throw new IllegalArgumentException("authReader must not be null");
         }
-        this.testingAuthReader = agentAuthReader;
+        this.testingAuthReader = authReader;
         newLine = lineSeparator;
         long length = -1;
         try {
             length = testingAuthReader.skip(Long.MAX_VALUE);
             if (length > Integer.MAX_VALUE) {
-                throw new IllegalArgumentException("agentAuthReader larger than supported Integer.MAX_VALUE");
+                throw new IllegalArgumentException("authReader larger than supported Integer.MAX_VALUE");
             }
             testingAuthReader.reset();
         } catch (IOException e) {
-            throw new IllegalArgumentException("IOException from agentAuthReader", e);
+            throw new IllegalArgumentException("IOException from authReader", e);
         }
         authDataLength = (int) length;
         this.authFile = null;
@@ -111,7 +111,7 @@ public class AgentStorageCredentials implements StorageCredentials {
     }
 
     // Testing constructor
-    AgentStorageCredentials(Reader agentAuthReader) {
+    FileStorageCredentials(Reader agentAuthReader) {
         this(agentAuthReader, System.lineSeparator());
     }
 
@@ -245,7 +245,7 @@ public class AgentStorageCredentials implements StorageCredentials {
                 continue;
             }
             // Unrecognized content in file
-            throw new InvalidConfigurationException(t.localize(LocaleResources.BAD_AGENT_AUTH_CONTENTS));
+            throw new InvalidConfigurationException(t.localize(LocaleResources.BAD_AUTH_CONTENTS));
         }
         return null;
     }

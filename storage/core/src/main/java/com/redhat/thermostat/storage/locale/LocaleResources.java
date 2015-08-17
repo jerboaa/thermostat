@@ -34,20 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.locale;
+package com.redhat.thermostat.storage.locale;
 
-import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
+import com.redhat.thermostat.shared.locale.Translate;
 
-public class LocaleResourcesTest  extends AbstractLocaleResourcesTest<LocaleResources> {
+public enum LocaleResources {
 
-    @Override
-    protected Class<LocaleResources> getEnumClass() {
-        return LocaleResources.class;
-    }
+    FILE_NOT_VALID,
+    BAD_AUTH_CONTENTS,
+    ;
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.storage.locale.strings";
 
-    @Override
-    protected String getResourceBundle() {
-        return LocaleResources.RESOURCE_BUNDLE;
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
 }

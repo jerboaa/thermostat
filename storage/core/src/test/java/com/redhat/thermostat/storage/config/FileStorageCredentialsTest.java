@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.config;
+package com.redhat.thermostat.storage.config;
 
 import java.io.File;
 import java.io.Reader;
@@ -43,12 +43,14 @@ import java.io.StringReader;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AgentStorageCredentialsTest {
+import com.redhat.thermostat.storage.config.FileStorageCredentials;
+
+public class FileStorageCredentialsTest {
     
     @Test
     public void testAuthConfigNoNewlineAtEOF() {
         Reader reader = new StringReader("username=user\npassword=pass");
-        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals(4, creds.getPassword().length);
         Assert.assertEquals("pass", new String(creds.getPassword()));
@@ -57,7 +59,7 @@ public class AgentStorageCredentialsTest {
     @Test
     public void testAuthConfig() {
         Reader reader = new StringReader("username=user\npassword=pass\n");
-        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
@@ -65,7 +67,7 @@ public class AgentStorageCredentialsTest {
     @Test
     public void testEmptyAuthConfig() {
         Reader reader = new StringReader("");
-        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
         Assert.assertNull(creds.getUsername());
         Assert.assertNull(creds.getPassword());
     }
@@ -73,7 +75,7 @@ public class AgentStorageCredentialsTest {
     @Test
     public void testNonExistingAgentAuthFile() {
         File file = new File("this.file.should.not.exist");
-        AgentStorageCredentials creds = new AgentStorageCredentials(file);
+        FileStorageCredentials creds = new FileStorageCredentials(file);
         Assert.assertNull(creds.getUsername());
         Assert.assertNull(creds.getPassword());
     }
@@ -81,7 +83,7 @@ public class AgentStorageCredentialsTest {
     @Test
     public void testAuthConfigWithConfigCommentedOut() {
         Reader reader = new StringReader("#username=user\n#password=pass\n");
-        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
         Assert.assertNull(creds.getUsername());
         Assert.assertNull(creds.getPassword());
     }
@@ -89,7 +91,7 @@ public class AgentStorageCredentialsTest {
     @Test
     public void testAuthConfigWithVariousExtraNewlines() {
         Reader reader = new StringReader("\n#username=nottheuser\n\n\n#password=wrong\nusername=user\n\n\npassword=pass\n\n\n#username=wronguser\n\n\n#password=badpassword");
-        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
@@ -97,7 +99,7 @@ public class AgentStorageCredentialsTest {
     @Test
     public void testAuthConfigWithSillyWhitespace() {
         Reader reader = new StringReader("\tusername =\t  user\n\n\npassword=pass   \n\n\n");
-        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
@@ -105,7 +107,7 @@ public class AgentStorageCredentialsTest {
     @Test
     public void testCommentPrecededByWhitespaceIsStillIgnored() {
         Reader reader = new StringReader("     #username=wronguser\nusername=user\npassword=pass\n    #username=wronguser");
-        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
@@ -113,7 +115,7 @@ public class AgentStorageCredentialsTest {
     @Test
     public void testAuthParamsContainingWhitespace() {
         Reader reader = new StringReader("     #username=wronguser\nusername=u s e r\npassword=p a s s\n    #username=wronguser");
-        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
         Assert.assertEquals("u s e r", creds.getUsername());
         Assert.assertEquals("p a s s", new String(creds.getPassword()));
     }
@@ -121,7 +123,7 @@ public class AgentStorageCredentialsTest {
     @Test
     public void testAlternateNewLine() {
         Reader reader = new StringReader("username=user\r\npassword=pass\r\n");
-        AgentStorageCredentials creds = new AgentStorageCredentials(reader, "\r\n");
+        FileStorageCredentials creds = new FileStorageCredentials(reader, "\r\n");
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
