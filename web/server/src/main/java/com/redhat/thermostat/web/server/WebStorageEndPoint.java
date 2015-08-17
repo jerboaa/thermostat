@@ -37,7 +37,6 @@
 package com.redhat.thermostat.web.server;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -75,6 +74,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
+import com.redhat.thermostat.storage.config.FileStorageCredentials;
 import com.redhat.thermostat.storage.core.BasicBatchCursor;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
@@ -299,7 +299,7 @@ public class WebStorageEndPoint extends HttpServlet {
     
     // package private for testing
     StorageCredentials createStorageCredentials(File underlyingFile) {
-        return new FileBasedStorageCredentials(underlyingFile);
+        return new FileStorageCredentials(underlyingFile);
     }
 
     // Side effect: sets this.paths

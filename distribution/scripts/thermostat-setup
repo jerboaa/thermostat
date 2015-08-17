@@ -184,9 +184,9 @@ runSetup() {
     echo -e "Writing to $TH_WEB_AUTH\n"
   fi
   local success=0
-  echo "storage.username = $USERNAME" > "$TH_WEB_AUTH"
+  echo "username = $USERNAME" > "$TH_WEB_AUTH"
   success=$(( $sedSuccess + $? ))
-  echo "storage.password = $PASSWORD" >> "$TH_WEB_AUTH"
+  echo "password = $PASSWORD" >> "$TH_WEB_AUTH"
   success=$(( $sedSuccess + $? ))
   chmod 640 "$TH_WEB_AUTH"
   success=$(( $sedSuccess + $? ))

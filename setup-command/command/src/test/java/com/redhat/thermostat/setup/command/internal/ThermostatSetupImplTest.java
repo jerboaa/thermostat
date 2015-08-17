@@ -43,6 +43,8 @@ import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.storage.config.FileStorageCredentials;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +68,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Properties;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -251,12 +254,20 @@ public class ThermostatSetupImplTest {
         assertTrue(setupCompleteFile.exists());
 
         assertTrue(credentialsFile.toFile().exists());
-        String credentialsData = new String(Files.readAllBytes(credentialsFile));
-        assertTrue(credentialsData.contains("storage.username=" + username));
-        assertTrue(credentialsData.contains("storage.password=" + password));
+        // make sure credentials file can be read by FileStorageCredentials
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile.toFile());
+        assertEquals(username, creds.getUsername());
+        assertArrayEquals(password.toCharArray(), creds.getPassword());
 
         String setupCompleteData = new String(Files.readAllBytes(setupCompleteFile.toPath()));
         assertTrue(setupCompleteData.contains("Created by Thermostat Setup"));
+    }
+
+    private void assertArrayEquals(char[] expected, char[] actual) {
+        assertTrue(expected.length == actual.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(expected[i], actual[i]);
+        }
     }
 
     @Test

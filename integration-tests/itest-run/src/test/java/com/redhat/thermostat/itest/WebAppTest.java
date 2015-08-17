@@ -340,9 +340,9 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
     private static void createWebAuthFile() throws IOException {
         System.out.println("WRITING auth file: " + getMongodbUsername() + "/" + getMongodbPassword());
         List<String> lines = new ArrayList<String>();
-        lines.add("storage.username = " + getMongodbUsername());
-        lines.add("storage.password = " + getMongodbPassword());
-        Files.write(new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), lines, StandardCharsets.UTF_8);
+        lines.add("username = " + getMongodbUsername());
+        lines.add("password = " + getMongodbPassword());
+        Files.write(new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), lines, StandardCharsets.US_ASCII);
     }
 
     private static String getMongodbUsername() {

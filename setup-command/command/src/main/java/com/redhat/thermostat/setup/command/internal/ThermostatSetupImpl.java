@@ -198,8 +198,8 @@ public class ThermostatSetupImpl implements ThermostatSetup {
         try {
             File credentialsFile = finder.getConfiguration(WEB_AUTH_FILE);
             Properties credentialProps = new Properties();
-            credentialProps.setProperty("storage.username", username);
-            credentialProps.setProperty("storage.password", String.valueOf(password));
+            credentialProps.setProperty("username", username);
+            credentialProps.setProperty("password", String.valueOf(password));
             credentialProps.store(new FileOutputStream(credentialsFile), "Storage Credentials");
 
             credentialsFile.setReadable(true, false);
