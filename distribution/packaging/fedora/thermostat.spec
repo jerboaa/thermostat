@@ -643,7 +643,7 @@ popd
 # We require java >= 1.7.0
 sed -i 's|^JAVA=.*|JAVA="%{jdk_base}/bin/java"|' distribution/target/image/bin/thermostat-common
 # Fix path to tools.jar, replace system thermostatrc
-sed 's|__TOOLS_PATH__|%{jdk_base}/lib/tools.jar"|' %{SOURCE4} > distribution/target/image/etc/thermostatrc
+sed 's|__TOOLS_PATH__|%{jdk_base}/lib/tools.jar|' %{SOURCE4} > distribution/target/image/etc/thermostatrc
 sed -i 's|^TOOLS_JAR=.*|TOOLS_JAR="%{jdk_base}/lib/tools.jar"|' distribution/target/image/bin/thermostat-agent-proxy
 %{?scl:EOF}
 
@@ -754,11 +754,13 @@ for i in *.so; do
 done
 popd
 
-# Symlink the thermostat script(s) in /usr/bin
+# Symlink essential thermostat script(s) in /usr/bin
 ln -s %{_datarootdir}/%{pkg_name}/bin/thermostat \
     %{buildroot}%{_bindir}/thermostat
 ln -s %{_datarootdir}/%{pkg_name}/bin/thermostat-setup \
     %{buildroot}%{_bindir}/thermostat-setup
+ln -s %{_datarootdir}/%{pkg_name}/bin/thermostat-common \
+    %{buildroot}%{_bindir}/thermostat-common
 
 # Move config files to /etc and symlink stuff under
 # $THERMOSTAT_HOME/etc to it. Put example configs
@@ -986,6 +988,7 @@ fi
 %{_jnidir}/thermostat-*.jar
 %{_bindir}/thermostat
 %{_bindir}/thermostat-setup
+%{_bindir}/thermostat-common
 %if 0%{?with_systemd}
 %{_unitdir}/%{?scl_prefix}%{pkg_name}-storage.service
 %endif
