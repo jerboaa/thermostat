@@ -461,4 +461,26 @@ public class ThermostatSetupImplTest {
 
         assertTrue(Arrays.asList(roles).containsAll(Arrays.asList(loadedRoles)));
     }
+
+    @Test
+    public void testCrendentialFileCreatedIfNotExists() throws IOException {
+        File agentAuthFile = mock(File.class);
+        when(agentAuthFile.exists()).thenReturn(false);
+        when(agentAuthFile.toPath()).thenReturn(userAgentAuth);
+
+        tSetup.createCredentialFile(agentAuthFile);
+
+        assertTrue(userAgentAuth.toFile().exists());
+    }
+
+    @Test
+    public void testCrendentialFileNotCreatedIfAlreadyExists() throws IOException {
+        File agentAuthFile = mock(File.class);
+        when(agentAuthFile.exists()).thenReturn(true);
+        when(agentAuthFile.toPath()).thenReturn(userAgentAuth);
+
+        tSetup.createCredentialFile(agentAuthFile);
+
+        assertFalse(userAgentAuth.toFile().exists());
+    }
 }

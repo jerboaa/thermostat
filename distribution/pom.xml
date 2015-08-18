@@ -258,6 +258,10 @@
                 <chmod file="${project.build.directory}/image/bin/*" perm="755" />
                 <chmod file="${project.build.directory}/image/bin/thermostat-common" perm="644" />
                 <chmod file="${project.build.directory}/tools/*" perm="755" />
+                <chmod file="${project.build.directory}/image/etc/thermostat-roles.properties" perm="600" />
+                <chmod file="${project.build.directory}/image/etc/thermostat-users.properties" perm="600" />
+                <chmod file="${project.build.directory}/image/etc/web.auth" perm="600" />
+                <chmod file="${project.build.directory}/image/etc/agent.auth" perm="600" />
               </target>
             </configuration>
             <goals>
