@@ -36,35 +36,57 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+import static org.junit.Assert.assertTrue;
 
-import javax.swing.JPanel;
+import java.awt.Dimension;
+import java.lang.reflect.InvocationTargetException;
 
-import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
-import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
+import javax.swing.SwingUtilities;
 
-public class TreeMapPanel extends HeapTreeMapView implements SwingComponent {
-    
-    private final JPanel panel;
+import junit.framework.Assert;
+
+import org.junit.Before;
+import org.junit.Test;
+
+
+
+public class TreeMapZoomBarTest {
 
     private TreeMapComponent treeMap;
-    
-    public TreeMapPanel() {
-        panel = new JPanel();
-        panel.setLayout(new BorderLayout());
+    @SuppressWarnings("unused")
+    private TreeMapZoomBar zoomBar;
+
+    private static TreeMapNode tree;
+    private static Dimension dim;
+
+    @Before
+    public void setUp() {
+        tree = new TreeMapNode(1);
+        dim = new Dimension(500, 500);
     }
 
-    @Override
-    public void display(ObjectHistogram histogram) {
-        treeMap = new TreeMapComponent(histogram);
-        panel.add(treeMap, BorderLayout.CENTER);
-        panel.add(new TreeMapToolbar(treeMap), BorderLayout.NORTH);
+    @Test
+    public final void testTreeMapZoomBar() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+
+            @Override
+            public void run() {
+                boolean catched = false;
+                try {
+                    zoomBar = new TreeMapZoomBar(null);
+                } catch(NullPointerException e) {
+                    catched = true;
+                }
+                assertTrue(catched);
+                try {
+                    treeMap = new TreeMapComponent(tree, dim);
+                    zoomBar = new TreeMapZoomBar(treeMap);
+                } catch (NullPointerException e) {
+                    Assert.fail("Should not throw any exception.");
+                }
+            }
+        });
     }
 
-    @Override
-    public Component getUiComponent() {
-        return panel;
-    }
+   
 }

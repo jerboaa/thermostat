@@ -46,6 +46,7 @@ import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -290,4 +291,25 @@ public class TreeMapNodeTest {
             node.setColor(node.getNextColor());
         }
     }
+    
+    
+    @Test
+    public final void testGetAncestors() {
+        TreeMapNode node1 = new TreeMapNode(0);
+        TreeMapNode node2 = new TreeMapNode(0);
+        TreeMapNode node3 = new TreeMapNode(0);
+        TreeMapNode node4 = new TreeMapNode(0);
+        
+        node1.addChild(node2);
+        node2.addChild(node3);
+        node3.addChild(node4);
+        
+        LinkedList<TreeMapNode> ancestors = node4.getAncestors();
+        
+        assertEquals(node1, ancestors.get(3));
+        assertEquals(node2, ancestors.get(2));
+        assertEquals(node3, ancestors.get(1));
+        assertEquals(node4, ancestors.get(0));        
+    }
+    
 }

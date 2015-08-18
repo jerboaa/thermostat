@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -450,5 +451,19 @@ public class TreeMapNode {
           }
       };
       Collections.sort(nodes, c);
+    }
+    
+    /**
+     * Return the list of ancestors node of this object. The first one is this 
+     * node itself, the last one the root.
+     * @return a list of ancestors nodes.
+     */
+    public LinkedList<TreeMapNode> getAncestors() {
+        LinkedList<TreeMapNode> toReturn = new LinkedList<TreeMapNode>();
+        TreeMapNode tmp = this;
+        do {
+            toReturn.add(tmp);
+        } while ((tmp = tmp.getParent()) != null);
+        return toReturn;
     }
 }

@@ -53,6 +53,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
 
@@ -163,6 +166,11 @@ public class TreeMapComponent extends JComponent {
     private static Comp lastClicked;
     
     /**
+     * List of objects observing this.
+     */
+    private List<TreeMapObserver> observers;
+
+    /**
      * Constructor which creates a TreeMapComponent by an histogram object.
      * @param histogram the histogram to represent as tree map.
      */
@@ -187,6 +195,7 @@ public class TreeMapComponent extends JComponent {
         lastDim = getSize();
         this.zoomStack = new Stack<>();
         this.zoomStack.push(this.tree);
+        this.observers = new ArrayList<>();
 
         // assign a rectangle to the tree's root in order to process the tree.
         Rectangle2D.Double area = new Rectangle2D.Double(0, 0, d.width, d.height);
@@ -333,7 +342,7 @@ public class TreeMapComponent extends JComponent {
                     Dimension newDim = container.getSize();
 
                     if (isChangedSize(newDim)) {
-                        redrawTreeMap(); 
+                        redrawTreeMap(tree); 
                     }
                 } 
             }            
@@ -379,7 +388,8 @@ public class TreeMapComponent extends JComponent {
      * This method recalculates and redraws the TreeMap in according to the size
      * of this component and the actual {@link TreeMapNode} object.
      */
-    private void redrawTreeMap() {
+    private void redrawTreeMap(TreeMapNode newRoot) {
+        tree = newRoot;
         Rectangle2D.Double newArea = tree.getRectangle();
         // give to the root node the size of this object so it can be recalculated
         newArea.width = getSize().width;
@@ -392,27 +402,28 @@ public class TreeMapComponent extends JComponent {
         drawTreeMap(tree);        
     }
 
-    /**
-     * Zoom the TreeMap on the given node.
-     * @param node the new TreeMap's root.
-     */
     public void zoomIn(TreeMapNode node) {
-        if (node != null && node != this.tree && !zoomStack.contains(node)) {
-            zoomStack.push(node);
-            tree = node;
-            redrawTreeMap();
+        if (node != null && node != this.tree) {
+            fillZoomStack(node.getAncestors());
+            redrawTreeMap(node);
+            notifyZoomInToObservers(zoomStack.peek());
         } 
     }
 
-    /**
-     * Zoom out the view to the last zoom level, until the original root is 
-     * reached.
-     */
+    private void fillZoomStack(LinkedList<TreeMapNode> ancestors) {
+        zoomStack.clear();
+        while (!ancestors.isEmpty()) {
+            zoomStack.push(ancestors.removeLast());
+        }
+    }
+
+    
     public void zoomOut() {
+        // if the actual root element is not the tree's original root
         if (zoomStack.size() > 1) {
             zoomStack.pop();
-            tree = zoomStack.peek();
-            redrawTreeMap();
+            redrawTreeMap(zoomStack.peek());
+            notifyZoomOutToObservers();
         }
     }
 
@@ -422,10 +433,67 @@ public class TreeMapComponent extends JComponent {
     public void zoomFull() {
         if (zoomStack.size() > 1) {
             clearZoomCallsStack();
-            tree = zoomStack.peek();
-            redrawTreeMap();
+            redrawTreeMap(zoomStack.peek());
+            notifyZoomFullToObservers();
         }
     }
+    
+    /**
+     * Add the object in input to the list of registered objects to this TreeMap.
+     * @param observer the Notifiable object to register to this object.
+     */
+    public void register(TreeMapObserver observer) {
+        this.observers.add(observer);
+    }
+    
+    /**
+     * Remove the object in input from the list of registered objects to this TreeMap.
+     * @param observer the Notifiable object to unregister from this object.
+     */
+    public void unregister(TreeMapObserver observer) {
+        this.observers.remove(observer);
+    }
+    /**
+     * Notify observers that an object in the TreeMap has been selected.
+     * @param comp the selected component.
+     */
+    private void notifySelectionToObservers(TreeMapNode node) {
+        for (TreeMapObserver observer : observers) {
+            observer.notifySelection(node);
+        }
+    }
+
+    /**
+     * Notify observers that  TreeMap has been zoomed.
+     * @param zoomedComponent 
+     */
+    private void notifyZoomInToObservers(TreeMapNode node) {
+        for (TreeMapObserver observer : observers) {
+            observer.notifyZoomIn(node);
+        }
+    }
+    
+    /**
+     * Notify observers that  TreeMap has been zoomed.
+     * @param zoomedComponent 
+     */
+    private void notifyZoomOutToObservers() {
+        for (TreeMapObserver observer : observers) {
+            observer.notifyZoomOut();
+        }
+    }
+    
+    /**
+     * Notify observers that  TreeMap has been zoomed.
+     * @param zoomedComponent 
+     */
+    private void notifyZoomFullToObservers() {
+        for (TreeMapObserver observer : observers) {
+            observer.notifyZoomFull();
+        }
+    }
+    
+    
 
     /**
      * Returns the list of zoom operation calls.
@@ -640,19 +708,19 @@ public class TreeMapComponent extends JComponent {
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         selectComp();
                     }
-                    // two left click: zoom-in
-                    // two right click: zoom-out
-                    // two middle click: zoom full
-                    if (e.getClickCount() == 2) {
-                        if (SwingUtilities.isLeftMouseButton(e)) {
-                            if (!getNode().isLeaf()) {
-                                zoomIn(getNode());
-                            }
-                        } else if (SwingUtilities.isRightMouseButton(e)) {
-                            zoomOut();
-                        } else {
-                            zoomFull();
+                    // double left click to zoom in (on non-leaf nodes only)
+                    if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+                        if (!getNode().isLeaf()) {
+                            zoomIn(getNode());
                         }
+                    }
+                    // one right click to zoom out
+                    if (SwingUtilities.isRightMouseButton(e)) {
+                        zoomOut();
+                    }
+                    // one middle click to reset zoom
+                    if (SwingUtilities.isMiddleMouseButton(e)) {
+                        zoomFull();
                     }
                 }
             };
@@ -712,6 +780,7 @@ public class TreeMapComponent extends JComponent {
                 setColor(getColor().darker());
             }
             repaint();
+            notifySelectionToObservers(node);
         }
     }
 }

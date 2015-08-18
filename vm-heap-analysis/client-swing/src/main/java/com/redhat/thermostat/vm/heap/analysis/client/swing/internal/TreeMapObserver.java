@@ -36,35 +36,35 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-
-import javax.swing.JPanel;
-
-import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
-import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
-
-public class TreeMapPanel extends HeapTreeMapView implements SwingComponent {
+/**
+ * This interface is used as part of the Observer Design Pattern developed
+ * for objects who want to be notified about TreeMap's events.
+ */
+public interface TreeMapObserver {
     
-    private final JPanel panel;
-
-    private TreeMapComponent treeMap;
+    /**
+     * This method inform the Observer object that the object passed as 
+     * argument has been selected.
+     * 
+     * @param selectedComp the selected component to communicate to 
+     * this Observer object.
+     */
+    public void notifySelection(TreeMapNode node);
     
-    public TreeMapPanel() {
-        panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-    }
-
-    @Override
-    public void display(ObjectHistogram histogram) {
-        treeMap = new TreeMapComponent(histogram);
-        panel.add(treeMap, BorderLayout.CENTER);
-        panel.add(new TreeMapToolbar(treeMap), BorderLayout.NORTH);
-    }
-
-    @Override
-    public Component getUiComponent() {
-        return panel;
-    }
+    /**
+     * This method informs objects that a zoom in event has been performed on
+     * the given node.
+     * @param node the zoomed node.
+     */
+    public void notifyZoomIn(TreeMapNode node);
+    
+    /**
+     * This method informs objects that a zoom out event has been performed.
+     */
+    public void notifyZoomOut();
+    
+    /**
+     * This method informs objects that the zoom level has been resetted.
+     */
+    public void notifyZoomFull();
 }

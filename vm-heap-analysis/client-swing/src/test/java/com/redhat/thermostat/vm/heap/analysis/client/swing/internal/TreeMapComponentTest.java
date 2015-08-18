@@ -221,4 +221,53 @@ public class TreeMapComponentTest {
             }
         });
     }
+    
+    @Test
+    public final void testObserver() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            boolean zoomedIn = false;
+            boolean zoomedOut = false;
+            boolean zoomedFull = false;
+            
+            TreeMapObserver observer = new TreeMapObserver() {
+                @Override
+                public void notifyZoomOut() {
+                    zoomedOut = true;
+                }
+                
+                @Override
+                public void notifyZoomIn(TreeMapNode node) {
+                    zoomedIn = true;
+                }
+                
+                @Override
+                public void notifyZoomFull() {
+                    zoomedFull = true;
+                }
+                
+                @Override
+                public void notifySelection(TreeMapNode node) {
+                }
+            };
+
+            @Override
+            public void run() {
+                TreeMapNode child = new TreeMapNode(1);
+                tree.addChild(child);
+                
+                treeMap = new TreeMapComponent(tree, dim);
+                treeMap.register(observer);
+                
+                treeMap.zoomIn(child);
+                assertTrue(zoomedIn);
+                
+                treeMap.zoomOut();
+                assertTrue(zoomedOut);
+                
+                treeMap.zoomIn(child);
+                treeMap.zoomFull();
+                assertTrue(zoomedFull);
+            }
+        });
+    }
 }

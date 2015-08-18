@@ -49,6 +49,10 @@ public class HeapIconResources {
     public static final String PIN_MASK = "com/redhat/thermostat/vm/heap/analysis/client/core/pin_mask.png";
     public static final String TRIGGER_HEAP_DUMP = "com/redhat/thermostat/vm/heap/analysis/client/core/take_dump.png";
 
+    public static final String BREADCRUMB_HEAD = "com/redhat/thermostat/vm/heap/analysis/client/swing/breadcrumb_head.png";
+    public static final String BREADCRUMB_BODY = "com/redhat/thermostat/vm/heap/analysis/client/swing/breadcrumb_body.png";
+    public static final String BREADCRUMB_TAIL = "com/redhat/thermostat/vm/heap/analysis/client/swing/breadcrumb_tail.png";
+
     private static Map<String, IconDescriptor> icons = new HashMap<>();
     
     public synchronized static IconDescriptor getIcon(String path) {
