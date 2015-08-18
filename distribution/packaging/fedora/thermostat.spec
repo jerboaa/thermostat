@@ -740,6 +740,9 @@ for plugin_name in $(ls); do
   popd
 done
 popd
+# Remove duplicate tools*.jar files which makes the resulting
+# RPM insanely large (21 * 20 MB) ~= 410 MB => ~90 to 100 MB compressed
+find %{buildroot}%{thermostat_home} -name 'tools*.jar' | xargs rm
 
 pushd %{buildroot}%{_libdir}/%{pkg_name}
 # symlink JNI jars
