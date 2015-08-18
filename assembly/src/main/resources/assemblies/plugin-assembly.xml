@@ -60,6 +60,10 @@
       </includes>
       <excludes>
         <exclude>thermostat-plugin.xml</exclude>
+        <exclude>target</exclude>
+        <exclude>pom.xml*</exclude>
+        <exclude>.project</exclude>
+        <exclude>.settings</exclude>
       </excludes>
     </fileSet>
   </fileSets>
