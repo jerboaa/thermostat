@@ -36,11 +36,9 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
-import com.redhat.thermostat.storage.model.HostInfo;
-
 import java.util.Map;
 
-class HostMatcher extends AbstractMatcher<HostInfo> {
+class HostMatcher extends AbstractMatcher {
 
     HostMatcher(Map<String, String> criteriaMap) {
         for (Map.Entry<String, String> entry : criteriaMap.entrySet()) {

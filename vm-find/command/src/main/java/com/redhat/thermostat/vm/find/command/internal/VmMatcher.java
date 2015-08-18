@@ -36,11 +36,9 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
-import com.redhat.thermostat.storage.model.VmInfo;
-
 import java.util.Map;
 
-class VmMatcher extends AbstractMatcher<VmInfo> {
+class VmMatcher extends AbstractMatcher {
 
     VmMatcher(Map<String, String> criteriaMap) {
         for (Map.Entry<String, String> entry : criteriaMap.entrySet()) {

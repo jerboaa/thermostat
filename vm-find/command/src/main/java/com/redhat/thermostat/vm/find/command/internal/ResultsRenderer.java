@@ -36,11 +36,8 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
-import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.TableRenderer;
-import com.redhat.thermostat.storage.model.HostInfo;
-import com.redhat.thermostat.storage.model.VmInfo;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -77,8 +74,8 @@ class ResultsRenderer {
             return cliSwitch;
         }
 
-        String getAdaptedField(Pair<HostInfo, VmInfo> pair) {
-            return fieldAdapter.map(pair);
+        String getAdaptedField(MatchContext matchContext) {
+            return fieldAdapter.map(matchContext);
         }
     }
 
@@ -101,13 +98,13 @@ class ResultsRenderer {
         }
     }
 
-    void print(PrintStream printStream, Iterable<Pair<HostInfo, VmInfo>> pairs) {
+    void print(PrintStream printStream, Iterable<MatchContext> matchContexts) {
         TableRenderer renderer = new TableRenderer(enabledFields.size());
         if (!isShortOutput()) {
             renderer.printHeader(getHeaderFields().toArray(new String[enabledFields.size()]));
         }
-        for (Pair<HostInfo, VmInfo> pair : pairs) {
-            List<String> info = getInfo(pair);
+        for (MatchContext context : matchContexts) {
+            List<String> info = getInfo(context);
             renderer.printLine(info.toArray(new String[enabledFields.size()]));
         }
         renderer.render(printStream);
@@ -125,95 +122,85 @@ class ResultsRenderer {
         return list;
     }
 
-    List<String> getInfo(Pair<HostInfo, VmInfo> pair) {
+    List<String> getInfo(MatchContext matchContext) {
         List<String> list = new ArrayList<>();
         for (Field field : enabledFields) {
-            list.add(field.getAdaptedField(pair));
+            list.add(field.getAdaptedField(matchContext));
         }
         return list;
     }
 
     interface FieldAdapter {
-        String map(Pair<HostInfo, VmInfo> pair);
+        String map(MatchContext matchContext);
     }
 
     static class VmIdFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            VmInfo vmInfo = pair.getSecond();
-            return vmInfo.getVmId();
+        public String map(MatchContext matchContext) {
+            return matchContext.getVmInfo().getVmId();
         }
     }
 
     static class MainClassFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            VmInfo vmInfo = pair.getSecond();
-            return vmInfo.getMainClass();
+        public String map(MatchContext matchContext) {
+            return matchContext.getVmInfo().getMainClass();
         }
     }
 
     static class VmNameFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            VmInfo vmInfo = pair.getSecond();
-            return vmInfo.getVmName();
+        public String map(MatchContext matchContext) {
+            return matchContext.getVmInfo().getVmName();
         }
     }
 
     static class JavaVersionFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            VmInfo vmInfo = pair.getSecond();
-            return vmInfo.getJavaVersion();
+        public String map(MatchContext matchContext) {
+            return matchContext.getVmInfo().getJavaVersion();
         }
     }
 
     static class VmVersionFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            VmInfo vmInfo = pair.getSecond();
-            return vmInfo.getVmVersion();
+        public String map(MatchContext matchContext) {
+            return matchContext.getVmInfo().getVmVersion();
         }
     }
 
     static class PidFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            VmInfo vmInfo = pair.getSecond();
-            return Integer.toString(vmInfo.getVmPid());
+        public String map(MatchContext matchContext) {
+            return Integer.toString(matchContext.getVmInfo().getVmPid());
         }
     }
 
     static class UsernameFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            VmInfo vmInfo = pair.getSecond();
-            return vmInfo.getUsername();
+        public String map(MatchContext matchContext) {
+            return matchContext.getVmInfo().getUsername();
         }
     }
 
     static class HostnameFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            HostInfo hostInfo = pair.getFirst();
-            return hostInfo.getHostname();
+        public String map(MatchContext matchContext) {
+            return matchContext.getHostInfo().getHostname();
         }
     }
 
     static class OsNameFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            HostInfo hostInfo = pair.getFirst();
-            return hostInfo.getOsName();
+        public String map(MatchContext matchContext) {
+            return matchContext.getHostInfo().getOsName();
         }
     }
 
     static class OsKernelFieldAdapter implements FieldAdapter {
         @Override
-        public String map(Pair<HostInfo, VmInfo> pair) {
-            HostInfo hostInfo = pair.getFirst();
-            return hostInfo.getOsKernel();
+        public String map(MatchContext matchContext) {
+            return matchContext.getHostInfo().getOsKernel();
         }
     }
 

@@ -36,10 +36,8 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
-import com.redhat.thermostat.storage.model.Pojo;
+interface CriterionMatcher {
 
-interface CriterionMatcher<T extends Pojo, U> {
-
-    boolean match(T t, U u);
+    boolean match(MatchContext matchContext, String string);
 
 }

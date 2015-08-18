@@ -36,19 +36,17 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
-import com.redhat.thermostat.storage.model.Pojo;
-
 import java.util.HashMap;
 import java.util.Map;
 
-abstract class AbstractMatcher<T extends Pojo> implements Matcher<T> {
+abstract class AbstractMatcher implements Matcher {
 
-    protected final Map<CriterionMatcher<T, String>, String> criteriaMap = new HashMap<>();
+    protected final Map<CriterionMatcher, String> criteriaMap = new HashMap<>();
 
     @Override
-    public boolean match(T t) {
-        for (Map.Entry<? extends CriterionMatcher<T, String>, String> entry : criteriaMap.entrySet()) {
-            boolean match = entry.getKey().match(t, entry.getValue());
+    public boolean match(MatchContext matchContext) {
+        for (Map.Entry<? extends CriterionMatcher, String> entry : criteriaMap.entrySet()) {
+            boolean match = entry.getKey().match(matchContext, entry.getValue());
             if (!match) {
                 return false;
             }

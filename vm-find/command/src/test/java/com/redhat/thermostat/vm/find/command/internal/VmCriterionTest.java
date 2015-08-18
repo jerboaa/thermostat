@@ -49,13 +49,14 @@ public class VmCriterionTest {
         VmCriterion criterion = VmCriterion.JAVA_VERSION;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setJavaVersion("1.8");
-        assertThat(criterion.match(vmInfo, "1.8"), is(true));
-        assertThat(criterion.match(vmInfo, "1.80"), is(false));
-        assertThat(criterion.match(vmInfo, "1.8_u45"), is(false));
-        assertThat(criterion.match(vmInfo, "1.7"), is(false));
-        assertThat(criterion.match(vmInfo, "1."), is(false));
-        assertThat(criterion.match(vmInfo, "1"), is(false));
-        assertThat(criterion.match(vmInfo, "8"), is(false));
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).build();
+        assertThat(criterion.match(matchContext, "1.8"), is(true));
+        assertThat(criterion.match(matchContext, "1.80"), is(false));
+        assertThat(criterion.match(matchContext, "1.8_u45"), is(false));
+        assertThat(criterion.match(matchContext, "1.7"), is(false));
+        assertThat(criterion.match(matchContext, "1."), is(false));
+        assertThat(criterion.match(matchContext, "1"), is(false));
+        assertThat(criterion.match(matchContext, "8"), is(false));
     }
 
     @Test
@@ -63,18 +64,19 @@ public class VmCriterionTest {
         VmCriterion criterion = VmCriterion.MAINCLASS;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setMainClass("com.example.java.ExampleApplet");
-        assertThat(criterion.match(vmInfo, "com.example.java.ExampleApplet"), is(true));
-        assertThat(criterion.match(vmInfo, "com.example.java.ExampleApplet.*"), is(true));
-        assertThat(criterion.match(vmInfo, "com.example.java.ExampleApplet.+"), is(false));
-        assertThat(criterion.match(vmInfo, "com.example.java.Example.+"), is(true));
-        assertThat(criterion.match(vmInfo, "ExampleApplet"), is(true));
-        assertThat(criterion.match(vmInfo, ".*Applet"), is(true));
-        assertThat(criterion.match(vmInfo, ".*Applet.+"), is(false));
-        assertThat(criterion.match(vmInfo, ".*"), is(true));
-        assertThat(criterion.match(vmInfo, "*"), is(false));
-        assertThat(criterion.match(vmInfo, "com.example.java"), is(true));
-        assertThat(criterion.match(vmInfo, "com.example.java..*"), is(true));
-        assertThat(criterion.match(vmInfo, "com.example.java.ExampleApplet2"), is(false));
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).build();
+        assertThat(criterion.match(matchContext, "com.example.java.ExampleApplet"), is(true));
+        assertThat(criterion.match(matchContext, "com.example.java.ExampleApplet.*"), is(true));
+        assertThat(criterion.match(matchContext, "com.example.java.ExampleApplet.+"), is(false));
+        assertThat(criterion.match(matchContext, "com.example.java.Example.+"), is(true));
+        assertThat(criterion.match(matchContext, "ExampleApplet"), is(true));
+        assertThat(criterion.match(matchContext, ".*Applet"), is(true));
+        assertThat(criterion.match(matchContext, ".*Applet.+"), is(false));
+        assertThat(criterion.match(matchContext, ".*"), is(true));
+        assertThat(criterion.match(matchContext, "*"), is(false));
+        assertThat(criterion.match(matchContext, "com.example.java"), is(true));
+        assertThat(criterion.match(matchContext, "com.example.java..*"), is(true));
+        assertThat(criterion.match(matchContext, "com.example.java.ExampleApplet2"), is(false));
     }
 
     @Test
@@ -82,11 +84,12 @@ public class VmCriterionTest {
         VmCriterion criterion = VmCriterion.VM_NAME;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setVmName("Example JVM Implementation Name");
-        assertThat(criterion.match(vmInfo, "Example JVM Implementation Name"), is(true));
-        assertThat(criterion.match(vmInfo, "Example JVM Implementation Name 2"), is(false));
-        assertThat(criterion.match(vmInfo, "JVM Implementation"), is(false));
-        assertThat(criterion.match(vmInfo, "Example JVM"), is(false));
-        assertThat(criterion.match(vmInfo, "*"), is(false));
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).build();
+        assertThat(criterion.match(matchContext, "Example JVM Implementation Name"), is(true));
+        assertThat(criterion.match(matchContext, "Example JVM Implementation Name 2"), is(false));
+        assertThat(criterion.match(matchContext, "JVM Implementation"), is(false));
+        assertThat(criterion.match(matchContext, "Example JVM"), is(false));
+        assertThat(criterion.match(matchContext, "*"), is(false));
     }
 
     @Test
@@ -94,15 +97,16 @@ public class VmCriterionTest {
         VmCriterion criterion = VmCriterion.VM_ARGS;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setVmArguments("-Xmx1024M -Xms1024M");
-        assertThat(criterion.match(vmInfo, "-Xmx1024M -Xms1024M"), is(true));
-        assertThat(criterion.match(vmInfo, "-Xmx1024M,-Xms1024M"), is(true));
-        assertThat(criterion.match(vmInfo, "-Xms1024M,-Xmx1024M"), is(true));
-        assertThat(criterion.match(vmInfo, "-Xmx1024M"), is(true));
-        assertThat(criterion.match(vmInfo, "-Xms1024M"), is(true));
-        assertThat(criterion.match(vmInfo, "Xmx1024M"), is(true));
-        assertThat(criterion.match(vmInfo, "Xmx"), is(true));
-        assertThat(criterion.match(vmInfo, "Xms,Xmx"), is(true));
-        assertThat(criterion.match(vmInfo, "-Xmx2048M"), is(false));
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).build();
+        assertThat(criterion.match(matchContext, "-Xmx1024M -Xms1024M"), is(true));
+        assertThat(criterion.match(matchContext, "-Xmx1024M,-Xms1024M"), is(true));
+        assertThat(criterion.match(matchContext, "-Xms1024M,-Xmx1024M"), is(true));
+        assertThat(criterion.match(matchContext, "-Xmx1024M"), is(true));
+        assertThat(criterion.match(matchContext, "-Xms1024M"), is(true));
+        assertThat(criterion.match(matchContext, "Xmx1024M"), is(true));
+        assertThat(criterion.match(matchContext, "Xmx"), is(true));
+        assertThat(criterion.match(matchContext, "Xms,Xmx"), is(true));
+        assertThat(criterion.match(matchContext, "-Xmx2048M"), is(false));
     }
 
     @Test
@@ -110,13 +114,14 @@ public class VmCriterionTest {
         VmCriterion criterion = VmCriterion.VM_VERSION;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setVmVersion("20.5.6");
-        assertThat(criterion.match(vmInfo, "20.5.6"), is(true));
-        assertThat(criterion.match(vmInfo, "20.5,6"), is(false));
-        assertThat(criterion.match(vmInfo, "20.5.8"), is(false));
-        assertThat(criterion.match(vmInfo, "21.5.6"), is(false));
-        assertThat(criterion.match(vmInfo, "20"), is(false));
-        assertThat(criterion.match(vmInfo, "20+"), is(false));
-        assertThat(criterion.match(vmInfo, "<=21"), is(false));
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).build();
+        assertThat(criterion.match(matchContext, "20.5.6"), is(true));
+        assertThat(criterion.match(matchContext, "20.5,6"), is(false));
+        assertThat(criterion.match(matchContext, "20.5.8"), is(false));
+        assertThat(criterion.match(matchContext, "21.5.6"), is(false));
+        assertThat(criterion.match(matchContext, "20"), is(false));
+        assertThat(criterion.match(matchContext, "20+"), is(false));
+        assertThat(criterion.match(matchContext, "<=21"), is(false));
     }
 
     @Test
@@ -124,11 +129,12 @@ public class VmCriterionTest {
         VmCriterion criterion = VmCriterion.USERNAME;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setUsername("foo-user");
-        assertThat(criterion.match(vmInfo, "foo-user"), is(true));
-        assertThat(criterion.match(vmInfo, "foo"), is(false));
-        assertThat(criterion.match(vmInfo, "user"), is(false));
-        assertThat(criterion.match(vmInfo, "*"), is(false));
-        assertThat(criterion.match(vmInfo, ".*"), is(false));
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).build();
+        assertThat(criterion.match(matchContext, "foo-user"), is(true));
+        assertThat(criterion.match(matchContext, "foo"), is(false));
+        assertThat(criterion.match(matchContext, "user"), is(false));
+        assertThat(criterion.match(matchContext, "*"), is(false));
+        assertThat(criterion.match(matchContext, ".*"), is(false));
     }
 
     @Test
@@ -136,13 +142,14 @@ public class VmCriterionTest {
         VmCriterion criterion = VmCriterion.JAVA_HOME;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setJavaHome("/some/filesystem/path/to/jdk");
-        assertThat(criterion.match(vmInfo, "/some/filesystem/path/to/jdk"), is(true));
-        assertThat(criterion.match(vmInfo, "/some/filesystem/path"), is(false));
-        assertThat(criterion.match(vmInfo, "/some/filesystem/path/to/"), is(false));
-        assertThat(criterion.match(vmInfo, "/some/filesystem/path/to/jdk/"), is(true));
-        assertThat(criterion.match(vmInfo, "some/filesystem/path/to/jdk/"), is(false));
-        assertThat(criterion.match(vmInfo, "/other/some/filesystem/path/to/jdk/"), is(false));
-        assertThat(criterion.match(vmInfo, "/some/filesystem/path"), is(false));
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).build();
+        assertThat(criterion.match(matchContext, "/some/filesystem/path/to/jdk"), is(true));
+        assertThat(criterion.match(matchContext, "/some/filesystem/path"), is(false));
+        assertThat(criterion.match(matchContext, "/some/filesystem/path/to/"), is(false));
+        assertThat(criterion.match(matchContext, "/some/filesystem/path/to/jdk/"), is(true));
+        assertThat(criterion.match(matchContext, "some/filesystem/path/to/jdk/"), is(false));
+        assertThat(criterion.match(matchContext, "/other/some/filesystem/path/to/jdk/"), is(false));
+        assertThat(criterion.match(matchContext, "/some/filesystem/path"), is(false));
     }
 
     @Test

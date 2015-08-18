@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
-import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
 import org.junit.Test;
@@ -59,13 +59,23 @@ import static org.mockito.Mockito.when;
 public class ResultsRendererTest {
 
     private static final HostInfo HOST_INFO = new HostInfo();
+    private static final AgentInformation AGENT_INFO = new AgentInformation();
     private static final VmInfo VM_INFO = new VmInfo();
-    private static final Pair<HostInfo, VmInfo> PAIR = new Pair<>(HOST_INFO, VM_INFO);
+    private static final MatchContext MATCH_CONTEXT = MatchContext.builder()
+            .hostInfo(HOST_INFO)
+            .agentInfo(AGENT_INFO)
+            .vmInfo(VM_INFO)
+            .build();
 
     static {
         HOST_INFO.setOsName("foo-os");
         HOST_INFO.setHostname("foo-host");
         HOST_INFO.setOsKernel("foo-kern");
+
+        AGENT_INFO.setAlive(true);
+        AGENT_INFO.setStartTime(150l);
+        AGENT_INFO.setStopTime(100l);
+        AGENT_INFO.setAgentId("foo-agent");
 
         VM_INFO.setJavaHome("/some/path/to/jdk");
         VM_INFO.setUsername("foo-user");
@@ -81,70 +91,70 @@ public class ResultsRendererTest {
     @Test
     public void testVmId() {
         ResultsRenderer.Field field = ResultsRenderer.Field.VM_ID;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("foo-id"));
     }
 
     @Test
     public void testMainclass() {
         ResultsRenderer.Field field = ResultsRenderer.Field.MAINCLASS;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("com.example.java.ExampleApplet"));
     }
 
     @Test
     public void testVmName() {
         ResultsRenderer.Field field = ResultsRenderer.Field.VMNAME;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("Example JVM Implementation"));
     }
 
     @Test
     public void testJavaVersion() {
         ResultsRenderer.Field field = ResultsRenderer.Field.JAVAVERSION;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("1.8"));
     }
 
     @Test
     public void testVmVersion() {
         ResultsRenderer.Field field = ResultsRenderer.Field.VMVERSION;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("20.5.6"));
     }
 
     @Test
     public void testPid() {
         ResultsRenderer.Field field = ResultsRenderer.Field.PID;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("2"));
     }
 
     @Test
     public void testUsername() {
         ResultsRenderer.Field field = ResultsRenderer.Field.USERNAME;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("foo-user"));
     }
 
     @Test
     public void testHostname() {
         ResultsRenderer.Field field = ResultsRenderer.Field.HOSTNAME;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("foo-host"));
     }
 
     @Test
     public void testOsName() {
         ResultsRenderer.Field field = ResultsRenderer.Field.OSNAME;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("foo-os"));
     }
 
     @Test
     public void testOsKernel() {
         ResultsRenderer.Field field = ResultsRenderer.Field.OSKERNEL;
-        String result = field.getAdaptedField(PAIR);
+        String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("foo-kern"));
     }
 
@@ -204,7 +214,7 @@ public class ResultsRendererTest {
         when(arguments.hasArgument(ResultsRenderer.Field.HOSTNAME.getCliSwitch())).thenReturn(true);
         when(arguments.hasArgument(ResultsRenderer.Field.PID.getCliSwitch())).thenReturn(true);
         ResultsRenderer renderer = new ResultsRenderer(arguments);
-        List<String> info = renderer.getInfo(PAIR);
+        List<String> info = renderer.getInfo(MATCH_CONTEXT);
         assertThat(info, is(equalTo(Arrays.asList("2", "foo-host"))));
     }
 
@@ -216,7 +226,7 @@ public class ResultsRendererTest {
         when(arguments.hasArgument(ResultsRenderer.Field.HOSTNAME.getCliSwitch())).thenReturn(true);
         when(arguments.hasArgument(ResultsRenderer.Field.PID.getCliSwitch())).thenReturn(true);
         ResultsRenderer renderer = new ResultsRenderer(arguments);
-        renderer.print(ps, Collections.singleton(PAIR));
+        renderer.print(ps, Collections.singleton(MATCH_CONTEXT));
         String output = baos.toString();
         assertThat(output, containsString("HOSTNAME"));
         assertThat(output, containsString("PID"));

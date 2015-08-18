@@ -1,4 +1,4 @@
-package com.redhat.thermostat.vm.find.command.internal;/*
+/*
  * Copyright 2012-2015 Red Hat, Inc.
  *
  * This file is part of Thermostat.
@@ -34,8 +34,10 @@ package com.redhat.thermostat.vm.find.command.internal;/*
  * to do so, delete this exception statement from your version.
  */
 
-interface Matcher<T> {
+package com.redhat.thermostat.vm.find.command.internal;
 
-    boolean match(T t);
+interface Matcher {
+
+    boolean match(MatchContext matchContext);
 
 }

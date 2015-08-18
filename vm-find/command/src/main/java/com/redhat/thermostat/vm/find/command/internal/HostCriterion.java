@@ -36,25 +36,23 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
-import com.redhat.thermostat.storage.model.HostInfo;
-
-enum HostCriterion implements CriterionMatcher<HostInfo, String> {
+enum HostCriterion implements CriterionMatcher {
     HOSTNAME("hostname", new HostnameMatcher()),
     OS_KERNEL("oskernel", new OsKernelMatcher()),
     OS_NAME("osname", new OsNameMatcher()),
     ;
 
     private final String cliSwitch;
-    private final CriterionMatcher<HostInfo, String> criterionMatcher;
+    private final CriterionMatcher criterionMatcher;
 
-    HostCriterion(String cliSwitch, CriterionMatcher<HostInfo, String> criterionMatcher) {
+    HostCriterion(String cliSwitch, CriterionMatcher criterionMatcher) {
         this.cliSwitch = cliSwitch;
         this.criterionMatcher = criterionMatcher;
     }
 
     @Override
-    public boolean match(HostInfo hostInfo, String value) {
-        return this.criterionMatcher.match(hostInfo, value);
+    public boolean match(MatchContext matchContext, String value) {
+        return this.criterionMatcher.match(matchContext, value);
     }
 
     String getCliSwitch() {
@@ -70,24 +68,26 @@ enum HostCriterion implements CriterionMatcher<HostInfo, String> {
         throw new IllegalArgumentException(string + " is not a legal HostCriterion");
     }
 
-    static class HostnameMatcher implements CriterionMatcher<HostInfo, String> {
+    static class HostnameMatcher implements CriterionMatcher {
         @Override
-        public boolean match(HostInfo hostInfo, String s) {
-            return hostInfo.getHostname().equals(s);
+        public boolean match(MatchContext matchContext, String s) {
+            return matchContext.getHostInfo().getHostname().equals(s);
         }
     }
 
-    static class OsKernelMatcher implements CriterionMatcher<HostInfo, String> {
+    static class OsKernelMatcher implements CriterionMatcher {
         @Override
-        public boolean match(HostInfo hostInfo, String s) {
-            return hostInfo.getOsKernel().equals(s) || hostInfo.getOsKernel().contains(s);
+        public boolean match(MatchContext matchContext, String s) {
+            String osKernel = matchContext.getHostInfo().getOsKernel();
+            return osKernel.equals(s) || osKernel.contains(s);
         }
     }
 
-    static class OsNameMatcher implements CriterionMatcher<HostInfo, String> {
+    static class OsNameMatcher implements CriterionMatcher {
         @Override
-        public boolean match(HostInfo hostInfo, String s) {
-            return hostInfo.getOsName().equals(s) || hostInfo.getOsName().contains(s);
+        public boolean match(MatchContext matchContext, String s) {
+            String osName = matchContext.getHostInfo().getOsName();
+            return osName.equals(s) || osName.contains(s);
         }
     }
 

@@ -49,11 +49,12 @@ public class HostCriterionTest {
         HostCriterion hostCriterion = HostCriterion.HOSTNAME;
         HostInfo hostInfo = new HostInfo();
         hostInfo.setHostname("foo");
-        assertThat(hostCriterion.match(hostInfo, "foo"), is(true));
-        assertThat(hostCriterion.match(hostInfo, "fo"), is(false));
-        assertThat(hostCriterion.match(hostInfo, "oo"), is(false));
-        assertThat(hostCriterion.match(hostInfo, "bar"), is(false));
-        assertThat(hostCriterion.match(hostInfo, "fooo"), is(false));
+        MatchContext matchContext = MatchContext.builder().hostInfo(hostInfo).build();
+        assertThat(hostCriterion.match(matchContext, "foo"), is(true));
+        assertThat(hostCriterion.match(matchContext, "fo"), is(false));
+        assertThat(hostCriterion.match(matchContext, "oo"), is(false));
+        assertThat(hostCriterion.match(matchContext, "bar"), is(false));
+        assertThat(hostCriterion.match(matchContext, "fooo"), is(false));
     }
 
     @Test
@@ -61,11 +62,12 @@ public class HostCriterionTest {
         HostCriterion hostCriterion = HostCriterion.OS_KERNEL;
         HostInfo hostInfo = new HostInfo();
         hostInfo.setOsKernel("foo");
-        assertThat(hostCriterion.match(hostInfo, "foo"), is(true));
-        assertThat(hostCriterion.match(hostInfo, "fo"), is(true));
-        assertThat(hostCriterion.match(hostInfo, "oo"), is(true));
-        assertThat(hostCriterion.match(hostInfo, "bar"), is(false));
-        assertThat(hostCriterion.match(hostInfo, "fooo"), is(false));
+        MatchContext matchContext = MatchContext.builder().hostInfo(hostInfo).build();
+        assertThat(hostCriterion.match(matchContext, "foo"), is(true));
+        assertThat(hostCriterion.match(matchContext, "fo"), is(true));
+        assertThat(hostCriterion.match(matchContext, "oo"), is(true));
+        assertThat(hostCriterion.match(matchContext, "bar"), is(false));
+        assertThat(hostCriterion.match(matchContext, "fooo"), is(false));
     }
 
     @Test
@@ -73,11 +75,12 @@ public class HostCriterionTest {
         HostCriterion hostCriterion = HostCriterion.OS_NAME;
         HostInfo hostInfo = new HostInfo();
         hostInfo.setOsName("foo");
-        assertThat(hostCriterion.match(hostInfo, "foo"), is(true));
-        assertThat(hostCriterion.match(hostInfo, "fo"), is(true));
-        assertThat(hostCriterion.match(hostInfo, "oo"), is(true));
-        assertThat(hostCriterion.match(hostInfo, "bar"), is(false));
-        assertThat(hostCriterion.match(hostInfo, "fooo"), is(false));
+        MatchContext matchContext = MatchContext.builder().hostInfo(hostInfo).build();
+        assertThat(hostCriterion.match(matchContext, "foo"), is(true));
+        assertThat(hostCriterion.match(matchContext, "fo"), is(true));
+        assertThat(hostCriterion.match(matchContext, "oo"), is(true));
+        assertThat(hostCriterion.match(matchContext, "bar"), is(false));
+        assertThat(hostCriterion.match(matchContext, "fooo"), is(false));
     }
 
     @Test

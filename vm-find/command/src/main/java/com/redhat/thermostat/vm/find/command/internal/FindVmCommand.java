@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.redhat.thermostat.client.cli.AgentArgument;
-import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -88,7 +87,7 @@ public class FindVmCommand extends AbstractCommand {
         HostMatcher hostMatcher = new HostMatcher(hostCriteria);
         VmMatcher vmMatcher = new VmMatcher(vmCriteria);
 
-        List<Pair<HostInfo, VmInfo>> results = performSearch(hostInfoDAO, vmInfoDAO,
+        List<MatchContext> results = performSearch(hostInfoDAO, vmInfoDAO,
                 agentsToSearch, hostMatcher, vmMatcher);
 
         ResultsRenderer resultsRenderer = new ResultsRenderer(arguments);
@@ -145,24 +144,33 @@ public class FindVmCommand extends AbstractCommand {
         }
     }
 
-    static List<Pair<HostInfo, VmInfo>> performSearch(HostInfoDAO hostInfoDAO, VmInfoDAO vmInfoDAO,
+    static List<MatchContext> performSearch(HostInfoDAO hostInfoDAO, VmInfoDAO vmInfoDAO,
             Iterable<AgentInformation> agents, HostMatcher hostMatcher, VmMatcher vmMatcher) {
-        List<Pair<HostInfo, VmInfo>> pairs = new ArrayList<>();
+        List<MatchContext> matchContexts = new ArrayList<>();
         for (AgentInformation agentInformation : filterAgents(hostInfoDAO, agents, hostMatcher)) {
             HostInfo hostInfo = getHostInfo(hostInfoDAO, agentInformation);
-            List<VmInfo> matchingVms = getMatchingVms(vmInfoDAO, agentInformation, vmMatcher);
+            List<VmInfo> matchingVms = getMatchingVms(vmInfoDAO, agentInformation, hostInfo, vmMatcher);
             for (VmInfo vm : matchingVms) {
-                pairs.add(new Pair<>(hostInfo, vm));
+                MatchContext context = MatchContext.builder()
+                        .agentInfo(agentInformation)
+                        .hostInfo(hostInfo)
+                        .vmInfo(vm)
+                        .build();
+                matchContexts.add(context);
             }
         }
-        return pairs;
+        return matchContexts;
     }
 
     static List<AgentInformation> filterAgents(HostInfoDAO hostInfoDAO, Iterable<AgentInformation> agents, HostMatcher hostMatcher) {
         List<AgentInformation> list = new ArrayList<>();
         for (AgentInformation agent : agents) {
             HostInfo hostInfo = hostInfoDAO.getHostInfo(new AgentId(agent.getAgentId()));
-            if (hostMatcher.match(hostInfo)) {
+            MatchContext context = MatchContext.builder()
+                    .agentInfo(agent)
+                    .hostInfo(hostInfo)
+                    .build();
+            if (hostMatcher.match(context)) {
                 list.add(agent);
             }
         }
@@ -173,11 +181,16 @@ public class FindVmCommand extends AbstractCommand {
         return hostInfoDAO.getHostInfo(new AgentId(agentInformation.getAgentId()));
     }
 
-    static List<VmInfo> getMatchingVms(VmInfoDAO vmInfoDAO, AgentInformation agent, VmMatcher vmMatcher) {
+    static List<VmInfo> getMatchingVms(VmInfoDAO vmInfoDAO, AgentInformation agent, HostInfo hostInfo, VmMatcher vmMatcher) {
         List<VmInfo> list = new ArrayList<>();
         for (VmId vmId : vmInfoDAO.getVmIds(new AgentId(agent.getAgentId()))) {
             VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
-            if (vmMatcher.match(vmInfo)) {
+            MatchContext context = MatchContext.builder()
+                    .agentInfo(agent)
+                    .hostInfo(hostInfo)
+                    .vmInfo(vmInfo)
+                    .build();
+            if (vmMatcher.match(context)) {
                 list.add(vmInfo);
             }
         }

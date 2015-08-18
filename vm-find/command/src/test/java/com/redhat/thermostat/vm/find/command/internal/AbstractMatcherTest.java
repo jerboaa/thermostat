@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
-import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -44,12 +44,12 @@ import static org.junit.Assert.assertThat;
 
 public class AbstractMatcherTest {
 
-    static class TestMatcher extends AbstractMatcher<BasePojo> {
+    static class TestMatcher extends AbstractMatcher {
         TestMatcher() {
-            CriterionMatcher<BasePojo, String> matcher = new CriterionMatcher<BasePojo, String>() {
+            CriterionMatcher matcher = new CriterionMatcher() {
                 @Override
-                public boolean match(BasePojo pojo, String s) {
-                    return pojo.getAgentId().equals(s);
+                public boolean match(MatchContext matchContext, String s) {
+                    return matchContext.getAgentInfo().getAgentId().equals(s);
                 }
             };
             criteriaMap.put(matcher, "foo");
@@ -58,9 +58,11 @@ public class AbstractMatcherTest {
 
     @Test
     public void testMatch() {
-        AbstractMatcher<BasePojo> matcher = new TestMatcher();
-        BasePojo foo = new BasePojo("foo");
-        BasePojo bar = new BasePojo("bar");
+        AbstractMatcher matcher = new TestMatcher();
+        AgentInformation fooAgent = new AgentInformation("foo");
+        AgentInformation barAgent = new AgentInformation("bar");
+        MatchContext foo = MatchContext.builder().agentInfo(fooAgent).build();
+        MatchContext bar = MatchContext.builder().agentInfo(barAgent).build();
         assertThat(matcher.match(foo), is(true));
         assertThat(matcher.match(bar), is(false));
     }

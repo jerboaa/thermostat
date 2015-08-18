@@ -55,11 +55,13 @@ public class VmMatcherTest {
 
         VmInfo vmInfo1 = new VmInfo();
         vmInfo1.setUsername("foo-user");
+        MatchContext matchContext1 = MatchContext.builder().vmInfo(vmInfo1).build();
 
         VmInfo vmInfo2 = new VmInfo();
         vmInfo2.setUsername("bar-user");
+        MatchContext matchContext2 = MatchContext.builder().vmInfo(vmInfo2).build();
 
-        assertThat(matcher.match(vmInfo1), is(true));
-        assertThat(matcher.match(vmInfo2), is(false));
+        assertThat(matcher.match(matchContext1), is(true));
+        assertThat(matcher.match(matchContext2), is(false));
     }
 }

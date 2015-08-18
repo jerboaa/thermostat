@@ -36,14 +36,12 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
-import com.redhat.thermostat.storage.model.VmInfo;
-
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.PatternSyntaxException;
 
-enum VmCriterion implements CriterionMatcher<VmInfo, String> {
+enum VmCriterion implements CriterionMatcher {
     JAVA_VERSION("javaversion", new JavaVersionMatcher()),
     MAINCLASS("mainclass", new MainclassMatcher()),
     VM_NAME("vmname", new VmNameMatcher()),
@@ -54,16 +52,16 @@ enum VmCriterion implements CriterionMatcher<VmInfo, String> {
     ;
 
     private final String cliSwitch;
-    private final CriterionMatcher<VmInfo, String> criterionMatcher;
+    private final CriterionMatcher criterionMatcher;
 
-    VmCriterion(String cliSwitch, CriterionMatcher<VmInfo, String> criterionMatcher) {
+    VmCriterion(String cliSwitch, CriterionMatcher criterionMatcher) {
         this.cliSwitch = cliSwitch;
         this.criterionMatcher = criterionMatcher;
     }
 
     @Override
-    public boolean match(VmInfo vmInfo, String value) {
-        return this.criterionMatcher.match(vmInfo, value);
+    public boolean match(MatchContext matchContext, String value) {
+        return this.criterionMatcher.match(matchContext, value);
     }
 
     String getCliSwitch() {
@@ -79,68 +77,69 @@ enum VmCriterion implements CriterionMatcher<VmInfo, String> {
         throw new IllegalArgumentException(string + " is not a legal VmCriterion");
     }
 
-    static class JavaVersionMatcher implements CriterionMatcher<VmInfo, String> {
+    static class JavaVersionMatcher implements CriterionMatcher {
         @Override
-        public boolean match(VmInfo vmInfo, String s) {
-            return vmInfo.getJavaVersion().equals(s);
+        public boolean match(MatchContext matchContext, String s) {
+            return matchContext.getVmInfo().getJavaVersion().equals(s);
         }
     }
 
-    static class MainclassMatcher implements CriterionMatcher<VmInfo, String> {
+    static class MainclassMatcher implements CriterionMatcher {
         @Override
-        public boolean match(VmInfo vmInfo, String s) {
+        public boolean match(MatchContext matchContext, String s) {
             try {
-                return vmInfo.getMainClass().equals(s) || vmInfo.getMainClass().contains(s) || vmInfo.getMainClass().matches(s);
+                String mainClass = matchContext.getVmInfo().getMainClass();
+                return mainClass.equals(s) || mainClass.contains(s) || mainClass.matches(s);
             } catch (PatternSyntaxException e) {
                 return false;
             }
         }
     }
 
-    static class VmNameMatcher implements CriterionMatcher<VmInfo, String> {
+    static class VmNameMatcher implements CriterionMatcher {
         @Override
-        public boolean match(VmInfo vmInfo, String s) {
-            return vmInfo.getVmName().equals(s);
+        public boolean match(MatchContext matchContext, String s) {
+            return matchContext.getVmInfo().getVmName().equals(s);
         }
     }
 
-    static class VmArgsMatcher implements CriterionMatcher<VmInfo, String> {
+    static class VmArgsMatcher implements CriterionMatcher {
         @Override
-        public boolean match(VmInfo vmInfo, String s) {
+        public boolean match(MatchContext matchContext, String s) {
             if (!s.contains(",")) {
-                return vmInfo.getVmArguments().contains(s);
+                return matchContext.getVmInfo().getVmArguments().contains(s);
             }
             boolean allPresent = true;
             String[] args = s.split(",");
             for (String arg : args) {
-                allPresent = allPresent && vmInfo.getVmArguments().contains(arg);
+                allPresent = allPresent && matchContext.getVmInfo().getVmArguments().contains(arg);
             }
             return allPresent;
         }
     }
 
-    static class VmVersionMatcher implements CriterionMatcher<VmInfo, String> {
+    static class VmVersionMatcher implements CriterionMatcher {
         @Override
-        public boolean match(VmInfo vmInfo, String s) {
-            return vmInfo.getVmVersion().equals(s);
+        public boolean match(MatchContext matchContext, String s) {
+            return matchContext.getVmInfo().getVmVersion().equals(s);
         }
     }
 
-    static class UsernameMatcher implements CriterionMatcher<VmInfo, String> {
+    static class UsernameMatcher implements CriterionMatcher {
         @Override
-        public boolean match(VmInfo vmInfo, String s) {
-            return vmInfo.getUsername().equals(s);
+        public boolean match(MatchContext matchContext, String s) {
+            return matchContext.getVmInfo().getUsername().equals(s);
         }
     }
 
-    static class JavaHomeMatcher implements CriterionMatcher<VmInfo, String> {
+    static class JavaHomeMatcher implements CriterionMatcher {
         @Override
-        public boolean match(VmInfo vmInfo, String s) {
-            if (vmInfo.getJavaHome().equals(s)) {
+        public boolean match(MatchContext matchContext, String s) {
+            if (matchContext.getVmInfo().getJavaHome().equals(s)) {
                 return true;
             }
             try {
-                Path vmPath = Paths.get(vmInfo.getJavaHome());
+                Path vmPath = Paths.get(matchContext.getVmInfo().getJavaHome());
                 Path givenPath = Paths.get(s);
                 return vmPath.equals(givenPath);
             } catch (InvalidPathException e) {

@@ -62,7 +62,10 @@ public class HostMatcherTest {
         host2.setHostname("foo");
         host2.setOsName("baz");
 
-        assertThat(matcher.match(host1), is(true));
-        assertThat(matcher.match(host2), is(false));
+        MatchContext matchContext1 = MatchContext.builder().hostInfo(host1).build();
+        MatchContext matchContext2 = MatchContext.builder().hostInfo(host2).build();
+
+        assertThat(matcher.match(matchContext1), is(true));
+        assertThat(matcher.match(matchContext2), is(false));
     }
 }
