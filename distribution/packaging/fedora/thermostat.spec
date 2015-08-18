@@ -52,6 +52,10 @@ __DEFAULT_RELEASE__ 3
   %global gson_bundle_version        2.3.1
   # Real OSGi Bundle-Version is 2.13.2.RELEASE
   %global mongo_bundle_version       2.13.2
+  # Jansi is used as bootstrap bundle and the
+  # bootstrap bundle properties file refers to the jar
+  # with version suffix. See 0001_shared_fix_bundle_loading.patch
+  %global jansi_version              1.11
 
 %else
 
@@ -73,16 +77,16 @@ __DEFAULT_RELEASE__ 3
   %global gson_bundle_version        2.2.2
   # Real OSGi Bundle-Version is 2.11.4.RELEASE
   %global mongo_bundle_version       2.11.4
+  # Jansi is used as bootstrap bundle and the
+  # bootstrap bundle properties file refers to the jar
+  # with version suffix. See 0001_shared_fix_bundle_loading.patch
+  %global jansi_version              1.9
 
 %endif
 
 # apache-commons-collections
 %global collections_bundle_version 3.2.1
 
-# Jansi is used as bootstrap bundle and the
-# bootstrap bundle properties file refers to the jar
-# with version suffix. See 0001_shared_fix_bundle_loading.patch
-%global jansi_version              1.11
 # thread plugin needs jgraphx. See gui.properties hunk in
 # 0001_shared_fix_bundle_loading.patch We pass in
 # jgraphx.osgi.version via the command line.
