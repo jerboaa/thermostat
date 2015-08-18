@@ -47,9 +47,11 @@ import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 
-
+@Category(CacioTest.class)
 public class TreeMapZoomBarTest {
 
     private TreeMapComponent treeMap;
