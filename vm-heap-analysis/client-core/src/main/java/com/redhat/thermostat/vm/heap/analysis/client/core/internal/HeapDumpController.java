@@ -110,6 +110,8 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
 
     private ProgressNotifier notifier;
     
+    private HeapDumpListController heapDumpListController;
+    
     public HeapDumpController(final VmMemoryStatDAO vmMemoryStatDao,
                               final VmInfoDAO vmInfoDao,
                               final HeapDAO heapDao, final VmRef ref,
@@ -210,19 +212,19 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
             public void actionPerformed(ActionEvent<HeapDumperAction> actionEvent) {
                 HeapDump dump = null;
                 switch (actionEvent.getActionId()) {
-                case DUMP_REQUESTED:
+                case DUMP_REQUESTED: {
                     view.disableHeapDumping(DumpDisabledReason.DUMP_IN_PROGRESS);
                     requestDump(heapDumper);
-                    break;
+                } break;
                     
-                case REQUEST_DISPLAY_DUMP_LIST:
+                case REQUEST_DISPLAY_DUMP_LIST: {
                     openDumpList();
-                    break;
+                } break;
                     
-                case ANALYSE:
+                case ANALYSE: {
                     dump = (HeapDump) actionEvent.getPayload();
                     analyseDump(dump);
-                    break;
+                } break;
                     
                 case REQUEST_EXPORT: {
                     dump = (HeapDump) actionEvent.getPayload();
@@ -288,14 +290,17 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         appService.getApplicationExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                List<HeapDump> dumps = getHeapDumps();
-                HeapDumpListController controller =
-                        new HeapDumpListController(heapDumpListViewProvider,
-                                                   HeapDumpController.this);
-                controller.setDumps(dumps);
-                view.openDumpListView(controller.getView());                
+                if (heapDumpListController == null) {
+                    heapDumpListController = createHeapDumpListController();
+                }
+                updateDumpList();
+                view.openDumpListView(heapDumpListController.getView());                
             }
         });
+    }
+    
+    HeapDumpListController createHeapDumpListController() {
+        return new HeapDumpListController(heapDumpListViewProvider, this);
     }
     
     private void requestDump(final HeapDumper heapDumper) {
@@ -316,6 +321,8 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                             heapDumper.dump();
                             view.enableHeapDumping();
                             view.notifyHeapDumpComplete();
+                            updateDumpList();
+                            
                         } catch (CommandException e) {
                             view.displayWarning(e.getTranslatedMessage());
                         }
@@ -325,6 +332,14 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         });
     }
 
+    private void updateDumpList() {
+        if (heapDumpListController == null) {
+            return;
+        }
+        List<HeapDump> dumps = getHeapDumps();
+        heapDumpListController.setDumps(dumps);
+    }
+    
     void analyseDump(final HeapDump dump) {
         appService.getApplicationExecutor().execute(new Runnable() {
             @Override

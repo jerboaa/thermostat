@@ -132,7 +132,7 @@ public class HeapDumpControllerTest {
     private HeapDumpListViewProvider heapDumpListViewProvider;
     
     private ProgressNotifier notifier;
-    
+    private HeapDumpListController heapDumpListController;
     @Before
     public void setUp() {
         heapDao = mock(HeapDAO.class);
@@ -213,10 +213,16 @@ public class HeapDumpControllerTest {
         when(ref.getVmId()).thenReturn("vm-id");
         when(ref.getHostRef()).thenReturn(hostRef);
 
+        heapDumpListController = mock(HeapDumpListController.class);
+        
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramProvider, treeMapProvider,
                 objectDetailsProvider, objectRootsProvider, heapDumpListViewProvider,
-                heapDumper, notifier);
+                heapDumper, notifier) {
+            HeapDumpListController createHeapDumpListController() {
+                return heapDumpListController;
+            }
+        };
     }
     
     @After
@@ -566,6 +572,32 @@ public class HeapDumpControllerTest {
     private void assertTimeStampIsAround(long expected, long actual) {
         assertTrue(actual <= expected + 1000);
         assertTrue(actual >= expected - 1000);
+    }
+    
+    @Test
+    public void testRequestHeapDumpUpdatesDumpList() throws CommandException, InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
+        mockExecutorService(latch);
+        setUpListeners();
+
+        heapDumperListener.actionPerformed(new ActionEvent<HeapDumperAction>(view, HeapDumperAction.DUMP_REQUESTED));
+        latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        verify(heapDumper).dump();
+        verify(view).notifyHeapDumpComplete();
+        
+        // the list has not been opened yet, so no interaction should happen
+        // here
+        verify(heapDumpListController, times(0)).setDumps(any(List.class));
+        
+        // now the list should be intialiased
+        heapDumperListener.actionPerformed(new ActionEvent<HeapDumperAction>(view, HeapDumperAction.REQUEST_DISPLAY_DUMP_LIST));
+        verify(heapDumpListController, times(1)).setDumps(any(List.class));
+        
+        // since it was initialised before, we should see another interaction
+        // here
+        heapDumperListener.actionPerformed(new ActionEvent<HeapDumperAction>(view, HeapDumperAction.DUMP_REQUESTED));
+        verify(heapDumpListController, times(2)).setDumps(any(List.class));
     }
 
 }
