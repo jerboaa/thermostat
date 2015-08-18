@@ -95,7 +95,6 @@ public class GCCommandTest {
             
             @Override
             public AliveStatus isAlive(AgentInformation agentInfo) {
-                System.out.println("returning running");
                 return AliveStatus.RUNNING;
             }
             
