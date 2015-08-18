@@ -183,13 +183,22 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         profileList.setCellRenderer(new ProfileItemRenderer());
         profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         profileList.addListSelectionListener(new ListSelectionListener() {
+
+            private Profile oldValue = null;
+
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
 
-                fireProfileAction(ProfileAction.PROFILE_SELECTED);
+                Profile newValue = profileList.getModel().getElementAt(e.getFirstIndex());
+
+                if (oldValue == null || !oldValue.equals(newValue)) {
+                    oldValue = newValue;
+                    fireProfileAction(ProfileAction.PROFILE_SELECTED);
+                }
+
             }
         });
         ThermostatScrollPane profileListPane = new ThermostatScrollPane(profileList);
@@ -285,11 +294,23 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     }
 
     @Override
-    public void setAvailableProfilingRuns(List<Profile> data) {
-        listModel.clear();
-        for (Profile item : data) {
-            listModel.addElement(item);
-        }
+    public void setAvailableProfilingRuns(final List<Profile> data) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                Profile selectedValue = profileList.getSelectedValue();
+
+                DefaultListModel<Profile> newListModel = new DefaultListModel<>();
+                for (Profile item : data) {
+                    newListModel.addElement(item);
+                }
+
+                profileList.setModel(newListModel);
+                if (selectedValue != null) {
+                    profileList.setSelectedValue(selectedValue, /* shouldScroll = */ true);
+                }
+            }
+        });
     }
 
     @Override

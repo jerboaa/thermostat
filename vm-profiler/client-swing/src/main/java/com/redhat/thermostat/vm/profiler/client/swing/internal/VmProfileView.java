@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
@@ -51,6 +52,19 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
         public Profile(String name, long timeStamp) {
             this.name = name;
             this.timeStamp = timeStamp;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (obj.getClass() != Profile.class) {
+                return false;
+            }
+            Profile other = (Profile) obj;
+            return Objects.equals(this.name, other.name)
+                    && Objects.equals(this.timeStamp, other.timeStamp);
         }
     }
 

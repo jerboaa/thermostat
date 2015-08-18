@@ -39,6 +39,8 @@ package com.redhat.thermostat.vm.profiler.client.swing.internal;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -300,6 +302,8 @@ public class VmProfileController implements InformationServiceController<VmRef> 
             profiles.add(profile);
         }
 
+        Collections.sort(profiles, new ByTimeStamp());
+
         view.setAvailableProfilingRuns(profiles);
     }
 
@@ -321,4 +325,10 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         return translator.localize(LocaleResources.PROFILER_TAB_NAME);
     }
 
+    static class ByTimeStamp implements Comparator<Profile> {
+        @Override
+        public int compare(Profile o1, Profile o2) {
+            return Long.compare(o1.timeStamp, o2.timeStamp);
+        }
+    }
 }
