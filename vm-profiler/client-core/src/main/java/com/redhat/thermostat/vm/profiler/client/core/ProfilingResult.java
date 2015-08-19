@@ -39,16 +39,18 @@ package com.redhat.thermostat.vm.profiler.client.core;
 import java.util.Collections;
 import java.util.List;
 
+import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
+
 public class ProfilingResult {
 
     public static class MethodInfo {
 
-        public final String name;
+        public final MethodDeclaration decl;
         public final long totalTimeInMillis;
         public final double percentageTime;
 
-        public MethodInfo(String name, long totalTime, double percentageTime) {
-            this.name = name;
+        public MethodInfo(MethodDeclaration decl, long totalTime, double percentageTime) {
+            this.decl = decl;
             this.totalTimeInMillis = totalTime;
             this.percentageTime = percentageTime;
         }

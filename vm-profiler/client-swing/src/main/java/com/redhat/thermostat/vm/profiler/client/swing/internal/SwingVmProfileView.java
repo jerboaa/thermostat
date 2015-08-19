@@ -37,10 +37,12 @@
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -69,8 +71,11 @@ import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
+import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
@@ -337,12 +342,50 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
         for (MethodInfo methodInfo: results.getMethodInfo()) {
             Object[] data = new Object[] {
-                    methodInfo.name,
+                    syntaxHighlightMethod(methodInfo.decl),
                     methodInfo.percentageTime,
                     methodInfo.totalTimeInMillis,
             };
             tableModel.addRow(data);
         }
+    }
+
+    private String syntaxHighlightMethod(MethodDeclaration decl) {
+        final Color METHOD_COLOR = Palette.PALE_RED.getColor();
+        final Color PARAMETER_COLOR = Palette.AZUREUS.getColor();
+        final Color RETURN_TYPE_COLOR = Palette.SKY_BLUE.getColor();
+
+        String highlightedName = htmlColorText(decl.getName(), METHOD_COLOR);
+        String highlightedReturnType = htmlColorText(decl.getReturnType(), RETURN_TYPE_COLOR);
+
+        StringBuilder toReturn = new StringBuilder();
+        toReturn.append("<html>");
+        toReturn.append("<pre>");
+
+        toReturn.append(highlightedReturnType);
+        toReturn.append(" ");
+        toReturn.append("<b>");
+        toReturn.append(highlightedName);
+        toReturn.append("</b>");
+        toReturn.append("(");
+
+        ArrayList<String> parameters = new ArrayList<>();
+        for (String parameter : decl.getParameters()) {
+            parameters.add(htmlColorText(parameter, PARAMETER_COLOR));
+        }
+
+        toReturn.append(StringUtils.join(",", parameters));
+
+        toReturn.append(")");
+        toReturn.append("</pre>");
+        toReturn.append("<html>");
+        return toReturn.toString();
+
+    }
+
+    private String htmlColorText(String unescapedText, Color color) {
+        return "<font color='" + ("#" + Integer.toHexString(color.getRGB() & 0x00ffffff)) + "'>"
+                + StringUtils.htmlEscape(unescapedText) + "</font>";
     }
 
     @Override
@@ -362,14 +405,16 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 window.setVisible(true);
 
                 List<MethodInfo> data = new ArrayList<>();
-                data.add(new MethodInfo("foo", 1000, 1.0));
-                data.add(new MethodInfo("foo2", 10001, 100001));
-                data.add(new MethodInfo("bar", 200, 3.5));
-                data.add(new MethodInfo("baz", 100000, 9.8));
-                data.add(new MethodInfo("spam", 5000, 0.99999));
+                data.add(new MethodInfo(new MethodDeclaration("foo", list("int"), "int"), 1000, 1.0));
+                data.add(new MethodInfo(new MethodDeclaration("bar", list("foo.bar.Baz", "int"), "Bar"), 100000, 100));
                 ProfilingResult results = new ProfilingResult(data);
                 view.setProfilingDetailData(results);
             }
+
+            private List<String> list(String... args) {
+                return Arrays.asList(args);
+            }
         });
     }
+
 }

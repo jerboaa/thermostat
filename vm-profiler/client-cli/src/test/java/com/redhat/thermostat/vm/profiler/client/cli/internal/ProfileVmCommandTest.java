@@ -168,7 +168,7 @@ public class ProfileVmCommandTest {
         AgentInformation agentInfo = mock(AgentInformation.class);
         when(agentsDao.getAgentInformation(agentId)).thenReturn(agentInfo);
 
-        String data = "1000000 foo\n3000000 bar";
+        String data = "1000000 foo()V\n3000000 bar(I)I";
         ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
         when(profileDao.loadLatestProfileData(agentId, vmId)).thenReturn(in);
 
@@ -180,7 +180,7 @@ public class ProfileVmCommandTest {
         cmd.run(ctx);
 
         assertEquals("% Time    Time (ms) Method Name\n" +
-                     "75.000000 3         bar\n" +
-                     "25.000000 1         foo\n", cmdCtxFactory.getOutput());
+                     "75.000000 3         int bar(int)\n" +
+                     "25.000000 1         void foo()\n", cmdCtxFactory.getOutput());
     }
 }

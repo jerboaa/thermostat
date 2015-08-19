@@ -77,5 +77,18 @@ public class StringUtils {
 
         return result.toString();
     }
+
+    /** Make a string usable as html by escaping everything dangerous inside it */
+    public static String htmlEscape(String in) {
+        // https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.231_-_HTML_Escape_Before_Inserting_Untrusted_Data_into_HTML_Element_Content
+        in = in.replaceAll("&", "&amp;");
+        in = in.replaceAll("<", "&lt;");
+        in = in.replaceAll(">", "&gt;");
+        in = in.replaceAll("\"", "&quot;");
+        in = in.replaceAll("'", "&#x27;");
+        in = in.replaceAll("/", "&#x2F;");
+        return in;
+    }
+
 }
 

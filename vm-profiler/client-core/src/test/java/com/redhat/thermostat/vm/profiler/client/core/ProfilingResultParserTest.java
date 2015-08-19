@@ -50,7 +50,7 @@ public class ProfilingResultParserTest {
 
     @Test
     public void parsesCorrectly() throws Exception {
-        String data = "1000000 foo\n2000000 bar";
+        String data = "1000000 foo()V\n2000000 bar()I";
         ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
 
         ProfilingResult result = new ProfilingResultParser().parse(in);
@@ -58,11 +58,11 @@ public class ProfilingResultParserTest {
         List<MethodInfo> methods = result.getMethodInfo();
 
         MethodInfo method0 = methods.get(0);
-        assertEquals("foo", method0.name);
+        assertEquals("void foo()", method0.decl.toString());
         assertEquals(1, method0.totalTimeInMillis);
 
         MethodInfo method1 = methods.get(1);
-        assertEquals("bar", method1.name);
+        assertEquals("int bar()", method1.decl.toString());
         assertEquals(2, method1.totalTimeInMillis);
     }
 }

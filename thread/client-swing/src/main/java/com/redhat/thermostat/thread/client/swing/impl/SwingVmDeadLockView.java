@@ -67,6 +67,7 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollBar;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
+import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.DeadlockParser;
 import com.redhat.thermostat.thread.client.common.DeadlockParser.Information;
@@ -251,7 +252,7 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
     private static String getThreadTooltip(DeadlockParser.Thread thread) {
         return translate.localize(
                 LocaleResources.DEADLOCK_THREAD_TOOLTIP,
-                htmlEscape(thread.waitingOn.name),
+                StringUtils.htmlEscape(thread.waitingOn.name),
                 stackTraceToHtmlString(thread.stackTrace))
             .getContents();
     }
@@ -259,20 +260,9 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
     private static String stackTraceToHtmlString(List<String> items) {
         StringBuilder result = new StringBuilder();
         for (String item : items) {
-            result.append(htmlEscape(item)).append("<br/>");
+            result.append(StringUtils.htmlEscape(item)).append("<br/>");
         }
         return result.toString();
-    }
-
-    private static String htmlEscape(String in) {
-        // https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.231_-_HTML_Escape_Before_Inserting_Untrusted_Data_into_HTML_Element_Content
-        in = in.replaceAll("&", "&amp;");
-        in = in.replaceAll("<", "&lt;");
-        in = in.replaceAll(">", "&gt;");
-        in = in.replaceAll("\"", "&quot;");
-        in = in.replaceAll("'", "&#x27;");
-        in = in.replaceAll("/", "&#x2F;");
-        return in;
     }
 
     private static String getEdgeTooltip(DeadlockParser.Thread thread, Map<String, String> idToLabel) {

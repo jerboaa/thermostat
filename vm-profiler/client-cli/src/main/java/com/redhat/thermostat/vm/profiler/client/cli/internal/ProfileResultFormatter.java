@@ -61,7 +61,7 @@ public class ProfileResultFormatter {
     public void addMethodInfo(MethodInfo methodInfo) {
         printLine(String.format("%4f", methodInfo.percentageTime),
                 String.valueOf(methodInfo.totalTimeInMillis),
-                methodInfo.name);
+                methodInfo.decl.toString());
     }
 
     public void format(OutputStream output) {

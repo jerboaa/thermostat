@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,4 +63,18 @@ public class StringUtilsTest {
             return Arrays.asList(items);
         }
     }
+
+    @Test
+    public void testHtmlEscape() {
+        String plainText = "hello";
+        assertEquals(plainText, StringUtils.htmlEscape(plainText));
+
+        String funnyCharacters = "<a h=\"f\">b</a>";
+        String escapedFunnyCharacters = StringUtils.htmlEscape(funnyCharacters);
+        assertFalse(escapedFunnyCharacters.contains("<"));
+        assertFalse(escapedFunnyCharacters.contains(">"));
+        assertFalse(escapedFunnyCharacters.contains("\""));
+        assertFalse(escapedFunnyCharacters.contains("/"));
+    }
+
 }

@@ -53,6 +53,37 @@ public class MethodDescriptorConverter {
 
     private static final Map<Character, String> lookupTable = new HashMap<>();
 
+    public static class MethodDeclaration {
+
+        private final String name;
+        private final List<String> parameters;
+        private final String returnType;
+
+        public MethodDeclaration(String name, List<String> parameters, String returnType) {
+            this.name = name;
+            this.parameters = parameters;
+            this.returnType = returnType;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public List<String> getParameters() {
+            return parameters;
+        }
+
+        public String getReturnType() {
+            return returnType;
+        }
+
+        @Override
+        public String toString() {
+            String parameters = StringUtils.join(", ", this.parameters);
+            return returnType + " " + name + "(" + parameters + ")";
+        }
+    }
+
     static {
         lookupTable.put('Z', "boolean");
         lookupTable.put('B', "byte");
@@ -70,6 +101,10 @@ public class MethodDescriptorConverter {
     }
 
     public static String toJavaType(String methodName, String descriptor) {
+        return toJavaDeclaration(methodName, descriptor).toString();
+    }
+
+    public static MethodDeclaration toJavaDeclaration(String methodName, String descriptor) {
         final int NOT_FOUND = -1;
 
         int start = descriptor.indexOf('(');
@@ -79,13 +114,12 @@ public class MethodDescriptorConverter {
         }
 
         String parameterPart = descriptor.substring(start+1, end);
-        List<String> decodedParameters = convertParameters(parameterPart);
-        String parameters = StringUtils.join(", ", decodedParameters);
+        List<String> parameters = convertParameters(parameterPart);
 
         String returnPart = descriptor.substring(end+1);
         String returnType = DescriptorConverter.toJavaType(returnPart, lookupTable);
 
-        return returnType + " " + methodName.replace('/', '.') + "(" + parameters + ")";
+        return new MethodDeclaration(methodName.replace('/', '.'), parameters, returnType);
     }
 
     private static List<String> convertParameters(String parameterPart) {

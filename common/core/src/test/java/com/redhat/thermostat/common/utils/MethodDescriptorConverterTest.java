@@ -78,4 +78,19 @@ public class MethodDescriptorConverterTest {
         assertEquals(expected, result);
     }
 
+    @Test (expected=IllegalArgumentException.class)
+    public void verifyDescriptorsWithoutParenthesisThrowsExceptions() {
+        MethodDescriptorConverter.toJavaType("foo");
+    }
+
+    @Test (expected=IllegalArgumentException.class)
+    public void verifyDescriptorWithBadClassCausesException() {
+        MethodDescriptorConverter.toJavaType("foo(Ljava/lang/Object)"); // no ';' matching 'L'
+    }
+
+    @Test (expected=IllegalArgumentException.class)
+    public void verifyUnrecognizedDescriptorCausesException() {
+        MethodDescriptorConverter.toJavaType("foo(X)");
+    }
+
 }

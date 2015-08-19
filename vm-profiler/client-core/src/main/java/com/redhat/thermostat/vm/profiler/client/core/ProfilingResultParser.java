@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -54,8 +53,23 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.MethodDescriptorConverter;
+import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
+/**
+ * Results are expected to be in this format, one result per line:
+ *
+ * <pre>
+ * [methodTime] [method]
+ * </pre>
+ *
+ * Where {@code methodTime} is the total time, in nanoseconds, that the method
+ * took. {@code method} is the method name followed by the method
+ * descriptor, as defined by the <a href=
+ * "http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3.3">
+ * Java Language</a>. An example is {@code foo(I)I} to indicate
+ * {@code int foo(int)}.
+ */
 public class ProfilingResultParser {
 
     private static final Logger logger = LoggingUtils.getLogger(ProfilingResultParser.class);
@@ -92,8 +106,8 @@ public class ProfilingResultParser {
 
         for (Entry<String, Long> entry : results.entrySet()) {
             String methodNameAndDescriptor = entry.getKey();
-            String methodName = prettify(methodNameAndDescriptor);
-            MethodInfo method = new MethodInfo(methodName, entry.getValue(), (entry.getValue() * 1.0 / totalTime) * 100);
+            MethodDeclaration declaration = breakDownMethod(methodNameAndDescriptor);
+            MethodInfo method = new MethodInfo(declaration, entry.getValue(), (entry.getValue() * 1.0 / totalTime) * 100);
             info.add(method);
         }
 
@@ -107,14 +121,15 @@ public class ProfilingResultParser {
         return new ProfilingResult(info);
     }
 
-    private String prettify(String name) {
+    private MethodDeclaration breakDownMethod(String name) {
         int startDescriptor = name.indexOf('(');
         if (startDescriptor == -1) {
             // handle malformed method descriptor by returning it as it is
-            return name;
+            return new MethodDeclaration(name, new ArrayList<String>(), "");
         }
         String methodClassName = name.substring(0, startDescriptor);
-        return MethodDescriptorConverter.toJavaType(methodClassName, name.substring(startDescriptor));
+
+        return MethodDescriptorConverter.toJavaDeclaration(methodClassName, name.substring(startDescriptor));
     }
 
 }

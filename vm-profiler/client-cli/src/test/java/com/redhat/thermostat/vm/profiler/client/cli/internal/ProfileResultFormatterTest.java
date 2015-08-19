@@ -40,10 +40,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
@@ -83,7 +85,8 @@ public class ProfileResultFormatterTest {
         long time = 1;
         double percentage = 100;
 
-        MethodInfo info = new MethodInfo(methodName, time, percentage);
+        MethodDeclaration decl = new MethodDeclaration("Class.method", Arrays.<String>asList(), "void");
+        MethodInfo info = new MethodInfo(decl, time, percentage);
 
         formatter.addMethodInfo(info);
         formatter.format(out);
