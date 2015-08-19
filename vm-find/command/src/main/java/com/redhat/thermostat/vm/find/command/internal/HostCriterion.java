@@ -51,7 +51,7 @@ enum HostCriterion implements CriterionMatcher {
     }
 
     @Override
-    public boolean match(MatchContext matchContext, String value) {
+    public boolean match(MatchContext matchContext, String value) throws UnrecognizedArgumentException {
         return this.criterionMatcher.match(matchContext, value);
     }
 

@@ -73,8 +73,8 @@ public class ResultsRendererTest {
         HOST_INFO.setOsKernel("foo-kern");
 
         AGENT_INFO.setAlive(true);
-        AGENT_INFO.setStartTime(150l);
-        AGENT_INFO.setStopTime(100l);
+        AGENT_INFO.setStartTime(50l);
+        AGENT_INFO.setStopTime(-1l);
         AGENT_INFO.setAgentId("foo-agent");
 
         VM_INFO.setJavaHome("/some/path/to/jdk");
@@ -86,6 +86,8 @@ public class ResultsRendererTest {
         VM_INFO.setVmId("foo-id");
         VM_INFO.setVmName("Example JVM Implementation");
         VM_INFO.setVmPid(2);
+        VM_INFO.setStartTimeStamp(100l);
+        VM_INFO.setStopTimeStamp(-1l);
     }
 
     @Test
@@ -100,6 +102,13 @@ public class ResultsRendererTest {
         ResultsRenderer.Field field = ResultsRenderer.Field.MAINCLASS;
         String result = field.getAdaptedField(MATCH_CONTEXT);
         assertThat(result, containsString("com.example.java.ExampleApplet"));
+    }
+
+    @Test
+    public void testVmStatus() {
+        ResultsRenderer.Field field = ResultsRenderer.Field.VMSTATUS;
+        String result = field.getAdaptedField(MATCH_CONTEXT);
+        assertThat(result, containsString("RUNNING"));
     }
 
     @Test

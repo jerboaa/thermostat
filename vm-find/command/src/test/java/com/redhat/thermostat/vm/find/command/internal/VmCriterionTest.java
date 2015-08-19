@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 import org.junit.Test;
 
@@ -45,7 +46,7 @@ import static org.junit.Assert.assertThat;
 public class VmCriterionTest {
 
     @Test
-    public void testJavaVersion() {
+    public void testJavaVersion() throws UnrecognizedArgumentException {
         VmCriterion criterion = VmCriterion.JAVA_VERSION;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setJavaVersion("1.8");
@@ -60,7 +61,7 @@ public class VmCriterionTest {
     }
 
     @Test
-    public void testMainClass() {
+    public void testMainClass() throws UnrecognizedArgumentException {
         VmCriterion criterion = VmCriterion.MAINCLASS;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setMainClass("com.example.java.ExampleApplet");
@@ -80,7 +81,138 @@ public class VmCriterionTest {
     }
 
     @Test
-    public void testVmName() {
+    public void testVmStatusWithRunningVM() throws UnrecognizedArgumentException {
+        VmCriterion criterion = VmCriterion.VM_STATUS;
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setStartTimeStamp(100l);
+        vmInfo.setStopTimeStamp(-1l);
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setStartTime(50l);
+        agentInfo.setStopTime(-1l);
+        agentInfo.setAlive(true);
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).agentInfo(agentInfo).build();
+        assertThat(criterion.match(matchContext, "RUNNING"), is(true));
+        assertThat(criterion.match(matchContext, "RuNnInG"), is(true));
+        assertThat(criterion.match(matchContext, "running"), is(true));
+        assertThat(criterion.match(matchContext, "EXITED"), is(false));
+        assertThat(criterion.match(matchContext, "ExItEd"), is(false));
+        assertThat(criterion.match(matchContext, "exited"), is(false));
+        assertThat(criterion.match(matchContext, "UNKNOWN"), is(false));
+        assertThat(criterion.match(matchContext, "UnKnOwN"), is(false));
+        assertThat(criterion.match(matchContext, "unknown"), is(false));
+    }
+
+    @Test
+    public void testVmStatusWithExitedVM() throws UnrecognizedArgumentException {
+        VmCriterion criterion = VmCriterion.VM_STATUS;
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setStartTimeStamp(100l);
+        vmInfo.setStopTimeStamp(150l);
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setStartTime(50l);
+        agentInfo.setStopTime(-1l);
+        agentInfo.setAlive(true);
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).agentInfo(agentInfo).build();
+        assertThat(criterion.match(matchContext, "RUNNING"), is(false));
+        assertThat(criterion.match(matchContext, "RuNnInG"), is(false));
+        assertThat(criterion.match(matchContext, "running"), is(false));
+        assertThat(criterion.match(matchContext, "EXITED"), is(true));
+        assertThat(criterion.match(matchContext, "ExItEd"), is(true));
+        assertThat(criterion.match(matchContext, "exited"), is(true));
+        assertThat(criterion.match(matchContext, "UNKNOWN"), is(false));
+        assertThat(criterion.match(matchContext, "UnKnOwN"), is(false));
+        assertThat(criterion.match(matchContext, "unknown"), is(false));
+    }
+
+    @Test
+    public void testVmStatusWithExitedVMAndDeadAgent() throws UnrecognizedArgumentException {
+        VmCriterion criterion = VmCriterion.VM_STATUS;
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setStartTimeStamp(100l);
+        vmInfo.setStopTimeStamp(150l);
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setStartTime(50l);
+        agentInfo.setStopTime(125l);
+        agentInfo.setAlive(false);
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).agentInfo(agentInfo).build();
+        assertThat(criterion.match(matchContext, "RUNNING"), is(false));
+        assertThat(criterion.match(matchContext, "RuNnInG"), is(false));
+        assertThat(criterion.match(matchContext, "running"), is(false));
+        assertThat(criterion.match(matchContext, "EXITED"), is(true));
+        assertThat(criterion.match(matchContext, "ExItEd"), is(true));
+        assertThat(criterion.match(matchContext, "exited"), is(true));
+        assertThat(criterion.match(matchContext, "UNKNOWN"), is(false));
+        assertThat(criterion.match(matchContext, "UnKnOwN"), is(false));
+        assertThat(criterion.match(matchContext, "unknown"), is(false));
+    }
+
+    @Test
+    public void testVmStatusWithRunningVMAndDeadAgent() throws UnrecognizedArgumentException {
+        VmCriterion criterion = VmCriterion.VM_STATUS;
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setStartTimeStamp(100l);
+        vmInfo.setStopTimeStamp(-1l);
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setStartTime(50l);
+        agentInfo.setStopTime(125l);
+        agentInfo.setAlive(false);
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).agentInfo(agentInfo).build();
+        assertThat(criterion.match(matchContext, "RUNNING"), is(false));
+        assertThat(criterion.match(matchContext, "RuNnInG"), is(false));
+        assertThat(criterion.match(matchContext, "running"), is(false));
+        assertThat(criterion.match(matchContext, "EXITED"), is(false));
+        assertThat(criterion.match(matchContext, "ExItEd"), is(false));
+        assertThat(criterion.match(matchContext, "exited"), is(false));
+        assertThat(criterion.match(matchContext, "UNKNOWN"), is(true));
+        assertThat(criterion.match(matchContext, "UnKnOwN"), is(true));
+        assertThat(criterion.match(matchContext, "unknown"), is(true));
+    }
+
+    @Test(expected = UnrecognizedArgumentException.class)
+    public void testVmStatusDoesNotAcceptSubstrings() throws UnrecognizedArgumentException {
+        VmCriterion criterion = VmCriterion.VM_STATUS;
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setStartTimeStamp(100l);
+        vmInfo.setStopTimeStamp(-1l);
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setStartTime(50l);
+        agentInfo.setStopTime(-1l);
+        agentInfo.setAlive(true);
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).agentInfo(agentInfo).build();
+        criterion.match(matchContext, "RUN");
+    }
+
+    @Test(expected = UnrecognizedArgumentException.class)
+    public void testVmStatusDoesNotAcceptSubstrings2() throws UnrecognizedArgumentException {
+        VmCriterion criterion = VmCriterion.VM_STATUS;
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setStartTimeStamp(100l);
+        vmInfo.setStopTimeStamp(-1l);
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setStartTime(50l);
+        agentInfo.setStopTime(-1l);
+        agentInfo.setAlive(true);
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).agentInfo(agentInfo).build();
+        criterion.match(matchContext, "EXIT");
+    }
+
+
+    @Test(expected = UnrecognizedArgumentException.class)
+    public void testVmStatusDoesNotAcceptSubstrings3() throws UnrecognizedArgumentException {
+        VmCriterion criterion = VmCriterion.VM_STATUS;
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setStartTimeStamp(100l);
+        vmInfo.setStopTimeStamp(-1l);
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setStartTime(50l);
+        agentInfo.setStopTime(-1l);
+        agentInfo.setAlive(true);
+        MatchContext matchContext = MatchContext.builder().vmInfo(vmInfo).agentInfo(agentInfo).build();
+        criterion.match(matchContext, "UNK");
+    }
+
+    @Test
+    public void testVmName() throws UnrecognizedArgumentException {
         VmCriterion criterion = VmCriterion.VM_NAME;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setVmName("Example JVM Implementation Name");
@@ -93,7 +225,7 @@ public class VmCriterionTest {
     }
 
     @Test
-    public void testVmArgs() {
+    public void testVmArgs() throws UnrecognizedArgumentException {
         VmCriterion criterion = VmCriterion.VM_ARGS;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setVmArguments("-Xmx1024M -Xms1024M");
@@ -110,7 +242,7 @@ public class VmCriterionTest {
     }
 
     @Test
-    public void testVmVersion() {
+    public void testVmVersion() throws UnrecognizedArgumentException {
         VmCriterion criterion = VmCriterion.VM_VERSION;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setVmVersion("20.5.6");
@@ -125,7 +257,7 @@ public class VmCriterionTest {
     }
 
     @Test
-    public void testUsername() {
+    public void testUsername() throws UnrecognizedArgumentException {
         VmCriterion criterion = VmCriterion.USERNAME;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setUsername("foo-user");
@@ -138,7 +270,7 @@ public class VmCriterionTest {
     }
 
     @Test
-    public void testJavahome() {
+    public void testJavahome() throws UnrecognizedArgumentException {
         VmCriterion criterion = VmCriterion.JAVA_HOME;
         VmInfo vmInfo = new VmInfo();
         vmInfo.setJavaHome("/some/filesystem/path/to/jdk");

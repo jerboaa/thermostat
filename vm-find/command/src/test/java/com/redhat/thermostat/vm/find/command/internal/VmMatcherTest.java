@@ -48,7 +48,7 @@ import static org.junit.Assert.assertThat;
 public class VmMatcherTest {
 
     @Test
-    public void testTestMatch() {
+    public void testTestMatch() throws UnrecognizedArgumentException {
         Map<String, String> map = new HashMap<>();
         map.put("username", "foo-user");
         VmMatcher matcher = new VmMatcher(map);

@@ -52,6 +52,7 @@ class ResultsRenderer {
     enum Field {
         VM_ID("show-vm-ids", new VmIdFieldAdapter()),
         MAINCLASS("show-mainclasses", new MainClassFieldAdapter()),
+        VMSTATUS("show-vmstatuses", new VmStatusFieldAdapter()),
         VMNAME("show-vmnames", new VmNameFieldAdapter()),
         JAVAVERSION("show-javaversions", new JavaVersionFieldAdapter()),
         VMVERSION("show-vmversions", new VmVersionFieldAdapter()),
@@ -145,6 +146,13 @@ class ResultsRenderer {
         @Override
         public String map(MatchContext matchContext) {
             return matchContext.getVmInfo().getMainClass();
+        }
+    }
+
+    static class VmStatusFieldAdapter implements FieldAdapter {
+        @Override
+        public String map(MatchContext matchContext) {
+            return matchContext.getVmInfo().isAlive(matchContext.getAgentInfo()).toString().toUpperCase();
         }
     }
 

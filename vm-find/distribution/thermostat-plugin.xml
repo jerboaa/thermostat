@@ -77,6 +77,10 @@
           <description>enable display of mainclass</description>
         </option>
         <option>
+          <long>show-vmstatuses</long>
+          <description>enable display of VM statuses (RUNNING, EXITED, UNKNOWN)</description>
+        </option>
+        <option>
           <long>show-vmnames</long>
           <description>enable display of VM names</description>
         </option>
@@ -127,6 +131,13 @@
           <argument>nameOrRegex</argument>
           <required>false</required>
           <description>the main class the VM is running. Can be fully qualified name, substring, or regular expression</description>
+        </option>
+        <option>
+          <long>vmstatus</long>
+          <short>s</short>
+          <argument>status</argument>
+          <required>false</required>
+          <description>the status of the VM. Can be RUNNING, EXITED, or UNKNOWN, case insensitive</description>
         </option>
         <option>
           <long>vmname</long>

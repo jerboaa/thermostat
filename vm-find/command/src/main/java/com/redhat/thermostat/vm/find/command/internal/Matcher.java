@@ -38,6 +38,6 @@ package com.redhat.thermostat.vm.find.command.internal;
 
 interface Matcher {
 
-    boolean match(MatchContext matchContext);
+    boolean match(MatchContext matchContext) throws UnrecognizedArgumentException;
 
 }

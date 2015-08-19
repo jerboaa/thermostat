@@ -396,7 +396,7 @@ public class FindVmCommandTest {
     }
 
     @Test
-    public void testPerformSearch() {
+    public void testPerformSearch() throws UnrecognizedArgumentException {
         AgentInformation agentInfo1 = new AgentInformation("agentInfo1");
         AgentId agentId1 = new AgentId(agentInfo1.getAgentId());
         AgentInformation agentInfo2 = new AgentInformation("agentInfo2");
@@ -525,7 +525,7 @@ public class FindVmCommandTest {
     }
 
     @Test
-    public void testFilterAgents() {
+    public void testFilterAgents() throws UnrecognizedArgumentException {
         AgentInformation foo = new AgentInformation("foo");
         AgentId fooId = new AgentId(foo.getAgentId());
         AgentInformation bar = new AgentInformation("bar");
@@ -557,7 +557,7 @@ public class FindVmCommandTest {
     }
 
     @Test
-    public void testGetMatchingVms() {
+    public void testGetMatchingVms() throws UnrecognizedArgumentException {
         AgentInformation agent = new AgentInformation("agent");
         AgentId agentId = new AgentId(agent.getAgentId());
 

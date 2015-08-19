@@ -36,14 +36,20 @@
 
 package com.redhat.thermostat.vm.find.command.internal;
 
+import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.vm.find.command.locale.LocaleResources;
+
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.PatternSyntaxException;
 
 enum VmCriterion implements CriterionMatcher {
     JAVA_VERSION("javaversion", new JavaVersionMatcher()),
     MAINCLASS("mainclass", new MainclassMatcher()),
+    VM_STATUS("vmstatus", new VmStatusMatcher()),
     VM_NAME("vmname", new VmNameMatcher()),
     VM_ARGS("vmargs", new VmArgsMatcher()),
     VM_VERSION("vmversion", new VmVersionMatcher()),
@@ -60,7 +66,7 @@ enum VmCriterion implements CriterionMatcher {
     }
 
     @Override
-    public boolean match(MatchContext matchContext, String value) {
+    public boolean match(MatchContext matchContext, String value) throws UnrecognizedArgumentException {
         return this.criterionMatcher.match(matchContext, value);
     }
 
@@ -93,6 +99,38 @@ enum VmCriterion implements CriterionMatcher {
             } catch (PatternSyntaxException e) {
                 return false;
             }
+        }
+    }
+
+    static class VmStatusMatcher implements CriterionMatcher {
+        @Override
+        public boolean match(MatchContext matchContext, String string) throws UnrecognizedArgumentException {
+            if (!isRecognizedValue(string)) {
+                throw new UnrecognizedArgumentException(LocaleResources.createTranslator(),
+                        FindVmCommand.REGISTER_NAME, "--" + VM_STATUS.getCliSwitch(), string, getAcceptedValues());
+            }
+
+            VmInfo.AliveStatus status = matchContext.getVmInfo().isAlive(matchContext.getAgentInfo());
+            return status.toString().equalsIgnoreCase(string);
+        }
+
+        private static boolean isRecognizedValue(String s) {
+            boolean matched = false;
+            for (VmInfo.AliveStatus status : VmInfo.AliveStatus.values()) {
+                matched = status.toString().equalsIgnoreCase(s);
+                if (matched) {
+                    break;
+                }
+            }
+            return matched;
+        }
+
+        private static List<String> getAcceptedValues() {
+            List<String> list = new ArrayList<>();
+            for (VmInfo.AliveStatus status : VmInfo.AliveStatus.values()) {
+                list.add(status.toString().toUpperCase());
+            }
+            return list;
         }
     }
 

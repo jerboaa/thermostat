@@ -45,7 +45,7 @@ import static org.junit.Assert.assertThat;
 public class HostCriterionTest {
 
     @Test
-    public void testHostname() {
+    public void testHostname() throws UnrecognizedArgumentException {
         HostCriterion hostCriterion = HostCriterion.HOSTNAME;
         HostInfo hostInfo = new HostInfo();
         hostInfo.setHostname("foo");
@@ -58,7 +58,7 @@ public class HostCriterionTest {
     }
 
     @Test
-    public void testOsKernel() {
+    public void testOsKernel() throws UnrecognizedArgumentException {
         HostCriterion hostCriterion = HostCriterion.OS_KERNEL;
         HostInfo hostInfo = new HostInfo();
         hostInfo.setOsKernel("foo");
@@ -71,7 +71,7 @@ public class HostCriterionTest {
     }
 
     @Test
-    public void testOsName() {
+    public void testOsName() throws UnrecognizedArgumentException {
         HostCriterion hostCriterion = HostCriterion.OS_NAME;
         HostInfo hostInfo = new HostInfo();
         hostInfo.setOsName("foo");

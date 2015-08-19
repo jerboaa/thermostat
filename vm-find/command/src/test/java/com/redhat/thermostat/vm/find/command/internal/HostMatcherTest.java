@@ -48,7 +48,7 @@ import static org.junit.Assert.assertThat;
 public class HostMatcherTest {
 
     @Test
-    public void testTestMatch() {
+    public void testTestMatch() throws UnrecognizedArgumentException {
         Map<String, String> map = new HashMap<>();
         map.put("hostname", "foo");
         map.put("osname", "bar");

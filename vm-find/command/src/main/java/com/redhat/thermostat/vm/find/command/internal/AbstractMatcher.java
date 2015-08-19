@@ -44,7 +44,7 @@ abstract class AbstractMatcher implements Matcher {
     protected final Map<CriterionMatcher, String> criteriaMap = new HashMap<>();
 
     @Override
-    public boolean match(MatchContext matchContext) {
+    public boolean match(MatchContext matchContext) throws UnrecognizedArgumentException {
         for (Map.Entry<? extends CriterionMatcher, String> entry : criteriaMap.entrySet()) {
             boolean match = entry.getKey().match(matchContext, entry.getValue());
             if (!match) {
