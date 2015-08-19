@@ -402,8 +402,14 @@ public class TreeMapComponent extends JComponent {
         drawTreeMap(tree);        
     }
 
+    boolean isZoomInEnabled(TreeMapNode node) {
+        return !(node == null
+                || node.equals(this.tree)
+                || node.isLeaf());
+    }
+
     public void zoomIn(TreeMapNode node) {
-        if (node != null && node != this.tree) {
+        if (isZoomInEnabled(node)) {
             fillZoomStack(node.getAncestors());
             redrawTreeMap(node);
             notifyZoomInToObservers(zoomStack.peek());
@@ -417,7 +423,6 @@ public class TreeMapComponent extends JComponent {
         }
     }
 
-    
     public void zoomOut() {
         // if the actual root element is not the tree's original root
         if (zoomStack.size() > 1) {
@@ -710,9 +715,7 @@ public class TreeMapComponent extends JComponent {
                     }
                     // double left click to zoom in (on non-leaf nodes only)
                     if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
-                        if (!getNode().isLeaf()) {
-                            zoomIn(getNode());
-                        }
+                        zoomIn(getNode());
                     }
                     // one right click to zoom out
                     if (SwingUtilities.isRightMouseButton(e)) {

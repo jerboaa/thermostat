@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.awt.Dimension;
@@ -71,7 +72,6 @@ public class TreeMapComponentTest {
 
     @Test
     public final void testTreeMapComponent() throws InvocationTargetException, InterruptedException {
-
         SwingUtilities.invokeAndWait(new Runnable() {
 
             @Override
@@ -124,6 +124,21 @@ public class TreeMapComponentTest {
     }
 
     @Test
+    public final void testIsZoomInEnabled() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                TreeMapComponent treeMap = new TreeMapComponent(tree, dim);
+
+                assertFalse("Should not be able to zoom in on null", treeMap.isZoomInEnabled(null));
+                assertFalse("Should not be able to zoom in on root", treeMap.isZoomInEnabled(tree));
+                assertTrue("Should be able to zoom in on node 1", treeMap.isZoomInEnabled(node1));
+                assertFalse("Should not be able to zoom in on node 2", treeMap.isZoomInEnabled(node2));
+            }
+        });
+    }
+
+    @Test
     public final void testZoomIn() throws InvocationTargetException, InterruptedException {
         SwingUtilities.invokeAndWait(new Runnable() {
 
@@ -135,7 +150,7 @@ public class TreeMapComponentTest {
                 assertEquals(node1, treeMap.getTreeMapRoot());
 
                 treeMap.zoomIn(node2);
-                assertEquals(node2, treeMap.getTreeMapRoot());
+                assertEquals(node1, treeMap.getTreeMapRoot());
             }
         });
     }
@@ -152,9 +167,8 @@ public class TreeMapComponentTest {
                 assertEquals(tree, treeMap.getTreeMapRoot());
 
                 treeMap.zoomIn(node1); //if zoom out root is tree
-                treeMap.zoomIn(node2); //if zoom out root is node1
+                treeMap.zoomIn(node2); //no-op, cannot zoom on leaf
 
-                treeMap.zoomOut();
                 assertEquals(node1, treeMap.getTreeMapRoot());
 
                 treeMap.zoomOut();
@@ -254,19 +268,25 @@ public class TreeMapComponentTest {
             public void run() {
                 TreeMapNode child = new TreeMapNode(1);
                 tree.addChild(child);
-                
+                TreeMapNode grandchild = new TreeMapNode(1);
+                child.addChild(grandchild);
+
                 treeMap = new TreeMapComponent(tree, dim);
                 treeMap.register(observer);
                 
                 treeMap.zoomIn(child);
-                assertTrue(zoomedIn);
+                assertTrue("Should have zoomed in on child", zoomedIn);
+                zoomedIn = false;
+
+                treeMap.zoomIn(grandchild);
+                assertFalse("Should not have zoomed in on grandchild", zoomedIn);
                 
                 treeMap.zoomOut();
-                assertTrue(zoomedOut);
+                assertTrue("Should have zoomed out", zoomedOut);
                 
                 treeMap.zoomIn(child);
                 treeMap.zoomFull();
-                assertTrue(zoomedFull);
+                assertTrue("Should have zoomed full", zoomedFull);
             }
         });
     }

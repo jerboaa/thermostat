@@ -90,7 +90,6 @@ public class TreeMapZoomBar extends JComponent implements TreeMapObserver {
         treemap.register(this);
     }
 
-
     private void initComponent() {
         this.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
         createZoomInButton();
@@ -214,14 +213,8 @@ public class TreeMapZoomBar extends JComponent implements TreeMapObserver {
 
     @Override
     public void notifySelection(TreeMapNode node) {
-        // if an item different from the root has been selected
-        // then it is possible to zoom in.
-        if (node != treemap.getTreeMapRoot()) {
-            zoomIn.setEnabled(true);
-            selectedItem = node;
-        } else {
-            zoomIn.setEnabled(false);
-        }
+        selectedItem = node;
+        zoomIn.setEnabled(treemap.isZoomInEnabled(node));
     }
 
     @Override
@@ -241,7 +234,6 @@ public class TreeMapZoomBar extends JComponent implements TreeMapObserver {
         zoomOut.setEnabled(false);
         zoomIn.setEnabled(false);
     }
-
 
     private boolean isRootShown() {
         return treemap.getTreeMapRoot() == treemap.getZoomCallsStack().firstElement();
