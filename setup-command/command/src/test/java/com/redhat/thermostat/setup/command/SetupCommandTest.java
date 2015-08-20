@@ -38,15 +38,23 @@ package com.redhat.thermostat.setup.command;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -158,6 +166,49 @@ public class SetupCommandTest {
         }
     }
     
+    @Test
+    public void verifyOriginalCommandRunsAfterSetup() throws CommandException {
+        doTestOriginalCmdRunsAfterSetup("web-storage-service", new String[] {
+           "web-storage-service"     
+        });
+    }
+    
+    @Test
+    public void verifyOriginalCommandRunsAfterSetup2() throws CommandException {
+        doTestOriginalCmdRunsAfterSetup("list-vms|||--dbUrl=mongodb://127.0.0.1:25718", new String[] {
+           "list-vms", "--dbUrl=mongodb://127.0.0.1:25718"     
+        });
+    }
+    
+    @Test
+    public void verifySetupAsOrigCommandDoesNotRunAgain() throws CommandException {
+        cmd = createSetupCommand();
+        setServices();
+        
+        Arguments args = mock(Arguments.class);
+        CommandContext ctxt = mock(CommandContext.class);
+        when(ctxt.getArguments()).thenReturn(args);
+        when(args.hasArgument("origArgs")).thenReturn(true);
+        when(args.getArgument("origArgs")).thenReturn("setup");
+        
+        cmd.run(ctxt);
+        verify(launcher, times(0)).run(argThat(new ArgsMatcher(new String[] { "setup" })), eq(false));
+    }
+    
+    private void doTestOriginalCmdRunsAfterSetup(String origArgs, String[] argsList) throws CommandException {
+        cmd = createSetupCommand();
+        setServices();
+        
+        Arguments args = mock(Arguments.class);
+        CommandContext ctxt = mock(CommandContext.class);
+        when(ctxt.getArguments()).thenReturn(args);
+        when(args.hasArgument("origArgs")).thenReturn(true);
+        when(args.getArgument("origArgs")).thenReturn(origArgs);
+        
+        cmd.run(ctxt);
+        verify(launcher).run(argThat(new ArgsMatcher(argsList)), eq(false));
+    }
+    
     private SetupCommand createSetupCommand() {
         return new SetupCommand() {
             @Override
@@ -175,6 +226,37 @@ public class SetupCommandTest {
     private void setServices() {
         cmd.setPaths(paths);
         cmd.setLauncher(launcher);
+    }
+    
+    private static class ArgsMatcher extends BaseMatcher<String[]> {
+
+        private final String[] expected;
+        
+        private ArgsMatcher(String[] expected) {
+            this.expected = expected;
+        }
+        
+        @Override
+        public boolean matches(Object arg0) {
+            if (arg0 == null || arg0.getClass() != String[].class) {
+                return false;
+            }
+            String[] other = (String[])arg0;
+            if (other.length != expected.length) {
+                return false;
+            }
+            boolean matches = true;
+            for (int i = 0; i < expected.length; i++) {
+                matches = matches && Objects.equals(expected[i], other[i]);
+            }
+            return matches;
+        }
+
+        @Override
+        public void describeTo(Description arg0) {
+            arg0.appendText(Arrays.asList(expected).toString());
+        }
+        
     }
 
 }

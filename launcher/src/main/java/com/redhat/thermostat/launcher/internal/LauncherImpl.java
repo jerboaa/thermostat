@@ -46,7 +46,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.launcher.GlobalOptions;
 import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -157,14 +156,11 @@ public class LauncherImpl implements Launcher {
             } else {
                 // With web-always-on we need to make sure that the setup ran.
                 if (isThermostatConfigured()) {
+                    logger.log(Level.FINE, "Running command without setup interception.");
                     runCommandFromArguments(args, listeners, inShell);
                 } else {
-                    if (Arrays.asList(args).contains(GlobalOptions.SKIP_SETUP.getOptString())) {
-                        runCommandFromArguments(args, listeners, inShell);
-                    } else {
-                        String[] setupArgs = {"setup"};
-                        runCommandFromArguments(setupArgs, listeners, inShell);
-                    }
+                    logger.log(Level.FINE, "Running command through setup.");
+                    runSetupThenInterceptedCommand(args);
                 }
             }
         } catch (NoClassDefFoundError e) {
@@ -188,11 +184,32 @@ public class LauncherImpl implements Launcher {
             }
         }
     }
+    
+    private void runSetupThenInterceptedCommand(String[] originalCmdArgs) {
+        String origCmdArgs = convertOriginalArgsToString(originalCmdArgs);
+        String[] setupArgs = { "setup",
+                               "--origArgs",
+                               origCmdArgs
+                             };
+        runCommandFromArguments(setupArgs, null, false);
+    }
 
-    // Log messages might go to a file. Be sure to print to stdout as well.
-    private void printAndLogLine(String msg) {
-        System.out.println(msg);
-        logger.log(Level.INFO, msg);
+    private String convertOriginalArgsToString(String[] origArgs) {
+        if (origArgs.length == 0) {
+            throw new AssertionError("Running setup with no argument?");
+        }
+        final String separator = "|||";
+        // single argument
+        if (origArgs.length == 1) {
+            return origArgs[0];
+        }
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < origArgs.length - 1; i++) {
+            buffer.append(origArgs[i]);
+            buffer.append(separator);
+        }
+        buffer.append(origArgs[origArgs.length - 1]);
+        return buffer.toString();
     }
 
     private boolean isThermostatConfigured() throws InvalidConfigurationException {
@@ -247,7 +264,8 @@ public class LauncherImpl implements Launcher {
         runCommand(HELP_COMMAND_NAME, new String[] { "--", cmdName }, null, false);
     }
 
-    private void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
+    // package-private for testing
+    void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
         runCommand(args[0], Arrays.copyOfRange(args, 1, args.length), listeners, inShell);
     }
 
@@ -398,5 +416,6 @@ public class LauncherImpl implements Launcher {
             return args[0].equals(Version.VERSION_OPTION);
         }
     }
+
 }
 

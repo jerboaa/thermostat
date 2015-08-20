@@ -38,12 +38,16 @@ package com.redhat.thermostat.setup.command;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.setup.command.internal.SetupWindow;
@@ -53,15 +57,24 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class SetupCommand extends AbstractCommand {
 
+    private static final String ORIG_CMD_ARGUMENT_NAME = "origArgs";
+    private static final Logger logger = LoggingUtils.getLogger(SetupCommand.class);
     private final DependencyServices dependentServices = new DependencyServices();
     private SetupWindow mainWindow;
     private CommonPaths paths;
     private Launcher launcher;
     private ThermostatSetup thermostatSetup;
     private Console console;
+    private String[] origArgsList;
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        Arguments args = ctx.getArguments();
+        if (args.hasArgument(ORIG_CMD_ARGUMENT_NAME)) {
+            String origArgs = args.getArgument(ORIG_CMD_ARGUMENT_NAME);
+            origArgsList = origArgs.split("\\|\\|\\|");
+        }
+        
         this.console = ctx.getConsole();
 
         try {
@@ -76,6 +89,22 @@ public class SetupCommand extends AbstractCommand {
         } catch (InterruptedException | InvocationTargetException e) {
             throw new CommandException(new LocalizedString("SetupCommand failed to run"), e);
         }
+        runOriginalCommand(origArgsList);
+    }
+
+    private void runOriginalCommand(String[] args) {
+        if (args == null) {
+            return;
+        }
+        if (args.length == 0) {
+            throw new AssertionError("Original command args were empty!");
+        }
+        if (args[0].equals("setup")) {
+            // Do not run setup recursively
+            return;
+        }
+        logger.log(Level.FINE, "Running intercepted command '" + args[0] + "' after setup.");
+        launcher.run(args, false);
     }
 
     public void setPaths(CommonPaths paths) {

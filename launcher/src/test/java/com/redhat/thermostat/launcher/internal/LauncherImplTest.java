@@ -48,8 +48,11 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -58,6 +61,8 @@ import java.util.logging.Logger;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -70,6 +75,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -237,6 +243,7 @@ public class LauncherImplTest {
         when(infos.getCommandInfo(name4)).thenReturn(info4);
         when(infos.getCommandInfo("basic")).thenReturn(basicInfo);
         when(infos.getCommandInfo("help")).thenReturn(helpCommandInfo);
+        when(infos.getCommandInfo("setup")).thenReturn(mock(CommandInfo.class));
 
         Collection<CommandInfo> infoList = new ArrayList<CommandInfo>();
         infoList.add(helpCommandInfo);
@@ -674,6 +681,60 @@ public class LauncherImplTest {
         runAndVerifyCommand(new String[] { cmdName }, expected, isInShell);
     }
     
+    @Test
+    public void verifyOriginalCmdArgsArePassedOnToSetup() {
+        String[] argsList = new String[] { "list-vms", "--dbUrl=foo" };
+        List<Pair<String[], Boolean>> resultList = doOriginalCmdArgsArePassedOnToSetupTest(argsList);
+        assertEquals("Expected to run only setup", 1, resultList.size());
+        Pair<String[], Boolean> actual = resultList.get(0);
+        assertFalse("Expected to run outside shell", actual.getSecond());
+        String[] expectedList = new String[] { "setup", "--origArgs", "list-vms|||--dbUrl=foo" };
+        assertArrayEquals(expectedList, actual.getFirst());
+    }
+    
+    @Test
+    public void verifyOriginalCmdArgsArePassedOnToSetup2() {
+        String[] argsList = new String[] { "web-storage-service" };
+        List<Pair<String[], Boolean>> resultList = doOriginalCmdArgsArePassedOnToSetupTest(argsList);
+        assertEquals("Expected to run only setup", 1, resultList.size());
+        Pair<String[], Boolean> actual = resultList.get(0);
+        assertFalse("Expected to run outside shell", actual.getSecond());
+        String[] expectedList = new String[] { "setup", "--origArgs", "web-storage-service" };
+        assertArrayEquals(expectedList, actual.getFirst());
+    }
+    
+    private List<Pair<String[], Boolean>> doOriginalCmdArgsArePassedOnToSetupTest(String[] args) {
+        CommonPaths setupPaths = mock(CommonPaths.class);
+        File mockFile = mock(File.class);
+        when(mockFile.exists()).thenReturn(false);
+        when(setupPaths.getUserSetupCompleteStampFile()).thenReturn(mockFile);
+        File fileWithAbsPath = mock(File.class);
+        when(setupPaths.getSystemThermostatHome()).thenReturn(fileWithAbsPath);
+        when(setupPaths.getUserThermostatHome()).thenReturn(fileWithAbsPath);
+        final List<Pair<String[], Boolean>> runList = new ArrayList<>();
+        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos,
+                                    new CommandSource(bundleContext), environment,
+                                    dbServiceFactory, version,
+                                    mock(ClientPreferences.class),
+                                    mock(Keyring.class), setupPaths) {
+            @Override
+            void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
+                Pair<String[], Boolean> pair = new Pair<>(args, inShell);
+                runList.add(pair);
+            }
+        };
+        
+        wrappedRun(launcher, args, false, null);
+        return runList;
+    }
+    
+    private void assertArrayEquals(String[] expected, String[] actual) {
+        assertTrue(expected.length == actual.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(expected[i], actual[i]);
+        }
+    }
+    
     private static class TestLogHandler extends Handler {
         
         private boolean loggedThermostatHome;
@@ -702,5 +763,6 @@ public class LauncherImplTest {
         }
         
     }
+
 }
 

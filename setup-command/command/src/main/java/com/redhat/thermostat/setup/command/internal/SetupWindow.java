@@ -281,6 +281,10 @@ public class SetupWindow {
     }
 
     private void shutdown() {
+        // Explicitly dispose the window on shutdown since we might have
+        // intercepted another command and the window would otherwise
+        // stay open.
+        frame.dispose();
         shutdown.countDown();
     }
 }
