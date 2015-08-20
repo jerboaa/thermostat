@@ -37,8 +37,10 @@
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -53,15 +55,19 @@ public class HistogramConverterTest {
 
     @Before
     public void setUp() throws Exception {
-        
-       
         /*
-         *  This is the classes structure used for the test and built using histogram
+         * This is the classes structure used for the test and built using
+         * histogram. Nodes are compacted at the point of branching
+         * so for example the node relative to "example2.package1.Class1" is
+         * still just one node "example2.package1.Class1" but the node relative
+         * to "com.example1.package1.Class1" branches at "com" so becomes the
+         * common parent node "com" with children "example1" and "example2",
+         * and so fort:
          * 
          *                ________com_______                    java
          *               /                  \                     |
          *         __example1__           example2              lang
-         *        /            \             |                    |
+         *       /            \             |                    |
          *    package1      package2      package1              Object
          *    /     \           |            |   
          * Class1  Class2     Class3       Class4         
@@ -82,13 +88,16 @@ public class HistogramConverterTest {
          *  Class1  Class2   
          *      
          */
-
         final String[] classes = {
                     "com.example1.package1.Class1", 
                     "com.example1.package1.Class2",
                     "com.example1.package2.Class3",
                     "com.example2.package1.Class4",
-                    "java.lang.Object"
+                    "example2.package1.Class1",
+                    "java.lang.Object",
+                    "repeat1.repeat1.RepeatClass",
+                    "repeat2.repeat2A.RepeatClass",
+                    "repeat2.repeat2B.RepeatClass",
                 };
         
         histrogram = new ObjectHistogram();
@@ -112,58 +121,64 @@ public class HistogramConverterTest {
         }
     }
     
+    private static TreeMapNode searchNode(List<TreeMapNode> nodes, String nodeId) {
+        for (TreeMapNode node : nodes) {
+            if (node.getLabel().equals(nodeId)) {
+                return node;
+            }
+        }
+        return null;
+    }
+    
     @Test
-    public final void testconvertToTreeMap() {
+    public void testconvertToTreeMap() {
         TreeMapNode tree = HistogramConverter.convertToTreeMap(histrogram);
 
+        List<TreeMapNode> nodes = tree.getChildren();
+        assertEquals(5, nodes.size());
+        
+        TreeMapNode node = searchNode(nodes, "com");
+        assertNotNull(node);
 
-        //tree node is the root element, which has an empty label by default
-        assertEquals(tree.getLabel(), "");
-        assertTrue(tree.getChildren().size() == 2);
+        List<TreeMapNode> nodesFromCom = node.getChildren();
+        
+        // example1 and example2
+        assertEquals(2, nodesFromCom.size());
+        node = searchNode(nodesFromCom, "example1");
+        assertNotNull(node);
+        
+        // package2.Class3 and package1
+        assertEquals(2, node.getChildren().size());
+        
+        node = searchNode(node.getChildren(), "package2.Class3");
+        assertNotNull(node);
+        assertTrue(node.getChildren().isEmpty());
 
+        node = searchNode(nodes, "java.lang.Object");
+        assertNotNull(node);
+        assertTrue(node.getChildren().isEmpty());
 
-        TreeMapNode com = tree.searchNodeByLabel("com");
-        assertNotNull(com);
-        assertEquals(com.getParent(), tree);
-
-        TreeMapNode java = tree.searchNodeByLabel("java.lang.Object");
-        assertNotNull(java);
-        assertEquals(java.getParent(), tree);
+        node = searchNode(nodes, "example2.package1.Class1");
+        assertNotNull(node);
+        assertTrue(node.getChildren().isEmpty());
         
-        // com node has 2 children
-        assertTrue(com.getChildren().size() == 2);
+        // now on to the  "repeat1.repeat1.RepeatClass" bunch
+        node = searchNode(nodes, "repeat1.repeat1.RepeatClass");
+        assertNotNull(node);
+        assertTrue(node.getChildren().isEmpty());
         
-        TreeMapNode example1 = com.searchNodeByLabel("example1");
-        assertNotNull(example1);
-        assertEquals(example1.getParent(), com);
-
-        //example2 subtree has been collapsed in example2 node
-        TreeMapNode example2 = com.searchNodeByLabel("example2.package1.Class4"); 
-        assertNotNull(example2);
-        assertEquals(example2.getParent(), com);
-
+        node = searchNode(nodes, "repeat2");
+        assertNotNull(node);
+        assertEquals(2, node.getChildren().size());
         
-        assertTrue(example1.getChildren().size() == 2);
-
-        //class3 node has been collapsed in package2 node
-        TreeMapNode package2 = example1.searchNodeByLabel("package2.Class3");
-        assertNotNull(package2);
-        assertEquals(package2.getParent(), example1);
+        List<TreeMapNode> nodesFromRepeat2 = node.getChildren();
+        node = searchNode(nodesFromRepeat2, "repeat2A.RepeatClass");
+        assertNotNull(node);
+        assertTrue(node.getChildren().isEmpty());
         
-        
-        TreeMapNode package1 = example1.searchNodeByLabel("package1");
-        assertNotNull(package1);
-        assertEquals(package1.getParent(), example1);
-        
-        assertTrue(package1.getChildren().size() == 2);
-        
-        TreeMapNode class1 = package1.searchNodeByLabel("Class1");
-        assertNotNull(class1);
-        assertTrue(class1.getChildren().isEmpty());
-        
-        TreeMapNode class2 = package1.searchNodeByLabel("Class2");
-        assertNotNull(class2);
-        assertTrue(class2.getChildren().isEmpty());        
+        node = searchNode(nodesFromRepeat2, "repeat2B.RepeatClass");
+        assertNotNull(node);
+        assertTrue(node.getChildren().isEmpty());
     }
 
 }

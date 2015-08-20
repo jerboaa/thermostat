@@ -67,7 +67,7 @@ public class HistogramConverter {
      * @return the resulting tree
      */
     public static TreeMapNode convertToTreeMap(ObjectHistogram histrogram) {
-       TreeMapNode root = new TreeMapNode("", 0);
+        TreeMapNode root = new TreeMapNode("", 0);
         
         List<HistogramRecord> records = new ArrayList<>();
         records.addAll(histrogram.getHistogram());
@@ -104,8 +104,7 @@ public class HistogramConverter {
                
                 String nodeId = className.split(SPLIT_REG_EXP)[0];
                 
-                TreeMapNode child = lastProcessed.searchNodeByLabel(nodeId);
-                
+                TreeMapNode child = searchNode(lastProcessed, nodeId);
                 if (child == null) {
                     child = new TreeMapNode(nodeId, 0);
                     lastProcessed.addChild(child);
@@ -130,6 +129,16 @@ public class HistogramConverter {
         }
     }
 
+    private static TreeMapNode searchNode(TreeMapNode root, String nodeId) {
+        List<TreeMapNode> nodes = root.getChildren();
+        for (TreeMapNode node : nodes) {
+            if (node.getLabel().equals(nodeId)) {
+                return node;
+            }
+        }
+        return null;
+    }
+    
     /**
      * This method calcs the real weights using a bottom-up traversal. From leaves, 
      * weights are passed to parent nodem which will have as weight the sum of

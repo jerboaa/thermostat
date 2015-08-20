@@ -206,32 +206,6 @@ public class TreeMapNodeTest {
     }
 
     @Test
-    public final void testSearchByLabel() {
-        TreeMapNode root = new TreeMapNode("root", 0);
-
-        TreeMapNode a = new TreeMapNode("a", 3);
-        TreeMapNode b = new TreeMapNode("b", 2);
-        TreeMapNode c = new TreeMapNode("c", 1);
-        root.addChild(a);
-        root.addChild(b);
-        root.addChild(c);
-
-        TreeMapNode aa = new TreeMapNode("aa", 3);
-        TreeMapNode ab = new TreeMapNode("ab", 3);
-        TreeMapNode ac = new TreeMapNode("ac", 3);
-        a.addChild(aa);
-        a.addChild(ab);
-        a.addChild(ac);        
-
-        assertEquals(aa, root.searchNodeByLabel("aa"));
-        assertEquals(b, root.searchNodeByLabel("b"));
-        assertEquals(ac, root.searchNodeByLabel("ac"));
-        assertEquals(c, root.searchNodeByLabel("c"));
-    }
-
-
-
-    @Test
     public final void testSort() {
 
         TreeMapNode n1 = new TreeMapNode(null, 5);

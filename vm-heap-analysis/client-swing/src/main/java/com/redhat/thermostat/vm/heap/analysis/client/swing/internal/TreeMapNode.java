@@ -292,27 +292,6 @@ public class TreeMapNode {
                 "; rectangle=" + rectangle.getBounds() + "]";
     }
 
-    
-    /**
-     * Search into the tree the node with id = key.
-     * @param key the id of the node to search.
-     * @return the node of exists, else null.
-     */
-    public TreeMapNode searchNodeByLabel(String key) {
-        if (this.getLabel().equals(key)) {
-            return this;
-        }
-        
-        TreeMapNode result = null;
-        for (TreeMapNode child : getChildren()) {
-            result = child.searchNodeByLabel(key) ;
-            if (result != null) {
-                return result;
-            }
-        }
-        return result;
-    }
-
     /**
      * Return the weight of this object. In case of allowNonPositiveWeight is 
      * set to false and the weight is 0, less than 0 or not a number 
