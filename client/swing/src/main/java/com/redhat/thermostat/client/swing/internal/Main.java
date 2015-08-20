@@ -150,12 +150,16 @@ public class Main implements ClientConfigReconnector, ConnectionListener {
     }
 
     private void connect(ClientPreferences prefs, StorageCredentials creds, ExecutorService service) {
-        // FIXME: bug? on reconnect, this service is registered again, with a different object :(
-        @SuppressWarnings("rawtypes")
-        final ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
         try {
             // create DbService with potentially modified parameters
             final DbService dbService = dbServiceFactory.createDbService(prefs.getConnectionUrl());
+            // Note that this method may be called a second time possibly
+            // (via reconnect()). Registered storage creds get unregistered in
+            // the finally block in the Runnable establishing the connection.
+            // This ensures that we don't register two distinct instances for
+            // the StorageCredentials service.
+            @SuppressWarnings("rawtypes")
+            final ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
             dbService.addConnectionListener(this);
             service.execute(new Runnable() {
                 @Override
