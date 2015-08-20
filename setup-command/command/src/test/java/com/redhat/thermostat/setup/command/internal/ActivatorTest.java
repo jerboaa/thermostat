@@ -40,7 +40,9 @@ import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
+import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
+
 import org.junit.Test;
 
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -53,7 +55,9 @@ public class ActivatorTest {
         StubBundleContext ctx = new StubBundleContext();
 
         CommonPaths paths = mock(CommonPaths.class);
+        Launcher launcher = mock(Launcher.class);
         ctx.registerService(CommonPaths.class, paths, null);
+        ctx.registerService(Launcher.class, launcher, null);
 
         Activator activator = new Activator();
 
@@ -63,7 +67,7 @@ public class ActivatorTest {
 
         activator.stop(ctx);
 
-        assertEquals(1, ctx.getAllServices().size());
+        assertEquals(2, ctx.getAllServices().size());
     }
 
 }

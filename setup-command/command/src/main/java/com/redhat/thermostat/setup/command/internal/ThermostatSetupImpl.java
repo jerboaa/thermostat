@@ -36,22 +36,10 @@
 
 package com.redhat.thermostat.setup.command.internal;
 
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
-import com.redhat.thermostat.common.tools.ApplicationState;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.launcher.Launcher;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,12 +49,22 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
+
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
+import com.redhat.thermostat.common.cli.Console;
+import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.setup.command.locale.LocaleResources;
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.locale.Translate;
 
 
 public class ThermostatSetupImpl implements ThermostatSetup {
@@ -92,31 +90,22 @@ public class ThermostatSetupImpl implements ThermostatSetup {
     private String setupUnlockContentRegular;
     private String userDoneFile;
     private String createUserScript;
-    private PrintStream out;
     private CredentialFinder finder;
     private File setupCompleteFile;
     private File agentAuthFile;
     private Launcher launcher;
     private Properties roleProps;
 
-    public ThermostatSetupImpl(BundleContext context, CommonPaths paths, PrintStream out) {
-        this.out = out;
-        finder = new CredentialFinder(paths);
-
-        ServiceReference launcherRef = context.getServiceReference(Launcher.class);
-        launcher = (Launcher) context.getService(launcherRef);
-
-        listeners = new ArrayList<>();
-        listeners.add(new StorageListener(out));
-        setThermostatVars(paths);
+    public ThermostatSetupImpl(Launcher launcher, CommonPaths paths, Console console) {
+        this(launcher, paths, console, new CredentialFinder(paths));
     }
 
     //package-private constructor for testing
-    ThermostatSetupImpl(Launcher launcher, CommonPaths paths, PrintStream out, CredentialFinder finder) {
+    ThermostatSetupImpl(Launcher launcher, CommonPaths paths, Console console, CredentialFinder finder) {
         this.launcher = launcher;
         this.finder = finder;
         listeners = new ArrayList<>();
-        listeners.add(new StorageListener(out));
+        listeners.add(new StorageListener(console));
         setThermostatVars(paths);
     }
 
@@ -385,10 +374,10 @@ public class ThermostatSetupImpl implements ThermostatSetup {
 
     private static class StorageListener implements ActionListener<ApplicationState> {
 
-        private final PrintStream out;
+        private final Console console;
 
-        private StorageListener(PrintStream out) {
-            this.out = out;
+        private StorageListener(Console console) {
+            this.console = console;
         }
 
         @Override
@@ -405,7 +394,7 @@ public class ThermostatSetupImpl implements ThermostatSetup {
                         storageFailed = false;
                         break;
                     case FAIL:
-                        out.println(translator.localize(LocaleResources.STORAGE_FAILED).getContents());
+                        console.getOutput().println(translator.localize(LocaleResources.STORAGE_FAILED).getContents());
                         storageFailed = true;
                         break;
                 }

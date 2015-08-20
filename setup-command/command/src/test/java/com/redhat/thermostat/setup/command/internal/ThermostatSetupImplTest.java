@@ -40,6 +40,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
+import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -105,7 +106,8 @@ public class ThermostatSetupImplTest {
     private ThermostatSetupImpl tSetup;
     private CommonPaths paths;
     private Launcher mockLauncher;
-    private OutputStream out;
+    private ByteArrayOutputStream out;
+    private Console console;
     private static ActionEvent<ApplicationState> mockActionEvent;
     private static Collection<ActionListener<ApplicationState>> listeners;
     private CredentialFinder mockCredentialFinder;
@@ -143,6 +145,8 @@ public class ThermostatSetupImplTest {
         makeTempFilesAndDirectories();
 
         out = new ByteArrayOutputStream();
+        console = mock(Console.class);
+        when(console.getOutput()).thenReturn(new PrintStream(out));
 
         paths = mock(CommonPaths.class);
         when(paths.getSystemThermostatHome()).thenReturn(thermostatSysHome.toFile());
@@ -164,7 +168,7 @@ public class ThermostatSetupImplTest {
         when(mockCredentialFinder.getConfiguration(USERS_PROPERTIES)).thenReturn(userPropertiesFile.toFile());
         when(mockCredentialFinder.getConfiguration(ROLES_PROPERTIES)).thenReturn(rolesPropertiesFile.toFile());
 
-        tSetup = new ThermostatSetupImpl(mockLauncher, paths, new PrintStream(out), mockCredentialFinder) {
+        tSetup = new ThermostatSetupImpl(mockLauncher, paths, console, mockCredentialFinder) {
             @Override
             int runMongo() {
                 //instead of running mongo through ProcessBuilder
@@ -339,7 +343,7 @@ public class ThermostatSetupImplTest {
 
     @Test
     public void testCreateMongodbUserFail() {
-        tSetup = new ThermostatSetupImpl(mockLauncher, paths, new PrintStream(out), mockCredentialFinder) {
+        tSetup = new ThermostatSetupImpl(mockLauncher, paths, console, mockCredentialFinder) {
             @Override
             int runMongo() {
                 //return non-zero val to test failure

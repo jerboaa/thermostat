@@ -47,20 +47,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.shared.config.CommonPaths;
 import org.junit.Before;
+import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
-import org.junit.Test;
-import org.osgi.framework.BundleContext;
+import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class SetupCommandTest {
 
     private SetupCommand cmd;
-    private BundleContext context;
     private CommandContext ctxt;
     private Arguments mockArgs;
     private Console console;
@@ -68,11 +67,11 @@ public class SetupCommandTest {
     private ByteArrayOutputStream outputBaos, errorBaos;
     private PrintStream output, error;
     private CommonPaths paths;
+    private Launcher launcher;
 
     @Before
     public void setUp() {
         paths = mock(CommonPaths.class);
-        context = mock(BundleContext.class);
         ctxt = mock(CommandContext.class);
         mockArgs = mock(Arguments.class);
         console = mock(Console.class);
@@ -82,6 +81,7 @@ public class SetupCommandTest {
 
         errorBaos = new ByteArrayOutputStream();
         error = new PrintStream(errorBaos);
+        launcher = mock(Launcher.class);
 
         when(ctxt.getArguments()).thenReturn(mockArgs);
         when(ctxt.getConsole()).thenReturn(console);
@@ -93,7 +93,7 @@ public class SetupCommandTest {
     @Test
     public void testLookAndFeelIsSet() throws CommandException {
         final boolean[] isSet = {false};
-        cmd = new SetupCommand(context) {
+        cmd = new SetupCommand() {
             @Override
             void setLookAndFeel() throws InvocationTargetException, InterruptedException {
                 isSet[0] = true;
@@ -105,7 +105,7 @@ public class SetupCommandTest {
             }
         };
 
-        cmd.setPaths(paths);
+        setServices();
         cmd.run(ctxt);
 
         assertTrue(isSet[0]);
@@ -114,7 +114,7 @@ public class SetupCommandTest {
     @Test
     public void testCreateMainWindowIsCalled() throws CommandException {
         final boolean[] isSet = {false};
-        cmd = new SetupCommand(context) {
+        cmd = new SetupCommand() {
             @Override
             void setLookAndFeel() throws InvocationTargetException, InterruptedException {
                 //do nothing
@@ -126,15 +126,40 @@ public class SetupCommandTest {
             }
         };
 
-        cmd.setPaths(paths);
+        setServices();
         cmd.run(ctxt);
 
         assertTrue(isSet[0]);
     }
 
+
     @Test
     public void testPathsNotSetFailure() {
-        cmd = new SetupCommand(context) {
+        cmd = createSetupCommand();
+
+        try {
+            cmd.run(ctxt);
+            fail();
+        } catch (CommandException e) {
+            assertTrue(e.getMessage().contains("CommonPaths dependency not available"));
+        }
+    }
+    
+    @Test
+    public void testLauncherNotSetFailure() {
+        cmd = createSetupCommand();
+        
+        cmd.setPaths(mock(CommonPaths.class));
+        try {
+            cmd.run(ctxt);
+            fail();
+        } catch (CommandException e) {
+            assertTrue(e.getMessage().contains("Launcher dependency not available"));
+        }
+    }
+    
+    private SetupCommand createSetupCommand() {
+        return new SetupCommand() {
             @Override
             void setLookAndFeel() throws InvocationTargetException, InterruptedException {
                 //do nothing
@@ -145,13 +170,11 @@ public class SetupCommandTest {
                 //do nothing
             }
         };
-
-        try {
-            cmd.run(ctxt);
-            fail();
-        } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("CommonPaths dependency not available"));
-        }
+    }
+    
+    private void setServices() {
+        cmd.setPaths(paths);
+        cmd.setLauncher(launcher);
     }
 
 }

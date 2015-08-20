@@ -36,46 +36,42 @@
 
 package com.redhat.thermostat.setup.command;
 
+import java.awt.EventQueue;
+import java.lang.reflect.InvocationTargetException;
+
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.Console;
+import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
+import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.setup.command.internal.SetupWindow;
 import com.redhat.thermostat.setup.command.internal.ThermostatSetup;
 import com.redhat.thermostat.setup.command.internal.ThermostatSetupImpl;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.LocalizedString;
-import org.osgi.framework.BundleContext;
-
-import java.awt.EventQueue;
-import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class SetupCommand extends AbstractCommand {
+
+    private final DependencyServices dependentServices = new DependencyServices();
     private SetupWindow mainWindow;
-
     private CommonPaths paths;
-    private BundleContext context;
-    private CountDownLatch pathsAvailable;
+    private Launcher launcher;
     private ThermostatSetup thermostatSetup;
-    private PrintStream out;
-
-    public SetupCommand(BundleContext context) {
-        this.context = context;
-        pathsAvailable = new CountDownLatch(1);
-    }
+    private Console console;
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        out = ctx.getConsole().getOutput();
+        this.console = ctx.getConsole();
 
         try {
             setLookAndFeel();
 
-            pathsAvailable.await(1000l, TimeUnit.MILLISECONDS);
+            this.paths = dependentServices.getService(CommonPaths.class);
             requireNonNull(paths, new LocalizedString("CommonPaths dependency not available"));
+            this.launcher = dependentServices.getService(Launcher.class);
+            requireNonNull(launcher, new LocalizedString("Launcher dependency not available"));
 
             createMainWindowAndRun();
         } catch (InterruptedException | InvocationTargetException e) {
@@ -84,8 +80,16 @@ public class SetupCommand extends AbstractCommand {
     }
 
     public void setPaths(CommonPaths paths) {
-        this.paths = paths;
-        pathsAvailable.countDown();
+        dependentServices.addService(CommonPaths.class, paths);
+    }
+    
+    public void setLauncher(Launcher launcher) {
+        dependentServices.addService(Launcher.class, launcher);
+    }
+    
+    public void setServicesUnavailable() {
+        dependentServices.removeService(Launcher.class);
+        dependentServices.removeService(CommonPaths.class);
     }
 
     public boolean isStorageRequired() {
@@ -94,8 +98,8 @@ public class SetupCommand extends AbstractCommand {
 
     //package-private for testing
     void createMainWindowAndRun() {
-        thermostatSetup = new ThermostatSetupImpl(context, paths, out);
-        mainWindow = new SetupWindow(out, thermostatSetup);
+        thermostatSetup = new ThermostatSetupImpl(launcher, paths, console);
+        mainWindow = new SetupWindow(thermostatSetup);
         mainWindow.run();
     }
 

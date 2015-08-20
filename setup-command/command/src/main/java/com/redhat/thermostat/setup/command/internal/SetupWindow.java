@@ -36,14 +36,6 @@
 
 package com.redhat.thermostat.setup.command.internal;
 
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
-import com.redhat.thermostat.shared.locale.Translate;
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -53,9 +45,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.util.concurrent.CountDownLatch;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+
+import com.redhat.thermostat.setup.command.locale.LocaleResources;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class SetupWindow {
     private CountDownLatch shutdown;
@@ -79,10 +79,7 @@ public class SetupWindow {
     private static final String DEFAULT_STORAGE_PASSWORD = "mongodevpassword";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private PrintStream out;
-
-    public SetupWindow(PrintStream out, ThermostatSetup thermostatSetup) {
-        this.out = out;
+    public SetupWindow(ThermostatSetup thermostatSetup) {
         this.thermostatSetup = thermostatSetup;
         shutdown = new CountDownLatch(1);
     }

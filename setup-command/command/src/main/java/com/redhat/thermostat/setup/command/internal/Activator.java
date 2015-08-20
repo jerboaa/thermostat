@@ -41,9 +41,12 @@ import java.util.Map;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+
 import com.redhat.thermostat.setup.command.SetupCommand;
 
 public class Activator implements BundleActivator {
@@ -55,21 +58,25 @@ public class Activator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         reg = new CommandRegistryImpl(context);
-        setupCommand = new SetupCommand(context);
+        setupCommand = new SetupCommand();
         reg.registerCommand("setup", setupCommand);
 
         Class<?>[] deps = new Class<?>[] {
-                CommonPaths.class
+                CommonPaths.class,
+                Launcher.class
         };
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+                Launcher launcher = (Launcher) services.get(Launcher.class.getName());
                 setupCommand.setPaths(paths);
+                setupCommand.setLauncher(launcher);
             }
 
             @Override
             public void dependenciesUnavailable() {
+                setupCommand.setServicesUnavailable();
                 reg.unregisterCommands();
             }
         });
@@ -80,5 +87,6 @@ public class Activator implements BundleActivator {
     public void stop(BundleContext context) throws Exception {
         reg.unregisterCommands();
         tracker.close();
+        setupCommand = null;
     }
 }
