@@ -37,6 +37,7 @@
 package com.redhat.thermostat.setup.command.internal;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -202,11 +203,15 @@ public class ThermostatSetupImpl implements ThermostatSetup {
     private void writeStorageCredentialsFile(String username, char[] password) throws MongodbUserSetupException {
         try {
             Properties credentialProps = new Properties();
-            credentialProps.setProperty("username", username);
-            credentialProps.setProperty("password", String.valueOf(password));
             File credentialsFile = finder.getConfiguration(WEB_AUTH_FILE);
             createCredentialFile(credentialsFile);
-            credentialProps.store(new FileOutputStream(credentialsFile), "Storage Credentials");
+            credentialProps.load(new FileInputStream(credentialsFile));
+            if (credentialProps.getProperty("username") == null) {
+                credentialProps = new Properties();
+                credentialProps.setProperty("username", username);
+                credentialProps.setProperty("password", String.valueOf(password));
+                credentialProps.store(new FileOutputStream(credentialsFile), "Storage Credentials");
+            }
         } catch (IOException e) {
             throw new MongodbUserSetupException("Storing credentials to file " + WEB_AUTH_FILE + " failed!", e);
         }
@@ -233,9 +238,12 @@ public class ThermostatSetupImpl implements ThermostatSetup {
         Properties userProps = new Properties();
         File userPropsFile = finder.getConfiguration(USERS_PROPERTIES);
         createCredentialFile(userPropsFile);
-        FileOutputStream userStream = new FileOutputStream(userPropsFile, true);
-        userProps.setProperty(username, String.valueOf(password));
-        userProps.store(userStream, "Client User");
+        userProps.load(new FileInputStream(userPropsFile));
+        if (userProps.getProperty(username) == null) {
+            userProps = new Properties();
+            userProps.setProperty(username, String.valueOf(password));
+            userProps.store(new FileOutputStream(userPropsFile, true), "Client User");
+        }
 
         setClientRoles(username, roles);
     }
@@ -263,25 +271,33 @@ public class ThermostatSetupImpl implements ThermostatSetup {
 
         File rolePropsFile = finder.getConfiguration(ROLES_PROPERTIES);
         createCredentialFile(rolePropsFile);
-        FileOutputStream roleStream = new FileOutputStream(rolePropsFile, true);
-        roleProps.store(new PropertiesWriter(roleStream), "Thermostat Client Roles");
+        if (roleProps.size() > 0) {
+            FileOutputStream roleStream = new FileOutputStream(rolePropsFile, true);
+            roleProps.store(new PropertiesWriter(roleStream), "Thermostat Client Roles");
+        }
     }
 
     private void createAgentUser(String username, char[] password, String[] roles) throws IOException {
         Properties userProps = new Properties();
         File userPropsFile = finder.getConfiguration(USERS_PROPERTIES);
         createCredentialFile(userPropsFile);
-        FileOutputStream userStream = new FileOutputStream(userPropsFile, true);
-        userProps.setProperty(username, String.valueOf(password));
-        userProps.store(userStream, "Agent User");
+        userProps.load(new FileInputStream(userPropsFile));
+        if (userProps.getProperty(username) == null) {
+            userProps = new Properties();
+            userProps.setProperty(username, String.valueOf(password));
+            userProps.store(new FileOutputStream(userPropsFile, true), "Agent User");
+        }
 
         //set agent credentials
         Properties agentProps = new Properties();
         createCredentialFile(agentAuthFile);
-        FileOutputStream agentAuthStream = new FileOutputStream(agentAuthFile);
-        agentProps.setProperty("username", username);
-        agentProps.setProperty("password", String.valueOf(password));
-        agentProps.store(agentAuthStream, "Agent Credentials");
+        agentProps.load(new FileInputStream(agentAuthFile));
+        if (userProps.getProperty("username") == null) {
+            agentProps = new Properties();
+            agentProps.setProperty("username", username);
+            agentProps.setProperty("password", String.valueOf(password));
+            agentProps.store(new FileOutputStream(agentAuthFile), "Agent Credentials");
+        }
 
         setAgentRoles(username, roles);
     }
@@ -294,15 +310,21 @@ public class ThermostatSetupImpl implements ThermostatSetup {
         setRoleProperty(THERMOSTAT_AGENT, agentRoles);
         File rolePropsFile = finder.getConfiguration(ROLES_PROPERTIES);
         createCredentialFile(rolePropsFile);
-        FileOutputStream roleStream = new FileOutputStream(rolePropsFile, true);
-        roleProps.store(new PropertiesWriter(roleStream), "Thermostat Agent Roles");
+        if (roleProps.size() > 0) {
+            FileOutputStream roleStream = new FileOutputStream(rolePropsFile, true);
+            roleProps.store(new PropertiesWriter(roleStream), "Thermostat Agent Roles");
+        }
     }
 
     private void setRoleProperty(String attribute, String[] roles) throws IOException {
+        Properties existingRoleProps = new Properties();
+        File rolePropsFile = finder.getConfiguration(ROLES_PROPERTIES);
+        createCredentialFile(rolePropsFile);
+        existingRoleProps.load(new FileInputStream(rolePropsFile));
         if (roleProps == null) {
             roleProps = new Properties();
         }
-        if (roles.length > 0) {
+        if (roles.length > 0 && existingRoleProps.getProperty(attribute) == null) {
             StringBuilder rolesBuilder = new StringBuilder();
             for (int i = 0; i < roles.length - 1; i++) {
                 rolesBuilder.append(roles[i] + ", " + System.getProperty("line.separator"));
