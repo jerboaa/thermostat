@@ -150,9 +150,10 @@ public class Main implements ClientConfigReconnector, ConnectionListener {
     }
 
     private void connect(ClientPreferences prefs, StorageCredentials creds, ExecutorService service) {
+        // FIXME: DbServiceFactory.createDbService needs to access a StorageCredentials
+        // instance obtained via the OSGi registry. This implicit dependency between
+        // credsReg and dbService should be made explicit.
         try {
-            // create DbService with potentially modified parameters
-            final DbService dbService = dbServiceFactory.createDbService(prefs.getConnectionUrl());
             // Note that this method may be called a second time possibly
             // (via reconnect()). Registered storage creds get unregistered in
             // the finally block in the Runnable establishing the connection.
@@ -160,6 +161,8 @@ public class Main implements ClientConfigReconnector, ConnectionListener {
             // the StorageCredentials service.
             @SuppressWarnings("rawtypes")
             final ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
+            // create DbService with potentially modified parameters
+            final DbService dbService = dbServiceFactory.createDbService(prefs.getConnectionUrl());
             dbService.addConnectionListener(this);
             service.execute(new Runnable() {
                 @Override
