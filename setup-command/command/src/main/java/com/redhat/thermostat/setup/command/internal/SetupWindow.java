@@ -54,7 +54,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
+import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class SetupWindow {
@@ -70,6 +72,7 @@ public class SetupWindow {
     private String storageUsername = null;
     private char[] storagePassword = null;
     private boolean showDetailedBlurb = false;
+    private boolean setupFailed = false;
     private ThermostatSetup thermostatSetup;
 
     private static final String DEFAULT_AGENT_USER = "agent-tester";
@@ -84,7 +87,7 @@ public class SetupWindow {
         shutdown = new CountDownLatch(1);
     }
 
-    public void run() {
+    public void run() throws CommandException {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -97,8 +100,11 @@ public class SetupWindow {
 
         try {
             shutdown.await();
+            if (setupFailed) {
+                throw new CommandException(new LocalizedString("Setup failed to complete"));
+            }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            throw new CommandException(new LocalizedString("Waiting for setup complete latch was interrupted"), e);
         } finally {
             cleanup();
         }
@@ -193,11 +199,14 @@ public class SetupWindow {
             public void actionPerformed(ActionEvent actionEvent) {
                 storageUsername = mongoUserSetupView.getUsername();
                 storagePassword = mongoUserSetupView.getPassword();
-                runMongoSetup();
 
                 if (thermostatSetup.isWebAppInstalled()) {
                     mainView.remove(mongoUserSetupView);
                     showView(userPropertiesView);
+                } else {
+                    //webapp isn't installed so just run setup
+                    //now to create mongodb user and quit
+                    runSetup();
                 }
             }
         });
@@ -210,7 +219,7 @@ public class SetupWindow {
         userPropertiesView.getFinishBtn().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                runPropertiesSetup();
+                runSetup();
             }
         });
         userPropertiesView.getCancelBtn().addActionListener(new ActionListener() {
@@ -229,18 +238,29 @@ public class SetupWindow {
         }
     }
 
-    private void runMongoSetup() {
+    private void runSetup() {
         SwingWorker worker = new SwingWorker<Void, Void>() {
             @Override
             public Void doInBackground() {
                 mongoUserSetupView.disableButtons();
                 userPropertiesView.disableButtons();
+
                 try {
-                    thermostatSetup.createMongodbUser(storageUsername, storagePassword);
+                    runMongoSetup();
                 } catch (MongodbUserSetupException e) {
-                    e.printStackTrace();
-                    shutdown();
+                    setupFailed = true;
+                    return null;
                 }
+
+                if (thermostatSetup.isWebAppInstalled()) {
+                    try {
+                        runPropertiesSetup();
+                    } catch (IOException e) {
+                        setupFailed = true;
+                        return null;
+                    }
+                }
+
                 return null;
             }
 
@@ -248,69 +268,51 @@ public class SetupWindow {
             public void done() {
                 mongoUserSetupView.enableButtons();
                 userPropertiesView.enableButtons();
-                if (!thermostatSetup.isWebAppInstalled()) {
-                    shutdown();
-                }
+                shutdown();
             }
         };
         worker.execute();
     }
 
-    private void runPropertiesSetup() {
-        SwingWorker worker = new SwingWorker<Void, Void>() {
-            @Override
-            public Void doInBackground() {
-                userPropertiesView.disableButtons();
-                try {
-                    String[] agentRoles = null;
-                    String[] clientRoles = null;
-                    if (userPropertiesView.makeAgentUserSelected()) {
-                        agentRoles = new String[] {
-                                UserRoles.CMD_CHANNEL_VERIFY,
-                                UserRoles.LOGIN,
-                                UserRoles.PREPARE_STATEMENT,
-                                UserRoles.PURGE,
-                                UserRoles.REGISTER_CATEGORY,
-                                UserRoles.ACCESS_REALM,
-                                UserRoles.SAVE_FILE,
-                                UserRoles.WRITE,
-                                UserRoles.GRANT_FILES_WRITE_ALL,
-                        };
-                    }
-                    if (userPropertiesView.makeClientAdminSelected()) {
-                        clientRoles = new String[] {
-                                UserRoles.GRANT_AGENTS_READ_ALL,
-                                UserRoles.CMD_CHANNEL_GENERATE,
-                                UserRoles.GRANT_HOSTS_READ_ALL,
-                                UserRoles.LOAD_FILE,
-                                UserRoles.LOGIN,
-                                UserRoles.PREPARE_STATEMENT,
-                                UserRoles.READ,
-                                UserRoles.ACCESS_REALM,
-                                UserRoles.REGISTER_CATEGORY,
-                                UserRoles.GRANT_VMS_READ_BY_USERNAME_ALL,
-                                UserRoles.GRANT_VMS_READ_BY_VM_ID_ALL,
-                                UserRoles.GRANT_FILES_READ_ALL,
-                                UserRoles.WRITE,
-                        };
-                    }
-                    thermostatSetup.createThermostatUser(DEFAULT_AGENT_USER, DEFAULT_USER_PASSWORD.toCharArray(), agentRoles);
-                    thermostatSetup.createThermostatUser(DEFAULT_CLIENT_USER, DEFAULT_USER_PASSWORD.toCharArray(), clientRoles);
+    private void runMongoSetup() throws MongodbUserSetupException {
+        thermostatSetup.createMongodbUser(storageUsername, storagePassword);
+    }
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    shutdown();
-                }
-                return null;
-            }
-
-            @Override
-            public void done() {
-                userPropertiesView.enableButtons();
-                shutdown();
-            }
-        };
-        worker.execute();
+    private void runPropertiesSetup() throws IOException {
+        String[] agentRoles = null;
+        String[] clientRoles = null;
+        if (userPropertiesView.makeAgentUserSelected()) {
+            agentRoles = new String[] {
+                    UserRoles.CMD_CHANNEL_VERIFY,
+                    UserRoles.LOGIN,
+                    UserRoles.PREPARE_STATEMENT,
+                    UserRoles.PURGE,
+                    UserRoles.REGISTER_CATEGORY,
+                    UserRoles.ACCESS_REALM,
+                    UserRoles.SAVE_FILE,
+                    UserRoles.WRITE,
+                    UserRoles.GRANT_FILES_WRITE_ALL,
+            };
+        }
+        if (userPropertiesView.makeClientAdminSelected()) {
+            clientRoles = new String[] {
+                    UserRoles.GRANT_AGENTS_READ_ALL,
+                    UserRoles.CMD_CHANNEL_GENERATE,
+                    UserRoles.GRANT_HOSTS_READ_ALL,
+                    UserRoles.LOAD_FILE,
+                    UserRoles.LOGIN,
+                    UserRoles.PREPARE_STATEMENT,
+                    UserRoles.READ,
+                    UserRoles.ACCESS_REALM,
+                    UserRoles.REGISTER_CATEGORY,
+                    UserRoles.GRANT_VMS_READ_BY_USERNAME_ALL,
+                    UserRoles.GRANT_VMS_READ_BY_VM_ID_ALL,
+                    UserRoles.GRANT_FILES_READ_ALL,
+                    UserRoles.WRITE,
+            };
+        }
+        thermostatSetup.createThermostatUser(DEFAULT_AGENT_USER, DEFAULT_USER_PASSWORD.toCharArray(), agentRoles);
+        thermostatSetup.createThermostatUser(DEFAULT_CLIENT_USER, DEFAULT_USER_PASSWORD.toCharArray(), clientRoles);
     }
 
     private void showView(SetupView view) {

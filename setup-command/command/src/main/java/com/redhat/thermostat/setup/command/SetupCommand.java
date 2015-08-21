@@ -97,7 +97,7 @@ public class SetupCommand extends AbstractCommand {
     }
 
     //package-private for testing
-    void createMainWindowAndRun() {
+    void createMainWindowAndRun() throws CommandException {
         thermostatSetup = new ThermostatSetupImpl(launcher, paths, console);
         mainWindow = new SetupWindow(thermostatSetup);
         mainWindow.run();
