@@ -40,7 +40,15 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
 
-    BIND_ADDRESS_NULL
+    COMMON_PATHS_UNAVAILABLE,
+    LAUNCHER_UNAVAILABLE,
+    SSL_CONFIGURATION_UNAVAILABLE,
+
+    STORAGE_WAIT_INTERRUPTED,
+    ERROR_STARTING_STORAGE,
+    ERROR_STARTING_JETTY,
+
+    BIND_ADDRESS_NULL,
     ;
 
     public static final String RESOURCE_BUNDLE =

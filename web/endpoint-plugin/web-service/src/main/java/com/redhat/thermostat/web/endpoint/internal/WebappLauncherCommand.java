@@ -54,8 +54,11 @@ import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 
 class WebappLauncherCommand implements Command {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     // The time to wait after the agent finished and before the web endpoint
     // goes down. This increases the chance of emptying the queue.
@@ -84,12 +87,12 @@ class WebappLauncherCommand implements Command {
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference commonPathsRef = context.getServiceReference(CommonPaths.class.getName());
         if (commonPathsRef == null) {
-            throw new CommandException(new LocalizedString("CommonPaths unavailable"));
+            throw new CommandException(translator.localize(LocaleResources.COMMON_PATHS_UNAVAILABLE));
         }
         CommonPaths paths = (CommonPaths)context.getService(commonPathsRef);
         ServiceReference launcherRef = context.getServiceReference(Launcher.class.getName());
         if (launcherRef == null) {
-            throw new CommandException(new LocalizedString("Launcher Unavailable"));
+            throw new CommandException(translator.localize(LocaleResources.LAUNCHER_UNAVAILABLE));
         }
         Launcher launcher = (Launcher) context.getService(launcherRef);
         // start storage
@@ -104,16 +107,16 @@ class WebappLauncherCommand implements Command {
         try {
             storageLatch.await();
         } catch (InterruptedException e) {
-            throw new CommandException(new LocalizedString("Interrupted waiting for storage"));
+            throw new CommandException(translator.localize(LocaleResources.STORAGE_WAIT_INTERRUPTED));
         }
         if (storageListener.startupFailed) {
-            throw new CommandException(new LocalizedString("Starting mongodb storage failed"));
+            throw new CommandException(translator.localize(LocaleResources.ERROR_STARTING_STORAGE));
         }
         EmbeddedServletContainerConfiguration config = getConfiguration(paths);
         
         ServiceReference sslConfigRef = context.getServiceReference(SSLConfiguration.class.getName());
         if (sslConfigRef == null) {
-            throw new CommandException(new LocalizedString("SSLConfiguration Unavailable"));
+            throw new CommandException(translator.localize(LocaleResources.SSL_CONFIGURATION_UNAVAILABLE));
         }
         SSLConfiguration sslConfig = (SSLConfiguration) context.getService(sslConfigRef);
         JettyContainerLauncher jettyLauncher = new JettyContainerLauncher(config, sslConfig);
@@ -127,7 +130,7 @@ class WebappLauncherCommand implements Command {
         }
         if (!jettyLauncher.isStartupSuccessFul()) {
             stopStorage(launcher);
-            throw new CommandException(new LocalizedString("Failed to start embedded jetty instance"));
+            throw new CommandException(translator.localize(LocaleResources.ERROR_STARTING_JETTY));
         }
         
         // start agent

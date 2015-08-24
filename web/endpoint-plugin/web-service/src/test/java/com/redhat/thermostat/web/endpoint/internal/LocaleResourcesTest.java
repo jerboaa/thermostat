@@ -36,36 +36,20 @@
 
 package com.redhat.thermostat.web.endpoint.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
 
-import org.junit.Test;
-
-import com.redhat.thermostat.web.endpoint.internal.LocaleResources;
-
-public class LocaleResourcesTest {
-    @Test
-    public void testLocalizedStringsArePresent() throws IOException {
-        
-        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
-        
-        Properties props = new Properties();
-        try (InputStream in = getClass().getResourceAsStream(stringsResource)) {
-            assertNotNull(in);
-            props.load(in);
-
-            assertEquals(LocaleResources.values().length, props.values().size());
-            for (LocaleResources resource : LocaleResources.values()) {
-                assertTrue("missing property from resource bound file: " + resource,
-                                  props.containsKey(resource.name()));
-            }
-            
-        }
+    @Override
+    protected Class<LocaleResources> getEnumClass() {
+        return LocaleResources.class;
     }
+
+    @Override
+    protected String getResourceBundle() {
+        return LocaleResources.RESOURCE_BUNDLE;
+    }
+
+    
 }
 
