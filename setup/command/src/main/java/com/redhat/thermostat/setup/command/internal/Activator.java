@@ -48,6 +48,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.setup.command.SetupCommand;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator implements BundleActivator {
 
@@ -63,15 +64,18 @@ public class Activator implements BundleActivator {
 
         Class<?>[] deps = new Class<?>[] {
                 CommonPaths.class,
-                Launcher.class
+                Launcher.class,
+                Keyring.class
         };
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 Launcher launcher = (Launcher) services.get(Launcher.class.getName());
+                Keyring keyring = (Keyring) services.get(Keyring.class.getName());
                 setupCommand.setPaths(paths);
                 setupCommand.setLauncher(launcher);
+                setupCommand.setKeyring(keyring);
             }
 
             @Override

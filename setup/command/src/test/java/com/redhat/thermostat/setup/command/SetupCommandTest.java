@@ -64,6 +64,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class SetupCommandTest {
 
@@ -76,6 +77,7 @@ public class SetupCommandTest {
     private PrintStream output, error;
     private CommonPaths paths;
     private Launcher launcher;
+    private Keyring keyring;
 
     @Before
     public void setUp() {
@@ -90,6 +92,7 @@ public class SetupCommandTest {
         errorBaos = new ByteArrayOutputStream();
         error = new PrintStream(errorBaos);
         launcher = mock(Launcher.class);
+        keyring = mock(Keyring.class);
 
         when(ctxt.getArguments()).thenReturn(mockArgs);
         when(ctxt.getConsole()).thenReturn(console);
@@ -209,6 +212,20 @@ public class SetupCommandTest {
         verify(launcher).run(argThat(new ArgsMatcher(argsList)), eq(false));
     }
     
+    @Test
+    public void testKeyringNotSetFailure() {
+        cmd = createSetupCommand();
+        
+        cmd.setPaths(mock(CommonPaths.class));
+        cmd.setLauncher(mock(Launcher.class));
+        try {
+            cmd.run(ctxt);
+            fail();
+        } catch (CommandException e) {
+            assertTrue(e.getMessage().contains("Keyring dependency not available"));
+        }
+    }
+    
     private SetupCommand createSetupCommand() {
         return new SetupCommand() {
             @Override
@@ -226,6 +243,7 @@ public class SetupCommandTest {
     private void setServices() {
         cmd.setPaths(paths);
         cmd.setLauncher(launcher);
+        cmd.setKeyring(keyring);
     }
     
     private static class ArgsMatcher extends BaseMatcher<String[]> {

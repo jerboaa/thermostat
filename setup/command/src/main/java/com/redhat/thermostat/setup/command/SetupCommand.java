@@ -54,6 +54,7 @@ import com.redhat.thermostat.setup.command.internal.SetupWindow;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class SetupCommand extends AbstractCommand {
 
@@ -63,6 +64,7 @@ public class SetupCommand extends AbstractCommand {
     private SetupWindow mainWindow;
     private CommonPaths paths;
     private Launcher launcher;
+    private Keyring keyring;
     private ThermostatSetup thermostatSetup;
     private Console console;
     private String[] origArgsList;
@@ -84,6 +86,8 @@ public class SetupCommand extends AbstractCommand {
             requireNonNull(paths, new LocalizedString("CommonPaths dependency not available"));
             this.launcher = dependentServices.getService(Launcher.class);
             requireNonNull(launcher, new LocalizedString("Launcher dependency not available"));
+            this.keyring = dependentServices.getService(Keyring.class);
+            requireNonNull(keyring, new LocalizedString("Keyring dependency not available"));
 
             createMainWindowAndRun();
         } catch (InterruptedException | InvocationTargetException e) {
@@ -115,9 +119,14 @@ public class SetupCommand extends AbstractCommand {
         dependentServices.addService(Launcher.class, launcher);
     }
     
+    public void setKeyring(Keyring keyring) {
+        dependentServices.addService(Keyring.class, keyring);
+    }
+    
     public void setServicesUnavailable() {
         dependentServices.removeService(Launcher.class);
         dependentServices.removeService(CommonPaths.class);
+        dependentServices.removeService(Keyring.class);
     }
 
     public boolean isStorageRequired() {
@@ -126,7 +135,7 @@ public class SetupCommand extends AbstractCommand {
 
     //package-private for testing
     void createMainWindowAndRun() throws CommandException {
-        thermostatSetup = ThermostatSetup.create(launcher, paths, console);
+        thermostatSetup = ThermostatSetup.create(launcher, paths, console, keyring);
         mainWindow = new SetupWindow(thermostatSetup);
         mainWindow.run();
     }

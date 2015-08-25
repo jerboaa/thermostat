@@ -250,10 +250,12 @@ public class SetupWindow {
                 thermostatSetup.createMongodbUser(storageUsername, storagePassword);
                 try {
                     if (userPropertiesView.makeAgentUserSelected()) {
-                        thermostatSetup.createAgentUser(DEFAULT_AGENT_USER, DEFAULT_USER_PASSWORD);
+                        char[] agentPassword = Arrays.copyOf(DEFAULT_USER_PASSWORD, DEFAULT_USER_PASSWORD.length);
+                        thermostatSetup.createAgentUser(DEFAULT_AGENT_USER, agentPassword);
                     }
                     if (userPropertiesView.makeClientAdminSelected()) {
-                        thermostatSetup.createClientAdminUser(DEFAULT_CLIENT_USER, DEFAULT_USER_PASSWORD);
+                        char[] clientPassword = Arrays.copyOf(DEFAULT_USER_PASSWORD, DEFAULT_USER_PASSWORD.length);
+                        thermostatSetup.createClientAdminUser(DEFAULT_CLIENT_USER, clientPassword);
                     }
                     thermostatSetup.commit();
                 } catch (IOException e) {

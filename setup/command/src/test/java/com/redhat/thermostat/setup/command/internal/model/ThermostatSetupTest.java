@@ -57,7 +57,9 @@ import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatSetupTest {
 
@@ -73,7 +75,7 @@ public class ThermostatSetupTest {
     @Test
     public void testIsWebAppInstalledDelegates() {
         StructureInformation structureInfo = mock(StructureInformation.class);
-        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, structureInfo, mock(CommonPaths.class), mock(CredentialsFileCreator.class));
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, structureInfo, mock(CommonPaths.class), mock(CredentialsFileCreator.class), mock(Keyring.class), mock(ClientPreferences.class));
         when(structureInfo.isWebAppInstalled()).thenReturn(true);
         assertTrue(setup.isWebAppInstalled());
         verify(structureInfo).isWebAppInstalled();
@@ -81,7 +83,7 @@ public class ThermostatSetupTest {
     
     @Test
     public void testCreateAgentUser() {
-        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), mock(CommonPaths.class), mock(CredentialsFileCreator.class));
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), mock(CommonPaths.class), mock(CredentialsFileCreator.class), mock(Keyring.class), mock(ClientPreferences.class));
         setup.createAgentUser("foo-agent", new char[] { 't' });
         verify(userSetup).createRecursiveRole(eq("thermostat-agent"), argThat(new RoleMatcher(UserRoles.AGENT_ROLES)), any(String.class));
         verify(userSetup).assignRolesToUser(eq("foo-agent"), argThat(new RoleMatcher(new String[] { "thermostat-agent", UserRoles.GRANT_FILES_WRITE_ALL })), any(String.class));
@@ -89,7 +91,7 @@ public class ThermostatSetupTest {
     
     @Test
     public void testCreateClientAdminUser() {
-        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), mock(CommonPaths.class), mock(CredentialsFileCreator.class));
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), mock(CommonPaths.class), mock(CredentialsFileCreator.class), mock(Keyring.class), mock(ClientPreferences.class));
         setup.createClientAdminUser("foo-client", new char[] { 't' });
         verify(userSetup).createRecursiveRole(eq("thermostat-client"), argThat(new RoleMatcher(UserRoles.CLIENT_ROLES)), any(String.class));
         verify(userSetup).createRecursiveRole(eq("thermostat-cmdc"), argThat(new RoleMatcher(UserRoles.CMD_CHANNEL_GRANT_ALL_ACTIONS)), any(String.class));
@@ -99,18 +101,27 @@ public class ThermostatSetupTest {
     }
     
     @Test
-    public void flushCreatesAgentAuthFile() throws IOException {
+    public void commitCreatesAgentAuthFileStoresToKeyring() throws IOException {
         CommonPaths paths = mock(CommonPaths.class);
         File mockAgentAuthFile = File.createTempFile("thermostat-test-", getClass().getName());
+        Keyring keyring = mock(Keyring.class);
+        ClientPreferences prefs = mock(ClientPreferences.class);
         try {
             when(paths.getUserAgentAuthConfigFile()).thenReturn(mockAgentAuthFile);
-            ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), paths, mock(CredentialsFileCreator.class));
+            ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), paths, mock(CredentialsFileCreator.class), keyring, prefs);
             List<String> contents = Files.readAllLines(mockAgentAuthFile.toPath(), Charset.forName("UTF-8"));
             assertEquals(0, contents.size());
             setup.createAgentUser("damian", new char[] { 't', 'e', 's', 't' });
+            String clientUser = "client-admin";
+            char[] clientPass = new char[] { 't' };
+            setup.createClientAdminUser(clientUser, clientPass);
             setup.commit();
             verify(userSetup).commit();
             verify(mongoUserSetup).commit();
+            verify(keyring).savePassword(prefs.getConnectionUrl(), clientUser, clientPass);
+            verify(prefs).flush();
+            verify(prefs).setSaveEntitlements(true);
+            verify(prefs).setUserName(clientUser);
             contents = Files.readAllLines(mockAgentAuthFile.toPath(), Charset.forName("UTF-8"));
             assertTrue("username and password must be present", contents.size() > 2);
             assertTrue("username=damian expected to be found in agent.auth file", contents.contains("username=damian"));
