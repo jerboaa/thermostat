@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.setup.command.internal;
+package com.redhat.thermostat.setup.command.internal.model;
 
 public interface UserRoles {
 
@@ -108,5 +108,23 @@ public interface UserRoles {
             UserRoles.CMD_CHANNEL_GENERATE,
             UserRoles.LOAD_FILE,
             UserRoles.REGISTER_CATEGORY
+    };
+    
+    final String[] ADMIN_READALL = new String[] {
+            UserRoles.GRANT_FILES_READ_ALL,
+            UserRoles.GRANT_HOSTS_READ_ALL,
+            UserRoles.GRANT_VMS_READ_BY_USERNAME_ALL,
+            UserRoles.GRANT_VMS_READ_BY_VM_ID_ALL,
+            UserRoles.GRANT_AGENTS_READ_ALL
+    };
+
+    final String[] CMD_CHANNEL_GRANT_ALL_ACTIONS = new String[] {
+            UserRoles.GRANT_CMD_CHANNEL_DUMP_HEAP,
+            UserRoles.GRANT_CMD_CHANNEL_GARBAGE_COLLECT,
+            UserRoles.GRANT_CMD_CHANNEL_GRANT_THREAD_HARVESTER,
+            UserRoles.GRANT_CMD_CHANNEL_JMX_TOGGLE_NOTIFICATION,
+            UserRoles.GRANT_CMD_CHANNEL_KILLVM,
+            UserRoles.GRANT_CMD_CHANNEL_PING,
+            UserRoles.GRANT_CMD_PROFILE_VM
     };
 }

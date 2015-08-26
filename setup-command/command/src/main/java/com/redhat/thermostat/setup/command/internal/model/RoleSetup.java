@@ -34,47 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.setup.command.internal;
+package com.redhat.thermostat.setup.command.internal.model;
 
-import com.redhat.thermostat.shared.config.CommonPaths;
+interface RoleSetup extends PersistableSetup {
 
-import java.io.File;
-import java.io.IOException;
-
-public class CredentialFinder {
-
-    private final CommonPaths paths;
-
-    public CredentialFinder(CommonPaths paths) {
-        this.paths = paths;
-    }
-
-    public File getConfiguration(String name) throws IOException {
-        File systemFile = getConfigurationFile(paths.getSystemConfigurationDirectory(), name);
-        if (isUsable(systemFile)) {
-            return systemFile;
-        }
-        File userFile = getConfigurationFile(paths.getUserConfigurationDirectory(), name);
-        if (isUsable(userFile)) {
-            return userFile;
-        }
-        return null;
-    }
-
-    //package-private for testing
-    File getConfigurationFile(File directory, String name) {
-        return new File(directory, name);
-    }
-
-    //package-private for testing
-    boolean isUsable(File file) throws IOException {
-        if (file.exists()) {
-            return file.isFile() && file.canRead() && file.canWrite();
-        } else {
-            //Check that the parent directory is not read-only,
-            //so file can be created
-            File canonicalFile = file.getCanonicalFile();
-            return canonicalFile.getParentFile().canWrite();
-        }
-    }
+    /**
+     * Assigns user {@code username} roles as given by {@code roles}.
+     * 
+     * It is the responsibility of the user to first define {@code username}
+     * via {@link #createThermostatUser(String, char[])}.
+     * 
+     * @param username
+     * @param roles
+     * @param comment An optional comment added to persistent files. May be
+     *                {@code null}
+     */
+    void assignRolesToUser(String username, String[] roles, String comment);
+    
+    /**
+     * Defines a new recursive role with name {@code name} and with role
+     * primitives as specified in {@code rolePrimitives} . Note elements in
+     * {@code rolePrimitives} might itself be a recursive roles.
+     * 
+     * @param name
+     * @param rolePrimitives
+     * @param comment An optional comment added to persistent files. May be
+     *                {@code null}
+     */
+    void createRecursiveRole(String name, String[] rolePrimitives, String comment);
 }

@@ -34,19 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.setup.command.internal;
+package com.redhat.thermostat.setup.command.internal.model;
 
-public class MongodbUserSetupException extends Exception {
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-    public MongodbUserSetupException(String message) {
-        super(message);
+import com.redhat.thermostat.shared.config.CommonPaths;
+
+class StructureInformation {
+    
+    private final String webApp;
+    
+    StructureInformation(CommonPaths paths) {
+        webApp = paths.getSystemThermostatHome() + "/webapp";
     }
 
-    public MongodbUserSetupException(Throwable cause) {
-        super(cause);
-    }
-
-    public MongodbUserSetupException(String message, Throwable cause) {
-        super(message, cause);
+    boolean isWebAppInstalled() {
+        Path webAppPath = Paths.get(webApp);
+        if (Files.exists(webAppPath)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

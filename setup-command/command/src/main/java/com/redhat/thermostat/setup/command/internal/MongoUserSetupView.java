@@ -307,8 +307,8 @@ public class MongoUserSetupView extends JPanel implements SetupView {
         return passwordField1.getPassword();
     }
 
-    public void setPassword(String password) {
-        this.passwordField1.setText(password);
-        this.passwordField2.setText(password);
+    public void setPassword(char[] password) {
+        this.passwordField1.setText(String.valueOf(password));
+        this.passwordField2.setText(String.valueOf(password));
     }
 }

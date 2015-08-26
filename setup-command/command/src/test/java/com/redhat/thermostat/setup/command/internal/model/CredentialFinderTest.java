@@ -34,9 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.setup.command.internal;
+package com.redhat.thermostat.setup.command.internal.model;
 
+import com.redhat.thermostat.setup.command.internal.model.CredentialFinder;
 import com.redhat.thermostat.shared.config.CommonPaths;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

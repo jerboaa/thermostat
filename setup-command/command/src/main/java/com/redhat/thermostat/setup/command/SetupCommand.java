@@ -47,8 +47,7 @@ import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.setup.command.internal.SetupWindow;
-import com.redhat.thermostat.setup.command.internal.ThermostatSetup;
-import com.redhat.thermostat.setup.command.internal.ThermostatSetupImpl;
+import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
@@ -98,7 +97,7 @@ public class SetupCommand extends AbstractCommand {
 
     //package-private for testing
     void createMainWindowAndRun() throws CommandException {
-        thermostatSetup = new ThermostatSetupImpl(launcher, paths, console);
+        thermostatSetup = ThermostatSetup.create(launcher, paths, console);
         mainWindow = new SetupWindow(thermostatSetup);
         mainWindow.run();
     }

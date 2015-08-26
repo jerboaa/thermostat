@@ -34,39 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.setup.command.internal;
+package com.redhat.thermostat.setup.command.internal.model;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.EnumSet;
+import java.util.Set;
 
-public interface ThermostatSetup {
+class CredentialsFileCreator {
+    
+    private static final Set<PosixFilePermission> CREDS_FILE_PERMISSIONS = EnumSet.of(
+            PosixFilePermission.OWNER_READ,
+            PosixFilePermission.OWNER_WRITE
+    );
 
-    /**
-     * Creates a Mongodb User and a web.auth
-     * file (if webapp is installed) for the
-     * provided username and password
-     *
-     * @param username
-     * @param password
-     * @throws MongodbUserSetupException
-     */
-    void createMongodbUser(String username, char[] password) throws MongodbUserSetupException;
-
-    /**
-     * Creates entries in the thermostat-users.properties
-     * and thermostat-roles.properties for the provided
-     * username, password and roles
-     *
-     * @param username
-     * @param password
-     * @param roles
-     * @throws IOException
-     */
-    void createThermostatUser(String username, char[] password, String[] roles) throws IOException;
-
-    /**
-     * Checks if webapp is installed on the system
-     *
-     * @return true if webapp is installed, false otherwise
-     */
-    boolean isWebAppInstalled();
+    void create(File file) throws IOException {
+        if (!file.exists()) {
+            //create file and set file permissions to 600
+            Files.createFile(file.toPath(), PosixFilePermissions.asFileAttribute(CREDS_FILE_PERMISSIONS));
+        }
+    }
 }
