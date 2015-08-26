@@ -55,7 +55,6 @@
       </options>
       <environments>
         <environment>cli</environment>
-        <environment>shell</environment>
       </environments>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.setup.command</symbolic-name><version>${project.version}</version></bundle>
