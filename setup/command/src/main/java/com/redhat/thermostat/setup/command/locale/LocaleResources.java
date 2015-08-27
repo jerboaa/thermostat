@@ -56,6 +56,9 @@ public enum LocaleResources {
     STORAGE_FAILED,
     CREATE_AGENT_USER,
     CREATE_CLIENT_ADMIN,
+    SERVICE_UNAVAILABLE_MESSAGE,
+    SETUP_FAILED,
+    SETUP_INTERRUPTED,
     ;
 
     static final String RESOURCE_BUNDLE =

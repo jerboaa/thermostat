@@ -55,11 +55,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.setup.command.internal.model.MongodbUserSetupException;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
-import com.redhat.thermostat.setup.command.internal.model.UserRoles;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class SetupWindow {
@@ -104,10 +101,10 @@ public class SetupWindow {
         try {
             shutdown.await();
             if (setupFailed) {
-                throw new CommandException(new LocalizedString("Setup failed to complete"));
+                throw new CommandException(translator.localize(LocaleResources.SETUP_FAILED));
             }
         } catch (InterruptedException e) {
-            throw new CommandException(new LocalizedString("Waiting for setup complete latch was interrupted"), e);
+            throw new CommandException(translator.localize(LocaleResources.SETUP_INTERRUPTED), e);
         } finally {
             cleanup();
         }

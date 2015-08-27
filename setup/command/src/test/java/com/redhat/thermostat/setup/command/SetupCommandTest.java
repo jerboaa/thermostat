@@ -152,7 +152,7 @@ public class SetupCommandTest {
             cmd.run(ctxt);
             fail();
         } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("CommonPaths dependency not available"));
+            assertTrue(e.getMessage().contains("CommonPaths service dependency unavailable"));
         }
     }
     
@@ -165,7 +165,7 @@ public class SetupCommandTest {
             cmd.run(ctxt);
             fail();
         } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("Launcher dependency not available"));
+            assertTrue(e.getMessage().contains("Launcher service dependency unavailable"));
         }
     }
     
@@ -222,7 +222,7 @@ public class SetupCommandTest {
             cmd.run(ctxt);
             fail();
         } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("Keyring dependency not available"));
+            assertTrue(e.getMessage().contains("Keyring service dependency unavailable"));
         }
     }
     

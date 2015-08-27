@@ -52,12 +52,14 @@ import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.setup.command.internal.SetupWindow;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
+import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.utils.keyring.Keyring;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class SetupCommand extends AbstractCommand {
 
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final String ORIG_CMD_ARGUMENT_NAME = "origArgs";
     private static final Logger logger = LoggingUtils.getLogger(SetupCommand.class);
     private final DependencyServices dependentServices = new DependencyServices();
@@ -83,15 +85,15 @@ public class SetupCommand extends AbstractCommand {
             setLookAndFeel();
 
             this.paths = dependentServices.getService(CommonPaths.class);
-            requireNonNull(paths, new LocalizedString("CommonPaths dependency not available"));
+            requireNonNull(paths, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "CommonPaths"));
             this.launcher = dependentServices.getService(Launcher.class);
-            requireNonNull(launcher, new LocalizedString("Launcher dependency not available"));
+            requireNonNull(launcher, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Launcher"));
             this.keyring = dependentServices.getService(Keyring.class);
-            requireNonNull(keyring, new LocalizedString("Keyring dependency not available"));
+            requireNonNull(keyring, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Keyring"));
 
             createMainWindowAndRun();
         } catch (InterruptedException | InvocationTargetException e) {
-            throw new CommandException(new LocalizedString("SetupCommand failed to run"), e);
+            throw new CommandException(t.localize(LocaleResources.SETUP_FAILED), e);
         }
         runOriginalCommand(origArgsList);
     }
