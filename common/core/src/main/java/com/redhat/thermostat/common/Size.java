@@ -147,28 +147,49 @@ public class Size {
      */
     @Override
     public String toString() {
-        String[] parts = toStringParts();
+        String[] parts = toStringParts(DOUBLE_FORMAT_STRING);
+        return translator.localize(LocaleResources.VALUE_AND_UNIT, parts[0], parts[1]).getContents();
+    }
+
+    /**
+     * Returns a simplified and human-readable version of this Size
+     *
+     * @param valueFormatString indicates how to format the value (such as {@code "%.2f"}).
+     */
+    public String toString(String valueFormatString) {
+        String[] parts = toStringParts(valueFormatString);
         return translator.localize(LocaleResources.VALUE_AND_UNIT, parts[0], parts[1]).getContents();
     }
 
     /**
      * Returns a human-readable version of this Size, appropriate for localization.
      *
-     * @return a two-element string array. The first element is the amount. The second element is the unit.
+     * @return a two-element string array. The first element is the value. The second element is the unit.
      */
     public String[] toStringParts() {
+        return toStringParts(DOUBLE_FORMAT_STRING);
+    }
+
+    /**
+     * Returns a human-readable version of this Size, appropriate for localization.
+     *
+     * @param valueFormatString indicates how to format the value (such as {@code "%.2f"}).
+     *
+     * @return a two-element string array. The first element is the value. The second element is the unit.
+     */
+    public String[] toStringParts(String valueFormatString) {
         long amountInBytes = (long) (amount * unit.getNumBytes());
         if (amountInBytes < BYTES_IN_KiB) {
             // No decimal units in plain bytes
             return new String[] { String.valueOf(amountInBytes), Unit.B.name() };
         } else if (amountInBytes < BYTES_IN_MiB) {
-            return new String[] { String.format(DOUBLE_FORMAT_STRING, (double) amountInBytes / BYTES_IN_KiB), Unit.KiB.name() };
+            return new String[] { String.format(valueFormatString, (double) amountInBytes / BYTES_IN_KiB), Unit.KiB.name() };
         } else if (amountInBytes < BYTES_IN_GiB) {
-            return new String[] { String.format(DOUBLE_FORMAT_STRING, (double) amountInBytes / BYTES_IN_MiB), Unit.MiB.name() };
+            return new String[] { String.format(valueFormatString, (double) amountInBytes / BYTES_IN_MiB), Unit.MiB.name() };
         } else if (amountInBytes < BYTES_IN_TiB) {
-            return new String[] { String.format(DOUBLE_FORMAT_STRING, (double) amountInBytes / BYTES_IN_GiB), Unit.GiB.name() };
+            return new String[] { String.format(valueFormatString, (double) amountInBytes / BYTES_IN_GiB), Unit.GiB.name() };
         } else {
-            return new String[] { String.format(DOUBLE_FORMAT_STRING, (double) amountInBytes / BYTES_IN_TiB), Unit.TiB.name() };
+            return new String[] { String.format(valueFormatString, (double) amountInBytes / BYTES_IN_TiB), Unit.TiB.name() };
         }
     }
 

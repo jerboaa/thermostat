@@ -70,6 +70,8 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
 import com.redhat.thermostat.client.swing.ThermostatSwingCursors;
+import com.redhat.thermostat.common.Size;
+import com.redhat.thermostat.common.Size.Unit;
 
 /**
  * This class allows to represent a hierarchical data structure as a TreeMap.
@@ -666,8 +668,9 @@ public class TreeMapComponent extends JComponent {
         public void setNode(TreeMapNode node) {
             this.node = node;
             this.color = node.getColor();
-            ValueFormatter f = new ValueFormatter(this.node.getRealWeight());
-            this.setToolTipText(this.node.getLabel() + " - " + f.format());
+            // FIXME remove this assumption about weight being a size
+            Size size = new Size(node.getRealWeight(), Unit.B);
+            this.setToolTipText(node.getLabel() + " - " + size.toString("%.2f"));
         }
         
         public TreeMapNode getNode() {
