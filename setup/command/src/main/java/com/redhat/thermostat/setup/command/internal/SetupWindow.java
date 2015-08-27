@@ -47,6 +47,9 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -55,6 +58,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -72,8 +76,8 @@ public class SetupWindow {
     private String storageUsername = null;
     private char[] storagePassword = null;
     private boolean showDetailedBlurb = false;
-    private boolean setupFailed = false;
-    private ThermostatSetup thermostatSetup;
+    private final ThermostatSetup thermostatSetup;
+    private SwingWorker<IOException, Void> finishAction;
 
     private static final String DEFAULT_AGENT_USER = "agent-tester";
     private static final String DEFAULT_CLIENT_USER = "client-tester";
@@ -81,10 +85,11 @@ public class SetupWindow {
     private static final String DEFAULT_STORAGE_USER = "mongodevuser";
     private static final char[] DEFAULT_STORAGE_PASSWORD = new char[] { 'm', 'o', 'n', 'g', 'o', 'd', 'e', 'v', 'p', 'a', 's', 's', 'w', 'o', 'r', 'd' };
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private static final Logger logger = LoggingUtils.getLogger(SetupWindow.class);
 
     public SetupWindow(ThermostatSetup thermostatSetup) {
         this.thermostatSetup = thermostatSetup;
-        shutdown = new CountDownLatch(1);
+        this.shutdown = new CountDownLatch(1);
     }
 
     public void run() throws CommandException {
@@ -100,10 +105,19 @@ public class SetupWindow {
 
         try {
             shutdown.await();
-            if (setupFailed) {
-                throw new CommandException(translator.localize(LocaleResources.SETUP_FAILED));
+            // Explicitly dispose the window once we're done since we might have
+            // intercepted another command and the window would otherwise
+            // stay open.
+            frame.dispose();
+            // Determine if we've finished successfully.
+            if (finishAction != null) {
+                IOException finishException = finishAction.get();
+                if (finishException != null) {
+                    logger.log(Level.INFO, "Setup failed.", finishException);
+                    throw new CommandException(translator.localize(LocaleResources.SETUP_FAILED), finishException);
+                }
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new CommandException(translator.localize(LocaleResources.SETUP_INTERRUPTED), e);
         } finally {
             cleanup();
@@ -239,9 +253,9 @@ public class SetupWindow {
     }
 
     private void runSetup() {
-        SwingWorker worker = new SwingWorker<Void, Void>() {
+        finishAction = new SwingWorker<IOException, Void>() {
             @Override
-            public Void doInBackground() {
+            public IOException doInBackground() {
                 mongoUserSetupView.disableButtons();
                 userPropertiesView.disableButtons();
                 thermostatSetup.createMongodbUser(storageUsername, storagePassword);
@@ -255,11 +269,11 @@ public class SetupWindow {
                         thermostatSetup.createClientAdminUser(DEFAULT_CLIENT_USER, clientPassword);
                     }
                     thermostatSetup.commit();
+                    return null;
                 } catch (IOException e) {
-                    e.printStackTrace();
                     shutdown();
+                    return e;
                 }
-                return null;
             }
 
             @Override
@@ -269,9 +283,9 @@ public class SetupWindow {
                 shutdown();
             }
         };
-        worker.execute();
+        finishAction.execute();
     }
-
+    
     private void showView(SetupView view) {
         mainView.add(view.getUiComponent(), BorderLayout.CENTER);
         view.setTitleAndProgress(title, progress);
@@ -280,10 +294,7 @@ public class SetupWindow {
     }
 
     private void shutdown() {
-        // Explicitly dispose the window on shutdown since we might have
-        // intercepted another command and the window would otherwise
-        // stay open.
-        frame.dispose();
         shutdown.countDown();
     }
+    
 }
