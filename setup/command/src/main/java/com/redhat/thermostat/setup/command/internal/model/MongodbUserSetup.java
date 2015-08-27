@@ -49,28 +49,25 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
-import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.locale.Translate;
 
 class MongodbUserSetup implements UserSetup {
 
     static final String[] STORAGE_START_ARGS = {"storage", "--start", "--permitLocalhostException"};
     static final String[] STORAGE_STOP_ARGS = {"storage", "--stop"};
     private static final String WEB_AUTH_FILE = "web.auth";
-    private static boolean storageFailed = false;
     private final UserCredsValidator validator;
     private final Launcher launcher;
     private final CredentialFinder finder;
     private final CredentialsFileCreator fileCreator;
-    private final List<ActionListener<ApplicationState>> listeners;
     private final CommonPaths paths;
     private final StampFiles stampFiles;
     private final StructureInformation structureInfo;
@@ -78,14 +75,12 @@ class MongodbUserSetup implements UserSetup {
     private char[] password;
     private String userComment;
     
-    MongodbUserSetup(UserCredsValidator validator, Launcher launcher, CredentialFinder finder, CredentialsFileCreator fileCreator, Console console, CommonPaths paths, StampFiles stampFiles, StructureInformation structureInfo) {
+    MongodbUserSetup(UserCredsValidator validator, Launcher launcher, CredentialFinder finder, CredentialsFileCreator fileCreator, CommonPaths paths, StampFiles stampFiles, StructureInformation structureInfo) {
         this.validator = validator;
         this.launcher = launcher;
         this.finder = finder;
         this.fileCreator = fileCreator;
         this.stampFiles = stampFiles;
-        this.listeners = new ArrayList<>();
-        this.listeners.add(new StorageListener(console));
         this.paths = paths;
         this.structureInfo = structureInfo;
     }
@@ -109,15 +104,21 @@ class MongodbUserSetup implements UserSetup {
     }
     
     private void addMongodbUser() throws MongodbUserSetupException {
+        boolean storageStarted = false;
         try {
             unlockThermostat();
 
-            startStorage();
+            storageStarted = startStorage();
 
+            // Sometimes the forked mongod process returns early with success
+            // although it does not seem to be completely up. once mongo wants
+            // to connect to mongod it fails if connected too soon. We used to
+            // sleep for 3 seconds in the script. Let's hope 2 seconds is enough.
+            // Yes, agreed, this is unfortunate :(
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+            
             int mongoRetVal = runMongo();
             if (mongoRetVal != 0) {
-                stampFiles.deleteSetupCompleteStamp();
-                stampFiles.deleteMongodbUserStamp();
                 throw new MongodbUserSetupException("Mongodb user setup failed");
             }
 
@@ -127,23 +128,33 @@ class MongodbUserSetup implements UserSetup {
 
             stampFiles.createMongodbUserStamp();
 
+            // If we reached here without exception, storage must have
+            // started successfully.
+            stopStorage();
             if (!isWebAppInstalled()) {
                 String completeDate = ThermostatSetup.DATE_FORMAT.format(new Date());
                 String regularContent = "Created by '" + ThermostatSetup.PROGRAM_NAME + "' on " + completeDate;
                 stampFiles.createSetupCompleteStamp(regularContent);
             }
         } catch (IOException | InterruptedException e) {
-            stampFiles.deleteSetupCompleteStamp();
-            stampFiles.deleteMongodbUserStamp();
             throw new MongodbUserSetupException("Error creating Mongodb user", e);
+        } catch (MongodbUserSetupException e) {
+            // Stop storage (if need be), remove temp stamp files and rethrow
+            cleanupAndReThrow(storageStarted, e);
         } finally {
-            if (!storageFailed) {
-                stopStorage();
-            }
             Arrays.fill(password, '\0'); // clear the password
         }
     }
     
+    private void cleanupAndReThrow(boolean storageStarted, MongodbUserSetupException e) throws MongodbUserSetupException {
+        if (storageStarted) {
+            stopStorage();
+        }
+        stampFiles.deleteSetupCompleteStamp();
+        stampFiles.deleteMongodbUserStamp();
+        throw e;
+    }
+
     //package-private for testing
     void unlockThermostat() throws IOException {
         Date date = new Date();
@@ -176,21 +187,35 @@ class MongodbUserSetup implements UserSetup {
         return process.waitFor();
     }
     
-    private void startStorage() throws MongodbUserSetupException {
-        launcher.run(STORAGE_START_ARGS, listeners, false);
-
-        if (storageFailed) {
+    private boolean startStorage() throws MongodbUserSetupException {
+        StorageListener listener = runStorage(STORAGE_START_ARGS);
+        if (listener.isFailure()) {
             throw new MongodbUserSetupException("Thermostat storage failed to start");
         }
+        return true;
     }
-
+    
     private void stopStorage() throws MongodbUserSetupException {
-        launcher.run(STORAGE_STOP_ARGS, listeners, false);
-
-        if (storageFailed) {
+        StorageListener listener = runStorage(STORAGE_STOP_ARGS);
+        if (listener.isFailure()) {
             throw new MongodbUserSetupException("Thermostat storage failed to stop");
         }
     }
+    
+    private StorageListener runStorage(String[] storageArgs) throws MongodbUserSetupException {
+        final List<ActionListener<ApplicationState>> listeners = new ArrayList<>();
+        CountDownLatch latch = new CountDownLatch(1);
+        StorageListener listener = new StorageListener(latch);
+        listeners.add(listener);
+        launcher.run(storageArgs, listeners, false);
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new MongodbUserSetupException(e);
+        }
+        return listener;
+    }
+    
     
     private boolean isWebAppInstalled() {
         return structureInfo.isWebAppInstalled();
@@ -211,11 +236,11 @@ class MongodbUserSetup implements UserSetup {
     
     private static class StorageListener implements ActionListener<ApplicationState> {
 
-        private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-        private final Console console;
+        private final CountDownLatch latch;
+        private boolean failed;
 
-        private StorageListener(Console console) {
-            this.console = console;
+        private StorageListener(CountDownLatch latch) {
+            this.latch = latch;
         }
 
         @Override
@@ -229,14 +254,23 @@ class MongodbUserSetup implements UserSetup {
 
                 switch (actionEvent.getActionId()) {
                     case START:
-                        storageFailed = false;
+                        latch.countDown();
+                        break;
+                    case STOP:
+                        latch.countDown();
                         break;
                     case FAIL:
-                        console.getOutput().println(translator.localize(LocaleResources.STORAGE_FAILED).getContents());
-                        storageFailed = true;
+                        failed = true;
+                        latch.countDown();
                         break;
+                    default:
+                        throw new AssertionError("Unexpected action event: " + actionEvent.getActionId());
                 }
             }
+        }
+        
+        public boolean isFailure() {
+            return failed;
         }
     }
 

@@ -45,7 +45,6 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Properties;
 
-import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -173,12 +172,12 @@ public class ThermostatSetup implements PersistableSetup {
         return structureInfo.isWebAppInstalled();
     }
     
-    public static ThermostatSetup create(Launcher launcher, CommonPaths paths, Console console, Keyring keyring) {
+    public static ThermostatSetup create(Launcher launcher, CommonPaths paths, Keyring keyring) {
         CredentialFinder finder = new CredentialFinder(paths);
         CredentialsFileCreator creator = new CredentialsFileCreator();
         StampFiles stampFiles = new StampFiles(paths);
         StructureInformation info = new StructureInformation(paths);
-        MongodbUserSetup mongoSetup = new MongodbUserSetup(new UserCredsValidator(), launcher, finder, creator , console, paths, stampFiles, info);
+        MongodbUserSetup mongoSetup = new MongodbUserSetup(new UserCredsValidator(), launcher, finder, creator , paths, stampFiles, info);
         ThermostatUserSetup userSetup = new ThermostatUserSetup(new UserPropertiesFinder(finder), new UserCredsValidator(), creator, stampFiles);
         ClientPreferences prefs = new ClientPreferences(paths);
         return new ThermostatSetup(userSetup, mongoSetup, info, paths, creator, keyring, prefs);

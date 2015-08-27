@@ -45,7 +45,6 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
@@ -54,8 +53,8 @@ import com.redhat.thermostat.setup.command.internal.SetupWindow;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.utils.keyring.Keyring;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class SetupCommand extends AbstractCommand {
 
@@ -68,7 +67,6 @@ public class SetupCommand extends AbstractCommand {
     private Launcher launcher;
     private Keyring keyring;
     private ThermostatSetup thermostatSetup;
-    private Console console;
     private String[] origArgsList;
 
     @Override
@@ -79,8 +77,6 @@ public class SetupCommand extends AbstractCommand {
             origArgsList = origArgs.split("\\|\\|\\|");
         }
         
-        this.console = ctx.getConsole();
-
         try {
             setLookAndFeel();
 
@@ -137,7 +133,7 @@ public class SetupCommand extends AbstractCommand {
 
     //package-private for testing
     void createMainWindowAndRun() throws CommandException {
-        thermostatSetup = ThermostatSetup.create(launcher, paths, console, keyring);
+        thermostatSetup = ThermostatSetup.create(launcher, paths, keyring);
         mainWindow = new SetupWindow(thermostatSetup);
         mainWindow.run();
     }

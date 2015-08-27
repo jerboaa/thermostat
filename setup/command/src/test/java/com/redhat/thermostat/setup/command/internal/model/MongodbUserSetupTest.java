@@ -51,7 +51,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,7 +66,6 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
-import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -80,7 +78,6 @@ public class MongodbUserSetupTest {
     private Launcher mockLauncher;
     private CredentialFinder finder;
     private CredentialsFileCreator fileCreator;
-    private Console console;
     private CommonPaths paths;
     private StructureInformation info;
     
@@ -88,13 +85,11 @@ public class MongodbUserSetupTest {
     public void setup() {
         paths = mock(CommonPaths.class);
         finder = new CredentialFinder(paths);
-        console = mock(Console.class);
-        when(console.getOutput()).thenReturn(mock(PrintStream.class));
         fileCreator = mock(CredentialsFileCreator.class);
         stampFiles = mock(StampFiles.class);
         info = mock(StructureInformation.class);
         mockLauncher = mock(Launcher.class);
-        mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, console, paths, stampFiles, info) {
+        mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info) {
             @Override
             int runMongo() {
                 //instead of running mongo through ProcessBuilder
@@ -228,7 +223,7 @@ public class MongodbUserSetupTest {
         createUserJsFile.createNewFile();
         when(paths.getSystemThermostatHome()).thenReturn(testRoot.toFile());
         try {
-            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, console, paths, stampFiles, info) {
+            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info) {
                 @Override
                 int runMongo() {
                     //return non-zero val to test failure
@@ -250,6 +245,23 @@ public class MongodbUserSetupTest {
                     return null;
                 }
             }).when(mockLauncher).run(eq(MongodbUserSetup.STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+            
+            // We simulate storage starting to work, thus on shut-down it tries
+            // to stop storage again.
+            doAnswer(new Answer<Void>() {
+                @Override
+                public Void answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    listeners[0] = (Collection<ActionListener<ApplicationState>>) args[1];
+    
+                    when(mockActionEvent.getActionId()).thenReturn(ApplicationState.STOP);
+    
+                    for (ActionListener<ApplicationState> listener : listeners[0]) {
+                        listener.actionPerformed(mockActionEvent);
+                    }
+                    return null;
+                }
+            }).when(mockLauncher).run(eq(MongodbUserSetup.STORAGE_STOP_ARGS), isA(Collection.class), anyBoolean());
     
             try {
                 mongoSetup.createUser("foo-user", new char[] { 't' }, "bar comment");
@@ -309,8 +321,25 @@ public class MongodbUserSetupTest {
                     return null;
                 }
             }).when(mockLauncher).run(eq(MongodbUserSetup.STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+
+            // We started storage successfully, thus after we are done we
+            // stop it again. Mock the storage --stop.
+            doAnswer(new Answer<Void>() {
+                @Override
+                public Void answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    listeners[0] = (Collection<ActionListener<ApplicationState>>) args[1];
     
-            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, console, paths, stampFiles, info) {
+                    when(mockActionEvent.getActionId()).thenReturn(ApplicationState.STOP);
+    
+                    for (ActionListener<ApplicationState> listener : listeners[0]) {
+                        listener.actionPerformed(mockActionEvent);
+                    }
+                    return null;
+                }
+            }).when(mockLauncher).run(eq(MongodbUserSetup.STORAGE_STOP_ARGS), isA(Collection.class), anyBoolean());
+            
+            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info) {
                 @Override
                 int runMongo() {
                     //instead of running mongo through ProcessBuilder
@@ -331,14 +360,12 @@ public class MongodbUserSetupTest {
     
             verify(mockLauncher, times(1)).run(eq(MongodbUserSetup.STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
             verify(mockLauncher, times(1)).run(eq(MongodbUserSetup.STORAGE_STOP_ARGS), isA(Collection.class), anyBoolean());
-            verify(mockActionEvent, times(1)).getActionId();
+            verify(mockActionEvent, times(2)).getActionId();
             verify(fileCreator).create(mockWebAuthFile);
             verify(stampFiles).createMongodbUserStamp();
             // temp unlocking calls this
             verify(stampFiles, times(1)).createSetupCompleteStamp(any(String.class));
     
-    
-            
             assertTrue(mockWebAuthFile.exists());
             // make sure credentials file can be read by FileStorageCredentials
             FileStorageCredentials creds = new FileStorageCredentials(mockWebAuthFile);
