@@ -43,7 +43,7 @@ public class SwingHeapTreeMapViewProvider implements HeapTreeMapViewProvider {
 
     @Override
     public HeapTreeMapView createView() {
-        return new TreeMapPanel();
+        return new SwingHeapTreeMapView();
     }
 
 }

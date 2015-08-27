@@ -48,13 +48,13 @@ import com.redhat.thermostat.client.swing.components.experimental.TreeMapToolbar
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 
-public class TreeMapPanel extends HeapTreeMapView implements SwingComponent {
+public class SwingHeapTreeMapView extends HeapTreeMapView implements SwingComponent {
     
     private final JPanel panel;
 
     private TreeMapComponent treeMap;
     
-    public TreeMapPanel() {
+    public SwingHeapTreeMapView() {
         panel = new JPanel();
         panel.setLayout(new BorderLayout());
     }
