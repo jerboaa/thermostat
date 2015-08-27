@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.redhat.thermostat.client.swing.components.experimental.TreeMapNode;
 import com.redhat.thermostat.common.utils.DescriptorConverter;
 import com.redhat.thermostat.vm.heap.analysis.common.HistogramRecord;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;

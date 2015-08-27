@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -47,9 +47,9 @@ import javax.swing.JLabel;
 
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.internal.LocaleResources;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 
 /**
  * This class provides a component containing zoom in/out/full buttons which can
@@ -115,7 +115,7 @@ public class TreeMapZoomBar extends JComponent implements TreeMapObserver {
         final Icon hoverIcon = new FontAwesomeIcon('\uf065', 15, enterColor);
         
         zoomIn.setIcon(baseIcon);
-        zoomIn.setToolTipText(t.localize(LocaleResources.ZOOM_IN).getContents());
+        zoomIn.setToolTipText(t.localize(LocaleResources.TREEMAP_ZOOM_IN).getContents());
         
         zoomIn.addMouseListener(new MouseAdapter() {
             @Override
@@ -146,7 +146,7 @@ public class TreeMapZoomBar extends JComponent implements TreeMapObserver {
         final Icon hoverIcon = new FontAwesomeIcon('\uf066', 15, enterColor);
         
         zoomOut.setIcon(baseIcon);
-        zoomOut.setToolTipText(t.localize(LocaleResources.ZOOM_OUT).getContents());
+        zoomOut.setToolTipText(t.localize(LocaleResources.TREEMAP_ZOOM_OUT).getContents());
         zoomOut.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseExited(MouseEvent e) {
@@ -174,7 +174,7 @@ public class TreeMapZoomBar extends JComponent implements TreeMapObserver {
         final Icon hoverIcon = new FontAwesomeIcon('\uf03b', 15, enterColor);
         
         zoomFull.setIcon(baseIcon);
-        zoomFull.setToolTipText(t.localize(LocaleResources.ZOOM_FULL).getContents());
+        zoomFull.setToolTipText(t.localize(LocaleResources.TREEMAP_ZOOM_FULL).getContents());
         zoomFull.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseExited(MouseEvent e) {

@@ -36,22 +36,20 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core;
 
-import com.redhat.thermostat.client.ui.IconDescriptor;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.ui.IconDescriptor;
+
 public class HeapIconResources {
 
-    public static final String PIN_MASK = "com/redhat/thermostat/vm/heap/analysis/client/core/pin_mask.png";
-    public static final String TRIGGER_HEAP_DUMP = "com/redhat/thermostat/vm/heap/analysis/client/core/take_dump.png";
-
-    public static final String BREADCRUMB_HEAD = "com/redhat/thermostat/vm/heap/analysis/client/swing/breadcrumb_head.png";
-    public static final String BREADCRUMB_BODY = "com/redhat/thermostat/vm/heap/analysis/client/swing/breadcrumb_body.png";
-    public static final String BREADCRUMB_TAIL = "com/redhat/thermostat/vm/heap/analysis/client/swing/breadcrumb_tail.png";
+    private static final String PACKAGE_PATH =
+            HeapIconResources.class.getPackage().getName().replace(".", "/");
+    public static final String PIN_MASK = PACKAGE_PATH + "/pin_mask.png";
+    public static final String TRIGGER_HEAP_DUMP = PACKAGE_PATH + "/take_dump.png";
 
     private static Map<String, IconDescriptor> icons = new HashMap<>();
     

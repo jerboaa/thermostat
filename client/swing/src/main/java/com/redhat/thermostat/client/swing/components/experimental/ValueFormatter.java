@@ -34,57 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
 
-import static org.junit.Assert.assertTrue;
-
-import java.awt.Dimension;
-import java.lang.reflect.InvocationTargetException;
-
-import javax.swing.SwingUtilities;
-
-import junit.framework.Assert;
-
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import com.redhat.thermostat.annotations.internal.CacioTest;
-
-@Category(CacioTest.class)
-public class TreeMapToolbarTest {
-
-    private TreeMapComponent treeMap;
-    @SuppressWarnings("unused")
-    private TreeMapToolbar toolbar;
-
-    private static TreeMapNode tree;
-    private static Dimension dim;
-
-    @Test
-    public final void testTreeMapToolbar() throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                
-                tree = new TreeMapNode(1);
-                dim = new Dimension(500, 500);
-                treeMap = new TreeMapComponent(tree, dim);
-                
-                boolean catched = false;
-                try {
-                    toolbar = new TreeMapToolbar(null);
-                } catch(NullPointerException e) {
-                    catched = true;
-                }
-                assertTrue(catched);
-                try {
-                    toolbar = new TreeMapToolbar(treeMap);
-                } catch (NullPointerException e) {
-                    Assert.fail("Should not throw any exception.");
-                }
-            }
-        });
+public class ValueFormatter {
+    
+    private double value;
+    
+    public ValueFormatter(double val) {
+        this.value = val;
     }
-
-   
+    
+    /**
+     * This method returns the node value calculating it in bytes, KB or MB. 
+     * 
+     * i.e. if node's weight = 200 it returns: "200 bytes" <br>
+     * if weight = 20152: "20.15 KB"  <br>
+     * if weight = 2015248: "2.01 MB"  <br>
+     * 
+     * Note that float values are approximated to the second decimal digit.
+     */
+    public String format() {
+        int KB = 1000;
+        int MB = 1000000;
+        String unit = "Bytes";
+        
+        if (value >= KB && value < MB) {
+            value /= KB;
+            unit = "KBytes";
+        } else if (value >= MB) {
+            value /= MB;
+            unit = "MBytes";
+        }
+        // show 2 decimal digits 
+        String formattedValue = String.format("%.2f", value);
+        return formattedValue + " " + unit;
+    }
 }

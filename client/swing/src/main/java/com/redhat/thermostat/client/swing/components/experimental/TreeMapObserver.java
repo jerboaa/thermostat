@@ -34,61 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
 
-import static org.junit.Assert.assertTrue;
-
-import java.awt.Dimension;
-import java.lang.reflect.InvocationTargetException;
-
-import javax.swing.SwingUtilities;
-
-import junit.framework.Assert;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import com.redhat.thermostat.annotations.internal.CacioTest;
-
-@Category(CacioTest.class)
-public class TreeMapZoomBarTest {
-
-    private TreeMapComponent treeMap;
-    @SuppressWarnings("unused")
-    private TreeMapZoomBar zoomBar;
-
-    private static TreeMapNode tree;
-    private static Dimension dim;
-
-    @Before
-    public void setUp() {
-        tree = new TreeMapNode(1);
-        dim = new Dimension(500, 500);
-    }
-
-    @Test
-    public final void testTreeMapZoomBar() throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-
-            @Override
-            public void run() {
-                boolean catched = false;
-                try {
-                    zoomBar = new TreeMapZoomBar(null);
-                } catch(NullPointerException e) {
-                    catched = true;
-                }
-                assertTrue(catched);
-                try {
-                    treeMap = new TreeMapComponent(tree, dim);
-                    zoomBar = new TreeMapZoomBar(treeMap);
-                } catch (NullPointerException e) {
-                    Assert.fail("Should not throw any exception.");
-                }
-            }
-        });
-    }
-
-   
+/**
+ * This interface is used as part of the Observer Design Pattern developed
+ * for objects who want to be notified about TreeMap's events.
+ */
+public interface TreeMapObserver {
+    
+    /**
+     * This method inform the Observer object that the object passed as 
+     * argument has been selected.
+     * 
+     * @param selectedComp the selected component to communicate to 
+     * this Observer object.
+     */
+    public void notifySelection(TreeMapNode node);
+    
+    /**
+     * This method informs objects that a zoom in event has been performed on
+     * the given node.
+     * @param node the zoomed node.
+     */
+    public void notifyZoomIn(TreeMapNode node);
+    
+    /**
+     * This method informs objects that a zoom out event has been performed.
+     */
+    public void notifyZoomOut();
+    
+    /**
+     * This method informs objects that the zoom level has been resetted.
+     */
+    public void notifyZoomFull();
 }

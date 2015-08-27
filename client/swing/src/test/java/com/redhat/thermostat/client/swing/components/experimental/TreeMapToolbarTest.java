@@ -34,25 +34,57 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
 
-import static org.junit.Assert.assertEquals;
+import junit.framework.Assert;
+
+import static org.junit.Assert.assertTrue;
+
+import java.awt.Dimension;
+import java.lang.reflect.InvocationTargetException;
+
+import javax.swing.SwingUtilities;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class ValueFormatterTest {
+import com.redhat.thermostat.annotations.internal.CacioTest;
 
-    private ValueFormatter formatter;
+@Category(CacioTest.class)
+public class TreeMapToolbarTest {
+
+    private TreeMapComponent treeMap;
+    @SuppressWarnings("unused")
+    private TreeMapToolbar toolbar;
+
+    private static TreeMapNode tree;
+    private static Dimension dim;
 
     @Test
-    public final void getFormattedWeight() {
-        formatter = new ValueFormatter(2);
-        assertEquals("2.00 Bytes", formatter.format());
-
-        formatter = new ValueFormatter(2222);
-        assertEquals("2.22 KBytes", formatter.format());
-
-        formatter = new ValueFormatter(2222222);
-        assertEquals("2.22 MBytes", formatter.format());
+    public final void testTreeMapToolbar() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                
+                tree = new TreeMapNode(1);
+                dim = new Dimension(500, 500);
+                treeMap = new TreeMapComponent(tree, dim);
+                
+                boolean catched = false;
+                try {
+                    toolbar = new TreeMapToolbar(null);
+                } catch(NullPointerException e) {
+                    catched = true;
+                }
+                assertTrue(catched);
+                try {
+                    toolbar = new TreeMapToolbar(treeMap);
+                } catch (NullPointerException e) {
+                    Assert.fail("Should not throw any exception.");
+                }
+            }
+        });
     }
+
+   
 }

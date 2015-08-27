@@ -79,10 +79,6 @@ public enum LocaleResources {
     DUMPS_LIST,
     LIST_DUMPS_ACTION, 
     HEAP_DUMP_SECTION_TREEMAP,
-
-    ZOOM_IN,
-    ZOOM_OUT,
-    ZOOM_FULL,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.heap.analysis.client.locale.strings";

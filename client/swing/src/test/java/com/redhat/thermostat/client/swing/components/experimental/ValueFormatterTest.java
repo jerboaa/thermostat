@@ -34,39 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
 
-public class ValueFormatter {
-    
-    private double value;
-    
-    public ValueFormatter(double val) {
-        this.value = val;
-    }
-    
-    /**
-     * This method returns the node value calculating it in bytes, KB or MB. 
-     * 
-     * i.e. if node's weight = 200 it returns: "200 bytes" <br>
-     * if weight = 20152: "20.15 KB"  <br>
-     * if weight = 2015248: "2.01 MB"  <br>
-     * 
-     * Note that float values are approximated to the second decimal digit.
-     */
-    public String format() {
-        int KB = 1000;
-        int MB = 1000000;
-        String unit = "Bytes";
-        
-        if (value >= KB && value < MB) {
-            value /= KB;
-            unit = "KBytes";
-        } else if (value >= MB) {
-            value /= MB;
-            unit = "MBytes";
-        }
-        // show 2 decimal digits 
-        String formattedValue = String.format("%.2f", value);
-        return formattedValue + " " + unit;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+public class ValueFormatterTest {
+
+    private ValueFormatter formatter;
+
+    @Test
+    public final void getFormattedWeight() {
+        formatter = new ValueFormatter(2);
+        assertEquals("2.00 Bytes", formatter.format());
+
+        formatter = new ValueFormatter(2222);
+        assertEquals("2.22 KBytes", formatter.format());
+
+        formatter = new ValueFormatter(2222222);
+        assertEquals("2.22 MBytes", formatter.format());
     }
 }

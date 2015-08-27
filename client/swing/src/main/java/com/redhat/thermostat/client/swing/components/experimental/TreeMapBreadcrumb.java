@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.Font;
 import java.awt.Image;
@@ -53,7 +53,6 @@ import javax.swing.JLabel;
 import javax.swing.UIManager;
 
 import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapIconResources;
 
 /**
  * This object creates a breadcrumb navigation bar used to trace 
@@ -227,13 +226,13 @@ public class TreeMapBreadcrumb extends JComponent implements TreeMapObserver {
 
         private void initTail() {
             tail = new JLabel();
-            tail.setIcon(new Icon(HeapIconResources.getIcon(HeapIconResources.BREADCRUMB_TAIL)));
+            tail.setIcon(new Icon(BreadcrumbIconResources.getIcon(BreadcrumbIconResources.BREADCRUMB_TAIL)));
             this.add(tail);
         }
 
         private void initHead() {
             head = new JLabel();
-            head.setIcon(new Icon(HeapIconResources.getIcon(HeapIconResources.BREADCRUMB_HEAD)));
+            head.setIcon(new Icon(BreadcrumbIconResources.getIcon(BreadcrumbIconResources.BREADCRUMB_HEAD)));
             this.add(head);
         }
 
@@ -242,7 +241,7 @@ public class TreeMapBreadcrumb extends JComponent implements TreeMapObserver {
             body.setFont(FONT);
             body.setHorizontalTextPosition(JLabel.CENTER);
             body.setText(node.getLabel());
-            adaptIcon(body, new Icon(HeapIconResources.getIcon(HeapIconResources.BREADCRUMB_BODY)));
+            adaptIcon(body, new Icon(BreadcrumbIconResources.getIcon(BreadcrumbIconResources.BREADCRUMB_BODY)));
             this.add(body);
         }
 
@@ -258,7 +257,7 @@ public class TreeMapBreadcrumb extends JComponent implements TreeMapObserver {
             this.remove(tail);
             this.tail = null;
             this.body.setText(ROOT_TEXT);
-            adaptIcon(body, new Icon(HeapIconResources.getIcon(HeapIconResources.BREADCRUMB_BODY)));
+            adaptIcon(body, new Icon(BreadcrumbIconResources.getIcon(BreadcrumbIconResources.BREADCRUMB_BODY)));
         }
 
         /**

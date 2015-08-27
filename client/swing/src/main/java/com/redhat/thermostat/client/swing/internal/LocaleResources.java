@@ -46,6 +46,10 @@ public enum LocaleResources {
     ZOOM_IN,
     ZOOM_OUT,
     RESET_ZOOM,
+
+    TREEMAP_ZOOM_IN,
+    TREEMAP_ZOOM_OUT,
+    TREEMAP_ZOOM_FULL,
     ;
 
     static final String RESOURCE_BUNDLE =

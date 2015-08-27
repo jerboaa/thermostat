@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ import java.util.Objects;
 
 /**
  *  This class implements the Squarified algorithm for TreeMaps. Using it, it is 
- *  possible to associate a rectangle to a {@link TreeMapNode} element and its 
+ *  possible to associate a rectangle to a {@link TreeMapNode} element and its
  *  children.
  *  <p>
  *  @see TreeMapNode

@@ -45,6 +45,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.client.swing.components.experimental.TreeMapNode;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;

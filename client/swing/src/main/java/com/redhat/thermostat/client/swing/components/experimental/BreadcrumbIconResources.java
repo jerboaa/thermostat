@@ -34,40 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import javax.swing.JPanel;
+import com.redhat.thermostat.client.ui.IconDescriptor;
 
-import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.experimental.TreeMapComponent;
-import com.redhat.thermostat.client.swing.components.experimental.TreeMapToolbar;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
-import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
+class BreadcrumbIconResources {
 
-public class TreeMapPanel extends HeapTreeMapView implements SwingComponent {
-    
-    private final JPanel panel;
+    private static final String PACKAGE_PATH =
+        BreadcrumbIconResources.class.getPackage().getName().replace(".", "/");
+    public static final String BREADCRUMB_HEAD = PACKAGE_PATH + "/breadcrumb_head.png";
+    public static final String BREADCRUMB_BODY = PACKAGE_PATH + "/breadcrumb_body.png";
+    public static final String BREADCRUMB_TAIL = PACKAGE_PATH + "/breadcrumb_tail.png";
 
-    private TreeMapComponent treeMap;
-    
-    public TreeMapPanel() {
-        panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-    }
+    private static Map<String, IconDescriptor> icons = new HashMap<>();
 
-    @Override
-    public void display(ObjectHistogram histogram) {
-        treeMap = new TreeMapComponent(HistogramConverter.convertToTreeMap(histogram), new Dimension());
-        panel.add(treeMap, BorderLayout.CENTER);
-        panel.add(new TreeMapToolbar(treeMap), BorderLayout.NORTH);
-    }
+    public synchronized static IconDescriptor getIcon(String path) {
+        if (!icons.containsKey(path)) {
+            try {
+                IconDescriptor icon = IconDescriptor.loadIcon(BreadcrumbIconResources.class.getClassLoader(),
+                        path);
+                icons.put(path, icon);
 
-    @Override
-    public Component getUiComponent() {
-        return panel;
+            } catch (IOException ex) {
+                Logger.getLogger(BreadcrumbIconResources.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            }
+        }
+        return icons.get(path);
     }
 }

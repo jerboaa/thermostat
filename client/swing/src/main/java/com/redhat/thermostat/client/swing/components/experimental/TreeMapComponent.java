@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -70,7 +70,6 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
 import com.redhat.thermostat.client.swing.ThermostatSwingCursors;
-import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 
 /**
  * This class allows to represent a hierarchical data structure as a TreeMap.
@@ -169,14 +168,6 @@ public class TreeMapComponent extends JComponent {
      * List of objects observing this.
      */
     private List<TreeMapObserver> observers;
-
-    /**
-     * Constructor which creates a TreeMapComponent by an histogram object.
-     * @param histogram the histogram to represent as tree map.
-     */
-    public TreeMapComponent(ObjectHistogram histogram) {
-        this(HistogramConverter.convertToTreeMap(histogram), new Dimension());
-    }
 
     /**
      * Constructor. It draw a TreeMap of the given tree in according to the 
@@ -331,8 +322,8 @@ public class TreeMapComponent extends JComponent {
 
     /**
      * Create and add to the {@link Container} given in input a 
-     * {@link ComponentResized} listener.
-     * @param c the container in to assign the listener.
+     * {@link java.awt.event.ComponentListener} listener.
+     * @param container the container in to assign the listener.
      */
     private void addResizeListener(final Container container) {
         ComponentAdapter adapter = new ComponentAdapter() {
