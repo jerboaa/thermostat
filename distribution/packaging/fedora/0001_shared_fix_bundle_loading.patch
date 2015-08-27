@@ -178,6 +178,18 @@ diff --git a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbu
 -        commons-cli-${commons-cli.version}.jar
 +        commons-cli-${commons-cli.version}.jar, \
 +        jansi-${jansi.version}.jar
+diff --git a/setup/distribution/thermostat-plugin.xml b/setup/distribution/thermostat-plugin.xml
+--- a/setup/distribution/thermostat-plugin.xml
++++ b/setup/distribution/thermostat-plugin.xml
+@@ -64,6 +64,8 @@
+         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+         <bundle><symbolic-name>com.redhat.thermostat.internal.utils.laf</symbolic-name><version>${project.version}</version></bundle>
+         <bundle><symbolic-name>com.redhat.thermostat.plugin.validator</symbolic-name><version>${project.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
+       </bundles>
+     </command>
+   </commands>
 diff --git a/storage-profile/distribution/thermostat-plugin.xml b/storage-profile/distribution/thermostat-plugin.xml
 --- a/storage-profile/distribution/thermostat-plugin.xml
 +++ b/storage-profile/distribution/thermostat-plugin.xml
@@ -204,7 +216,7 @@ diff --git a/vm-gc/distribution/thermostat-plugin.xml b/vm-gc/distribution/therm
          <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
          <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
        </bundles>
-@@ -122,7 +122,7 @@
+@@ -128,7 +128,7 @@
          <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
@@ -310,7 +322,7 @@ diff --git a/vm-heap-analysis/distribution/thermostat-plugin.xml b/vm-heap-analy
 diff --git a/vm-profiler/distribution/thermostat-plugin.xml b/vm-profiler/distribution/thermostat-plugin.xml
 --- a/vm-profiler/distribution/thermostat-plugin.xml
 +++ b/vm-profiler/distribution/thermostat-plugin.xml
-@@ -95,7 +95,7 @@
+@@ -88,7 +88,7 @@
                  <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
                  <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
                  <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
