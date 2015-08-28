@@ -137,7 +137,6 @@ public class UserPropertiesView extends JPanel implements SetupView {
 
         backBtn = new JButton(translator.localize(LocaleResources.BACK).getContents());
         backBtn.setPreferredSize(new Dimension(70, 30));
-        backBtn.setEnabled(false);
         finishBtn = new JButton(translator.localize(LocaleResources.FINISH).getContents());
         finishBtn.setPreferredSize(new Dimension(70, 30));
         finishBtn.setEnabled(true);
@@ -163,12 +162,14 @@ public class UserPropertiesView extends JPanel implements SetupView {
     }
 
     public void enableButtons() {
+        backBtn.setEnabled(true);
         finishBtn.setEnabled(true);
         agentInfoPanel.setEnabled(true);
         clientInfoPanel.setEnabled(true);
     }
 
     public void disableButtons() {
+        backBtn.setEnabled(false);
         finishBtn.setEnabled(false);
         agentInfoPanel.setEnabled(false);
         clientInfoPanel.setEnabled(false);
@@ -177,6 +178,10 @@ public class UserPropertiesView extends JPanel implements SetupView {
     @Override
     public Component getUiComponent() {
         return this;
+    }
+
+    public JButton getBackBtn() {
+        return backBtn;
     }
 
     public JButton getFinishBtn() {

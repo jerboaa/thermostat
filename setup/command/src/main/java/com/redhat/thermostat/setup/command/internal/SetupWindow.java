@@ -211,6 +211,14 @@ public class SetupWindow {
                 }
             }
         });
+        userPropertiesView.getBackBtn().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                mainView.remove(userPropertiesView);
+                showView(mongoUserSetupView);
+                setLargeFrame(false);
+            }
+        });
         userPropertiesView.getFinishBtn().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
