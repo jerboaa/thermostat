@@ -61,7 +61,6 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Export-Package />
             <Private-Package>
-              com.redhat.thermostat.setup.command,
               com.redhat.thermostat.setup.command.internal,
               com.redhat.thermostat.setup.command.internal.model,
               com.redhat.thermostat.setup.command.locale,

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.setup.command;
+package com.redhat.thermostat.setup.command.internal;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
@@ -49,7 +49,6 @@ import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.setup.command.internal.SetupWindow;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;

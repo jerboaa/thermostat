@@ -46,7 +46,6 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 import org.junit.Test;
 
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.setup.command.SetupCommand;
 
 public class ActivatorTest {
 

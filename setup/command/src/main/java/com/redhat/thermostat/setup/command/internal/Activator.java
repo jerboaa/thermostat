@@ -47,7 +47,6 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.setup.command.SetupCommand;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator implements BundleActivator {
