@@ -76,6 +76,7 @@ public class SetupWindow {
     private String storageUsername = null;
     private char[] storagePassword = null;
     private boolean showDetailedBlurb = false;
+    private boolean setupCancelled = false;
     private final ThermostatSetup thermostatSetup;
     private SwingWorker<IOException, Void> finishAction;
 
@@ -116,6 +117,9 @@ public class SetupWindow {
                     logger.log(Level.INFO, "Setup failed.", finishException);
                     throw new CommandException(translator.localize(LocaleResources.SETUP_FAILED), finishException);
                 }
+            } else if (setupCancelled) {
+                logger.log(Level.INFO, "Setup was cancelled.");
+                throw new CommandException(translator.localize(LocaleResources.SETUP_CANCELLED));
             }
         } catch (InterruptedException | ExecutionException e) {
             throw new CommandException(translator.localize(LocaleResources.SETUP_INTERRUPTED), e);
@@ -180,12 +184,6 @@ public class SetupWindow {
                 showView(mongoUserSetupView);
             }
         });
-        startView.getCancelBtn().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                shutdown();
-            }
-        });
         startView.getShowMoreInfoBtn().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -224,24 +222,23 @@ public class SetupWindow {
                 }
             }
         });
-        mongoUserSetupView.getCancelBtn().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                shutdown();
-            }
-        });
         userPropertiesView.getFinishBtn().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 runSetup();
             }
         });
-        userPropertiesView.getCancelBtn().addActionListener(new ActionListener() {
+
+        ActionListener cancelButtonListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+                setupCancelled = true;
                 shutdown();
             }
-        });
+        };
+        startView.getCancelBtn().addActionListener(cancelButtonListener);
+        mongoUserSetupView.getCancelBtn().addActionListener(cancelButtonListener);
+        userPropertiesView.getCancelBtn().addActionListener(cancelButtonListener);
     }
 
     private void setLargeFrame(boolean setLarge) {

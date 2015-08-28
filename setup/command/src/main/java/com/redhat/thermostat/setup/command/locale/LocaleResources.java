@@ -59,6 +59,7 @@ public enum LocaleResources {
     SERVICE_UNAVAILABLE_MESSAGE,
     SETUP_FAILED,
     SETUP_INTERRUPTED,
+    SETUP_CANCELLED,
     ;
 
     static final String RESOURCE_BUNDLE =
