@@ -60,6 +60,7 @@ __DEFAULT_RELEASE__ 3
   # bootstrap bundle properties file refers to the jar
   # with version suffix. See 0001_shared_fix_bundle_loading.patch
   %global jansi_version              1.11
+  %global lucene_analysis_core_bsn   org.apache.lucene.analyzers-common
 
 %else
 
@@ -85,6 +86,7 @@ __DEFAULT_RELEASE__ 3
   # bootstrap bundle properties file refers to the jar
   # with version suffix. See 0001_shared_fix_bundle_loading.patch
   %global jansi_version              1.9
+  %global lucene_analysis_core_bsn   org.apache.lucene.analysis
 
 %endif
 
@@ -644,7 +646,7 @@ popd
                  -Djcommon.osgi.version=%{jcommon_bundle_version} \
                  -Djfreechart.osgi.version=%{jfreechart_bundle_version} \
                  -Dlucene-core.bundle.symbolic-name=org.apache.lucene.core \
-                 -Dlucene-analysis.bundle.symbolic-name=org.apache.lucene.analysis \
+                 -Dlucene-analysis.bundle.symbolic-name=%{lucene_analysis_core_bsn} \
                  -Dosgi.compendium.bundle.symbolic-name=org.osgi.compendium \
                  -Dosgi.compendium.osgi-version=4.1.0 \
                  -Djgraphx.osgi.version=%{jgraphx_bundle_version}
