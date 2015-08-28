@@ -80,11 +80,6 @@ public class SetupWindow {
     private final ThermostatSetup thermostatSetup;
     private SwingWorker<IOException, Void> finishAction;
 
-    private static final String DEFAULT_AGENT_USER = "agent-tester";
-    private static final String DEFAULT_CLIENT_USER = "client-tester";
-    private static final char[] DEFAULT_USER_PASSWORD = new char[] { 't', 'e', 's', 't', 'e', 'r' };
-    private static final String DEFAULT_STORAGE_USER = "mongodevuser";
-    private static final char[] DEFAULT_STORAGE_PASSWORD = new char[] { 'm', 'o', 'n', 'g', 'o', 'd', 'e', 'v', 'p', 'a', 's', 's', 'w', 'o', 'r', 'd' };
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(SetupWindow.class);
 
@@ -199,13 +194,6 @@ public class SetupWindow {
                 showView(startView);
             }
         });
-        mongoUserSetupView.getDefaultSetupBtn().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                mongoUserSetupView.setUsername(DEFAULT_STORAGE_USER);
-                mongoUserSetupView.setPassword(DEFAULT_STORAGE_PASSWORD);
-            }
-        });
         mongoUserSetupView.getNextBtn().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -215,6 +203,7 @@ public class SetupWindow {
                 if (thermostatSetup.isWebAppInstalled()) {
                     mainView.remove(mongoUserSetupView);
                     showView(userPropertiesView);
+                    setLargeFrame(true);
                 } else {
                     //webapp isn't installed so just run setup
                     //now to create mongodb user and quit
@@ -257,14 +246,8 @@ public class SetupWindow {
                 userPropertiesView.disableButtons();
                 thermostatSetup.createMongodbUser(storageUsername, storagePassword);
                 try {
-                    if (userPropertiesView.makeAgentUserSelected()) {
-                        char[] agentPassword = Arrays.copyOf(DEFAULT_USER_PASSWORD, DEFAULT_USER_PASSWORD.length);
-                        thermostatSetup.createAgentUser(DEFAULT_AGENT_USER, agentPassword);
-                    }
-                    if (userPropertiesView.makeClientAdminSelected()) {
-                        char[] clientPassword = Arrays.copyOf(DEFAULT_USER_PASSWORD, DEFAULT_USER_PASSWORD.length);
-                        thermostatSetup.createClientAdminUser(DEFAULT_CLIENT_USER, clientPassword);
-                    }
+                    thermostatSetup.createAgentUser(userPropertiesView.getAgentUsername(), userPropertiesView.getAgentPassword());
+                    thermostatSetup.createClientAdminUser(userPropertiesView.getClientUsername(), userPropertiesView.getClientPassword());
                     thermostatSetup.commit();
                     return null;
                 } catch (IOException e) {
@@ -282,7 +265,7 @@ public class SetupWindow {
         };
         finishAction.execute();
     }
-    
+
     private void showView(SetupView view) {
         mainView.add(view.getUiComponent(), BorderLayout.CENTER);
         view.setTitleAndProgress(title, progress);
@@ -293,5 +276,5 @@ public class SetupWindow {
     private void shutdown() {
         shutdown.countDown();
     }
-    
+
 }

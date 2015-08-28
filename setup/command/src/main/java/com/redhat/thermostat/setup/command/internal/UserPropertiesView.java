@@ -44,14 +44,13 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.LayoutManager;
 import java.net.URL;
 
@@ -60,13 +59,14 @@ public class UserPropertiesView extends JPanel implements SetupView {
     private JButton finishBtn;
     private JButton backBtn;
     private JButton cancelBtn;
-
     private JPanel toolbar;
     private JPanel midPanel;
-    private JPanel detailsPanel;
-    private JCheckBox makeAgentUserBtn;
-    private JCheckBox makeClientAdminBtn;
+    private CredentialPanel clientInfoPanel;
+    private CredentialPanel agentInfoPanel;
 
+    private static final String DEFAULT_CLIENT_USER = "client-tester";
+    private static final String DEFAULT_AGENT_USER = "agent-tester";
+    private static final char[] DEFAULT_USER_PASSWORD = new char[] {'t', 'e', 's', 't', 'e', 'r'};
     private static final String THERMOSTAT_LOGO = "thermostat.png";
     private static final String PROGRESS = "Step 3 of 3";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
@@ -79,6 +79,29 @@ public class UserPropertiesView extends JPanel implements SetupView {
 
         this.add(midPanel, BorderLayout.CENTER);
         this.add(toolbar, BorderLayout.SOUTH);
+
+        DocumentListener inputValidator = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                validateInput();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                validateInput();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                validateInput();
+            }
+        };
+        clientInfoPanel.getUsernameField().getDocument().addDocumentListener(inputValidator);
+        clientInfoPanel.getPasswordField1().getDocument().addDocumentListener(inputValidator);
+        clientInfoPanel.getPasswordField2().getDocument().addDocumentListener(inputValidator);
+        agentInfoPanel.getUsernameField().getDocument().addDocumentListener(inputValidator);
+        agentInfoPanel.getPasswordField1().getDocument().addDocumentListener(inputValidator);
+        agentInfoPanel.getPasswordField2().getDocument().addDocumentListener(inputValidator);
     }
 
     @Override
@@ -88,31 +111,24 @@ public class UserPropertiesView extends JPanel implements SetupView {
     }
 
     public void createMidPanel() {
-        JLabel agentInfo = new JLabel(translator.localize(LocaleResources.AGENT_INFO).getContents());
-        JLabel clientInfo = new JLabel(translator.localize(LocaleResources.CLIENT_INFO).getContents());
-        makeAgentUserBtn = new JCheckBox(translator.localize(LocaleResources.CREATE_AGENT_USER).getContents());
-        makeAgentUserBtn.setSelected(true);
-        makeClientAdminBtn = new JCheckBox(translator.localize(LocaleResources.CREATE_CLIENT_ADMIN).getContents());
-        makeClientAdminBtn.setSelected(true);
-        detailsPanel = new JPanel(new GridBagLayout());
+        clientInfoPanel = new CredentialPanel(
+            translator.localize(LocaleResources.CLIENT_CRED_TITLE).getContents(),
+            translator.localize(LocaleResources.CLIENT_HELP_INFO).getContents(),
+            DEFAULT_CLIENT_USER,
+            DEFAULT_USER_PASSWORD);
+        agentInfoPanel = new CredentialPanel(
+            translator.localize(LocaleResources.AGENT_CRED_TITLE).getContents(),
+            translator.localize(LocaleResources.AGENT_HELP_INFO).getContents(),
+            DEFAULT_AGENT_USER,
+            DEFAULT_USER_PASSWORD);
 
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridy = 0;
-        c.insets.top = 40;
-        detailsPanel.add(agentInfo, c);
-        c.gridy = 1;
-        c.insets.top = 10;
-        detailsPanel.add(makeAgentUserBtn, c);
-        c.insets.top = 25;
-        c.gridy = 2;
-        detailsPanel.add(clientInfo, c);
-        c.insets.top = 10;
-        c.gridy = 3;
-        detailsPanel.add(makeClientAdminBtn, c);
-
-        midPanel = new JPanel(new BorderLayout());
-        midPanel.add(detailsPanel, BorderLayout.NORTH);
+        midPanel = new JPanel();
+        midPanel.setLayout(new BoxLayout(midPanel, BoxLayout.PAGE_AXIS));
+        midPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        midPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        midPanel.add(clientInfoPanel);
+        midPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        midPanel.add(agentInfoPanel);
     }
 
     private void createToolbarPanel() {
@@ -124,6 +140,7 @@ public class UserPropertiesView extends JPanel implements SetupView {
         backBtn.setEnabled(false);
         finishBtn = new JButton(translator.localize(LocaleResources.FINISH).getContents());
         finishBtn.setPreferredSize(new Dimension(70, 30));
+        finishBtn.setEnabled(true);
         cancelBtn = new JButton(translator.localize(LocaleResources.CANCEL).getContents());
         cancelBtn.setPreferredSize(new Dimension(70, 30));
 
@@ -137,16 +154,24 @@ public class UserPropertiesView extends JPanel implements SetupView {
         toolbar.add(cancelBtn);
     }
 
+    private void validateInput() {
+        if (clientInfoPanel.isInputValid() && agentInfoPanel.isInputValid()) {
+            finishBtn.setEnabled(true);
+        } else {
+            finishBtn.setEnabled(false);
+        }
+    }
+
     public void enableButtons() {
-        makeAgentUserBtn.setEnabled(true);
-        makeClientAdminBtn.setEnabled(true);
         finishBtn.setEnabled(true);
+        agentInfoPanel.setEnabled(true);
+        clientInfoPanel.setEnabled(true);
     }
 
     public void disableButtons() {
-        makeAgentUserBtn.setEnabled(false);
-        makeClientAdminBtn.setEnabled(false);
         finishBtn.setEnabled(false);
+        agentInfoPanel.setEnabled(false);
+        clientInfoPanel.setEnabled(false);
     }
 
     @Override
@@ -162,11 +187,20 @@ public class UserPropertiesView extends JPanel implements SetupView {
         return cancelBtn;
     }
 
-    public boolean makeAgentUserSelected() {
-        return makeAgentUserBtn.isSelected();
+    public String getAgentUsername() {
+        return agentInfoPanel.getUsername();
     }
 
-    public boolean makeClientAdminSelected() {
-        return makeClientAdminBtn.isSelected();
+    public char[] getAgentPassword() {
+        return agentInfoPanel.getPassword();
     }
+
+    public String getClientUsername() {
+        return clientInfoPanel.getUsername();
+    }
+
+    public char[] getClientPassword() {
+        return clientInfoPanel.getPassword();
+    }
+
 }

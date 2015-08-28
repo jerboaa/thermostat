@@ -36,15 +36,15 @@
 
 package com.redhat.thermostat.setup.command.internal.model;
 
-class UserCredsValidator {
-    
-    void validateUsername(String username) {
+public class UserCredsValidator {
+
+    public void validateUsername(String username) {
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("Name must not be null or empty");
         }
     }
-    
-    void validatePassword(char[] password) {
+
+    public void validatePassword(char[] password) {
         if (password == null || password.length == 0) {
             throw new IllegalArgumentException("Password must not be null or empty");
         }

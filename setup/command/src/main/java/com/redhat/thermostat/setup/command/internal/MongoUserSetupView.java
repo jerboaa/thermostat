@@ -44,51 +44,30 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.LayoutManager;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.net.URL;
-import java.util.Arrays;
 
 public class MongoUserSetupView extends JPanel implements SetupView {
 
     private JButton backBtn;
-    private JButton defaultSetupBtn;
     private JButton nextBtn;
     private JButton cancelBtn;
 
-    private JTextField usernameField;
-    private JPasswordField passwordField1;
-    private JPasswordField passwordField2;
-
     private JPanel toolbar;
     private JPanel midPanel;
-    private JPanel detailsPanel;
-    private JPanel messagePanel;
-
-    private JLabel usernameLabel;
-    private JLabel passwordLabel1;
-    private JLabel passwordLabel2;
-    private JLabel passwordMismatchLabel;
-    private JLabel detailsMissingLabel;
-    private JCheckBox showPasswordCheckbox;
+    private CredentialPanel credentialPanel;
 
     private static final String THERMOSTAT_LOGO = "thermostat.png";
     private static final String PROGRESS = "Step 2 of 3";
+    private static final String DEFAULT_STORAGE_USER = "mongodevuser";
+    private static final char[] DEFAULT_STORAGE_PASSWORD = new char[] {'m', 'o', 'n', 'g', 'o', 'd', 'e', 'v', 'p', 'a', 's', 's', 'w', 'o', 'r', 'd'};
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     public MongoUserSetupView(LayoutManager layout) {
@@ -99,7 +78,20 @@ public class MongoUserSetupView extends JPanel implements SetupView {
 
         this.add(midPanel, BorderLayout.CENTER);
         this.add(toolbar, BorderLayout.SOUTH);
+    }
 
+    @Override
+    public void setTitleAndProgress(JLabel title, JLabel progress) {
+        title.setText(translator.localize(LocaleResources.MONGO_SETUP_TITLE).getContents());
+        progress.setText(PROGRESS);
+    }
+
+    private void createMidPanel() {
+        credentialPanel = new CredentialPanel(
+            translator.localize(LocaleResources.MONGO_CRED_TITLE).getContents(),
+            translator.localize(LocaleResources.STORAGE_HELP_INFO).getContents(),
+            DEFAULT_STORAGE_USER,
+            DEFAULT_STORAGE_PASSWORD);
         DocumentListener inputValidator = new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent documentEvent) {
@@ -116,85 +108,16 @@ public class MongoUserSetupView extends JPanel implements SetupView {
                 validateInput();
             }
         };
-        usernameField.getDocument().addDocumentListener(inputValidator);
-        passwordField1.getDocument().addDocumentListener(inputValidator);
-        passwordField2.getDocument().addDocumentListener(inputValidator);
-    }
+        credentialPanel.getUsernameField().getDocument().addDocumentListener(inputValidator);
+        credentialPanel.getPasswordField1().getDocument().addDocumentListener(inputValidator);
+        credentialPanel.getPasswordField2().getDocument().addDocumentListener(inputValidator);
 
-    @Override
-    public void setTitleAndProgress(JLabel title, JLabel progress) {
-        title.setText(translator.localize(LocaleResources.MONGO_SETUP_TITLE).getContents());
-        progress.setText(PROGRESS);
-    }
-
-    private void createMidPanel() {
-        usernameLabel = new JLabel("Username: ");
-        usernameField = new JTextField(30);
-        passwordLabel1 = new JLabel("Password:");
-        passwordField1 = new JPasswordField(30);
-        passwordLabel2 = new JLabel("Verify Password:");
-        passwordField2 = new JPasswordField(30);
-        showPasswordCheckbox = new JCheckBox("Show passwords");
-        showPasswordCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                togglePasswords(showPasswordCheckbox.isSelected());
-            }
-        });
-
-        defaultSetupBtn = new JButton("Use Defaults");
-        defaultSetupBtn.setPreferredSize(new Dimension(140, 30));
-        passwordMismatchLabel = new JLabel("Passwords don't match!");
-        passwordMismatchLabel.setForeground(Color.RED);
-        detailsMissingLabel = new JLabel("Please fill in ALL fields");
-        detailsMissingLabel.setForeground(Color.RED);
-        detailsPanel = new JPanel(new GridBagLayout());
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 1;
-        c.insets.top = 40;
-        detailsPanel.add(usernameLabel, c);
-        c.gridx = 1;
-        c.gridy = 0;
-        c.gridwidth = 2;
-        detailsPanel.add(usernameField, c);
-        c.gridx = 0;
-        c.gridy = 1;
-        c.gridwidth = 1;
-        c.insets.top = 10;
-        detailsPanel.add(passwordLabel1, c);
-        c.gridx = 1;
-        c.gridy = 1;
-        c.gridwidth = 2;
-        detailsPanel.add(passwordField1, c);
-        c.gridx = 0;
-        c.gridy = 2;
-        c.gridwidth = 1;
-        detailsPanel.add(passwordLabel2, c);
-        c.gridx = 1;
-        c.gridy = 2;
-        c.gridwidth = 2;
-        detailsPanel.add(passwordField2, c);
-        c.gridx = 1;
-        c.gridy = 3;
-        c.gridwidth = 1;
-        detailsPanel.add(showPasswordCheckbox, c);
-
-        c.fill = GridBagConstraints.NONE;
-        c.anchor = GridBagConstraints.LINE_END;
-        c.gridx = 2;
-        c.gridy = 3;
-        c.gridwidth = 1;
-        detailsPanel.add(defaultSetupBtn, c);
-
-        messagePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-
-        midPanel = new JPanel(new BorderLayout());
-        midPanel.add(detailsPanel, BorderLayout.NORTH);
-        midPanel.add(messagePanel, BorderLayout.SOUTH);
+        midPanel = new JPanel();
+        midPanel.setLayout(new BoxLayout(midPanel, BoxLayout.PAGE_AXIS));
+        midPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        midPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        midPanel.add(credentialPanel);
+        midPanel.add(Box.createRigidArea(new Dimension(0, 20)));
     }
 
     private void createToolbarPanel() {
@@ -219,59 +142,24 @@ public class MongoUserSetupView extends JPanel implements SetupView {
         toolbar.add(cancelBtn);
     }
 
-    private void togglePasswords(boolean isVisible) {
-        if (isVisible) {
-            passwordField1.setEchoChar((char) 0);
-            passwordField2.setEchoChar((char) 0);
-        } else {
-            passwordField1.setEchoChar('*');
-            passwordField2.setEchoChar('*');
-        }
-    }
-
     private void validateInput() {
-        if (usernameField.getText().isEmpty() || passwordField1.getPassword().length == 0 || passwordField2.getPassword().length == 0) {
-            showDetailsMissing();
-            nextBtn.setEnabled(false);
-        } else if (!(Arrays.equals(passwordField1.getPassword(), passwordField2.getPassword()))) {
-            showPasswordMismatch();
-            nextBtn.setEnabled(false);
-        } else {
-            removeErrorMessages();
+        if (credentialPanel.isInputValid()) {
             nextBtn.setEnabled(true);
+        } else {
+            nextBtn.setEnabled(false);
         }
     }
 
     public void enableButtons() {
         backBtn.setEnabled(true);
-        defaultSetupBtn.setEnabled(true);
         nextBtn.setEnabled(true);
+        credentialPanel.setEnabled(true);
     }
 
     public void disableButtons() {
         backBtn.setEnabled(false);
-        defaultSetupBtn.setEnabled(false);
         nextBtn.setEnabled(false);
-    }
-
-    private void showPasswordMismatch() {
-        messagePanel.removeAll();
-        messagePanel.add(passwordMismatchLabel);
-        midPanel.revalidate();
-        midPanel.repaint();
-    }
-
-    private void showDetailsMissing() {
-        messagePanel.removeAll();
-        messagePanel.add(detailsMissingLabel);
-        midPanel.revalidate();
-        midPanel.repaint();
-    }
-
-    private void removeErrorMessages() {
-        messagePanel.removeAll();
-        midPanel.revalidate();
-        midPanel.repaint();
+        credentialPanel.setEnabled(false);
     }
 
     @Override
@@ -283,10 +171,6 @@ public class MongoUserSetupView extends JPanel implements SetupView {
         return backBtn;
     }
 
-    public JButton getDefaultSetupBtn() {
-        return defaultSetupBtn;
-    }
-
     public JButton getNextBtn() {
         return nextBtn;
     }
@@ -296,19 +180,10 @@ public class MongoUserSetupView extends JPanel implements SetupView {
     }
 
     public String getUsername() {
-        return usernameField.getText();
-    }
-
-    public void setUsername(String username) {
-        this.usernameField.setText(username);
+        return credentialPanel.getUsername();
     }
 
     public char[] getPassword() {
-        return passwordField1.getPassword();
-    }
-
-    public void setPassword(char[] password) {
-        this.passwordField1.setText(String.valueOf(password));
-        this.passwordField2.setText(String.valueOf(password));
+        return credentialPanel.getPassword();
     }
 }
