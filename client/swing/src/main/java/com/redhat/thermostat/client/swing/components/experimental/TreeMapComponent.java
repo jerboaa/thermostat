@@ -171,6 +171,8 @@ public class TreeMapComponent extends JComponent {
      */
     private List<TreeMapObserver> observers;
 
+    private ToolTipRenderer tooltipRenderer;
+
     /**
      * Constructor. It draw a TreeMap of the given tree in according to the 
      * {@Dimension} object in input.
@@ -189,6 +191,8 @@ public class TreeMapComponent extends JComponent {
         this.zoomStack = new Stack<>();
         this.zoomStack.push(this.tree);
         this.observers = new ArrayList<>();
+        // FIXME remove this assumption about TreeMap and size
+        this.tooltipRenderer = new WeightAsSizeRenderer();
 
         // assign a rectangle to the tree's root in order to process the tree.
         Rectangle2D.Double area = new Rectangle2D.Double(0, 0, d.width, d.height);
@@ -198,7 +202,7 @@ public class TreeMapComponent extends JComponent {
 
         drawTreeMap(tree); 
 
-        addResizeListener(this);        
+        addResizeListener(this);
         repaint();
     }
 
@@ -208,6 +212,10 @@ public class TreeMapComponent extends JComponent {
      */
     public TreeMapNode getTreeMapRoot() {
         return this.tree;
+    }
+
+    public void setToolTipRenderer(ToolTipRenderer renderer) {
+        this.tooltipRenderer = renderer;
     }
 
     /**
@@ -668,9 +676,7 @@ public class TreeMapComponent extends JComponent {
         public void setNode(TreeMapNode node) {
             this.node = node;
             this.color = node.getColor();
-            // FIXME remove this assumption about weight being a size
-            Size size = new Size(node.getRealWeight(), Unit.B);
-            this.setToolTipText(node.getLabel() + " - " + size.toString("%.2f"));
+            this.setToolTipText(TreeMapComponent.this.tooltipRenderer.render(node));
         }
         
         public TreeMapNode getNode() {
@@ -778,6 +784,25 @@ public class TreeMapComponent extends JComponent {
             }
             repaint();
             notifySelectionToObservers(node);
+        }
+    }
+
+    public static interface ToolTipRenderer {
+        public String render(TreeMapNode node);
+    }
+
+    public static class SimpleRenderer implements ToolTipRenderer {
+        @Override
+        public String render(TreeMapNode node) {
+            return node.getLabel();
+        }
+    }
+
+    public static class WeightAsSizeRenderer implements ToolTipRenderer {
+        @Override
+        public String render(TreeMapNode node) {
+            Size size = new Size(node.getRealWeight(), Unit.B);
+            return node.getLabel() + " - " + size.toString("%.2f");
         }
     }
 }
