@@ -139,7 +139,7 @@ public class UserPropertiesView extends JPanel implements SetupView {
         backBtn.setPreferredSize(new Dimension(70, 30));
         finishBtn = new JButton(translator.localize(LocaleResources.FINISH).getContents());
         finishBtn.setPreferredSize(new Dimension(70, 30));
-        finishBtn.setEnabled(true);
+        finishBtn.setEnabled(false);
         cancelBtn = new JButton(translator.localize(LocaleResources.CANCEL).getContents());
         cancelBtn.setPreferredSize(new Dimension(70, 30));
 
