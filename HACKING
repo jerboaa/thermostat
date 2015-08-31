@@ -83,6 +83,31 @@ Use this style:
     }
 
 
+UI Message Style
+----------------
+
+Messages displayed in progress handles should be short but mostly-complete
+sentence fragments. Overly verbose messages clutter the UI, but overly curt
+messages maybe not provide the user with enough information to distinguish
+which task a progress notification belongs to.
+
+Additionally, messages should be properly capitalized, and should be
+terminated with the Unicode horizontal ellipsis character ('\u2026')
+immediately following the final character of the message itself - in other
+words, there should be no space between the message and the ellipsis.
+
+This is a good example of a progress handle message:
+
+"Starting profiling\u2026"
+
+The following are bad examples of the same message:
+
+"Starting\u2026" (what task is starting?)
+"Profiling\u2026" (what is profiling doing?)
+"Starting profiling..." (these are three periods, not an ellipsis character)
+"Starting profiling \u2026" (space before the ellipsis)
+"starting profiling\u2026" (not capitalized correctly)
+
 
 Tests
 -----
