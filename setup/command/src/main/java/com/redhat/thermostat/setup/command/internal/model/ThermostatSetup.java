@@ -44,8 +44,11 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -53,6 +56,7 @@ import com.redhat.thermostat.utils.keyring.KeyringException;
 
 public class ThermostatSetup implements PersistableSetup {
 
+    private static final Logger logger = LoggingUtils.getLogger(ThermostatSetup.class);
     static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss zzz");
     static final String PROGRAM_NAME = "thermostat setup";
     private static final String THERMOSTAT_AGENT_REC_ROLE_NAME = "thermostat-agent";
@@ -142,12 +146,16 @@ public class ThermostatSetup implements PersistableSetup {
             prefs.setSaveEntitlements(true); // force writing on flush()
             String url = prefs.getConnectionUrl();
             prefs.setUserName(clientUsername);
-            // Unconditionally save the chosen username. If setup was run again
-            // it will overwrite existing credentials.
-            keyring.savePassword(url, clientUsername, clientPassword);
+            // Unconditionally save credentials for the chosen username. If setup
+            // runs again it will overwrite existing credentials.
             prefs.flush();
+            keyring.savePassword(url, clientUsername, clientPassword);
         } catch (KeyringException e) {
-            throw new IOException(e);
+            // Don't fail setup if storing to keyring fails. After all this is
+            // for convenience only (so that thermostat gui works out of the box
+            // after setup). If we failed, one would have to have a working
+            // keyring setup which isn't always the case. Think thermostat agent.
+            logger.log(Level.INFO, "Failed to store client credentials to keyring. Usability of client commands might suffer.", e);
         } finally {
             Arrays.fill(clientPassword, '\0');
         }

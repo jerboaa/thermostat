@@ -43,6 +43,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +61,7 @@ import org.junit.Test;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.utils.keyring.Keyring;
+import com.redhat.thermostat.utils.keyring.KeyringException;
 
 public class ThermostatSetupTest {
 
@@ -102,10 +104,14 @@ public class ThermostatSetupTest {
     
     @Test
     public void commitCreatesAgentAuthFileStoresToKeyring() throws IOException {
+        Keyring keyring = mock(Keyring.class); // well behaved keyring
+        doCommitTest(keyring);
+    }
+
+    private void doCommitTest(Keyring keyring) throws IOException {
+        ClientPreferences prefs = mock(ClientPreferences.class);
         CommonPaths paths = mock(CommonPaths.class);
         File mockAgentAuthFile = File.createTempFile("thermostat-test-", getClass().getName());
-        Keyring keyring = mock(Keyring.class);
-        ClientPreferences prefs = mock(ClientPreferences.class);
         try {
             when(paths.getUserAgentAuthConfigFile()).thenReturn(mockAgentAuthFile);
             ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), paths, mock(CredentialsFileCreator.class), keyring, prefs);
@@ -126,12 +132,32 @@ public class ThermostatSetupTest {
             assertTrue("username and password must be present", contents.size() > 2);
             assertTrue("username=damian expected to be found in agent.auth file", contents.contains("username=damian"));
             assertTrue("password=test expected to be found in agent.auth file", contents.contains("password=test"));
-        } finally {
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail("Did not expect failure on commit()");
+        }    
+        finally {
             Files.delete(mockAgentAuthFile.toPath());
         }
     }
     
-    private class RoleMatcher extends BaseMatcher<String[]> {
+    @Test
+    public void keyringStoreFailureIsNonFatal() throws IOException {
+        Keyring keyring = mock(Keyring.class);
+        doThrow(new MockKeyringException("This is a test")).when(keyring).savePassword(any(String.class), any(String.class), any(char[].class));
+        doCommitTest(keyring);
+    }
+    
+    @SuppressWarnings("serial")
+    private static class MockKeyringException extends KeyringException {
+
+        public MockKeyringException(String string) {
+            super(string);
+        }
+        
+    }
+    
+    private static class RoleMatcher extends BaseMatcher<String[]> {
         
         final String[] expected;
         private RoleMatcher(String[] expected) {
