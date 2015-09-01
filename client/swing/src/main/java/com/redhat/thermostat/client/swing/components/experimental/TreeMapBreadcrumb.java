@@ -63,7 +63,7 @@ public class TreeMapBreadcrumb extends JComponent implements TreeMapObserver {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Font used by bradcrumb items.
+     * Font used by breadcrumb items.
      */
     private Font FONT = (Font) UIManager.get("thermostat-default-font");
 
@@ -141,6 +141,14 @@ public class TreeMapBreadcrumb extends JComponent implements TreeMapObserver {
         item.setAsLast();
         items.push(item);
         this.add(item);
+    }
+
+    /**
+     * Package-private for testing only.
+     * @return the number of BreadcrumbItems in the items stack
+     */
+    int getItemCount() {
+        return items.size();
     }
 
 
@@ -284,8 +292,10 @@ public class TreeMapBreadcrumb extends JComponent implements TreeMapObserver {
     /**
      * Calculates the labels' text size in order to scale the given image
      * and to apply to it.
+     *
+     * Package-private for testing only.
      */
-    private void adaptIcon(JLabel label, ImageIcon icon) {
+    void adaptIcon(JLabel label, ImageIcon icon) {
         Rectangle fontArea;
         try {
             fontArea = label.getFont().getStringBounds(label.getText(), 
