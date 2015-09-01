@@ -4,8 +4,8 @@
 
 # Username to use for connecting to the backing storage
 # implementation
-# storage.username=username
+# username=some-username
 
 # Password to use for connecting to the backing storage
 # implementation
-# storage.password=password
+# password=some-password
