@@ -121,7 +121,7 @@ public class DevWebStorageTest extends WebStorageUsingIntegrationTest {
         Spawn setup = spawnScript(THERMOSTAT_DEV_SETUP_SCRIPT, new String[] {});
         setup.expectClose();
         String stdout = setup.getCurrentStandardOutContents();
-        assertTrue(stdout.contains("Thermostat setup complete!"));
+        assertTrue(stdout.contains("Setup finished successfully."));
         assertTrue(stdout.contains("mongodevuser"));
     }
 }

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.setup.command.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.argThat;
@@ -45,7 +46,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -64,6 +67,8 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.setup.command.internal.SetupCommand;
+import com.redhat.thermostat.setup.command.internal.cli.CharArrayMatcher;
+import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -79,10 +84,12 @@ public class SetupCommandTest {
     private CommonPaths paths;
     private Launcher launcher;
     private Keyring keyring;
+    private ThermostatSetup thermostatSetup;
 
     @Before
     public void setUp() {
         paths = mock(CommonPaths.class);
+        when(paths.getUserClientConfigurationFile()).thenReturn(mock(File.class));
         ctxt = mock(CommandContext.class);
         mockArgs = mock(Arguments.class);
         console = mock(Console.class);
@@ -94,6 +101,7 @@ public class SetupCommandTest {
         error = new PrintStream(errorBaos);
         launcher = mock(Launcher.class);
         keyring = mock(Keyring.class);
+        thermostatSetup = mock(ThermostatSetup.class);
 
         when(ctxt.getArguments()).thenReturn(mockArgs);
         when(ctxt.getConsole()).thenReturn(console);
@@ -112,7 +120,7 @@ public class SetupCommandTest {
             }
 
             @Override
-            void createMainWindowAndRun() {
+            void createMainWindowAndRun(ThermostatSetup setup) {
                 //do nothing
             }
         };
@@ -133,7 +141,7 @@ public class SetupCommandTest {
             }
 
             @Override
-            void createMainWindowAndRun() {
+            void createMainWindowAndRun(ThermostatSetup setup) {
                 isSet[0] = true;
             }
         };
@@ -199,6 +207,32 @@ public class SetupCommandTest {
         verify(launcher, times(0)).run(argThat(new ArgsMatcher(new String[] { "setup" })), eq(false));
     }
     
+    @Test
+    public void verifySetupAsOrigCommandNonGui() throws CommandException {
+        cmd = createSetupCommand();
+        setServices();
+        
+        Arguments args = mock(Arguments.class);
+        CommandContext ctxt = mock(CommandContext.class);
+        when(ctxt.getArguments()).thenReturn(args);
+        when(args.hasArgument("origArgs")).thenReturn(true);
+        when(args.getArgument("origArgs")).thenReturn("setup|||-c");
+        when(ctxt.getConsole()).thenReturn(console);
+        when(thermostatSetup.isWebAppInstalled()).thenReturn(true);
+        when(console.getInput())
+            .thenReturn(new ByteArrayInputStream("yes\nmongo\nm\nm\nclient\nc\nc\nagent\na\na\n".getBytes()));
+        
+        cmd.run(ctxt);
+        verify(thermostatSetup).createAgentUser(eq("agent"), argThat(matchesPassword(new char[] { 'a' })));
+        verify(thermostatSetup).createClientAdminUser(eq("client"), argThat(matchesPassword(new char[] { 'c' })));
+        verify(thermostatSetup).createMongodbUser(eq("mongo"), argThat(matchesPassword(new char[] { 'm' })));
+        verify(launcher, times(0)).run(argThat(new ArgsMatcher(new String[] { "setup", "-c" })), eq(false));
+    }
+    
+    private CharArrayMatcher matchesPassword(char[] expected) {
+        return new CharArrayMatcher(expected);
+    }
+    
     private void doTestOriginalCmdRunsAfterSetup(String origArgs, String[] argsList) throws CommandException {
         cmd = createSetupCommand();
         setServices();
@@ -235,10 +269,39 @@ public class SetupCommandTest {
             }
 
             @Override
-            void createMainWindowAndRun() {
+            void createMainWindowAndRun(ThermostatSetup setup) {
                 //do nothing
             }
+            
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
         };
+    }
+    
+    @Test
+    public void mergedSetupArgumentsTest() {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument("nonGui")).thenReturn(false);
+        String[] origArgs = new String[] { "-c", "--nonGui" };
+        SetupCommand.MergedSetupArguments arguments = new SetupCommand.MergedSetupArguments(args, origArgs);
+        assertTrue(arguments.hasArgument("nonGui"));
+        // short version of nonGui
+        origArgs = new String[] { "-c" };
+        arguments = new SetupCommand.MergedSetupArguments(args, origArgs);
+        assertTrue(arguments.hasArgument("nonGui"));
+        // long version
+        origArgs = new String[] { "--nonGui" };
+        arguments = new SetupCommand.MergedSetupArguments(args, origArgs);
+        assertTrue(arguments.hasArgument("nonGui"));
+        
+        // unrelated option
+        when(args.getArgument("something")).thenReturn(null);
+        origArgs = new String[] { "--something", "someVal", "-c" };
+        arguments = new SetupCommand.MergedSetupArguments(args, origArgs);
+        assertEquals("someVal", arguments.getArgument("something"));
+        assertTrue(arguments.hasArgument("nonGui"));
     }
     
     private void setServices() {

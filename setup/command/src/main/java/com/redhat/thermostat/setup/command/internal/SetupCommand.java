@@ -38,6 +38,11 @@ package com.redhat.thermostat.setup.command.internal;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,10 +50,13 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.setup.command.internal.SetupWindow;
+import com.redhat.thermostat.setup.command.internal.cli.CLISetup;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -59,13 +67,13 @@ public class SetupCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final String ORIG_CMD_ARGUMENT_NAME = "origArgs";
+    private static final String NON_GUI_OPTION_NAME = "nonGui";
     private static final Logger logger = LoggingUtils.getLogger(SetupCommand.class);
     private final DependencyServices dependentServices = new DependencyServices();
     private SetupWindow mainWindow;
     private CommonPaths paths;
     private Launcher launcher;
     private Keyring keyring;
-    private ThermostatSetup thermostatSetup;
     private String[] origArgsList;
 
     @Override
@@ -74,23 +82,46 @@ public class SetupCommand extends AbstractCommand {
         if (args.hasArgument(ORIG_CMD_ARGUMENT_NAME)) {
             String origArgs = args.getArgument(ORIG_CMD_ARGUMENT_NAME);
             origArgsList = origArgs.split("\\|\\|\\|");
+            if (isSetupInvocation(origArgsList)) {
+                String[] optionArgs = Arrays.copyOfRange(origArgsList, 1, origArgsList.length);
+                args = mergeOriginalArgs(optionArgs, args);
+            }
         }
         
+        
+        this.paths = dependentServices.getService(CommonPaths.class);
+        requireNonNull(paths, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "CommonPaths"));
+        this.launcher = dependentServices.getService(Launcher.class);
+        requireNonNull(launcher, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Launcher"));
+        this.keyring = dependentServices.getService(Keyring.class);
+        requireNonNull(keyring, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Keyring"));
+        ThermostatSetup setup = createSetup();
+        if (args.hasArgument(NON_GUI_OPTION_NAME)) {
+            runCLISetup(setup, ctx.getConsole());
+        } else {
+            runGUISetup(setup);
+        }
+        
+        runOriginalCommand(origArgsList);
+    }
+
+    private Arguments mergeOriginalArgs(String[] origArgsList, Arguments args) {
+        logger.fine("Intercepted setup invocation 'setup' " + Arrays.asList(origArgsList).toString());
+        return new MergedSetupArguments(args, origArgsList);
+    }
+
+    private void runCLISetup(ThermostatSetup setup, Console console) throws CommandException {
+        CLISetup cliSetup = new CLISetup(setup, console);
+        cliSetup.run();
+    }
+
+    private void runGUISetup(ThermostatSetup setup) throws CommandException {
         try {
             setLookAndFeel();
-
-            this.paths = dependentServices.getService(CommonPaths.class);
-            requireNonNull(paths, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "CommonPaths"));
-            this.launcher = dependentServices.getService(Launcher.class);
-            requireNonNull(launcher, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Launcher"));
-            this.keyring = dependentServices.getService(Keyring.class);
-            requireNonNull(keyring, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Keyring"));
-
-            createMainWindowAndRun();
+            createMainWindowAndRun(setup);
         } catch (InterruptedException | InvocationTargetException e) {
             throw new CommandException(t.localize(LocaleResources.SETUP_FAILED), e);
         }
-        runOriginalCommand(origArgsList);
     }
 
     private void runOriginalCommand(String[] args) {
@@ -100,12 +131,16 @@ public class SetupCommand extends AbstractCommand {
         if (args.length == 0) {
             throw new AssertionError("Original command args were empty!");
         }
-        if (args[0].equals("setup")) {
+        if (isSetupInvocation(args)) {
             // Do not run setup recursively
             return;
         }
         logger.log(Level.FINE, "Running intercepted command '" + args[0] + "' after setup.");
         launcher.run(args, false);
+    }
+    
+    private boolean isSetupInvocation(String[] args) {
+        return args[0].equals("setup");
     }
 
     public void setPaths(CommonPaths paths) {
@@ -130,14 +165,13 @@ public class SetupCommand extends AbstractCommand {
         return false;
     }
 
-    //package-private for testing
-    void createMainWindowAndRun() throws CommandException {
-        thermostatSetup = ThermostatSetup.create(launcher, paths, keyring);
-        mainWindow = new SetupWindow(thermostatSetup);
+    // package-private for testing
+    void createMainWindowAndRun(ThermostatSetup setup) throws CommandException {
+        mainWindow = new SetupWindow(setup);
         mainWindow.run();
     }
 
-    //package-private for testing
+    // package-private for testing
     void setLookAndFeel() throws InvocationTargetException, InterruptedException {
         EventQueue.invokeAndWait(new Runnable() {
             @Override
@@ -146,6 +180,88 @@ public class SetupCommand extends AbstractCommand {
                 themeManager.setLAF();
             }
         });
+    }
+    
+    // package-private for testing
+    ThermostatSetup createSetup() {
+        return ThermostatSetup.create(launcher, paths, keyring);
+    }
+    
+    static class MergedSetupArguments implements Arguments {
+
+        private static final String SINGLE_DASH = "-";
+        private static final String DOUBLE_DASH = "--";
+        private static final String NON_GUI_SHORT_OPT = "c";
+        
+        private final Arguments argsDelegate;
+        private final String[] origArgs;
+        private final Map<String, String> additionalOptions;
+        
+        MergedSetupArguments(Arguments args, String[] origArgs) {
+            this.origArgs = origArgs;
+            this.argsDelegate = Objects.requireNonNull(args);
+            this.additionalOptions = buildAdditionalOptions(origArgs);
+        }
+        
+        private Map<String, String> buildAdditionalOptions(String[] origArgs) {
+            Map<String, String> options = new HashMap<>();
+            for (int i = 0; i < origArgs.length; i++) {
+                String opt = origArgs[i];
+                String value = "NONE";
+                if (opt.startsWith(DOUBLE_DASH)) {
+                    if (i + 1 < origArgs.length && isOptionArg(origArgs, i)) {
+                        value = origArgs[i + 1];
+                        i++; // skip argument
+                    }
+                    options.put(opt.substring(2), value);
+                    continue;
+                } else if (opt.startsWith(SINGLE_DASH)) {
+                    // This is a poor-man's version of short-arg parsing for
+                    // non-gui setup option.
+                    String cleanedOp = opt.substring(1);
+                    if (cleanedOp.equals(NON_GUI_SHORT_OPT)) {
+                        options.put(NON_GUI_OPTION_NAME, Boolean.TRUE.toString());
+                    }
+                    continue;
+                } else {
+                    throw new AssertionError("Invalid option for setup: " + opt);
+                }
+            }
+            return options;
+        }
+        
+        private boolean isOptionArg(String[] origArgs, int i) {
+            return !(origArgs[i + 1].startsWith(SINGLE_DASH) || origArgs[i + 1].startsWith(DOUBLE_DASH));
+        }
+
+        @Override
+        public List<String> getNonOptionArguments() {
+            return argsDelegate.getNonOptionArguments();
+        }
+
+        @Override
+        public boolean hasArgument(String name) {
+            boolean delegateHasArgument = argsDelegate.hasArgument(name);
+            if (delegateHasArgument) {
+                return true;
+            }
+            return additionalOptions.keySet().contains(name);
+        }
+
+        @Override
+        public String getArgument(String name) {
+            String arg = argsDelegate.getArgument(name);
+            if (arg != null) {
+                return arg;
+            }
+            return additionalOptions.get(name);
+        }
+        
+        @Override
+        public String toString() {
+            return "setup [delegate=" + argsDelegate.toString() + ",origArgs=" + Arrays.asList(origArgs).toString() + "]";
+        }
+        
     }
 }
 

@@ -34,68 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.setup.command.locale;
+package com.redhat.thermostat.setup.command.internal.cli;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 
+public class CharArrayMatcher extends BaseMatcher<char[]> {
 
-public enum LocaleResources {
-
-    WINDOW_TITLE,
-    WELCOME_SCREEN_TITLE,
-    MONGO_SETUP_TITLE,
-    USERS_SETUP_TITLE,
-    MONGO_CRED_TITLE,
-    CLIENT_CRED_TITLE,
-    AGENT_CRED_TITLE,
-    NEXT,
-    BACK,
-    CANCEL,
-    FINISH,
-    AGENT_HELP_INFO,
-    CLIENT_HELP_INFO,
-    STORAGE_HELP_INFO,
-    PASSWORD_MISMATCH,
-    DETAILS_MISSING,
-    SHOW_PASSWORDS,
-    USE_DEFAULTS,
-    THERMOSTAT_BRIEF,
-    THERMOSTAT_BLURB,
-    STORAGE_FAILED,
-    SERVICE_UNAVAILABLE_MESSAGE,
-    SETUP_FAILED,
-    SETUP_INTERRUPTED,
-    SETUP_CANCELLED,
-    USERNAME,
-    PASSWORD,
-    VERIFY_PASSWORD,
-    CLI_SETUP_INTRO,
-    CLI_SETUP_PROCEED_QUESTION,
-    CLI_SETUP_UNKNOWN_RESPONSE,
-    CLI_SETUP_PROCEED_WORD,
-    CLI_SETUP_CANCEL_WORD,
-    CLI_SETUP_YES,
-    CLI_SETUP_NO,
-    CLI_SETUP_PASSWORD_INVALID,
-    CLI_SETUP_PASSWORD_MISMATCH,
-    CLI_SETUP_USERNAME_INVALID,
-    CLI_SETUP_MONGODB_USER_CREDS_INTRO,
-    CLI_SETUP_MONGODB_USERNAME_PROMPT,
-    CLI_SETUP_PASSWORD_PROMPT,
-    CLI_SETUP_USERNAME_REPEAT,
-    CLI_SETUP_PASSWORD_REPEAT_PROMPT,
-    CLI_SETUP_THERMOSTAT_USER_CREDS_INTRO,
-    CLI_SETUP_THERMOSTAT_CLIENT_USERNAME_PROMPT, 
-    CLI_SETUP_THERMOSTAT_AGENT_USERNAME_PROMPT,
-    CLI_SETUP_FINISH_SUCCESS,
-    ;
-
-    static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.setup.locale.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    private final char[] expected;
+    public CharArrayMatcher(char[] expected) {
+        this.expected = expected;
+    }
+    
+    @Override
+    public boolean matches(Object arg0) {
+        if (arg0 == null || arg0.getClass() != char[].class) {
+            return false;
+        }
+        char[] other = (char[])arg0;
+        boolean matches = (expected.length == other.length);
+        if (!matches) {
+            return false;
+        }
+        for (int i = 0; i < expected.length; i++) {
+            matches = matches && expected[i] == other[i];
+        }
+        return matches;
     }
 
+    @Override
+    public void describeTo(Description arg0) {
+        arg0.appendText(new String(expected));
+    }
+    
 }
-

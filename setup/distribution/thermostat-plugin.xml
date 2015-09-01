@@ -52,6 +52,12 @@
           <required>false</required>
           <description>A string holding '|||'-separated values of original arguments if a command got intercepted with setup.</description>
         </option>
+        <option>
+          <long>nonGui</long>
+          <short>c</short>
+          <required>false</required>
+          <description>Don't use the graphical user interface, but use the command line instead for interactive questions.</description>
+        </option>
       </options>
       <environments>
         <environment>cli</environment>
