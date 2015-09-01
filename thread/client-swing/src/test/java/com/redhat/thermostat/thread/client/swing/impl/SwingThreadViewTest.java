@@ -40,16 +40,22 @@ import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+
 import java.awt.Color;
+import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
+
 import javax.swing.JFrame;
+
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
+import org.fest.swing.fixture.JTabbedPaneFixture;
 import org.fest.swing.fixture.JToggleButtonFixture;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -59,6 +65,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -111,6 +118,20 @@ public class SwingThreadViewTest {
         frameFixture = new FrameFixture(frame);
     }
 
+    @Category(GUITest.class)
+    @GUITest
+    @Test
+    public void verifyThreadCountIsFirstTab() {
+        frameFixture.show();
+
+        JTabbedPaneFixture tabPane = frameFixture.tabbedPane("topTabbedPane");
+        Component comp = tabPane.component().getComponentAt(0);
+        assertEquals("count", comp.getName());
+        
+        comp = tabPane.component().getComponentAt(1);
+        assertEquals("timeline", comp.getName());
+    }
+    
     @GUITest
     @Test
     public void verifyMonitorLabelChange() throws InvocationTargetException, InterruptedException {

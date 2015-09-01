@@ -155,11 +155,15 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         topPane = new ThermostatTabbedPane();
         topPane.setName("topTabbedPane");
         
-        threadTimelineView = new SwingThreadTimelineView(uiDefaults);
-        topPane.addTab(t.localize(LocaleResources.TIMELINE).getContents(), threadTimelineView.getUiComponent());
-        
         threadCountView = new SwingThreadCountView();
-        topPane.addTab(t.localize(LocaleResources.THREAD_COUNT).getContents(), threadCountView.getUiComponent());
+        Component comp = threadCountView.getUiComponent();
+        comp.setName("count");
+        topPane.addTab(t.localize(LocaleResources.THREAD_COUNT).getContents(), comp);
+        
+        threadTimelineView = new SwingThreadTimelineView(uiDefaults);
+        comp = threadTimelineView.getUiComponent();
+        comp.setName("timeline");
+        topPane.addTab(t.localize(LocaleResources.TIMELINE).getContents(), comp);
         
         panel.getSplitPane().setTopComponent(topPane);
     }
