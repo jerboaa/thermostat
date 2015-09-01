@@ -168,8 +168,7 @@ class MongodbUserSetup implements UserSetup {
         ProcessBuilder mongoProcessBuilder = new ProcessBuilder("mongo", "127.0.0.1:27518/thermostat");
         mongoProcessBuilder.redirectInput(Redirect.PIPE);
         Process process = mongoProcessBuilder.start();
-        File libPath = new File(paths.getSystemThermostatHome(), "lib");
-        File createUserTemplate = new File(libPath, "create-user.js");
+        File createUserTemplate = new File(paths.getSystemLibRoot(), "create-user.js");
         // Write to the forked processes stdIn replacing username/password
         // on the fly.
         try (OutputStream pOut = process.getOutputStream();

@@ -150,8 +150,8 @@
                   <filtering>true</filtering>
                 </resource>
                 <resource>
-                  <directory>lib</directory>
-                  <targetPath>image/lib</targetPath>
+                  <directory>libs</directory>
+                  <targetPath>image/libs</targetPath>
                   <filtering>true</filtering>
                   <includes>
                     <include>create-user.js</include>

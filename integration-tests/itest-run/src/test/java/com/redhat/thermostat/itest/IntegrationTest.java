@@ -286,7 +286,7 @@ public class IntegrationTest {
         try {
             ExpectJ mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
             Spawn mongoSpawn = mongo.spawn("mongo 127.0.0.1:27518/thermostat");
-            File createUser = new File(new File(getThermostatHome(), "lib"), "create-user.js");
+            File createUser = new File(new File(getThermostatHome(), "libs"), "create-user.js");
             String contents = new String(Files.readAllBytes(createUser.toPath()), StandardCharsets.UTF_8);
             contents = contents.replaceAll("\\$USERNAME", username);
             contents = contents.replaceAll("\\$PASSWORD", password);

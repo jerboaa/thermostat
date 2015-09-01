@@ -266,7 +266,7 @@ setupMongodbUser() {
   mkdir -p $USER_THERMOSTAT_HOME
   touch $USER_THERMOSTAT_HOME/creds.js
   chmod u=rw $USER_THERMOSTAT_HOME/creds.js
-  sed -e s/'\$USERNAME'/"$USERNAME"/g -e s/'\$PASSWORD'/"$PASSWORD"/g $THERMOSTAT_HOME/lib/create-user.js > $USER_THERMOSTAT_HOME/creds.js
+  sed -e s/'\$USERNAME'/"$USERNAME"/g -e s/'\$PASSWORD'/"$PASSWORD"/g $THERMOSTAT_HOME/libs/create-user.js > $USER_THERMOSTAT_HOME/creds.js
   mongo 127.0.0.1:27518/thermostat $USER_THERMOSTAT_HOME/creds.js
   MONGO_SETUP_RETVAL="$?"
   rm $USER_THERMOSTAT_HOME/creds.js

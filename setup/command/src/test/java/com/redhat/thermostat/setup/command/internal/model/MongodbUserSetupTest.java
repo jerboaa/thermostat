@@ -217,7 +217,7 @@ public class MongodbUserSetupTest {
         when(mockStorage.getNotifier()).thenReturn(mock(ActionNotifier.class));
         final Collection<ActionListener<ApplicationState>> listeners[] = new Collection[1];
         Path testRoot = TestRootHelper.createTestRootDirectory(getClass().getName());
-        Path libDir = Paths.get(testRoot.toString(), "lib");
+        Path libDir = Paths.get(testRoot.toString(), "libs");
         Files.createDirectory(libDir);
         File createUserJsFile = new File(libDir.toFile(), "create-user.js");
         createUserJsFile.createNewFile();
@@ -281,7 +281,7 @@ public class MongodbUserSetupTest {
     @Test
     public void testSetupMongodbUser() throws IOException {
         Path testRoot = TestRootHelper.createTestRootDirectory(getClass().getName());
-        Path libDir = Paths.get(testRoot.toString(), "lib");
+        Path libDir = Paths.get(testRoot.toString(), "libs");
         Files.createDirectory(libDir);
         File createUserJsFile = new File(libDir.toFile(), "create-user.js");
         createUserJsFile.createNewFile();
