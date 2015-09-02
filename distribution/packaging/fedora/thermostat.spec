@@ -973,7 +973,6 @@ fi
 %config(noreplace) %{system_confdir}/sysconfig/%{pkg_name}
 %{_datadir}/%{pkg_name}/etc
 %{_datadir}/%{pkg_name}/bin
-%{_datadir}/%{pkg_name}/lib
 %{_datadir}/%{pkg_name}/libs
 %{_datadir}/%{pkg_name}/plugins/host-cpu
 %{_datadir}/%{pkg_name}/plugins/host-memory
