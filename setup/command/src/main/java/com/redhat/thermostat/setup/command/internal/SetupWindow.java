@@ -135,7 +135,7 @@ public class SetupWindow {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                shutdown();
+                cancelSetup();
             }
         });
         mainView = new JPanel(new BorderLayout());
@@ -229,8 +229,7 @@ public class SetupWindow {
         ActionListener cancelButtonListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                setupCancelled = true;
-                shutdown();
+                cancelSetup();
             }
         };
         startView.getCancelBtn().addActionListener(cancelButtonListener);
@@ -279,6 +278,11 @@ public class SetupWindow {
         view.setTitleAndProgress(title, progress);
         mainView.revalidate();
         mainView.repaint();
+    }
+
+    private void cancelSetup() {
+        setupCancelled = true;
+        shutdown();
     }
 
     private void shutdown() {
