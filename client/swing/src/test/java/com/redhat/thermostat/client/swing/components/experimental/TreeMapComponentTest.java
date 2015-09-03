@@ -80,13 +80,13 @@ public class TreeMapComponentTest {
                 boolean catched = false;
 
                 try {
-                    treeMap = new TreeMapComponent(tree, dim);
+                    treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
                     // pass
                  } catch(NullPointerException e) {
                     Assert.fail("Didn't expect exception.");
                  }
                 try {
-                    treeMap = new TreeMapComponent(null, null);
+                    treeMap = new TreeMapComponent(null, null, new TreeMapComponent.WeightAsSizeRenderer());
                 } catch(NullPointerException e) {
                     catched = true;
                 }
@@ -94,7 +94,7 @@ public class TreeMapComponentTest {
                 catched = false;
 
                 try {
-                    treeMap = new TreeMapComponent(tree, null);
+                    treeMap = new TreeMapComponent(tree, null, new TreeMapComponent.WeightAsSizeRenderer());
                 } catch(NullPointerException e) {
                     catched = true;
                 }
@@ -102,7 +102,7 @@ public class TreeMapComponentTest {
                 catched = false;
 
                 try {
-                    treeMap = new TreeMapComponent(null, dim);
+                    treeMap = new TreeMapComponent(null, dim, new TreeMapComponent.WeightAsSizeRenderer());
                 } catch(NullPointerException e) {
                     catched = true;
                 }
@@ -117,7 +117,7 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent(tree, dim);
+                treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
                 assertEquals(tree, treeMap.getTreeMapRoot());
             }
         });
@@ -128,7 +128,7 @@ public class TreeMapComponentTest {
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
-                TreeMapComponent treeMap = new TreeMapComponent(tree, dim);
+                TreeMapComponent treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
 
                 assertFalse("Should not be able to zoom in on null", treeMap.isZoomInEnabled(null));
                 assertFalse("Should not be able to zoom in on root", treeMap.isZoomInEnabled(tree));
@@ -144,7 +144,7 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                TreeMapComponent treeMap = new TreeMapComponent(tree, dim);
+                TreeMapComponent treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
 
                 treeMap.zoomIn(node1);
                 assertEquals(node1, treeMap.getTreeMapRoot());
@@ -161,7 +161,7 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent(tree, dim);
+                treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
 
                 treeMap.zoomOut();
                 assertEquals(tree, treeMap.getTreeMapRoot());
@@ -183,7 +183,7 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent(tree, dim);
+                treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
 
                 treeMap.zoomIn(node2);
                 treeMap.zoomFull();
@@ -199,7 +199,7 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent(tree, dim);
+                treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
 
                 // the root is always in the stack
                 assertEquals(1, treeMap.getZoomCallsStack().size());
@@ -223,7 +223,7 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent(tree, dim);
+                treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
 
                 treeMap.clearZoomCallsStack();
                 assertEquals(1, treeMap.getZoomCallsStack().size());
@@ -271,7 +271,7 @@ public class TreeMapComponentTest {
                 TreeMapNode grandchild = new TreeMapNode(1);
                 child.addChild(grandchild);
 
-                treeMap = new TreeMapComponent(tree, dim);
+                treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
                 treeMap.register(observer);
                 
                 treeMap.zoomIn(child);

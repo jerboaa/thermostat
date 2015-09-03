@@ -81,7 +81,7 @@ public class TreeMapZoomBarTest {
                 }
                 assertTrue(catched);
                 try {
-                    treeMap = new TreeMapComponent(tree, dim);
+                    treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
                     zoomBar = new TreeMapZoomBar(treeMap);
                 } catch (NullPointerException e) {
                     Assert.fail("Should not throw any exception.");

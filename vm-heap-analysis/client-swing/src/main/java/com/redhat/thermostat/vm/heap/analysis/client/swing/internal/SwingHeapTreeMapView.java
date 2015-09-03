@@ -61,7 +61,7 @@ public class SwingHeapTreeMapView extends HeapTreeMapView implements SwingCompon
 
     @Override
     public void display(ObjectHistogram histogram) {
-        treeMap = new TreeMapComponent(HistogramConverter.convertToTreeMap(histogram), new Dimension());
+        treeMap = new TreeMapComponent(HistogramConverter.convertToTreeMap(histogram), new Dimension(), new TreeMapComponent.WeightAsSizeRenderer());
         panel.add(treeMap, BorderLayout.CENTER);
         panel.add(new TreeMapToolbar(treeMap), BorderLayout.NORTH);
     }

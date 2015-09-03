@@ -179,10 +179,11 @@ public class TreeMapComponent extends JComponent {
      * 
      * @param tree the tree to represent as TreeMap.
      * @param d the dimension the TreeMap will fulfill.
-     * 
+     *
+     * @param renderer
      * @throws NullPointerException if one of the parameters is null
      */
-    public TreeMapComponent(TreeMapNode tree, Dimension d) {
+    public TreeMapComponent(TreeMapNode tree, Dimension d, ToolTipRenderer renderer) {
         super();
         Objects.requireNonNull(tree);
         Objects.requireNonNull(d);
@@ -191,8 +192,7 @@ public class TreeMapComponent extends JComponent {
         this.zoomStack = new Stack<>();
         this.zoomStack.push(this.tree);
         this.observers = new ArrayList<>();
-        // FIXME remove this assumption about TreeMap and size
-        this.tooltipRenderer = new WeightAsSizeRenderer();
+        this.tooltipRenderer = renderer;
 
         // assign a rectangle to the tree's root in order to process the tree.
         Rectangle2D.Double area = new Rectangle2D.Double(0, 0, d.width, d.height);

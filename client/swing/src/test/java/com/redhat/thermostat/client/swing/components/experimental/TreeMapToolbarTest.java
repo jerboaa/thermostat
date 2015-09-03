@@ -68,7 +68,7 @@ public class TreeMapToolbarTest {
                 
                 tree = new TreeMapNode(1);
                 dim = new Dimension(500, 500);
-                treeMap = new TreeMapComponent(tree, dim);
+                treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
                 
                 boolean catched = false;
                 try {
