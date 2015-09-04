@@ -38,6 +38,7 @@ package com.redhat.thermostat.setup.command.internal;
 
 import java.awt.BorderLayout;
 import java.awt.Cursor;
+import java.awt.Dialog;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -46,17 +47,24 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.WindowConstants;
 
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -112,16 +120,48 @@ public class SetupWindow {
                 IOException finishException = finishAction.get();
                 if (finishException != null) {
                     logger.log(Level.INFO, "Setup failed.", finishException);
+                    showErrorDialog(finishException);
                     throw new CommandException(translator.localize(LocaleResources.SETUP_FAILED), finishException);
                 }
             } else if (setupCancelled) {
                 logger.log(Level.INFO, "Setup was cancelled.");
                 throw new CommandException(translator.localize(LocaleResources.SETUP_CANCELLED));
             }
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException | ExecutionException | InvocationTargetException e) {
             throw new CommandException(translator.localize(LocaleResources.SETUP_INTERRUPTED), e);
         } finally {
             cleanup();
+        }
+    }
+
+    private void showErrorDialog(final Exception e) throws InvocationTargetException, InterruptedException {
+        doSynchronouslyOnEdt(new Runnable() {
+            @Override
+            public void run() {
+                JOptionPane optionPane = new JOptionPane();
+                optionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
+
+                StringWriter stringWriter = new StringWriter();
+                e.printStackTrace(new PrintWriter(stringWriter));
+                JTextArea stackTraceArea = new JTextArea();
+                stackTraceArea.setEditable(false);
+                stackTraceArea.setText(stringWriter.toString());
+
+                optionPane.setMessage(new Object[] { e.getLocalizedMessage(), stackTraceArea });
+
+                JDialog dialog = optionPane.createDialog(frame, translator.localize(LocaleResources.SETUP_FAILED).getContents());
+                dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+                dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                dialog.setVisible(true);
+            }
+        });
+    }
+
+    private void doSynchronouslyOnEdt(Runnable runnable) throws InvocationTargetException, InterruptedException {
+        if (SwingUtilities.isEventDispatchThread()) {
+            runnable.run();
+        } else {
+            SwingUtilities.invokeAndWait(runnable);
         }
     }
 
