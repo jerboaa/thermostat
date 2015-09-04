@@ -55,7 +55,6 @@ import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.setup.command.internal.SetupWindow;
 import com.redhat.thermostat.setup.command.internal.cli.CLISetup;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;

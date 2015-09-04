@@ -38,63 +38,43 @@ package com.redhat.thermostat.setup.command.internal;
 
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.setup.command.internal.model.UserCredsValidator;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.border.Border;
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
 
-public class CredentialPanel extends JPanel {
-
+public abstract class CredentialPanel extends JPanel {
+    
     private String titleText;
     private String helpMessage;
-    private String defaultUsername;
-    private char[] defaultPassword;
-
-    private JPanel messagePanel;
-    private JLabel usernameText;
-    private JLabel passwordText1;
-    private JLabel passwordText2;
-    private JLabel errorMessage;
-    private JTextField username;
-    private JPasswordField password1;
-    private JPasswordField password2;
-    private JCheckBox showPasswordCheckbox;
-    private JButton useDefaultsBtn;
     private ComponentTitledBorder titledBorder;
     private JLabel title;
 
-    private static final UserCredsValidator validator = new UserCredsValidator();
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final Icon infoIcon = new FontAwesomeIcon('\uf05a', 15);
 
-    public CredentialPanel(String titleText, String helpMessage, String defaultUsername, char[] defaultPassword) {
+    protected JLabel usernameText;
+    protected JLabel passwordText;
+    protected JTextField username;
+    protected JPasswordField password;
+
+    public CredentialPanel(String titleText, String helpMessage) {
         this.titleText = titleText;
         this.helpMessage = helpMessage;
-        this.defaultUsername = defaultUsername;
-        this.defaultPassword = defaultPassword;
 
         //enable tooltips
         ToolTipManager.sharedInstance().registerComponent(this);
@@ -104,37 +84,10 @@ public class CredentialPanel extends JPanel {
     }
 
     private void initComponents() {
-        showPasswordCheckbox = new JCheckBox(translator.localize(LocaleResources.SHOW_PASSWORDS).getContents());
-        showPasswordCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                togglePasswords(showPasswordCheckbox.isSelected());
-            }
-        });
-        showPasswordCheckbox.setSelected(false);
-
-        useDefaultsBtn = new JButton(translator.localize(LocaleResources.USE_DEFAULTS).getContents());
-        useDefaultsBtn.setPreferredSize(new Dimension(140, 30));
-        useDefaultsBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                username.setText(defaultUsername);
-                password1.setText(String.valueOf(defaultPassword));
-                password2.setText(String.valueOf(defaultPassword));
-                removeErrorMessage();
-            }
-        });
-
-        usernameText = new JLabel();
-        usernameText.setText(translator.localize(LocaleResources.USERNAME).getContents());
-        passwordText1 = new JLabel();
-        passwordText1.setText(translator.localize(LocaleResources.PASSWORD).getContents());
-        passwordText2 = new JLabel();
-        passwordText2.setText(translator.localize(LocaleResources.VERIFY_PASSWORD).getContents());
-
+        usernameText = new JLabel(translator.localize(LocaleResources.USERNAME).getContents());
+        passwordText = new JLabel(translator.localize(LocaleResources.PASSWORD).getContents());
         username = new JTextField();
-        password1 = new JPasswordField();
-        password2 = new JPasswordField();
+        password = new JPasswordField();
 
         title = new JLabel(titleText, infoIcon, JLabel.CENTER);
         title.setHorizontalTextPosition(JLabel.LEFT);
@@ -143,63 +96,6 @@ public class CredentialPanel extends JPanel {
 
         titledBorder = new ComponentTitledBorder(title, BorderFactory.createEtchedBorder());
         setBorder(titledBorder);
-
-        errorMessage = new JLabel();
-        errorMessage.setForeground(Color.RED);
-        errorMessage.setHorizontalAlignment(SwingConstants.CENTER);
-
-        messagePanel = new JPanel(new BorderLayout());
-        messagePanel.add(errorMessage, BorderLayout.CENTER);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                            .addGap(25, 25, 25)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(passwordText1)
-                                .addComponent(usernameText)
-                                .addComponent(passwordText2))
-                            .addGap(65, 65, 65)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(showPasswordCheckbox)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 6, Short.MAX_VALUE)
-                                    .addComponent(useDefaultsBtn))
-                                .addComponent(password2, javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(password1)
-                                .addComponent(username))))
-                    .addContainerGap())
-                .addComponent(messagePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addContainerGap()
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(usernameText)
-                        .addComponent(username, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(passwordText1)
-                        .addComponent(password1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(passwordText2)
-                        .addComponent(password2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(showPasswordCheckbox)
-                        .addComponent(useDefaultsBtn))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(messagePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, 0))
-        );
     }
 
     public JTextField getUsernameField() {
@@ -210,77 +106,12 @@ public class CredentialPanel extends JPanel {
         return username.getText();
     }
 
-    public JTextField getPasswordField1() {
-        return password1;
-    }
-
-    public JTextField getPasswordField2() {
-        return password2;
+    public JTextField getPasswordField() {
+        return password;
     }
 
     public char[] getPassword() {
-        return password1.getPassword();
-    }
-
-    private void togglePasswords(boolean isVisible) {
-        if (isVisible) {
-            password1.setEchoChar((char) 0);
-            password2.setEchoChar((char) 0);
-        } else {
-            password1.setEchoChar('*');
-            password2.setEchoChar('*');
-        }
-    }
-
-    public void removeErrorMessage() {
-        errorMessage.setText(null);
-        this.revalidate();
-        this.repaint();
-    }
-
-    public void showPasswordMismatch() {
-        errorMessage.setText(translator.localize(LocaleResources.PASSWORD_MISMATCH).getContents());
-        this.revalidate();
-        this.repaint();
-    }
-
-    public void showDetailsMissing() {
-        errorMessage.setText(translator.localize(LocaleResources.DETAILS_MISSING).getContents());
-        this.revalidate();
-        this.repaint();
-    }
-
-    public boolean isInputValid() {
-        //ensure credentials are not empty
-        try {
-            validator.validateUsername(username.getText());
-            validator.validatePassword(password1.getPassword());
-            validator.validatePassword(password2.getPassword());
-        } catch (IllegalArgumentException e) {
-            showDetailsMissing();
-            return false;
-        }
-
-        //ensure passwords match
-        if (!Arrays.equals(password1.getPassword(), password2.getPassword())) {
-            showPasswordMismatch();
-            return false;
-        }
-
-        removeErrorMessage();
-        return true;
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        usernameText.setEnabled(enabled);
-        passwordText1.setEnabled(enabled);
-        passwordText2.setEnabled(enabled);
-        username.setEnabled(enabled);
-        password1.setEnabled(enabled);
-        password2.setEnabled(enabled);
-        showPasswordCheckbox.setEnabled(enabled);
-        useDefaultsBtn.setEnabled(enabled);
+        return password.getPassword();
     }
 
     @Override
@@ -294,9 +125,8 @@ public class CredentialPanel extends JPanel {
 
     public class ComponentTitledBorder implements Border {
         private static final int OFFSET = 5;
-        public final Component comp;
+        private final Component comp;
         private Rectangle rect;
-
         private Border border;
 
         public ComponentTitledBorder(Component comp, Border border) {
@@ -328,6 +158,5 @@ public class CredentialPanel extends JPanel {
         public Rectangle getTitleRect() {
             return rect;
         }
-
     }
 }

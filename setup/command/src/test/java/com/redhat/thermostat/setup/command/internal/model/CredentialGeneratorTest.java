@@ -34,30 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.setup.command.internal;
+package com.redhat.thermostat.setup.command.internal.model;
 
-import javax.swing.JLabel;
-import java.awt.Component;
+import org.junit.Before;
+import org.junit.Test;
 
-public interface SetupView {
+import static org.junit.Assert.assertTrue;
 
-    /**
-     * Sets the title of the current view
-     *
-     * @param title
-     */
-    void setTitle(JLabel title);
+public class CredentialGeneratorTest {
+    private CredentialGenerator credentialGenerator;
+    private static final String usernamePrefix = "prefix";
+    private static final int usernameSuffixLength = 8;
+    private static final int passwordLength = 8;
 
-    /**
-     * Sets the progress of the current view
-     *
-     * @param progress
-     */
-    void setProgress(JLabel progress);
+    @Before
+    public void setup() {
+        credentialGenerator = new CredentialGenerator(usernamePrefix);
+    }
 
-    Component getUiComponent();
+    @Test
+    public void testRandomUsernameHasCorrectPrefix() {
+        String randomUsername = credentialGenerator.generateRandomUsername();
+        assertTrue(randomUsername.startsWith(usernamePrefix + "-"));
+    }
 
-    void setDefaultButton();
+    @Test
+    public void testRandomCredentialsHaveCorrectLength() {
+        String randomUsername = credentialGenerator.generateRandomUsername();
+        char[] randomPassword = credentialGenerator.generateRandomPassword();
 
-    void focusInitialComponent();
+        assertTrue(randomUsername.length() == usernamePrefix.length() + usernameSuffixLength + 1);
+        assertTrue(randomPassword.length == passwordLength);
+    }
+
 }

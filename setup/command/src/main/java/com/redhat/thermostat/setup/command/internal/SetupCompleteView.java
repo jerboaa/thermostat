@@ -46,41 +46,41 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.LayoutManager;
 import java.net.URL;
 
-public class MongoUserSetupView extends JPanel implements SetupView {
+public class SetupCompleteView extends JPanel implements SetupView {
 
-    private JButton backBtn;
-    private JButton nextBtn;
-    private JButton cancelBtn;
-
+    private JButton finishBtn;
     private JPanel toolbar;
     private JPanel midPanel;
-    private InputCredentialPanel credentialPanel;
-
+    private DisplayCredentialPanel clientInfoPanel;
+    private DisplayCredentialPanel agentInfoPanel;
     private static final String THERMOSTAT_LOGO = "thermostat.png";
-    private static final String PROGRESS = "Step 2 of 3";
+    private static final String PROGRESS = "Step 2 of 2";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    public MongoUserSetupView(LayoutManager layout) {
+    public SetupCompleteView(LayoutManager layout) {
         super(layout);
 
         createMidPanel();
         createToolbarPanel();
+    }
 
-        this.add(midPanel, BorderLayout.CENTER);
-        this.add(toolbar, BorderLayout.SOUTH);
+    public void setClientCredentials(String clientUsername, char[] clientPassword) {
+        clientInfoPanel.setDisplayCredentials(clientUsername, clientPassword);
+    }
+
+    public void setAgentCredentials(String agentUsername, char[] agentPassword) {
+        agentInfoPanel.setDisplayCredentials(agentUsername, agentPassword);
     }
 
     @Override
     public void setTitle(JLabel title) {
-        title.setText(translator.localize(LocaleResources.MONGO_SETUP_TITLE).getContents());
+        title.setText(translator.localize(LocaleResources.SETUP_COMPLETE_TITLE).getContents());
     }
 
     @Override
@@ -88,90 +88,51 @@ public class MongoUserSetupView extends JPanel implements SetupView {
         progress.setText(PROGRESS);
     }
 
-    private void createMidPanel() {
-        credentialPanel = new InputCredentialPanel(
-            translator.localize(LocaleResources.MONGO_CRED_TITLE).getContents(),
-            translator.localize(LocaleResources.STORAGE_HELP_INFO).getContents(),
-            translator.localize(LocaleResources.MONGO_USER_PREFIX).getContents());
+    public void createMidPanel() {
+        clientInfoPanel = new DisplayCredentialPanel(
+            translator.localize(LocaleResources.CLIENT_CRED_TITLE).getContents(),
+            translator.localize(LocaleResources.CLIENT_HELP_INFO).getContents());
 
-        DocumentListener inputValidator = new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent documentEvent) {
-                validateInput();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent documentEvent) {
-                validateInput();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent documentEvent) {
-                validateInput();
-            }
-        };
-        credentialPanel.getUsernameField().getDocument().addDocumentListener(inputValidator);
-        credentialPanel.getPasswordField().getDocument().addDocumentListener(inputValidator);
-        credentialPanel.getPasswordConfirmField().getDocument().addDocumentListener(inputValidator);
+        agentInfoPanel = new DisplayCredentialPanel(
+            translator.localize(LocaleResources.AGENT_CRED_TITLE).getContents(),
+            translator.localize(LocaleResources.AGENT_HELP_INFO).getContents());
 
         midPanel = new JPanel();
         midPanel.setLayout(new BoxLayout(midPanel, BoxLayout.PAGE_AXIS));
         midPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         midPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        midPanel.add(credentialPanel);
+        midPanel.add(clientInfoPanel);
         midPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        midPanel.add(agentInfoPanel);
+
+        this.add(midPanel, BorderLayout.CENTER);
     }
 
     private void createToolbarPanel() {
-        URL logoURL = SetupWindow.class.getClassLoader().getResource(THERMOSTAT_LOGO);
+        URL logoURL = SetupCompleteView.class.getClassLoader().getResource(THERMOSTAT_LOGO);
         JLabel thermostatLogo = new JLabel(new ImageIcon(logoURL));
 
-        backBtn = new JButton(translator.localize(LocaleResources.BACK).getContents());
-        backBtn.setPreferredSize(new Dimension(70, 30));
-        nextBtn = new JButton(translator.localize(LocaleResources.NEXT).getContents());
-        nextBtn.setPreferredSize(new Dimension(70, 30));
-        nextBtn.setEnabled(false);
-        cancelBtn = new JButton(translator.localize(LocaleResources.CANCEL).getContents());
-        cancelBtn.setPreferredSize(new Dimension(70, 30));
+        finishBtn = new JButton(translator.localize(LocaleResources.FINISH).getContents());
+        finishBtn.setPreferredSize(new Dimension(70, 30));
 
         toolbar = new JPanel();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.LINE_AXIS));
         toolbar.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         toolbar.add(thermostatLogo);
         toolbar.add(Box.createHorizontalGlue());
-        toolbar.add(backBtn);
-        toolbar.add(nextBtn);
-        toolbar.add(cancelBtn);
-    }
+        toolbar.add(finishBtn);
 
-    private void validateInput() {
-        if (credentialPanel.isInputValid()) {
-            nextBtn.setEnabled(true);
-        } else {
-            nextBtn.setEnabled(false);
-        }
-    }
-
-    public void enableButtons() {
-        backBtn.setEnabled(true);
-        nextBtn.setEnabled(true);
-        credentialPanel.setEnabled(true);
-    }
-
-    public void disableButtons() {
-        backBtn.setEnabled(false);
-        nextBtn.setEnabled(false);
-        credentialPanel.setEnabled(false);
+        this.add(toolbar, BorderLayout.SOUTH);
     }
 
     @Override
     public void setDefaultButton() {
-        getRootPane().setDefaultButton(nextBtn);
+        getRootPane().setDefaultButton(finishBtn);
     }
 
     @Override
     public void focusInitialComponent() {
-        credentialPanel.getUsernameField().requestFocusInWindow();
+        finishBtn.requestFocusInWindow();
     }
 
     @Override
@@ -179,23 +140,8 @@ public class MongoUserSetupView extends JPanel implements SetupView {
         return this;
     }
 
-    public JButton getBackBtn() {
-        return backBtn;
+    public JButton getFinishBtn() {
+        return finishBtn;
     }
 
-    public JButton getNextBtn() {
-        return nextBtn;
-    }
-
-    public JButton getCancelBtn() {
-        return cancelBtn;
-    }
-
-    public String getUsername() {
-        return credentialPanel.getUsername();
-    }
-
-    public char[] getPassword() {
-        return credentialPanel.getPassword();
-    }
 }

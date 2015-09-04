@@ -61,12 +61,9 @@ public class UserPropertiesView extends JPanel implements SetupView {
     private JButton cancelBtn;
     private JPanel toolbar;
     private JPanel midPanel;
-    private CredentialPanel clientInfoPanel;
-    private CredentialPanel agentInfoPanel;
+    private InputCredentialPanel clientInfoPanel;
+    private InputCredentialPanel agentInfoPanel;
 
-    private static final String DEFAULT_CLIENT_USER = "client-tester";
-    private static final String DEFAULT_AGENT_USER = "agent-tester";
-    private static final char[] DEFAULT_USER_PASSWORD = new char[] {'t', 'e', 's', 't', 'e', 'r'};
     private static final String THERMOSTAT_LOGO = "thermostat.png";
     private static final String PROGRESS = "Step 3 of 3";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
@@ -97,30 +94,32 @@ public class UserPropertiesView extends JPanel implements SetupView {
             }
         };
         clientInfoPanel.getUsernameField().getDocument().addDocumentListener(inputValidator);
-        clientInfoPanel.getPasswordField1().getDocument().addDocumentListener(inputValidator);
-        clientInfoPanel.getPasswordField2().getDocument().addDocumentListener(inputValidator);
+        clientInfoPanel.getPasswordField().getDocument().addDocumentListener(inputValidator);
+        clientInfoPanel.getPasswordConfirmField().getDocument().addDocumentListener(inputValidator);
         agentInfoPanel.getUsernameField().getDocument().addDocumentListener(inputValidator);
-        agentInfoPanel.getPasswordField1().getDocument().addDocumentListener(inputValidator);
-        agentInfoPanel.getPasswordField2().getDocument().addDocumentListener(inputValidator);
+        agentInfoPanel.getPasswordField().getDocument().addDocumentListener(inputValidator);
+        agentInfoPanel.getPasswordConfirmField().getDocument().addDocumentListener(inputValidator);
     }
 
     @Override
-    public void setTitleAndProgress(JLabel title, JLabel progress) {
+    public void setTitle(JLabel title) {
         title.setText(translator.localize(LocaleResources.USERS_SETUP_TITLE).getContents());
+    }
+
+    @Override
+    public void setProgress(JLabel progress) {
         progress.setText(PROGRESS);
     }
 
     public void createMidPanel() {
-        clientInfoPanel = new CredentialPanel(
+        clientInfoPanel = new InputCredentialPanel(
             translator.localize(LocaleResources.CLIENT_CRED_TITLE).getContents(),
             translator.localize(LocaleResources.CLIENT_HELP_INFO).getContents(),
-            DEFAULT_CLIENT_USER,
-            DEFAULT_USER_PASSWORD);
-        agentInfoPanel = new CredentialPanel(
+            translator.localize(LocaleResources.CLIENT_USER_PREFIX).getContents());
+        agentInfoPanel = new InputCredentialPanel(
             translator.localize(LocaleResources.AGENT_CRED_TITLE).getContents(),
             translator.localize(LocaleResources.AGENT_HELP_INFO).getContents(),
-            DEFAULT_AGENT_USER,
-            DEFAULT_USER_PASSWORD);
+            translator.localize(LocaleResources.AGENT_USER_PREFIX).getContents());
 
         midPanel = new JPanel();
         midPanel.setLayout(new BoxLayout(midPanel, BoxLayout.PAGE_AXIS));

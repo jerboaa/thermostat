@@ -68,6 +68,7 @@ import javax.swing.WindowConstants;
 
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.setup.command.internal.model.CredentialGenerator;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -82,8 +83,13 @@ public class SetupWindow {
     private StartView startView;
     private MongoUserSetupView mongoUserSetupView;
     private UserPropertiesView userPropertiesView;
+    private SetupCompleteView setupCompleteView;
     private String storageUsername = null;
     private char[] storagePassword = null;
+    private String clientUsername = null;
+    private char[] clientPassword = null;
+    private String agentUsername = null;
+    private char[] agentPassword = null;
     private boolean showDetailedBlurb = false;
     private boolean setupCancelled = false;
     private final ThermostatSetup thermostatSetup;
@@ -91,6 +97,10 @@ public class SetupWindow {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(SetupWindow.class);
+
+    private static final int FRAME_WIDTH = 600;
+    private static final int FRAME_HEIGHT = 380;
+    private static final int FRAME_LARGE_HEIGHT = 600;
 
     public SetupWindow(ThermostatSetup thermostatSetup) {
         this.thermostatSetup = thermostatSetup;
@@ -111,10 +121,7 @@ public class SetupWindow {
 
         try {
             shutdown.await();
-            // Explicitly dispose the window once we're done since we might have
-            // intercepted another command and the window would otherwise
-            // stay open.
-            frame.dispose();
+
             // Determine if we've finished successfully.
             if (finishAction != null) {
                 IOException finishException = finishAction.get();
@@ -127,13 +134,35 @@ public class SetupWindow {
                 logger.log(Level.INFO, "Setup was cancelled.");
                 throw new CommandException(translator.localize(LocaleResources.SETUP_CANCELLED));
             }
+
+            // if quick setup option was selected display
+            // the setup complete window with user credentials
+            if (startView.isQuickSetupSelected()) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainView.remove(startView);
+                        showView(setupCompleteView);
+                    }
+                });
+                shutdown = new CountDownLatch(1);
+                shutdown.await();
+            }
         } catch (InterruptedException | ExecutionException | InvocationTargetException e) {
             throw new CommandException(translator.localize(LocaleResources.SETUP_INTERRUPTED), e);
         } finally {
+            // Explicitly dispose the window once we're done since we might have
+            // intercepted another command and the window would otherwise
+            // stay open.
+            frame.dispose();
             cleanup();
         }
     }
 
+    public static int getFrameWidth() {
+        return FRAME_WIDTH;
+    }
+    
     private void showErrorDialog(final Exception e) throws InvocationTargetException, InterruptedException {
         doSynchronouslyOnEdt(new Runnable() {
             @Override
@@ -188,6 +217,7 @@ public class SetupWindow {
         startView = new StartView(new BorderLayout());
         mongoUserSetupView = new MongoUserSetupView(new BorderLayout());
         userPropertiesView = new UserPropertiesView(new BorderLayout());
+        setupCompleteView = new SetupCompleteView(new BorderLayout());
     }
 
     private void createTopPanel() {
@@ -217,8 +247,12 @@ public class SetupWindow {
                 startView.showMoreInfo(showDetailedBlurb);
                 setLargeFrame(showDetailedBlurb);
 
-                mainView.remove(startView);
-                showView(mongoUserSetupView);
+                if (startView.isQuickSetupSelected()) {
+                    runQuickSetup();
+                } else {
+                    mainView.remove(startView);
+                    showView(mongoUserSetupView);
+                }
             }
         });
         startView.getShowMoreInfoBtn().addActionListener(new ActionListener() {
@@ -227,6 +261,18 @@ public class SetupWindow {
                 showDetailedBlurb = !showDetailedBlurb;
                 startView.showMoreInfo(showDetailedBlurb);
                 setLargeFrame(showDetailedBlurb);
+            }
+        });
+        startView.getQuickSetupBtn().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startView.setProgress(progress);
+            }
+        });
+        startView.getCustomSetupBtn().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startView.setProgress(progress);
             }
         });
         mongoUserSetupView.getBackBtn().addActionListener(new ActionListener() {
@@ -264,7 +310,17 @@ public class SetupWindow {
         userPropertiesView.getFinishBtn().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+                agentUsername = userPropertiesView.getAgentUsername();
+                agentPassword = userPropertiesView.getAgentPassword();
+                clientUsername = userPropertiesView.getClientUsername();
+                clientPassword = userPropertiesView.getClientPassword();
                 runSetup();
+            }
+        });
+        setupCompleteView.getFinishBtn().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                shutdown();
             }
         });
 
@@ -281,9 +337,9 @@ public class SetupWindow {
 
     private void setLargeFrame(boolean setLarge) {
         if (setLarge) {
-            frame.setSize(600, 600);
+            frame.setSize(FRAME_WIDTH, FRAME_LARGE_HEIGHT);
         } else {
-            frame.setSize(600, 350);
+            frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         }
     }
 
@@ -292,12 +348,13 @@ public class SetupWindow {
             @Override
             public IOException doInBackground() {
                 frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                startView.disableButtons();
                 mongoUserSetupView.disableButtons();
                 userPropertiesView.disableButtons();
                 thermostatSetup.createMongodbUser(storageUsername, storagePassword);
                 try {
-                    thermostatSetup.createAgentUser(userPropertiesView.getAgentUsername(), userPropertiesView.getAgentPassword());
-                    thermostatSetup.createClientAdminUser(userPropertiesView.getClientUsername(), userPropertiesView.getClientPassword());
+                    thermostatSetup.createAgentUser(agentUsername, agentPassword);
+                    thermostatSetup.createClientAdminUser(clientUsername, clientPassword);
                     thermostatSetup.commit();
                     return null;
                 } catch (IOException e) {
@@ -308,6 +365,7 @@ public class SetupWindow {
 
             @Override
             public void done() {
+                startView.enableButtons();
                 mongoUserSetupView.enableButtons();
                 userPropertiesView.enableButtons();
                 frame.setCursor(Cursor.getDefaultCursor());
@@ -317,9 +375,41 @@ public class SetupWindow {
         finishAction.execute();
     }
 
+    private void runQuickSetup() {
+        if(thermostatSetup.isWebAppInstalled()) {
+            CredentialGenerator storage = new CredentialGenerator(translator.localize(LocaleResources.MONGO_USER_PREFIX).getContents());
+            CredentialGenerator agent = new CredentialGenerator(translator.localize(LocaleResources.AGENT_USER_PREFIX).getContents());
+            CredentialGenerator client = new CredentialGenerator(translator.localize(LocaleResources.CLIENT_USER_PREFIX).getContents());
+
+            storageUsername = storage.generateRandomUsername();
+            storagePassword = storage.generateRandomPassword();
+            agentUsername = agent.generateRandomUsername();
+            agentPassword = agent.generateRandomPassword();
+            clientUsername = client.generateRandomUsername();
+            clientPassword = client.generateRandomPassword();
+        } else {
+            CredentialGenerator user = new CredentialGenerator(translator.localize(LocaleResources.USER_PREFIX).getContents());
+
+            String username = user.generateRandomUsername();
+            char[] password = user.generateRandomPassword();
+            storageUsername = username;
+            storagePassword = password;
+            agentUsername = username;
+            agentPassword = password;
+            clientUsername = username;
+            clientPassword = password;
+        }
+
+        setupCompleteView.setClientCredentials(clientUsername, clientPassword);
+        setupCompleteView.setAgentCredentials(agentUsername, agentPassword);
+
+        runSetup();
+    }
+
     private void showView(SetupView view) {
         mainView.add(view.getUiComponent(), BorderLayout.CENTER);
-        view.setTitleAndProgress(title, progress);
+        view.setTitle(title);
+        view.setProgress(progress);
         view.setDefaultButton();
         view.focusInitialComponent();
         mainView.revalidate();

@@ -49,11 +49,13 @@ import java.net.URL;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
@@ -68,15 +70,19 @@ public class StartView extends JPanel implements SetupView {
     private JButton nextBtn;
     private JButton cancelBtn;
     private JButton moreInfoBtn;
+    private JRadioButton quickSetupBtn;
+    private JRadioButton customSetupBtn;
 
     private JPanel toolbar;
     private JEditorPane thermostatBlurb;
     private JPanel midPanel;
+
     private static final String THERMOSTAT_LOGO = "thermostat.png";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final String SHOW_MORE = "Show More";
     private static final String SHOW_LESS = "Show Less";
     private static final String PROGRESS = "Step 1 of 3";
+    private static final String FAST_TRACK_PROGRESS = "Step 1 of 2";
 
     public StartView(LayoutManager layout) {
         super(layout);
@@ -86,20 +92,23 @@ public class StartView extends JPanel implements SetupView {
     }
 
     @Override
-    public void setTitleAndProgress(JLabel title, JLabel progress) {
+    public void setTitle(JLabel title) {
         title.setText(translator.localize(LocaleResources.WELCOME_SCREEN_TITLE).getContents());
-        progress.setText(PROGRESS);
+    }
+
+    @Override
+    public void setProgress(JLabel progress) {
+        if (quickSetupBtn.isSelected()) {
+            progress.setText(FAST_TRACK_PROGRESS);
+        } else {
+            progress.setText(PROGRESS);
+        }
     }
 
     private void createMidPanel() {
         thermostatBlurb = new JEditorPane();
         thermostatBlurb.setEditorKit(JEditorPane.createEditorKitForContentType("text/html"));
         thermostatBlurb.setEditable(false);
-
-        moreInfoBtn = new JButton();
-        moreInfoBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        showMoreInfo(false);
-
         thermostatBlurb.addHyperlinkListener(new HyperlinkListener() {
             public void hyperlinkUpdate(HyperlinkEvent e) {
                 if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
@@ -117,11 +126,38 @@ public class StartView extends JPanel implements SetupView {
         JScrollPane scrollPane = new ThermostatScrollPane(thermostatBlurb);
         scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        moreInfoBtn = new JButton();
+        moreInfoBtn.setPreferredSize(new Dimension(150, 30));
+        moreInfoBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        showMoreInfo(false);
+
+        //Create radio buttons.
+        int radioBtnOffset = SetupWindow.getFrameWidth() / 3;
+
+        quickSetupBtn = new JRadioButton(translator.localize(LocaleResources.QUICK_SETUP).getContents());
+        quickSetupBtn.setToolTipText(translator.localize(LocaleResources.QUICK_SETUP_INFO).getContents());
+        quickSetupBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        quickSetupBtn.setBorder(BorderFactory.createEmptyBorder(0, radioBtnOffset, 0, 0));
+        quickSetupBtn.setSelected(true);
+
+        customSetupBtn = new JRadioButton(translator.localize(LocaleResources.CUSTOM_SETUP).getContents());
+        customSetupBtn.setToolTipText(translator.localize(LocaleResources.CUSTOM_SETUP_INFO).getContents());
+        customSetupBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        customSetupBtn.setBorder(BorderFactory.createEmptyBorder(0, radioBtnOffset, 0, 0));
+
+        //Group the radio buttons.
+        ButtonGroup setupOptionsGroup = new ButtonGroup();
+        setupOptionsGroup.add(quickSetupBtn);
+        setupOptionsGroup.add(customSetupBtn);
+
         midPanel = new JPanel();
         midPanel.setLayout(new BoxLayout(midPanel, BoxLayout.Y_AXIS));
         midPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         midPanel.add(scrollPane);
         midPanel.add(moreInfoBtn);
+        midPanel.add(quickSetupBtn);
+        midPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        midPanel.add(customSetupBtn);
 
         this.add(midPanel, BorderLayout.CENTER);
     }
@@ -151,7 +187,7 @@ public class StartView extends JPanel implements SetupView {
         StringBuilder text = new StringBuilder();
 
         text.append("<html>");
-        if(setDetailed) {
+        if (setDetailed) {
             text.append(translator.localize(LocaleResources.THERMOSTAT_BLURB).getContents());
             moreInfoBtn.setText(SHOW_LESS);
         } else {
@@ -159,9 +195,9 @@ public class StartView extends JPanel implements SetupView {
             moreInfoBtn.setText(SHOW_MORE);
         }
         text.append("<center><a href=\"\">")
-                .append(userGuideURL)
-                .append("</a></center>")
-                .append("</html>").toString();
+            .append(userGuideURL)
+            .append("</a></center>")
+            .append("</html>").toString();
 
         thermostatBlurb.setText(text.toString());
     }
@@ -191,6 +227,30 @@ public class StartView extends JPanel implements SetupView {
     @Override
     public void focusInitialComponent() {
         nextBtn.requestFocusInWindow();
+    }
+
+    public boolean isQuickSetupSelected() {
+        return quickSetupBtn.isSelected();
+    }
+
+    public JRadioButton getCustomSetupBtn() {
+        return customSetupBtn;
+    }
+
+    public JRadioButton getQuickSetupBtn() {
+        return quickSetupBtn;
+    }
+
+    public void enableButtons() {
+        nextBtn.setEnabled(true);
+        quickSetupBtn.setEnabled(true);
+        customSetupBtn.setEnabled(true);
+    }
+
+    public void disableButtons() {
+        nextBtn.setEnabled(false);
+        quickSetupBtn.setEnabled(false);
+        customSetupBtn.setEnabled(false);
     }
 
 }

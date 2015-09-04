@@ -34,30 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.setup.command.internal;
+package com.redhat.thermostat.setup.command.internal.model;
 
-import javax.swing.JLabel;
-import java.awt.Component;
+import java.security.SecureRandom;
 
-public interface SetupView {
+public class CredentialGenerator {
+    private SecureRandom random;
+    private final String usernamePrefix;
 
-    /**
-     * Sets the title of the current view
-     *
-     * @param title
-     */
-    void setTitle(JLabel title);
+    static final char[] VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
+    private static final int usernameSuffixLength = 8;
+    private static final int passwordLength = 8;
 
-    /**
-     * Sets the progress of the current view
-     *
-     * @param progress
-     */
-    void setProgress(JLabel progress);
+    public CredentialGenerator(String usernamePrefix) {
+        this.usernamePrefix = usernamePrefix;
+        random = new SecureRandom();
+    }
 
-    Component getUiComponent();
+    public String generateRandomUsername() {
+        String usernameSuffix = String.valueOf(generateRandomString(usernameSuffixLength));
+        return usernamePrefix + "-" + usernameSuffix;
+    }
 
-    void setDefaultButton();
+    public char[] generateRandomPassword() {
+        return generateRandomString(passwordLength);
+    }
 
-    void focusInitialComponent();
+    private char[] generateRandomString(int length) {
+        char[] result = new char[length];
+        for (int i = 0; i < result.length; i++) {
+            int randomIndex = random.nextInt(VALID_CHARACTERS.length);
+            result[i] = VALID_CHARACTERS[randomIndex];
+        }
+        return result;
+    }
 }
