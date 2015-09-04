@@ -36,21 +36,17 @@
 
 package com.redhat.thermostat.setup.command.internal.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doThrow;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 import org.hamcrest.BaseMatcher;
@@ -58,10 +54,7 @@ import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.utils.keyring.Keyring;
-import com.redhat.thermostat.utils.keyring.KeyringException;
+import com.redhat.thermostat.setup.command.internal.cli.CharArrayMatcher;
 
 public class ThermostatSetupTest {
 
@@ -77,7 +70,7 @@ public class ThermostatSetupTest {
     @Test
     public void testIsWebAppInstalledDelegates() {
         StructureInformation structureInfo = mock(StructureInformation.class);
-        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, structureInfo, mock(CommonPaths.class), mock(CredentialsFileCreator.class), mock(Keyring.class), mock(ClientPreferences.class));
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, structureInfo, mock(AuthFileWriter.class), mock(KeyringWriter.class));
         when(structureInfo.isWebAppInstalled()).thenReturn(true);
         assertTrue(setup.isWebAppInstalled());
         verify(structureInfo).isWebAppInstalled();
@@ -85,76 +78,57 @@ public class ThermostatSetupTest {
     
     @Test
     public void testCreateAgentUser() {
-        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), mock(CommonPaths.class), mock(CredentialsFileCreator.class), mock(Keyring.class), mock(ClientPreferences.class));
+        AuthFileWriter writer = mock(AuthFileWriter.class);
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), writer, mock(KeyringWriter.class));
         setup.createAgentUser("foo-agent", new char[] { 't' });
         verify(userSetup).createRecursiveRole(eq("thermostat-agent"), argThat(new RoleMatcher(UserRoles.AGENT_ROLES)), any(String.class));
         verify(userSetup).assignRolesToUser(eq("foo-agent"), argThat(new RoleMatcher(new String[] { "thermostat-agent", UserRoles.GRANT_FILES_WRITE_ALL })), any(String.class));
+        verify(writer).setCredentials(eq("foo-agent"), argThat(matchesPassword(new char[] { 't' })));
+    }
+    
+    private CharArrayMatcher matchesPassword(char[] password) {
+        return new CharArrayMatcher(password);
     }
     
     @Test
     public void testCreateClientAdminUser() {
-        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), mock(CommonPaths.class), mock(CredentialsFileCreator.class), mock(Keyring.class), mock(ClientPreferences.class));
+        KeyringWriter writer = mock(KeyringWriter.class);
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), mock(AuthFileWriter.class), writer);
         setup.createClientAdminUser("foo-client", new char[] { 't' });
         verify(userSetup).createRecursiveRole(eq("thermostat-client"), argThat(new RoleMatcher(UserRoles.CLIENT_ROLES)), any(String.class));
         verify(userSetup).createRecursiveRole(eq("thermostat-cmdc"), argThat(new RoleMatcher(UserRoles.CMD_CHANNEL_GRANT_ALL_ACTIONS)), any(String.class));
         verify(userSetup).createRecursiveRole(eq("thermostat-admin-read-all"), argThat(new RoleMatcher(UserRoles.ADMIN_READALL)), any(String.class));
         String[] clientAllRoles = new String[] { "thermostat-client", "thermostat-cmdc", "thermostat-admin-read-all", UserRoles.PURGE };
         verify(userSetup).assignRolesToUser(eq("foo-client"), argThat(new RoleMatcher(clientAllRoles)), any(String.class));
+        verify(writer).setCredentials(eq("foo-client"), argThat(matchesPassword(new char[] { 't' })));
     }
     
     @Test
-    public void commitCreatesAgentAuthFileStoresToKeyring() throws IOException {
-        Keyring keyring = mock(Keyring.class); // well behaved keyring
-        doCommitTest(keyring);
-    }
-
-    private void doCommitTest(Keyring keyring) throws IOException {
-        ClientPreferences prefs = mock(ClientPreferences.class);
-        CommonPaths paths = mock(CommonPaths.class);
-        File mockAgentAuthFile = File.createTempFile("thermostat-test-", getClass().getName());
-        try {
-            when(paths.getUserAgentAuthConfigFile()).thenReturn(mockAgentAuthFile);
-            ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), paths, mock(CredentialsFileCreator.class), keyring, prefs);
-            List<String> contents = Files.readAllLines(mockAgentAuthFile.toPath(), Charset.forName("UTF-8"));
-            assertEquals(0, contents.size());
-            setup.createAgentUser("damian", new char[] { 't', 'e', 's', 't' });
-            String clientUser = "client-admin";
-            char[] clientPass = new char[] { 't' };
-            setup.createClientAdminUser(clientUser, clientPass);
-            setup.commit();
-            verify(userSetup).commit();
-            verify(mongoUserSetup).commit();
-            verify(keyring).savePassword(prefs.getConnectionUrl(), clientUser, clientPass);
-            verify(prefs).flush();
-            verify(prefs).setSaveEntitlements(true);
-            verify(prefs).setUserName(clientUser);
-            contents = Files.readAllLines(mockAgentAuthFile.toPath(), Charset.forName("UTF-8"));
-            assertTrue("username and password must be present", contents.size() > 2);
-            assertTrue("username=damian expected to be found in agent.auth file", contents.contains("username=damian"));
-            assertTrue("password=test expected to be found in agent.auth file", contents.contains("password=test"));
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail("Did not expect failure on commit()");
-        }    
-        finally {
-            Files.delete(mockAgentAuthFile.toPath());
-        }
+    public void commitCreatesAgentAuthFileStoresToKeyringWhenWebappInstalled() throws IOException {
+        StructureInformation info = mock(StructureInformation.class);
+        when(info.isWebAppInstalled()).thenReturn(true);
+        AuthFileWriter authWriter = mock(AuthFileWriter.class);
+        KeyringWriter keyringWriter = mock(KeyringWriter.class);
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, info, authWriter, keyringWriter);
+        setup.commit();
+        verify(authWriter).write();
+        verify(keyringWriter).write();
+        verify(userSetup).commit();
+        verify(mongoUserSetup).commit();
     }
     
     @Test
-    public void keyringStoreFailureIsNonFatal() throws IOException {
-        Keyring keyring = mock(Keyring.class);
-        doThrow(new MockKeyringException("This is a test")).when(keyring).savePassword(any(String.class), any(String.class), any(char[].class));
-        doCommitTest(keyring);
-    }
-    
-    @SuppressWarnings("serial")
-    private static class MockKeyringException extends KeyringException {
-
-        public MockKeyringException(String string) {
-            super(string);
-        }
-        
+    public void commitOnlyCommitsMongodbCredsWhenWebappIsNotInstalled() throws IOException {
+        StructureInformation info = mock(StructureInformation.class);
+        when(info.isWebAppInstalled()).thenReturn(false);
+        AuthFileWriter authWriter = mock(AuthFileWriter.class);
+        KeyringWriter keyringWriter = mock(KeyringWriter.class);
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, info, authWriter, keyringWriter);
+        setup.commit();
+        verify(mongoUserSetup).commit();
+        verifyNoMoreInteractions(authWriter);
+        verifyNoMoreInteractions(keyringWriter);
+        verifyNoMoreInteractions(userSetup);
     }
     
     private static class RoleMatcher extends BaseMatcher<String[]> {

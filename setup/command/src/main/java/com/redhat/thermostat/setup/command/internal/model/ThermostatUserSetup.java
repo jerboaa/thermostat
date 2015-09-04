@@ -72,7 +72,6 @@ class ThermostatUserSetup implements UserSetup, RoleSetup {
 
     @Override
     public void commit() throws IOException {
-        // FIXME: Don't persist users/role setup if webapp is not installed.
         Map<String, CommentedRolePropertyValue> roleProps = buildRoleProperties();
         Map<String, CommentedCredsPropertyValue> userProps = buildUserProperties();
         writeUsers(userProps);

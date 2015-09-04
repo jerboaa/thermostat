@@ -36,27 +36,19 @@
 
 package com.redhat.thermostat.setup.command.internal.model;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.utils.keyring.Keyring;
-import com.redhat.thermostat.utils.keyring.KeyringException;
 
 public class ThermostatSetup implements PersistableSetup {
 
-    private static final Logger logger = LoggingUtils.getLogger(ThermostatSetup.class);
+    static final String WEB_STORAGE_URL = "http://127.0.0.1:8999/thermostat/storage";
+    static final String MONGODB_STORAGE_URL = "mongodb://127.0.0.1:27518";
     static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss zzz");
     static final String PROGRAM_NAME = "thermostat setup";
     private static final String THERMOSTAT_AGENT_REC_ROLE_NAME = "thermostat-agent";
@@ -66,23 +58,15 @@ public class ThermostatSetup implements PersistableSetup {
     private final ThermostatUserSetup userSetup;
     private final MongodbUserSetup mongodbUserSetup;
     private final StructureInformation structureInfo;
-    private final CredentialsFileCreator creator;
-    private final CommonPaths paths;
-    private final Keyring keyring;
-    private final ClientPreferences prefs;
-    private String agentUserName;
-    private char[] agentPassword;
-    private String clientUsername;
-    private char[] clientPassword;
+    private final AuthFileWriter authWriter;
+    private final KeyringWriter keyringWriter;
     
-    ThermostatSetup(ThermostatUserSetup userSetup, MongodbUserSetup mongodbUserSetup, StructureInformation structureInfo, CommonPaths paths, CredentialsFileCreator creator, Keyring keyring, ClientPreferences prefs) {
+    ThermostatSetup(ThermostatUserSetup userSetup, MongodbUserSetup mongodbUserSetup, StructureInformation structureInfo, AuthFileWriter authWriter, KeyringWriter keyringWriter) {
         this.mongodbUserSetup = mongodbUserSetup;
         this.userSetup = userSetup;
         this.structureInfo = structureInfo;
-        this.paths = paths;
-        this.creator = creator;
-        this.keyring = keyring;
-        this.prefs = prefs;
+        this.authWriter = authWriter;
+        this.keyringWriter = keyringWriter;
     }
 
     public void createMongodbUser(String username, char[] password) {
@@ -108,10 +92,7 @@ public class ThermostatSetup implements PersistableSetup {
                                               },
                                     "Client admin user username => role assignment."
         );
-        // Hold on to these credentials so that they can be written to keyring
-        // on commit(). This makes gui work out of the box after setup has run.
-        this.clientUsername = username;
-        this.clientPassword = password;
+        keyringWriter.setCredentials(username, password);
     }
 
     public void createAgentUser(String username, char[] password) {
@@ -125,54 +106,17 @@ public class ThermostatSetup implements PersistableSetup {
                                         UserRoles.GRANT_FILES_WRITE_ALL // Agent needs perm to write files.
                                     },
                                     "Agent user username => role assignment.");
-        // Hold on to creds for persistency later.
-        agentUserName = username;
-        agentPassword = password;
+        authWriter.setCredentials(username, password);
     }
 
     @Override
     public void commit() throws IOException {
-        // FIXME: report errors
         mongodbUserSetup.commit();
-        userSetup.commit();
-        writeAgentAuthFile();
-        storeClientCredsToKeyring();
-    }
-    
-    private void storeClientCredsToKeyring() throws IOException {
-        Objects.requireNonNull(clientUsername);
-        Objects.requireNonNull(clientPassword);
-        try {
-            prefs.setSaveEntitlements(true); // force writing on flush()
-            String url = prefs.getConnectionUrl();
-            prefs.setUserName(clientUsername);
-            // Unconditionally save credentials for the chosen username. If setup
-            // runs again it will overwrite existing credentials.
-            prefs.flush();
-            keyring.savePassword(url, clientUsername, clientPassword);
-        } catch (KeyringException e) {
-            // Don't fail setup if storing to keyring fails. After all this is
-            // for convenience only (so that thermostat gui works out of the box
-            // after setup). If we failed, one would have to have a working
-            // keyring setup which isn't always the case. Think thermostat agent.
-            logger.log(Level.INFO, "Failed to store client credentials to keyring. Usability of client commands might suffer.", e);
-        } finally {
-            Arrays.fill(clientPassword, '\0');
-        }
-    }
-
-    private void writeAgentAuthFile() throws IOException {
-        Objects.requireNonNull(agentPassword);
-        Objects.requireNonNull(agentUserName);
-        Properties credentialProps = new Properties();
-        credentialProps.setProperty("username", agentUserName);
-        credentialProps.setProperty("password", String.valueOf(agentPassword));
-        File credentialsFile = paths.getUserAgentAuthConfigFile();
-        creator.create(credentialsFile);
-        try (FileOutputStream fout = new FileOutputStream(credentialsFile)) {
-            credentialProps.store(fout, "Credentials used for 'thermostat agent' connections.");
-        } finally {
-            Arrays.fill(agentPassword, '\0');
+        if (isWebAppInstalled()) {
+            userSetup.commit();
+            authWriter.write();
+            keyringWriter.setStorageUrl(WEB_STORAGE_URL);
+            keyringWriter.write();
         }
     }
 
@@ -185,9 +129,11 @@ public class ThermostatSetup implements PersistableSetup {
         CredentialsFileCreator creator = new CredentialsFileCreator();
         StampFiles stampFiles = new StampFiles(paths);
         StructureInformation info = new StructureInformation(paths);
-        MongodbUserSetup mongoSetup = new MongodbUserSetup(new UserCredsValidator(), launcher, finder, creator , paths, stampFiles, info);
-        ThermostatUserSetup userSetup = new ThermostatUserSetup(new UserPropertiesFinder(finder), new UserCredsValidator(), creator, stampFiles);
         ClientPreferences prefs = new ClientPreferences(paths);
-        return new ThermostatSetup(userSetup, mongoSetup, info, paths, creator, keyring, prefs);
+        KeyringWriter keyringWriter = new KeyringWriter(prefs, keyring);
+        AuthFileWriter authWriter = new AuthFileWriter(paths, creator);
+        MongodbUserSetup mongoSetup = new MongodbUserSetup(new UserCredsValidator(), launcher, finder, creator , paths, stampFiles, info, authWriter, keyringWriter);
+        ThermostatUserSetup userSetup = new ThermostatUserSetup(new UserPropertiesFinder(finder), new UserCredsValidator(), creator, stampFiles);
+        return new ThermostatSetup(userSetup, mongoSetup, info, authWriter, keyringWriter);
     }
 }

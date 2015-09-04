@@ -36,7 +36,9 @@
 
 package com.redhat.thermostat.setup.command.internal;
 
+import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
 import javax.swing.BorderFactory;
@@ -48,6 +50,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -56,6 +59,7 @@ import java.net.URL;
 
 public class MongoUserSetupView extends JPanel implements SetupView {
 
+    private final ThermostatSetup thermostatSetup;
     private JButton backBtn;
     private JButton nextBtn;
     private JButton cancelBtn;
@@ -65,12 +69,13 @@ public class MongoUserSetupView extends JPanel implements SetupView {
     private InputCredentialPanel credentialPanel;
 
     private static final String THERMOSTAT_LOGO = "thermostat.png";
-    private static final String PROGRESS = "Step 2 of 3";
+    private static final String PROGRESS_FORMAT = "Step 2 of %s";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    public MongoUserSetupView(LayoutManager layout) {
+    public MongoUserSetupView(LayoutManager layout, ThermostatSetup setup) {
         super(layout);
 
+        this.thermostatSetup = setup;
         createMidPanel();
         createToolbarPanel();
 
@@ -85,7 +90,11 @@ public class MongoUserSetupView extends JPanel implements SetupView {
 
     @Override
     public void setProgress(JLabel progress) {
-        progress.setText(PROGRESS);
+        int totalSteps = 2;
+        if (thermostatSetup.isWebAppInstalled()) {
+            totalSteps++;
+        }
+        progress.setText(String.format(PROGRESS_FORMAT, totalSteps));
     }
 
     private void createMidPanel() {
@@ -128,7 +137,11 @@ public class MongoUserSetupView extends JPanel implements SetupView {
 
         backBtn = new JButton(translator.localize(LocaleResources.BACK).getContents());
         backBtn.setPreferredSize(new Dimension(70, 30));
-        nextBtn = new JButton(translator.localize(LocaleResources.NEXT).getContents());
+        LocalizedString nextButtonLabel = translator.localize(LocaleResources.NEXT);
+        if (!thermostatSetup.isWebAppInstalled()) {
+            nextButtonLabel = translator.localize(LocaleResources.FINISH);
+        }
+        nextBtn = new JButton(nextButtonLabel.getContents());
         nextBtn.setPreferredSize(new Dimension(70, 30));
         nextBtn.setEnabled(false);
         cancelBtn = new JButton(translator.localize(LocaleResources.CANCEL).getContents());

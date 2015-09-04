@@ -214,8 +214,8 @@ public class SetupWindow {
         mainView.add(topPanel, BorderLayout.NORTH);
         frame.add(mainView);
 
-        startView = new StartView(new BorderLayout());
-        mongoUserSetupView = new MongoUserSetupView(new BorderLayout());
+        startView = new StartView(new BorderLayout(), thermostatSetup);
+        mongoUserSetupView = new MongoUserSetupView(new BorderLayout(), thermostatSetup);
         userPropertiesView = new UserPropertiesView(new BorderLayout());
         setupCompleteView = new SetupCompleteView(new BorderLayout());
     }
@@ -353,8 +353,10 @@ public class SetupWindow {
                 userPropertiesView.disableButtons();
                 thermostatSetup.createMongodbUser(storageUsername, storagePassword);
                 try {
-                    thermostatSetup.createAgentUser(agentUsername, agentPassword);
-                    thermostatSetup.createClientAdminUser(clientUsername, clientPassword);
+                    if (thermostatSetup.isWebAppInstalled()) {
+                        thermostatSetup.createAgentUser(agentUsername, agentPassword);
+                        thermostatSetup.createClientAdminUser(clientUsername, clientPassword);
+                    }
                     thermostatSetup.commit();
                     return null;
                 } catch (IOException e) {

@@ -71,11 +71,13 @@ class MongodbUserSetup implements UserSetup {
     private final CommonPaths paths;
     private final StampFiles stampFiles;
     private final StructureInformation structureInfo;
+    private final AuthFileWriter authFileWriter;
+    private final KeyringWriter keyringWriter;
     private String username;
     private char[] password;
     private String userComment;
     
-    MongodbUserSetup(UserCredsValidator validator, Launcher launcher, CredentialFinder finder, CredentialsFileCreator fileCreator, CommonPaths paths, StampFiles stampFiles, StructureInformation structureInfo) {
+    MongodbUserSetup(UserCredsValidator validator, Launcher launcher, CredentialFinder finder, CredentialsFileCreator fileCreator, CommonPaths paths, StampFiles stampFiles, StructureInformation structureInfo, AuthFileWriter authWriter, KeyringWriter keyringWriter) {
         this.validator = validator;
         this.launcher = launcher;
         this.finder = finder;
@@ -83,6 +85,8 @@ class MongodbUserSetup implements UserSetup {
         this.stampFiles = stampFiles;
         this.paths = paths;
         this.structureInfo = structureInfo;
+        this.authFileWriter = authWriter;
+        this.keyringWriter = keyringWriter;
     }
     
     @Override
@@ -132,6 +136,9 @@ class MongodbUserSetup implements UserSetup {
             // started successfully.
             stopStorage();
             if (!isWebAppInstalled()) {
+                // Allow for gui/agent to work out of the box by using mongodb
+                // URLs.
+                setupForDirectMongodbUrls();
                 String completeDate = ThermostatSetup.DATE_FORMAT.format(new Date());
                 String regularContent = "Created by '" + ThermostatSetup.PROGRAM_NAME + "' on " + completeDate;
                 stampFiles.createSetupCompleteStamp(regularContent);
@@ -146,6 +153,18 @@ class MongodbUserSetup implements UserSetup {
         }
     }
     
+    private void setupForDirectMongodbUrls() throws MongodbUserSetupException {
+        try {
+            authFileWriter.setCredentials(username, Arrays.copyOf(password, password.length));
+            authFileWriter.write();
+            keyringWriter.setCredentials(username, Arrays.copyOf(password, password.length));
+            keyringWriter.setStorageUrl(ThermostatSetup.MONGODB_STORAGE_URL);
+            keyringWriter.write();
+        } catch (IOException e) {
+            throw new MongodbUserSetupException("Error creating agent.auth file or persisting keyring prefs", e);
+        }
+    }
+
     private void cleanupAndReThrow(boolean storageStarted, MongodbUserSetupException e) throws MongodbUserSetupException {
         if (storageStarted) {
             stopStorage();

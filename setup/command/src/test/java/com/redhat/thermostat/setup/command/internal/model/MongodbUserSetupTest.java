@@ -37,16 +37,19 @@
 package com.redhat.thermostat.setup.command.internal.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -68,6 +71,7 @@ import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.setup.command.internal.cli.CharArrayMatcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.config.FileStorageCredentials;
 
@@ -80,6 +84,8 @@ public class MongodbUserSetupTest {
     private CredentialsFileCreator fileCreator;
     private CommonPaths paths;
     private StructureInformation info;
+    private AuthFileWriter authFileWriter;
+    private KeyringWriter keyringWriter;
     
     @Before
     public void setup() {
@@ -89,7 +95,9 @@ public class MongodbUserSetupTest {
         stampFiles = mock(StampFiles.class);
         info = mock(StructureInformation.class);
         mockLauncher = mock(Launcher.class);
-        mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info) {
+        authFileWriter = mock(AuthFileWriter.class);
+        keyringWriter = mock(KeyringWriter.class);
+        mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
             @Override
             int runMongo() {
                 //instead of running mongo through ProcessBuilder
@@ -223,7 +231,7 @@ public class MongodbUserSetupTest {
         createUserJsFile.createNewFile();
         when(paths.getSystemThermostatHome()).thenReturn(testRoot.toFile());
         try {
-            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info) {
+            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
                 @Override
                 int runMongo() {
                     //return non-zero val to test failure
@@ -279,7 +287,7 @@ public class MongodbUserSetupTest {
     
     @SuppressWarnings("unchecked")
     @Test
-    public void testSetupMongodbUser() throws IOException {
+    public void testSetupMongodbUserWebappInstalled() throws IOException {
         Path testRoot = TestRootHelper.createTestRootDirectory(getClass().getName());
         Path libDir = Paths.get(testRoot.toString(), "libs");
         Files.createDirectory(libDir);
@@ -339,7 +347,7 @@ public class MongodbUserSetupTest {
                 }
             }).when(mockLauncher).run(eq(MongodbUserSetup.STORAGE_STOP_ARGS), isA(Collection.class), anyBoolean());
             
-            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info) {
+            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
                 @Override
                 int runMongo() {
                     //instead of running mongo through ProcessBuilder
@@ -365,6 +373,9 @@ public class MongodbUserSetupTest {
             verify(stampFiles).createMongodbUserStamp();
             // temp unlocking calls this
             verify(stampFiles, times(1)).createSetupCompleteStamp(any(String.class));
+            // we don't expect any interactions for the non-webapp case
+            verifyNoMoreInteractions(authFileWriter);
+            verifyNoMoreInteractions(keyringWriter);
     
             assertTrue(mockWebAuthFile.exists());
             // make sure credentials file can be read by FileStorageCredentials
@@ -378,10 +389,103 @@ public class MongodbUserSetupTest {
         }
     }
     
-    private void assertArrayEquals(char[] expected, char[] actual) {
-        assertTrue(expected.length == actual.length);
-        for (int i = 0; i < expected.length; i++) {
-            assertEquals(expected[i], actual[i]);
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSetupMongodbUserNoWebappInstalled() throws IOException {
+        Path testRoot = TestRootHelper.createTestRootDirectory(getClass().getName());
+        Path libDir = Paths.get(testRoot.toString(), "libs");
+        Files.createDirectory(libDir);
+        File createUserJsFile = new File(libDir.toFile(), "create-user.js");
+        createUserJsFile.createNewFile();
+        when(paths.getSystemThermostatHome()).thenReturn(testRoot.toFile());
+        // Fake webapp is *not* installed.
+        when(info.isWebAppInstalled()).thenReturn(false);
+        try {
+            File userDoneFile = File.createTempFile("thermostat", getClass().getName());
+            userDoneFile.deleteOnExit();
+            File setupCompleteFile = File.createTempFile("thermostat", getClass().getName());
+            setupCompleteFile.deleteOnExit();
+            when(stampFiles.getMongodbStampFile()).thenReturn(userDoneFile);
+            when(stampFiles.getSetupCompleteStampFile()).thenReturn(setupCompleteFile);
+    
+            final ActionEvent<ApplicationState> mockActionEvent = mock(ActionEvent.class);
+            AbstractStateNotifyingCommand mockStorage = mock(AbstractStateNotifyingCommand.class);
+            when(mockActionEvent.getSource()).thenReturn(mockStorage);
+            when(mockStorage.getNotifier()).thenReturn(mock(ActionNotifier.class));
+            final Collection<ActionListener<ApplicationState>> listeners[] = new Collection[1];
+            doAnswer(new Answer<Void>() {
+                @Override
+                public Void answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    listeners[0] = (Collection<ActionListener<ApplicationState>>) args[1];
+    
+                    when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
+    
+                    for (ActionListener<ApplicationState> listener : listeners[0]) {
+                        listener.actionPerformed(mockActionEvent);
+                    }
+                    return null;
+                }
+            }).when(mockLauncher).run(eq(MongodbUserSetup.STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+
+            // We started storage successfully, thus after we are done we
+            // stop it again. Mock the storage --stop.
+            doAnswer(new Answer<Void>() {
+                @Override
+                public Void answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    listeners[0] = (Collection<ActionListener<ApplicationState>>) args[1];
+    
+                    when(mockActionEvent.getActionId()).thenReturn(ApplicationState.STOP);
+    
+                    for (ActionListener<ApplicationState> listener : listeners[0]) {
+                        listener.actionPerformed(mockActionEvent);
+                    }
+                    return null;
+                }
+            }).when(mockLauncher).run(eq(MongodbUserSetup.STORAGE_STOP_ARGS), isA(Collection.class), anyBoolean());
+            
+            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
+                @Override
+                int runMongo() {
+                    //instead of running mongo through ProcessBuilder
+                    //we need to always return 0 for success in tests
+                    return 0;
+                }
+            };
+            String username = "foo-user";
+            char[] password = new char[] { 't', 'e', 's', 't' };
+            try {
+                mongoSetup.createUser(username, password, "bar comment");
+                mongoSetup.commit();
+                // pass
+            } catch (IOException e) {
+                e.printStackTrace();
+                fail("did not expect exception");
+            }
+    
+            verify(mockLauncher, times(1)).run(eq(MongodbUserSetup.STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+            verify(mockLauncher, times(1)).run(eq(MongodbUserSetup.STORAGE_STOP_ARGS), isA(Collection.class), anyBoolean());
+            verify(mockActionEvent, times(2)).getActionId();
+            verifyNoMoreInteractions(fileCreator); // We don't want web.auth created
+            verify(stampFiles).createMongodbUserStamp();
+            
+            // twice = 1 x temp unlock, 2 x final creation since webapp is not installed
+            verify(stampFiles, times(2)).createSetupCompleteStamp(any(String.class));
+            verify(authFileWriter).setCredentials(eq(username), argThat(matchesPassword(new char[] { 't', 'e', 's', 't' })));
+            verify(authFileWriter).write();
+            verify(keyringWriter).setCredentials(eq(username), argThat(matchesPassword(new char[] { 't', 'e', 's', 't' })));
+            verify(keyringWriter).setStorageUrl(ThermostatSetup.MONGODB_STORAGE_URL);
+            verify(keyringWriter).write();
+    
+            // Passed in password array is expected to be cleared.
+            assertArrayEquals(new char[] { '\0', '\0', '\0', '\0'}, password);
+        } finally {
+            TestRootHelper.recursivelyRemoveTestRootDirectory(testRoot);
         }
+    }
+    
+    private CharArrayMatcher matchesPassword(char[] expected) {
+        return new CharArrayMatcher(expected);
     }
 }

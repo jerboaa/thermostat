@@ -62,11 +62,13 @@ import javax.swing.event.HyperlinkListener;
 
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.common.ApplicationInfo;
+import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class StartView extends JPanel implements SetupView {
 
+    private final ThermostatSetup thermostatSetup;
     private JButton nextBtn;
     private JButton cancelBtn;
     private JButton moreInfoBtn;
@@ -81,12 +83,12 @@ public class StartView extends JPanel implements SetupView {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final String SHOW_MORE = "Show More";
     private static final String SHOW_LESS = "Show Less";
-    private static final String PROGRESS = "Step 1 of 3";
-    private static final String FAST_TRACK_PROGRESS = "Step 1 of 2";
+    private static final String PROGRESS_FORMAT = "Step 1 of %s";
 
-    public StartView(LayoutManager layout) {
+    public StartView(LayoutManager layout, ThermostatSetup thermostatSetup) {
         super(layout);
 
+        this.thermostatSetup = thermostatSetup;
         createToolbarPanel();
         createMidPanel();
     }
@@ -98,10 +100,14 @@ public class StartView extends JPanel implements SetupView {
 
     @Override
     public void setProgress(JLabel progress) {
+        int totalSteps = 2;
         if (quickSetupBtn.isSelected()) {
-            progress.setText(FAST_TRACK_PROGRESS);
+            progress.setText(String.format(PROGRESS_FORMAT, totalSteps));
         } else {
-            progress.setText(PROGRESS);
+            if (thermostatSetup.isWebAppInstalled()) {
+                totalSteps++;
+            }
+            progress.setText(String.format(PROGRESS_FORMAT, totalSteps));
         }
     }
 
