@@ -44,6 +44,10 @@ import com.redhat.thermostat.storage.model.VmInfo;
 
 public class ThermostatVmMainLabelDecorator implements ReferenceFieldLabelDecorator {
 
+    // duplicated in the startup scripts
+    private static final String MAIN_CLASS =
+            "com.redhat.thermostat.main.Thermostat";
+
     private VmInfoDAO dao;
 
     public ThermostatVmMainLabelDecorator(VmInfoDAO dao) {
@@ -54,10 +58,14 @@ public class ThermostatVmMainLabelDecorator implements ReferenceFieldLabelDecora
     public String getLabel(String originalLabel, Ref reference) {
 
         if (!(reference instanceof VmRef) || 
-                !reference.getName().contains("thermostat")) {
+                !reference.getName().equals(MAIN_CLASS)) {
             return originalLabel;
         }
-        return processLabel(dao.getVmInfo((VmRef) reference));
+        VmInfo vmInfo = dao.getVmInfo((VmRef) reference);
+        if (!vmInfo.getMainClass().equals(MAIN_CLASS)) {
+            return originalLabel;
+        }
+        return createLabel(vmInfo);
     }
 
     @Override
@@ -70,9 +78,28 @@ public class ThermostatVmMainLabelDecorator implements ReferenceFieldLabelDecora
      * @param info the vm info object from which take information.
      * @return the resulting string 
      */
-    private String processLabel(VmInfo info) {
+    private String createLabel(VmInfo info) {
         String[]  s = info.getJavaCommandLine().split("\\."); //escaped dot
-        return s[s.length - 1];
+        String afterDot = s[s.length - 1];
+
+        // heuristic: take the first two non-option arguments
+
+        // FIXME this doesn't work if --boot-delegation appears before the
+        // subcommand. --boot-delegation requires a separate value.
+        String[] parts = afterDot.split("\\s+");
+        int argumentCount = 0;
+        StringBuilder result = new StringBuilder();
+        for (String part : parts) {
+            if (part.startsWith("--")) {
+                continue;
+            }
+            result.append(part).append(" ");
+            argumentCount++;
+            if (argumentCount == 2) {
+                break;
+            }
+        }
+        return result.toString().trim();
     }
 }
 

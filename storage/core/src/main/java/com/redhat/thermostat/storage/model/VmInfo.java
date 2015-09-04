@@ -203,6 +203,10 @@ public class VmInfo extends BasePojo {
         this.javaHome = javaHome;
     }
 
+    /**
+     * If java is invoked as {@code java -jar foo.jar}, then the main class name
+     * is {@code foo.jar}.
+     */
     @Persist
     public String getMainClass() {
         return mainClass;

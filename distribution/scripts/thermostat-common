@@ -65,6 +65,7 @@ export USER_THERMOSTAT_HOME
 THERMOSTAT="${THERMOSTAT_HOME}/bin/thermostat"
 THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 
+# Duplicated in ThermostatVmMainLabelDecorator
 THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
 
 JAVA="@java.home@/bin/java"

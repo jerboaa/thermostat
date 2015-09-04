@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.filter.host.swing;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -51,17 +52,20 @@ import com.redhat.thermostat.storage.model.VmInfo;
 
 public class ThermostatVmMainLabelDecoratorTest {
 
+    private static final String THERMOSTAT_MAIN_CLASS = "com.redhat.thermostat.main.Thermostat";
+
     private ThermostatVmMainLabelDecorator decorator;
     private VmInfoDAO dao;
     private VmRef vmRef;
     private VmInfo info;
-
 
     @Before
     public void setUp() {
         dao = mock(VmInfoDAO.class);
         vmRef = mock(VmRef.class);        
         info = mock(VmInfo.class);
+
+        when(dao.getVmInfo(vmRef)).thenReturn(info);
     }
     
     /**
@@ -70,32 +74,63 @@ public class ThermostatVmMainLabelDecoratorTest {
      */
     @Test
     public void getLabelTest1() {
-        
-        when(dao.getVmInfo(vmRef)).thenReturn(info);
-        when(vmRef.getName()).thenReturn("com.redhat.thermostat.main.Thermostat");
-        when(info.getMainClass()).thenReturn("com.redhat.thermostat.main.Thermostat");
+        when(vmRef.getName()).thenReturn(THERMOSTAT_MAIN_CLASS);
+        when(info.getMainClass()).thenReturn(THERMOSTAT_MAIN_CLASS);
         when(info.getJavaCommandLine()).thenReturn("com.redhat.thermostat.main.Thermostat service");
         
         decorator = new ThermostatVmMainLabelDecorator(dao);
         String result = decorator.getLabel("originalLabel", vmRef);
         assertTrue(result.equals("Thermostat service"));
     }
-    
+
+    @Test
+    public void verifyLabelForIncompleteCommand() {
+        when(vmRef.getName()).thenReturn(THERMOSTAT_MAIN_CLASS);
+        when(info.getMainClass()).thenReturn(THERMOSTAT_MAIN_CLASS);
+        when(info.getJavaCommandLine()).thenReturn("com.redhat.thermostat.main.Thermostat");
+
+        decorator = new ThermostatVmMainLabelDecorator(dao);
+        String result = decorator.getLabel("originalLabel", vmRef);
+        assertEquals("Thermostat", result);
+    }
+
+
+    @Test
+    public void verifyLabelForCliCommand() {
+        when(vmRef.getName()).thenReturn(THERMOSTAT_MAIN_CLASS);
+        when(info.getMainClass()).thenReturn(THERMOSTAT_MAIN_CLASS);
+        when(info.getJavaCommandLine()).thenReturn("com.redhat.thermostat.main.Thermostat kill-vm --vmId foo");
+
+        decorator = new ThermostatVmMainLabelDecorator(dao);
+        String result = decorator.getLabel("originalLabel", vmRef);
+        assertEquals("Thermostat kill-vm", result);
+    }
+
+    @Test
+    public void verifyLabelWhenGlobalOptionIsUsed() {
+        when(vmRef.getName()).thenReturn(THERMOSTAT_MAIN_CLASS);
+        when(info.getMainClass()).thenReturn(THERMOSTAT_MAIN_CLASS);
+        when(info.getJavaCommandLine()).thenReturn("com.redhat.thermostat.main.Thermostat --print-osgi-info kill-vm");
+
+        decorator = new ThermostatVmMainLabelDecorator(dao);
+        String result = decorator.getLabel("originalLabel", vmRef);
+        assertEquals("Thermostat kill-vm", result);
+    }
+
     /**
      * Testing using a non Thermostat vm. The getLabel method must return
      * the vm's main class.
      */
     @Test
     public void getLabelTest2() {
-        
-        when(dao.getVmInfo(vmRef)).thenReturn(info);
-        when(vmRef.getName()).thenReturn("/opt/eclipse//plugin/org.eclipse.equinox.laucher.jar");
-        when(info.getMainClass()).thenReturn("/opt/eclipse//plugin/org.eclipse.equinox.laucher.jar");
+        String JAR = "/opt/eclipse//plugin/org.eclipse.equinox.laucher.jar";
+        when(vmRef.getName()).thenReturn(JAR);
+        when(info.getMainClass()).thenReturn(JAR);
         when(info.getJavaCommandLine()).thenReturn("-os linux");
 
         decorator = new ThermostatVmMainLabelDecorator(dao);
         String result = decorator.getLabel("originalLabel", vmRef);
-        assertTrue(result.equals("originalLabel"));
+        assertEquals("originalLabel", result);
     }
     
     
@@ -105,13 +140,24 @@ public class ThermostatVmMainLabelDecoratorTest {
      */
     @Test
     public void getLabelTest3() {
-        
         Ref hostRef = mock(HostRef.class);
         when(hostRef.getName()).thenReturn("localhost.localdomain");
 
         decorator = new ThermostatVmMainLabelDecorator(dao);
         String result = decorator.getLabel("localhost.localdomain", hostRef);
-        assertTrue(result.equals("localhost.localdomain"));
+        assertEquals("localhost.localdomain", result);
     }
 
+    @Test
+    public void verifySomeDirectoryIsNotDetectedAsThermostat() {
+        // Just because "thermostat" appears in the path doesn't make it thermostat
+        String JAR = "/home/thermostat/ant/ant.jar";
+        when(vmRef.getName()).thenReturn(JAR);
+        when(info.getMainClass()).thenReturn(JAR);
+        when(info.getJavaCommandLine()).thenReturn("-f bulid.xml");
+
+        decorator = new ThermostatVmMainLabelDecorator(dao);
+        String result = decorator.getLabel("originalLabel", vmRef);
+        assertEquals("originalLabel", result);
+    }
 }
