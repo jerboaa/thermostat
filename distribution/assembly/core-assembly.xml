@@ -59,6 +59,7 @@
         <include>com.redhat.thermostat:thermostat-agent-core</include>
         <include>com.redhat.thermostat:thermostat-agent-cli</include>
         <include>com.redhat.thermostat:thermostat-agent-command</include>
+        <include>com.redhat.thermostat:thermostat-agent-command-server</include>
         <include>com.redhat.thermostat:thermostat-agent-proxy-server</include>
         <include>com.redhat.thermostat:thermostat-common-core</include>
         <include>com.redhat.thermostat:thermostat-common-command</include>

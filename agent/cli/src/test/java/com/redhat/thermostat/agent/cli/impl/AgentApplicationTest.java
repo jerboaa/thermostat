@@ -77,6 +77,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
+import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
@@ -156,6 +157,23 @@ public class AgentApplicationTest {
             fail("Timeout expired!");
         }
         
+    }
+    
+    @Test
+    public void testAgentStartupConnectFailure() throws CommandException, InterruptedException {
+        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, configCreator, dbServiceFactory);
+        
+        Arguments args = mock(Arguments.class);
+        final CommandContext commandContext = mock(CommandContext.class);
+        when(commandContext.getArguments()).thenReturn(args);
+        
+        // Throw a ConnectionException when we try to connect to storage
+        doThrow(new ConnectionException()).when(dbService).connect();
+        
+        agent.run(commandContext);
+        
+        // Ensure we shut down command channel server
+        verify(configServer).stopListening();
     }
     
     /*

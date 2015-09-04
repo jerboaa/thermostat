@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.agent.command.server.internal;
 
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -52,9 +52,7 @@ import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.ssl.SslHandler;
-import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SslInitException;
@@ -62,19 +60,17 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-class ConfigurationServerContext implements ConfigurationCommandContext {
+class CommandChannelServerContext implements ConfigurationCommandContext {
 
-    private static final Logger logger = LoggingUtils.getLogger(ConfigurationServerContext.class);
+    private static final Logger logger = LoggingUtils.getLogger(CommandChannelServerContext.class);
     
     private final ServerBootstrap bootstrap;
     private final ChannelGroup channels;
-    private final BundleContext context;
     private final SSLConfiguration sslConf;
 
-    ConfigurationServerContext(BundleContext context, SSLConfiguration sslConf) {
+    CommandChannelServerContext(SSLConfiguration sslConf) {
         bootstrap = createBootstrap();
         channels = createChannelGroup();
-        this.context = context;
         this.sslConf = sslConf;
     }
 
@@ -89,7 +85,7 @@ class ConfigurationServerContext implements ConfigurationCommandContext {
     }
 
     private ChannelGroup createChannelGroup() {
-        return new DefaultChannelGroup(ConfigurationServerImpl.class.getName());
+        return new DefaultChannelGroup(CommandChannelServerImpl.class.getName());
     }
 
     private ServerBootstrap createBootstrap() {
@@ -128,9 +124,9 @@ class ConfigurationServerContext implements ConfigurationCommandContext {
                 pipeline.addLast("ssl", new SslHandler(engine));
                 logger.log(Level.FINE, "Added SSL handler for command channel endpoint");
             }
-            pipeline.addLast("decoder", new RequestDecoder());
+            pipeline.addLast("decoder", new CommandChannelRequestDecoder());
             pipeline.addLast("encoder", new ResponseEncoder());
-            pipeline.addLast("handler", new ServerHandler(new ReceiverRegistry(context), sslConf));
+            pipeline.addLast("handler", new ServerHandler(sslConf));
             return pipeline;
         }
         

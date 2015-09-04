@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.command.internal;
+package com.redhat.thermostat.agent.command.internal;
 
 import static org.jboss.netty.buffer.ChannelBuffers.dynamicBuffer;
 import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
@@ -49,6 +49,7 @@ import com.redhat.thermostat.common.command.EncodingHelper;
 import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
@@ -82,15 +83,35 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
  * </pre>
  * </p>
  */
-class RequestEncoder extends MessageEncoder {
+class TestRequestEncoder extends MessageEncoder {
 
-    private static final Logger logger = LoggingUtils.getLogger(RequestEncoder.class);
+    private static final Logger logger = LoggingUtils.getLogger(TestRequestEncoder.class);
 
     /*
-     * See the javadoc of RequestEncoder for a description of the encoding.
+     * See the javadoc of Request for a description of the encoding.
      */
     @Override
     protected ChannelBuffer encode(Message msg) {
+        RequestType type = (RequestType) ((Request) msg).getType();
+        return encode(msg, type.name(), null);
+    }
+    
+    /**
+     * @param msg Request object
+     * @param reqType substitute this for msg's RequestType
+     * @param badParam write this parameter incorrectly
+     */
+    protected ChannelBuffer encode(Message msg, String reqType, String badParam) {
+        return encode(msg, reqType, badParam, -1);
+    }
+    
+    /**
+     * @param msg Request object
+     * @param reqType substitute this for msg's RequestType
+     * @param badParam write this parameter incorrectly
+     * @param numParams value > 0 will replace automatically calculated number of parameters
+     */
+    protected ChannelBuffer encode(Message msg, String reqType, String badParam, int numParams) {
         // At this point we are only getting Messages. Since our only
         // registered MessageEncoder is the one for Requests a cast
         // to Request should be safe.
@@ -98,22 +119,38 @@ class RequestEncoder extends MessageEncoder {
         logger.log(Level.FINEST, "encoding Request object " + request.toString());
 
         // Request Type
-        String requestType = EncodingHelper.trimType(request.getType()
-                .toString());
-        ChannelBuffer typeBuffer = EncodingHelper.encode(requestType);
+        ChannelBuffer typeBuffer = null;
+        if (reqType != null) {
+            String requestType = EncodingHelper.trimType(reqType);
+            typeBuffer = EncodingHelper.encode(requestType);
+        }
 
         // Parameters
         // TODO: if in practice parms take up more than 256 bytes, use
         // appropriate dynamicBuffer() variant to specify initial/estimated capacity.
-        ChannelBuffer parmsBuffer = dynamicBuffer();
+        ChannelBuffer parmsBuffer = null;
         Collection<String> parmNames = request.getParameterNames();
-        parmsBuffer.writeInt(parmNames.size());
-        for (String parmName : parmNames) {
-            EncodingHelper.encode(parmName, request.getParameter(parmName),
-                    parmsBuffer);
+        parmsBuffer = dynamicBuffer();
+        if (numParams < 0) {
+            numParams = parmNames.size();
         }
+        parmsBuffer.writeInt(numParams);
+        for (String parmName : parmNames) {
+            if (parmName.equals(badParam)) {
+                EncodingHelper.encode("BAD PARAM");
+            } else {
+                EncodingHelper.encode(parmName, request.getParameter(parmName),
+                        parmsBuffer);
+            }
+        }
+        
         // Compose the full message.
-        ChannelBuffer buf = wrappedBuffer(typeBuffer, parmsBuffer);
+        ChannelBuffer buf;
+        if (typeBuffer != null) {
+            buf = wrappedBuffer(typeBuffer, parmsBuffer);
+        } else {
+            buf = parmsBuffer;
+        }
         // Just return the channel buffer which is our encoded message
         return buf;
     }

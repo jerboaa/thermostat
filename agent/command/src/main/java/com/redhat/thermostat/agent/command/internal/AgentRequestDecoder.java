@@ -42,42 +42,66 @@ import java.util.logging.Logger;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
 
 import com.redhat.thermostat.common.command.DecodingHelper;
 import com.redhat.thermostat.common.command.InvalidMessageException;
-import com.redhat.thermostat.common.command.Message;
-import com.redhat.thermostat.common.command.MessageDecoder;
-import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
+ * <p>
+ * {@link Request} objects are serialized over the command channel in the
+ * following format:
+ * <pre>
+ * -------------------------
+ * | A | TYPE | B | PARAMS |
+ * -------------------------
  * 
- * See implementation of {@link MessageEncoder} for documentation of the
- * {@link Request} encoding format.
+ * A is an 32 bit integer representing the length - in bytes - of TYPE. TYPE
+ * is a byte array representing the string of the request type (e.g.
+ * "RESPONSE_EXPECTED") B is a 32 bit integer representing the number of
+ * request parameters which follow.
+ * 
+ * PARAMS (if B > 0) is a variable length stream of the following format:
+ * 
+ * It is a simple encoding of name => value pairs.
+ * 
+ * -----------------------------------------------------------------------------------------------
+ * | I_1 | K_1 | P_1 | V_1 | ... | I_(n-1) | K_(n-1) | P_(n-1) | V_(n-1) | I_n | K_n | P_n | V_n |
+ * -----------------------------------------------------------------------------------------------
+ * 
+ * I_n  A 32 bit integer representing the length - in bytes - of the n'th
+ *      parameter name.
+ * K_n  A 32 bit integer representing the length - in bytes - of the n'th
+ *      parameter value.
+ * P_n  A byte array representing the string of the n'th parameter name.
+ * V_n  A byte array representing the string of the n'th parameter value.
+ * </pre>
+ * </p>
  */
-class RequestDecoder extends MessageDecoder {
+class AgentRequestDecoder {
     
-    private static final Logger logger = LoggingUtils.getLogger(RequestDecoder.class);
+    private static final Logger logger = LoggingUtils.getLogger(AgentRequestDecoder.class);
 
-    /*
-     * See the javadoc of Request for a description of the encoding.
-     */
-    @Override
-    protected Message decode(Channel channel, ChannelBuffer msg) throws InvalidMessageException {
-        logger.log(Level.FINEST, "agent: decoding Request object");
-        ChannelBuffer buffer = (ChannelBuffer) msg;
+    protected Request decode(InetSocketAddress addr, byte[] buf) throws InvalidMessageException {
+        logger.log(Level.FINEST, "Agent: decoding request received from command channel");
+        
+        ChannelBuffer buffer = ChannelBuffers.copiedBuffer(buf);
         buffer.markReaderIndex();
         String typeAsString = DecodingHelper.decodeString(buffer);
         if (typeAsString == null) {
             buffer.resetReaderIndex();
             throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
         }
-        // Netty javadoc tells us it's safe to downcast to more concrete type.
-        InetSocketAddress addr = (InetSocketAddress)channel.getRemoteAddress();
-        Request request = new Request(RequestType.valueOf(typeAsString), addr);
+        Request request;
+        try {
+            RequestType type = RequestType.valueOf(typeAsString);
+            request = new Request(type, addr);
+        } catch (IllegalArgumentException e) {
+            buffer.resetReaderIndex();
+            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
+        }
         if (!DecodingHelper.decodeParameters(buffer, request)) {
             buffer.resetReaderIndex();
             throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));

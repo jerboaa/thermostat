@@ -36,42 +36,16 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
-import static org.junit.Assert.assertEquals;
+interface CommandChannelConstants {
 
-import java.nio.charset.Charset;
+    String BEGIN_SSL_CONFIG_TOKEN = "<BEGIN SSL CONFIG>";
+    String KEYSTORE_FILE_PREFIX = "KSFILE:";
+    String KEYSTORE_PASS_PREFIX = "KSPASS:";
+    String KEYSTORE_NULL = "KSNULL";
+    String END_SSL_CONFIG_TOKEN = "<END SSL CONFIG>";
+    String BEGIN_REQUEST_TOKEN = "<BEGIN REQUEST>";
+    String END_REQUEST_TOKEN = "<END REQUEST>";
+    String BEGIN_RESPONSE_TOKEN = "<BEGIN RESPONSE>";
+    String END_RESPONSE_TOKEN = "<END RESPONSE>";
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.junit.Test;
-
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Response.ResponseType;
-
-public class ResponseEncoderTest {
-
-    private static final boolean DEBUG = false;
-    
-    @Test
-    public void testEncode() throws Exception {
-        ResponseEncoder encoder = new ResponseEncoder();
-        String responseExp = "OK";
-        ChannelBuffer stringBuf = ChannelBuffers.copiedBuffer(responseExp, Charset.defaultCharset());
-        ChannelBuffer buf = ChannelBuffers.buffer(4);
-        buf.writeInt(responseExp.getBytes().length);
-        ChannelBuffer expected = ChannelBuffers.wrappedBuffer(buf, stringBuf);
-        Response ok = new Response(ResponseType.OK);
-        ChannelBuffer actual = (ChannelBuffer)encoder.encode(ok);
-        if (DEBUG) {
-            printBuffers(actual, expected);
-        }
-        assertEquals(0, ChannelBuffers.compare(expected, actual));
-    }
-    
-    private void printBuffers(ChannelBuffer actual, ChannelBuffer expected) {
-        System.out.println("hexdump expected\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(expected));
-        System.out.println("\nhexdump actual\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(actual) + "\n\n");
-    }
 }
-

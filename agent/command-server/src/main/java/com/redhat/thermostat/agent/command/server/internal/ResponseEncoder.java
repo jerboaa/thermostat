@@ -34,50 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.agent.command.server.internal;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
+import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.ChannelException;
+import org.jboss.netty.buffer.ChannelBuffer;
 
-import com.redhat.thermostat.agent.command.ConfigurationServer;
+import com.redhat.thermostat.common.command.EncodingHelper;
+import com.redhat.thermostat.common.command.Message;
+import com.redhat.thermostat.common.command.MessageEncoder;
+import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-class ConfigurationServerImpl implements ConfigurationServer {
 
-    private final ConfigurationServerContext ctx;
-    private static final Logger logger = LoggingUtils.getLogger(ConfigurationServerImpl.class);
+class ResponseEncoder extends MessageEncoder {
 
-    ConfigurationServerImpl(ConfigurationServerContext ctx) {
-        this.ctx = ctx;
-    }
-
+    private static final Logger logger = LoggingUtils.getLogger(ResponseEncoder.class);
+    
+    /*
+     * See javadoc of Response for a description of the encoding.
+     */
     @Override
-    public void startListening(String hostname, int port) throws IOException {
-        ServerBootstrap bootstrap = (ServerBootstrap) ctx.getBootstrap();
+    protected ChannelBuffer encode(Message msg) {
+        // At this point we are only getting Messages. Since our only
+        // registered MessageEncoder is the one for Responses a cast
+        // to Response should be safe.
+        logger.log(Level.FINEST, "Command channel server: encoding Response object");
+        Response response = (Response) msg;
 
-        InetSocketAddress addr = new InetSocketAddress(hostname, port);
-        
-        logger.log(Level.FINE, "Starting command channel server on " + addr.toString());
-        try {
-            // Bind and start to accept incoming connections.
-            bootstrap.bind(addr);
-        } catch (ChannelException e) {
-            throw new IOException("Failed to bind command channel server (" + e.getMessage() + ")", e);
-        }
-        logger.log(Level.FINEST, "Bound command channel server to " + addr.toString());
+        // Response Type
+        String responseType = EncodingHelper.trimType(response.getType().toString());
+        ChannelBuffer typeBuffer = EncodingHelper.encode(responseType);
+
+        // Compose the full message.
+        ChannelBuffer buf = wrappedBuffer(typeBuffer);
+        return buf;
     }
 
-    @Override
-    public void stopListening() {
-        logger.log(Level.FINE, "Stopping command channel server");
-        ctx.getChannelGroup().close().awaitUninterruptibly();
-        ctx.getChannelGroup().clear();
-        ctx.getBootstrap().releaseExternalResources();
-    }
 }
 

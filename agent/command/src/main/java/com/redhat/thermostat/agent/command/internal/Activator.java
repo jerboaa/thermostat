@@ -36,19 +36,20 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class Activator implements BundleActivator {
@@ -58,38 +59,31 @@ public class Activator implements BundleActivator {
     @SuppressWarnings("rawtypes")
     private ServiceRegistration confServerRegistration;
     private ReceiverRegistry receivers;
-    @SuppressWarnings("rawtypes")
-    private ServiceTracker sslConfigTracker;
+    private MultipleServiceTracker sslConfigTracker;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void start(final BundleContext context) throws Exception {
         logger.log(Level.INFO, "activating thermostat-agent-confserver");
         receivers = new ReceiverRegistry(context);
         receivers.registerReceiver(new PingReceiver());
-        sslConfigTracker = new ServiceTracker(context, SSLConfiguration.class, new ServiceTrackerCustomizer() {
-
+        
+        Class<?>[] deps = { CommonPaths.class, SSLConfiguration.class };
+        sslConfigTracker = new MultipleServiceTracker(context, deps, new Action() {
+            
             @Override
-            public Object addingService(ServiceReference reference) {
-                SSLConfiguration sslConf = (SSLConfiguration) context.getService(reference);
-                ConfigurationServerImpl confServer = new ConfigurationServerImpl(new ConfigurationServerContext(context, sslConf));
+            public void dependenciesAvailable(Map<String, Object> services) {
+                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+                SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class.getName());
+                CommandChannelDelegate confServer = new CommandChannelDelegate(receivers, sslConf, paths.getSystemBinRoot());
                 confServerRegistration = context.registerService(ConfigurationServer.class.getName(), confServer, null);
-                return confServer;
             }
 
             @Override
-            public void modifiedService(ServiceReference reference,
-                    Object service) {
-                // Do nothing
-            }
-
-            @Override
-            public void removedService(ServiceReference reference,
-                    Object service) {
+            public void dependenciesUnavailable() {
                 confServerRegistration.unregister();
                 confServerRegistration = null;
-                context.ungetService(reference);
-            }});
+            }
+        });
         sslConfigTracker.open();
     }
 

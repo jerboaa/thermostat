@@ -190,6 +190,9 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                     // Lost config server while still running
                     logger.warning("ConfigurationServer unexpectedly became unavailable");
                 }
+                // Stop listening on command channel
+                ConfigurationServer server = (ConfigurationServer) service;
+                server.stopListening();
                 super.removedService(reference, service);
             }
         };

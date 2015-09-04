@@ -34,45 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.agent.command.server.internal;
 
-import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
+interface CommandChannelConstants {
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.jboss.netty.buffer.ChannelBuffer;
-
-import com.redhat.thermostat.common.command.EncodingHelper;
-import com.redhat.thermostat.common.command.Message;
-import com.redhat.thermostat.common.command.MessageEncoder;
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-
-
-class ResponseEncoder extends MessageEncoder {
-
-    private static final Logger logger = LoggingUtils.getLogger(ResponseEncoder.class);
-    
-    /*
-     * See javadoc of Response for a description of the encoding.
-     */
-    @Override
-    protected ChannelBuffer encode(Message msg) {
-        // At this point we are only getting Messages. Since our only
-        // registered MessageEncoder is the one for Responses a cast
-        // to Response should be safe.
-        logger.log(Level.FINEST, "agent: encoding Response object");
-        Response response = (Response) msg;
-
-        // Response Type
-        String responseType = EncodingHelper.trimType(response.getType().toString());
-        ChannelBuffer typeBuffer = EncodingHelper.encode(responseType);
-
-        // Compose the full message.
-        ChannelBuffer buf = wrappedBuffer(typeBuffer);
-        return buf;
-    }
+    String BEGIN_SSL_CONFIG_TOKEN = "<BEGIN SSL CONFIG>";
+    String KEYSTORE_FILE_PREFIX = "KSFILE:";
+    String KEYSTORE_PASS_PREFIX = "KSPASS:";
+    String KEYSTORE_NULL = "KSNULL";
+    String END_SSL_CONFIG_TOKEN = "<END SSL CONFIG>";
+    String BEGIN_REQUEST_TOKEN = "<BEGIN REQUEST>";
+    String END_REQUEST_TOKEN = "<END REQUEST>";
+    String BEGIN_RESPONSE_TOKEN = "<BEGIN RESPONSE>";
+    String END_RESPONSE_TOKEN = "<END RESPONSE>";
 
 }
-

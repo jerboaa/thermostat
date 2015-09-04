@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.agent.command.server.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -49,6 +49,7 @@ import org.jboss.netty.channel.Channel;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.command.server.internal.CommandChannelRequestDecoder;
 import com.redhat.thermostat.common.command.InvalidMessageException;
 import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.Messages;
@@ -98,12 +99,12 @@ public class RequestDecoderTest {
     private static final byte[] TYPE = RequestType.RESPONSE_EXPECTED.toString().getBytes();
 
     private Channel channel;
-    private RequestDecoder decoder;
+    private CommandChannelRequestDecoder decoder;
 
     @Before
     public void setUp() {
         channel = mock(Channel.class);
-        decoder = new RequestDecoder();
+        decoder = new CommandChannelRequestDecoder();
     }
 
     @Test
@@ -145,13 +146,13 @@ public class RequestDecoderTest {
         Request expected = new Request(RequestType.RESPONSE_EXPECTED, null);
         expected.setParameter("param1", "value1");
         expected.setParameter("param2", "value2");
-        Message actual = new RequestDecoder().decode(channel, buffer);
+        Message actual = new CommandChannelRequestDecoder().decode(channel, buffer);
         assertTrue(actual instanceof Request);
         assertTrue(Messages.equal(expected, (Request)actual));
         InetSocketAddress addr = new InetSocketAddress(1234);
         buffer = ChannelBuffers.copiedBuffer(ENCODED_REQUEST_WITH_NO_PARAMS);
         expected = new Request(RequestType.RESPONSE_EXPECTED, addr);
-        actual = new RequestDecoder().decode(channel, buffer);
+        actual = new CommandChannelRequestDecoder().decode(channel, buffer);
         assertTrue(actual instanceof Request);
         assertTrue(Messages.equal(expected, (Request)actual));
     }
@@ -164,7 +165,7 @@ public class RequestDecoderTest {
         for (int i = 0; i < GARBAGE_AS_REQUEST.length; i++) {
             ChannelBuffer buffer = ChannelBuffers
                     .copiedBuffer(GARBAGE_AS_REQUEST[0]);
-            RequestDecoder decoder = new RequestDecoder();
+            CommandChannelRequestDecoder decoder = new CommandChannelRequestDecoder();
             try {
                 decoder.decode(channel, buffer);
             } catch (InvalidMessageException e) {

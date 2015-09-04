@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+# Copyright 2012-2015 Red Hat, Inc.
+#
+# This file is part of Thermostat.
+#
+# Thermostat is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published
+# by the Free Software Foundation; either version 2, or (at your
+# option) any later version.
+#
+# Thermostat is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Thermostat; see the file COPYING.  If not see
+# <http://www.gnu.org/licenses/>.
+#
+# Linking this code with other modules is making a combined work
+# based on this code.  Thus, the terms and conditions of the GNU
+# General Public License cover the whole combination.
+#
+# As a special exception, the copyright holders of this code give
+# you permission to link this code with independent modules to
+# produce an executable, regardless of the license terms of these
+# independent modules, and to copy and distribute the resulting
+# executable under terms of your choice, provided that you also
+# meet, for each linked independent module, the terms and conditions
+# of the license of that module.  An independent module is a module
+# which is not derived from or based on this code.  If you modify
+# this code, you may extend this exception to your version of the
+# library, but you are not obligated to do so.  If you do not wish
+# to do so, delete this exception statement from your version.
+#
+#####################################################################
+#
+
+# Source thermostat-common from same directory as this script
+CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$CWD"/thermostat-common
+
+# Source system thermostat profile
+. ${THERMOSTAT_HOME}/etc/thermostatrc 
+# Source user thermostat profile (if any)
+if [ -f ${USER_THERMOSTAT_HOME}/etc/thermostatrc ]; then
+  . ${USER_THERMOSTAT_HOME}/etc/thermostatrc
+fi
+
+# NOTE: The following variables come from the system/user
+#       profiles (if any)
+#
+# THERMOSTAT_EXT_BOOT_CLASSPATH
+# THERMOSTAT_EXT_JAVA_OPTS
+# THERMOSTAT_EXT_OPTS
+
+# JARs necessary for the server
+BOOT_CLASSPATH="${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-@netty.version@.jar"
+BOOT_CLASSPATH="${TOOLS_JAR}:${BOOT_CLASSPATH}"
+
+# Append extra class path entries coming from the profiles
+if [ ! -z ${THERMOSTAT_EXT_BOOT_CLASSPATH} ]; then
+  BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_EXT_BOOT_CLASSPATH}"
+fi
+
+CMD_CHANNEL_CLASS="com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain"
+
+# Set this to remote debug
+if [ x"$THERMOSTAT_CMDC_DEBUG" != x ] ; then
+  DEBUG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,quiet=y,address=1083"
+fi
+
+# TODO Maybe there is a more reliable way to do this
+THIS_SCRIPT="$CWD/thermostat-command-channel"
+SCRIPT_OWNER=$(stat -c '%U' "$THIS_SCRIPT")
+
+# Start server
+HOSTNAME=$1
+PORT=$2
+# Drop permissions, if root
+if [ "$(/bin/id -u)" -eq 0 ]; then
+  exec /bin/su "$SCRIPT_OWNER" -c "${JAVA} ${THERMOSTAT_EXT_JAVA_OPTS} ${LOGGING_ARG} -cp ${BOOT_CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} $HOSTNAME $PORT"
+else
+  exec ${JAVA} ${THERMOSTAT_EXT_JAVA_OPTS} ${LOGGING_ARG} -cp ${BOOT_CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} $HOSTNAME $PORT
+fi

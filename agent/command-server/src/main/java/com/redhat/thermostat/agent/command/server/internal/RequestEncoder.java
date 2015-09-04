@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.command.internal;
+package com.redhat.thermostat.agent.command.server.internal;
 
 import static org.jboss.netty.buffer.ChannelBuffers.dynamicBuffer;
 import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
@@ -87,7 +87,7 @@ class RequestEncoder extends MessageEncoder {
     private static final Logger logger = LoggingUtils.getLogger(RequestEncoder.class);
 
     /*
-     * See the javadoc of RequestEncoder for a description of the encoding.
+     * See the javadoc of Request for a description of the encoding.
      */
     @Override
     protected ChannelBuffer encode(Message msg) {

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.agent.command.server.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -54,9 +54,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-public class ConfigurationServerImplTest {
+import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerContext;
+import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerImpl;
 
-    private ConfigurationServerContext ctx;
+public class CommandChannelServerImplTest {
+
+    private CommandChannelServerContext ctx;
     ChannelGroup cg;
     ServerBootstrap bootstrap;
 
@@ -66,14 +69,14 @@ public class ConfigurationServerImplTest {
         ChannelGroupFuture future = mock(ChannelGroupFuture.class);
         when(cg.close()).thenReturn(future);
         bootstrap = mock(ServerBootstrap.class);
-        ctx = mock(ConfigurationServerContext.class);
+        ctx = mock(CommandChannelServerContext.class);
         when(ctx.getBootstrap()).thenReturn(bootstrap);
         when(ctx.getChannelGroup()).thenReturn(cg);
     }
 
     @Test
     public void testStartListening() throws IOException {
-        ConfigurationServerImpl server = new ConfigurationServerImpl(ctx);
+        CommandChannelServerImpl server = new CommandChannelServerImpl(ctx);
         server.startListening("127.0.0.1", 123);
 
         ArgumentCaptor<InetSocketAddress> argument = ArgumentCaptor.forClass(InetSocketAddress.class);
@@ -86,7 +89,7 @@ public class ConfigurationServerImplTest {
     @SuppressWarnings("unchecked")
     @Test
     public void startListeningFailureThrowsException() {
-        ConfigurationServerImpl server = new ConfigurationServerImpl(ctx);
+        CommandChannelServerImpl server = new CommandChannelServerImpl(ctx);
 
         when(bootstrap.bind(any(InetSocketAddress.class))).thenThrow(ChannelException.class);
         
@@ -100,7 +103,7 @@ public class ConfigurationServerImplTest {
 
     @Test
     public void testStopListening() {
-        ConfigurationServerImpl server = new ConfigurationServerImpl(ctx);
+        CommandChannelServerImpl server = new CommandChannelServerImpl(ctx);
         server.stopListening();
 
         verify(cg).close();

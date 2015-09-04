@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.agent.command.server.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -56,28 +56,31 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.osgi.framework.BundleContext;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.agent.command.server.internal.CommandChannelRequestDecoder;
+import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerContext;
+import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerImpl;
+import com.redhat.thermostat.agent.command.server.internal.ResponseEncoder;
+import com.redhat.thermostat.agent.command.server.internal.ServerHandler;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SSLContextFactory.class,
         SSLEngine.class, SSLContext.class })
-public class ConfigurationServerContextTest {
+public class CommandChannelServerContextTest {
 
-    ConfigurationServerContext ctx;
+    CommandChannelServerContext ctx;
     SSLConfiguration mockSSLConf;
 
     @Before
     public void setUp() {
-        BundleContext bCtx = mock(BundleContext.class);
         mockSSLConf = mock(SSLConfiguration.class);
         when(mockSSLConf.enableForCmdChannel()).thenReturn(false);
-        ctx = new ConfigurationServerContext(bCtx, mockSSLConf);
+        ctx = new CommandChannelServerContext(mockSSLConf);
     }
 
     @Test
@@ -108,7 +111,7 @@ public class ConfigurationServerContextTest {
 
         ChannelHandler decoder = p.get("decoder");
         assertNotNull(decoder);
-        assertTrue(decoder instanceof RequestDecoder);
+        assertTrue(decoder instanceof CommandChannelRequestDecoder);
 
         ChannelHandler handler = p.get("handler");
         assertNotNull(handler);
@@ -149,7 +152,7 @@ public class ConfigurationServerContextTest {
     public void testChannelGroup() {
         ChannelGroup cg = ctx.getChannelGroup();
         assertNotNull(cg);
-        assertEquals(ConfigurationServerImpl.class.getName(), cg.getName());
+        assertEquals(CommandChannelServerImpl.class.getName(), cg.getName());
     }
 }
 

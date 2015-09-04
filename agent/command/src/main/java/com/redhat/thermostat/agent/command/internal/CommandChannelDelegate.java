@@ -36,26 +36,24 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.lang.ProcessBuilder.Redirect;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.ssl.SslHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.agent.command.internal.ProcessOutputStreamReader.ProcessOutputStreamRequestListener;
+import com.redhat.thermostat.agent.command.internal.ProcessStreamReader.ExceptionListener;
 import com.redhat.thermostat.common.command.Message.MessageType;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
@@ -66,51 +64,93 @@ import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
 
-class ServerHandler extends SimpleChannelUpstreamHandler {
-
-    private static final Logger logger = LoggingUtils.getLogger(ServerHandler.class);
-    private ReceiverRegistry receivers;
-    private SSLConfiguration sslConf;
-    private StorageGetter storageGetter;
-
-    public ServerHandler(ReceiverRegistry receivers, SSLConfiguration sslConf) {
-        this(receivers, sslConf, new StorageGetter());
+class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStreamRequestListener {
+    
+    private static final String CMD_NAME = "thermostat-command-channel";
+    private static final Logger logger = LoggingUtils.getLogger(CommandChannelDelegate.class);
+    
+    private final ReceiverRegistry receivers;
+    private final SSLConfiguration sslConf;
+    private final StorageGetter storageGetter;
+    private final File binPath;
+    private final ProcessCreator procCreator;
+    private Process process;
+    private ProcessStreamReader stdoutReader;
+    private PrintWriter printer;
+    
+    CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath) {
+        this(receivers, sslConf, binPath, new StorageGetter(), new ProcessCreator());
     }
 
     /** For testing only */
-    ServerHandler(ReceiverRegistry receivers, SSLConfiguration sslConf, StorageGetter getter) {
+    CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath, 
+            StorageGetter getter, ProcessCreator procCreator) {
         this.storageGetter = getter;
         this.receivers = receivers;
         this.sslConf = sslConf;
+        this.binPath = binPath;
+        this.procCreator = procCreator;
     }
 
     @Override
-    public void handleUpstream(
-            ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
-        if (e instanceof ChannelStateEvent) {
-            logger.log(Level.FINEST, e.toString());
-        }
-        super.handleUpstream(ctx, e);
+    public void startListening(String hostname, int port) throws IOException {
+        startServer(hostname, port);
     }
-    
-    @Override
-    public void channelConnected(
-            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        if (sslConf.enableForCmdChannel()) {
-            // Get the SslHandler in the current pipeline.
-            // We added it in ConfigurationServerContext$ServerPipelineFactory.
-            final SslHandler sslHandler = ctx.getPipeline().get(
-                    SslHandler.class);
 
-            // Get notified when SSL handshake is done.
-            ChannelFuture handshakeFuture = sslHandler.handshake();
-            handshakeFuture.addListener(new SSLHandshakeDoneListener());
+    @Override
+    public void stopListening() {
+        try {
+            killServer();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Error occurred while stopping command channel server", e);
+        }
+    }
+    
+    void startServer(String hostname, int port) throws IOException {
+        String[] processArgs = { binPath.getAbsolutePath() + File.separator + CMD_NAME, hostname, String.valueOf(port) };
+        logger.info("Starting command channel server process");
+        process = procCreator.startProcess(processArgs);
+        
+        ExceptionListener exceptionListener = new ExceptionListener() {
+            
+            @Override
+            public void notifyException(IOException e) {
+                // Log exception, send ERROR Response
+                logger.log(Level.WARNING, "Unexpected input received from command channel server", e);
+                writeResponse(new Response(ResponseType.ERROR));
+            }
+        };
+        stdoutReader = new ProcessOutputStreamReader(process.getInputStream(), this, exceptionListener);
+        // Must be instantiated before starting output reader
+        printer = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), "UTF-8"));
+        stdoutReader.start();
+        
+        SSLConfigurationWriter sslWriter = new SSLConfigurationWriter(printer);
+        sslWriter.writeSSLConfiguration(sslConf);
+    }
+
+    private void shutdownProcess() throws IOException {
+        // Interrupt the reader thread to stop processing
+        stdoutReader.interrupt();
+        
+        process.destroy();
+        
+        try {
+            stdoutReader.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    void killServer() throws IOException {
+        if (process != null) {
+            logger.info("Stopping command channel server process");
+            shutdownProcess();
         }
     }
     
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-        Request request = (Request) e.getMessage();
+    public void requestReceived(Request request) {
         String receiverName = request.getReceiver();
         MessageType requestType = request.getType();
         logger.info("Request received: '" + requestType + "' for '" + receiverName + "'");
@@ -132,29 +172,39 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
                 response = new Response(ResponseType.ERROR);
             }
         }
-        Channel channel = ctx.getChannel();
-        if (channel.isConnected()) {
-            logger.info("Sending response: " + response.getType().toString());
-            ChannelFuture f = channel.write(response);
-            f.addListener(ChannelFutureListener.CLOSE);
-        } else {
-            logger.warning("Channel not connected.");
-        }
+        
+        writeResponse(response);
+    }
+
+    private void writeResponse(Response response) {
+        /*
+         * Write out response to command channel server using the
+         * following protocol:
+         * '<BEGIN RESPONSE>'
+         * ResponseType
+         * '<END RESPONSE>'
+         */
+        printer.println(CommandChannelConstants.BEGIN_RESPONSE_TOKEN);
+        printer.println(response.getType().name());
+        printer.println(CommandChannelConstants.END_RESPONSE_TOKEN);
+        printer.flush();
     }
 
     private boolean authenticateRequestIfNecessary(Request request) {
         Storage storage = storageGetter.get();
+        boolean result = false;
         if (storage instanceof SecureStorage) {
-            boolean authenticatedRequest = authenticateRequest(request, (SecureStorage) storage);
-            if (authenticatedRequest) {
+            result = authenticateRequest(request, (SecureStorage) storage);
+            if (result) {
                 logger.finest("Authentication and authorization for request " + request + " succeeded!");
             } else {
                 logger.finest("Request " + request + " failed to authenticate or authorize");
             }
-            return authenticatedRequest;
         } else {
-            return true;
+            result = true;
         }
+        storageGetter.unget();
+        return result;
     }
 
     private boolean authenticateRequest(Request request, SecureStorage storage) {
@@ -174,36 +224,28 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
         }
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.log(Level.WARNING, "Unexpected exception from downstream.", e.getCause());
-        e.getChannel().close();
-    }
-    
-    /*
-     * Only registered if SSL is enabled
-     */
-    static final class SSLHandshakeDoneListener implements ChannelFutureListener {
-
-        @Override
-        public void operationComplete(ChannelFuture future) throws Exception {
-            if (future.isSuccess()) {
-                logger.log(Level.FINE, "Finished SSL handshake.");
-            } else {
-                logger.log(Level.WARNING, "SSL handshake failed!");
-                future.getChannel().close();
-            }
-        }
-    }
-
     /** for testing only */
     static class StorageGetter {
-        public Storage get() {
+        Storage get() {
             BundleContext bCtx = FrameworkUtil.getBundle(getClass()).getBundleContext();
             ServiceReference<Storage> storageRef = bCtx.getServiceReference(Storage.class);
-            // FIXME there should be a matching unget() somewhere to release the reference
             Storage storage = (Storage) bCtx.getService(storageRef);
             return storage;
+        }
+        
+        void unget() {
+            BundleContext bCtx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+            ServiceReference<Storage> storageRef = bCtx.getServiceReference(Storage.class);
+            bCtx.ungetService(storageRef);
+        }
+    }
+    
+    /** for testing only */
+    static class ProcessCreator {
+        Process startProcess(String[] args) throws IOException {
+            ProcessBuilder builder = new ProcessBuilder(args);
+            builder.redirectError(Redirect.INHERIT);
+            return builder.start();
         }
     }
 }
