@@ -37,6 +37,7 @@
 package com.redhat.thermostat.setup.command.internal;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -250,6 +251,7 @@ public class SetupWindow {
         finishAction = new SwingWorker<IOException, Void>() {
             @Override
             public IOException doInBackground() {
+                frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 mongoUserSetupView.disableButtons();
                 userPropertiesView.disableButtons();
                 thermostatSetup.createMongodbUser(storageUsername, storagePassword);
@@ -268,6 +270,7 @@ public class SetupWindow {
             public void done() {
                 mongoUserSetupView.enableButtons();
                 userPropertiesView.enableButtons();
+                frame.setCursor(Cursor.getDefaultCursor());
                 shutdown();
             }
         };
