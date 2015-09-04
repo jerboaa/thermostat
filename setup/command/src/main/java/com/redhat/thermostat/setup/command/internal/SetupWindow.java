@@ -96,6 +96,7 @@ public class SetupWindow {
                 addViewListeners();
                 showView(startView);
                 frame.setVisible(true);
+                startView.focusInitialComponent(); // cannot receive focus before everything is made visible
             }
         });
 
@@ -276,6 +277,8 @@ public class SetupWindow {
     private void showView(SetupView view) {
         mainView.add(view.getUiComponent(), BorderLayout.CENTER);
         view.setTitleAndProgress(title, progress);
+        view.setDefaultButton();
+        view.focusInitialComponent();
         mainView.revalidate();
         mainView.repaint();
     }

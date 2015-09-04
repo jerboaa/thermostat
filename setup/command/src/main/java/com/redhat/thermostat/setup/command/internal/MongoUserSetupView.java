@@ -163,6 +163,16 @@ public class MongoUserSetupView extends JPanel implements SetupView {
     }
 
     @Override
+    public void setDefaultButton() {
+        getRootPane().setDefaultButton(nextBtn);
+    }
+
+    @Override
+    public void focusInitialComponent() {
+        credentialPanel.getUsernameField().requestFocusInWindow();
+    }
+
+    @Override
     public Component getUiComponent() {
         return this;
     }

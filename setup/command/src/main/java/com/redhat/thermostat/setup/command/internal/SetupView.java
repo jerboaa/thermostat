@@ -51,4 +51,8 @@ public interface SetupView {
     void setTitleAndProgress(JLabel title, JLabel progress);
 
     Component getUiComponent();
+
+    void setDefaultButton();
+
+    void focusInitialComponent();
 }

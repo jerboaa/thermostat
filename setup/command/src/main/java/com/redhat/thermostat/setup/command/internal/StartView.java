@@ -183,4 +183,14 @@ public class StartView extends JPanel implements SetupView {
         return cancelBtn;
     }
 
+    @Override
+    public void setDefaultButton() {
+        getRootPane().setDefaultButton(nextBtn);
+    }
+
+    @Override
+    public void focusInitialComponent() {
+        nextBtn.requestFocusInWindow();
+    }
+
 }
