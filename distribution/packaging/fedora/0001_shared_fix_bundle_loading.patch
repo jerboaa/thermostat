@@ -159,7 +159,7 @@ diff --git a/distribution/config/commands/vm-stat.properties b/distribution/conf
 diff --git a/killvm/distribution/thermostat-plugin.xml b/killvm/distribution/thermostat-plugin.xml
 --- a/killvm/distribution/thermostat-plugin.xml
 +++ b/killvm/distribution/thermostat-plugin.xml
-@@ -74,7 +74,7 @@
+@@ -74,9 +74,11 @@
          <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
@@ -167,7 +167,11 @@ diff --git a/killvm/distribution/thermostat-plugin.xml b/killvm/distribution/the
 +        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
          <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
          <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
        </bundles>
+     </command>
+   </commands>
 diff --git a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
 --- a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
 +++ b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
