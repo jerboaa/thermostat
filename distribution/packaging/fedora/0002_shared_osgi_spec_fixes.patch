@@ -15,8 +15,8 @@ diff --git a/agent/cli/pom.xml b/agent/cli/pom.xml
 diff --git a/agent/command/pom.xml b/agent/command/pom.xml
 --- a/agent/command/pom.xml
 +++ b/agent/command/pom.xml
-@@ -76,8 +76,8 @@
-       <artifactId>netty</artifactId>
+@@ -72,8 +72,8 @@
+       <scope>test</scope>
      </dependency>
      <dependency>
 -      <groupId>org.osgi</groupId>
@@ -744,7 +744,7 @@ diff --git a/pom.xml b/pom.xml
  
      <netty.version>3.2.4.Final</netty.version>
      <httpcomponents.core.version>4.3.2</httpcomponents.core.version>
-@@ -565,16 +577,6 @@
+@@ -567,16 +579,6 @@
        </dependency>
  
        <dependency>
@@ -1180,7 +1180,7 @@ diff --git a/vm-gc/command/pom.xml b/vm-gc/command/pom.xml
 diff --git a/vm-gc/common/pom.xml b/vm-gc/common/pom.xml
 --- a/vm-gc/common/pom.xml
 +++ b/vm-gc/common/pom.xml
-@@ -99,14 +99,8 @@
+@@ -105,14 +105,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
