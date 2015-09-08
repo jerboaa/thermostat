@@ -37,7 +37,9 @@
 package com.redhat.thermostat.setup.command.internal;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.Dialog;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -50,22 +52,33 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.text.JTextComponent;
 
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.setup.command.internal.model.CredentialGenerator;
@@ -167,21 +180,7 @@ public class SetupWindow {
         doSynchronouslyOnEdt(new Runnable() {
             @Override
             public void run() {
-                JOptionPane optionPane = new JOptionPane();
-                optionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
-
-                StringWriter stringWriter = new StringWriter();
-                e.printStackTrace(new PrintWriter(stringWriter));
-                JTextArea stackTraceArea = new JTextArea();
-                stackTraceArea.setEditable(false);
-                stackTraceArea.setText(stringWriter.toString());
-
-                optionPane.setMessage(new Object[] { e.getLocalizedMessage(), stackTraceArea });
-
-                JDialog dialog = optionPane.createDialog(frame, translator.localize(LocaleResources.SETUP_FAILED).getContents());
-                dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-                dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                dialog.setVisible(true);
+                ErrorDialog.createDialog(frame, e).setVisible(true);
             }
         });
     }
@@ -425,6 +424,91 @@ public class SetupWindow {
 
     private void shutdown() {
         shutdown.countDown();
+    }
+
+    private static class ErrorDialog extends JDialog {
+
+        static JDialog createDialog(JFrame parent, Throwable throwable) {
+            JOptionPane optionPane = new JOptionPane();
+            optionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
+
+            JButton showMoreInfoButton = createShowMoreInfoButton();
+            final JScrollPane stackTracePane = createStackTracePane(throwable);
+            stackTracePane.setVisible(false);
+            final JTextComponent stepsToResolveText = createStepsToResolveText();
+            stepsToResolveText.setVisible(false);
+
+            JPanel messagePanel = new JPanel();
+            messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.Y_AXIS));
+            messagePanel.add(showMoreInfoButton);
+            messagePanel.add(stepsToResolveText);
+            messagePanel.add(stackTracePane);
+
+            optionPane.setMessage(new Object[] {
+                    translator.localize(LocaleResources.SETUP_FAILED_DIALOG_MESSAGE, throwable.getLocalizedMessage()).getContents(),
+                    messagePanel,
+            });
+
+            final JDialog dialog = optionPane.createDialog(parent, translator.localize(LocaleResources.SETUP_FAILED_DIALOG_TITLE).getContents());
+            dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+            dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+            showMoreInfoButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    stepsToResolveText.setVisible(!stepsToResolveText.isVisible());
+                    stackTracePane.setVisible(!stackTracePane.isVisible());
+                    dialog.pack();
+                }
+            });
+            return dialog;
+        }
+
+        private static JButton createShowMoreInfoButton() {
+            JButton button = new JButton();
+            button.setText(translator.localize(LocaleResources.SHOW_MORE_ERROR_INFO_BUTTON).getContents());
+            return button;
+        }
+
+        private static JScrollPane createStackTracePane(Throwable throwable) {
+            JTextArea textArea = new JTextArea();
+            textArea.setEditable(false);
+            textArea.setText(stackTracetoString(throwable));
+            return new ThermostatScrollPane(textArea);
+        }
+
+        private static String stackTracetoString(Throwable throwable) {
+            StringWriter stringWriter = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(stringWriter));
+            return stringWriter.toString();
+        }
+
+        private static JTextComponent createStepsToResolveText() {
+            JEditorPane component = new JEditorPane();
+
+            final String userGuideURL = new ApplicationInfo().getUserGuide();
+            component.setEditorKit(JEditorPane.createEditorKitForContentType("text/html"));
+            component.setEditable(false);
+            component.setBackground(new Color(0, 0, 0, 0));
+            component.setHighlighter(null);
+            component.setText(translator.localize(LocaleResources.STEPS_TO_RESOLVE_ERROR_LABEL_TEXT, userGuideURL).getContents());
+            component.addHyperlinkListener(new HyperlinkListener() {
+                public void hyperlinkUpdate(HyperlinkEvent e) {
+                    if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                        if (Desktop.isDesktopSupported()) {
+                            try {
+                                Desktop.getDesktop().browse(new URI(userGuideURL));
+                            } catch (IOException | URISyntaxException e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            });
+
+            return component;
+        }
+
     }
 
 }
