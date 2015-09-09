@@ -53,6 +53,7 @@ import com.redhat.thermostat.shared.locale.Translate;
  */
 public class StorageAuthInfoGetter {
 
+    private static final int EOF = -1;
     private static final int PW_SIZE_INCREMENT = 16;
 
     private final ConsoleReader reader;
@@ -114,8 +115,11 @@ public class StorageAuthInfoGetter {
         Character oldEcho = reader.getEchoCharacter();
         reader.setEchoCharacter('\0');
         int pwChar = reader.readCharacter();
+        if (pwChar == EOF) {
+            return null;
+        }
         int length = 0;
-        while ((char) pwChar != '\n' && (char) pwChar != '\r') {
+        while ((char) pwChar != '\n' && (char) pwChar != '\r' && pwChar != EOF) {
             password[length] = (char) pwChar;
             length++;
             if (length >= password.length) {
