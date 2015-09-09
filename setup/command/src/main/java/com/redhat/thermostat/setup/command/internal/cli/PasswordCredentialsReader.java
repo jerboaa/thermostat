@@ -50,6 +50,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 class PasswordCredentialsReader {
 
+    private static final int MAX_TRIES = 100;
     private static final LocalizedString UNUSED = new LocalizedString("ignored");
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private final Console console;
@@ -70,11 +71,19 @@ class PasswordCredentialsReader {
         char[] password;
         char[] confirmation;
         boolean isValid = false;
+        int currTry = 0;
         do {
             StorageAuthInfoGetter getter = new StorageAuthInfoGetter(console, UNUSED, passwordPrompt);
             password = getter.getPassword(null);
+            if (password == null) {
+                throw new IOException("Unexpected EOF while reading password.");
+            }
             StorageAuthInfoGetter confirmGetter = new StorageAuthInfoGetter(console, UNUSED, confirmPasswordPrompt);
             confirmation = confirmGetter.getPassword(null);
+            if (confirmation == null) {
+                throw new IOException("Unexpected EOF while reading password confirmation.");
+            }
+            currTry++;
             try {
                 verifyPassword(password, confirmation);
                 Arrays.fill(confirmation, '\0');
@@ -87,13 +96,21 @@ class PasswordCredentialsReader {
                 printError(LocaleResources.CLI_SETUP_PASSWORD_MISMATCH);
                 clearPasswords(password, confirmation);
             }
-        } while (!isValid);
+        } while (!isValid && currTry < MAX_TRIES);
+        // If we have reached maximum tries then we might still be invalid
+        if (!isValid) {
+            throw new IOException("Tried " + MAX_TRIES + " times and got invalid input each time.");
+        }
         return password;
     }
     
     private void clearPasswords(char[] password, char[] confirmation) {
-        Arrays.fill(password, '\0');
-        Arrays.fill(confirmation, '\0');
+        if (password != null) {
+            Arrays.fill(password, '\0');
+        }
+        if (confirmation != null) {
+            Arrays.fill(confirmation, '\0');
+        }
         password = null;
         confirmation = null;
     }
@@ -104,7 +121,6 @@ class PasswordCredentialsReader {
     }
     
     private void verifyPassword(char[] password, char[] confirmation) throws InvalidPasswordException, PasswordMismatchException {
-        checkPasswordsMatch(password, confirmation);
         UserCredsValidator validator = new UserCredsValidator();
         try {
             validator.validatePassword(password);
@@ -112,6 +128,8 @@ class PasswordCredentialsReader {
         } catch (IllegalArgumentException e) {
             throw new InvalidPasswordException();
         }
+        // passwords are now non-null and not empty
+        checkPasswordsMatch(password, confirmation);
     }
 
     void checkPasswordsMatch(char[] first, char[] second) throws PasswordMismatchException {

@@ -54,6 +54,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public class CLISetup {
 
+    private static final int EOF = -1;
     private static final Logger logger = LoggingUtils.getLogger(CLISetup.class);
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private final ThermostatSetup thermostatSetup;
@@ -165,6 +166,9 @@ public class CLISetup {
         int currTry = 0;
         do {
             input = readLine(in);
+            if (input == null) {
+                throw new IOException("Unexpected EOF while reading answer.");
+            }
             if (input.equals(localizedCancelToken)) {
                 return false;
             }
@@ -181,12 +185,16 @@ public class CLISetup {
     private String readLine(InputStream in) throws IOException {
         int c;
         StringBuilder builder = new StringBuilder();
-        while ((c = in.read()) != -1) {
+        while ((c = in.read()) != EOF) {
             char token = (char) c;
             if (token == '\n') {
                 break;
             }
             builder.append(token);
+        }
+        if (c == EOF) {
+            // reached EOF before we read any other character.
+            return null;
         }
         return builder.toString();
     }

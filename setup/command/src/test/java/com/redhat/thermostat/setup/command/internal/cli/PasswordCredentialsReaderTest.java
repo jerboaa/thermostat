@@ -46,6 +46,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -99,5 +100,76 @@ public class PasswordCredentialsReaderTest {
         assertArrayEquals(new char[] { 'b', 'a', 'r' }, password);
         assertEquals("Expected no errors", "", new String(berr.toByteArray()));
         assertEquals("tell me the password: \nrepeat the password: \n", new String(bout.toByteArray()));
+    }
+    
+    @Test
+    public void canGetPasswordNoEOLAfterConfirmation() throws IOException {
+        String input = "bar\nbar";
+        when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
+        char[] password = credsReader.readPassword();
+        assertArrayEquals(new char[] { 'b', 'a', 'r' }, password);
+        assertEquals("Expected no errors", "", new String(berr.toByteArray()));
+        assertEquals("tell me the password: \nrepeat the password: \n", new String(bout.toByteArray()));
+    }
+    
+    /*
+     * Insufficient input should not loop forever.
+     */
+    @Test
+    public void testShortReadNoConfirmation() throws IOException {
+        String input = "bar\n"; // expected password + confirmation
+        when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
+        try {
+            credsReader.readPassword();
+            fail("should not reach here");
+        } catch (IOException e) {
+            assertEquals("Unexpected EOF while reading password confirmation.", e.getMessage());
+        }
+    }
+    
+
+    @Test
+    public void testShortReadNothing() throws IOException {
+        String input = ""; // expected password + confirmation
+        when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
+        try {
+            credsReader.readPassword();
+            fail("should not reach here");
+        } catch (IOException e) {
+            assertEquals("Unexpected EOF while reading password.", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testShortReadNoMatch() throws IOException {
+        String input = "foo\nbar"; // no EOL after bar. next iteration is null password
+        when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
+        try {
+            credsReader.readPassword();
+            fail("should not reach here");
+        } catch (IOException e) {
+            assertEquals("Unexpected EOF while reading password.", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void noMatchAfter100TriesBreaksLoop() {
+        String input = build101NoMatchingPasswords("mypassword");
+        when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
+        try {
+            credsReader.readPassword();
+            fail("should not reach here");
+        } catch (IOException e) {
+            assertEquals("Tried 100 times and got invalid input each time.", e.getMessage());
+        }
+    }
+    
+    private String build101NoMatchingPasswords(String password) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 101; i++) {
+            builder.append(password + "\n");
+            builder.append(password + "-no-match\n");
+        }
+        return builder.toString();
     }
 }

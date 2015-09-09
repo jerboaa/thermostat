@@ -48,6 +48,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 class UsernameCredentialsReader {
 
+    private static final int MAX_TRIES = 100;
     private static final LocalizedString UNUSED = new LocalizedString("ignored");
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private final Console console;
@@ -65,8 +66,13 @@ class UsernameCredentialsReader {
         boolean isValid = false;
         UserCredsValidator validator = new UserCredsValidator();
         String username = null;
-        while (!isValid) {
+        int currTry = 0;
+        while (!isValid && currTry < MAX_TRIES) {
             username = getter.getUserName(null);
+            if (username == null) {
+                throw new IOException("Unexpected EOF while reading username.");
+            }
+            currTry++;
             try {
                 validator.validateUsername(username);
                 isValid = true;
@@ -74,6 +80,10 @@ class UsernameCredentialsReader {
                 printError(LocaleResources.CLI_SETUP_USERNAME_INVALID, username);
                 // continue loop
             }
+        }
+        // If we have reached maximum tries then we might still be invalid
+        if (!isValid) {
+            throw new IOException("Tried " + MAX_TRIES + " times and got invalid input each time.");
         }
         return username;
     }

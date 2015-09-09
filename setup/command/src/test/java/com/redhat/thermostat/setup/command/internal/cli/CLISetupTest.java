@@ -136,7 +136,8 @@ public class CLISetupTest {
             cliSetup.run();
             fail("Expected setup to cancel");
         } catch (CommandException e) {
-            assertEquals("Setup cancelled on user request.", e.getMessage());
+            IOException cause = (IOException)e.getCause();
+            assertEquals("Unexpected EOF while reading answer.", cause.getMessage());
         }
     }
     
@@ -214,6 +215,36 @@ public class CLISetupTest {
         assertTrue("Expected agent-user in output. Got: " + output, output.contains("agent-user"));
         assertTrue("Expected mongodb-user in output. Got: " + output, output.contains("mongodb-user"));
         assertEquals("Expected no errors", "", new String(berr.toByteArray()));
+    }
+    
+    /*
+     * Verifies that if webapp is installed but only mongodb credentials are
+     * provided, setup fails and does not loop forever. 
+     */
+    @Test
+    public void setupDoesNotLoopOnShortInput() throws CommandException {
+        String input = "yes\nmongodb-user\nfoo\nfoo\n";
+        doShortInputTest(input);
+    }
+    
+    @Test
+    public void setupDoesNotLoopOnShortInput2() throws CommandException {
+        String input = "yes\nmongodb-user\nfoo\nfoo\nsomeUser\n";
+        doShortInputTest(input);
+    }
+
+    private void doShortInputTest(String input) {
+        // simulate webapp being installed
+        when(thermostatSetup.isWebAppInstalled()).thenReturn(true);
+        
+        when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
+        try {
+            cliSetup.run();
+            fail("Expected exception due to invalid - too short - input");
+        } catch (CommandException e) {
+            IOException cause = (IOException)e.getCause();
+            assertTrue(cause.getMessage().startsWith("Unexpected EOF while reading"));
+        }
     }
     
     private CharArrayMatcher matchesPassword(char[] array) {

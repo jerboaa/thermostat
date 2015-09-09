@@ -37,6 +37,7 @@
 package com.redhat.thermostat.setup.command.internal.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -87,5 +88,40 @@ public class UsernameCredentialsReaderTest {
         assertEquals("try-second-time", username);
         assertEquals("Chosen username '' invalid!\n", new String(berr.toByteArray()));
         assertEquals("tell me the username: \ntell me the username: try-second-time\n", new String(bout.toByteArray()));
+    }
+    
+    /*
+     * Insufficient input should not loop forever.
+     */
+    @Test
+    public void testShortRead() throws IOException {
+        String input = "";
+        when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
+        try {
+            credsReader.read();
+            fail("should not reach here");
+        } catch (IOException e) {
+            assertEquals("Unexpected EOF while reading username.", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void tooManyInvalidInputsBreaksLoop() throws IOException {
+        String input = build101EmptyInputs();
+        when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
+        try {
+            credsReader.read();
+            fail("should not reach here");
+        } catch (IOException e) {
+            assertEquals("Tried 100 times and got invalid input each time.", e.getMessage());
+        }
+    }
+
+    private String build101EmptyInputs() {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 101; i++) {
+            builder.append("\n");
+        }
+        return builder.toString();
     }
 }
