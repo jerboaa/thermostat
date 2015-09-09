@@ -40,7 +40,6 @@ import junit.framework.Assert;
 
 import static org.junit.Assert.assertTrue;
 
-import java.awt.Dimension;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.SwingUtilities;
@@ -58,7 +57,6 @@ public class TreeMapToolbarTest {
     private TreeMapToolbar toolbar;
 
     private static TreeMapNode tree;
-    private static Dimension dim;
 
     @Test
     public final void testTreeMapToolbar() throws InvocationTargetException, InterruptedException {
@@ -67,8 +65,8 @@ public class TreeMapToolbarTest {
             public void run() {
                 
                 tree = new TreeMapNode(1);
-                dim = new Dimension(500, 500);
-                treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
+                treeMap = new TreeMapComponent();
+                treeMap.setModel(tree);
                 
                 boolean catched = false;
                 try {

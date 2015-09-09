@@ -101,6 +101,8 @@ public class TreeMapComponent extends JComponent {
      */
     private TreeMapNode tree;
 
+    private Dimension dimension;
+
     /**
      * Horizontal and vertical padding for nested component.
      */
@@ -177,6 +179,10 @@ public class TreeMapComponent extends JComponent {
 
     private ToolTipRenderer tooltipRenderer;
 
+    public TreeMapComponent() {
+        this(null, new Dimension(), null);
+    }
+
     public TreeMapComponent(Dimension d) {
         this(null, d, null);
     }
@@ -193,6 +199,7 @@ public class TreeMapComponent extends JComponent {
     public TreeMapComponent(TreeMapNode tree, Dimension d, ToolTipRenderer renderer) {
         super();
         Objects.requireNonNull(d);
+        this.dimension = d;
         this.tree = tree;
         lastDim = getSize();
         this.zoomStack = new Stack<>();
@@ -201,15 +208,15 @@ public class TreeMapComponent extends JComponent {
 
         if (tree != null) {
             this.zoomStack.push(this.tree);
-            processAndDrawTreeMap(d);
+            processAndDrawTreeMap();
         }
     }
 
-    public void processAndDrawTreeMap(Dimension d) {
-        Objects.requireNonNull(d);
+    public void processAndDrawTreeMap() {
+        Objects.requireNonNull(this.dimension);
         Objects.requireNonNull(this.tree);
         // assign a rectangle to the tree's root in order to process the tree.
-        Rectangle2D.Double area = new Rectangle2D.Double(0, 0, d.width, d.height);
+        Rectangle2D.Double area = new Rectangle2D.Double(0, 0, this.dimension.width, this.dimension.height);
 
         // calculate rectangles of tree's subtrees
         TreeProcessor.processTreeMap(tree, area);

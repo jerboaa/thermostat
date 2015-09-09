@@ -54,7 +54,6 @@ import com.redhat.thermostat.annotations.internal.CacioTest;
 @Category(CacioTest.class)
 public class TreeMapZoomBarTest {
 
-    private TreeMapComponent treeMap;
     @SuppressWarnings("unused")
     private TreeMapZoomBar zoomBar;
 
@@ -81,8 +80,7 @@ public class TreeMapZoomBarTest {
                 }
                 assertTrue(catched);
                 try {
-                    treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
-                    zoomBar = new TreeMapZoomBar(treeMap);
+                    zoomBar = new TreeMapZoomBar(new TreeMapComponent());
                 } catch (NullPointerException e) {
                     Assert.fail("Should not throw any exception.");
                 }

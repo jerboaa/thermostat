@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 
 import javax.swing.JPanel;
 
@@ -51,12 +50,10 @@ import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 public class SwingHeapTreeMapView extends HeapTreeMapView implements SwingComponent {
     
     private TreeMapComponent treeMap;
-    private Dimension d;
     private final JPanel panel;
     
     public SwingHeapTreeMapView() {
-        d = new Dimension();
-        treeMap = new TreeMapComponent(d);
+        treeMap = new TreeMapComponent();
         treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
 
         panel = new JPanel();
@@ -66,7 +63,7 @@ public class SwingHeapTreeMapView extends HeapTreeMapView implements SwingCompon
     @Override
     public void display(ObjectHistogram histogram) {
         treeMap.setModel(HistogramConverter.convertToTreeMap(histogram));
-        treeMap.processAndDrawTreeMap(d);
+        treeMap.processAndDrawTreeMap();
         panel.add(treeMap, BorderLayout.CENTER);
         panel.add(new TreeMapToolbar(treeMap), BorderLayout.NORTH);
     }
