@@ -70,8 +70,10 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
 import com.redhat.thermostat.client.swing.ThermostatSwingCursors;
+import com.redhat.thermostat.client.swing.internal.LocaleResources;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Size.Unit;
+import com.redhat.thermostat.shared.locale.Translate;
 
 /**
  * This class allows to represent a hierarchical data structure as a TreeMap.
@@ -79,6 +81,8 @@ import com.redhat.thermostat.common.Size.Unit;
  *
  */
 public class TreeMapComponent extends JComponent {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private static final long serialVersionUID = 1L;
 
@@ -95,7 +99,7 @@ public class TreeMapComponent extends JComponent {
     /**
      * The tree to render as TreeMap.
      */
-    TreeMapNode tree;
+    private TreeMapNode tree;
 
     /**
      * Horizontal and vertical padding for nested component.
@@ -173,34 +177,44 @@ public class TreeMapComponent extends JComponent {
 
     private ToolTipRenderer tooltipRenderer;
 
+    public TreeMapComponent(Dimension d) {
+        this(null, d, null);
+    }
+
     /**
      * Constructor. It draw a TreeMap of the given tree in according to the 
      * {@Dimension} object in input.
      * 
      * @param tree the tree to represent as TreeMap.
      * @param d the dimension the TreeMap will fulfill.
-     *
      * @param renderer
-     * @throws NullPointerException if one of the parameters is null
+     * @throws NullPointerException if the dimension is null
      */
     public TreeMapComponent(TreeMapNode tree, Dimension d, ToolTipRenderer renderer) {
         super();
-        Objects.requireNonNull(tree);
         Objects.requireNonNull(d);
         this.tree = tree;
         lastDim = getSize();
         this.zoomStack = new Stack<>();
-        this.zoomStack.push(this.tree);
         this.observers = new ArrayList<>();
         this.tooltipRenderer = renderer;
 
+        if (tree != null) {
+            this.zoomStack.push(this.tree);
+            processAndDrawTreeMap(d);
+        }
+    }
+
+    public void processAndDrawTreeMap(Dimension d) {
+        Objects.requireNonNull(d);
+        Objects.requireNonNull(this.tree);
         // assign a rectangle to the tree's root in order to process the tree.
         Rectangle2D.Double area = new Rectangle2D.Double(0, 0, d.width, d.height);
 
         // calculate rectangles of tree's subtrees
         TreeProcessor.processTreeMap(tree, area);
 
-        drawTreeMap(tree); 
+        drawTreeMap(tree);
 
         addResizeListener(this);
         repaint();
@@ -212,6 +226,12 @@ public class TreeMapComponent extends JComponent {
      */
     public TreeMapNode getTreeMapRoot() {
         return this.tree;
+    }
+
+    public void setModel(TreeMapNode tree) {
+        this.tree = Objects.requireNonNull(tree);
+        this.zoomStack.clear();
+        this.zoomStack.push(this.tree);
     }
 
     public void setToolTipRenderer(ToolTipRenderer renderer) {
@@ -343,7 +363,7 @@ public class TreeMapComponent extends JComponent {
                     Dimension newDim = container.getSize();
 
                     if (isChangedSize(newDim)) {
-                        redrawTreeMap(tree); 
+                        redrawTreeMap(Objects.requireNonNull(tree));
                     }
                 } 
             }            
@@ -388,9 +408,11 @@ public class TreeMapComponent extends JComponent {
     /**
      * This method recalculates and redraws the TreeMap in according to the size
      * of this component and the actual {@link TreeMapNode} object.
+     *
+     * Package-private for testing only.
      */
-    private void redrawTreeMap(TreeMapNode newRoot) {
-        tree = newRoot;
+    void redrawTreeMap(TreeMapNode newRoot) {
+        tree = Objects.requireNonNull(newRoot);
         Rectangle2D.Double newArea = tree.getRectangle();
         // give to the root node the size of this object so it can be recalculated
         newArea.width = getSize().width;
@@ -405,7 +427,7 @@ public class TreeMapComponent extends JComponent {
 
     boolean isZoomInEnabled(TreeMapNode node) {
         return !(node == null
-                || node.equals(this.tree)
+                || node.equals(Objects.requireNonNull(this.tree))
                 || node.isLeaf());
     }
 
@@ -676,7 +698,7 @@ public class TreeMapComponent extends JComponent {
         public void setNode(TreeMapNode node) {
             this.node = node;
             this.color = node.getColor();
-            this.setToolTipText(TreeMapComponent.this.tooltipRenderer.render(node));
+            this.setToolTipText(Objects.requireNonNull(TreeMapComponent.this.tooltipRenderer).render(node));
         }
         
         public TreeMapNode getNode() {

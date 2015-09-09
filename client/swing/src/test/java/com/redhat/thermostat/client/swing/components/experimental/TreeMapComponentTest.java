@@ -50,8 +50,13 @@ import javax.swing.SwingUtilities;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.redhat.thermostat.client.swing.internal.LocaleResources;
+import com.redhat.thermostat.shared.locale.Translate;
+
 
 public class TreeMapComponentTest {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private TreeMapComponent treeMap;
     private static TreeMapNode tree;
@@ -77,36 +82,74 @@ public class TreeMapComponentTest {
             @Override
             public void run() {
 
-                boolean catched = false;
+                boolean caught = false;
+
+                try {
+                    treeMap = new TreeMapComponent(dim);
+                } catch (NullPointerException e) {
+                    Assert.fail("Didn't expect exception.");
+                }
+                try {
+                    treeMap = new TreeMapComponent(null);
+                } catch (NullPointerException e) {
+                    caught = true;
+                }
+                assertTrue(caught);
+                caught = false;
 
                 try {
                     treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
                     // pass
-                 } catch(NullPointerException e) {
+                } catch (NullPointerException e) {
                     Assert.fail("Didn't expect exception.");
-                 }
+                }
                 try {
                     treeMap = new TreeMapComponent(null, null, new TreeMapComponent.WeightAsSizeRenderer());
-                } catch(NullPointerException e) {
-                    catched = true;
+                } catch (NullPointerException e) {
+                    caught = true;
                 }
-                assertTrue(catched);
-                catched = false;
+                assertTrue(caught);
+                caught = false;
 
                 try {
                     treeMap = new TreeMapComponent(tree, null, new TreeMapComponent.WeightAsSizeRenderer());
-                } catch(NullPointerException e) {
-                    catched = true;
+                } catch (NullPointerException e) {
+                    caught = true;
                 }
-                assertTrue(catched);
-                catched = false;
+                assertTrue(caught);
+            }
+        });
+    }
+
+    @Test
+    public final void testProcessAndDrawTreeMap() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
+                    treeMap.processAndDrawTreeMap(dim);
+                } catch (NullPointerException e) {
+                    Assert.fail("Didn't expect exception.");
+                }
+
+                boolean caught = false;
+                try {
+                    treeMap = new TreeMapComponent(dim);
+                    treeMap.processAndDrawTreeMap(dim);
+                } catch (NullPointerException e) {
+                    caught = true;
+                }
+                assertTrue(caught);
+                caught = false;
 
                 try {
-                    treeMap = new TreeMapComponent(null, dim, new TreeMapComponent.WeightAsSizeRenderer());
-                } catch(NullPointerException e) {
-                    catched = true;
+                    treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
+                    treeMap.processAndDrawTreeMap(null);
+                } catch (NullPointerException e) {
+                    caught = true;
                 }
-                assertTrue(catched);
+                assertTrue(caught);
             }
         });
     }
@@ -124,7 +167,69 @@ public class TreeMapComponentTest {
     }
 
     @Test
+    public final void testSetModel() {
+        try {
+            treeMap = new TreeMapComponent(dim);
+            treeMap.setModel(tree);
+        } catch (NullPointerException e) {
+            Assert.fail("Didn't expect exception.");
+        }
+
+        boolean caught = false;
+        try {
+            treeMap = new TreeMapComponent(dim);
+            treeMap.setModel(null);
+        } catch (NullPointerException e) {
+            caught = true;
+        }
+        assertTrue(caught);
+    }
+
+    @Test
+    public final void testRedrawTreeMap() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    treeMap = new TreeMapComponent(dim);
+                    treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
+                    treeMap.redrawTreeMap(node1);
+                } catch (NullPointerException e) {
+                    Assert.fail("Didn't expect exception.");
+                }
+
+                boolean caught = false;
+                try {
+                    treeMap = new TreeMapComponent(dim);
+                    treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
+                    treeMap.redrawTreeMap(null);
+                } catch (NullPointerException e) {
+                    caught = true;
+                }
+                assertTrue(caught);
+            }
+        });
+    }
+
+    @Test
     public final void testIsZoomInEnabled() throws InvocationTargetException, InterruptedException {
+        try {
+            treeMap = new TreeMapComponent(dim);
+            treeMap.setModel(tree);
+            treeMap.isZoomInEnabled(node1);
+        } catch (NullPointerException e) {
+            Assert.fail("Didn't expect exception.");
+        }
+
+        boolean caught = false;
+        try {
+            treeMap = new TreeMapComponent(dim);
+            treeMap.isZoomInEnabled(node1);
+        } catch (NullPointerException e) {
+            caught = true;
+        }
+        assertTrue(caught);
+
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
@@ -216,7 +321,6 @@ public class TreeMapComponentTest {
         });
     }
 
-
     @Test
     public final void testClearZoomCallsStack() throws InvocationTargetException, InterruptedException {
         SwingUtilities.invokeAndWait(new Runnable() {
@@ -235,30 +339,30 @@ public class TreeMapComponentTest {
             }
         });
     }
-    
+
     @Test
     public final void testObserver() throws InvocationTargetException, InterruptedException {
         SwingUtilities.invokeAndWait(new Runnable() {
             boolean zoomedIn = false;
             boolean zoomedOut = false;
             boolean zoomedFull = false;
-            
+
             TreeMapObserver observer = new TreeMapObserver() {
                 @Override
                 public void notifyZoomOut() {
                     zoomedOut = true;
                 }
-                
+
                 @Override
                 public void notifyZoomIn(TreeMapNode node) {
                     zoomedIn = true;
                 }
-                
+
                 @Override
                 public void notifyZoomFull() {
                     zoomedFull = true;
                 }
-                
+
                 @Override
                 public void notifySelection(TreeMapNode node) {
                 }
@@ -273,21 +377,43 @@ public class TreeMapComponentTest {
 
                 treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
                 treeMap.register(observer);
-                
+
                 treeMap.zoomIn(child);
                 assertTrue("Should have zoomed in on child", zoomedIn);
                 zoomedIn = false;
 
                 treeMap.zoomIn(grandchild);
                 assertFalse("Should not have zoomed in on grandchild", zoomedIn);
-                
+
                 treeMap.zoomOut();
                 assertTrue("Should have zoomed out", zoomedOut);
-                
+
                 treeMap.zoomIn(child);
                 treeMap.zoomFull();
                 assertTrue("Should have zoomed full", zoomedFull);
             }
         });
+    }
+
+    @Test
+    public final void testSetNode() {
+        try {
+            treeMap = new TreeMapComponent(dim);
+            treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
+            TreeMapComponent.Comp comp = treeMap.new Comp();
+            comp.setNode(node1);
+        } catch (NullPointerException e) {
+            Assert.fail("Didn't expect exception.");
+        }
+
+        boolean caught = false;
+        try {
+            treeMap = new TreeMapComponent(dim);
+            TreeMapComponent.Comp comp = treeMap.new Comp();
+            comp.setNode(node1);
+        } catch (NullPointerException e) {
+            caught = true;
+        }
+        assertTrue(caught);
     }
 }
