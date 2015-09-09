@@ -346,10 +346,19 @@ public class SetupWindow {
         finishAction = new SwingWorker<IOException, Void>() {
             @Override
             public IOException doInBackground() {
-                frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                startView.disableButtons();
-                mongoUserSetupView.disableButtons();
-                userPropertiesView.disableButtons();
+                try {
+                    doSynchronouslyOnEdt(new Runnable() {
+                        @Override
+                        public void run() {
+                            frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            startView.disableButtons();
+                            mongoUserSetupView.disableButtons();
+                            userPropertiesView.disableButtons();
+                        }
+                    });
+                } catch (InvocationTargetException | InterruptedException e) {
+                    e.printStackTrace();
+                }
                 thermostatSetup.createMongodbUser(storageUsername, storagePassword);
                 try {
                     if (thermostatSetup.isWebAppInstalled()) {
