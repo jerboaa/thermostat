@@ -41,7 +41,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -87,11 +89,18 @@ import com.redhat.thermostat.utils.keyring.Keyring;
  */
 public class LauncherImpl implements Launcher {
 
+    private static final Set<String> HELP_SET;
     private static final String HELP_COMMAND_NAME = "help";
+    private static final String HELP_OPTION = "--help";
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(LauncherImpl.class);
 
+    static {
+        HELP_SET = new HashSet<>();
+        HELP_SET.add(HELP_COMMAND_NAME);
+        HELP_SET.add(HELP_OPTION);
+    }
     private final AtomicInteger usageCount = new AtomicInteger(0);
     private final BundleContext context;
     private final BundleManager registry;
@@ -155,7 +164,7 @@ public class LauncherImpl implements Launcher {
                 cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
             } else {
                 // With web-always-on we need to make sure that the setup ran.
-                if (isThermostatConfigured()) {
+                if (isSomeHelpInvocation(args) || isThermostatConfigured()) {
                     logger.log(Level.FINE, "Running command without setup interception.");
                     runCommandFromArguments(args, listeners, inShell);
                 } else {
@@ -185,6 +194,15 @@ public class LauncherImpl implements Launcher {
         }
     }
     
+    private boolean isSomeHelpInvocation(String[] args) {
+        for (String arg: args) {
+            if (HELP_SET.contains(arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void runSetupThenInterceptedCommand(String[] originalCmdArgs) {
         String origCmdArgs = convertOriginalArgsToString(originalCmdArgs);
         String[] setupArgs = { "setup",
@@ -271,7 +289,7 @@ public class LauncherImpl implements Launcher {
 
     private void runCommand(String cmdName, String[] cmdArgs, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
         // treat 'foo --help' as 'help foo'
-        if (!cmdName.equals(HELP_COMMAND_NAME) && Arrays.asList(cmdArgs).contains("--help")) {
+        if (!cmdName.equals(HELP_COMMAND_NAME) && Arrays.asList(cmdArgs).contains(HELP_OPTION)) {
             runCommand(HELP_COMMAND_NAME, new String[] { cmdName } , listeners, inShell);
             return;
         }

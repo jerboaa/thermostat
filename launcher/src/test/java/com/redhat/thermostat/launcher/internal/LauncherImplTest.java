@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -48,11 +49,9 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -61,8 +60,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -152,6 +149,7 @@ public class LauncherImplTest {
     private CurrentEnvironment environment;
     private CommonPaths paths;
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws CommandInfoNotFoundException, BundleException, IOException {
         setupCommandContextFactory();
@@ -610,6 +608,7 @@ public class LauncherImplTest {
 
     @Test
     public void verifyListenersAdded() {
+        @SuppressWarnings("unchecked")
         ActionListener<ApplicationState> listener = mock(ActionListener.class);
         Collection<ActionListener<ApplicationState>> listeners = new ArrayList<>();
         listeners.add(listener);
@@ -684,7 +683,7 @@ public class LauncherImplTest {
     @Test
     public void verifyOriginalCmdArgsArePassedOnToSetup() {
         String[] argsList = new String[] { "list-vms", "--dbUrl=foo" };
-        List<Pair<String[], Boolean>> resultList = doOriginalCmdArgsArePassedOnToSetupTest(argsList);
+        List<Pair<String[], Boolean>> resultList = runAsUnconfiguredThermostat(argsList);
         assertEquals("Expected to run only setup", 1, resultList.size());
         Pair<String[], Boolean> actual = resultList.get(0);
         assertFalse("Expected to run outside shell", actual.getSecond());
@@ -695,7 +694,7 @@ public class LauncherImplTest {
     @Test
     public void verifyOriginalCmdArgsArePassedOnToSetup2() {
         String[] argsList = new String[] { "web-storage-service" };
-        List<Pair<String[], Boolean>> resultList = doOriginalCmdArgsArePassedOnToSetupTest(argsList);
+        List<Pair<String[], Boolean>> resultList = runAsUnconfiguredThermostat(argsList);
         assertEquals("Expected to run only setup", 1, resultList.size());
         Pair<String[], Boolean> actual = resultList.get(0);
         assertFalse("Expected to run outside shell", actual.getSecond());
@@ -703,7 +702,35 @@ public class LauncherImplTest {
         assertArrayEquals(expectedList, actual.getFirst());
     }
     
-    private List<Pair<String[], Boolean>> doOriginalCmdArgsArePassedOnToSetupTest(String[] args) {
+    /*
+     * Bash completion uses help which expects help to always run
+     * (no setup required).
+     */
+    @Test
+    public void verifyHelpIsNotRunThroughSetupHook() {
+        String[] argsList = new String[] { "help" };
+        
+        List<Pair<String[], Boolean>> resultList = runAsUnconfiguredThermostat(argsList);
+        assertEquals("Expected to run only help", 1, resultList.size());
+        Pair<String[], Boolean> actual = resultList.get(0);
+        assertFalse("Expected to run outside shell", actual.getSecond());
+        String[] expectedList = new String[] { "help" };
+        assertArrayEquals(expectedList, actual.getFirst());
+    }
+    
+    @Test
+    public void verifyCommandHelpOptionIsNotRunThroughSetupHook() {
+        String[] argsList = new String[] { "web-storage-service", "--help" };
+        
+        List<Pair<String[], Boolean>> resultList = runAsUnconfiguredThermostat(argsList);
+        assertEquals("Expected to run only web-storage-service --help", 1, resultList.size());
+        Pair<String[], Boolean> actual = resultList.get(0);
+        assertFalse("Expected to run outside shell", actual.getSecond());
+        String[] expectedList = new String[] { "web-storage-service", "--help" };
+        assertArrayEquals(expectedList, actual.getFirst());
+    }
+    
+    private List<Pair<String[], Boolean>> runAsUnconfiguredThermostat(String[] args) {
         CommonPaths setupPaths = mock(CommonPaths.class);
         File mockFile = mock(File.class);
         when(mockFile.exists()).thenReturn(false);
@@ -726,13 +753,6 @@ public class LauncherImplTest {
         
         wrappedRun(launcher, args, false, null);
         return runList;
-    }
-    
-    private void assertArrayEquals(String[] expected, String[] actual) {
-        assertTrue(expected.length == actual.length);
-        for (int i = 0; i < expected.length; i++) {
-            assertEquals(expected[i], actual[i]);
-        }
     }
     
     private static class TestLogHandler extends Handler {

@@ -63,12 +63,8 @@ function __print_completions {
 
 function __init {
     USER_THERMOSTAT_HOME="$TARGET/bash-completion-test-user-home"
-    echo "Skipping initial thermostat setup..."
-    mkdir -p $USER_THERMOSTAT_HOME/data
     echo "Exporting custom home..."
     export USER_THERMOSTAT_HOME
-    touch ${USER_THERMOSTAT_HOME}/data/setup-complete.stamp
-
     echo "Checking that help works..."
     ${TARGET}/image/bin/thermostat help >/dev/null
 
