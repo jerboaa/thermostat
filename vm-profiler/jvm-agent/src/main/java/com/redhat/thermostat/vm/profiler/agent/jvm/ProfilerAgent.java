@@ -91,7 +91,7 @@ public class ProfilerAgent {
                 }
                 System.out.println("AGENT: Added '" + jarPath + "' to " + (addToBoot ? "bootstrap" : "system") + " classpath");
             } catch (IOException e) {
-                throw new AssertionError(jarFile + " not found!");
+                throw new AssertionError(jarPath + " not found!");
             }
         }
     }
