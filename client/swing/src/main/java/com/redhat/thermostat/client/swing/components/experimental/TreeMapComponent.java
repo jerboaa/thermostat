@@ -120,23 +120,15 @@ public class TreeMapComponent extends JComponent {
      */
     private static final String TITLE = "";
 
-    /**
-     * TreeMap UI Constraint.
+    /*
+     * TreeMap border styles
      */
-    public static final int SIMPLE = 0;
-    public static final int FLAT = 1;
-    public static final int ETCHED_LOWERED = 2;
-    public static final int ETCHED_RAISED = 3;
+    public static final int BORDER_SIMPLE = 0;
+    public static final int BORDER_FLAT = 1;
+    public static final int BORDER_ETCHED_LOWERED = 2;
+    public static final int BORDER_ETCHED_RAISED = 3;
 
-    /**
-     * Stores the chosen UI mode.
-     */
-    private int borderStyle = ETCHED_LOWERED;
-
-    /**
-     * The components' border
-     */
-    private Border defaultBorder;
+    private int borderStyle = BORDER_ETCHED_LOWERED;
 
     /**
      * Font and size for this component's label.
@@ -578,31 +570,35 @@ public class TreeMapComponent extends JComponent {
     }
 
     /**
-     * Switch the component's visualization mode to the one given in input. 
-     * Use static constraints to set correctly a visualization mode.
-     * @param UIMode the UI visualization mode to set.
+     * Switch the component's border style to the one given in input.
+     *
+     * @param borderStyle the border style to use
      */
-    public void setBorderStyle(int UIMode) {
-        this.borderStyle = UIMode;
-        switch (borderStyle) {
-            case 1 : {
-                defaultBorder = new EmptyBorder(0, 0, 0, 0);
+    public void setBorderStyle(int newBorderStyle) {
+        Border border;
+        switch (newBorderStyle) {
+            case BORDER_SIMPLE : {
+                border = new EmptyBorder(0, 0, 0, 0);
                 break;
             }    
-            case 2 : {                
-                defaultBorder = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED, Color.white, Color.darkGray);
+            case BORDER_FLAT : {
+                border = new LineBorder(Color.black, 1);
                 break;
             }
-            case 3 : {
-                defaultBorder = BorderFactory.createEtchedBorder(EtchedBorder.RAISED, Color.white, Color.darkGray);
+            case BORDER_ETCHED_LOWERED : {
+                border = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED, Color.white, Color.darkGray);
                 break;
             }
+            case BORDER_ETCHED_RAISED : {
+                border = BorderFactory.createEtchedBorder(EtchedBorder.RAISED, Color.white, Color.darkGray);
+                 break;
+             }
             default : {
-                defaultBorder = new LineBorder(Color.black, 1);
-                break;
+                throw new IllegalArgumentException("Unknown border style: " + newBorderStyle);
             }
         }
-        applyBorderToSubtree(mainComp);
+        this.borderStyle = newBorderStyle;
+        applyBorderToSubtree(mainComp, border);
     }
     
     /**
@@ -610,12 +606,12 @@ public class TreeMapComponent extends JComponent {
      * the default border.
      * @param comp the subtree's root from which apply the border style.
      */
-    private void applyBorderToSubtree(Comp comp) {
-        comp.setBorder(defaultBorder);
+    private void applyBorderToSubtree(Comp comp, Border border) {
+        comp.setBorder(border);
         Component[] children = comp.getComponents();
         for (int i = 0; i < children.length; i++) {
             if (children[i] instanceof Comp) {
-                applyBorderToSubtree((Comp) children[i]);
+                applyBorderToSubtree((Comp) children[i], border);
             }
         }
     }

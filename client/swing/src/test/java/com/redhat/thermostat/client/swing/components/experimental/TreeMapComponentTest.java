@@ -36,23 +36,25 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
-import junit.framework.Assert;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.lang.reflect.InvocationTargetException;
 
+import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.swing.internal.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
-
 
 public class TreeMapComponentTest {
 
@@ -427,4 +429,34 @@ public class TreeMapComponentTest {
         }
         assertTrue(caught);
     }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                JFrame mainWindow = new JFrame();
+                mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+                TreeMapNode node = new TreeMapNode("test1", 1.0);
+
+                // FIXME this hack should not be needed
+                UIManager.put("thermostat-default-font", Font.decode(Font.MONOSPACED));
+
+                TreeMapComponent treeMap = new TreeMapComponent();
+                // FIXME the default renderer should not be null
+                treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
+                treeMap.setModel(node);
+
+                // FIXME no other swing component needs the following:
+                treeMap.processAndDrawTreeMap();
+
+                mainWindow.add(treeMap, BorderLayout.CENTER);
+
+                mainWindow.setSize(400, 200);
+                mainWindow.setVisible(true);
+            }
+        });
+    }
+
 }
