@@ -488,9 +488,9 @@ public class TreeMapComponent extends JComponent {
     public void unregister(TreeMapObserver observer) {
         this.observers.remove(observer);
     }
+
     /**
      * Notify observers that an object in the TreeMap has been selected.
-     * @param comp the selected component.
      */
     private void notifySelectionToObservers(TreeMapNode node) {
         for (TreeMapObserver observer : observers) {
@@ -499,8 +499,7 @@ public class TreeMapComponent extends JComponent {
     }
 
     /**
-     * Notify observers that  TreeMap has been zoomed.
-     * @param zoomedComponent 
+     * Notify observers that TreeMap has been zoomed.
      */
     private void notifyZoomInToObservers(TreeMapNode node) {
         for (TreeMapObserver observer : observers) {
@@ -510,7 +509,6 @@ public class TreeMapComponent extends JComponent {
     
     /**
      * Notify observers that  TreeMap has been zoomed.
-     * @param zoomedComponent 
      */
     private void notifyZoomOutToObservers() {
         for (TreeMapObserver observer : observers) {
@@ -520,15 +518,12 @@ public class TreeMapComponent extends JComponent {
     
     /**
      * Notify observers that  TreeMap has been zoomed.
-     * @param zoomedComponent 
      */
     private void notifyZoomFullToObservers() {
         for (TreeMapObserver observer : observers) {
             observer.notifyZoomFull();
         }
     }
-    
-    
 
     /**
      * Returns the list of zoom operation calls.
@@ -585,7 +580,7 @@ public class TreeMapComponent extends JComponent {
     /**
      * Switch the component's visualization mode to the one given in input. 
      * Use static constraints to set correctly a visualization mode.
-     * @param constraint the UI visualization mode to set.
+     * @param UIMode the UI visualization mode to set.
      */
     public void setBorderStyle(int UIMode) {
         this.borderStyle = UIMode;
