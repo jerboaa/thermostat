@@ -39,6 +39,7 @@ package com.redhat.thermostat.setup.command.internal.cli;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,21 +53,21 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class CLISetup {
-    
+
     private static final Logger logger = LoggingUtils.getLogger(CLISetup.class);
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private final ThermostatSetup thermostatSetup;
     private final Console console;
     private final PrintWriter outWriter;
     private final PrintWriter errWriter;
-    
+
     public CLISetup(ThermostatSetup setup, Console console) {
         this.thermostatSetup = setup;
         this.console = console;
         this.outWriter = new PrintWriter(console.getOutput());
         this.errWriter = new PrintWriter(console.getError());
     }
-    
+
     public void run() throws CommandException {
         runSetup();
         println(LocaleResources.CLI_SETUP_FINISH_SUCCESS);
@@ -92,24 +93,47 @@ public class CLISetup {
 
     // package-private for testing
     void readThermostatUserCredentials() throws IOException {
+        String clientUsername;
+        char[] clientPassword;
+        String agentUsername;
+        char[] agentPassword;
+        boolean isValid = false;
+
         println(LocaleResources.CLI_SETUP_THERMOSTAT_USER_CREDS_INTRO);
-        LocalizedString clientUsernamePrompt = t.localize(LocaleResources.CLI_SETUP_THERMOSTAT_CLIENT_USERNAME_PROMPT);
-        UsernameCredentialsReader clientUserReader = new UsernameCredentialsReader(console, clientUsernamePrompt);
-        String clientUsername = clientUserReader.read();
-        LocalizedString passwordPrompt = t.localize(LocaleResources.CLI_SETUP_PASSWORD_PROMPT, clientUsername);
-        LocalizedString passwordPromptRepeat = t.localize(LocaleResources.CLI_SETUP_PASSWORD_REPEAT_PROMPT, clientUsername);
-        PasswordCredentialsReader clientPasswordReader = new PasswordCredentialsReader(console, passwordPrompt, passwordPromptRepeat);
-        char[] clientPassword = clientPasswordReader.readPassword();
+        do {
+            LocalizedString clientUsernamePrompt = t.localize(LocaleResources.CLI_SETUP_THERMOSTAT_CLIENT_USERNAME_PROMPT);
+            UsernameCredentialsReader clientUserReader = new UsernameCredentialsReader(console, clientUsernamePrompt);
+            clientUsername = clientUserReader.read();
+            LocalizedString passwordPrompt = t.localize(LocaleResources.CLI_SETUP_PASSWORD_PROMPT, clientUsername);
+            LocalizedString passwordPromptRepeat = t.localize(LocaleResources.CLI_SETUP_PASSWORD_REPEAT_PROMPT, clientUsername);
+            PasswordCredentialsReader clientPasswordReader = new PasswordCredentialsReader(console, passwordPrompt, passwordPromptRepeat);
+            clientPassword = clientPasswordReader.readPassword();
+
+            LocalizedString agentUsernamePrompt = t.localize(LocaleResources.CLI_SETUP_THERMOSTAT_AGENT_USERNAME_PROMPT);
+            UsernameCredentialsReader agentUserReader = new UsernameCredentialsReader(console, agentUsernamePrompt);
+            agentUsername = agentUserReader.read();
+            passwordPrompt = t.localize(LocaleResources.CLI_SETUP_PASSWORD_PROMPT, agentUsername);
+            passwordPromptRepeat = t.localize(LocaleResources.CLI_SETUP_PASSWORD_REPEAT_PROMPT, agentUsername);
+            PasswordCredentialsReader agentPasswordReader = new PasswordCredentialsReader(console, passwordPrompt, passwordPromptRepeat);
+            agentPassword = agentPasswordReader.readPassword();
+
+            try {
+                checkUsernamesNotIdentical(clientUsername, agentUsername);
+                isValid = true;
+            } catch (IdenticalUsernameException e) {
+                Arrays.fill(clientPassword, '\0');
+                Arrays.fill(agentPassword, '\0');
+                printErr(LocaleResources.CLI_SETUP_USERNAMES_IDENTICAL, clientUsername);
+            }
+        } while (!isValid);
         thermostatSetup.createClientAdminUser(clientUsername, clientPassword);
-        
-        LocalizedString agentUsernamePrompt = t.localize(LocaleResources.CLI_SETUP_THERMOSTAT_AGENT_USERNAME_PROMPT);
-        UsernameCredentialsReader agentUserReader = new UsernameCredentialsReader(console, agentUsernamePrompt);
-        String agentUsername = agentUserReader.read();
-        passwordPrompt = t.localize(LocaleResources.CLI_SETUP_PASSWORD_PROMPT, agentUsername);
-        passwordPromptRepeat = t.localize(LocaleResources.CLI_SETUP_PASSWORD_REPEAT_PROMPT, agentUsername);
-        PasswordCredentialsReader agentPasswordReader = new PasswordCredentialsReader(console, passwordPrompt, passwordPromptRepeat);
-        char[] agentPassword = agentPasswordReader.readPassword();
         thermostatSetup.createAgentUser(agentUsername, agentPassword);
+    }
+
+    void checkUsernamesNotIdentical(String first, String second) throws IdenticalUsernameException {
+        if (first.equals(second)) {
+            throw new IdenticalUsernameException();
+        }
     }
 
     // package-private for testing
@@ -126,10 +150,8 @@ public class CLISetup {
     }
 
     /**
-     * 
      * @return {@code true} if user wants to continue, {@code false} otherwise.
-     * 
-     * @throws IOException 
+     * @throws IOException
      */
     private boolean readContinueAnswer() throws IOException {
         final String localizedProceedToken = t.localize(LocaleResources.CLI_SETUP_PROCEED_WORD).getContents();
@@ -155,12 +177,12 @@ public class CLISetup {
         logger.log(Level.WARNING, "Tried " + maxTries + " times with invalid input. Cancelling.");
         return false;
     }
-    
+
     private String readLine(InputStream in) throws IOException {
         int c;
         StringBuilder builder = new StringBuilder();
         while ((c = in.read()) != -1) {
-            char token = (char)c;
+            char token = (char) c;
             if (token == '\n') {
                 break;
             }
@@ -173,12 +195,12 @@ public class CLISetup {
         String userGuideURL = new ApplicationInfo().getUserGuide();
         println(LocaleResources.CLI_SETUP_INTRO, userGuideURL);
     }
-    
+
     private void println(LocaleResources resource, String... strings) {
         outWriter.println(t.localize(resource, strings).getContents());
         outWriter.flush();
     }
-    
+
     private void print(LocaleResources resource, String... strings) {
         outWriter.print(t.localize(resource, strings).getContents());
         outWriter.flush();
@@ -187,5 +209,10 @@ public class CLISetup {
     private void printErr(LocaleResources resource, String... strings) {
         errWriter.println(t.localize(resource, strings).getContents());
         errWriter.flush();
+    }
+
+    @SuppressWarnings("serial")
+    private static class IdenticalUsernameException extends Exception {
+        // nothing
     }
 }

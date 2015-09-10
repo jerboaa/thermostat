@@ -119,7 +119,20 @@ public class UserPropertiesView extends JPanel implements SetupView {
         agentInfoPanel = new InputCredentialPanel(
             translator.localize(LocaleResources.AGENT_CRED_TITLE).getContents(),
             translator.localize(LocaleResources.AGENT_HELP_INFO).getContents(),
-            translator.localize(LocaleResources.AGENT_USER_PREFIX).getContents());
+            translator.localize(LocaleResources.AGENT_USER_PREFIX).getContents()) {
+
+            @Override
+            public boolean isInputValid() {
+                // show additional error message to indicate that the chosen
+                // agent username cannot be identical to the client username
+                if (getUsername().equals(clientInfoPanel.getUsername())) {
+                    setErrorMessage(translator.localize(LocaleResources.USERNAMES_IDENTICAL).getContents());
+                    return false;
+                } else {
+                    return super.isInputValid();
+                }
+            }
+        };
 
         midPanel = new JPanel();
         midPanel.setLayout(new BoxLayout(midPanel, BoxLayout.PAGE_AXIS));

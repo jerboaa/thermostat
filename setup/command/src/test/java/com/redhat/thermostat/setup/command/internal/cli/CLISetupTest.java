@@ -109,7 +109,7 @@ public class CLISetupTest {
         byte[] buf = new byte[input.length()];
         int retval = mockInStream.read(buf, 3, input.length() - 3);
         assertEquals("Read more bytes than are needed!", input.length() - 3, retval);
-        assertEquals("Expected 'e' from somethingMor(e)", 'e', (char)buf[input.length() - 2]);
+        assertEquals("Expected 'e' from somethingMor(e)", 'e', (char) buf[input.length() - 2]);
     }
     
     @Test
@@ -180,6 +180,21 @@ public class CLISetupTest {
         assertTrue("Expected client-user in output. Got: " + output, output.contains("client-user"));
         assertTrue("Expected agent-user in output. Got: " + output, output.contains("agent-user"));
         assertEquals("Expected no errors", "", new String(berr.toByteArray()));
+    }
+
+    @Test
+    public void testReadThermostatCredsWithIdenticalUsernames() throws IOException {
+        String incorrectInput = "identical-user\nt\nt\nidentical-user\nb\nb\n";
+        String correctInput = "client-user\nt\nt\nagent-user\nb\nb\n";
+        ByteArrayInputStream mockInStream = new ByteArrayInputStream((incorrectInput + correctInput).getBytes());
+        when(console.getInput()).thenReturn(mockInStream);
+        cliSetup.readThermostatUserCredentials();
+        verify(thermostatSetup).createAgentUser(eq("agent-user"), argThat(matchesPassword(new char[] {'b'})));
+        verify(thermostatSetup).createClientAdminUser(eq("client-user"), argThat(matchesPassword(new char[] {'t'})));
+        String output = new String(bout.toByteArray());
+        assertTrue("Expected client-user in output. Got: " + output, output.contains("client-user"));
+        assertTrue("Expected agent-user in output. Got: " + output, output.contains("agent-user"));
+        assertEquals("Both client and agent usernames cannot be 'identical-user'!\n", new String(berr.toByteArray()));
     }
     
     @Test

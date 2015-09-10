@@ -210,6 +210,12 @@ public class InputCredentialPanel extends CredentialPanel {
         this.repaint();
     }
 
+    public void setErrorMessage(String message) {
+        errorMessage.setText(message);
+        this.revalidate();
+        this.repaint();
+    }
+
     public boolean isInputValid() {
         //ensure credentials are not empty
         try {
