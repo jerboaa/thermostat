@@ -60,7 +60,6 @@ public class SetupCompleteView extends JPanel implements SetupView {
     private DisplayCredentialPanel clientInfoPanel;
     private DisplayCredentialPanel agentInfoPanel;
     private static final String THERMOSTAT_LOGO = "thermostat.png";
-    private static final String PROGRESS = "Step 2 of 2";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     public SetupCompleteView(LayoutManager layout) {
@@ -85,7 +84,7 @@ public class SetupCompleteView extends JPanel implements SetupView {
 
     @Override
     public void setProgress(JLabel progress) {
-        progress.setText(PROGRESS);
+        progress.setText(translator.localize(LocaleResources.STEP_X_OF_Y, "2", "2").getContents());
     }
 
     public void createMidPanel() {

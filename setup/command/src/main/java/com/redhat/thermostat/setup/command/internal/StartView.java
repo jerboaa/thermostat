@@ -81,9 +81,6 @@ public class StartView extends JPanel implements SetupView {
 
     private static final String THERMOSTAT_LOGO = "thermostat.png";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    private static final String SHOW_MORE = "Show More";
-    private static final String SHOW_LESS = "Show Less";
-    private static final String PROGRESS_FORMAT = "Step 1 of %s";
 
     public StartView(LayoutManager layout, ThermostatSetup thermostatSetup) {
         super(layout);
@@ -102,12 +99,12 @@ public class StartView extends JPanel implements SetupView {
     public void setProgress(JLabel progress) {
         int totalSteps = 2;
         if (quickSetupBtn.isSelected()) {
-            progress.setText(String.format(PROGRESS_FORMAT, totalSteps));
+            progress.setText(translator.localize(LocaleResources.STEP_X_OF_Y, "1", String.valueOf(totalSteps)).getContents());
         } else {
             if (thermostatSetup.isWebAppInstalled()) {
                 totalSteps++;
             }
-            progress.setText(String.format(PROGRESS_FORMAT, totalSteps));
+            progress.setText(translator.localize(LocaleResources.STEP_X_OF_Y, "1", String.valueOf(totalSteps)).getContents());
         }
     }
 
@@ -195,10 +192,10 @@ public class StartView extends JPanel implements SetupView {
         text.append("<html>");
         if (setDetailed) {
             text.append(translator.localize(LocaleResources.THERMOSTAT_BLURB).getContents());
-            moreInfoBtn.setText(SHOW_LESS);
+            moreInfoBtn.setText(translator.localize(LocaleResources.SHOW_LESS).getContents());
         } else {
             text.append(translator.localize(LocaleResources.THERMOSTAT_BRIEF).getContents());
-            moreInfoBtn.setText(SHOW_MORE);
+            moreInfoBtn.setText(translator.localize(LocaleResources.SHOW_MORE).getContents());
         }
         text.append("<center><a href=\"\">")
             .append(userGuideURL)

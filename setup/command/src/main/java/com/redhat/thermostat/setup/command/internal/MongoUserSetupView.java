@@ -69,7 +69,6 @@ public class MongoUserSetupView extends JPanel implements SetupView {
     private InputCredentialPanel credentialPanel;
 
     private static final String THERMOSTAT_LOGO = "thermostat.png";
-    private static final String PROGRESS_FORMAT = "Step 2 of %s";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     public MongoUserSetupView(LayoutManager layout, ThermostatSetup setup) {
@@ -94,7 +93,7 @@ public class MongoUserSetupView extends JPanel implements SetupView {
         if (thermostatSetup.isWebAppInstalled()) {
             totalSteps++;
         }
-        progress.setText(String.format(PROGRESS_FORMAT, totalSteps));
+        progress.setText(translator.localize(LocaleResources.STEP_X_OF_Y, "2", String.valueOf(totalSteps)).getContents());
     }
 
     private void createMidPanel() {

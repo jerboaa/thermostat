@@ -65,7 +65,6 @@ public class UserPropertiesView extends JPanel implements SetupView {
     private InputCredentialPanel agentInfoPanel;
 
     private static final String THERMOSTAT_LOGO = "thermostat.png";
-    private static final String PROGRESS = "Step 3 of 3";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     public UserPropertiesView(LayoutManager layout) {
@@ -108,7 +107,7 @@ public class UserPropertiesView extends JPanel implements SetupView {
 
     @Override
     public void setProgress(JLabel progress) {
-        progress.setText(PROGRESS);
+        progress.setText(translator.localize(LocaleResources.STEP_X_OF_Y, "3", "3").getContents());
     }
 
     public void createMidPanel() {
