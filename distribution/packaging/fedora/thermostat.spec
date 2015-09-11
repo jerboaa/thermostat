@@ -487,10 +487,10 @@ security.
 #%%pom_remove_dep org.jboss.netty:netty 
 %pom_remove_dep org.jboss.netty:netty common/command
 %pom_remove_dep org.jboss.netty:netty client/command
-%pom_remove_dep org.jboss.netty:netty agent/command
+%pom_remove_dep org.jboss.netty:netty agent/command-server
 %pom_add_dep io.netty:netty:%{netty_bundle_version} common/command
 %pom_add_dep io.netty:netty:%{netty_bundle_version} client/command
-%pom_add_dep io.netty:netty:%{netty_bundle_version} agent/command
+%pom_add_dep io.netty:netty:%{netty_bundle_version} agent/command-server
 
 # Don't use maven-exec-plugin. We do things manually in order to avoid this
 # additional dep. It's used in agent/core/pom.xml et.al.
