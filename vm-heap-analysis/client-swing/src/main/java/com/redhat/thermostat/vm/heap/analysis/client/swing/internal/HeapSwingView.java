@@ -138,7 +138,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         stack = new JPanel();
         stack.setLayout(new OverlayLayout(stack));
         
-        overlay = new OverlayPanel(translator.localize(LocaleResources.DUMPS_LIST));
+        overlay = new OverlayPanel(translator.localize(LocaleResources.DUMPS_LIST), true, true);
         stack.add(overlay);
         stack.add(stats);
         stats.setOpaque(false);

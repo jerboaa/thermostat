@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.swing.components;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -44,15 +45,20 @@ import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 
 import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
@@ -76,13 +82,18 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
  */
 @SuppressWarnings("serial")
 public class OverlayPanel extends JPanel {
-    
+
+    private static final char CLOSE_ICON_ID = '\uf00d';
+    private static final char CLOSE_HOVERSTATE_ICON_ID = '\uf057';
+    private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
     private JPanel content;
     private JPanel titlePane;
+    private JButton closeButton;
 
     private ShadowLabel overlayTitle;
     
     private boolean displayArrow;
+    private boolean showCloseButton;
     
     /**
      * Creates a new {@link OverlayPanel}, with an arrow facing upward.
@@ -96,26 +107,44 @@ public class OverlayPanel extends JPanel {
      * arrow if {@code displayArrow} is {@code true}.
      */
     public OverlayPanel(LocalizedString title, boolean displayArrow) {
-        
+        this(title, displayArrow, false);
+    }
+
+    public OverlayPanel(LocalizedString title, boolean displayArrow, boolean showCloseButton) {
         this.displayArrow = displayArrow;
+        this.showCloseButton = showCloseButton;
         
         setOpaque(false);
         setBorder(new OverlayBorder());
         setLayout(new BorderLayout(0, 10));
         
         setName(OverlayPanel.class.getName());
-        
+
         titlePane = new JPanel();
+        titlePane.setLayout(new BoxLayout(titlePane, BoxLayout.LINE_AXIS));
         titlePane.setOpaque(true);
 
         overlayTitle = new ShadowLabel(title);
-        
+
         titlePane.setBorder(new TitleBorder());
         titlePane.setBackground(Palette.ROYAL_BLUE.getColor());
         overlayTitle.setForeground(Palette.WHITE.getColor());
 
+        closeButton = new JButton();
+        closeButton.setIcon(getCloseButtonInvisibleIcon());
+        closeButton.setBackground(TRANSPARENT);
+
+        if (showCloseButton) {
+            titlePane.add(closeButton);
+        }
+        titlePane.add(Box.createHorizontalGlue());
         titlePane.add(overlayTitle);
-        
+        titlePane.add(Box.createHorizontalGlue());
+        if (showCloseButton) {
+            Component closeButtonPlaceholder = Box.createRigidArea(closeButton.getPreferredSize());
+            titlePane.add(closeButtonPlaceholder);
+        }
+
         content = new JPanel();
         content.setOpaque(false);
         
@@ -129,13 +158,39 @@ public class OverlayPanel extends JPanel {
         
         installListeners();
     }
+
+    private FontAwesomeIcon getCloseButtonHoverStateIcon() {
+        return getCloseButtonIcon(CLOSE_HOVERSTATE_ICON_ID, overlayTitle.getForeground());
+    }
+
+    private FontAwesomeIcon getCloseButtonVisibleIcon() {
+        return getCloseButtonIcon(CLOSE_ICON_ID, overlayTitle.getForeground());
+    }
+
+    private FontAwesomeIcon getCloseButtonInvisibleIcon() {
+        return getCloseButtonIcon(CLOSE_ICON_ID, titlePane.getBackground());
+    }
+
+    private FontAwesomeIcon getCloseButtonIcon(char iconId, Color color) {
+        return new FontAwesomeIcon(iconId, (int) (overlayTitle.getPreferredSize().getHeight() * 0.6), color);
+    }
     
     private void installListeners() {
-        
+        CloseButtonVisibilityListener closeButtonVisibilityListener = new CloseButtonVisibilityListener();
+        titlePane.addMouseListener(closeButtonVisibilityListener);
+        closeButton.addMouseListener(closeButtonVisibilityListener);
+        closeButton.addMouseListener(new CloseButtonBackgroundColorListener());
+
         // filter events, we don't want them to reach components through us
-        addMouseListener(new MouseAdapter() {});
-        addMouseMotionListener(new MouseMotionAdapter() {});
+        addMouseMotionListener(new MouseMotionAdapter() {
+        });
         addKeyListener(new KeyAdapter() {});
+        closeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                setOverlayVisible(false);
+            }
+        });
         setFocusTraversalKeysEnabled(false);
 
         final int NO_MODIFIERS = 0;
@@ -316,6 +371,30 @@ public class OverlayPanel extends JPanel {
             insets.bottom = 50;
             
             return insets;
+        }
+    }
+
+    private class CloseButtonVisibilityListener extends MouseAdapter {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            closeButton.setIcon(getCloseButtonVisibleIcon());
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            closeButton.setIcon(getCloseButtonInvisibleIcon());
+        }
+    }
+
+    private class CloseButtonBackgroundColorListener extends MouseAdapter {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            closeButton.setIcon(getCloseButtonHoverStateIcon());
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            closeButton.setIcon(getCloseButtonVisibleIcon());
         }
     }
 }
