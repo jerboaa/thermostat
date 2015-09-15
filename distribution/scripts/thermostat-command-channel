@@ -69,6 +69,7 @@ if [ ! -z ${THERMOSTAT_EXT_BOOT_CLASSPATH} ]; then
   BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_EXT_BOOT_CLASSPATH}"
 fi
 
+# Duplicated in ThermostatVmMainLabelDecorator
 CMD_CHANNEL_CLASS="com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain"
 
 # Set this to remote debug

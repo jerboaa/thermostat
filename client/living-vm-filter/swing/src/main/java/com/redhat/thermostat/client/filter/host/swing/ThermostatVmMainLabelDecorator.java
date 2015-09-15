@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.client.filter.host.swing;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -47,6 +50,17 @@ public class ThermostatVmMainLabelDecorator implements ReferenceFieldLabelDecora
     // duplicated in the startup scripts
     private static final String MAIN_CLASS =
             "com.redhat.thermostat.main.Thermostat";
+    // duplicated in the startup scripts
+    private static final String COMMAND_CHANNEL_CLASS =
+            "com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain";
+
+    private static final Set<String> KNOWN_STARTUP_CLASSES;
+
+    static {
+        KNOWN_STARTUP_CLASSES = new TreeSet<>();
+        KNOWN_STARTUP_CLASSES.add(MAIN_CLASS);
+        KNOWN_STARTUP_CLASSES.add(COMMAND_CHANNEL_CLASS);
+    }
 
     private VmInfoDAO dao;
 
@@ -57,12 +71,12 @@ public class ThermostatVmMainLabelDecorator implements ReferenceFieldLabelDecora
     @Override
     public String getLabel(String originalLabel, Ref reference) {
 
-        if (!(reference instanceof VmRef) || 
-                !reference.getName().equals(MAIN_CLASS)) {
+        if (!(reference instanceof VmRef) ||
+            !KNOWN_STARTUP_CLASSES.contains(reference.getName())) {
             return originalLabel;
         }
         VmInfo vmInfo = dao.getVmInfo((VmRef) reference);
-        if (!vmInfo.getMainClass().equals(MAIN_CLASS)) {
+        if (!KNOWN_STARTUP_CLASSES.contains(vmInfo.getMainClass())) {
             return originalLabel;
         }
         return createLabel(vmInfo);
@@ -79,6 +93,18 @@ public class ThermostatVmMainLabelDecorator implements ReferenceFieldLabelDecora
      * @return the resulting string 
      */
     private String createLabel(VmInfo info) {
+        if (info.getMainClass().equals(COMMAND_CHANNEL_CLASS)) {
+            return createLabelForCommandChannel(info);
+        }
+
+        return createLabelForRegularCommand(info);
+    }
+
+    private String createLabelForCommandChannel(VmInfo info) {
+        return "Thermostat (command channel)";
+    }
+
+    private String createLabelForRegularCommand(VmInfo info) {
         String[]  s = info.getJavaCommandLine().split("\\."); //escaped dot
         String afterDot = s[s.length - 1];
 

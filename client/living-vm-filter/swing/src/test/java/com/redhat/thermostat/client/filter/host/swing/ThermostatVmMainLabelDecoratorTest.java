@@ -53,6 +53,7 @@ import com.redhat.thermostat.storage.model.VmInfo;
 public class ThermostatVmMainLabelDecoratorTest {
 
     private static final String THERMOSTAT_MAIN_CLASS = "com.redhat.thermostat.main.Thermostat";
+    private static final String THERMOSTAT_COMMAND_CHANNEL_CLASS = "com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain";
 
     private ThermostatVmMainLabelDecorator decorator;
     private VmInfoDAO dao;
@@ -94,6 +95,17 @@ public class ThermostatVmMainLabelDecoratorTest {
         assertEquals("Thermostat", result);
     }
 
+
+    @Test
+    public void verifyLabelForCommandChannel() {
+        when(vmRef.getName()).thenReturn(THERMOSTAT_COMMAND_CHANNEL_CLASS);
+        when(info.getMainClass()).thenReturn(THERMOSTAT_COMMAND_CHANNEL_CLASS);
+        when(info.getJavaCommandLine()).thenReturn("com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain 127.0.0.1 1200");
+
+        decorator = new ThermostatVmMainLabelDecorator(dao);
+        String result = decorator.getLabel("originalLabel", vmRef);
+        assertEquals("Thermostat (command channel)", result);
+    }
 
     @Test
     public void verifyLabelForCliCommand() {
