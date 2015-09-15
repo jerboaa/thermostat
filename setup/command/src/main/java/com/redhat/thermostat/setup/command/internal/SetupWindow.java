@@ -60,6 +60,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -441,7 +442,7 @@ public class SetupWindow {
             JOptionPane optionPane = new JOptionPane();
             optionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
 
-            JButton showMoreInfoButton = createShowMoreInfoButton();
+            final JButton showMoreInfoButton = createShowMoreInfoButton();
             final JScrollPane stackTracePane = createStackTracePane(throwable);
             stackTracePane.setVisible(false);
             final JTextComponent stepsToResolveText = createStepsToResolveText();
@@ -449,9 +450,14 @@ public class SetupWindow {
 
             JPanel messagePanel = new JPanel();
             messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.Y_AXIS));
-            messagePanel.add(showMoreInfoButton);
             messagePanel.add(stepsToResolveText);
             messagePanel.add(stackTracePane);
+
+            JPanel infoButtonPanel = new JPanel();
+            infoButtonPanel.setLayout(new BoxLayout(infoButtonPanel, BoxLayout.LINE_AXIS));
+            infoButtonPanel.add(showMoreInfoButton);
+            infoButtonPanel.add(Box.createHorizontalGlue());
+            messagePanel.add(infoButtonPanel);
 
             optionPane.setMessage(new Object[] {
                     translator.localize(LocaleResources.SETUP_FAILED_DIALOG_MESSAGE, throwable.getLocalizedMessage()).getContents(),
@@ -465,8 +471,16 @@ public class SetupWindow {
             showMoreInfoButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
-                    stepsToResolveText.setVisible(!stepsToResolveText.isVisible());
-                    stackTracePane.setVisible(!stackTracePane.isVisible());
+                    boolean moreInfoVisible = stepsToResolveText.isVisible();
+                    stepsToResolveText.setVisible(!moreInfoVisible);
+                    stackTracePane.setVisible(!moreInfoVisible);
+                    String buttonText;
+                    if (stepsToResolveText.isVisible()) {
+                        buttonText = translator.localize(LocaleResources.SHOW_LESS_ERROR_INFO).getContents();
+                    } else {
+                        buttonText = translator.localize(LocaleResources.SHOW_MORE_ERROR_INFO).getContents();
+                    }
+                    showMoreInfoButton.setText(buttonText);
                     dialog.pack();
                 }
             });
@@ -475,7 +489,7 @@ public class SetupWindow {
 
         private static JButton createShowMoreInfoButton() {
             JButton button = new JButton();
-            button.setText(translator.localize(LocaleResources.SHOW_MORE_ERROR_INFO_BUTTON).getContents());
+            button.setText(translator.localize(LocaleResources.SHOW_MORE_ERROR_INFO).getContents());
             return button;
         }
 
