@@ -121,7 +121,6 @@ __DEFAULT_RELEASE__ 4
   %global system_root_datadir %{_root_datadir}
   %global system_tmpfilesdir %{_root_exec_prefix}/lib/tmpfiles.d
   %global system_datadir %{_root_localstatedir}/lib/%{pkg_name}
-  %global system_datadir %{_root_localstatedir}/lib/%{pkg_name}
   %global system_cachedir %{_root_localstatedir}/cache/%{pkg_name}
   %global system_logdir %{_root_localstatedir}/log/%{pkg_name}
   %global system_statedir %{_root_localstatedir}/run/%{pkg_name}
@@ -737,6 +736,15 @@ install -m 0644 distribution/packaging/shared/systemd/tmpfiles.d/%{pkg_name}.con
 # Install thermostat man page
 install -m 0644 distribution/packaging/shared/man/%{pkg_name}.1 %{buildroot}%{_mandir}/man1/%{pkg_name}.1
 
+# Install bash completions. Note those won't work on EL 6 unless somebody
+# finds a bash-completion package somewhere (e.g. via EPEL)
+# FIXME: Install it outside the SCL
+# (i.e. /usr/share directly) since there does not seem to be support
+# for it otherwise.
+# See: https://bugzilla.redhat.com/show_bug.cgi?id=1264094
+mkdir -p %{buildroot}%{system_root_datadir}/bash-completion/completions
+install -pm 644 distribution/target/packaging/bash-completion/thermostat-completion %{buildroot}%{system_root_datadir}/bash-completion/completions/%{pkg_name}
+
 rm -rf distribution/target/image/bin/%{pkg_name}.orig
 # Remove developer setup things.
 rm distribution/target/image/bin/thermostat-devsetup
@@ -971,6 +979,11 @@ fi
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/db.properties
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/logging.properties
 %config %{_sysconfdir}/%{pkg_name}/bash-complete-logging.properties
+%{system_root_datadir}/bash-completion/completions/%{pkg_name}
+# Own containing directories since bash-completion package might not
+# be installed
+%dir %{system_root_datadir}/bash-completion/completions
+%dir %{system_root_datadir}/bash-completion
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/plugins.d
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/ssl.properties
 %config %{_sysconfdir}/%{pkg_name}/commands
