@@ -685,6 +685,8 @@ mkdir -p %{buildroot}%{_datarootdir}/icons/hicolor/scalable/apps
 mkdir -p %{buildroot}%{_datarootdir}/applications
 # Example config files are in docdir
 mkdir -p %{buildroot}%{_docdir}/%{pkg_name}
+# Man page
+mkdir -p %{buildroot}%{_mandir}/man1
 
 # Dance the xmvn install limbo. This only makes sense if %mvn_build does NOT
 # have the '-i' switch.
@@ -731,6 +733,9 @@ popd
 # Install tmpfiles.d config file for /var/run/%{pkg_name}
 mkdir -p %{buildroot}%{system_tmpfilesdir}
 install -m 0644 distribution/packaging/shared/systemd/tmpfiles.d/%{pkg_name}.conf %{buildroot}%{system_tmpfilesdir}/%{pkg_name}.conf
+
+# Install thermostat man page
+install -m 0644 distribution/packaging/shared/man/%{pkg_name}.1 %{buildroot}%{_mandir}/man1/%{pkg_name}.1
 
 rm -rf distribution/target/image/bin/%{pkg_name}.orig
 # Remove developer setup things.
@@ -1005,6 +1010,7 @@ fi
 %{_bindir}/thermostat
 %{_bindir}/thermostat-setup
 %{_bindir}/thermostat-common
+%{_mandir}/man1/%{pkg_name}.1*
 %if 0%{?with_systemd}
 %{_unitdir}/%{?scl_prefix}%{pkg_name}-storage.service
 %endif
