@@ -2,7 +2,7 @@
 %global __jar_repack 0
 
 # Allow for setting the RELEASE. Will be removed at SRPM build time.
-__DEFAULT_RELEASE__ 3
+__DEFAULT_RELEASE__ 4
 
 # Upstream Thermostat version triplet
 %global major        __MAJOR__
@@ -487,9 +487,11 @@ security.
 #%%pom_remove_dep org.jboss.netty:netty 
 %pom_remove_dep org.jboss.netty:netty common/command
 %pom_remove_dep org.jboss.netty:netty client/command
+%pom_remove_dep org.jboss.netty:netty agent/command
 %pom_remove_dep org.jboss.netty:netty agent/command-server
 %pom_add_dep io.netty:netty:%{netty_bundle_version} common/command
 %pom_add_dep io.netty:netty:%{netty_bundle_version} client/command
+%pom_add_dep io.netty:netty:%{netty_bundle_version} agent/command
 %pom_add_dep io.netty:netty:%{netty_bundle_version} agent/command-server
 
 # Don't use maven-exec-plugin. We do things manually in order to avoid this
@@ -1014,6 +1016,8 @@ fi
 %attr(0770,thermostat,thermostat) %dir %{system_cachedir}
 %attr(0770,thermostat,thermostat) %dir %{system_logdir}
 %attr(0770,thermostat,thermostat) %dir %{system_statedir}
+# Command channel script should be owned by 'thermostat' user to drop root privileges
+%attr(0755,thermostat,thermostat) %{_datadir}/%{pkg_name}/bin/thermostat-command-channel
 %doc %{_docdir}/%{pkg_name}
 
 %files javadoc -f .mfiles-javadoc
@@ -1061,7 +1065,10 @@ fi
 %{_datadir}/%{pkg_name}/plugins/embedded-web-endpoint
 
 %changelog
-* Fri Jul 24 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-__RELEASE__
+* Fri Sep 11 2015 Elliott Baron <ebaron@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-__RELEASE__
+- Install thermostat-command-channel script owned by thermostat user.
+
+* Fri Jul 24 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-3
 - Merge in EL 6/ EL 7 pieces.
 
 * Wed Jul 01 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-2
