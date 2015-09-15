@@ -43,6 +43,7 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -51,7 +52,10 @@ import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.ui.Palette;
@@ -133,6 +137,17 @@ public class OverlayPanel extends JPanel {
         addMouseMotionListener(new MouseMotionAdapter() {});
         addKeyListener(new KeyAdapter() {});
         setFocusTraversalKeysEnabled(false);
+
+        final int NO_MODIFIERS = 0;
+        KeyStroke escape = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, NO_MODIFIERS);
+        javax.swing.Action closeOverlay = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setOverlayVisible(false);
+            }
+        };
+        getActionMap().put("close", closeOverlay);
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escape, "close");
     }
 
     @Override
