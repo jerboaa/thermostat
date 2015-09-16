@@ -103,6 +103,7 @@ public interface UserRoles {
     final String[] CLIENT_ROLES = {
             UserRoles.ACCESS_REALM,
             UserRoles.LOGIN,
+            UserRoles.WRITE, // clients need to write notes
             UserRoles.READ,
             UserRoles.PREPARE_STATEMENT,
             UserRoles.CMD_CHANNEL_GENERATE,
