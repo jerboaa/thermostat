@@ -120,6 +120,7 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
         retransformAlreadyLoadedClasses(instrumentation, classInstrumentor);
 
         writeProfilingResultsToDisk();
+        clearProfileData();
     }
 
     private void retransformAlreadyLoadedClasses(Instrumentation instrumentation, ProfilerInstrumentor profiler) {
@@ -194,6 +195,10 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void clearProfileData() {
+        recorder.clearData();
     }
 
     @Override

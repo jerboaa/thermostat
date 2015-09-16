@@ -127,4 +127,8 @@ public class ProfileRecorder {
     public Map<String, AtomicLong> getData() {
         return profileData;
     }
+
+    public void clearData() {
+        profileData.clear();
+    }
 }

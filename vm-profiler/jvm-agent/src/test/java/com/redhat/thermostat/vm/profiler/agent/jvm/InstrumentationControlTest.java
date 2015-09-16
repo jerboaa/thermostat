@@ -148,6 +148,14 @@ public class InstrumentationControlTest {
     }
 
     @Test
+    public void stopProfilingClearsProfilingData() throws Exception {
+        control.startProfiling();
+        control.stopProfiling();
+
+        verify(recorder).clearData();
+    }
+
+    @Test
     public void vmShutdownSaveDataToDisk() throws Exception {
         final String DATA_LOCATION = "foobar";
 
