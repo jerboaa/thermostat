@@ -66,6 +66,12 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
             return Objects.equals(this.name, other.name)
                     && Objects.equals(this.timeStamp, other.timeStamp);
         }
+
+        @Override
+        public String toString() {
+            return "Profile (" + this.name + ", " + this.timeStamp + ")";
+        }
+
     }
 
     enum ProfileAction {

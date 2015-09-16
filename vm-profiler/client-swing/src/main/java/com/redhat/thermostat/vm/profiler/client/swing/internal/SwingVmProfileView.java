@@ -41,11 +41,13 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.DefaultListCellRenderer;
@@ -65,6 +67,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
@@ -184,6 +187,10 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     }
 
     private JComponent createInformationPanel() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new AssertionError("Not in the EDT!");
+        }
+
         profileList = new JList<>(listModel);
         profileList.setCellRenderer(new ProfileItemRenderer());
         profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -197,7 +204,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                     return;
                 }
 
-                Profile newValue = profileList.getModel().getElementAt(e.getFirstIndex());
+                Profile newValue = profileList.getSelectedValue();
 
                 if (oldValue == null || !oldValue.equals(newValue)) {
                     oldValue = newValue;
@@ -249,12 +256,20 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     }
 
     private void fireProfileAction(final ProfileAction action) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new AssertionError("Not in the EDT!");
+        }
+
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
-                ActionEvent<ProfileAction> event = new ActionEvent<>(this, action);
-                for (ActionListener<ProfileAction> listener : listeners) {
-                    listener.actionPerformed(event);
+                try {
+                    ActionEvent<ProfileAction> event = new ActionEvent<>(this, action);
+                    for (ActionListener<ProfileAction> listener : listeners) {
+                        listener.actionPerformed(event);
+                    }
+                } catch (Throwable t) {
+                    t.printStackTrace();
                 }
                 return null;
             }
@@ -320,34 +335,48 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     @Override
     public Profile getSelectedProfile() {
-        if (profileList.isSelectionEmpty()) {
-            throw new AssertionError("Selection is empty");
-            // return null;
+        try {
+            return new EdtHelper().callAndWait(new Callable<Profile>() {
+                @Override
+                public Profile call() throws Exception {
+                    if (profileList.isSelectionEmpty()) {
+                        throw new AssertionError("Selection is empty");
+                    }
+                    return profileList.getSelectedValue();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            e.printStackTrace();
+            return null;
         }
-        return profileList.getSelectedValue();
     }
 
     @Override
-    public void setProfilingDetailData(ProfilingResult results) {
-        // delete all existing data
-        tableModel.setRowCount(0);
+    public void setProfilingDetailData(final ProfilingResult results) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                // delete all existing data
+                tableModel.setRowCount(0);
 
-        if (results.getMethodInfo().size() == 0) {
-            String noResultsMessage = translator
-                    .localize(LocaleResources.PROFILER_NO_RESULTS)
-                    .getContents();
-            tableModel.addRow(new Object[] { noResultsMessage, null, null });
-            return;
-        }
+                if (results.getMethodInfo().size() == 0) {
+                    String noResultsMessage = translator
+                            .localize(LocaleResources.PROFILER_NO_RESULTS)
+                            .getContents();
+                    tableModel.addRow(new Object[] { noResultsMessage, null, null });
+                    return;
+                }
 
-        for (MethodInfo methodInfo: results.getMethodInfo()) {
-            Object[] data = new Object[] {
-                    syntaxHighlightMethod(methodInfo.decl),
-                    methodInfo.percentageTime,
-                    methodInfo.totalTimeInMillis,
-            };
-            tableModel.addRow(data);
-        }
+                for (MethodInfo methodInfo: results.getMethodInfo()) {
+                    Object[] data = new Object[] {
+                            syntaxHighlightMethod(methodInfo.decl),
+                            methodInfo.percentageTime,
+                            methodInfo.totalTimeInMillis,
+                    };
+                    tableModel.addRow(data);
+                }
+            }
+        });
     }
 
     private String syntaxHighlightMethod(MethodDeclaration decl) {
