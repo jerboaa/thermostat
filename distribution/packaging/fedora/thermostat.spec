@@ -52,7 +52,7 @@ __DEFAULT_RELEASE__ 4
   # apache-commons-logging
   %global logging_bundle_version     1.2.0
   %global hc_core_bundle_version     4.4.3
-  %global hc_client_bundle_version   4.5.0
+  %global hc_client_bundle_version   4.5.1
   %global gson_bundle_version        2.3.1
   # Real OSGi Bundle-Version is 2.13.2.RELEASE
   %global mongo_bundle_version       2.13.2
