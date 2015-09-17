@@ -37,6 +37,7 @@
 package com.redhat.thermostat.agent.command.server.internal;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,16 +46,21 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.ChannelException;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
-import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerContext;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class CommandChannelServerImpl implements ConfigurationServer {
 
-    private final CommandChannelServerContext ctx;
     private static final Logger logger = LoggingUtils.getLogger(CommandChannelServerImpl.class);
-
+    private final CommandChannelServerContext ctx;
+    private final PrintStream printer;
+    
     CommandChannelServerImpl(CommandChannelServerContext ctx) {
+        this(ctx, System.out);
+    }
+
+    CommandChannelServerImpl(CommandChannelServerContext ctx, PrintStream printer) {
         this.ctx = ctx;
+        this.printer = printer;
     }
 
     @Override
@@ -67,6 +73,9 @@ class CommandChannelServerImpl implements ConfigurationServer {
         try {
             // Bind and start to accept incoming connections.
             bootstrap.bind(addr);
+            
+            // Output server started token to agent
+            printer.println(CommandChannelConstants.SERVER_STARTED_TOKEN);
         } catch (ChannelException e) {
             throw new IOException("Failed to bind command channel server (" + e.getMessage() + ")", e);
         }

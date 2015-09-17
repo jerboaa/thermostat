@@ -47,5 +47,6 @@ interface CommandChannelConstants {
     String END_REQUEST_TOKEN = "<END REQUEST>";
     String BEGIN_RESPONSE_TOKEN = "<BEGIN RESPONSE>";
     String END_RESPONSE_TOKEN = "<END RESPONSE>";
+    String SERVER_STARTED_TOKEN = "<SERVER STARTED>";
 
 }

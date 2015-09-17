@@ -40,10 +40,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
@@ -54,14 +56,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerContext;
-import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerImpl;
-
 public class CommandChannelServerImplTest {
 
     private CommandChannelServerContext ctx;
-    ChannelGroup cg;
-    ServerBootstrap bootstrap;
+    private ChannelGroup cg;
+    private ServerBootstrap bootstrap;
+    private PrintStream printer;
 
     @Before
     public void setUp() {
@@ -72,15 +72,17 @@ public class CommandChannelServerImplTest {
         ctx = mock(CommandChannelServerContext.class);
         when(ctx.getBootstrap()).thenReturn(bootstrap);
         when(ctx.getChannelGroup()).thenReturn(cg);
+        printer = mock(PrintStream.class);
     }
 
     @Test
     public void testStartListening() throws IOException {
-        CommandChannelServerImpl server = new CommandChannelServerImpl(ctx);
+        CommandChannelServerImpl server = new CommandChannelServerImpl(ctx, printer);
         server.startListening("127.0.0.1", 123);
 
         ArgumentCaptor<InetSocketAddress> argument = ArgumentCaptor.forClass(InetSocketAddress.class);
         verify(bootstrap).bind(argument.capture());
+        verify(printer).println(CommandChannelConstants.SERVER_STARTED_TOKEN);
         
         InetSocketAddress addr = new InetSocketAddress("127.0.0.1", 123);
         assertEquals(addr, argument.getValue());
@@ -89,7 +91,7 @@ public class CommandChannelServerImplTest {
     @SuppressWarnings("unchecked")
     @Test
     public void startListeningFailureThrowsException() {
-        CommandChannelServerImpl server = new CommandChannelServerImpl(ctx);
+        CommandChannelServerImpl server = new CommandChannelServerImpl(ctx, printer);
 
         when(bootstrap.bind(any(InetSocketAddress.class))).thenThrow(ChannelException.class);
         
@@ -99,6 +101,8 @@ public class CommandChannelServerImplTest {
         } catch (IOException e) {
             // pass
         }
+        
+        verify(printer, never()).println(CommandChannelConstants.SERVER_STARTED_TOKEN);
     }
 
     @Test

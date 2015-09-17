@@ -36,8 +36,11 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.ProcessBuilder.Redirect;
@@ -74,22 +77,24 @@ class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStream
     private final StorageGetter storageGetter;
     private final File binPath;
     private final ProcessCreator procCreator;
+    private final ReaderCreator readerCreator;
     private Process process;
     private ProcessStreamReader stdoutReader;
     private PrintWriter printer;
     
     CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath) {
-        this(receivers, sslConf, binPath, new StorageGetter(), new ProcessCreator());
+        this(receivers, sslConf, binPath, new StorageGetter(), new ProcessCreator(), new ReaderCreator());
     }
 
     /** For testing only */
     CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath, 
-            StorageGetter getter, ProcessCreator procCreator) {
+            StorageGetter getter, ProcessCreator procCreator, ReaderCreator readerCreator) {
         this.storageGetter = getter;
         this.receivers = receivers;
         this.sslConf = sslConf;
         this.binPath = binPath;
         this.procCreator = procCreator;
+        this.readerCreator = readerCreator;
     }
 
     @Override
@@ -120,23 +125,41 @@ class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStream
                 writeResponse(new Response(ResponseType.ERROR));
             }
         };
-        stdoutReader = new ProcessOutputStreamReader(process.getInputStream(), this, exceptionListener);
+        
         // Must be instantiated before starting output reader
         printer = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), "UTF-8"));
-        stdoutReader.start();
-        
         SSLConfigurationWriter sslWriter = new SSLConfigurationWriter(printer);
         sslWriter.writeSSLConfiguration(sslConf);
+        
+        // Wait for started notification
+        waitForStarted();
+        
+        stdoutReader = new ProcessOutputStreamReader(process.getInputStream(), this, exceptionListener);
+        stdoutReader.start();
+        
+    }
+
+    private void waitForStarted() throws IOException {
+        BufferedReader br = readerCreator.createReader(process.getInputStream());
+        String token = br.readLine();
+        if (token == null || !CommandChannelConstants.SERVER_STARTED_TOKEN.equals(token)) {
+            throw new IOException("Command channel server failed to start");
+        }
+        logger.info("Command channel server ready to accept requests");
     }
 
     private void shutdownProcess() throws IOException {
         // Interrupt the reader thread to stop processing
-        stdoutReader.interrupt();
+        if (stdoutReader != null) {
+            stdoutReader.interrupt();
+        }
         
         process.destroy();
         
         try {
-            stdoutReader.join();
+            if (stdoutReader != null) {
+                stdoutReader.join();
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -246,6 +269,13 @@ class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStream
             ProcessBuilder builder = new ProcessBuilder(args);
             builder.redirectError(Redirect.INHERIT);
             return builder.start();
+        }
+    }
+    
+    /** for testing only */
+    static class ReaderCreator {
+        BufferedReader createReader(InputStream in) throws IOException {
+            return new BufferedReader(new InputStreamReader(in, "UTF-8"));
         }
     }
 }

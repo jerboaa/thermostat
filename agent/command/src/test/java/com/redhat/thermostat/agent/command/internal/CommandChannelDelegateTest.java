@@ -46,6 +46,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +62,7 @@ import org.mockito.stubbing.Answer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.ProcessCreator;
+import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.ReaderCreator;
 import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.StorageGetter;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
@@ -74,6 +76,7 @@ public class CommandChannelDelegateTest {
     
     private StorageGetter storageGetter;
     private ProcessCreator processCreator;
+    private ReaderCreator readerCreator;
     private ReceiverRegistry receivers;
     private File binPath;
     private CommandChannelDelegate delegate;
@@ -90,16 +93,21 @@ public class CommandChannelDelegateTest {
         storageGetter = mock(StorageGetter.class);
         processCreator = mock(ProcessCreator.class);
         process = mock(Process.class);
+        
+        readerCreator = mock(ReaderCreator.class);
         stdout = mock(InputStream.class);
-        when(stdout.read(any(byte[].class), anyInt(), anyInt())).thenReturn(-1);
+        BufferedReader br = mock(BufferedReader.class);
+        when(br.readLine()).thenReturn(CommandChannelConstants.SERVER_STARTED_TOKEN);
+        when(readerCreator.createReader(stdout)).thenReturn(br);
         stderr = mock(InputStream.class);
         when(stderr.read(any(byte[].class), anyInt(), anyInt())).thenReturn(-1);
         stdin = mock(OutputStream.class);
+        
         when(process.getInputStream()).thenReturn(stdout);
         when(process.getErrorStream()).thenReturn(stderr);
         when(process.getOutputStream()).thenReturn(stdin);
         when(processCreator.startProcess(any(String[].class))).thenReturn(process);
-        delegate = new CommandChannelDelegate(receivers, sslConf, binPath, storageGetter, processCreator);
+        delegate = new CommandChannelDelegate(receivers, sslConf, binPath, storageGetter, processCreator, readerCreator);
     }
 
     @Test
@@ -128,6 +136,13 @@ public class CommandChannelDelegateTest {
                 return null;
             }
         }).when(stdin).write(any(byte[].class), anyInt(), anyInt());
+    }
+    
+    @Test(expected=IOException.class)
+    public void testServerFailsToStart() throws IOException {
+        BufferedReader br = mock(BufferedReader.class);
+        when(readerCreator.createReader(stdout)).thenReturn(br);
+        delegate.startListening("127.0.0.1", 123);
     }
     
     @Test
