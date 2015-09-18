@@ -45,6 +45,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -318,16 +319,32 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                Profile selectedValue = profileList.getSelectedValue();
+                DefaultListModel<Profile> listModel = (DefaultListModel<Profile>) profileList.getModel();
+                updateSwingModel(data, listModel);
+            }
 
-                DefaultListModel<Profile> newListModel = new DefaultListModel<>();
-                for (Profile item : data) {
-                    newListModel.addElement(item);
+            /**
+             * Update the swing model based on the provided data, adding new
+             * items and removing no-longer-present items from the swing model
+             */
+            private void updateSwingModel(final List<Profile> data, DefaultListModel<Profile> model) {
+                for (Profile profile : data) {
+                    if (!model.contains(profile)) {
+                        model.addElement(profile);
+                    }
                 }
 
-                profileList.setModel(newListModel);
-                if (selectedValue != null) {
-                    profileList.setSelectedValue(selectedValue, /* shouldScroll = */ true);
+                List<Profile> toRemove = new ArrayList<>();
+                Enumeration<Profile> e = model.elements();
+                while (e.hasMoreElements()) {
+                    Profile profile = e.nextElement();
+                    if (!data.contains(profile)) {
+                        toRemove.add(profile);
+                    }
+                }
+
+                for (Profile profile : toRemove) {
+                    model.removeElement(profile);
                 }
             }
         });
