@@ -131,6 +131,25 @@ public class ThermostatSetupTest {
         verifyNoMoreInteractions(userSetup);
     }
     
+    @Test
+    public void testDetermineReasonFromExceptionStorageRunningException() {
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), mock(AuthFileWriter.class), mock(KeyringWriter.class));
+        Throwable testException = mock(Throwable.class);
+        when(testException.getCause()).thenReturn(mock(MongodbUserSetup.StorageAlreadyRunningException.class));
+        String reason = setup.determineReasonFromException(testException);
+        assertTrue(reason.equals("Thermostat storage is already running. Please stop storage and then run setup again."));
+    }
+
+    @Test
+    public void testDetermineReasonFromExceptionGenericException() {
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, mock(StructureInformation.class), mock(AuthFileWriter.class), mock(KeyringWriter.class));
+        Throwable testException = mock(Throwable.class);
+        when(testException.getCause()).thenReturn(mock(Exception.class));
+        when(testException.getLocalizedMessage()).thenReturn("test error message");
+        String reason = setup.determineReasonFromException(testException);
+        assertTrue(reason.equals("test error message"));
+    }
+    
     private static class RoleMatcher extends BaseMatcher<String[]> {
         
         final String[] expected;

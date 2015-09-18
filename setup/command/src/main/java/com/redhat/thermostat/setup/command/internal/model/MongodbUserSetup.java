@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.setup.command.internal.model;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -44,6 +45,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.ProcessBuilder.Redirect;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -62,12 +65,14 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.service.process.UnixProcessUtilities;
 
 class MongodbUserSetup implements UserSetup {
 
     static final String[] STORAGE_START_ARGS = {"storage", "--start", "--permitLocalhostException"};
     static final String[] STORAGE_STOP_ARGS = {"storage", "--stop"};
     private static final String WEB_AUTH_FILE = "web.auth";
+    private static final String MONGO_PROCESS = "mongod";
     private static final Logger logger = LoggingUtils.getLogger(MongodbUserSetup.class);
     private final UserCredsValidator validator;
     private final Launcher launcher;
@@ -81,6 +86,7 @@ class MongodbUserSetup implements UserSetup {
     private String username;
     private char[] password;
     private String userComment;
+    private Integer pid;
     
     MongodbUserSetup(UserCredsValidator validator, Launcher launcher, CredentialFinder finder, CredentialsFileCreator fileCreator, CommonPaths paths, StampFiles stampFiles, StructureInformation structureInfo, AuthFileWriter authWriter, KeyringWriter keyringWriter) {
         this.validator = validator;
@@ -113,9 +119,12 @@ class MongodbUserSetup implements UserSetup {
     }
     
     private void addMongodbUser() throws MongodbUserSetupException {
+        boolean thermostatUnlocked = false;
         boolean storageStarted = false;
         try {
-            unlockThermostat();
+            thermostatUnlocked = unlockThermostat();
+            
+            checkStorageNotRunning();
 
             storageStarted = startStorage();
 
@@ -152,12 +161,54 @@ class MongodbUserSetup implements UserSetup {
             throw new MongodbUserSetupException("Error creating Mongodb user", e);
         } catch (MongodbUserSetupException e) {
             // Stop storage (if need be), remove temp stamp files and rethrow
-            cleanupAndReThrow(storageStarted, e);
+            cleanupAndReThrow(thermostatUnlocked, storageStarted, e);
         } finally {
             Arrays.fill(password, '\0'); // clear the password
         }
     }
+
+    private void checkStorageNotRunning() throws StorageAlreadyRunningException {
+        if (isStorageRunning()) {
+            throw new StorageAlreadyRunningException();
+        }
+    }
+
+    boolean isStorageRunning() {
+        File pidFile = paths.getUserStoragePidFile();
+        if (!checkPid(pidFile)) {
+            return false;
+        }
+        String processName = UnixProcessUtilities.getInstance().getProcessName(pid);
+        // TODO: check if we want mongos or mongod from the configs
+        return (processName != null && processName.equalsIgnoreCase(MONGO_PROCESS));
+    }
+
+    // package private for testing
+    boolean checkPid(File pidFile) {
+        Charset charset = Charset.defaultCharset();
+        if (pidFile.exists()) {
+            try (BufferedReader reader = Files.newBufferedReader(pidFile.toPath(), charset)) {
+                pid = doGetPid(reader);
+            } catch (IOException | NumberFormatException e) {
+                pid = null;
+            }
+        } else {
+            pid = null;
+        }
+        return (pid != null);
+    }
     
+    // package private for testing
+    Integer doGetPid(BufferedReader reader) throws IOException {
+        String line = reader.readLine();
+        // readLine() returns null on EOF
+        if (line == null || line.isEmpty()) {
+            return null;
+        } else {
+            return Integer.parseInt(line);
+        }
+    }
+
     private void setupForDirectMongodbUrls() throws MongodbUserSetupException {
         try {
             authFileWriter.setCredentials(username, Arrays.copyOf(password, password.length));
@@ -170,21 +221,28 @@ class MongodbUserSetup implements UserSetup {
         }
     }
 
-    private void cleanupAndReThrow(boolean storageStarted, MongodbUserSetupException e) throws MongodbUserSetupException {
+    private void cleanupAndReThrow(boolean thermostatUnlocked, boolean storageStarted, MongodbUserSetupException e) throws MongodbUserSetupException {
         if (storageStarted) {
             stopStorage();
         }
-        stampFiles.deleteSetupCompleteStamp();
-        stampFiles.deleteMongodbUserStamp();
+        if (thermostatUnlocked) {
+            stampFiles.deleteSetupCompleteStamp();
+            stampFiles.deleteMongodbUserStamp();
+        }
         throw e;
     }
 
     //package-private for testing
-    void unlockThermostat() throws IOException {
+    boolean unlockThermostat() throws IOException {
+        if (stampFiles.setupCompleteStampExists()) {
+            // Stamp file exists so this is a re-run of setup.
+            return false;
+        }
         Date date = new Date();
         String timestamp = ThermostatSetup.DATE_FORMAT.format(date);
         String setupTmpUnlockContent = "Temporarily unlocked thermostat via '" + ThermostatSetup.PROGRAM_NAME + "' on " + timestamp + "\n";
         stampFiles.createSetupCompleteStamp(setupTmpUnlockContent);
+        return true;
     }
     
     //package-private for testing
@@ -381,6 +439,12 @@ class MongodbUserSetup implements UserSetup {
         
         public String getOutput() {
             return new String(contents);
+        }
+    }
+
+    public static class StorageAlreadyRunningException extends MongodbUserSetupException {
+        public StorageAlreadyRunningException() {
+            super("");
         }
     }
 

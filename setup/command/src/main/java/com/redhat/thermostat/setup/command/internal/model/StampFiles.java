@@ -78,6 +78,10 @@ class StampFiles {
         return new File(paths.getUserPersistentDataDirectory(), "setup-complete.stamp");
     }
     
+    boolean setupCompleteStampExists() {
+        return getSetupCompleteStampFile().exists();
+    }
+    
     private void deleteFile(File file) {
         try {
             Files.delete(file.toPath());

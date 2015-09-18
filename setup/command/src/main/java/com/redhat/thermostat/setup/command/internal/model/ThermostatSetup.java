@@ -42,7 +42,9 @@ import java.text.SimpleDateFormat;
 
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatSetup implements PersistableSetup {
@@ -55,6 +57,7 @@ public class ThermostatSetup implements PersistableSetup {
     private static final String THERMOSTAT_CLIENT_REC_ROLE_NAME = "thermostat-client";
     private static final String THERMOSTAT_GRANT_CMD_CHANNEL_ALL_REC_ROLE_NAME = "thermostat-cmdc";
     private static final String THERMOSTAT_ADMIN_READ_ALL_REC_ROLE_NAME = "thermostat-admin-read-all";
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private final ThermostatUserSetup userSetup;
     private final MongodbUserSetup mongodbUserSetup;
     private final StructureInformation structureInfo;
@@ -122,6 +125,14 @@ public class ThermostatSetup implements PersistableSetup {
 
     public boolean isWebAppInstalled() {
         return structureInfo.isWebAppInstalled();
+    }
+
+    public String determineReasonFromException(Throwable e) {
+        if (e.getCause() instanceof MongodbUserSetup.StorageAlreadyRunningException) {
+            return translator.localize(LocaleResources.STORAGE_RUNNING).getContents();
+        } else {
+            return e.getLocalizedMessage();
+        }
     }
     
     public static ThermostatSetup create(Launcher launcher, CommonPaths paths, Keyring keyring) {

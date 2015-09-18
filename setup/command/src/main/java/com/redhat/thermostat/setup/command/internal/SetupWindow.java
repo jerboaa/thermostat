@@ -181,7 +181,8 @@ public class SetupWindow {
         doSynchronouslyOnEdt(new Runnable() {
             @Override
             public void run() {
-                ErrorDialog.createDialog(frame, e).setVisible(true);
+                String reason = thermostatSetup.determineReasonFromException(e);
+                ErrorDialog.createDialog(frame, reason, e).setVisible(true);
             }
         });
     }
@@ -438,7 +439,7 @@ public class SetupWindow {
 
     private static class ErrorDialog extends JDialog {
 
-        static JDialog createDialog(JFrame parent, Throwable throwable) {
+        static JDialog createDialog(JFrame parent, String reason, Throwable throwable) {
             JOptionPane optionPane = new JOptionPane();
             optionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
 
@@ -460,7 +461,7 @@ public class SetupWindow {
             messagePanel.add(infoButtonPanel);
 
             optionPane.setMessage(new Object[] {
-                    translator.localize(LocaleResources.SETUP_FAILED_DIALOG_MESSAGE, throwable.getLocalizedMessage()).getContents(),
+                    translator.localize(LocaleResources.SETUP_FAILED_DIALOG_MESSAGE, reason).getContents(),
                     messagePanel,
             });
 

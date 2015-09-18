@@ -38,7 +38,9 @@ package com.redhat.thermostat.setup.command.internal.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -58,6 +60,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.io.BufferedReader;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -104,6 +107,13 @@ public class MongodbUserSetupTest {
                 //we need to always return 0 for success in tests
                 return 0;
             }
+
+            @Override
+            boolean isStorageRunning() {
+                // Storage is required to not already be running in
+                // order for mongodb user to be added.
+                return false;
+            }
         };
     }
     
@@ -129,6 +139,7 @@ public class MongodbUserSetupTest {
     
     @Test
     public void testUnlockThermostat() throws IOException {
+        when(stampFiles.setupCompleteStampExists()).thenReturn(false);
         mongoSetup.unlockThermostat();
         ArgumentCaptor<String> argCaptor = ArgumentCaptor.forClass(String.class);
         verify(stampFiles).createSetupCompleteStamp(argCaptor.capture());
@@ -236,6 +247,13 @@ public class MongodbUserSetupTest {
                 int runMongo() {
                     //return non-zero val to test failure
                     return 1;
+                }
+
+                @Override
+                boolean isStorageRunning() {
+                    // Storage is required to not already be running in
+                    // order for mongodb user to be added.
+                    return false;
                 }
             };
     
@@ -354,6 +372,13 @@ public class MongodbUserSetupTest {
                     //we need to always return 0 for success in tests
                     return 0;
                 }
+
+                @Override
+                boolean isStorageRunning() {
+                    // Storage is required to not already be running in
+                    // order for mongodb user to be added.
+                    return false;
+                }
             };
             String username = "foo-user";
             char[] password = new char[] { 't', 'e', 's', 't' };
@@ -452,6 +477,13 @@ public class MongodbUserSetupTest {
                     //we need to always return 0 for success in tests
                     return 0;
                 }
+
+                @Override
+                boolean isStorageRunning() {
+                    // Storage is required to not already be running in
+                    // order for mongodb user to be added.
+                    return false;
+                }
             };
             String username = "foo-user";
             char[] password = new char[] { 't', 'e', 's', 't' };
@@ -483,6 +515,21 @@ public class MongodbUserSetupTest {
         } finally {
             TestRootHelper.recursivelyRemoveTestRootDirectory(testRoot);
         }
+    }
+
+    @Test
+    public void testCheckPidIfFileDoesNotExist() {
+        File pidFile = mock(File.class);
+        when(pidFile.exists()).thenReturn(false);
+        assertFalse(mongoSetup.checkPid(pidFile));
+    }
+    
+    @Test
+    public void testDoGetPidNull() throws IOException {
+        BufferedReader reader = mock(BufferedReader.class);
+        when(reader.readLine()).thenReturn(null);
+        Integer pid = mongoSetup.doGetPid(reader);
+        assertNull(pid);
     }
     
     private CharArrayMatcher matchesPassword(char[] expected) {
