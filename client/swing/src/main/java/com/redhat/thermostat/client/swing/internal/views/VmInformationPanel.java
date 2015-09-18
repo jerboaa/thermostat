@@ -45,6 +45,7 @@ import javax.swing.JTabbedPane;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.VmInformationView;
+import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -71,6 +72,10 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
         if (view instanceof SwingComponent) {
             SwingComponent panel = (SwingComponent)view;
             tabPane.insertTab(title.getContents(), null, panel.getUiComponent(), null, tabCount);
+            if (view instanceof OverlayContainer) {
+                OverlayContainer overlayContainer = (OverlayContainer) view;
+                tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
+            }
             tabCount++;
         } else {
             String message = ""

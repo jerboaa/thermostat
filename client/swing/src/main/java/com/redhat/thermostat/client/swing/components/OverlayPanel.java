@@ -50,10 +50,13 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
+import java.util.EventListener;
+import java.util.EventObject;
 
 import javax.swing.AbstractAction;
 import javax.swing.Box;
@@ -62,6 +65,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.ui.Palette;
@@ -181,14 +185,25 @@ public class OverlayPanel extends JPanel {
         closeButton.addMouseListener(closeButtonVisibilityListener);
         closeButton.addMouseListener(new CloseButtonBackgroundColorListener());
 
-        // filter events, we don't want them to reach components through us
-        addMouseMotionListener(new MouseMotionAdapter() {
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                boolean withinContentBounds = content.getBounds().contains(e.getPoint());
+                boolean withinTitleBounds = titlePane.getBounds().contains(e.getPoint());
+                boolean clickedBorder = !withinContentBounds && !withinTitleBounds;
+                if (clickedBorder && isVisible()) {
+                    fireCloseEvent();
+                }
+            }
         });
+
+        // filter events, we don't want them to reach components through us
+        addMouseMotionListener(new MouseMotionAdapter() {});
         addKeyListener(new KeyAdapter() {});
         closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                setOverlayVisible(false);
+                fireCloseEvent();
             }
         });
         setFocusTraversalKeysEnabled(false);
@@ -198,7 +213,7 @@ public class OverlayPanel extends JPanel {
         javax.swing.Action closeOverlay = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setOverlayVisible(false);
+                fireCloseEvent();
             }
         };
         getActionMap().put("close", closeOverlay);
@@ -219,7 +234,54 @@ public class OverlayPanel extends JPanel {
     public void removeAll() {
         content.removeAll();
     }
-    
+
+    /**
+     * Provides a {@link MouseListener} intended for use in GlassPanes. This listener generates
+     * close events if the overlay is visible, and notifies all registered
+     * {@link CloseEventListener} instances on
+     * this overlay of the close event. Then the click event is passed through to whichever component
+     * would have received the event had the GlassPane not intercepted it. This allows for clicking outside
+     * of an overlay to notify the hosting view that it should close the overlay.
+     */
+    public MouseListener getClickOutCloseListener(final Component parent) {
+        return new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (isVisible()) {
+                    fireCloseEvent();
+                }
+                Component component = SwingUtilities.getDeepestComponentAt(parent, e.getX(), e.getY());
+                if (component != parent) {
+                    MouseEvent converted = SwingUtilities.convertMouseEvent(parent, e, component);
+                    component.dispatchEvent(converted);
+                }
+            }
+        };
+    }
+
+    private void fireCloseEvent() {
+        CloseEvent event = new CloseEvent(this);
+        Object[] listeners = listenerList.getListeners(CloseEventListener.class);
+        for (int i = listeners.length - 1; i >= 0; i--) {
+            ((CloseEventListener) listeners[i]).closeRequested(event);
+        }
+    }
+
+    /**
+     * Add a listener which will decide what to do when this OverlayPanel is requested to be closed.
+     * If the host view summons and hides the overlay using a toggle button, for example, then the view
+     * should provide a listener which performs a click event upon the toggle button. If there are no other
+     * UI elements which reflect the state of the overlay's visibility then it is safe for the listener
+     * to simply call {@link #setOverlayVisible(boolean)} directly.
+     */
+    public void addCloseEventListener(CloseEventListener listener) {
+        listenerList.add(CloseEventListener.class, listener);
+    }
+
+    public void removeCloseEventListener(CloseEventListener listener) {
+        listenerList.remove(CloseEventListener.class, listener);
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
 
@@ -256,6 +318,9 @@ public class OverlayPanel extends JPanel {
     
     /**
      * Sets the visibility of this panel.
+     * Users of the OverlayPanel generally should not call this method directly. Instead,
+     * use {@link #getClickOutCloseListener(Component)} and
+     * {@link #addCloseEventListener(CloseEventListener)}.
      */
     public void setOverlayVisible(boolean visible) {
         super.setVisible(visible);
@@ -397,5 +462,22 @@ public class OverlayPanel extends JPanel {
             closeButton.setIcon(getCloseButtonVisibleIcon());
         }
     }
+
+    public interface CloseEventListener extends EventListener {
+        void closeRequested(CloseEvent event);
+    }
+
+    public static class CloseEvent extends EventObject {
+
+        public CloseEvent(OverlayPanel source) {
+            super(source);
+        }
+
+        @Override
+        public OverlayPanel getSource() {
+            return (OverlayPanel) source;
+        }
+    }
+
 }
 

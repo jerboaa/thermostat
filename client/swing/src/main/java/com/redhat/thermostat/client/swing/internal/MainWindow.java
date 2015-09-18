@@ -186,22 +186,20 @@ public class MainWindow extends JFrame implements MainView {
         LocalizedString title = translator.localize(LocaleResources.PROGRESS_NOTIFICATION_AREA_TITLE);
         final OverlayPanel overlay = new OverlayPanel(title, false);
         glassPane.add(overlay);
-
-        overlay.addMouseListener(new MouseAdapter() {
+        glassPane.addMouseListener(overlay.getClickOutCloseListener(glassPane));
+        overlay.addCloseEventListener(new OverlayPanel.CloseEventListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                overlay.setOverlayVisible(false);
+            public void closeRequested(OverlayPanel.CloseEvent event) {
+                event.getSource().setOverlayVisible(false);
             }
         });
 
         overlay.add(aggregateNotificationArea, BorderLayout.CENTER);
         notifier.addPropertyChangeListener(new com.redhat.thermostat.common.
-                                           ActionListener<SwingProgressNotifier.PropertyChange>()
-        {
+                ActionListener<SwingProgressNotifier.PropertyChange>() {
             @Override
             public void actionPerformed(com.redhat.thermostat.common.
-                                        ActionEvent<PropertyChange> actionEvent)
-            {
+                                                ActionEvent<PropertyChange> actionEvent) {
                 overlay.setOverlayVisible(false);
             }
         });

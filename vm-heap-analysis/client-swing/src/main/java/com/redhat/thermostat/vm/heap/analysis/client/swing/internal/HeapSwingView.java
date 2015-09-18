@@ -41,22 +41,19 @@ import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionButton;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
@@ -80,7 +77,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.StatsP
 import com.redhat.thermostat.vm.heap.analysis.common.DumpFile;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
-public class HeapSwingView extends HeapView implements SwingComponent {
+public class HeapSwingView extends HeapView implements SwingComponent, OverlayContainer {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -142,11 +139,12 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         stack.add(overlay);
         stack.add(stats);
         stats.setOpaque(false);
-        
+
         overlay.setAlignmentX(-1.f);
         overlay.setAlignmentY(1.f);
 
         overview.setContent(stack);
+        overview.addOverlayCloseListeners(overlay);
         new ComponentVisibilityNotifier().initialize(overview, notifier);
 
         Icon takeDumpIcon = new Icon(HeapIconResources.getIcon(HeapIconResources.TRIGGER_HEAP_DUMP));
@@ -160,7 +158,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
             }
         });
         overview.addToolBarButton(takeDumpIconButton);
-                
+
         Icon listDumpIcon = IconResource.HISTORY.getIcon();
         showHeapListButton = new ActionToggleButton(listDumpIcon, translator.localize(LocaleResources.LIST_DUMPS_ACTION));
         showHeapListButton.setToolTipText(translator.localize(LocaleResources.LIST_DUMPS_ACTION).getContents());
@@ -176,9 +174,15 @@ public class HeapSwingView extends HeapView implements SwingComponent {
                 }
             }
         });
-        
+
         overview.addToolBarButton(showHeapListButton);
-        
+        overlay.addCloseEventListener(new OverlayPanel.CloseEventListener() {
+            @Override
+            public void closeRequested(OverlayPanel.CloseEvent event) {
+                showHeapListButton.doClick();
+            }
+        });
+
         // at the beginning, only the overview is visible
         visiblePane.add(overview);
         
@@ -318,6 +322,11 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     @Override
     public Component getUiComponent() {
         return visiblePane;
+    }
+
+    @Override
+    public OverlayPanel getOverlay() {
+        return overlay;
     }
 
     @Override

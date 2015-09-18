@@ -179,6 +179,10 @@ public class HeaderPanel extends JPanel {
         controlPanel.add(theButton);
         hasButtons = true;
     }
+
+    public void addOverlayCloseListeners(OverlayPanel overlayPanel) {
+        headerPanel.addMouseListener(overlayPanel.getClickOutCloseListener(headerPanel));
+    }
     
     class PreferencesPopup extends ThermostatPopupMenu {
         JMenuItem preferencesMenu;
