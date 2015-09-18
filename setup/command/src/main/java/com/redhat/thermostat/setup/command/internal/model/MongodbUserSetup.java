@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.ProcessBuilder.Redirect;
@@ -51,11 +52,14 @@ import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
@@ -64,6 +68,7 @@ class MongodbUserSetup implements UserSetup {
     static final String[] STORAGE_START_ARGS = {"storage", "--start", "--permitLocalhostException"};
     static final String[] STORAGE_STOP_ARGS = {"storage", "--stop"};
     private static final String WEB_AUTH_FILE = "web.auth";
+    private static final Logger logger = LoggingUtils.getLogger(MongodbUserSetup.class);
     private final UserCredsValidator validator;
     private final Launcher launcher;
     private final CredentialFinder finder;
@@ -184,9 +189,11 @@ class MongodbUserSetup implements UserSetup {
     
     //package-private for testing
     int runMongo() throws IOException, InterruptedException {
+        logger.fine("running 'mongo 127.0.0.1:27518/thermostat' with piped input");
         ProcessBuilder mongoProcessBuilder = new ProcessBuilder("mongo", "127.0.0.1:27518/thermostat");
         mongoProcessBuilder.redirectInput(Redirect.PIPE);
         Process process = mongoProcessBuilder.start();
+        ProcOutErrReader reader = new ProcOutErrReader(process);
         File createUserTemplate = new File(paths.getSystemLibRoot(), "create-user.js");
         // Write to the forked processes stdIn replacing username/password
         // on the fly.
@@ -202,7 +209,14 @@ class MongodbUserSetup implements UserSetup {
                 outWriter.write(line);
             }
         }
-        return process.waitFor();
+        reader.start();
+        int exitStatus = process.waitFor();
+        reader.join();
+        String errOutput = reader.getErrOutput();
+        String stdOutput = reader.getOutput();
+        logger.fine("mongo stdout >>> " + stdOutput);
+        logger.fine("mongo stderr >>> " + errOutput);
+        return exitStatus;
     }
     
     private boolean startStorage() throws MongodbUserSetupException {
@@ -289,6 +303,84 @@ class MongodbUserSetup implements UserSetup {
         
         public boolean isFailure() {
             return failed;
+        }
+    }
+    
+    private static class ProcOutErrReader {
+        
+        private final Thread errReaderThread;
+        private final Thread outReaderThread;
+        private final ProcStreamReader outReader;
+        private final ProcStreamReader errReader;
+        
+        private ProcOutErrReader(Process process) {
+            outReader = new ProcStreamReader(process.getInputStream());
+            errReader = new ProcStreamReader(process.getErrorStream());
+            Runnable outRunnable = new Runnable() {
+                
+                @Override
+                public void run() {
+                    outReader.readAll();
+                }
+            };
+            Runnable errRunnable = new Runnable() {
+
+                @Override
+                public void run() {
+                    errReader.readAll();
+                }
+                
+            };
+            errReaderThread = new Thread(errRunnable);
+            outReaderThread = new Thread(outRunnable);
+        }
+        
+        public void start() {
+            errReaderThread.start();
+            outReaderThread.start();
+        }
+        
+        public void join() {
+            try {
+                errReaderThread.join();
+            } catch (InterruptedException e) {
+                // ignore
+            }
+            try {
+                outReaderThread.join();
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+        
+        public String getOutput() {
+            return outReader.getOutput();
+        }
+        
+        public String getErrOutput() {
+            return errReader.getOutput();
+        }
+    }
+    
+    private static class ProcStreamReader {
+        
+        private final InputStream in;
+        private byte[] contents;
+        
+        private ProcStreamReader(InputStream in) {
+            this.in = in;
+        }
+        
+        public void readAll() {
+            try {
+                contents = StreamUtils.readAll(in);
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+        
+        public String getOutput() {
+            return new String(contents);
         }
     }
 
