@@ -185,10 +185,10 @@ diff --git a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbu
 diff --git a/setup/distribution/thermostat-plugin.xml b/setup/distribution/thermostat-plugin.xml
 --- a/setup/distribution/thermostat-plugin.xml
 +++ b/setup/distribution/thermostat-plugin.xml
-@@ -70,6 +70,8 @@
-         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+@@ -71,6 +71,8 @@
          <bundle><symbolic-name>com.redhat.thermostat.internal.utils.laf</symbolic-name><version>${project.version}</version></bundle>
          <bundle><symbolic-name>com.redhat.thermostat.plugin.validator</symbolic-name><version>${project.version}</version></bundle>
+         <bundle><symbolic-name>com.redhat.thermostat.process</symbolic-name><version>${project.version}</version></bundle>
 +        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
 +        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
        </bundles>
