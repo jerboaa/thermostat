@@ -41,7 +41,7 @@
   <parent>
     <artifactId>thermostat-vm-cpu</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>1.99.4-SNAPSHOT</version>
+    <version>1.99.5-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-vm-cpu-common</artifactId>
   <packaging>bundle</packaging>

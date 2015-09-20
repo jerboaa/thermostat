@@ -42,12 +42,12 @@
   <parent>
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat-devel-modules</artifactId>
-    <version>1.99.4-SNAPSHOT</version>
+    <version>1.99.5-SNAPSHOT</version>
   </parent>
 
   <groupId>com.redhat.thermostat</groupId>
   <artifactId>thermostat-maven-archetype-ext</artifactId>
-  <version>1.99.4-SNAPSHOT</version>
+  <version>1.99.5-SNAPSHOT</version>
 
   <packaging>maven-archetype</packaging>
 

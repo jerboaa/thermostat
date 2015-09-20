@@ -42,7 +42,7 @@
   <parent>
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat-schema-info</artifactId>
-    <version>1.99.4-SNAPSHOT</version>
+    <version>1.99.5-SNAPSHOT</version>
   </parent>
 
   <artifactId>thermostat-schema-info-distribution</artifactId>
