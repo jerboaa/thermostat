@@ -146,7 +146,6 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                 switch (actionEvent.getActionId()) {
                     case HIDDEN:
                         updater.stop();
-                        hideProgressNotificationIfVisible();
                         break;
                     case VISIBLE:
                         updater.start();
