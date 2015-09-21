@@ -1085,7 +1085,7 @@ fi
 %{_datadir}/%{pkg_name}/plugins/embedded-web-endpoint
 
 %changelog
-* Thu Sep 16 2015 Jie Kang <jkang@redhat.com> - __MAJOR__.__MINOR__.PATCHLEVEL__-__RELEASE__
+* Wed Sep 16 2015 Jie Kang <jkang@redhat.com> - __MAJOR__.__MINOR__.PATCHLEVEL__-__RELEASE__
 - Add vm-numa plug-in to list of packaged plug-ins
 
 * Fri Sep 11 2015 Elliott Baron <ebaron@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-4
