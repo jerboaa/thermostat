@@ -113,7 +113,7 @@ public class SetupWindow {
     private static final Logger logger = LoggingUtils.getLogger(SetupWindow.class);
 
     private static final int FRAME_WIDTH = 600;
-    private static final int FRAME_HEIGHT = 380;
+    private static final int FRAME_HEIGHT = 400;
     private static final int FRAME_LARGE_HEIGHT = 600;
 
     public SetupWindow(ThermostatSetup thermostatSetup) {

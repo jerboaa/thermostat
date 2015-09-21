@@ -108,6 +108,7 @@ public enum LocaleResources {
     SHOW_MORE_ERROR_INFO,
     SHOW_LESS_ERROR_INFO,
     STEPS_TO_RESOLVE_ERROR_LABEL_TEXT,
+    SETUP_COMPLETE_NOTE_CREDENTIALS_TEXT,
     ;
 
     static final String RESOURCE_BUNDLE =

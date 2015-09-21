@@ -96,10 +96,17 @@ public class SetupCompleteView extends JPanel implements SetupView {
             translator.localize(LocaleResources.AGENT_CRED_TITLE).getContents(),
             translator.localize(LocaleResources.AGENT_HELP_INFO).getContents());
 
+        JLabel textLabel = new JLabel(translator.localize(LocaleResources.SETUP_COMPLETE_NOTE_CREDENTIALS_TEXT).getContents());
+        JPanel textLabelPanel = new JPanel();
+        textLabelPanel.setOpaque(false);
+        textLabelPanel.setLayout(new BoxLayout(textLabelPanel, BoxLayout.LINE_AXIS));
+        textLabelPanel.add(textLabel);
+
         midPanel = new JPanel();
         midPanel.setLayout(new BoxLayout(midPanel, BoxLayout.PAGE_AXIS));
         midPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        midPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        midPanel.add(textLabelPanel);
+        midPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         midPanel.add(clientInfoPanel);
         midPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         midPanel.add(agentInfoPanel);
