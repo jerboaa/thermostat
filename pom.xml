@@ -264,6 +264,7 @@
     <module>vm-profiler</module>
     <module>notes</module>
     <module>numa</module>
+    <module>vm-numa</module>
     <module>laf-utils</module>
     <module>thermostat-plugin-validator</module>
     <module>validate-command</module>

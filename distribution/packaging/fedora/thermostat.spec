@@ -2,7 +2,7 @@
 %global __jar_repack 0
 
 # Allow for setting the RELEASE. Will be removed at SRPM build time.
-__DEFAULT_RELEASE__ 4
+__DEFAULT_RELEASE__ 5
 
 # Upstream Thermostat version triplet
 %global major        __MAJOR__
@@ -1011,6 +1011,7 @@ fi
 %{_datadir}/%{pkg_name}/plugins/vm-io
 %{_datadir}/%{pkg_name}/plugins/vm-jmx
 %{_datadir}/%{pkg_name}/plugins/vm-memory
+%{_datadir}/%{pkg_name}/plugins/vm-numa
 %{_datadir}/%{pkg_name}/plugins/vm-overview
 %{_datadir}/%{pkg_name}/plugins/vm-profiler
 %{_datadir}/%{pkg_name}/plugins/vm-find
@@ -1084,7 +1085,10 @@ fi
 %{_datadir}/%{pkg_name}/plugins/embedded-web-endpoint
 
 %changelog
-* Fri Sep 11 2015 Elliott Baron <ebaron@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-__RELEASE__
+* Thu Sep 16 2015 Jie Kang <jkang@redhat.com> - __MAJOR__.__MINOR__.PATCHLEVEL__-__RELEASE__
+- Add vm-numa plug-in to list of packaged plug-ins
+
+* Fri Sep 11 2015 Elliott Baron <ebaron@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-4
 - Install thermostat-command-channel script owned by thermostat user.
 
 * Fri Jul 24 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-3
