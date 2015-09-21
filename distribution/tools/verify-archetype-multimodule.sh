@@ -57,9 +57,9 @@ EXAMPLE_CMD_OUTPUT="$TMP_DIR/example_cmd_output.txt"
 
 
 function launch_and_wait_for_web_storage() {
-  $THERMOSTAT_EXE -Tbg $WSS_PID web-storage-service > $WSS_OUTPUT 2>&1
+  $THERMOSTAT_EXE -Tbg $WSS_PID -J-Dthermostat.agent.verbose=true web-storage-service > $WSS_OUTPUT 2>&1
   TRIES=0
-  while [[ ! -f $WSS_OUTPUT || ! `grep -e "Agent id:" < $WSS_OUTPUT` ]]; do
+  while [[ ! -f $WSS_OUTPUT || ! `grep -e "Agent started." < $WSS_OUTPUT` ]]; do
     # don't wait forever
     if [ $TRIES -ge 20 ]; then
       return 1
