@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.shared.config.internal;
 
-import static org.junit.Assert.fail;
 import static com.redhat.thermostat.testutils.TestUtils.deleteRecursively;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -119,17 +119,17 @@ public class CommonPathsImplTest {
             CommonPaths config = new CommonPathsImpl();
 
             Assert.assertEquals(thermostatHome,
-                    config.getSystemThermostatHome().getCanonicalPath());
+                    config.getSystemThermostatHome().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHome, "libs", "native"),
-                    config.getSystemNativeLibsRoot().getCanonicalPath());
+                    config.getSystemNativeLibsRoot().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHome, "etc"),
-                    config.getSystemConfigurationDirectory().getCanonicalPath());
+                    config.getSystemConfigurationDirectory().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHome, "libs"),
-                    config.getSystemLibRoot().getCanonicalPath());
+                    config.getSystemLibRoot().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHome, "plugins"),
-                    config.getSystemPluginRoot().getCanonicalPath());
+                    config.getSystemPluginRoot().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHome, "etc", "plugins.d"),
-                    config.getSystemPluginConfigurationDirectory().getCanonicalPath());
+                    config.getSystemPluginConfigurationDirectory().getAbsolutePath());
         } finally {
             if (thermostatHome != null) {
                 deleteTempDir(thermostatHome);
@@ -147,21 +147,21 @@ public class CommonPathsImplTest {
             CommonPaths config = new CommonPathsImpl();
 
             Assert.assertEquals(concatPath(userHome, "etc", "agent.properties"),
-                    config.getUserAgentConfigurationFile().getCanonicalPath());
+                    config.getUserAgentConfigurationFile().getAbsolutePath());
             Assert.assertEquals(concatPath(userHome, "etc", "agent.auth"),
-                    config.getUserAgentAuthConfigFile().getCanonicalPath());
+                    config.getUserAgentAuthConfigFile().getAbsolutePath());
             Assert.assertEquals(concatPath(userHome, "etc", "db.properties"),
-                    config.getUserStorageConfigurationFile().getCanonicalPath());
+                    config.getUserStorageConfigurationFile().getAbsolutePath());
             Assert.assertEquals(concatPath(userHome, "data", "db"),
-                    config.getUserStorageDirectory().getCanonicalPath());
+                    config.getUserStorageDirectory().getAbsolutePath());
             Assert.assertEquals(concatPath(userHome, "run", "db.pid"),
-                    config.getUserStoragePidFile().getCanonicalPath());
+                    config.getUserStoragePidFile().getAbsolutePath());
             Assert.assertEquals(concatPath(userHome, "logs", "db.log"),
-                    config.getUserStorageLogFile().getCanonicalPath());
+                    config.getUserStorageLogFile().getAbsolutePath());
             Assert.assertEquals(concatPath(userHome, "data", "plugins"),
-                    config.getUserPluginRoot().getCanonicalPath());
+                    config.getUserPluginRoot().getAbsolutePath());
             Assert.assertEquals(concatPath(userHome, "etc", "plugins.d"),
-                    config.getUserPluginConfigurationDirectory().getCanonicalPath());
+                    config.getUserPluginConfigurationDirectory().getAbsolutePath());
         } finally {
             if (thermostatHome != null) {
                 deleteTempDir(thermostatHome);
@@ -179,21 +179,21 @@ public class CommonPathsImplTest {
             CommonPaths config = new CommonPathsImpl(thermostatHomeAndFakeRoot);
 
             Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "etc", "thermostat", "agent.properties"),
-                    config.getUserAgentConfigurationFile().getCanonicalPath());
+                    config.getUserAgentConfigurationFile().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "etc", "thermostat", "agent.auth"),
-                    config.getUserAgentAuthConfigFile().getCanonicalPath());
+                    config.getUserAgentAuthConfigFile().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "etc", "thermostat", "db.properties"),
-                    config.getUserStorageConfigurationFile().getCanonicalPath());
+                    config.getUserStorageConfigurationFile().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "var", "lib", "thermostat", "db"),
-                    config.getUserStorageDirectory().getCanonicalPath());
+                    config.getUserStorageDirectory().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "var", "run", "thermostat", "db.pid"),
                     config.getUserStoragePidFile().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "var", "log", "thermostat", "db.log"),
-                    config.getUserStorageLogFile().getCanonicalPath());
+                    config.getUserStorageLogFile().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "var", "lib", "thermostat", "plugins"),
-                    config.getUserPluginRoot().getCanonicalPath());
+                    config.getUserPluginRoot().getAbsolutePath());
             Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "etc", "thermostat", "plugins.d"),
-                    config.getUserPluginConfigurationDirectory().getCanonicalPath());
+                    config.getUserPluginConfigurationDirectory().getAbsolutePath());
         } finally {
             if (thermostatHomeAndFakeRoot != null) {
                 deleteTempDir(thermostatHomeAndFakeRoot);
@@ -214,21 +214,21 @@ public class CommonPathsImplTest {
             CommonPaths config = new CommonPathsImpl();
 
             Assert.assertEquals(concatPath(prefix, "etc", "thermostat", "agent.properties"),
-                    config.getUserAgentConfigurationFile().getCanonicalPath());
+                    config.getUserAgentConfigurationFile().getAbsolutePath());
             Assert.assertEquals(concatPath(prefix, "etc", "thermostat", "agent.auth"),
-                    config.getUserAgentAuthConfigFile().getCanonicalPath());
+                    config.getUserAgentAuthConfigFile().getAbsolutePath());
             Assert.assertEquals(concatPath(prefix, "etc", "thermostat", "db.properties"),
-                    config.getUserStorageConfigurationFile().getCanonicalPath());
+                    config.getUserStorageConfigurationFile().getAbsolutePath());
             Assert.assertEquals(concatPath(prefix, "var", "lib", "thermostat", "db"),
-                    config.getUserStorageDirectory().getCanonicalPath());
+                    config.getUserStorageDirectory().getAbsolutePath());
             Assert.assertEquals(concatPath(prefix, "var", "run", "thermostat", "db.pid"),
                     config.getUserStoragePidFile().getAbsolutePath());
             Assert.assertEquals(concatPath(prefix, "var", "log", "thermostat", "db.log"),
-                    config.getUserStorageLogFile().getCanonicalPath());
+                    config.getUserStorageLogFile().getAbsolutePath());
             Assert.assertEquals(concatPath(prefix, "var", "lib", "thermostat", "plugins"),
-                    config.getUserPluginRoot().getCanonicalPath());
+                    config.getUserPluginRoot().getAbsolutePath());
             Assert.assertEquals(concatPath(prefix, "etc", "thermostat", "plugins.d"),
-                    config.getUserPluginConfigurationDirectory().getCanonicalPath());
+                    config.getUserPluginConfigurationDirectory().getAbsolutePath());
         } finally {
             if (thermostatHome != null) {
                 deleteTempDir(thermostatHome);
