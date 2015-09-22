@@ -152,7 +152,7 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
                 } catch (UnmodifiableClassException e) {
                     throw new AssertionError("Tried to modify an unmodifiable class", e);
                 } catch (Error e) {
-                    System.err.println("Failed to trasnform: " + klass.getName());
+                    System.err.println("Failed to transform: " + klass.getName());
                     System.err.println("Unable to retransform all classes. Some classes may not have been instrumented correctly!");
                     e.printStackTrace();
                 }
