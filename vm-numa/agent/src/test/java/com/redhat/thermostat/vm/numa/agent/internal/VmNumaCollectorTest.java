@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.vm.numa.common.VmNumaNodeStat;
@@ -57,6 +58,7 @@ public class VmNumaCollectorTest {
      * Verify numastat output that we expect still occurs. If numastat is changed then this
      * test failure signals VmNumaCollector and VmNumaStatParser needs to change.
      */
+    @Ignore("This test depends on numastat being installed")
     @Test
     public void verifyNumastatOutput() throws IOException, InterruptedException, ParseException {
         //Arbitrary choice of pid 2 which should be readable. May fail if not readable.

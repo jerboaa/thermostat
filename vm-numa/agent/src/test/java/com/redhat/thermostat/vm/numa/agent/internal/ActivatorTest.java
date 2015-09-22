@@ -43,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
@@ -68,6 +69,7 @@ public class ActivatorTest {
         activator.stop(context);
     }
 
+    @Ignore("This test depends on numastat being installed")
     @Test
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext() {
