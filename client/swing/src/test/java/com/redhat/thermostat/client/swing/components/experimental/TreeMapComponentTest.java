@@ -167,7 +167,6 @@ public class TreeMapComponentTest {
             public void run() {
                 try {
                     treeMap = new TreeMapComponent(dim);
-                    treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
                     treeMap.processAndDrawTreeMap(node1);
                 } catch (NullPointerException e) {
                     Assert.fail("Didn't expect exception.");
@@ -176,7 +175,6 @@ public class TreeMapComponentTest {
                 boolean caught = false;
                 try {
                     treeMap = new TreeMapComponent(dim);
-                    treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
                     treeMap.processAndDrawTreeMap(null);
                 } catch (NullPointerException e) {
                     caught = true;
@@ -227,7 +225,6 @@ public class TreeMapComponentTest {
             public void run() {
                 TreeMapComponent treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
-                treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
 
                 treeMap.zoomIn(node1);
                 assertEquals(node1, treeMap.getTreeMapRoot());
@@ -246,7 +243,6 @@ public class TreeMapComponentTest {
             public void run() {
                 treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
-                treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
 
                 treeMap.zoomOut();
                 assertEquals(tree, treeMap.getTreeMapRoot());
@@ -287,7 +283,6 @@ public class TreeMapComponentTest {
             public void run() {
                 treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
-                treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
 
                 // the root is always in the stack
                 assertEquals(1, treeMap.getZoomCallsStack().size());
@@ -312,7 +307,6 @@ public class TreeMapComponentTest {
             public void run() {
                 treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
-                treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
 
                 treeMap.clearZoomCallsStack();
                 assertEquals(1, treeMap.getZoomCallsStack().size());
@@ -362,7 +356,6 @@ public class TreeMapComponentTest {
 
                 treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
-                treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
                 treeMap.register(observer);
 
                 treeMap.zoomIn(child);
@@ -386,22 +379,11 @@ public class TreeMapComponentTest {
     public final void testSetNode() {
         try {
             treeMap = new TreeMapComponent(dim);
-            treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
             TreeMapComponent.Comp comp = treeMap.new Comp();
             comp.setNode(node1);
         } catch (NullPointerException e) {
             Assert.fail("Didn't expect exception.");
         }
-
-        boolean caught = false;
-        try {
-            treeMap = new TreeMapComponent(dim);
-            TreeMapComponent.Comp comp = treeMap.new Comp();
-            comp.setNode(node1);
-        } catch (NullPointerException e) {
-            caught = true;
-        }
-        assertTrue(caught);
     }
 
     public static void main(String[] args) {
@@ -424,8 +406,6 @@ public class TreeMapComponentTest {
                 UIManager.put("thermostat-default-font", Font.decode(Font.MONOSPACED));
 
                 final TreeMapComponent treeMap = new TreeMapComponent();
-                // FIXME the default renderer should not be null
-                treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
                 treeMap.setModel(modelA);
 
                 // FIXME no other swing component needs the following:

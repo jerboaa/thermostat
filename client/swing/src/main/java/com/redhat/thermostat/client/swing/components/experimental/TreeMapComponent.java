@@ -168,11 +168,11 @@ public class TreeMapComponent extends JComponent {
     private ToolTipRenderer tooltipRenderer;
 
     public TreeMapComponent() {
-        this(null, new Dimension(), null);
+        this(null, new Dimension(), new SimpleRenderer());
     }
 
     public TreeMapComponent(Dimension d) {
-        this(null, d, null);
+        this(null, d, new SimpleRenderer());
     }
 
     /**
