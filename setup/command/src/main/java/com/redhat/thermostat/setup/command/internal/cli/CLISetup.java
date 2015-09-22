@@ -98,35 +98,36 @@ public class CLISetup {
         char[] clientPassword;
         String agentUsername;
         char[] agentPassword;
-        boolean isValid = false;
+        boolean isUsernameValid = false;
+        LocalizedString passwordPrompt;
+        LocalizedString passwordPromptRepeat;
 
         println(LocaleResources.CLI_SETUP_THERMOSTAT_USER_CREDS_INTRO);
         do {
             LocalizedString clientUsernamePrompt = t.localize(LocaleResources.CLI_SETUP_THERMOSTAT_CLIENT_USERNAME_PROMPT);
             UsernameCredentialsReader clientUserReader = new UsernameCredentialsReader(console, clientUsernamePrompt);
             clientUsername = clientUserReader.read();
-            LocalizedString passwordPrompt = t.localize(LocaleResources.CLI_SETUP_PASSWORD_PROMPT, clientUsername);
-            LocalizedString passwordPromptRepeat = t.localize(LocaleResources.CLI_SETUP_PASSWORD_REPEAT_PROMPT, clientUsername);
+            passwordPrompt = t.localize(LocaleResources.CLI_SETUP_PASSWORD_PROMPT, clientUsername);
+            passwordPromptRepeat = t.localize(LocaleResources.CLI_SETUP_PASSWORD_REPEAT_PROMPT, clientUsername);
             PasswordCredentialsReader clientPasswordReader = new PasswordCredentialsReader(console, passwordPrompt, passwordPromptRepeat);
             clientPassword = clientPasswordReader.readPassword();
 
             LocalizedString agentUsernamePrompt = t.localize(LocaleResources.CLI_SETUP_THERMOSTAT_AGENT_USERNAME_PROMPT);
             UsernameCredentialsReader agentUserReader = new UsernameCredentialsReader(console, agentUsernamePrompt);
             agentUsername = agentUserReader.read();
-            passwordPrompt = t.localize(LocaleResources.CLI_SETUP_PASSWORD_PROMPT, agentUsername);
-            passwordPromptRepeat = t.localize(LocaleResources.CLI_SETUP_PASSWORD_REPEAT_PROMPT, agentUsername);
-            PasswordCredentialsReader agentPasswordReader = new PasswordCredentialsReader(console, passwordPrompt, passwordPromptRepeat);
-            agentPassword = agentPasswordReader.readPassword();
 
             try {
                 checkUsernamesNotIdentical(clientUsername, agentUsername);
-                isValid = true;
+                isUsernameValid = true;
             } catch (IdenticalUsernameException e) {
                 Arrays.fill(clientPassword, '\0');
-                Arrays.fill(agentPassword, '\0');
                 printErr(LocaleResources.CLI_SETUP_USERNAMES_IDENTICAL, clientUsername);
             }
-        } while (!isValid);
+        } while (!isUsernameValid);
+        passwordPrompt = t.localize(LocaleResources.CLI_SETUP_PASSWORD_PROMPT, agentUsername);
+        passwordPromptRepeat = t.localize(LocaleResources.CLI_SETUP_PASSWORD_REPEAT_PROMPT, agentUsername);
+        PasswordCredentialsReader agentPasswordReader = new PasswordCredentialsReader(console, passwordPrompt, passwordPromptRepeat);
+        agentPassword = agentPasswordReader.readPassword();
         thermostatSetup.createClientAdminUser(clientUsername, clientPassword);
         thermostatSetup.createAgentUser(agentUsername, agentPassword);
     }

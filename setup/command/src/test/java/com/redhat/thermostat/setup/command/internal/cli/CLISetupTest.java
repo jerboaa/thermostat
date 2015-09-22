@@ -185,7 +185,7 @@ public class CLISetupTest {
 
     @Test
     public void testReadThermostatCredsWithIdenticalUsernames() throws IOException {
-        String incorrectInput = "identical-user\nt\nt\nidentical-user\nb\nb\n";
+        String incorrectInput = "identical-user\nt\nt\nidentical-user\n";
         String correctInput = "client-user\nt\nt\nagent-user\nb\nb\n";
         ByteArrayInputStream mockInStream = new ByteArrayInputStream((incorrectInput + correctInput).getBytes());
         when(console.getInput()).thenReturn(mockInStream);
