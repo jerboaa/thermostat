@@ -75,7 +75,7 @@ public class InteractiveStorageCredentials implements StorageCredentials {
     public String getUsername() {
         String username = null;
         if (url.equals(prefs.getConnectionUrl())) {
-            prefs.getUserName();
+            username = prefs.getUserName();
         }
         if (username == null) {
             try {
@@ -84,14 +84,19 @@ public class InteractiveStorageCredentials implements StorageCredentials {
                 throw new InteractiveException(t.localize(LocaleResources.LAUNCHER_USER_AUTH_PROMPT_ERROR).getContents(), e);
             }
         }
-        return username.length() == 0 ? null : username;
+        // getter.getUsername() might return null on short input
+        if (username == null) { 
+            return null;
+        } else {
+            return username.length() == 0 ? null : username;
+        }
     }
 
     @Override
     public char[] getPassword() {
         char[] password = null;
         if (url.equals(prefs.getConnectionUrl())) {
-            keyring.getPassword(url, prefs.getUserName());
+            password = keyring.getPassword(url, prefs.getUserName());
         }
         if (password == null) {
             try {
@@ -100,9 +105,14 @@ public class InteractiveStorageCredentials implements StorageCredentials {
                 throw new InteractiveException(t.localize(LocaleResources.LAUNCHER_USER_AUTH_PROMPT_ERROR).getContents(), e);
             }
         }
-        return password.length == 0 ? null : password;
+        // getter.getPassword() might return null on short input
+        if (password == null) {
+            return null;
+        } else {
+            return password.length == 0 ? null : password;
+        }
     }
-
+    
     class InteractiveException extends RuntimeException {
 
         private static final long serialVersionUID = -7921653973987512258L;
