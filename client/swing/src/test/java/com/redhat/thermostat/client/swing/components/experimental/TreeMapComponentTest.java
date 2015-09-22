@@ -104,13 +104,13 @@ public class TreeMapComponentTest {
                 caught = false;
 
                 try {
-                    treeMap = new TreeMapComponent(tree, dim, new TreeMapComponent.WeightAsSizeRenderer());
+                    treeMap = new TreeMapComponent(tree, dim);
                     // pass
                 } catch (NullPointerException e) {
                     Assert.fail("Didn't expect exception.");
                 }
                 try {
-                    treeMap = new TreeMapComponent(null, null, new TreeMapComponent.WeightAsSizeRenderer());
+                    treeMap = new TreeMapComponent(null, null);
                 } catch (NullPointerException e) {
                     caught = true;
                 }
@@ -118,7 +118,7 @@ public class TreeMapComponentTest {
                 caught = false;
 
                 try {
-                    treeMap = new TreeMapComponent(tree, null, new TreeMapComponent.WeightAsSizeRenderer());
+                    treeMap = new TreeMapComponent(tree, null);
                 } catch (NullPointerException e) {
                     caught = true;
                 }
