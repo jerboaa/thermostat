@@ -200,23 +200,10 @@ public class TreeMapComponent extends JComponent {
 
         if (tree != null) {
             this.zoomStack.push(this.tree);
-            processAndDrawTreeMap();
+            processAndDrawTreeMap(this.tree);
         }
-    }
-
-    public void processAndDrawTreeMap() {
-        Objects.requireNonNull(this.dimension);
-        Objects.requireNonNull(this.tree);
-        // assign a rectangle to the tree's root in order to process the tree.
-        Rectangle2D.Double area = new Rectangle2D.Double(0, 0, this.dimension.width, this.dimension.height);
-
-        // calculate rectangles of tree's subtrees
-        TreeProcessor.processTreeMap(tree, area);
-
-        drawTreeMap(tree);
 
         addResizeListener(this);
-        repaint();
     }
 
     /**
@@ -362,7 +349,7 @@ public class TreeMapComponent extends JComponent {
                     Dimension newDim = container.getSize();
 
                     if (isChangedSize(newDim)) {
-                        redrawTreeMap(Objects.requireNonNull(tree));
+                        processAndDrawTreeMap(Objects.requireNonNull(tree));
                     }
                 } 
             }            
@@ -403,15 +390,8 @@ public class TreeMapComponent extends JComponent {
         return null;
     }
 
-
-    /**
-     * This method recalculates and redraws the TreeMap in according to the size
-     * of this component and the actual {@link TreeMapNode} object.
-     *
-     * Package-private for testing only.
-     */
-    void redrawTreeMap(TreeMapNode newRoot) {
-        tree = Objects.requireNonNull(newRoot);
+    public void processAndDrawTreeMap(TreeMapNode root) {
+        tree = Objects.requireNonNull(root);
         Rectangle2D.Double newArea = tree.getRectangle();
         // give to the root node the size of this object so it can be recalculated
         newArea.width = getSize().width;
@@ -421,7 +401,7 @@ public class TreeMapComponent extends JComponent {
         TreeProcessor.processTreeMap(tree, newArea);
 
         removeAll();
-        drawTreeMap(tree);        
+        drawTreeMap(tree);
     }
 
     boolean isZoomInEnabled(TreeMapNode node) {
@@ -433,7 +413,7 @@ public class TreeMapComponent extends JComponent {
     public void zoomIn(TreeMapNode node) {
         if (isZoomInEnabled(node)) {
             fillZoomStack(node.getAncestors());
-            redrawTreeMap(node);
+            processAndDrawTreeMap(node);
             notifyZoomInToObservers(zoomStack.peek());
         } 
     }
@@ -449,7 +429,7 @@ public class TreeMapComponent extends JComponent {
         // if the actual root element is not the tree's original root
         if (zoomStack.size() > 1) {
             zoomStack.pop();
-            redrawTreeMap(zoomStack.peek());
+            processAndDrawTreeMap(zoomStack.peek());
             notifyZoomOutToObservers();
         }
     }
@@ -460,7 +440,7 @@ public class TreeMapComponent extends JComponent {
     public void zoomFull() {
         if (zoomStack.size() > 1) {
             clearZoomCallsStack();
-            redrawTreeMap(zoomStack.peek());
+            processAndDrawTreeMap(zoomStack.peek());
             notifyZoomFullToObservers();
         }
     }

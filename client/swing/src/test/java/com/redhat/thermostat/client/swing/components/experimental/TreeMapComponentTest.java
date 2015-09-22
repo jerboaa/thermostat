@@ -43,9 +43,13 @@ import static org.junit.Assert.assertTrue;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -129,32 +133,6 @@ public class TreeMapComponentTest {
     }
 
     @Test
-    public final void testProcessAndDrawTreeMap() throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    treeMap = new TreeMapComponent();
-                    treeMap.setModel(tree);
-                    treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
-                    treeMap.processAndDrawTreeMap();
-                } catch (NullPointerException e) {
-                    Assert.fail("Didn't expect exception.");
-                }
-
-                boolean caught = false;
-                try {
-                    treeMap = new TreeMapComponent();
-                    treeMap.processAndDrawTreeMap();
-                } catch (NullPointerException e) {
-                    caught = true;
-                }
-                assertTrue(caught);
-            }
-        });
-    }
-
-    @Test
     public final void testGetRoot() throws InvocationTargetException, InterruptedException {
         SwingUtilities.invokeAndWait(new Runnable() {
 
@@ -187,14 +165,15 @@ public class TreeMapComponentTest {
     }
 
     @Test
-    public final void testRedrawTreeMap() throws InvocationTargetException, InterruptedException {
+    public final void testProcessAndDrawTreeMap() throws InvocationTargetException,
+            InterruptedException {
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
                 try {
                     treeMap = new TreeMapComponent(dim);
                     treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
-                    treeMap.redrawTreeMap(node1);
+                    treeMap.processAndDrawTreeMap(node1);
                 } catch (NullPointerException e) {
                     Assert.fail("Didn't expect exception.");
                 }
@@ -203,7 +182,7 @@ public class TreeMapComponentTest {
                 try {
                     treeMap = new TreeMapComponent(dim);
                     treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
-                    treeMap.redrawTreeMap(null);
+                    treeMap.processAndDrawTreeMap(null);
                 } catch (NullPointerException e) {
                     caught = true;
                 }
@@ -438,20 +417,57 @@ public class TreeMapComponentTest {
                 JFrame mainWindow = new JFrame();
                 mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                TreeMapNode node = new TreeMapNode("test1", 1.0);
+                final TreeMapNode modelA = new TreeMapNode("A", 1.0);
+                modelA.addChild(new TreeMapNode("AA", 2.0));
+                modelA.addChild(new TreeMapNode("AB", 3.0));
+
+                final TreeMapNode modelB = new TreeMapNode("B", 5.0);
+                modelB.addChild(new TreeMapNode("BA", 10.0));
+                modelB.addChild(new TreeMapNode("BB", 10.0));
 
                 // FIXME this hack should not be needed
                 UIManager.put("thermostat-default-font", Font.decode(Font.MONOSPACED));
 
-                TreeMapComponent treeMap = new TreeMapComponent();
+                final TreeMapComponent treeMap = new TreeMapComponent();
                 // FIXME the default renderer should not be null
                 treeMap.setToolTipRenderer(new TreeMapComponent.WeightAsSizeRenderer());
-                treeMap.setModel(node);
+                treeMap.setModel(modelA);
 
                 // FIXME no other swing component needs the following:
-                treeMap.processAndDrawTreeMap();
+                treeMap.processAndDrawTreeMap(modelA);
 
-                mainWindow.add(treeMap, BorderLayout.CENTER);
+                JPanel container = new JPanel(new BorderLayout());
+
+                JPanel buttonPanel = new JPanel();
+                JButton changeModelButton = new JButton("Change model");
+                changeModelButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        TreeMapNode newModel = treeMap.getTreeMapRoot() == modelA ? modelB : modelA;
+                        treeMap.setModel(newModel);
+                        treeMap.processAndDrawTreeMap(newModel);
+                    }
+                });
+                buttonPanel.add(changeModelButton);
+
+                //FIXME The following button does not actually work, adding new nodes is broken
+                JButton addNewNodeButton = new JButton("Add new node");
+                addNewNodeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        TreeMapNode currentModel = treeMap.getTreeMapRoot();
+                        currentModel.addChild(new TreeMapNode("new", 10.0));
+
+                        treeMap.setModel(currentModel);
+                        treeMap.processAndDrawTreeMap(currentModel);
+                    }
+                });
+                buttonPanel.add(addNewNodeButton);
+
+                container.add(buttonPanel, BorderLayout.PAGE_START);
+                container.add(treeMap, BorderLayout.CENTER);
+
+                mainWindow.add(container, BorderLayout.CENTER);
 
                 mainWindow.setSize(400, 200);
                 mainWindow.setVisible(true);
