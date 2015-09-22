@@ -57,12 +57,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.redhat.thermostat.client.swing.internal.LocaleResources;
-import com.redhat.thermostat.shared.locale.Translate;
-
 public class TreeMapComponentTest {
-
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private TreeMapComponent treeMap;
     private static TreeMapNode tree;

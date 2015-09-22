@@ -70,10 +70,8 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
 import com.redhat.thermostat.client.swing.ThermostatSwingCursors;
-import com.redhat.thermostat.client.swing.internal.LocaleResources;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Size.Unit;
-import com.redhat.thermostat.shared.locale.Translate;
 
 /**
  * This class allows to represent a hierarchical data structure as a TreeMap.
@@ -81,8 +79,6 @@ import com.redhat.thermostat.shared.locale.Translate;
  *
  */
 public class TreeMapComponent extends JComponent {
-
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private static final long serialVersionUID = 1L;
 
