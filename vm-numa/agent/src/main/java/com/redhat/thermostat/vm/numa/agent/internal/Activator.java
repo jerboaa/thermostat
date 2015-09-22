@@ -86,7 +86,9 @@ public class Activator implements BundleActivator {
                 if (backend.isActive()) {
                     backend.deactivate();
                 }
-                reg.unregister();
+                if (reg != null) {
+                    reg.unregister();
+                }
             }
         });
 
