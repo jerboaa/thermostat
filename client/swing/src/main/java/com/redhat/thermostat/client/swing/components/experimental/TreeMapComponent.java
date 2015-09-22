@@ -97,8 +97,6 @@ public class TreeMapComponent extends JComponent {
      */
     private TreeMapNode tree;
 
-    private Dimension dimension;
-
     /**
      * Horizontal and vertical padding for nested component.
      */
@@ -187,7 +185,6 @@ public class TreeMapComponent extends JComponent {
     public TreeMapComponent(TreeMapNode tree, Dimension d) {
         super();
         Objects.requireNonNull(d);
-        this.dimension = d;
         this.tree = tree;
         lastDim = getSize();
         this.zoomStack = new Stack<>();
