@@ -45,7 +45,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -69,6 +68,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import com.redhat.thermostat.client.swing.EdtHelper;
+import com.redhat.thermostat.client.swing.ModelUtils;
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
@@ -78,8 +78,8 @@ import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifi
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
+import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
@@ -320,33 +320,9 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             @Override
             public void run() {
                 DefaultListModel<Profile> listModel = (DefaultListModel<Profile>) profileList.getModel();
-                updateSwingModel(data, listModel);
+                ModelUtils.updateListModel(data, listModel);
             }
 
-            /**
-             * Update the swing model based on the provided data, adding new
-             * items and removing no-longer-present items from the swing model
-             */
-            private void updateSwingModel(final List<Profile> data, DefaultListModel<Profile> model) {
-                for (Profile profile : data) {
-                    if (!model.contains(profile)) {
-                        model.addElement(profile);
-                    }
-                }
-
-                List<Profile> toRemove = new ArrayList<>();
-                Enumeration<Profile> e = model.elements();
-                while (e.hasMoreElements()) {
-                    Profile profile = e.nextElement();
-                    if (!data.contains(profile)) {
-                        toRemove.add(profile);
-                    }
-                }
-
-                for (Profile profile : toRemove) {
-                    model.removeElement(profile);
-                }
-            }
         });
     }
 
