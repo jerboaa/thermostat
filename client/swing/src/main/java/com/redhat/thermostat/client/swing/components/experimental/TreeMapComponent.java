@@ -218,6 +218,16 @@ public class TreeMapComponent extends JComponent {
         this.tree = Objects.requireNonNull(tree);
         this.zoomStack.clear();
         this.zoomStack.push(this.tree);
+        resetTreeMapNodeWeights(this.tree);
+    }
+
+    private void resetTreeMapNodeWeights(TreeMapNode node) {
+        Objects.requireNonNull(node);
+        node.setWeight(node.getRealWeight());
+
+        for(TreeMapNode child : node.getChildren()) {
+            resetTreeMapNodeWeights(child);
+        }
     }
 
     public void setToolTipRenderer(ToolTipRenderer renderer) {

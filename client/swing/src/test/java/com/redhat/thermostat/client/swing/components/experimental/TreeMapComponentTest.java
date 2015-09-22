@@ -450,7 +450,6 @@ public class TreeMapComponentTest {
                 });
                 buttonPanel.add(changeModelButton);
 
-                //FIXME The following button does not actually work, adding new nodes is broken
                 JButton addNewNodeButton = new JButton("Add new node");
                 addNewNodeButton.addActionListener(new ActionListener() {
                     @Override

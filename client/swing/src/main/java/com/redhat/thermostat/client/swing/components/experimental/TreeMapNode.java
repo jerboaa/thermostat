@@ -107,8 +107,7 @@ public class TreeMapNode {
     private String label;
     
     /**
-     * The node's weight which has been set inside the constructor. Note that
-     * this value can be assigned just one time, using the constructor. All 
+     * The node's weight which has been set inside the constructor. All
      * operations which refers to node's weight work on the weight field, that 
      * is used to make calcs.
      */
@@ -329,7 +328,7 @@ public class TreeMapNode {
      * automatically to 0.
      * @param weight the new weight for this object.
      */
-    public void setWeight(int w) {
+    public void setWeight(double w) {
         this.weight = w < 0 && !allowNonPositiveWeight ? 0 : w;
     }
 
