@@ -744,7 +744,7 @@ diff --git a/pom.xml b/pom.xml
  
      <netty.version>3.2.4.Final</netty.version>
      <httpcomponents.core.version>4.3.2</httpcomponents.core.version>
-@@ -567,16 +579,6 @@
+@@ -568,16 +580,6 @@
        </dependency>
  
        <dependency>
@@ -1646,6 +1646,66 @@ diff --git a/vm-memory/common/pom.xml b/vm-memory/common/pom.xml
 -    <dependency>
 -      <groupId>org.osgi</groupId>
 -      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-numa/agent/pom.xml b/vm-numa/agent/pom.xml
+--- a/vm-numa/agent/pom.xml
++++ b/vm-numa/agent/pom.xml
+@@ -86,9 +86,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-numa/client-core/pom.xml b/vm-numa/client-core/pom.xml
+--- a/vm-numa/client-core/pom.xml
++++ b/vm-numa/client-core/pom.xml
+@@ -89,9 +89,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-numa/client-swing/pom.xml b/vm-numa/client-swing/pom.xml
+--- a/vm-numa/client-swing/pom.xml
++++ b/vm-numa/client-swing/pom.xml
+@@ -93,9 +93,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-numa/common/pom.xml b/vm-numa/common/pom.xml
+--- a/vm-numa/common/pom.xml
++++ b/vm-numa/common/pom.xml
+@@ -104,9 +104,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
 -      <scope>provided</scope>
 +      <groupId>org.apache.felix</groupId>
 +      <artifactId>org.apache.felix.framework</artifactId>
