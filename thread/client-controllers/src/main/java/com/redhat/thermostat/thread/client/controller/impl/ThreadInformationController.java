@@ -37,6 +37,7 @@
 package com.redhat.thermostat.thread.client.controller.impl;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.progress.ProgressHandle;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -62,6 +63,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ThreadInformationController implements InformationServiceController<VmRef> {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private VmRef ref;
 
@@ -120,30 +123,58 @@ public class ThreadInformationController implements InformationServiceController
 
         @Override
         public void actionPerformed(ActionEvent<ThreadAction> actionEvent) {
-
-            boolean result = false;
-            
             switch (actionEvent.getActionId()) {
             case START_LIVE_RECORDING:
-                result = collector.startHarvester();
-                if (!result) {
-                    view.displayWarning(t.localize(LocaleResources.WARNING_CANNOT_ENABLE));
-                    view.setRecording(false, false);
-                }
+                startHarvester();
                 break;
             
             case STOP_LIVE_RECORDING:
-                result = collector.stopHarvester();
-                if (!result) {
-                    view.displayWarning(t.localize(LocaleResources.WARNING_CANNOT_DISABLE));
-                    view.setRecording(true, false);
-                }
+                stopHarvester();
                 break;
                 
             default:
                 logger.log(Level.WARNING, "unknown action: " + actionEvent.getActionId());
                 break;
             }
+        }
+
+        private void startHarvester() {
+            submitTask(new Runnable() {
+                @Override
+                public void run() {
+                    boolean result = collector.startHarvester();
+                    if (!result) {
+                        view.displayWarning(t.localize(LocaleResources.WARNING_CANNOT_ENABLE));
+                        view.setRecording(false, false);
+                    }
+                }
+            }, translator.localize(LocaleResources.STARTING_MONITORING));
+        }
+
+        private void stopHarvester() {
+            submitTask(new Runnable() {
+                @Override
+                public void run() {
+                    boolean result = collector.stopHarvester();
+                    if (!result) {
+                        view.displayWarning(t.localize(LocaleResources.WARNING_CANNOT_DISABLE));
+                        view.setRecording(true, false);
+                    }
+                }
+            }, translator.localize(LocaleResources.STOPPING_MONITORING));
+        }
+
+        private void submitTask(final Runnable task, final LocalizedString taskName) {
+            appService.getApplicationExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    final ProgressHandle handle = new ProgressHandle(taskName);
+                    handle.setTask(taskName);
+                    handle.setIndeterminate(true);
+                    notifier.register(handle);
+                    handle.runTask(task);
+                }
+            });
         }
     }
     

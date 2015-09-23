@@ -47,6 +47,9 @@ public enum LocaleResources {
 
     CHECKING_FOR_DEADLOCKS,
     NO_DEADLOCK_DETECTED,
+
+    STARTING_MONITORING,
+    STOPPING_MONITORING,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.thread.client.controller.impl.strings";
