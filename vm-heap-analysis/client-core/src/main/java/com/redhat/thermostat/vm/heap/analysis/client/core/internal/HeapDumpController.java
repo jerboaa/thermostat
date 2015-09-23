@@ -213,7 +213,6 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                 HeapDump dump = null;
                 switch (actionEvent.getActionId()) {
                 case DUMP_REQUESTED: {
-                    view.disableHeapDumping(DumpDisabledReason.DUMP_IN_PROGRESS);
                     requestDump(heapDumper);
                 } break;
                     
@@ -307,6 +306,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         appService.getApplicationExecutor().execute(new Runnable() {
             @Override
             public void run() {
+                view.disableHeapDumping(DumpDisabledReason.DUMP_IN_PROGRESS);
                 LocalizedString taskName = translator.localize(LocaleResources.HEAP_DUMP_IN_PROGRESS);
 
                 final ProgressHandle handle = new ProgressHandle(taskName);

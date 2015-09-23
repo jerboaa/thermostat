@@ -270,6 +270,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                 RequestResponseListener listener = new RequestResponseListener() {
                     @Override
                     public void fireComplete(Request request, Response response) {
+                        view.setEnableGCAction(true);
                         if (response.getType() == ResponseType.ERROR) {
                             view.displayWarning(translate.localize(
                                     LocaleResources.ERROR_PERFORMING_GC,
@@ -278,6 +279,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                         }
                     }
                 };
+                view.setEnableGCAction(false);
                 gcRequest.sendGCRequestToAgent(ref, agentDAO, listener);
             }
         });

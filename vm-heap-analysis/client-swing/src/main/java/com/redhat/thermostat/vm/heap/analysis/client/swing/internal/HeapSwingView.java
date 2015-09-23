@@ -243,6 +243,7 @@ public class HeapSwingView extends HeapView implements SwingComponent, OverlayCo
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                takeDumpIconButton.setEnabled(true);
                 stats.enableHeapDumperControl();
             }
         });
@@ -253,6 +254,7 @@ public class HeapSwingView extends HeapView implements SwingComponent, OverlayCo
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                takeDumpIconButton.setEnabled(false);
                 stats.disableHeapDumperControl(reason);
             }
         });

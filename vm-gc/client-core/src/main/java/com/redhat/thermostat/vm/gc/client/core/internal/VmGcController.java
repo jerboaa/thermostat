@@ -153,8 +153,10 @@ public class VmGcController implements InformationServiceController<VmRef> {
                                     VmGcController.this.ref.getHostRef().getAgentId(),
                                     VmGcController.this.ref.getVmId()));
                         }
+                        view.setEnableGCAction(true);
                     }
                 };
+                view.setEnableGCAction(false);
                 gcRequest.sendGCRequestToAgent(VmGcController.this.ref, agentDAO, listener);
             }
         });
