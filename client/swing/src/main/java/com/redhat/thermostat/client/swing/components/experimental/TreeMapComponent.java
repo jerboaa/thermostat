@@ -170,10 +170,7 @@ public class TreeMapComponent extends JComponent {
     }
 
     /**
-     * Constructor. It draw a TreeMap of the given tree in according to the 
-     * {@Dimension} object in input.
-     * 
-     * @param tree the tree to represent as TreeMap.
+     * Constructor that sets up a TreeMapComponent using the specified {@TreeMapNode} tree.
      */
     public TreeMapComponent(TreeMapNode tree) {
         super();
