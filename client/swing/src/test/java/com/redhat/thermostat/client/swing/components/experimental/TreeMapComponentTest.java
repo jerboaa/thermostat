@@ -41,7 +41,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -63,7 +62,6 @@ public class TreeMapComponentTest {
     private static TreeMapNode tree;
     private static TreeMapNode node1;
     private static TreeMapNode node2;
-    private static Dimension dim;
 
     @BeforeClass
     public static void setUpOnce() {
@@ -72,7 +70,6 @@ public class TreeMapComponentTest {
         node2 = new TreeMapNode(1);
         tree.addChild(node1);
         node1.addChild(node2);
-        dim = new Dimension(500, 500);
     }
 
 
@@ -85,44 +82,24 @@ public class TreeMapComponentTest {
 
                 try {
                     treeMap = new TreeMapComponent();
-                } catch (NullPointerException e) {
-                    Assert.fail("Didn't expect exception.");
-                }
-
-                boolean caught = false;
-                try {
-                    treeMap = new TreeMapComponent(dim);
-                } catch (NullPointerException e) {
-                    Assert.fail("Didn't expect exception.");
-                }
-                try {
-                    treeMap = new TreeMapComponent(null);
-                } catch (NullPointerException e) {
-                    caught = true;
-                }
-                assertTrue(caught);
-                caught = false;
-
-                try {
-                    treeMap = new TreeMapComponent(tree, dim);
                     // pass
                 } catch (NullPointerException e) {
                     Assert.fail("Didn't expect exception.");
                 }
-                try {
-                    treeMap = new TreeMapComponent(null, null);
-                } catch (NullPointerException e) {
-                    caught = true;
-                }
-                assertTrue(caught);
-                caught = false;
 
                 try {
-                    treeMap = new TreeMapComponent(tree, null);
+                    treeMap = new TreeMapComponent(tree);
+                    // pass
                 } catch (NullPointerException e) {
-                    caught = true;
+                    Assert.fail("Didn't expect exception.");
                 }
-                assertTrue(caught);
+
+                try {
+                    treeMap = new TreeMapComponent(null);
+                    // pass
+                } catch (NullPointerException e) {
+                    Assert.fail("Didn't expect exception.");
+                }
             }
         });
     }
@@ -143,7 +120,7 @@ public class TreeMapComponentTest {
     @Test
     public final void testSetModel() {
         try {
-            treeMap = new TreeMapComponent(dim);
+            treeMap = new TreeMapComponent();
             treeMap.setModel(tree);
         } catch (NullPointerException e) {
             Assert.fail("Didn't expect exception.");
@@ -151,7 +128,7 @@ public class TreeMapComponentTest {
 
         boolean caught = false;
         try {
-            treeMap = new TreeMapComponent(dim);
+            treeMap = new TreeMapComponent();
             treeMap.setModel(null);
         } catch (NullPointerException e) {
             caught = true;
@@ -166,7 +143,7 @@ public class TreeMapComponentTest {
             @Override
             public void run() {
                 try {
-                    treeMap = new TreeMapComponent(dim);
+                    treeMap = new TreeMapComponent();
                     treeMap.processAndDrawTreeMap(node1);
                 } catch (NullPointerException e) {
                     Assert.fail("Didn't expect exception.");
@@ -174,7 +151,7 @@ public class TreeMapComponentTest {
 
                 boolean caught = false;
                 try {
-                    treeMap = new TreeMapComponent(dim);
+                    treeMap = new TreeMapComponent();
                     treeMap.processAndDrawTreeMap(null);
                 } catch (NullPointerException e) {
                     caught = true;
@@ -187,7 +164,7 @@ public class TreeMapComponentTest {
     @Test
     public final void testIsZoomInEnabled() throws InvocationTargetException, InterruptedException {
         try {
-            treeMap = new TreeMapComponent(dim);
+            treeMap = new TreeMapComponent();
             treeMap.setModel(tree);
             treeMap.isZoomInEnabled(node1);
         } catch (NullPointerException e) {
@@ -196,7 +173,7 @@ public class TreeMapComponentTest {
 
         boolean caught = false;
         try {
-            treeMap = new TreeMapComponent(dim);
+            treeMap = new TreeMapComponent();
             treeMap.isZoomInEnabled(node1);
         } catch (NullPointerException e) {
             caught = true;
@@ -378,7 +355,7 @@ public class TreeMapComponentTest {
     @Test
     public final void testSetNode() {
         try {
-            treeMap = new TreeMapComponent(dim);
+            treeMap = new TreeMapComponent();
             TreeMapComponent.Comp comp = treeMap.new Comp();
             comp.setNode(node1);
         } catch (NullPointerException e) {

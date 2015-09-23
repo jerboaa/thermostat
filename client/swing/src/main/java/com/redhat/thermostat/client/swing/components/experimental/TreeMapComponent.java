@@ -166,11 +166,7 @@ public class TreeMapComponent extends JComponent {
     private ToolTipRenderer tooltipRenderer = new SimpleRenderer();
 
     public TreeMapComponent() {
-        this(null, new Dimension());
-    }
-
-    public TreeMapComponent(Dimension d) {
-        this(null, d);
+        this(null);
     }
 
     /**
@@ -178,13 +174,9 @@ public class TreeMapComponent extends JComponent {
      * {@Dimension} object in input.
      * 
      * @param tree the tree to represent as TreeMap.
-     * @param d the dimension the TreeMap will fulfill.
-     * @param renderer
-     * @throws NullPointerException if the dimension is null
      */
-    public TreeMapComponent(TreeMapNode tree, Dimension d) {
+    public TreeMapComponent(TreeMapNode tree) {
         super();
-        Objects.requireNonNull(d);
         this.tree = tree;
         lastDim = getSize();
         this.zoomStack = new Stack<>();
