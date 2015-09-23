@@ -104,6 +104,12 @@
           <required>false</required>
           <description>list tunable parameters for the configured GC. Intended as hints and guidelines, not an authoritative source</description>
         </option>
+        <option>
+          <long>show-tunables-descriptions</long>
+          <short>p</short>
+          <required>false</required>
+          <description>show descriptions for tunable parameters. Implies --with-tunables</description>
+        </option>
       </options>
       <environments>
         <environment>cli</environment>

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.gc.command.internal;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.List;
@@ -44,9 +45,11 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -68,6 +71,7 @@ public class ShowGcNameCommand extends AbstractCommand {
     // The name as which this command is registered.
     static final String REGISTER_NAME = "show-gc-name";
     static final String WITH_TUNABLES_FLAG ="with-tunables";
+    static final String SHOW_TUNABLES_DESCRIPTIONS_FLAG ="show-tunables-descriptions";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final GcCommonNameMapper commonNameMapper = new GcCommonNameMapper();
     private static final GcParamsMapper paramsMapper = GcParamsMapper.getInstance();
@@ -83,10 +87,12 @@ public class ShowGcNameCommand extends AbstractCommand {
         requireNonNull(vmInfoDao, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         requireNonNull(gcDao, translator.localize(LocaleResources.GC_STAT_DAO_SERVICE_UNAVAILABLE));
 
-        VmArgument vmArgument = VmArgument.required(ctx.getArguments());
+        Arguments arguments = ctx.getArguments();
+
+        VmArgument vmArgument = VmArgument.required(arguments);
         VmId vmId = vmArgument.getVmId();
         VmInfo vmInfo = checkVmExists(vmId, translator.localize(LocaleResources.VM_NOT_FOUND, vmId.get()));
-        
+
         PrintStream out = ctx.getConsole().getOutput();
         CollectorCommonName commonName = getCommonName(vmId);
         String msg = translator.localize(LocaleResources.GC_COMMON_NAME_SUCCESS_MSG,
@@ -95,10 +101,13 @@ public class ShowGcNameCommand extends AbstractCommand {
                                       commonName.getHumanReadableString())
                                       .getContents();
         out.println(msg);
-        if (ctx.getArguments().hasArgument(WITH_TUNABLES_FLAG)) {
+
+        boolean withTunables = arguments.hasArgument(WITH_TUNABLES_FLAG);
+        boolean showDescriptions = arguments.hasArgument(SHOW_TUNABLES_DESCRIPTIONS_FLAG);
+        if (withTunables || showDescriptions) {
             String javaVersion = vmInfo.getJavaVersion();
             String message = translator.localize(LocaleResources.GC_PARAMS_MESSAGE,
-                    getFormattedParams(commonName, javaVersion))
+                    getFormattedParams(commonName, javaVersion, showDescriptions))
                     .getContents();
             out.println(message);
         }
@@ -134,8 +143,12 @@ public class ShowGcNameCommand extends AbstractCommand {
         return vmInfo;
     }
 
-    private String getFormattedParams(CollectorCommonName commonName, String javaVersion) {
-        StringBuilder sb = new StringBuilder();
+    private String getFormattedParams(CollectorCommonName commonName, String javaVersion, boolean showDescriptions) {
+        TableRenderer renderer = new TableRenderer(showDescriptions ? 2 : 1);
+        if (showDescriptions) {
+            renderer.printHeader(translator.localize(LocaleResources.GC_PARAMS_HEADER_FLAG).getContents(),
+                    translator.localize(LocaleResources.GC_PARAMS_HEADER_DESC).getContents());
+        }
         List<GcParam> params;
         try {
             JavaVersionRange version = JavaVersionRange.fromString(javaVersion);
@@ -145,9 +158,19 @@ public class ShowGcNameCommand extends AbstractCommand {
             params = Collections.emptyList();
         }
         for (GcParam param : params) {
-            sb.append(System.lineSeparator()).append(param.getFlag());
+            renderer.printLine(getLine(param, showDescriptions));
         }
-        return sb.append(System.lineSeparator()).toString();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        renderer.render(baos);
+        return baos.toString();
+    }
+
+    private String[] getLine(GcParam param, boolean showDescriptions) {
+        if (showDescriptions) {
+            return new String[] { param.getFlag(), param.getDescription() };
+        } else {
+            return new String[] { param.getFlag() };
+        }
     }
     
     /**

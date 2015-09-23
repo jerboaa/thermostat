@@ -66,14 +66,23 @@ import com.redhat.thermostat.vm.gc.common.params.JavaVersionRange;
 public class ShowGcNameCommandTest {
     
     private static final String VM_ID = "foo-id";
-    private Arguments args, listTunablesArgs;
+    private Arguments args, listTunablesArgs, showDescriptionsArgs;
     
     @Before
     public void setup() {
         args = mock(Arguments.class);
         listTunablesArgs = mock(Arguments.class);
+        showDescriptionsArgs = mock(Arguments.class);
+
         when(listTunablesArgs.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn(VM_ID);
-        when(listTunablesArgs.hasArgument("with-tunables")).thenReturn(true);
+        when(listTunablesArgs.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(listTunablesArgs.hasArgument(ShowGcNameCommand.WITH_TUNABLES_FLAG)).thenReturn(true);
+        when(listTunablesArgs.hasArgument(ShowGcNameCommand.SHOW_TUNABLES_DESCRIPTIONS_FLAG)).thenReturn(false);
+
+        when(showDescriptionsArgs.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn(VM_ID);
+        when(showDescriptionsArgs.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(showDescriptionsArgs.hasArgument(ShowGcNameCommand.WITH_TUNABLES_FLAG)).thenReturn(true);
+        when(showDescriptionsArgs.hasArgument(ShowGcNameCommand.SHOW_TUNABLES_DESCRIPTIONS_FLAG)).thenReturn(true);
     }
     
     @Test
@@ -143,7 +152,7 @@ public class ShowGcNameCommandTest {
     }
 
     @Test
-    public void commandSuccessWithShowTunablesFlag() throws CommandException {
+    public void commandSuccessWithWithTunablesFlag() throws CommandException {
         Set<String> collectorSet = Sets.newSet("PSParallelCompact", "PSScavenge");
         String expectedCollectorName = "Parallel Collector";
         ShowGcNameCommand command = new ShowGcNameCommand();
@@ -167,6 +176,70 @@ public class ShowGcNameCommandTest {
         assertThat(output, containsString(VM_ID));
         for (GcParam param : GcParamsMapper.getInstance().getParams(new GcCommonNameMapper().mapToCommonName(collectorSet), JavaVersionRange.fromString(javaVersion))) {
             assertThat(output, containsString(param.getFlag()));
+        }
+        assertThat(output, not(containsString("Unable to show GC tunables")));
+    }
+
+    @Test
+    public void showTunablesDescriptionsImpliesWithTunables() throws CommandException {
+        when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn(VM_ID);
+        when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.hasArgument(ShowGcNameCommand.SHOW_TUNABLES_DESCRIPTIONS_FLAG)).thenReturn(true);
+        when(args.hasArgument(ShowGcNameCommand.WITH_TUNABLES_FLAG)).thenReturn(false);
+        Set<String> collectorSet = Sets.newSet("PSParallelCompact", "PSScavenge");
+        String expectedCollectorName = "Parallel Collector";
+        ShowGcNameCommand command = new ShowGcNameCommand();
+        VmInfoDAO dao = mock(VmInfoDAO.class);
+        VmInfo fooVmInfo = mock(VmInfo.class);
+        when(fooVmInfo.getVmId()).thenReturn(VM_ID);
+        String mainClass = "com.example.app.Main";
+        when(fooVmInfo.getMainClass()).thenReturn(mainClass);
+        String javaVersion = "1.8.0_45";
+        when(fooVmInfo.getJavaVersion()).thenReturn(javaVersion);
+        when(dao.getVmInfo(any(VmId.class))).thenReturn(fooVmInfo);
+        command.setVmInfo(dao);
+        VmGcStatDAO gcStat = mock(VmGcStatDAO.class);
+        when(gcStat.getDistinctCollectorNames(any(VmId.class))).thenReturn(collectorSet);
+        command.setVmGcStat(gcStat);
+        TestCommandContextFactory testContextFactory = new TestCommandContextFactory();
+        command.run(testContextFactory.createContext(args));
+        String output = testContextFactory.getOutput();
+        assertThat(output, containsString(expectedCollectorName));
+        assertThat(output, containsString(mainClass));
+        assertThat(output, containsString(VM_ID));
+        for (GcParam param : GcParamsMapper.getInstance().getParams(new GcCommonNameMapper().mapToCommonName(collectorSet), JavaVersionRange.fromString(javaVersion))) {
+            assertThat(output, containsString(param.getFlag()));
+            assertThat(output, containsString(param.getDescription()));
+        }
+        assertThat(output, not(containsString("Unable to show GC tunables")));
+    }
+
+    @Test
+    public void commandSuccessWithWithTunablesAndShowDescriptionsFlag() throws CommandException {
+        Set<String> collectorSet = Sets.newSet("PSParallelCompact", "PSScavenge");
+        String expectedCollectorName = "Parallel Collector";
+        ShowGcNameCommand command = new ShowGcNameCommand();
+        VmInfoDAO dao = mock(VmInfoDAO.class);
+        VmInfo fooVmInfo = mock(VmInfo.class);
+        when(fooVmInfo.getVmId()).thenReturn(VM_ID);
+        String mainClass = "com.example.app.Main";
+        when(fooVmInfo.getMainClass()).thenReturn(mainClass);
+        String javaVersion = "1.8.0_45";
+        when(fooVmInfo.getJavaVersion()).thenReturn(javaVersion);
+        when(dao.getVmInfo(any(VmId.class))).thenReturn(fooVmInfo);
+        command.setVmInfo(dao);
+        VmGcStatDAO gcStat = mock(VmGcStatDAO.class);
+        when(gcStat.getDistinctCollectorNames(any(VmId.class))).thenReturn(collectorSet);
+        command.setVmGcStat(gcStat);
+        TestCommandContextFactory testContextFactory = new TestCommandContextFactory();
+        command.run(testContextFactory.createContext(showDescriptionsArgs));
+        String output = testContextFactory.getOutput();
+        assertThat(output, containsString(expectedCollectorName));
+        assertThat(output, containsString(mainClass));
+        assertThat(output, containsString(VM_ID));
+        for (GcParam param : GcParamsMapper.getInstance().getParams(new GcCommonNameMapper().mapToCommonName(collectorSet), JavaVersionRange.fromString(javaVersion))) {
+            assertThat(output, containsString(param.getFlag()));
+            assertThat(output, containsString(param.getDescription()));
         }
         assertThat(output, not(containsString("Unable to show GC tunables")));
     }

@@ -269,7 +269,7 @@ public class GcParamsParser {
         if (descriptionNode.getNodeName().equals(DESCRIPTION_NODE_NAME)) {
             description = descriptionNode.getTextContent();
         }
-        return description;
+        return description.trim().replaceAll("\\s+", " ");
     }
 
     public static class ParseResult extends Pair<List<Collector>, Set<GcParam>> {

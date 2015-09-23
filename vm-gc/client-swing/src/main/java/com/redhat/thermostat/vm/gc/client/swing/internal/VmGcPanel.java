@@ -43,24 +43,42 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
+import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+import javax.swing.border.EtchedBorder;
+import javax.swing.text.JTextComponent;
 
+import com.redhat.thermostat.client.swing.OverlayContainer;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
+import com.redhat.thermostat.client.swing.components.OverlayPanel;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -77,7 +95,6 @@ import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
@@ -100,7 +117,7 @@ import com.redhat.thermostat.vm.gc.common.params.GcParam;
 import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;
 import com.redhat.thermostat.vm.gc.common.params.JavaVersionRange;
 
-public class VmGcPanel extends VmGcView implements SwingComponent {
+public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContainer {
 
     private static final Logger logger = LoggingUtils.getLogger(VmGcPanel.class);
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
@@ -113,15 +130,13 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     private static final int DEFAULT_VALUE = 10;
     private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
 
-    private static final char INFO_CIRCLE_ICON_ID = '\uf05a';
-    private static final int INFO_CIRCLE_ICON_SIZE = 12;
-
+    private JLayeredPane stack = new JLayeredPane();
+    private OverlayPanel overlayPanel = new OverlayPanel(translator.localize(LocaleResources.VM_GC_PARAMETERS_TITLE), true, true);
     private HeaderPanel visiblePanel = new HeaderPanel();
     private JPanel chartPanelContainer = new JPanel();
     private JPanel containerPanel = new JPanel();
     private JLabel gcAlgoLabelDescr;
     private JLabel commonNameLabel;
-    private JButton gcAlgoInfoButton;
     private CollectorCommonName collectorCommonName;
     private JavaVersionRange javaVersionRange;
 
@@ -129,6 +144,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
     private ToolbarGCButton toolbarGCButton;
     private RequestGCAction requestGCAction;
+    private JButton gcParamsButton;
 
     private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<>(this);
 
@@ -142,40 +158,27 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     public VmGcPanel() {
         super();
 
-        gcAlgoInfoButton = new JButton(new FontAwesomeIcon(INFO_CIRCLE_ICON_ID, INFO_CIRCLE_ICON_SIZE));
-        gcAlgoInfoButton.setVisible(false);
-        gcAlgoInfoButton.setBorderPainted(false);
-        gcAlgoInfoButton.setContentAreaFilled(false);
-        gcAlgoInfoButton.setToolTipText(translator.localize(LocaleResources.VM_GC_INFO_BUTTON_TOOLTIP).getContents());
-        gcAlgoInfoButton.addActionListener(new java.awt.event.ActionListener() {
+        gcParamsButton = new JButton();
+        gcParamsButton.setIcon(new FontAwesomeIcon('\uf05a', 12));
+        gcParamsButton.setToolTipText(translator.localize(LocaleResources.VM_GC_INFO_BUTTON_TOOLTIP).getContents());
+        gcParamsButton.setBackground(new Color(0, 0, 0, 0));
+        gcParamsButton.setEnabled(false);
+        gcParamsButton.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                if (collectorCommonName == CollectorCommonName.UNKNOWN_COLLECTOR) {
-                    showCollectorInfoErrorDialog(LocaleResources.VM_GC_UNKNOWN_COLLECTOR);
-                    return;
+                boolean isVisible = overlayPanel.isVisible();
+                if (isVisible) {
+                    overlayPanel.removeAll();
+                } else {
+                    if (javaVersionRange == null) {
+                        showCollectorInfoErrorDialog(LocaleResources.VM_GC_UNKNOWN_JAVA_VERSION);
+                    } else if (collectorCommonName == CollectorCommonName.UNKNOWN_COLLECTOR) {
+                        showCollectorInfoErrorDialog(LocaleResources.VM_GC_UNKNOWN_COLLECTOR);
+                    } else {
+                        overlayPanel.add(new GcParamsPanel());
+                    }
                 }
-                if (javaVersionRange == null) {
-                    showCollectorInfoErrorDialog(LocaleResources.VM_GC_UNKNOWN_JAVA_VERSION);
-                    return;
-                }
-
-                List<GcParam> params;
-                params = gcParamsMapper.getParams(collectorCommonName, javaVersionRange);
-                StringBuilder paramsMessage = new StringBuilder();
-                for (GcParam param : params) {
-                    paramsMessage.append(System.lineSeparator()).append(param.getFlag());
-                }
-                JOptionPane optionPane = new JOptionPane();
-                optionPane.setMessageType(JOptionPane.INFORMATION_MESSAGE);
-                String message = translator.localize(LocaleResources.VM_GC_PARAMETERS_MESSAGE,
-                        paramsMessage.toString())
-                        .getContents();
-                optionPane.setMessage(message);
-                JDialog dialog = optionPane.createDialog(gcAlgoInfoButton,
-                        translator.localize(LocaleResources.VM_GC_PARAMETERS_TITLE).getContents());
-                dialog.setModal(false);
-                dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                dialog.setVisible(true);
+                overlayPanel.setOverlayVisible(!isVisible);
             }
         });
 
@@ -189,22 +192,11 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
         requestGCAction = new RequestGCAction();
         toolbarGCButton = new ToolbarGCButton(requestGCAction);
+
         toolbarGCButton.setName("gcButton");
         visiblePanel.addToolBarButton(toolbarGCButton);
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
-    }
-
-    private void showCollectorInfoErrorDialog(LocaleResources resource) {
-        String message = translator.localize(resource).getContents();
-        JOptionPane optionPane = new JOptionPane();
-        optionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
-        optionPane.setMessage(message);
-        JDialog dialog = optionPane.createDialog(gcAlgoInfoButton,
-                translator.localize(LocaleResources.VM_GC_PARAMETERS_TITLE).getContents());
-        dialog.setModal(true);
-        dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        dialog.setVisible(true);
     }
 
     @Override
@@ -232,8 +224,17 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         return visiblePanel;
     }
 
+    @Override
+    public OverlayPanel getOverlay() {
+        return overlayPanel;
+    }
+
     private void initializePanel() {
-        visiblePanel.setContent(containerPanel);
+        overlayPanel.setOverlayVisible(false);
+        stack.setLayout(new OverlayLayout(stack));
+        stack.add(overlayPanel, JLayeredPane.MODAL_LAYER);
+        stack.add(containerPanel, JLayeredPane.DEFAULT_LAYER);
+        visiblePanel.setContent(stack);
         visiblePanel.setHeader(translator.localize(LocaleResources.VM_GC_TITLE));
         containerPanel.setLayout(new GridBagLayout());
         GridBagConstraints commonNameConstraints = getWeightedGridBagConstraint(0.03);
@@ -244,6 +245,25 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         JPanel commonNamePanel = createCollectorsCommonPanel();
         containerPanel.add(commonNamePanel, commonNameConstraints);
         containerPanel.add(chartPanelContainer, chartPanelConstraints);
+
+        javax.swing.Action closeOverlay = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (containerPanel.isVisible() && overlayPanel.isVisible()) {
+                    gcParamsButton.doClick();
+                }
+            }
+        };
+        overlayPanel.getActionMap().put("close", closeOverlay);
+        KeyStroke escape = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+        overlayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escape, "close");
+
+        overlayPanel.addCloseEventListener(new OverlayPanel.CloseEventListener() {
+            @Override
+            public void closeRequested(OverlayPanel.CloseEvent event) {
+                gcParamsButton.doClick();
+            }
+        });
     }
     
     private GridBagConstraints getWeightedGridBagConstraint(double weightY) {
@@ -269,7 +289,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         this.commonNameLabel = new JLabel(""); // intentionally empty string
         commonPanel.add(gcAlgoLabelDescr);
         commonPanel.add(commonNameLabel);
-        commonPanel.add(gcAlgoInfoButton);
+        commonPanel.add(gcParamsButton);
         return commonPanel;
     }
 
@@ -393,7 +413,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
             public void run() {
                 SampledDataset series = dataset.get(tag);
                 List<IntervalTimeData<Double>> data = addedData.get(tag);
-                for (IntervalTimeData<Double> timeData: copy) {
+                for (IntervalTimeData<Double> timeData : copy) {
                     if (!data.contains(timeData)) {
                         data.add(timeData);
                         series.add(timeData.getStartTimeInMillis(), timeData.getEndTimeInMillis(), timeData.getData());
@@ -413,8 +433,8 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
                 series.clear();
             }
         });
+        gcParamsButton.setEnabled(VmGcPanel.this.javaVersionRange != null);
     }
-
 
     @Override
     public void setCollectorInfo(final CollectorCommonName commonName, final String rawJavaVersion) {
@@ -435,7 +455,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
                 public void run() {
                     gcAlgoLabelDescr.setText(GC_ALGO_LABEL_NAME);
                     commonNameLabel.setText(collectorCommonName.getHumanReadableString());
-                    gcAlgoInfoButton.setVisible(VmGcPanel.this.javaVersionRange != null);
+                    gcParamsButton.setEnabled(VmGcPanel.this.javaVersionRange != null);
                 }
             });
         }
@@ -472,9 +492,115 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         return maxDuration;
     }
 
+    private void showCollectorInfoErrorDialog(LocaleResources resource) {
+        String message = translator.localize(resource).getContents();
+        JOptionPane optionPane = new JOptionPane();
+        optionPane.setMessageType(JOptionPane.ERROR_MESSAGE);
+        optionPane.setMessage(message);
+        JDialog dialog = optionPane.createDialog(stack,
+                translator.localize(LocaleResources.VM_GC_PARAMETERS_TITLE).getContents());
+        dialog.setModal(true);
+        dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        dialog.setVisible(true);
+    }
+
     @Override
     public void displayWarning(LocalizedString string) {
         JOptionPane.showMessageDialog(visiblePanel, string.getContents(), "Warning", JOptionPane.WARNING_MESSAGE);
     }
-}
 
+    private class GcParamsPanel extends JPanel {
+
+        GcParamsPanel() {
+            super();
+
+            setOpaque(true);
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
+            JPanel labelPanel = new JPanel();
+            labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.LINE_AXIS));
+            labelPanel.add(Box.createHorizontalStrut(10));
+            labelPanel.add(getTextComponent());
+            labelPanel.add(Box.createHorizontalStrut(4));
+
+            add(labelPanel);
+            add(Box.createVerticalStrut(8));
+
+            List<GcParam> gcParams;
+            if (collectorCommonName != null && javaVersionRange != null) {
+                gcParams = gcParamsMapper.getParams(collectorCommonName, javaVersionRange);
+            } else {
+                gcParams = Collections.emptyList();
+            }
+
+            JPanel paramsPanel = new JPanel();
+            paramsPanel.setLayout(new BoxLayout(paramsPanel, BoxLayout.PAGE_AXIS));
+            for (GcParam gcParam : gcParams) {
+                paramsPanel.add(createParamPanel(gcParam));
+            }
+
+            add(new ThermostatScrollPane(paramsPanel));
+        }
+
+        private JTextComponent getTextComponent() {
+            JTextArea textArea = new JTextArea();
+            textArea.setOpaque(false);
+            textArea.setBackground(new Color(0, 0, 0, 0));
+            textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(true);
+            textArea.setText(getMessage());
+            textArea.setBorder(BorderFactory.createEmptyBorder());
+            return textArea;
+        }
+
+        private String getMessage() {
+            return translator.localize(LocaleResources.VM_GC_PARAMETERS_MESSAGE).getContents();
+        }
+
+        private JPanel createParamPanel(GcParam gcParam) {
+            JPanel panel = new JPanel();
+            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+            JPanel labels = new JPanel();
+            labels.setLayout(new BoxLayout(labels, BoxLayout.LINE_AXIS));
+
+            JLabel label = new JLabel(gcParam.getFlag());
+            label.setOpaque(false);
+            JButton button = new JButton(new FontAwesomeIcon('\uf067', 8));
+            button.setOpaque(false);
+            button.setBackground(new Color(0, 0, 0, 0));
+            final JTextArea descriptionArea = new JTextArea();
+            descriptionArea.setOpaque(false);
+            descriptionArea.setEditable(false);
+            descriptionArea.setText(gcParam.getDescription());
+            descriptionArea.setVisible(false);
+            descriptionArea.setLineWrap(true);
+            descriptionArea.setWrapStyleWord(true);
+
+            MouseAdapter clickListener = new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    descriptionArea.setVisible(!descriptionArea.isVisible());
+                }
+            };
+            labels.addMouseListener(clickListener);
+            label.addMouseListener(clickListener);
+            button.addActionListener(new java.awt.event.ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    descriptionArea.setVisible(!descriptionArea.isVisible());
+                }
+            });
+
+            labels.add(button);
+            labels.add(label);
+            labels.add(Box.createHorizontalGlue());
+            panel.add(labels);
+            panel.add(descriptionArea);
+            panel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+
+            return panel;
+        }
+
+    }
+
+}

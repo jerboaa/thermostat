@@ -55,6 +55,8 @@ public enum LocaleResources {
     GC_COMMON_NAME_SUCCESS_MSG,
     GC_PARAMS_MESSAGE,
     GC_PARAMS_FAILURE_MESSAGE,
+    GC_PARAMS_HEADER_FLAG,
+    GC_PARAMS_HEADER_DESC,
     ;
 
     static final String RESOURCE_BUNDLE =
