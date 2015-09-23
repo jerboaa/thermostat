@@ -276,7 +276,7 @@ public class TreeMapComponent extends JComponent {
             return null;
         }
 
-        Comp comp = (Comp) mainComp.clone();
+        Comp comp = new Comp(mainComp);
         comp.setBounds(node.getRectangle().getBounds());
 
         return comp;
@@ -304,7 +304,7 @@ public class TreeMapComponent extends JComponent {
 
         // if the container is greater than the label, add it to the container
         if (componentW > fontArea.width && componentH > fontArea.height) {
-            Label label = (Label) cachedLabel.clone();
+            Label label = new Label(cachedLabel);
             label.setBounds(5, 1, cont.getWidth(), fontArea.height);
             label.setText(s);
             cont.add(label);
@@ -598,12 +598,8 @@ public class TreeMapComponent extends JComponent {
         return lastClicked;
     }
 
-    /**
-     * This class provides an extension of {@link JLabel} which main 
-     * characteristic is to implement the {@link Cloneable} interface in order
-     * to make his creation faster then JLabel class.
-     */
-    class Label extends JLabel implements Cloneable {
+    class Label extends JLabel {
+
         private static final long serialVersionUID = 1L;
 
         public Label(String s) {
@@ -612,26 +608,20 @@ public class TreeMapComponent extends JComponent {
             setBounds(0, 0, getPreferredSize().width, FONT_SIZE);
         }
 
-        @Override
-        protected JLabel clone() {
-            Label clone = new Label("");
-            clone.setFont(getFont());
-            clone.setText(getText());
-            clone.setBackground(getBackground());
-            clone.setBounds(getBounds());
-            clone.setBorder(getBorder());
-            return clone;
+        protected Label(Label other) {
+            this.setFont(other.getFont());
+            this.setText(other.getText());
+            this.setBackground(other.getBackground());
+            this.setBounds(other.getBounds());
+            this.setBorder(other.getBorder());
         }
     }    
 
     /**
-     * This class provides an extension of {@link JComponent} which main 
-     * characteristic is to implement {@link Cloneable} interface in order to
-     * make his creation faster. <br>
-     * It also provides some action listeners that allow to select it, performing
+     * This class provides some action listeners that allow to select it, performing
      * zoom operations for the treemap.
      */
-    class Comp extends JComponent implements Cloneable {
+    class Comp extends JComponent {
 
         private static final long serialVersionUID = 1L;
 
@@ -657,14 +647,11 @@ public class TreeMapComponent extends JComponent {
             addMouseListener(this);
         }
 
-        @Override
-        public Comp clone() {
-            Comp clone = new Comp();
-            clone.setBounds(getBounds());
-            clone.setBorder(getBorder());
-            clone.setLayout(getLayout());
-            clone.setOpaque(true);
-            return clone;
+        public Comp(Comp other) {
+            this.setBounds(other.getBounds());
+            this.setBorder(other.getBorder());
+            this.setLayout(other.getLayout());
+            this.setOpaque(true);
         }
 
         public void setNode(TreeMapNode node) {
