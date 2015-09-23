@@ -203,6 +203,7 @@ public class TreeMapComponent extends JComponent {
         this.zoomStack.clear();
         this.zoomStack.push(this.tree);
         resetTreeMapNodeWeights(this.tree);
+        processAndDrawTreeMap(this.tree);
     }
 
     private void resetTreeMapNodeWeights(TreeMapNode node) {
@@ -384,7 +385,10 @@ public class TreeMapComponent extends JComponent {
         return null;
     }
 
-    public void processAndDrawTreeMap(TreeMapNode root) {
+    /**
+     * Package-private for testing only.
+     */
+    void processAndDrawTreeMap(TreeMapNode root) {
         tree = Objects.requireNonNull(root);
         Rectangle2D.Double newArea = tree.getRectangle();
         // give to the root node the size of this object so it can be recalculated

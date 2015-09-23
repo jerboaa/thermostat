@@ -118,22 +118,27 @@ public class TreeMapComponentTest {
     }
 
     @Test
-    public final void testSetModel() {
-        try {
-            treeMap = new TreeMapComponent();
-            treeMap.setModel(tree);
-        } catch (NullPointerException e) {
-            Assert.fail("Didn't expect exception.");
-        }
+    public final void testSetModel() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    treeMap = new TreeMapComponent();
+                    treeMap.setModel(tree);
+                } catch (NullPointerException e) {
+                    Assert.fail("Didn't expect exception.");
+                }
 
-        boolean caught = false;
-        try {
-            treeMap = new TreeMapComponent();
-            treeMap.setModel(null);
-        } catch (NullPointerException e) {
-            caught = true;
-        }
-        assertTrue(caught);
+                boolean caught = false;
+                try {
+                    treeMap = new TreeMapComponent();
+                    treeMap.setModel(null);
+                } catch (NullPointerException e) {
+                    caught = true;
+                }
+                assertTrue(caught);
+            }
+        });
     }
 
     @Test
@@ -163,26 +168,26 @@ public class TreeMapComponentTest {
 
     @Test
     public final void testIsZoomInEnabled() throws InvocationTargetException, InterruptedException {
-        try {
-            treeMap = new TreeMapComponent();
-            treeMap.setModel(tree);
-            treeMap.isZoomInEnabled(node1);
-        } catch (NullPointerException e) {
-            Assert.fail("Didn't expect exception.");
-        }
-
-        boolean caught = false;
-        try {
-            treeMap = new TreeMapComponent();
-            treeMap.isZoomInEnabled(node1);
-        } catch (NullPointerException e) {
-            caught = true;
-        }
-        assertTrue(caught);
-
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
+                try {
+                    treeMap = new TreeMapComponent();
+                    treeMap.setModel(tree);
+                    treeMap.isZoomInEnabled(node1);
+                } catch (NullPointerException e) {
+                    Assert.fail("Didn't expect exception.");
+                }
+
+                boolean caught = false;
+                try {
+                    treeMap = new TreeMapComponent();
+                    treeMap.isZoomInEnabled(node1);
+                } catch (NullPointerException e) {
+                    caught = true;
+                }
+                assertTrue(caught);
+
                 TreeMapComponent treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
 
@@ -385,9 +390,6 @@ public class TreeMapComponentTest {
                 final TreeMapComponent treeMap = new TreeMapComponent();
                 treeMap.setModel(modelA);
 
-                // FIXME no other swing component needs the following:
-                treeMap.processAndDrawTreeMap(modelA);
-
                 JPanel container = new JPanel(new BorderLayout());
 
                 JPanel buttonPanel = new JPanel();
@@ -397,7 +399,6 @@ public class TreeMapComponentTest {
                     public void actionPerformed(ActionEvent e) {
                         TreeMapNode newModel = treeMap.getTreeMapRoot() == modelA ? modelB : modelA;
                         treeMap.setModel(newModel);
-                        treeMap.processAndDrawTreeMap(newModel);
                     }
                 });
                 buttonPanel.add(changeModelButton);
@@ -410,7 +411,6 @@ public class TreeMapComponentTest {
                         currentModel.addChild(new TreeMapNode("new", 10.0));
 
                         treeMap.setModel(currentModel);
-                        treeMap.processAndDrawTreeMap(currentModel);
                     }
                 });
                 buttonPanel.add(addNewNodeButton);
