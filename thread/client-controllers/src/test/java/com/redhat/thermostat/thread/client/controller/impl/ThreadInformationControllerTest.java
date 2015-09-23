@@ -70,6 +70,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.ExecutorService;
+
 public class ThreadInformationControllerTest {
 
     private ThreadView view;
@@ -80,6 +82,8 @@ public class ThreadInformationControllerTest {
     private ThreadInformationController controller;
     
     private ApplicationService appService;
+    private ExecutorService appExecutor;
+
     private VmInfo vmInfo;
     private VmInfoDAO vmInfoDao;
 
@@ -97,6 +101,8 @@ public class ThreadInformationControllerTest {
         vmInfoDao = mock(VmInfoDAO.class);
         when(vmInfoDao.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
         setUpTimers();
+        setupCache();
+        setupExecutor();
         setUpView();
     }
 
@@ -125,6 +131,16 @@ public class ThreadInformationControllerTest {
         when(appService.getTimerFactory()).thenReturn(timerFactory);
     }
     
+    private void setupCache() {
+        ApplicationCache cache = mock(ApplicationCache.class);
+        when(appService.getApplicationCache()).thenReturn(cache);
+    }
+
+    private void setupExecutor() {
+        appExecutor = mock(ExecutorService.class);
+        when(appService.getApplicationExecutor()).thenReturn(appExecutor);
+    }
+
     private void setUpListeners() {        
         doNothing().when(view).addActionListener(any(ActionListener.class));
         
@@ -137,8 +153,6 @@ public class ThreadInformationControllerTest {
     }
     
     private void createController() {
-        ApplicationCache cache = mock(ApplicationCache.class);
-        when(appService.getApplicationCache()).thenReturn(cache);
 
         VmRef ref = mock(VmRef.class);
         HostRef agent = mock(HostRef.class);
@@ -188,10 +202,10 @@ public class ThreadInformationControllerTest {
         ThreadCollectorFactory collectorFactory = mock(ThreadCollectorFactory.class);
         when(collectorFactory.getCollector(ref)).thenReturn(collector);
 
-        ApplicationCache cache = mock(ApplicationCache.class);
-        when(appService.getApplicationCache()).thenReturn(cache);
-
         ProgressNotifier notifier = mock(ProgressNotifier.class);
+
+        ArgumentCaptor<Runnable> longRunningTaskCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(appExecutor).execute(longRunningTaskCaptor.capture());
 
         controller = new ThreadInformationController(ref, appService, vmInfoDao,
                                                      collectorFactory,
@@ -200,18 +214,30 @@ public class ThreadInformationControllerTest {
         verify(collector).isHarvesterCollecting();
         verify(view, times(1)).setRecording(false, false);
 
+        // each action event posts a task to the executor.
+        // make sure the task is posted and execute it manually in tests to see its effects.
+
         threadActionListener = viewArgumentCaptor.getValue();
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.START_LIVE_RECORDING));
+
+        verify(appExecutor, times(1)).execute(isA(Runnable.class));
+        longRunningTaskCaptor.getValue().run();
 
         verify(view, times(1)).setRecording(false, false);
         verify(collector).startHarvester();
 
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.STOP_LIVE_RECORDING));
 
+        verify(appExecutor, times(2)).execute(isA(Runnable.class));
+        longRunningTaskCaptor.getValue().run();
+
         verify(collector).stopHarvester();
         verify(view, times(1)).setRecording(false, false);
 
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.STOP_LIVE_RECORDING));
+
+        verify(appExecutor, times(3)).execute(isA(Runnable.class));
+        longRunningTaskCaptor.getValue().run();
 
         verify(collector, times(2)).stopHarvester();
         verify(view, times(1)).setRecording(true, false);
