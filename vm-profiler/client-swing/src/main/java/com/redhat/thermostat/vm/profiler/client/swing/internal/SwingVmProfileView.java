@@ -58,6 +58,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
+import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
@@ -74,6 +75,7 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
+import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.ActionEvent;
@@ -90,6 +92,10 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     private static final double SPLIT_PANE_RATIO = 0.3;
 
+    private static final int COLUMN_METHOD_NAME = 0;
+    private static final int COLUMN_METHOD_PERCENTAGE = 1;
+    private static final int COLUMN_METHOD_TIME = 2;
+
     private final CopyOnWriteArrayList<ActionListener<ProfileAction>> listeners = new CopyOnWriteArrayList<>();
 
     private HeaderPanel mainContainer;
@@ -100,6 +106,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     private DefaultListModel<Profile> listModel;
     private JList<Profile> profileList;
 
+    private ThermostatTable profileTable;
     private DefaultTableModel tableModel;
 
     private JLabel currentStatusLabel;
@@ -224,11 +231,11 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             @Override
             public java.lang.Class<?> getColumnClass(int columnIndex) {
                 switch (columnIndex) {
-                case 0:
-                    return String.class;
-                case 1:
+                case COLUMN_METHOD_NAME:
+                    return MethodDeclaration.class;
+                case COLUMN_METHOD_PERCENTAGE:
                     return Double.class;
-                case 2:
+                case COLUMN_METHOD_TIME:
                     return Long.class;
                 default:
                     throw new AssertionError("Unknown column index");
@@ -236,7 +243,21 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             }
         };
 
-        ThermostatTable profileTable = new ThermostatTable(tableModel);
+        final PlainTextMethodDeclarationRenderer plainRenderer = new PlainTextMethodDeclarationRenderer();
+        final SyntaxHighlightedMethodDeclarationRenderer colorRenderer = new SyntaxHighlightedMethodDeclarationRenderer();
+
+        profileTable = new ThermostatTable(tableModel) {
+            public javax.swing.table.TableCellRenderer getCellRenderer(int row, int column) {
+                if (column == COLUMN_METHOD_NAME) {
+                    if (profileTable.isCellSelected(row, column)) {
+                        return plainRenderer;
+                    } else {
+                        return colorRenderer;
+                    }
+                }
+                return super.getCellRenderer(row, column);
+            }
+        };
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 profileListPane, profileTable.wrap());
@@ -362,7 +383,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
                 for (MethodInfo methodInfo: results.getMethodInfo()) {
                     Object[] data = new Object[] {
-                            syntaxHighlightMethod(methodInfo.decl),
+                            methodInfo.decl,
                             methodInfo.percentageTime,
                             methodInfo.totalTimeInMillis,
                     };
@@ -372,47 +393,78 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         });
     }
 
-    private String syntaxHighlightMethod(MethodDeclaration decl) {
-        final Color METHOD_COLOR = Palette.PALE_RED.getColor();
-        final Color PARAMETER_COLOR = Palette.AZUREUS.getColor();
-        final Color RETURN_TYPE_COLOR = Palette.SKY_BLUE.getColor();
-
-        String highlightedName = htmlColorText(decl.getName(), METHOD_COLOR);
-        String highlightedReturnType = htmlColorText(decl.getReturnType(), RETURN_TYPE_COLOR);
-
-        StringBuilder toReturn = new StringBuilder();
-        toReturn.append("<html>");
-        toReturn.append("<pre>");
-
-        toReturn.append(highlightedReturnType);
-        toReturn.append(" ");
-        toReturn.append("<b>");
-        toReturn.append(highlightedName);
-        toReturn.append("</b>");
-        toReturn.append("(");
-
-        ArrayList<String> parameters = new ArrayList<>();
-        for (String parameter : decl.getParameters()) {
-            parameters.add(htmlColorText(parameter, PARAMETER_COLOR));
-        }
-
-        toReturn.append(StringUtils.join(",", parameters));
-
-        toReturn.append(")");
-        toReturn.append("</pre>");
-        toReturn.append("<html>");
-        return toReturn.toString();
-
-    }
-
-    private String htmlColorText(String unescapedText, Color color) {
-        return "<font color='" + ("#" + Integer.toHexString(color.getRGB() & 0x00ffffff)) + "'>"
-                + StringUtils.htmlEscape(unescapedText) + "</font>";
-    }
-
     @Override
     public Component getUiComponent() {
         return mainContainer;
+    }
+
+    static class PlainTextMethodDeclarationRenderer extends ThermostatTableRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+
+            if (!(value instanceof MethodDeclaration)) {
+                throw new AssertionError("Unexpected value");
+            }
+
+            String plainText = ((MethodDeclaration) value).toString();
+            return super.getTableCellRendererComponent(table, plainText, isSelected, hasFocus, row, column);
+        }
+    }
+
+    static class SyntaxHighlightedMethodDeclarationRenderer extends ThermostatTableRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+
+            if (!(value instanceof MethodDeclaration)) {
+                throw new AssertionError("Unexpected value");
+            }
+
+            String syntaxHighlightedText = syntaxHighlightMethod((MethodDeclaration) value);
+            return super.getTableCellRendererComponent(table, syntaxHighlightedText, isSelected, hasFocus, row, column);
+        }
+
+        private String syntaxHighlightMethod(MethodDeclaration decl) {
+            final Color METHOD_COLOR = Palette.PALE_RED.getColor();
+            final Color PARAMETER_COLOR = Palette.VIOLET.getColor();
+            final Color RETURN_TYPE_COLOR = Palette.GRANITA_ORANGE.getColor();
+
+            String highlightedName = htmlColorText(decl.getName(), METHOD_COLOR);
+            String highlightedReturnType = htmlColorText(decl.getReturnType(), RETURN_TYPE_COLOR);
+
+            StringBuilder toReturn = new StringBuilder();
+            toReturn.append("<html>");
+            toReturn.append("<pre>");
+
+            toReturn.append(highlightedReturnType);
+            toReturn.append(" ");
+            toReturn.append("<b>");
+            toReturn.append(highlightedName);
+            toReturn.append("</b>");
+            toReturn.append("(");
+
+            ArrayList<String> parameters = new ArrayList<>();
+            for (String parameter : decl.getParameters()) {
+                parameters.add(htmlColorText(parameter, PARAMETER_COLOR));
+            }
+
+            toReturn.append(StringUtils.join(",", parameters));
+
+            toReturn.append(")");
+            toReturn.append("</pre>");
+            toReturn.append("<html>");
+            return toReturn.toString();
+
+        }
+
+        private String htmlColorText(String unescapedText, Color color) {
+            String hexColorString = "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
+            return "<font color='" + hexColorString + "'>"
+                    + StringUtils.htmlEscape(unescapedText) + "</font>";
+        }
     }
 
     public static void main(String[] args) {
