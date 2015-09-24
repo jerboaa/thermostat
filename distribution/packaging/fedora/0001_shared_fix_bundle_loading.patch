@@ -156,6 +156,18 @@ diff --git a/distribution/config/commands/vm-stat.properties b/distribution/conf
  
  summary = show various statistics about a VM
  
+diff --git a/distribution/scripts/thermostat-command-channel b/distribution/scripts/thermostat-command-channel
+--- a/distribution/scripts/thermostat-command-channel
++++ b/distribution/scripts/thermostat-command-channel
+@@ -61,7 +61,7 @@
+ BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
+ BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
+ BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
+-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-@netty.version@.jar"
++BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty.jar"
+ BOOT_CLASSPATH="${TOOLS_JAR}:${BOOT_CLASSPATH}"
+ 
+ # Append extra class path entries coming from the profiles
 diff --git a/killvm/distribution/thermostat-plugin.xml b/killvm/distribution/thermostat-plugin.xml
 --- a/killvm/distribution/thermostat-plugin.xml
 +++ b/killvm/distribution/thermostat-plugin.xml
