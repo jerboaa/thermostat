@@ -610,8 +610,8 @@ public class TreeMapComponent extends JComponent {
         }
 
         protected Label(Label other) {
+            this(other.getText());
             this.setFont(other.getFont());
-            this.setText(other.getText());
             this.setBackground(other.getBackground());
             this.setBounds(other.getBounds());
             this.setBorder(other.getBorder());
@@ -649,6 +649,7 @@ public class TreeMapComponent extends JComponent {
         }
 
         public Comp(Comp other) {
+            this();
             this.setBounds(other.getBounds());
             this.setBorder(other.getBorder());
             this.setLayout(other.getLayout());
