@@ -786,8 +786,8 @@ public class ShellCommandTest {
 
         Options options1 = mock(Options.class);
         when(info1.getOptions()).thenReturn(options1);
-        when(options1.getOptions()).thenReturn(new ArrayList(optionsList1));
-        when(info1.getOptions().getOptions()).thenReturn(new ArrayList(optionsList1));
+        when(options1.getOptions()).thenReturn(new ArrayList<>(optionsList1));
+        when(info1.getOptions().getOptions()).thenReturn(new ArrayList<>(optionsList1));
 
         infoList.add(info1);
 
@@ -813,8 +813,8 @@ public class ShellCommandTest {
 
         Options options2 = mock(Options.class);
         when(info2.getOptions()).thenReturn(options2);
-        when(options2.getOptions()).thenReturn(new ArrayList(optionsList2));
-        when(info2.getOptions().getOptions()).thenReturn(new ArrayList(optionsList2));
+        when(options2.getOptions()).thenReturn(new ArrayList<>(optionsList2));
+        when(info2.getOptions().getOptions()).thenReturn(new ArrayList<>(optionsList2));
 
         infoList.add(info2);
 
@@ -844,8 +844,8 @@ public class ShellCommandTest {
 
         Options options3 = mock(Options.class);
         when(info3.getOptions()).thenReturn(options3);
-        when(options3.getOptions()).thenReturn(new ArrayList(optionsList3));
-        when(info3.getOptions().getOptions()).thenReturn(new ArrayList(optionsList3));
+        when(options3.getOptions()).thenReturn(new ArrayList<>(optionsList3));
+        when(info3.getOptions().getOptions()).thenReturn(new ArrayList<>(optionsList3));
 
         infoList.add(info3);
 
