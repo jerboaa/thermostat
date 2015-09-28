@@ -92,7 +92,7 @@ public class CategoryBuilder<T extends Pojo> {
                 }
             }
 
-            List<Class> argumentClasses = new ArrayList<>();
+            List<Class<?>> argumentClasses = new ArrayList<>();
             argumentClasses.add(String.class);
             argumentClasses.add(Class.class);
             argumentClasses.add(List.class);
@@ -108,7 +108,7 @@ public class CategoryBuilder<T extends Pojo> {
                 argumentObjects.add(indexed);
             }
 
-            Class[] classes = argumentClasses.toArray(new Class[argumentClasses.size()]);
+            Class<?>[] classes = argumentClasses.toArray(new Class[argumentClasses.size()]);
             Object[] objects = argumentObjects.toArray();
 
             Category<T> category = create(classes, objects);

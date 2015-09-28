@@ -168,7 +168,7 @@ public class ActivatorTest {
         StubBundleContext context = new StubBundleContext();
         ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
         MultipleServiceTracker launcherDepsTracker = mock(MultipleServiceTracker.class);
-        Class[] launcherDeps = new Class[] {
+        Class<?>[] launcherDeps = new Class[] {
                 Keyring.class,
                 CommonPaths.class,
         };
@@ -176,7 +176,7 @@ public class ActivatorTest {
                 eq(launcherDeps), actionCaptor.capture()).thenReturn(launcherDepsTracker);
 
         MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
-        Class[] shellDeps = new Class[] {
+        Class<?>[] shellDeps = new Class[] {
                 CommonPaths.class,
                 ConfigurationInfoSource.class,
         };
@@ -234,7 +234,7 @@ public class ActivatorTest {
         StubBundleContext context = new StubBundleContext();
         ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
         MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
-        Class[] launcherDeps = new Class[] {
+        Class<?>[] launcherDeps = new Class[] {
                 Keyring.class,
                 CommonPaths.class,
         };
@@ -242,7 +242,7 @@ public class ActivatorTest {
                 eq(launcherDeps), actionCaptor.capture()).thenReturn(unusedTracker);
 
         MultipleServiceTracker shellTracker = mock(MultipleServiceTracker.class);
-        Class[] shellDeps = new Class[] {
+        Class<?>[] shellDeps = new Class[] {
                 CommonPaths.class,
                 ConfigurationInfoSource.class,
         };

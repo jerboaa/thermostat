@@ -44,7 +44,7 @@ import java.util.Map;
  */
 public class TypeMapper {
 
-    private static final Map<Class, String> map = new HashMap<>();
+    private static final Map<Class<?>, String> map = new HashMap<>();
     static {
         map.put(String.class, "?s");
         map.put(int.class, "?i");
@@ -52,7 +52,7 @@ public class TypeMapper {
         map.put(boolean.class, "?b");
     }
 
-    static String get(Class type) {
+    static String get(Class<?> type) {
         return map.get(type);
     }
 

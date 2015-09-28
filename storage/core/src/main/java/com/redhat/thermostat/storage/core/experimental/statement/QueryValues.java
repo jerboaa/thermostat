@@ -47,11 +47,11 @@ import com.redhat.thermostat.storage.core.Id;
  */
 public class QueryValues {
 
-    private static final Class EMPTY_VALUE = QueryValues.class;
+    private static final Class<?> EMPTY_VALUE = QueryValues.class;
 
     private Query query;
     private Map<Id, Value> values;
-    private Map<Id, Class> types;
+    private Map<Id, Class<?>> types;
 
     protected QueryValues(Query query) {
         this.query = query;
@@ -88,8 +88,8 @@ public class QueryValues {
 
     private void check(Id criteriaId, Object value) {
 
-        Class type = value.getClass();
-        Class targetType = types.get(criteriaId);
+        Class<?> type = value.getClass();
+        Class<?> targetType = types.get(criteriaId);
 
         boolean match = false;
         if (targetType.isAssignableFrom(int.class) ||

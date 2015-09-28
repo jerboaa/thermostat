@@ -156,7 +156,7 @@ public class StatementUtils {
     static <T extends Pojo> void setData(PreparedStatement<T> prepared,
                                          Value value, int index)
     {
-        Class type = value.get().getClass();
+        Class<?> type = value.get().getClass();
         if (type.isAssignableFrom(int.class) ||
             type.isAssignableFrom(Integer.class))
         {

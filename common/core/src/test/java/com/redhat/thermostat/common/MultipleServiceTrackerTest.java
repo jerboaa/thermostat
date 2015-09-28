@@ -100,7 +100,7 @@ public class MultipleServiceTrackerTest {
     @Test
     public void testSingleClass() throws Exception {
 
-        Class[] deps = { Object.class };
+        Class<?>[] deps = { Object.class };
         MultipleServiceTracker tracker = new MultipleServiceTracker(context, deps, action);
 
         ArgumentCaptor<ServiceTrackerCustomizer> customizerCaptor = ArgumentCaptor.forClass(ServiceTrackerCustomizer.class);
@@ -121,7 +121,7 @@ public class MultipleServiceTrackerTest {
 
     @Test
     public void testMultipleClasses() throws Exception {
-        Class[] deps = { Object.class, String.class };
+        Class<?>[] deps = { Object.class, String.class };
         MultipleServiceTracker tracker = new MultipleServiceTracker(context, deps, action);
 
         ArgumentCaptor<Map> serviceMap = ArgumentCaptor.forClass(Map.class);
