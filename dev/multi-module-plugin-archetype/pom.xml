@@ -45,9 +45,7 @@
     <version>1.99.6-SNAPSHOT</version>
   </parent>
 
-  <groupId>com.redhat.thermostat</groupId>
   <artifactId>thermostat-maven-archetype-multimodule</artifactId>
-  <version>1.99.6-SNAPSHOT</version>
   <packaging>maven-archetype</packaging>
 
   <name>Thermostat archetype for a multi-module plugin scaffold</name>
