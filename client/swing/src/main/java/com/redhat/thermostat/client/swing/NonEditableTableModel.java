@@ -54,7 +54,7 @@ public class NonEditableTableModel extends DefaultTableModel {
         super(columnNames, rowCount);
     }
 
-    public NonEditableTableModel(Vector<? extends Vector> data, Vector<?> columnNames) {
+    public NonEditableTableModel(Vector<? extends Vector<?>> data, Vector<?> columnNames) {
         super(data, columnNames);
     }
 
