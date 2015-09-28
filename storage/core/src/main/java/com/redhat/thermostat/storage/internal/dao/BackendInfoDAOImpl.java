@@ -43,6 +43,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
@@ -93,6 +94,21 @@ public class BackendInfoDAOImpl extends AbstractDao implements BackendInfoDAO {
                     @Override
                     public PreparedStatement<BackendInformation> customize(PreparedStatement<BackendInformation> preparedStatement) {
                         preparedStatement.setString(0, host.getAgentId());
+                        return preparedStatement;
+                    }
+                }).asList();
+        List<BackendInformation> sorted = new ArrayList<>(result);
+        Collections.sort(sorted, new OrderedComparator<>());
+        return sorted;
+    }
+
+    @Override
+    public List<BackendInformation> getBackendInformation(final AgentId agentId) {
+        List<BackendInformation> result = executeQuery(
+                new AbstractDaoQuery<BackendInformation>(storage, CATEGORY, QUERY_BACKEND_INFO) {
+                    @Override
+                    public PreparedStatement<BackendInformation> customize(PreparedStatement<BackendInformation> preparedStatement) {
+                        preparedStatement.setString(0, agentId.get());
                         return preparedStatement;
                     }
                 }).asList();

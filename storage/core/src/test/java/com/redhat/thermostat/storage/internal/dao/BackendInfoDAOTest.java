@@ -52,6 +52,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -175,6 +176,34 @@ public class BackendInfoDAOTest {
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
         List<BackendInformation> result = dao.getBackendInformation(agentref);
+
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, AGENT_ID);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
+
+        assertEquals(Arrays.asList(backendInfo1), result);
+    }
+
+    @Test
+    public void verifyGetBackendInformationWithAgentId() throws DescriptorParsingException, StatementExecutionException {
+        final String AGENT_ID = "agent-id";
+        AgentId agentId = new AgentId(AGENT_ID);
+
+        @SuppressWarnings("unchecked")
+        Cursor<BackendInformation> backendCursor = (Cursor<BackendInformation>) mock(Cursor.class);
+        when(backendCursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(backendCursor.next()).thenReturn(backend1).thenReturn(null);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<BackendInformation> stmt = (PreparedStatement<BackendInformation>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(backendCursor);
+
+        BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
+
+        List<BackendInformation> result = dao.getBackendInformation(agentId);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, AGENT_ID);

@@ -39,6 +39,7 @@ package com.redhat.thermostat.storage.dao;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
@@ -63,7 +64,11 @@ public interface BackendInfoDAO {
             PIDS_TO_MONITOR,
             ORDER_VALUE);
 
+    /** @deprecated use {@link #getBackendInformation(AgentId)} instead. */
+    @Deprecated
     List<BackendInformation> getBackendInformation(HostRef host);
+
+    List<BackendInformation> getBackendInformation(AgentId agentId);
 
     void addBackendInformation(BackendInformation info);
 
