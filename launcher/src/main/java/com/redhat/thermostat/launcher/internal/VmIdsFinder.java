@@ -39,16 +39,17 @@ package com.redhat.thermostat.launcher.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 public class VmIdsFinder implements IdFinder {
 
@@ -61,11 +62,6 @@ public class VmIdsFinder implements IdFinder {
     @Override
     public List<CompletionInfo> findIds() {
         List<CompletionInfo> vmIds = new ArrayList<>();
-        ServiceReference hostsDAORef = context.getServiceReference(HostInfoDAO.class.getName());
-        HostInfoDAO hostsDAO = (HostInfoDAO) context.getService(hostsDAORef);
-
-        Collection<HostRef> hosts = hostsDAO.getHosts();
-        context.ungetService(hostsDAORef);
 
         ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
         VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
@@ -73,13 +69,16 @@ public class VmIdsFinder implements IdFinder {
         ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
         AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
 
+        Set<AgentId> agentIds = agentInfoDAO.getAgentIds();
+
+        // FIXME we are still using the service after this line of code....
         context.ungetService(agentInfoDAORef);
 
-        for (HostRef host : hosts) {
-            AgentInformation agentInfo = agentInfoDAO.getAgentInformation(host);
+        for (AgentId agentId : agentIds) {
+            AgentInformation agentInfo = agentInfoDAO.getAgentInformation(agentId);
             if (agentInfo != null) {
-                Collection<VmRef> vms = vmsDAO.getVMs(host);
-                for (VmRef vm : vms) {
+                Collection<VmId> vms = vmsDAO.getVmIds(agentId);
+                for (VmId vm : vms) {
                     VmInfo info = vmsDAO.getVmInfo(vm);
                     vmIds.add(new CompletionInfo(info.getVmId(), getUserVisibleText(info, agentInfo)));
                 }

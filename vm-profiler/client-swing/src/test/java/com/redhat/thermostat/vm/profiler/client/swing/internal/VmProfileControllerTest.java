@@ -66,6 +66,7 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -105,7 +106,7 @@ public class VmProfileControllerTest {
     private VmRef vm;
 
     private VmProfileController controller;
-    private HostRef agent;
+    private AgentId agentId;
     private VmInfo vmInfo;
 
     @Before
@@ -131,17 +132,18 @@ public class VmProfileControllerTest {
         clock = mock(Clock.class);
         view = mock(VmProfileView.class);
 
-        agent = mock(HostRef.class);
-        when(agent.getAgentId()).thenReturn(AGENT_ID);
+        agentId = new AgentId(AGENT_ID);
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn(AGENT_ID);
 
         vm = mock(VmRef.class);
-        when(vm.getHostRef()).thenReturn(agent);
+        when(vm.getHostRef()).thenReturn(hostRef);
         when(vm.getVmId()).thenReturn(VM_ID);
 
         AgentInformation agentInfo = new AgentInformation();
         agentInfo.setAlive(true);
         agentInfo.setConfigListenAddress(AGENT_HOST + ":" + AGENT_PORT);
-        when(agentInfoDao.getAgentInformation(agent)).thenReturn(agentInfo);
+        when(agentInfoDao.getAgentInformation(agentId)).thenReturn(agentInfo);
     }
 
     @Test

@@ -51,7 +51,7 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -106,7 +106,7 @@ public class CleanDataCommand extends AbstractCommand {
         
         try {
             for (String agentId : agentIdList) {
-                AgentInformation agentInfo = agentInfoDAO.getAgentInformation(new HostRef(agentId, "unused"));
+                AgentInformation agentInfo = agentInfoDAO.getAgentInformation(new AgentId(agentId));
                 if (agentInfo != null) {
                     removeAgentDataIfSane(storage, agentId, !agentInfo.isAlive(), output);
                 } else {

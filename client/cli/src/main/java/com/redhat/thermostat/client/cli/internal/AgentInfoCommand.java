@@ -46,7 +46,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -85,11 +85,11 @@ public class AgentInfoCommand extends AbstractCommand {
     }
 
     private void displayAgentInfo(PrintStream out, String agentId) throws CommandException {
-        HostRef dummyRef = new HostRef(agentId, "dummy");
-        AgentInformation info = agentInfoDAO.getAgentInformation(dummyRef);
+        AgentId agent = new AgentId(agentId);
+        AgentInformation info = agentInfoDAO.getAgentInformation(agent);
         requireNonNull(info, translator.localize(LocaleResources.AGENT_NOT_FOUND, agentId));
 
-        List<BackendInformation> backendList = backendInfoDAO.getBackendInformation(dummyRef);
+        List<BackendInformation> backendList = backendInfoDAO.getBackendInformation(agent);
 
         AgentInfoFormatter formatter = new AgentInfoFormatter();
 

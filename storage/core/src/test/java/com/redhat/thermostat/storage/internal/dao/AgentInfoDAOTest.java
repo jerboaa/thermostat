@@ -60,7 +60,6 @@ import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
@@ -224,7 +223,7 @@ public class AgentInfoDAOTest {
 
     @Test
     public void verifyGetAgentInformationWhenStorageCantFindIt() throws DescriptorParsingException, StatementExecutionException {
-        HostRef agentRef = mock(HostRef.class);
+        AgentId agentId = mock(AgentId.class);
 
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")
@@ -238,15 +237,15 @@ public class AgentInfoDAOTest {
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
-        AgentInformation computed = dao.getAgentInformation(agentRef);
+        AgentInformation computed = dao.getAgentInformation(agentId);
 
         assertEquals(null, computed);
     }
 
     @Test
     public void verifyGetAgentInformation() throws StatementExecutionException, DescriptorParsingException {
-        HostRef agentRef = mock(HostRef.class);
-        when(agentRef.getAgentId()).thenReturn(agentInfo1.getAgentId());
+        AgentId agentId = mock(AgentId.class);
+        when(agentId.get()).thenReturn(agentInfo1.getAgentId());
 
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")
@@ -259,7 +258,7 @@ public class AgentInfoDAOTest {
         when(stmt.executeQuery()).thenReturn(cursor);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
-        AgentInformation computed = dao.getAgentInformation(agentRef);
+        AgentInformation computed = dao.getAgentInformation(agentId);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, agentInfo1.getAgentId());

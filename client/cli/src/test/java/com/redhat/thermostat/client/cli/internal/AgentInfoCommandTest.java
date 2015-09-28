@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
-
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,7 +52,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -61,7 +60,10 @@ import com.redhat.thermostat.storage.model.BackendInformation;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class AgentInfoCommandTest {
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    private static final String AGENT_ID = "some-agent-id";
 
     private AgentInfoCommand command;
 
@@ -69,7 +71,7 @@ public class AgentInfoCommandTest {
     private AgentInfoDAO agentInfoDAO;
     private BackendInfoDAO backendInfoDAO;
 
-    private HostRef hostRef;
+    private AgentId agent;
 
     private DateFormat dateFormat;
 
@@ -81,24 +83,23 @@ public class AgentInfoCommandTest {
         agentInfoDAO = mock(AgentInfoDAO.class);
         backendInfoDAO = mock(BackendInfoDAO.class);
 
-        hostRef = new HostRef("liveAgent", "dummy");
+        agent = new AgentId(AGENT_ID);
         command = new AgentInfoCommand();
     }
 
     @Test
     public void testGetAgentInfo() throws CommandException {
-        String idOne = "liveAgent";
         String address = "configListenAddress";
         long startTime = 0;
         long stopTime = 1;
 
         AgentInformation agentOne = new AgentInformation();
-        agentOne.setAgentId(idOne);
+        agentOne.setAgentId(AGENT_ID);
         agentOne.setConfigListenAddress(address);
         agentOne.setStartTime(startTime);
         agentOne.setStopTime(stopTime);
 
-        when(agentInfoDAO.getAgentInformation(hostRef)).thenReturn(agentOne);
+        when(agentInfoDAO.getAgentInformation(agent)).thenReturn(agentOne);
 
         String backendName = "backendInfo";
         boolean status = true;
@@ -108,17 +109,17 @@ public class AgentInfoCommandTest {
         when(backendInformation.getName()).thenReturn(backendName);
         when(backendInformation.isActive()).thenReturn(status);
         when(backendInformation.getDescription()).thenReturn(backendDescription);
-        when(backendInfoDAO.getBackendInformation(hostRef)).thenReturn(Arrays.asList(new BackendInformation[] {backendInformation}));
+        when(backendInfoDAO.getBackendInformation(agent)).thenReturn(Arrays.asList(new BackendInformation[] {backendInformation}));
 
         setupServices();
-        CommandContext context = setupArgs(idOne);
+        CommandContext context = setupArgs(AGENT_ID);
 
         command.run(context);
 
         String output = cmdCtxFactory.getOutput();
 
         verifyTitles(output);
-        verifyAgentContent(output, idOne, address, startTime, stopTime);
+        verifyAgentContent(output, AGENT_ID, address, startTime, stopTime);
         verifyBackendContent(output, backendName, status, backendDescription);
     }
 

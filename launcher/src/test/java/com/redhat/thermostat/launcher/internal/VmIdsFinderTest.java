@@ -40,20 +40,23 @@ import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.text.Collator;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import org.junit.Before;
-import org.junit.Test;
 
 public class VmIdsFinderTest {
 
@@ -86,31 +89,29 @@ public class VmIdsFinderTest {
     public void setupVmIdsFinder() {
         StubBundleContext context = new StubBundleContext();
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         VmInfoDAO vmsInfoDAO = mock(VmInfoDAO.class);
         context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
-        context.registerService(HostInfoDAO.class, hostInfoDAO, null);
         context.registerService(VmInfoDAO.class, vmsInfoDAO, null);
 
         vmIdsFinder = new VmIdsFinder(context);
 
-        Collection<HostRef> hostRefs = new ArrayList<>();
-        HostRef hostRef1 = mock(HostRef.class);
-        HostRef hostRef2 = mock(HostRef.class);
-        hostRefs.add(hostRef1);
-        hostRefs.add(hostRef2);
+        Set<AgentId> agentIds = new HashSet<>();
+        AgentId agentId1 = mock(AgentId.class);
+        AgentId agentId2 = mock(AgentId.class);
+        agentIds.add(agentId1);
+        agentIds.add(agentId2);
 
-        when(hostInfoDAO.getHosts()).thenReturn(hostRefs);
+        when(agentInfoDAO.getAgentIds()).thenReturn(agentIds);
         AgentInformation agentInformation1 = mock(AgentInformation.class);
-        when(agentInfoDAO.getAgentInformation(hostRef1)).thenReturn(agentInformation1);
+        when(agentInfoDAO.getAgentInformation(agentId1)).thenReturn(agentInformation1);
         AgentInformation agentInformation2 = mock(AgentInformation.class);
-        when(agentInfoDAO.getAgentInformation(hostRef2)).thenReturn(agentInformation2);
+        when(agentInfoDAO.getAgentInformation(agentId2)).thenReturn(agentInformation2);
 
-        Collection<VmRef> vms1 = new ArrayList<>();
-        VmRef vm0 = mock(VmRef.class);
-        VmRef vm1 = mock(VmRef.class);
-        VmRef vm2 = mock(VmRef.class);
-        VmRef vm3 = mock(VmRef.class);
+        Set<VmId> vms1 = new HashSet<>();
+        VmId vm0 = mock(VmId.class);
+        VmId vm1 = mock(VmId.class);
+        VmId vm2 = mock(VmId.class);
+        VmId vm3 = mock(VmId.class);
         vms1.add(vm0);
         vms1.add(vm1);
         vms1.add(vm2);
@@ -124,10 +125,10 @@ public class VmIdsFinderTest {
         when(vmsInfoDAO.getVmInfo(vm2)).thenReturn(info2);
         when(vmsInfoDAO.getVmInfo(vm3)).thenReturn(info3);
 
-        Collection<VmRef> vms2 = new ArrayList<>();
-        VmRef vm4 = mock(VmRef.class);
-        VmRef vm5 = mock(VmRef.class);
-        VmRef vm6 = mock(VmRef.class);
+        Set<VmId> vms2 = new HashSet<>();
+        VmId vm4 = mock(VmId.class);
+        VmId vm5 = mock(VmId.class);
+        VmId vm6 = mock(VmId.class);
         vms2.add(vm4);
         vms2.add(vm5);
         vms2.add(vm6);
@@ -163,8 +164,8 @@ public class VmIdsFinderTest {
         when(info5.isAlive(agentInformation2)).thenReturn(aliveStatus5);
         when(info6.isAlive(agentInformation2)).thenReturn(aliveStatus6);
 
-        when(vmsInfoDAO.getVMs(hostRef1)).thenReturn(vms1);
-        when(vmsInfoDAO.getVMs(hostRef2)).thenReturn(vms2);
+        when(vmsInfoDAO.getVmIds(agentId1)).thenReturn(vms1);
+        when(vmsInfoDAO.getVmIds(agentId2)).thenReturn(vms2);
 
         setupVmIdsFinderWithOnlyOneVm();
     }
@@ -172,24 +173,22 @@ public class VmIdsFinderTest {
     private void setupVmIdsFinderWithOnlyOneVm() {
         StubBundleContext context = new StubBundleContext();
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         VmInfoDAO vmsInfoDAO = mock(VmInfoDAO.class);
         context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
-        context.registerService(HostInfoDAO.class, hostInfoDAO, null);
         context.registerService(VmInfoDAO.class, vmsInfoDAO, null);
 
         vmIdsFinderWithOnlyOneVm = new VmIdsFinder(context);
 
-        Collection<HostRef> hostRefs = new ArrayList<>();
-        HostRef hostRef1 = mock(HostRef.class);
-        hostRefs.add(hostRef1);
+        Set<AgentId> agentIds = new HashSet<>();
+        AgentId agentId = new AgentId(id0);
+        agentIds.add(agentId);
 
-        when(hostInfoDAO.getHosts()).thenReturn(hostRefs);
+        when(agentInfoDAO.getAgentIds()).thenReturn(agentIds);
         AgentInformation agentInformation1 = mock(AgentInformation.class);
-        when(agentInfoDAO.getAgentInformation(hostRef1)).thenReturn(agentInformation1);
+        when(agentInfoDAO.getAgentInformation(agentId)).thenReturn(agentInformation1);
 
-        Collection<VmRef> vms1 = new ArrayList<>();
-        VmRef vm1 = mock(VmRef.class);
+        Set<VmId> vms1 = new HashSet<>();
+        VmId vm1 = mock(VmId.class);
         vms1.add(vm1);
         VmInfo info1 = mock(VmInfo.class);
         when(vmsInfoDAO.getVmInfo(vm1)).thenReturn(info1);
@@ -198,7 +197,7 @@ public class VmIdsFinderTest {
         when(info1.getMainClass()).thenReturn(mainClass0);
         when(info1.isAlive(agentInformation1)).thenReturn(aliveStatus0);
 
-        when(vmsInfoDAO.getVMs(hostRef1)).thenReturn(vms1);
+        when(vmsInfoDAO.getVmIds(agentId)).thenReturn(vms1);
         AgentInformation agentInfo0 = mock(AgentInformation.class);
         agentInfo0.setAgentId(id0);
     }
@@ -207,14 +206,24 @@ public class VmIdsFinderTest {
     public void testFindIds() {
 
         List<CompletionInfo> result = vmIdsFinder.findIds();
+
+        // Sort to get some predictability in result order
+        final Collator collator = Collator.getInstance(Locale.US);
+        result.sort(new Comparator<CompletionInfo>() {
+            @Override
+            public int compare(CompletionInfo o1, CompletionInfo o2) {
+                return collator.compare(o1.getActualCompletion(), o2.getActualCompletion());
+            }
+        });
+
         assertEquals(7, result.size());
-        assertEquals(formatExpected(id0, mainClass0, aliveStatus0), result.get(0).getCompletionWithUserVisibleText());
-        assertEquals(formatExpected(id1, mainClass1, aliveStatus1), result.get(1).getCompletionWithUserVisibleText());
-        assertEquals(formatExpected(id2, mainClass2, aliveStatus2), result.get(2).getCompletionWithUserVisibleText());
-        assertEquals(formatExpected(id3, mainClass3, aliveStatus3), result.get(3).getCompletionWithUserVisibleText());
-        assertEquals(formatExpected(id4, mainClass4, aliveStatus4), result.get(4).getCompletionWithUserVisibleText());
-        assertEquals(formatExpected(id5, mainClass5, aliveStatus5), result.get(5).getCompletionWithUserVisibleText());
-        assertEquals(formatExpected(id6, mainClass6, aliveStatus6), result.get(6).getCompletionWithUserVisibleText());
+        assertEquals(formatExpected(id2, mainClass2, aliveStatus2), result.get(0).getCompletionWithUserVisibleText());
+        assertEquals(formatExpected(id6, mainClass6, aliveStatus6), result.get(1).getCompletionWithUserVisibleText());
+        assertEquals(formatExpected(id1, mainClass1, aliveStatus1), result.get(2).getCompletionWithUserVisibleText());
+        assertEquals(formatExpected(id5, mainClass5, aliveStatus5), result.get(3).getCompletionWithUserVisibleText());
+        assertEquals(formatExpected(id3, mainClass3, aliveStatus3), result.get(4).getCompletionWithUserVisibleText());
+        assertEquals(formatExpected(id4, mainClass4, aliveStatus4), result.get(5).getCompletionWithUserVisibleText());
+        assertEquals(formatExpected(id0, mainClass0, aliveStatus0), result.get(6).getCompletionWithUserVisibleText());
     }
 
     @Test

@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.gc.remote.common;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
 
@@ -50,6 +50,7 @@ import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -74,14 +75,17 @@ public class GCRequestTest {
         
         listener = mock(RequestResponseListener.class);
 
-        HostRef ref = mock(HostRef.class);        
+        final String AGENT_ID = "some-id";
+
+        HostRef ref = mock(HostRef.class);
+        when(ref.getAgentId()).thenReturn(AGENT_ID);
         when(vm.getHostRef()).thenReturn(ref);
         when(vm.getPid()).thenReturn(123456);
 
         AgentInformation info = mock(AgentInformation.class);
         when(info.getRequestQueueAddress()).thenReturn(new InetSocketAddress("0.0.42.42", 42));
         
-        when(agentDAO.getAgentInformation(ref)).thenReturn(info);
+        when(agentDAO.getAgentInformation(new AgentId(AGENT_ID))).thenReturn(info);
         
         queue = mock(RequestQueue.class);
     }

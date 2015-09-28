@@ -50,12 +50,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.gc.remote.common.GCRequest;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.VmInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -67,7 +61,13 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.gc.remote.common.GCRequest;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
@@ -123,7 +123,7 @@ public class VmGcControllerTest {
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
         when(vmInfoDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(agentInfoDAO.getAgentInformation(isA(HostRef.class))).thenReturn(agentInfo);
+        when(agentInfoDAO.getAgentInformation(isA(AgentId.class))).thenReturn(agentInfo);
 
         // the following set should map to Concurrent Collector
         Set<String> cms = new HashSet<>();

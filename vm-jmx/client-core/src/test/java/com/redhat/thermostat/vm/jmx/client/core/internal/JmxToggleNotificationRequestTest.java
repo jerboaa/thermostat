@@ -58,6 +58,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -88,7 +89,10 @@ public class JmxToggleNotificationRequestTest {
         queue = mock(RequestQueue.class);
         requestCaptor = ArgumentCaptor.forClass(Request.class);
 
+        final String AGENT_ID = "some-id";
+        AgentId agentId = new AgentId(AGENT_ID);
         host = mock(HostRef.class);
+        when(host.getAgentId()).thenReturn(AGENT_ID);
         vm = mock(VmRef.class);
         when(vm.getHostRef()).thenReturn(host);
 
@@ -96,7 +100,7 @@ public class JmxToggleNotificationRequestTest {
 
         agentInfo = mock(AgentInformation.class);
         when(agentInfo.getRequestQueueAddress()).thenReturn(new InetSocketAddress(HOST, PORT));
-        when(agentDAO.getAgentInformation(host)).thenReturn(agentInfo);
+        when(agentDAO.getAgentInformation(agentId)).thenReturn(agentInfo);
         
         factory = mock(JmxToggleResponseListenerFactory.class);
         listener = mock(JmxToggleResponseListener.class);

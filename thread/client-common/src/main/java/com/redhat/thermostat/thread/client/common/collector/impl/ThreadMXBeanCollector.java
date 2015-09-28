@@ -36,6 +36,15 @@
 
 package com.redhat.thermostat.thread.client.common.collector.impl;
 
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
@@ -43,7 +52,7 @@ import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -56,13 +65,6 @@ import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 public class ThreadMXBeanCollector implements ThreadCollector {
 
@@ -94,9 +96,9 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     }
 
     Request createRequest() {
-        HostRef targetHostRef = ref.getHostRef();
+        AgentId targetId = new AgentId(ref.getHostRef().getAgentId());
         
-        InetSocketAddress target = agentDao.getAgentInformation(targetHostRef).getRequestQueueAddress();
+        InetSocketAddress target = agentDao.getAgentInformation(targetId).getRequestQueueAddress();
         Request harvester = new Request(RequestType.RESPONSE_EXPECTED, target);
 
         harvester.setReceiver(HarvesterCommand.RECEIVER);

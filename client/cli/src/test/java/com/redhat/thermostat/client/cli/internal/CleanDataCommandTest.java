@@ -58,8 +58,8 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -119,11 +119,11 @@ public class CleanDataCommandTest {
            mockAgent5
         ));
         
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId1", "unused"))).thenReturn(mockAgent1);
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId2", "unused"))).thenReturn(mockAgent2);
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId3", "unused"))).thenReturn(mockAgent3);
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId4", "unused"))).thenReturn(mockAgent4);
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId5", "unused"))).thenReturn(mockAgent5);
+        when(mockAgentInfoDAO.getAgentInformation(new AgentId("agentId1"))).thenReturn(mockAgent1);
+        when(mockAgentInfoDAO.getAgentInformation(new AgentId("agentId2"))).thenReturn(mockAgent2);
+        when(mockAgentInfoDAO.getAgentInformation(new AgentId("agentId3"))).thenReturn(mockAgent3);
+        when(mockAgentInfoDAO.getAgentInformation(new AgentId("agentId4"))).thenReturn(mockAgent4);
+        when(mockAgentInfoDAO.getAgentInformation(new AgentId("agentId5"))).thenReturn(mockAgent5);
     }
 
     @Test

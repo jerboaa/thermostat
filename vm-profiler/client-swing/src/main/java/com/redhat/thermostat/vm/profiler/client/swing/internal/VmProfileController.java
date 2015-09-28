@@ -64,7 +64,7 @@ import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -195,7 +195,8 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     }
 
     private void sendProfilingRequest(final boolean start) {
-        InetSocketAddress address = agentInfoDao.getAgentInformation(vm.getHostRef()).getRequestQueueAddress();
+        AgentId agentId = new AgentId(vm.getHostRef().getAgentId());
+        InetSocketAddress address = agentInfoDao.getAgentInformation(agentId).getRequestQueueAddress();
         String action = start ? ProfileRequest.START_PROFILING : ProfileRequest.STOP_PROFILING;
         Request req = ProfileRequest.create(address, vm.getVmId(), action);
         req.addListener(new RequestResponseListener() {
@@ -282,7 +283,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     }
 
     private boolean isAlive() {
-        HostRef agent = vm.getHostRef();
+        AgentId agent = new AgentId(vm.getHostRef().getAgentId());
         AgentInformation agentInfo = agentInfoDao.getAgentInformation(agent);
         if (!agentInfo.isAlive()) {
             return false;

@@ -47,19 +47,18 @@ import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.command.internal.LocaleResources;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
 public class PingCommand extends AbstractCommand {
     
@@ -124,20 +123,17 @@ public class PingCommand extends AbstractCommand {
             return;
         }
 
-        ServiceReference hostInfoDaoRef = context.getServiceReference(HostInfoDAO.class.getName());
-        requireNonNull(hostInfoDaoRef, translator.localize(LocaleResources.COMMAND_PING_NO_HOST_INFO_DAO));
-        HostInfoDAO hostInfoDao = (HostInfoDAO) context.getService(hostInfoDaoRef);
-        HostRef targetHostRef = getHostRef(hostInfoDao, agentId);
-        context.ungetService(hostInfoDaoRef);
-
-        if (targetHostRef == null) {
-            printCustomMessageWithUsage(out, translator.localize(LocaleResources.COMMAND_PING_INVALID_HOST_ID));
-            return;
-        }
         ServiceReference agentInfoDaoRef = context.getServiceReference(AgentInfoDAO.class.getName());
         requireNonNull(agentInfoDaoRef, translator.localize(LocaleResources.COMMAND_PING_NO_AGENT_INFO_DAO));
         AgentInfoDAO agentInfoDao = (AgentInfoDAO) context.getService(agentInfoDaoRef);
-        InetSocketAddress target = agentInfoDao.getAgentInformation(targetHostRef).getRequestQueueAddress();
+
+        AgentId targetId = getAgentId(agentInfoDao, agentId);
+        if (targetId == null) {
+            printCustomMessageWithUsage(out, translator.localize(LocaleResources.COMMAND_PING_INVALID_HOST_ID));
+            return;
+        }
+
+        InetSocketAddress target = agentInfoDao.getAgentInformation(targetId).getRequestQueueAddress();
         context.ungetService(agentInfoDaoRef);
         
         Request ping = new Request(RequestType.RESPONSE_EXPECTED, target);
@@ -167,15 +163,15 @@ public class PingCommand extends AbstractCommand {
         return args.get(0);
     }
 
-    private HostRef getHostRef(HostInfoDAO dao, String agentId) {
-        HostRef targetHostRef = null;
-        for (HostRef hostref : dao.getAliveHosts()) {
-            if (agentId.equals(hostref.getAgentId())) {
-                targetHostRef = hostref;
+    private AgentId getAgentId(AgentInfoDAO dao, String agentId) {
+        AgentId targetId = null;
+        for (AgentId aliveAgent : dao.getAliveAgentIds()) {
+            if (agentId.equals(aliveAgent.get())) {
+                targetId  = aliveAgent;
                 break;
             }
         }
-        return targetHostRef;
+        return targetId;
     }
 
     private void printCustomMessageWithUsage(PrintStream out, LocalizedString message) {

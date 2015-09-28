@@ -43,7 +43,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxCommand;
@@ -73,9 +73,9 @@ public class JmxToggleNotificationRequest {
     }
 
     public void sendEnableNotificationsRequestToAgent(VmRef vm, boolean enable) {
-        HostRef targetHostRef = vm.getHostRef();
+        AgentId targetId = new AgentId(vm.getHostRef().getAgentId());
 
-        InetSocketAddress target = agentDAO.getAgentInformation(targetHostRef).getRequestQueueAddress();
+        InetSocketAddress target = agentDAO.getAgentInformation(targetId).getRequestQueueAddress();
         Request req = new Request(RequestType.RESPONSE_EXPECTED, target);
 
         req.setReceiver(JmxCommand.RECEIVER);

@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.command.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -46,6 +45,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.concurrent.Semaphore;
 
 import org.junit.Test;
@@ -59,9 +59,9 @@ import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -87,34 +87,11 @@ public class PingCommandTest {
     }
 
     @Test
-    public void testCommandWithoutHostDao() throws CommandException {
-        StubBundleContext context = new StubBundleContext();
-
-        PingCommand command = new PingCommand(context);
-
-        TestCommandContextFactory factory = new TestCommandContextFactory();
-
-        SimpleArguments args = new SimpleArguments();
-        args.addNonOptionArgument(KNOWN_AGENT_ID);
-
-        try {
-            command.run(factory.createContext(args));
-            fail("did not throw expected exception");
-        } catch (CommandException agentDaoServiceMissing) {
-            assertEquals("Unable to access host information: service not available", agentDaoServiceMissing.getMessage());
-        }
-    }
-
-    @Test
     public void testCommandWithoutAgentDao() throws CommandException {
         HostRef host1 = mock(HostRef.class);
         when(host1.getAgentId()).thenReturn(KNOWN_AGENT_ID);
 
-        HostInfoDAO hostInfoDao = mock(HostInfoDAO.class);
-        when(hostInfoDao.getAliveHosts()).thenReturn(Arrays.asList(host1));
-
         StubBundleContext context = new StubBundleContext();
-        context.registerService(HostInfoDAO.class, hostInfoDao, null);
 
         PingCommand command = new PingCommand(context);
 
@@ -133,19 +110,15 @@ public class PingCommandTest {
     
     @Test
     public void testCommandWithoutRequestQueue() throws CommandException {
-        HostRef host1 = mock(HostRef.class);
-        when(host1.getAgentId()).thenReturn(KNOWN_AGENT_ID);
+        AgentId agentId = new AgentId(KNOWN_AGENT_ID);
 
-        HostInfoDAO hostInfoDao = mock(HostInfoDAO.class);
-        when(hostInfoDao.getAliveHosts()).thenReturn(Arrays.asList(host1));
-        
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        when(agentInfoDao.getAliveAgentIds()).thenReturn(new HashSet<>(Arrays.asList(agentId)));
         AgentInformation info = mock(AgentInformation.class);
         when(info.getConfigListenAddress()).thenReturn("myHost:9001");
-        when(agentInfoDao.getAgentInformation(any(HostRef.class))).thenReturn(info);
+        when(agentInfoDao.getAgentInformation(agentId)).thenReturn(info);
 
         StubBundleContext context = new StubBundleContext();
-        context.registerService(HostInfoDAO.class, hostInfoDao, null);
         context.registerService(AgentInfoDAO.class, agentInfoDao, null);
 
         PingCommand command = new PingCommand(context);
