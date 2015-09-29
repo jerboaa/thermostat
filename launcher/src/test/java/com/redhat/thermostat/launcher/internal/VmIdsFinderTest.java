@@ -41,6 +41,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.text.Collator;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -209,7 +210,8 @@ public class VmIdsFinderTest {
 
         // Sort to get some predictability in result order
         final Collator collator = Collator.getInstance(Locale.US);
-        result.sort(new Comparator<CompletionInfo>() {
+
+        Collections.sort(result, new Comparator<CompletionInfo>() {
             @Override
             public int compare(CompletionInfo o1, CompletionInfo o2) {
                 return collator.compare(o1.getActualCompletion(), o2.getActualCompletion());
