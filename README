@@ -43,7 +43,7 @@ Additional resources:
   correctly with just a JRE.
 
 * Maven (it will download all the java dependencies for you)
-* Make + GCC
+* Make, GCC + autoconf
 * MongoDB server
 
   Thermostat requires mongodb (http://www.mongodb.org/) server >= 2.0.0.
@@ -53,7 +53,8 @@ Additional resources:
     yum install mongodb-server
 
 * Either a /etc/os-release file or lsb_release
-* Gnome Keyring Daemon development libraries plus pkg-configs
+* Gnome Keyring Daemon development libraries plus pkg-configs. Either libsecret
+  based or a libgnome-keyring based solution is supported.
 * GTK 2+ development libraries plus pkg-configs
 
   Gnome Keyring/GTK2+ development libraries are required at build time.
@@ -61,6 +62,10 @@ Additional resources:
   You should check your distribution for the exact name of the libraries, on
   Fedora based distributions you can obtain it via:
 
+    dnf install libsecret-devel gtk2-devel
+
+  or
+   
     yum install libgnome-keyring-devel gtk2-devel
 
   on RHEL/CentOS 6.x via:

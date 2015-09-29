@@ -87,24 +87,48 @@
         <version>1.2.1</version>
         <executions>  
           <execution>
+            <id>id1</id>
             <phase>compile</phase>
             <goals>
               <goal>exec</goal>
             </goals>
+            <configuration>
+              <executable>autoreconf</executable>
+              <arguments>
+                <argument>--install</argument>
+              </arguments>
+            </configuration>
+          </execution>  
+          <execution>
+            <id>id2</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>./configure</executable>
+            </configuration>
+          </execution>  
+          <execution>
+            <id>id3</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>make</executable>
+              <arguments>
+                <argument>all</argument>
+              </arguments>
+              <systemProperties>
+                <systemProperty>
+                  <key>JAVA_HOME</key>
+                  <value>${java.home}</value>
+                </systemProperty>
+              </systemProperties>
+            </configuration>
           </execution>  
         </executions>
-        <configuration>
-          <executable>make</executable>
-          <arguments>
-            <argument>all</argument>
-          </arguments>
-          <systemProperties>
-            <systemProperty>
-              <key>JAVA_HOME</key>
-              <value>${java.home}</value>
-            </systemProperty>
-          </systemProperties>
-        </configuration>
       </plugin>
     </plugins>
     <pluginManagement>

@@ -4,18 +4,18 @@ MYCFLAGS   = -c -Wall -fPIC
 MYLDFLAGS  = -fPIC -shared
 COPY       = cp -a
 
-CLASSPATH  = target/classes/
-TARGET_DIR = target
+CLASSPATH  = ../../../../target/classes/
+TARGET_DIR = ../../../../target
 
 INCLUDE    = -I $(TARGET_DIR) -I $(JAVA_HOME)/include/ -I $(JAVA_HOME)/include/linux
-SOURCES    = src/main/native/GnomeKeyringLibraryNative.c
-TARGET     = $(TARGET_DIR)/GnomeKeyringLibraryNative.c
+SOURCES    = LibsecretKeyringLibraryNative.c
+TARGET     = $(TARGET_DIR)/LibsecretKeyringLibraryNative.c
 OBJECTS    = $(TARGET:.c=.o)
 
 EXECUTABLE = libGnomeKeyringWrapper.so
 
-MYCFLAGS   += `pkg-config --cflags gnome-keyring-1`
-MYLDFLAGS  += `pkg-config --libs gnome-keyring-1`
+MYCFLAGS   += `pkg-config --cflags libsecret-1`
+MYLDFLAGS  += `pkg-config --libs libsecret-1`
 
 .PHONY:
 JNI_LIST = com.redhat.thermostat.utils.keyring.impl.KeyringImpl
@@ -36,10 +36,10 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(MYCFLAGS) $(CFLAGS) $(INCLUDE) $< -o $@
 
 clean-lib:
-	rm $(TARGET_DIR)/$(EXECUTABLE)
+	rm -f $(TARGET_DIR)/$(EXECUTABLE)
 	
 clean-obj:
-	rm $(OBJECTS) $(TARGET)
+	rm -f $(OBJECTS) $(TARGET)
 	
 clean: clean-obj clean-lib
 	

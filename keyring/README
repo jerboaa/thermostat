@@ -1,0 +1,14 @@
+Thermostat Keyring service's JNI library.
+
+- A libsecret based implementation is preferred over
+- A libgnome-keyring based implementation
+
+If libsecret is not available a libgnome-keyring based implementation will be
+built. If both libgnome-keyring and libsecret are available, the libsecret
+based implementation will take precedence. 
+
+Please ensure you have the preferred library's devel packages installed.
+
+$ autoreconf --install
+$ ./configure
+$ make

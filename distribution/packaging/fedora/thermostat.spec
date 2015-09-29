@@ -2,7 +2,7 @@
 %global __jar_repack 0
 
 # Allow for setting the RELEASE. Will be removed at SRPM build time.
-__DEFAULT_RELEASE__ 5
+__DEFAULT_RELEASE__ 6
 
 # Upstream Thermostat version triplet
 %global major        __MAJOR__
@@ -274,8 +274,18 @@ BuildRequires: %{?scl_prefix_maven}mvn(org.apache.maven.plugins:maven-archetype-
 %if 0%{?is_rhel_6}
 BuildRequires: gnome-keyring-devel
 %else
+# Use libsecret on Fedora
+%{!?scl:
+BuildRequires: libsecret-devel
+}
+%{?scl:
 BuildRequires: libgnome-keyring-devel
+}
 %endif
+# Keyring JNI uses autotools
+BuildRequires: autoconf
+BuildRequires: automake
+BuildRequires: libtool
 # laf-utils JNI need pkconfig files for gtk2+
 BuildRequires: gtk2-devel
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.felix:org.apache.felix.framework)
@@ -363,7 +373,13 @@ Requires: %{?scl_prefix_mongodb}mongodb
 %if 0%{?is_rhel_6}
 Requires: gnome-keyring
 %else
+# Use libsecret on Fedora
+%{?!scl:
+Requires: libsecret
+}
+%{?scl:
 Requires: libgnome-keyring
+}
 %endif
 %if 0%{?is_rhel_6}
 Requires(post): /sbin/chkconfig
@@ -605,6 +621,8 @@ pushd keyring
            src/main/java/com/redhat/thermostat/utils/keyring/Keyring.java \
            src/main/java/com/redhat/thermostat/utils/keyring/KeyringException.java \
            src/main/java/com/redhat/thermostat/utils/keyring/impl/KeyringImpl.java
+  autoreconf --install
+  ./configure
   make all
 popd
 pushd agent/core
@@ -1090,7 +1108,10 @@ fi
 %{_datadir}/%{pkg_name}/plugins/embedded-web-endpoint
 
 %changelog
-* Wed Sep 16 2015 Jie Kang <jkang@redhat.com> - __MAJOR__.__MINOR__.PATCHLEVEL__-__RELEASE__
+* Tue Sep 29 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.PATCHLEVEL__-__RELEASE__
+- Use libsecret for keyring JNI on Fedora.
+
+* Wed Sep 16 2015 Jie Kang <jkang@redhat.com> - __MAJOR__.__MINOR__.PATCHLEVEL__-5
 - Add vm-numa plug-in to list of packaged plug-ins
 
 * Fri Sep 11 2015 Elliott Baron <ebaron@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-4
