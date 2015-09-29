@@ -567,14 +567,7 @@ diff --git a/killvm/common/pom.xml b/killvm/common/pom.xml
 -    <dependency>
        <groupId>org.apache.felix</groupId>
        <artifactId>org.apache.felix.framework</artifactId>
-       <version>4.2.0</version>
-@@ -120,4 +110,4 @@
      </dependency>
-   </dependencies>
- 
--</project>
-\ No newline at end of file
-+</project>
 diff --git a/laf-utils/pom.xml b/laf-utils/pom.xml
 --- a/laf-utils/pom.xml
 +++ b/laf-utils/pom.xml
