@@ -206,6 +206,16 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
     }
 
     @Override
+    public void setViewControlsEnabled(final boolean enabled) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                toolbarButton.setEnabled(enabled);
+            }
+        });
+    }
+
+    @Override
     public void setNotificationsEnabled(final boolean enabled) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override

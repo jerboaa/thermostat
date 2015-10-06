@@ -51,6 +51,7 @@ public abstract class JmxNotificationsView extends BasicView implements UICompon
     public abstract void addNotificationActionListener(ActionListener<NotificationAction> listener);
     public abstract void removeNotificationActionListener(ActionListener<NotificationAction> listener);
 
+    public abstract void setViewControlsEnabled(boolean enabled);
     public abstract void setNotificationsEnabled(boolean enabled);
     public abstract void clearNotifications();
     public abstract void addNotification(JmxNotification data);

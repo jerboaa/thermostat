@@ -38,9 +38,15 @@ package com.redhat.thermostat.vm.jmx.client.core.internal;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,6 +64,7 @@ import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 public class JmxNotificationsViewServiceImplTest {
 
     private AgentInfoDAO agentDao;
+    private VmInfoDAO vmInfoDao;
     private JmxNotificationDAO notificationDao;
     private Timer timer;
     private TimerFactory timerFactory;
@@ -70,6 +77,7 @@ public class JmxNotificationsViewServiceImplTest {
     public void setUp() {
         ApplicationService appSvc = mock(ApplicationService.class);
         agentDao = mock(AgentInfoDAO.class);
+        vmInfoDao = mock(VmInfoDAO.class);
         notificationDao = mock(JmxNotificationDAO.class);
         timer = mock(Timer.class);
         timerFactory = mock(TimerFactory.class);
@@ -81,7 +89,7 @@ public class JmxNotificationsViewServiceImplTest {
         viewProvider = mock(JmxNotificationsViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
 
-        service = new JmxNotificationsViewServiceImpl(appSvc, agentDao, notificationDao, 
+        service = new JmxNotificationsViewServiceImpl(appSvc, agentDao, vmInfoDao, notificationDao,
                 queue, timerFactory, viewProvider);
     }
 
@@ -93,6 +101,12 @@ public class JmxNotificationsViewServiceImplTest {
     @Test
     public void verifyGetInformationServiceController() {
         VmRef vm = mock(VmRef.class);
+        HostRef hostRef = mock(HostRef.class);
+        VmInfo vmInfo = mock(VmInfo.class);
+        when(hostRef.getAgentId()).thenReturn("agentId");
+        when(vm.getHostRef()).thenReturn(hostRef);
+        when(vmInfoDao.getVmInfo(any(VmRef.class))).thenReturn(vmInfo);
+        when(vmInfo.isAlive(any(AgentInformation.class))).thenReturn(VmInfo.AliveStatus.RUNNING);
         assertNotNull(service.getInformationServiceController(vm));
     }
 

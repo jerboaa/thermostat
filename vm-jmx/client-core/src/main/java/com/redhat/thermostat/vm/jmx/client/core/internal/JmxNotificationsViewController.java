@@ -52,8 +52,12 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView.NotificationAction;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsViewProvider;
@@ -67,26 +71,30 @@ public class JmxNotificationsViewController implements InformationServiceControl
     private final JmxNotificationsView view;
     private final Timer timer;
     private final JmxNotificationDAO dao;
+    private final VmInfoDAO vmInfo;
+    private final AgentInfoDAO agentInfo;
     private final VmRef vm;
+
     private final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private final JmxToggleNotificationRequest toggleReq;
-
     private final AtomicBoolean notificationsEnabled = new AtomicBoolean(false);
-    
+
     public JmxNotificationsViewController(ApplicationService appSvc,
-            AgentInfoDAO agent, JmxNotificationDAO notification,
+            AgentInfoDAO agent, VmInfoDAO vmInfo, JmxNotificationDAO notification,
             TimerFactory timerFactory, RequestQueue queue,
             JmxNotificationsViewProvider viewProvider, VmRef vmId) {
-        this(appSvc, agent, notification, timerFactory, queue, viewProvider, vmId,
+        this(appSvc, agent, vmInfo, notification, timerFactory, queue, viewProvider, vmId,
                 new JmxToggleNotificationRequestFactory());
     }
     
     JmxNotificationsViewController(final ApplicationService appSvc,
-            AgentInfoDAO agent, JmxNotificationDAO notification,
+            AgentInfoDAO agent, VmInfoDAO vmInfoDAO, JmxNotificationDAO notification,
             TimerFactory timerFactory, RequestQueue queue,
             JmxNotificationsViewProvider viewProvider, VmRef vmId,
             JmxToggleNotificationRequestFactory reqFactory) {
         this.dao = notification;
+        this.agentInfo = agent;
+        this.vmInfo = vmInfoDAO;
         this.view = viewProvider.createView();
         this.timer = timerFactory.createTimer();
         this.vm = vmId;
@@ -130,6 +138,7 @@ public class JmxNotificationsViewController implements InformationServiceControl
                     stopUpdatingView();
                     break;
                 case VISIBLE:
+                    view.setViewControlsEnabled(isVmAlive());
                     startUpdatingView();
                     break;
                 }
@@ -151,6 +160,7 @@ public class JmxNotificationsViewController implements InformationServiceControl
             }
         });
 
+        view.setViewControlsEnabled(isVmAlive());
     }
 
     private void initializeTimer() {
@@ -180,6 +190,13 @@ public class JmxNotificationsViewController implements InformationServiceControl
             }
         });
 
+    }
+
+    private boolean isVmAlive() {
+        AgentId agentId = new AgentId(vm.getHostRef().getAgentId());
+        AgentInformation agentInformation = agentInfo.getAgentInformation(agentId);
+        VmInfo.AliveStatus status = vmInfo.getVmInfo(vm).isAlive(agentInformation);
+        return status.equals(VmInfo.AliveStatus.RUNNING);
     }
 
     private void startUpdatingView() {

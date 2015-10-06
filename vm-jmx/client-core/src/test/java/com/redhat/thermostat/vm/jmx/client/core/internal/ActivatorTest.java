@@ -40,6 +40,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.command.RequestQueue;
@@ -58,6 +59,7 @@ public class ActivatorTest {
 
         bundleContext.registerService(ApplicationService.class, mock(ApplicationService.class), null);
         bundleContext.registerService(AgentInfoDAO.class, mock(AgentInfoDAO.class), null);
+        bundleContext.registerService(VmInfoDAO.class, mock(VmInfoDAO.class), null);
         bundleContext.registerService(JmxNotificationDAO.class, mock(JmxNotificationDAO.class), null);
         bundleContext.registerService(ApplicationService.class, mock(ApplicationService.class), null);
         bundleContext.registerService(RequestQueue.class, mock(RequestQueue.class), null);

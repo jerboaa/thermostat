@@ -41,6 +41,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -53,6 +54,9 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -91,13 +95,14 @@ public class JmxNotificationsViewControllerTest {
     private Timer timer;
     private TimerFactory timerFactory;
     private VmRef vm;
+    private VmInfo vmInfo;
     private RequestQueue queue;
     private JmxNotificationsViewController controller;
     private HostRef host;
+
     private JmxToggleNotificationRequest toggleReq;
 
     private Runnable successAction;
-
     private Runnable failureAction;
 
     @Before
@@ -117,6 +122,7 @@ public class JmxNotificationsViewControllerTest {
         
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         notificationDao = mock(JmxNotificationDAO.class);
+        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
         queue = mock(RequestQueue.class);
         view = mock(JmxNotificationsView.class);
         viewProvider = mock(JmxNotificationsViewProvider.class);
@@ -125,16 +131,21 @@ public class JmxNotificationsViewControllerTest {
         timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
 
+        vmInfo = mock(VmInfo.class);
+        when(vmInfo.isAlive(any(AgentInformation.class))).thenReturn(VmInfo.AliveStatus.RUNNING);
+        when(vmInfoDAO.getVmInfo(any(VmRef.class))).thenReturn(vmInfo);
+
         host = mock(HostRef.class);
         vm = mock(VmRef.class);
         when(vm.getHostRef()).thenReturn(host);
+        when(host.getAgentId()).thenReturn("123");
         
         JmxToggleNotificationRequestFactory reqFactory = mock(JmxToggleNotificationRequestFactory.class);
         toggleReq = mock(JmxToggleNotificationRequest.class);
         when(reqFactory.createRequest(eq(queue), eq(agentDao), any(Runnable.class), 
                 any(Runnable.class))).thenReturn(toggleReq);
 
-        controller = new JmxNotificationsViewController(appSvc, agentDao, notificationDao, timerFactory, 
+        controller = new JmxNotificationsViewController(appSvc, agentDao, vmInfoDAO, notificationDao, timerFactory,
                 queue, viewProvider, vm, reqFactory);
         ArgumentCaptor<Runnable> successCaptor = ArgumentCaptor.forClass(Runnable.class);
         ArgumentCaptor<Runnable> failureCaptor = ArgumentCaptor.forClass(Runnable.class);
@@ -252,7 +263,7 @@ public class JmxNotificationsViewControllerTest {
         
         ArgumentCaptor<LocalizedString> warningCaptor = ArgumentCaptor.forClass(LocalizedString.class);
         verify(view).displayWarning(warningCaptor.capture());
-        assertEquals(translator.localize(LocaleResources.NOTIFICATIONS_CANNOT_ENABLE).getContents(), 
+        assertEquals(translator.localize(LocaleResources.NOTIFICATIONS_CANNOT_ENABLE).getContents(),
                 warningCaptor.getValue().getContents());
     }
     
@@ -270,6 +281,28 @@ public class JmxNotificationsViewControllerTest {
 
         verify(toggleReq).sendEnableNotificationsRequestToAgent(vm, false);
         verify(view).setNotificationsEnabled(false);
+    }
+
+    @Test
+    public void verifyControlsEnabled() {
+        ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addActionListener(listenerCaptor.capture());
+
+        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, Action.VISIBLE));
+
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+    
+    @Test
+    public void verifyControlsDisabledWhenVmDead() {
+        when(vmInfo.isAlive(any(AgentInformation.class))).thenReturn(VmInfo.AliveStatus.EXITED);
+
+        ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addActionListener(listenerCaptor.capture());
+
+        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, Action.VISIBLE));
+
+        verify(view, atLeastOnce()).setViewControlsEnabled(false);
     }
 
     private void answerSuccess(boolean enable) {

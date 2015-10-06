@@ -40,6 +40,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -67,6 +68,7 @@ public class Activator implements BundleActivator {
         final Class<?>[] deps = new Class<?>[] {
                 ApplicationService.class,
                 AgentInfoDAO.class,
+                VmInfoDAO.class,
                 JmxNotificationDAO.class,
                 ApplicationService.class,
                 RequestQueue.class,
@@ -78,12 +80,13 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 JmxNotificationDAO notificationDao = (JmxNotificationDAO) services.get(JmxNotificationDAO.class.getName());
                 JmxNotificationsViewProvider viewProvider = (JmxNotificationsViewProvider) services.get(JmxNotificationsViewProvider.class.getName());
                 TimerFactory tf = ((ApplicationService) services.get(ApplicationService.class.getName())).getTimerFactory();
                 RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
 
-                JmxNotificationsViewServiceImpl notificationsView = new JmxNotificationsViewServiceImpl(appSvc, agentDao, notificationDao, queue, tf, viewProvider);
+                JmxNotificationsViewServiceImpl notificationsView = new JmxNotificationsViewServiceImpl(appSvc, agentDao, vmInfoDAO, notificationDao, queue, tf, viewProvider);
 
                 Dictionary props = new Hashtable();
                 props.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
