@@ -780,14 +780,6 @@ public class TreeMapComponent extends JComponent {
             return node.getLabel();
         }
     }
-
-    public static class WeightAsSizeRenderer implements ToolTipRenderer {
-        @Override
-        public String render(TreeMapNode node) {
-            Size size = new Size(node.getRealWeight(), Unit.B);
-            return node.getLabel() + " - " + size.toString("%.2f");
-        }
-    }
 }
 
 

@@ -36,50 +36,30 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+import static org.junit.Assert.assertEquals;
 
-import javax.swing.JPanel;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.experimental.TreeMapComponent;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapNode;
-import com.redhat.thermostat.client.swing.components.experimental.TreeMapToolbar;
-import com.redhat.thermostat.common.Size;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
-import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 
-public class SwingHeapTreeMapView extends HeapTreeMapView implements SwingComponent {
-    
-    private TreeMapComponent treeMap;
-    private final JPanel panel;
-    
-    public SwingHeapTreeMapView() {
-        treeMap = new TreeMapComponent();
-        treeMap.setToolTipRenderer(new WeightAsSizeRenderer());
+public class SwingHeapTreeMapViewTest {
 
-        panel = new JPanel();
-        panel.setLayout(new BorderLayout());
+    private static final String SOME_ROOT = "root";
+    private static final double WEIGHT = 1024.0;
+
+    private SwingHeapTreeMapView.WeightAsSizeRenderer renderer;
+    private TreeMapNode root;
+
+    @Before
+    public void setUp() {
+        root = new TreeMapNode(SOME_ROOT, WEIGHT);
+        renderer = new SwingHeapTreeMapView.WeightAsSizeRenderer();
     }
 
-    @Override
-    public void display(ObjectHistogram histogram) {
-        TreeMapNode model = HistogramConverter.convertToTreeMap(histogram);
-        treeMap.setModel(model);
-        panel.add(treeMap, BorderLayout.CENTER);
-        panel.add(new TreeMapToolbar(treeMap), BorderLayout.NORTH);
-    }
-
-    @Override
-    public Component getUiComponent() {
-        return panel;
-    }
-
-    public static class WeightAsSizeRenderer implements TreeMapComponent.ToolTipRenderer {
-        @Override
-        public String render(TreeMapNode node) {
-            Size size = new Size(node.getRealWeight(), Size.Unit.B);
-            return node.getLabel() + " - " + size.toString("%.2f");
-        }
+    @Test
+    public void testWeightAsSizeRenderer() {
+        String result = renderer.render(root);
+        assertEquals("root - 1.00 KiB", result);
     }
 }
