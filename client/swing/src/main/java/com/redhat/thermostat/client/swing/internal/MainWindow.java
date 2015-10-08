@@ -245,8 +245,6 @@ public class MainWindow extends JFrame implements MainView {
         });
         editMenu.add(configureClientMenuItem);
 
-        editMenu.addSeparator();
-
         JMenu viewMenu = new JMenu(translator.localize(LocaleResources.MENU_VIEW).getContents());
         mainMenuBar.add(viewMenu);
         JMenuItem configureAgentMenuItem = new JMenuItem(translator.localize(LocaleResources.MENU_VIEW_AGENTS).getContents());

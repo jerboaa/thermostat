@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.client.swing;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -46,6 +49,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
@@ -245,6 +249,26 @@ public class MenuHelperTest {
         assertNotNull(menuItem);
 
         assertTrue(menuItem.target instanceof JCheckBoxMenuItem);
+    }
+
+    @Category(GUITest.class)
+    @Test
+    public void addSeparatorToDynamicallyPopulatedMenus() {
+        final LocalizedString PARENT_NAME = new LocalizedString("File");
+        final LocalizedString MENU_NAME = new LocalizedString("Test");
+        MenuAction action = mock(MenuAction.class);
+        when(action.getName()).thenReturn(MENU_NAME);
+        when(action.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(action.getPath()).thenReturn(new LocalizedString[]{PARENT_NAME, MENU_NAME});
+
+        assertThat(window.getJMenuBar().getMenu(0).getMenuComponentCount(), is((0)));
+
+        frameFixture.show();
+
+        menu.addMenuAction(action);
+
+        assertThat(window.getJMenuBar().getMenu(0).getMenuComponentCount(), is(2));
+        assertThat(window.getJMenuBar().getMenu(0).getMenuComponent(0), instanceOf(JSeparator.class));
     }
 
     private String[] fromLocalizedArray(LocalizedString[] localized) {

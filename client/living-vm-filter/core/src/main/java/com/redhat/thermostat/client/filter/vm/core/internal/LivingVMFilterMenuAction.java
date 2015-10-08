@@ -72,7 +72,7 @@ class LivingVMFilterMenuAction implements MenuAction {
 
     @Override
     public LocalizedString[] getPath() {
-        return new LocalizedString[] { t.localize(LocaleResources.EDIT_MENU), getName() };
+        return new LocalizedString[] { t.localize(LocaleResources.VIEW_MENU), getName() };
     }
 }
 

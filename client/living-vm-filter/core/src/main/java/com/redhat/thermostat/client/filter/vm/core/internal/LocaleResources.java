@@ -46,7 +46,7 @@ public enum LocaleResources {
     SHOW_DEAD_HOST_NAME,
     SHOW_DEAD_HOST_DESC,
     
-    EDIT_MENU,
+    VIEW_MENU,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.filter.vm.core.internal.strings";

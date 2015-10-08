@@ -39,6 +39,8 @@ package com.redhat.thermostat.client.swing;
 import java.awt.event.ActionEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.swing.JCheckBoxMenuItem;
@@ -63,6 +65,7 @@ public class MenuHelper {
 
     private static final Logger logger = LoggingUtils.getLogger(MenuHelper.class);
 
+    private final Set<JMenu> dynamicallyPopulatedMenus = new HashSet<>();
     private final JMenuBar menuBar;
 
     public MenuHelper(JMenuBar menuBar) {
@@ -92,6 +95,14 @@ public class MenuHelper {
                     default:
                         menu = new JMenuItem();
                         break;
+                    }
+
+                    if (parent.swingDelegate instanceof JMenu) {
+                        JMenu jmenu = (JMenu) parent.swingDelegate;
+                        if (!dynamicallyPopulatedMenus.contains(jmenu)) {
+                            jmenu.addSeparator();
+                        }
+                        dynamicallyPopulatedMenus.add(jmenu);
                     }
 
                     menu.setText(action.getName().getContents());
