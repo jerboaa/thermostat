@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.swing.components;
 
 import java.awt.Color;
 
-import javax.swing.JEditorPane;
 import javax.swing.UIManager;
 import javax.swing.text.DefaultCaret;
 
@@ -47,7 +46,7 @@ import javax.swing.text.DefaultCaret;
  * any other JTextComponent.
  */
 @SuppressWarnings("serial")
-public class ValueField extends JEditorPane {
+public class ValueField extends ThermostatEditorPane {
 
     public ValueField(String text) {
         setUI(new ValueFieldUI());

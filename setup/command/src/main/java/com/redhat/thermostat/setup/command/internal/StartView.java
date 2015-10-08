@@ -52,7 +52,6 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -60,6 +59,7 @@ import javax.swing.JScrollPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
+import com.redhat.thermostat.client.swing.components.ThermostatEditorPane;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
@@ -76,7 +76,7 @@ public class StartView extends JPanel implements SetupView {
     private JRadioButton customSetupBtn;
 
     private JPanel toolbar;
-    private JEditorPane thermostatBlurb;
+    private ThermostatEditorPane thermostatBlurb;
     private JPanel midPanel;
 
     private static final String THERMOSTAT_LOGO = "thermostat.png";
@@ -109,8 +109,8 @@ public class StartView extends JPanel implements SetupView {
     }
 
     private void createMidPanel() {
-        thermostatBlurb = new JEditorPane();
-        thermostatBlurb.setEditorKit(JEditorPane.createEditorKitForContentType("text/html"));
+        thermostatBlurb = new ThermostatEditorPane();
+        thermostatBlurb.setEditorKit(ThermostatEditorPane.createEditorKitForContentType("text/html"));
         thermostatBlurb.setEditable(false);
         thermostatBlurb.addHyperlinkListener(new HyperlinkListener() {
             public void hyperlinkUpdate(HyperlinkEvent e) {

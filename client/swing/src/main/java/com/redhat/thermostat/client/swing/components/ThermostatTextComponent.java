@@ -34,33 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal;
+package com.redhat.thermostat.client.swing.components;
 
-import com.redhat.thermostat.shared.locale.Translate;
+public interface ThermostatTextComponent {
 
-public enum LocaleResources {
+    ThermostatPopupMenu getContextMenu();
 
-    HOST_PRIMARY_STATUS,
-    VM_PRIMARY_STATUS,
-
-    ZOOM_IN,
-    ZOOM_OUT,
-    RESET_ZOOM,
-
-    TREEMAP_ZOOM_IN,
-    TREEMAP_ZOOM_OUT,
-    TREEMAP_ZOOM_FULL,
-
-    CUT,
-    COPY,
-    PASTE,
-    ;
-
-    static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.swing.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
-    }
 }
-

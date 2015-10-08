@@ -34,33 +34,61 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal;
+package com.redhat.thermostat.client.swing.components;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import javax.swing.JTextField;
+import javax.swing.text.Document;
 
-public enum LocaleResources {
+public class ThermostatTextField extends JTextField implements ThermostatTextComponent {
 
-    HOST_PRIMARY_STATUS,
-    VM_PRIMARY_STATUS,
-
-    ZOOM_IN,
-    ZOOM_OUT,
-    RESET_ZOOM,
-
-    TREEMAP_ZOOM_IN,
-    TREEMAP_ZOOM_OUT,
-    TREEMAP_ZOOM_FULL,
-
-    CUT,
-    COPY,
-    PASTE,
-    ;
-
-    static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.swing.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    private CutCopyPastePopup contextMenu = new CutCopyPastePopup(this);
+    {
+        this.setComponentPopupMenu(contextMenu);
     }
-}
 
+    public ThermostatTextField() {
+        super();
+    }
+
+    public ThermostatTextField(String text) {
+        super(text);
+    }
+
+    public ThermostatTextField(int columns) {
+        super(columns);
+    }
+
+    public ThermostatTextField(String text, int columns) {
+        super(text, columns);
+    }
+
+    public ThermostatTextField(Document doc, String text, int columns) {
+        super(doc, text, columns);
+    }
+
+    @Override
+    public CutCopyPastePopup getContextMenu() {
+        return contextMenu;
+    }
+
+    @Override
+    public void setEditable(boolean b) {
+        super.setEditable(b);
+        if (contextMenu != null) {
+            contextMenu.setCutEnabled(b && isEnabled());
+            contextMenu.setPasteEnabled(b && isEnabled());
+        }
+    }
+
+    @Override
+    public void setEnabled(boolean b) {
+        super.setEnabled(b);
+        if (contextMenu != null) {
+            contextMenu.setCutEnabled(b && isEditable());
+            contextMenu.setCopyEnabled(b);
+            contextMenu.setPasteEnabled(b && isEditable());
+            contextMenu.setEnabled(b);
+        }
+    }
+
+}

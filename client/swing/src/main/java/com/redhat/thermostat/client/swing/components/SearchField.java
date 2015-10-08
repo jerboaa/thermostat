@@ -47,7 +47,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
-import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
@@ -73,7 +72,7 @@ public class SearchField extends BaseSearchProvider {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private final JTextField searchField = new JTextField();
+    private final ThermostatTextField searchField = new ThermostatTextField();
 
     private final AtomicReference<String> searchText = new AtomicReference<String>("");
     private final AtomicReference<LocalizedString> label = new AtomicReference<>(translator.localize(LocaleResources.SEARCH_HINT));

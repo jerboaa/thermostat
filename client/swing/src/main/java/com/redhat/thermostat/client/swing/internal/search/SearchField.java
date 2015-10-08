@@ -45,7 +45,6 @@ import java.awt.Shape;
 import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -55,12 +54,13 @@ import javax.swing.text.Document;
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.components.ThermostatTextField;
 import com.redhat.thermostat.client.ui.Palette;
 
 @SuppressWarnings("serial")
 public class SearchField extends BaseSearchProvider {
 
-    private JTextField searchField;
+    private ThermostatTextField searchField;
     
     public SearchField() {
         setFocusable(true);
@@ -70,7 +70,7 @@ public class SearchField extends BaseSearchProvider {
         final Icon searchIcon =
                 new FontAwesomeIcon('\uf002', 12, Palette.DARK_GRAY.getColor());
                 
-        searchField = new JTextField(20);
+        searchField = new ThermostatTextField(20);
         
         final JLabel searchLabel = new JLabel(searchIcon);
 

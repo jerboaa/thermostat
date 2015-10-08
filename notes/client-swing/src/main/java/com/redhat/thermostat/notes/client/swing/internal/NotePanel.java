@@ -48,12 +48,12 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
+import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.notes.client.swing.internal.NotesView.Action;
 import com.redhat.thermostat.notes.common.Note;
@@ -63,7 +63,7 @@ public class NotePanel extends JPanel {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private JTextArea text;
+    private ThermostatTextArea text;
     private JLabel timeStampLabel;
     private ActionNotifier<Action> actionNotifier;
 
@@ -74,7 +74,7 @@ public class NotePanel extends JPanel {
         // wrap in html tags to enable line wrapping
         String date = getPrettyTimeStamp(note.getTimeStamp());
         timeStampLabel = new JLabel(date);
-        text = new JTextArea(note.getContent());
+        text = new ThermostatTextArea(note.getContent());
         text.setWrapStyleWord(true);
         text.setLineWrap(true);
         text.getDocument().addDocumentListener(new DocumentListener() {

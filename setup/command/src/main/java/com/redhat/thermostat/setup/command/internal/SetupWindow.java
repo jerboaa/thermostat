@@ -64,13 +64,11 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
@@ -78,7 +76,9 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.JTextComponent;
 
+import com.redhat.thermostat.client.swing.components.ThermostatEditorPane;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -495,7 +495,7 @@ public class SetupWindow {
         }
 
         private static JScrollPane createStackTracePane(Throwable throwable) {
-            JTextArea textArea = new JTextArea();
+            ThermostatTextArea textArea = new ThermostatTextArea();
             textArea.setEditable(false);
             textArea.setText(stackTracetoString(throwable));
             return new ThermostatScrollPane(textArea);
@@ -508,10 +508,10 @@ public class SetupWindow {
         }
 
         private static JTextComponent createStepsToResolveText() {
-            JEditorPane component = new JEditorPane();
+            ThermostatEditorPane component = new ThermostatEditorPane();
 
             final String userGuideURL = new ApplicationInfo().getUserGuide();
-            component.setEditorKit(JEditorPane.createEditorKitForContentType("text/html"));
+            component.setEditorKit(ThermostatEditorPane.createEditorKitForContentType("text/html"));
             component.setEditable(false);
             component.setBackground(new Color(0, 0, 0, 0));
             component.setHighlighter(null);

@@ -41,12 +41,12 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.TitledBorder;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.swing.components.ThermostatPasswordField;
+import com.redhat.thermostat.client.swing.components.ThermostatTextField;
 import com.redhat.thermostat.shared.locale.Translate;
 
 @SuppressWarnings("serial")
@@ -54,9 +54,9 @@ class ClientConfigurationPanel extends JPanel {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    final JTextField storageUrl = new JTextField();
-    final JTextField userName = new JTextField();
-    final JPasswordField password = new JPasswordField();
+    final ThermostatTextField storageUrl = new ThermostatTextField();
+    final ThermostatTextField userName = new ThermostatTextField();
+    final ThermostatPasswordField password = new ThermostatPasswordField();
     
     final JCheckBox saveEntitlements;
     

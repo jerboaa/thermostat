@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.setup.command.internal;
 
+import com.redhat.thermostat.client.swing.components.ThermostatPasswordField;
 import com.redhat.thermostat.setup.command.internal.model.CredentialGenerator;
 import com.redhat.thermostat.setup.command.internal.model.UserCredsValidator;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
@@ -45,7 +46,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
@@ -58,7 +58,7 @@ import java.util.Arrays;
 public class InputCredentialPanel extends CredentialPanel {
 
     private JLabel passwordConfirmText;
-    private JPasswordField passwordConfirm;
+    private ThermostatPasswordField passwordConfirm;
     private JPanel messagePanel;
     private JLabel errorMessage;
     private JCheckBox showPasswordCheckbox;
@@ -102,7 +102,8 @@ public class InputCredentialPanel extends CredentialPanel {
         });
 
         passwordConfirmText = new JLabel(translator.localize(LocaleResources.VERIFY_PASSWORD).getContents());
-        passwordConfirm = new JPasswordField();
+        passwordConfirm = new ThermostatPasswordField();
+        passwordConfirm.setCutCopyEnabled(true);
 
         errorMessage = new JLabel();
         errorMessage.setForeground(Color.RED);

@@ -53,7 +53,6 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import com.mxgraph.layout.mxCircleLayout;
@@ -66,6 +65,7 @@ import com.mxgraph.view.mxGraph;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollBar;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -83,7 +83,7 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
     private final JSplitPane deadlockTextAndVisualization = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
     private final JPanel graphical = new JPanel();
-    private final JTextArea description = new JTextArea();
+    private final ThermostatTextArea description = new ThermostatTextArea();
 
     /**
      * Whether to set the divider's location. Do this only once to set a sane

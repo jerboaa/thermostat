@@ -38,13 +38,14 @@ package com.redhat.thermostat.setup.command.internal;
 
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.components.ThermostatPasswordField;
+import com.redhat.thermostat.client.swing.components.ThermostatTextField;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
@@ -69,8 +70,8 @@ public abstract class CredentialPanel extends JPanel {
 
     protected JLabel usernameText;
     protected JLabel passwordText;
-    protected JTextField username;
-    protected JPasswordField password;
+    protected ThermostatTextField username;
+    protected ThermostatPasswordField password;
 
     public CredentialPanel(String titleText, String helpMessage) {
         this.titleText = titleText;
@@ -86,8 +87,9 @@ public abstract class CredentialPanel extends JPanel {
     private void initComponents() {
         usernameText = new JLabel(translator.localize(LocaleResources.USERNAME).getContents());
         passwordText = new JLabel(translator.localize(LocaleResources.PASSWORD).getContents());
-        username = new JTextField();
-        password = new JPasswordField();
+        username = new ThermostatTextField();
+        password = new ThermostatPasswordField();
+        password.setCutCopyEnabled(true);
 
         title = new JLabel(titleText, infoIcon, JLabel.CENTER);
         title.setHorizontalTextPosition(JLabel.LEFT);
