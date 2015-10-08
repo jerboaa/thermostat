@@ -36,7 +36,14 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import org.fest.swing.annotation.GUITest;
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
+import org.fest.swing.edt.GuiActionRunner;
+import org.fest.swing.edt.GuiTask;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -45,138 +52,340 @@ import static org.junit.Assert.assertThat;
 
 public class ThermostatPasswordFieldTest {
 
+    private ThermostatPasswordField textField;
+
+    @BeforeClass
+    public static void setupOnce() {
+        FailOnThreadViolationRepaintManager.install();
+    }
+
+    @Before
+    public void setUp() {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField = new ThermostatPasswordField();
+            }
+        });
+    }
+
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testComponentPopupMenuIsSet() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
         assertThat(textField.getContextMenu(), is(not(equalTo(null))));
         assertThat(textField.getContextMenu(), is(textField.getComponentPopupMenu()));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testMenuEnabledWhenParentEnabled() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
         assertThat(textField.getContextMenu().isEnabled(), is(true));
-        textField.setEnabled(false);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEnabled(false);
+            }
+        });
+
         assertThat(textField.getContextMenu().isEnabled(), is(false));
-        textField.setEnabled(true);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isEnabled(), is(true));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testCutCopyDisabledByDefault() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
         assertThat(textField.isCutCopyEnabled(), is(false));
         assertThat(textField.getContextMenu().isCutEnabled(), is(false));
         assertThat(textField.getContextMenu().isCopyEnabled(), is(false));
         assertThat(textField.getContextMenu().isPasteEnabled(), is(true));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testSetCutCopyEnabled() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
-        textField.setCutCopyEnabled(true);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(true);
+            }
+        });
+
         assertThat(textField.isCutCopyEnabled(), is(true));
         assertThat(textField.getContextMenu().isCutEnabled(), is(true));
         assertThat(textField.getContextMenu().isCopyEnabled(), is(true));
         assertThat(textField.getContextMenu().isPasteEnabled(), is(true));
-        textField.setCutCopyEnabled(false);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(false);
+            }
+        });
+
         assertThat(textField.isCutCopyEnabled(), is(false));
         assertThat(textField.getContextMenu().isCutEnabled(), is(false));
         assertThat(textField.getContextMenu().isCopyEnabled(), is(false));
         assertThat(textField.getContextMenu().isPasteEnabled(), is(true));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testCutDisabledWhenParentDisabled() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
-        textField.setCutCopyEnabled(true);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(true));
-        textField.setEnabled(false);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEnabled(false);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(false));
-        textField.setEnabled(true);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(true));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testCopyDisabledWhenParentDisabled() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
-        textField.setCutCopyEnabled(true);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCopyEnabled(), is(true));
-        textField.setEnabled(false);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEnabled(false);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCopyEnabled(), is(false));
-        textField.setEnabled(true);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCopyEnabled(), is(true));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testPasteDisabledWhenParentDisabled() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
-        textField.setCutCopyEnabled(true);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isPasteEnabled(), is(true));
-        textField.setEnabled(false);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEnabled(false);
+            }
+        });
+
         assertThat(textField.getContextMenu().isPasteEnabled(), is(false));
-        textField.setEnabled(true);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isPasteEnabled(), is(true));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testCutDisabledWhenParentNotEditable() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
-        textField.setCutCopyEnabled(true);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(true));
-        textField.setEditable(false);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEditable(false);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(false));
-        textField.setEditable(true);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEditable(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(true));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testPasteDisabledWhenParentNotEditable() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
-        textField.setCutCopyEnabled(true);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isPasteEnabled(), is(true));
-        textField.setEditable(false);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEditable(false);
+            }
+        });
+
         assertThat(textField.getContextMenu().isPasteEnabled(), is(false));
-        textField.setEditable(true);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEditable(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isPasteEnabled(), is(true));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testCopyNotDisabledWhenParentNotEditable() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
-        textField.setCutCopyEnabled(true);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCopyEnabled(), is(true));
-        textField.setEditable(false);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEditable(false);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCopyEnabled(), is(true));
-        textField.setEditable(true);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEditable(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCopyEnabled(), is(true));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testEnableDoesNotOverrideEditable() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
-        textField.setCutCopyEnabled(true);
-        textField.setEnabled(false);
-        textField.setEditable(false);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(true);
+                textField.setEnabled(false);
+                textField.setEditable(false);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(false));
         assertThat(textField.getContextMenu().isCopyEnabled(), is(false));
         assertThat(textField.getContextMenu().isPasteEnabled(), is(false));
-        textField.setEnabled(true);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEnabled(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(false));
         assertThat(textField.getContextMenu().isCopyEnabled(), is(true));
         assertThat(textField.getContextMenu().isPasteEnabled(), is(false));
     }
 
+    @Category(GUITest.class)
+    @GUITest
     @Test
     public void testEditableDoesNotOverrideEnabled() {
-        ThermostatPasswordField textField = new ThermostatPasswordField();
-        textField.setCutCopyEnabled(true);
-        textField.setEnabled(false);
-        textField.setEditable(false);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setCutCopyEnabled(true);
+                textField.setEnabled(false);
+                textField.setEditable(false);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(false));
         assertThat(textField.getContextMenu().isCopyEnabled(), is(false));
         assertThat(textField.getContextMenu().isPasteEnabled(), is(false));
-        textField.setEditable(true);
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                textField.setEditable(true);
+            }
+        });
+
         assertThat(textField.getContextMenu().isCutEnabled(), is(false));
         assertThat(textField.getContextMenu().isCopyEnabled(), is(false));
         assertThat(textField.getContextMenu().isPasteEnabled(), is(false));
