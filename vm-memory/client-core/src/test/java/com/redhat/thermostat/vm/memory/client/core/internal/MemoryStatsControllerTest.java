@@ -42,6 +42,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -300,6 +301,21 @@ public class MemoryStatsControllerTest {
         assertTimeStampIsAround(DATA_TIMESTAMP, end2);
     }
 
+    @Test
+    public void verifyGcEnabled() {
+        viewListener.actionPerformed(new ActionEvent<>(view, MemoryStatsView.Action.VISIBLE));
+        verify(view, atLeastOnce()).setEnableGCAction(true);
+    }
+
+    @Test
+    public void verifyGcDisabledWhenVmDead() {
+        VmInfo vmInfo = mock(VmInfo.class);
+        when(vmInfo.isAlive()).thenReturn(false);
+        when(infoDao.getVmInfo(any(VmRef.class))).thenReturn(vmInfo);
+
+        viewListener.actionPerformed(new ActionEvent<>(view, MemoryStatsView.Action.VISIBLE));
+        verify(view, atLeastOnce()).setEnableGCAction(false);
+    }
 
     private void assertTimeStampIsAround(long expected, long actual) {
         assertTrue(actual <= expected + 500);

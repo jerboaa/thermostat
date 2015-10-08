@@ -100,7 +100,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
 
     private long lastSeenTimeStamp;
 
-    public VmGcController(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmInfoDAO vmInfoDAO, AgentInfoDAO agentInfoDAO, VmRef ref, VmGcViewProvider provider, final GCRequest gcRequest) {
+    public VmGcController(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmInfoDAO vmInfoDAO, AgentInfoDAO agentInfoDAO, final VmRef ref, VmGcViewProvider provider, final GCRequest gcRequest) {
         this.ref = ref;
         this.view = provider.createView();
         this.timer = appSvc.getTimerFactory().createTimer();
@@ -118,6 +118,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
                         stop();
                         break;
                     case VISIBLE:
+                        view.setEnableGCAction(infoDAO.getVmInfo(ref).isAlive());
                         start();
                         break;
                     default:
@@ -179,6 +180,8 @@ public class VmGcController implements InformationServiceController<VmRef> {
         timer.setInitialDelay(0);
         timer.setDelay(5);
         timer.setTimeUnit(TimeUnit.SECONDS);
+
+        view.setEnableGCAction(infoDAO.getVmInfo(ref).isAlive());
     }
 
     private void start() {

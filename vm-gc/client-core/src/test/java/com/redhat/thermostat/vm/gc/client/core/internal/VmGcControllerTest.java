@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.gc.client.core.internal;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.isNotNull;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -83,6 +84,7 @@ public class VmGcControllerTest {
     private Runnable timerAction;
     private VmGcView view;
     private ActionListener<VmGcView.Action> viewListener;
+    private VmInfoDAO vmInfoDAO;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
@@ -111,7 +113,7 @@ public class VmGcControllerTest {
         gen.setCollector("collector1");
         VmMemoryStat memoryStat = new VmMemoryStat("foo-agent", 1, "vmId", new Generation[] { gen });
 
-        VmInfo vmInfo = new VmInfo("foo", "vm1", 1, 0, 1, "1.8.0_45", "", "", "", "", "", "", "", null, null, null, -1, null);
+        VmInfo vmInfo = new VmInfo("foo", "vm1", 1, 0, -1, "1.8.0_45", "", "", "", "", "", "", "", null, null, null, -1, null);
 
         AgentInformation agentInfo = new AgentInformation("foo");
 
@@ -120,7 +122,7 @@ public class VmGcControllerTest {
         when(vmGcStatDAO.getLatestVmGcStats(isA(VmRef.class), isA(Long.class))).thenReturn(stats);
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         when(vmMemoryStatDAO.getNewestMemoryStat(isA(VmRef.class))).thenReturn(memoryStat);
-        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
+        vmInfoDAO = mock(VmInfoDAO.class);
         when(vmInfoDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         when(agentInfoDAO.getAgentInformation(isA(AgentId.class))).thenReturn(agentInfo);
@@ -174,6 +176,22 @@ public class VmGcControllerTest {
         viewListener.actionPerformed(new ActionEvent<>(view, VmGcView.Action.HIDDEN));
 
         verify(timer).stop();
+    }
+
+    @Test
+    public void verifyGcEnabled() {
+        viewListener.actionPerformed(new ActionEvent<>(view, VmGcView.Action.VISIBLE));
+        verify(view, atLeastOnce()).setEnableGCAction(true);
+    }
+
+    @Test
+    public void verifyGcDisabledWhenVmDead() {
+        VmInfo stoppedVmInfo = mock(VmInfo.class);
+        when(stoppedVmInfo.isAlive()).thenReturn(false);
+        when(vmInfoDAO.getVmInfo(isA(VmRef.class))).thenReturn(stoppedVmInfo);
+
+        viewListener.actionPerformed(new ActionEvent<>(view, VmGcView.Action.VISIBLE));
+        verify(view, atLeastOnce()).setEnableGCAction(false);
     }
 
     @SuppressWarnings("unchecked")

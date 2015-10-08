@@ -235,6 +235,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                         break;
                         
                     case VISIBLE:
+                        view.setEnableGCAction(vmInfoDao.getVmInfo(ref).isAlive());
                         start();
                         break;
                         
@@ -284,9 +285,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
             }
         });
 
-        if (!vmInfoDao.getVmInfo(ref).isAlive()) {
-            view.setEnableGCAction(false);
-        }
+        view.setEnableGCAction(vmInfoDao.getVmInfo(ref).isAlive());
 
         timeRangeController = new TimeRangeController<>();
     }
