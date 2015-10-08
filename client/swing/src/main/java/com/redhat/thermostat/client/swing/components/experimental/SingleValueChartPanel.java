@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.beans.PropertyChangeEvent;
@@ -49,12 +50,19 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
+import com.redhat.thermostat.client.ui.SampledDataset;
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.panel.CrosshairOverlay;
+import org.jfree.chart.plot.Crosshair;
 import org.jfree.chart.plot.XYPlot;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.components.ValueField;
+import org.jfree.ui.RectangleEdge;
 
 
 public class SingleValueChartPanel extends JPanel {
@@ -74,6 +82,9 @@ public class SingleValueChartPanel extends JPanel {
     private JTextComponent label;
 
     private Duration initialDuration;
+
+    private ChartPanel chartPanel;
+    private Crosshair xCrosshair;
 
     public SingleValueChartPanel(JFreeChart chart, Duration initialDuration) {
         this(initialDuration);
@@ -120,7 +131,7 @@ public class SingleValueChartPanel extends JPanel {
         chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);
         chart.getPlot().setOutlinePaint(BLACK);
 
-        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel = new ChartPanel(chart);
 
         chartPanel.setDisplayToolTips(false);
         chartPanel.setDoubleBuffered(true);
@@ -167,6 +178,57 @@ public class SingleValueChartPanel extends JPanel {
                 label.setText(text);
             }
         });
+    }
+    
+    public void enableDynamicCrosshairs() {
+        CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
+        xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
+        crosshairOverlay.addDomainCrosshair(xCrosshair);
+        chartPanel.addOverlay(crosshairOverlay);
+
+        chartPanel.addChartMouseListener(new ChartMouseListener() {
+            @Override
+            public void chartMouseClicked(ChartMouseEvent chartMouseEvent) {
+                //do nothing
+            }
+
+            @Override
+            public void chartMouseMoved(ChartMouseEvent event) {
+                XYPlot plot = (XYPlot) event.getChart().getPlot();
+                ValueAxis xAxis = plot.getDomainAxis();
+                SampledDataset dataset = (SampledDataset) plot.getDataset();
+                double xVal = xAxis.java2DToValue(event.getTrigger().getX(), chartPanel.getScreenDataArea(), RectangleEdge.BOTTOM);
+                int item = findNearestItem(dataset, xVal);
+                int series = dataset.getSeriesCount() - 1;
+                if (item >= 0) {
+                    double x = ((dataset.getStartXValue(series, item) + dataset.getEndXValue(series, item)) / 2) ;
+                    double y = dataset.getYValue(series, item);
+                    xCrosshair.setValue(x);
+                    setDataInformationLabel(String.valueOf(y));
+                } else {
+                    xCrosshair.setValue(Double.NaN);
+                    setDataInformationLabel("");
+                }
+            }
+        });
+    }
+    
+    private int findNearestItem(SampledDataset dataset, double xValue) {
+        int series = dataset.getSeriesCount() - 1;
+        int item = -1;
+        double currDiff = Math.abs(((dataset.getStartXValue(series, 0) + dataset.getEndXValue(series, 0)) / 2) - xValue);
+
+        for (int i = 0; i < dataset.getItemCount(series); i++) {
+            double newXVal = (dataset.getStartXValue(series, i) + dataset.getEndXValue(series, i)) / 2;
+            double newDiff = Math.abs(newXVal - xValue);
+            double yVal = dataset.getYValue(series, i);
+            if (newDiff <= currDiff && yVal > 0) {
+                item = i;
+                currDiff = newDiff;
+            }
+        }
+
+        return item;
     }
 
 }

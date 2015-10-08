@@ -84,8 +84,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.event.ChartProgressEvent;
-import org.jfree.chart.event.ChartProgressListener;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
@@ -314,9 +312,6 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
 
         setupPlotAxes(chart.getXYPlot());
 
-        chart.getXYPlot().setDomainCrosshairLockedOnData(true);
-        chart.getXYPlot().setDomainCrosshairVisible(true);
-
         chart.getPlot().setBackgroundPaint(WHITE);
         chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);
         chart.getPlot().setOutlinePaint(BLACK);
@@ -325,18 +320,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
         final RecentTimeSeriesChartController chartController = new RecentTimeSeriesChartController(chart);
         final SingleValueChartPanel chartPanel = new SingleValueChartPanel(chart, defaultDuration);
         subPanelDurations.put(tag, defaultDuration);
-        chart.addProgressListener(new ChartProgressListener() {
-
-            @Override
-            public void chartProgress(ChartProgressEvent event) {
-                if (event.getType() != ChartProgressEvent.DRAWING_FINISHED) {
-                    return;
-                }
-
-                double rangeCrossHairValue = event.getChart().getXYPlot().getRangeCrosshairValue();
-                chartPanel.setDataInformationLabel(String.valueOf(rangeCrossHairValue));
-            }
-        });
+        chartPanel.enableDynamicCrosshairs();
 
         chartPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
