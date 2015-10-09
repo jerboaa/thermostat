@@ -46,8 +46,10 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -59,9 +61,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
 
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
+import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
@@ -185,6 +191,7 @@ public class TreeMapComponent extends JComponent {
         }
 
         addResizeListener(this);
+        addKeyBindings(this);
     }
 
     /**
@@ -347,6 +354,43 @@ public class TreeMapComponent extends JComponent {
             }            
         };
         container.addComponentListener(adapter);
+    }
+
+    private void addKeyBindings(final JComponent component) {
+        final int NO_MODIFIERS = 0;
+        final String ZOOM_OUT = "zoomOut";
+        final String ZOOM_FULL = "zoomFull";
+        final String ZOOM_IN = "zoomIn";
+        InputMap inputMap = component.getInputMap(WHEN_FOCUSED);
+        ActionMap actionMap = component.getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, NO_MODIFIERS), ZOOM_OUT);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, NO_MODIFIERS), ZOOM_FULL);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, NO_MODIFIERS), ZOOM_OUT);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, NO_MODIFIERS), ZOOM_IN);
+
+        actionMap.put(ZOOM_OUT, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                zoomOut();
+                lastClicked = null;
+            }
+        });
+        actionMap.put(ZOOM_FULL, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                zoomFull();
+                lastClicked = null;
+            }
+        });
+        actionMap.put(ZOOM_IN, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if (lastClicked != null) {
+                    zoomIn(lastClicked.getNode());
+                }
+            }
+        });
     }
 
     /**
@@ -692,6 +736,7 @@ public class TreeMapComponent extends JComponent {
             MouseListener click = new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
+                    TreeMapComponent.this.requestFocusInWindow();
                     // one left click select the rectangle
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         selectComp();

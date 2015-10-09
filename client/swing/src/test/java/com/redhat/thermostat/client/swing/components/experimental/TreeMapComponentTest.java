@@ -36,25 +36,32 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.lang.reflect.InvocationTargetException;
+import org.jfree.chart.renderer.category.GradientBarPainter;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.lang.reflect.InvocationTargetException;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class TreeMapComponentTest {
 
@@ -72,6 +79,10 @@ public class TreeMapComponentTest {
         node1.addChild(node2);
     }
 
+    @Before
+    public void setup() {
+        treeMap = new TreeMapComponent();
+    }
 
     @Test
     public final void testTreeMapComponent() throws InvocationTargetException, InterruptedException {
@@ -110,7 +121,6 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
                 assertEquals(tree, treeMap.getTreeMapRoot());
             }
@@ -205,7 +215,6 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                TreeMapComponent treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
 
                 treeMap.zoomIn(node1);
@@ -223,7 +232,6 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
 
                 treeMap.zoomOut();
@@ -246,7 +254,6 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
 
                 treeMap.zoomIn(node2);
@@ -263,7 +270,6 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
 
                 // the root is always in the stack
@@ -287,7 +293,6 @@ public class TreeMapComponentTest {
 
             @Override
             public void run() {
-                treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
 
                 treeMap.clearZoomCallsStack();
@@ -336,7 +341,6 @@ public class TreeMapComponentTest {
                 TreeMapNode grandchild = new TreeMapNode(1);
                 child.addChild(grandchild);
 
-                treeMap = new TreeMapComponent();
                 treeMap.setModel(tree);
                 treeMap.register(observer);
 
@@ -360,12 +364,138 @@ public class TreeMapComponentTest {
     @Test
     public final void testSetNode() {
         try {
-            treeMap = new TreeMapComponent();
             TreeMapComponent.Comp comp = treeMap.new Comp();
             comp.setNode(node1);
         } catch (NullPointerException e) {
             Assert.fail("Didn't expect exception.");
         }
+    }
+
+
+    public void performKeyboardShortcutTest(final KeyStroke keyStroke, final Runnable pre, final KeyShortcutTestResultHandler handler)
+            throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+
+            boolean zoomedIn = false;
+            boolean zoomedOut = false;
+            boolean zoomedFull = false;
+
+            TreeMapObserver observer = new TreeMapObserver() {
+                @Override
+                public void notifyZoomOut() {
+                    zoomedOut = true;
+                }
+
+                @Override
+                public void notifyZoomIn(TreeMapNode node) {
+                    zoomedIn = true;
+                }
+
+                @Override
+                public void notifyZoomFull() {
+                    zoomedFull = true;
+                }
+
+                @Override
+                public void notifySelection(TreeMapNode node) {
+                }
+            };
+
+            @Override
+            public void run() {
+                TreeMapNode child = new TreeMapNode(1);
+                tree.addChild(child);
+                TreeMapNode grandchild = new TreeMapNode(1);
+                child.addChild(grandchild);
+                treeMap.setModel(tree);
+                treeMap.zoomIn(child);
+                treeMap.zoomIn(grandchild);
+                pre.run();
+                treeMap.register(observer);
+                ActionListener action = treeMap.getActionForKeyStroke(keyStroke);
+                assertThat(action, is(not(equalTo(null))));
+                action.actionPerformed(null);
+                handler.handle(new KeyShortcutTestResults(zoomedIn, zoomedOut, zoomedFull));
+            }
+        });
+    }
+
+    public void performKeyboardShortcutTest(final KeyStroke keyStroke, final KeyShortcutTestResultHandler handler) throws InvocationTargetException, InterruptedException {
+        Runnable emptyPre = new Runnable() {
+            @Override
+            public void run() {}
+        };
+        performKeyboardShortcutTest(keyStroke, emptyPre, handler);
+    }
+
+    @Test
+    public void testKeyShortcutBackspace() throws InvocationTargetException, InterruptedException {
+        final int NO_MODIFIERS = 0;
+        KeyStroke ks = KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, NO_MODIFIERS);
+        performKeyboardShortcutTest(ks, new KeyShortcutTestResultHandler() {
+            @Override
+            public void handle(KeyShortcutTestResults results) {
+                assertThat(results.zoomedIn, is(false));
+                assertThat(results.zoomedOut, is(true));
+                assertThat(results.zoomedFull, is(false));
+                assertThat(treeMap.getClickedComponent(), is(equalTo(null)));
+            }
+        });
+    }
+
+    @Test
+    public void testKeyShortcutEscape() throws InvocationTargetException, InterruptedException {
+        final int NO_MODIFIERS = 0;
+        KeyStroke ks = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, NO_MODIFIERS);
+        performKeyboardShortcutTest(ks, new KeyShortcutTestResultHandler() {
+            @Override
+            public void handle(KeyShortcutTestResults results) {
+                assertThat(results.zoomedIn, is(false));
+                assertThat(results.zoomedOut, is(true));
+                assertThat(results.zoomedFull, is(false));
+                assertThat(treeMap.getClickedComponent(), is(equalTo(null)));
+            }
+        });
+    }
+
+    @Test
+    public void testKeyShortcutHome() throws InvocationTargetException, InterruptedException {
+        final int NO_MODIFIERS = 0;
+        KeyStroke ks = KeyStroke.getKeyStroke(KeyEvent.VK_HOME, NO_MODIFIERS);
+        performKeyboardShortcutTest(ks, new KeyShortcutTestResultHandler() {
+            @Override
+            public void handle(KeyShortcutTestResults results) {
+                assertThat(results.zoomedIn, is(false));
+                assertThat(results.zoomedOut, is(false));
+                assertThat(results.zoomedFull, is(true));
+                assertThat(treeMap.getClickedComponent(), is(equalTo(null)));
+            }
+        });
+    }
+
+    //@Test
+    // FIXME: this test depends on lastClicked being set at some point prior to the test running, but this requires
+    // clicking on the painted TreeMap
+    public void testKeyShortcutEnter() throws InvocationTargetException, InterruptedException {
+        final int NO_MODIFIERS = 0;
+        KeyStroke ks = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, NO_MODIFIERS);
+        performKeyboardShortcutTest(ks,
+            new Runnable() {
+                @Override
+                public void run() {
+                    treeMap.zoomFull();
+                }
+            },
+            new KeyShortcutTestResultHandler() {
+                @Override
+                public void handle(KeyShortcutTestResults results) {
+                    assertThat(results.zoomedIn, is(false));
+                    assertThat(results.zoomedOut, is(false));
+                    assertThat(results.zoomedFull, is(false));
+                    assertThat(treeMap.getClickedComponent(), is(equalTo(null)));
+                }
+            }
+        );
     }
 
     public static void main(String[] args) {
@@ -424,6 +554,22 @@ public class TreeMapComponentTest {
                 mainWindow.setVisible(true);
             }
         });
+    }
+
+    interface KeyShortcutTestResultHandler {
+        void handle(KeyShortcutTestResults results);
+    }
+
+    class KeyShortcutTestResults {
+        boolean zoomedIn = false;
+        boolean zoomedOut = false;
+        boolean zoomedFull = false;
+
+        public KeyShortcutTestResults(boolean zoomedIn, boolean zoomedOut, boolean zoomedFull) {
+            this.zoomedIn = zoomedIn;
+            this.zoomedOut = zoomedOut;
+            this.zoomedFull = zoomedFull;
+        }
     }
 
 }
