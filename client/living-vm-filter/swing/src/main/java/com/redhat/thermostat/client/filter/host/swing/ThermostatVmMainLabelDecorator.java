@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.filter.host.swing;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -105,23 +106,25 @@ public class ThermostatVmMainLabelDecorator implements ReferenceFieldLabelDecora
     }
 
     private String createLabelForRegularCommand(VmInfo info) {
-        String[]  s = info.getJavaCommandLine().split("\\."); //escaped dot
-        String afterDot = s[s.length - 1];
+        String commandLine = info.getJavaCommandLine();
 
-        // heuristic: take the first two non-option arguments
+        // heuristic: take the first non-option argument
 
         // FIXME this doesn't work if --boot-delegation appears before the
         // subcommand. --boot-delegation requires a separate value.
-        String[] parts = afterDot.split("\\s+");
+        String[] parts = commandLine.split("\\s+");
+        parts = Arrays.copyOfRange(parts, 1, parts.length);
+
         int argumentCount = 0;
         StringBuilder result = new StringBuilder();
+        result.append("Thermostat ");
         for (String part : parts) {
             if (part.startsWith("--")) {
                 continue;
             }
             result.append(part).append(" ");
             argumentCount++;
-            if (argumentCount == 2) {
+            if (argumentCount == 1) {
                 break;
             }
         }

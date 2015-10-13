@@ -37,7 +37,6 @@
 package com.redhat.thermostat.client.filter.host.swing;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -81,7 +80,7 @@ public class ThermostatVmMainLabelDecoratorTest {
         
         decorator = new ThermostatVmMainLabelDecorator(dao);
         String result = decorator.getLabel("originalLabel", vmRef);
-        assertTrue(result.equals("Thermostat service"));
+        assertEquals("Thermostat service", result);
     }
 
     @Test
@@ -116,6 +115,17 @@ public class ThermostatVmMainLabelDecoratorTest {
         decorator = new ThermostatVmMainLabelDecorator(dao);
         String result = decorator.getLabel("originalLabel", vmRef);
         assertEquals("Thermostat kill-vm", result);
+    }
+
+    @Test
+    public void verifyLabelForCliCommand2() {
+        when(vmRef.getName()).thenReturn(THERMOSTAT_MAIN_CLASS);
+        when(info.getMainClass()).thenReturn(THERMOSTAT_MAIN_CLASS);
+        when(info.getJavaCommandLine()).thenReturn("com.redhat.thermostat.main.Thermostat agent -d http://127.0.0.1:8999/thermostat/storage");
+
+        decorator = new ThermostatVmMainLabelDecorator(dao);
+        String result = decorator.getLabel("originalLabel", vmRef);
+        assertEquals("Thermostat agent", result);
     }
 
     @Test
