@@ -41,7 +41,9 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.command.RequestQueue;
@@ -82,7 +84,9 @@ import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class VmProfileController implements InformationServiceController<VmRef> {
 
+    static final String STATE_MAP_KEY = "vmProfileControllerRestoreBundle";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private static final Map<VmRef, SaveState> STATE_BUNDLE_MAP = new HashMap<>();
 
     private final ApplicationService service;
     private final ProgressNotifier notifier;
@@ -99,8 +103,8 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     private Clock clock;
 
     private boolean profilingStartOrStopRequested = false;
-
     private ProfileStatusChange previousStatus;
+    private ProfilingState profilingState = ProfilingState.STOPPED;
 
     private ProgressHandle progressDisplay;
 
@@ -112,7 +116,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         this(service, notifier, agentInfoDao, vmInfoDao, dao, queue, new SystemClock(), new SwingVmProfileView(), vm);
     }
 
-    VmProfileController(ApplicationService service, ProgressNotifier notifier,
+    VmProfileController(final ApplicationService service, ProgressNotifier notifier,
             AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
             RequestQueue queue, Clock clock,
             final VmProfileView view, VmRef vm) {
@@ -125,6 +129,10 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         this.clock = clock;
         this.view = view;
         this.vm = vm;
+
+        if (service.getApplicationCache().getAttribute(STATE_MAP_KEY) == null) {
+            service.getApplicationCache().addAttribute(STATE_MAP_KEY, STATE_BUNDLE_MAP);
+        }
 
         // TODO dispose the timer when done
         updater = service.getTimerFactory().createTimer();
@@ -146,9 +154,11 @@ public class VmProfileController implements InformationServiceController<VmRef> 
             public void actionPerformed(ActionEvent<Action> actionEvent) {
                 switch (actionEvent.getActionId()) {
                     case HIDDEN:
+                        saveState();
                         updater.stop();
                         break;
                     case VISIBLE:
+                        restoreState();
                         view.setViewControlsEnabled(isAlive());
                         updater.start();
                         break;
@@ -182,11 +192,33 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         view.setViewControlsEnabled(isAlive());
     }
 
+    private void saveState() {
+        SaveState bundle = new SaveState(previousStatus, profilingStartOrStopRequested, profilingState);
+        Map<VmRef, SaveState> map = ((Map<VmRef, SaveState>) service.getApplicationCache().getAttribute(STATE_MAP_KEY));
+        map.put(vm, bundle);
+        service.getApplicationCache().addAttribute(STATE_MAP_KEY, map);
+    }
+
+    private void restoreState() {
+        SaveState bundle = ((Map<VmRef, SaveState>) service.getApplicationCache().getAttribute(STATE_MAP_KEY)).get(vm);
+        profilingStartOrStopRequested = bundle != null && bundle.isProfilingStartOrStopRequested();
+        previousStatus = bundle == null ? null : bundle.getProfileStatusChange();
+        profilingState = bundle == null ? ProfilingState.STOPPED : bundle.getProfilingState();
+        if (previousStatus != null) {
+            profilingState = getProfilingState(previousStatus, profilingStartOrStopRequested);
+        }
+        view.setProfilingState(profilingState);
+    }
+
     private void startProfiling() {
+        profilingState = ProfilingState.STARTING;
+        view.setProfilingState(profilingState);
         setProgressNotificationAndSendRequest(true);
     }
 
     private void stopProfiling() {
+        profilingState = ProfilingState.STOPPING;
+        view.setProfilingState(profilingState);
         setProgressNotificationAndSendRequest(false);
     }
 
@@ -212,6 +244,9 @@ public class VmProfileController implements InformationServiceController<VmRef> 
 
                         hideProgressNotificationIfVisible();
                         profilingStartOrStopRequested = false;
+                        profilingState = ProfilingState.DISABLED;
+                        view.setProfilingState(profilingState);
+                        view.setViewControlsEnabled(false);
                         break;
                 }
             }
@@ -221,23 +256,11 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     }
 
     private void updateViewWithCurrentProfilingStatus() {
-        ProfilingState profilingState = ProfilingState.STOPPED;
-
         ProfileStatusChange currentStatus = profileDao.getLatestStatus(vm);
         if (currentStatus != null) {
-            boolean currentlyActive = currentStatus.isStarted();
-            if (currentlyActive && profilingStartOrStopRequested) {
-                profilingState = ProfilingState.STARTING;
-            } else if (currentlyActive) {
-                profilingState = ProfilingState.STARTED;
-            } else if (profilingStartOrStopRequested) {
-                profilingState = ProfilingState.STOPPING;
-            } else {
-                profilingState = ProfilingState.STOPPED;
-            }
+            profilingState = getProfilingState(currentStatus, profilingStartOrStopRequested);
         }
 
-        view.setViewControlsEnabled(isAlive());
         if (!isAlive()) {
             view.setProfilingState(ProfilingState.DISABLED);
         } else if (profilingStartOrStopRequested) {
@@ -255,12 +278,25 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         previousStatus = currentStatus;
     }
 
+    private ProfilingState getProfilingState(ProfileStatusChange profileStatusChange, boolean profilingStartOrStopRequested) {
+        ProfilingState profilingState;
+        boolean currentlyActive = profileStatusChange.isStarted();
+        if (currentlyActive && profilingStartOrStopRequested) {
+            profilingState = ProfilingState.STARTING;
+        } else if (currentlyActive) {
+            profilingState = ProfilingState.STARTED;
+        } else if (profilingStartOrStopRequested) {
+            profilingState = ProfilingState.STOPPING;
+        } else {
+            profilingState = ProfilingState.STOPPED;
+        }
+        return profilingState;
+    }
+
     private void showProgressNotification(boolean start) {
         if (start) {
-            view.setProfilingState(ProfilingState.STARTING);
             progressDisplay = new ProgressHandle(translator.localize(LocaleResources.STARTING_PROFILING));
         } else {
-            view.setProfilingState(ProfilingState.STOPPING);
             progressDisplay = new ProgressHandle(translator.localize(LocaleResources.STOPPING_PROFILING));
         }
         progressDisplay.setIndeterminate(true);
@@ -322,6 +358,30 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         @Override
         public int compare(Profile o1, Profile o2) {
             return Long.compare(o1.timeStamp, o2.timeStamp);
+        }
+    }
+
+    static class SaveState {
+        private final ProfileStatusChange profileStatusChange;
+        private final boolean profilingStartOrStopRequested;
+        private final ProfilingState profilingState;
+
+        public SaveState(ProfileStatusChange profileStatusChange, boolean profilingStartOrStopRequested, ProfilingState profilingState) {
+            this.profileStatusChange = profileStatusChange;
+            this.profilingStartOrStopRequested = profilingStartOrStopRequested;
+            this.profilingState = profilingState;
+        }
+
+        public ProfileStatusChange getProfileStatusChange() {
+            return profileStatusChange;
+        }
+
+        public boolean isProfilingStartOrStopRequested() {
+            return profilingStartOrStopRequested;
+        }
+
+        public ProfilingState getProfilingState() {
+            return profilingState;
         }
     }
 }

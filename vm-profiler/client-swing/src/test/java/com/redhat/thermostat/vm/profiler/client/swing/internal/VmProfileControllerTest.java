@@ -36,9 +36,16 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -49,9 +56,14 @@ import java.io.ByteArrayInputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.common.ApplicationCache;
+import org.hamcrest.core.IsNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -97,6 +109,7 @@ public class VmProfileControllerTest {
 
     private Timer timer;
     private ApplicationService appService;
+    private ApplicationCache appCache;
     private ProgressNotifier notifier;
     private AgentInfoDAO agentInfoDao;
     private VmInfoDAO vmInfoDao;
@@ -119,6 +132,9 @@ public class VmProfileControllerTest {
 
         appService = mock(ApplicationService.class);
         when(appService.getTimerFactory()).thenReturn(timerFactory);
+
+        appCache = mock(ApplicationCache.class);
+        when(appService.getApplicationCache()).thenReturn(appCache);
 
         notifier = mock(ProgressNotifier.class);
 
@@ -149,6 +165,7 @@ public class VmProfileControllerTest {
 
     @Test
     public void timerRunsWhenVisible() throws Exception {
+        when(appCache.getAttribute(any(String.class))).thenReturn(new HashMap<>());
         controller = createController();
 
         verify(timer, never()).start();
@@ -163,6 +180,7 @@ public class VmProfileControllerTest {
 
     @Test
     public void timerStopsWhenHidden() throws Exception {
+        when(appCache.getAttribute(any(String.class))).thenReturn(new HashMap<>());
         controller = createController();
 
         verify(timer, never()).start();
@@ -200,7 +218,7 @@ public class VmProfileControllerTest {
         assertEquals(1, resultList.size());
         assertEquals(PROFILE_TIMESTAMP, resultList.get(0).timeStamp);
 
-        verify(view, times(2)).setViewControlsEnabled(true);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
     }
 
     @Test
@@ -315,6 +333,154 @@ public class VmProfileControllerTest {
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.PROFILE_SELECTED));
 
         verify(view).setProfilingDetailData(isA(ProfilingResult.class));
+    }
+
+    @Test
+    public void testSavesStateOnViewHidden() throws Exception {
+        Map<VmRef, VmProfileController.SaveState> map = new HashMap<>();
+        when(appCache.getAttribute(any(String.class))).thenReturn(map);
+        controller = createController();
+
+        ArgumentCaptor<ActionListener> actionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addActionListener(actionListenerCaptor.capture());
+
+        actionListenerCaptor.getValue().actionPerformed(new ActionEvent(view, Action.HIDDEN));
+
+        verify(appCache).addAttribute(VmProfileController.STATE_MAP_KEY, any(anyMap().getClass()));
+        assertThat(map.keySet(), is(equalTo(Collections.singleton(vm))));
+        VmProfileController.SaveState state = map.get(vm);
+        assertThat(state, is(notNullValue()));
+        assertThat(state.isProfilingStartOrStopRequested(), is(false));
+        assertThat(state.getProfilingState(), is(VmProfileView.ProfilingState.STOPPED));
+        assertThat(state.getProfileStatusChange(), is(equalTo(null)));
+    }
+
+    @Test
+    public void testRestoresStateOnViewVisible() throws Exception {
+        when(appCache.getAttribute(any(String.class))).thenReturn(new HashMap<>());
+        controller = createController();
+
+        ArgumentCaptor<ActionListener> actionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addActionListener(actionListenerCaptor.capture());
+
+        actionListenerCaptor.getValue().actionPerformed(new ActionEvent(view, Action.VISIBLE));
+
+        verify(appCache, atLeastOnce()).getAttribute(VmProfileController.STATE_MAP_KEY);
+        verify(view, atLeastOnce()).setProfilingState(any(VmProfileView.ProfilingState.class));
+        verify(view, atLeastOnce()).setViewControlsEnabled(anyBoolean());
+    }
+
+    @Test
+    public void testRestoresStateCorrectlyWhenPreviousStateSetStarting() throws Exception {
+        ProfileStatusChange psc = mock(ProfileStatusChange.class);
+        when(psc.isStarted()).thenReturn(true);
+        // should ignore the DISABLED argument because a previous state (psc) is available
+        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, true, VmProfileView.ProfilingState.DISABLED);
+        doRestoreTest(state);
+
+        verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STARTING);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+
+    @Test
+    public void testRestoresStateCorrectlyWhenPreviousStateSetStarted() throws Exception {
+        ProfileStatusChange psc = mock(ProfileStatusChange.class);
+        when(psc.isStarted()).thenReturn(true);
+        // should ignore the DISABLED argument because a previous state (psc) is available
+        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, false, VmProfileView.ProfilingState.DISABLED);
+        doRestoreTest(state);
+
+        verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STARTED);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+
+    @Test
+    public void testRestoresStateCorrectlyWhenPreviousStateSetStopping() throws Exception {
+        ProfileStatusChange psc = mock(ProfileStatusChange.class);
+        when(psc.isStarted()).thenReturn(false);
+        // should ignore the DISABLED argument because a previous state (psc) is available
+        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, true, VmProfileView.ProfilingState.DISABLED);
+        doRestoreTest(state);
+
+        verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STOPPING);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+
+    @Test
+    public void testRestoresStateCorrectlyWhenPreviousStateSetStopped() throws Exception {
+        ProfileStatusChange psc = mock(ProfileStatusChange.class);
+        when(psc.isStarted()).thenReturn(false);
+        // should ignore the DISABLED argument because a previous state (psc) is available
+        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, false, VmProfileView.ProfilingState.DISABLED);
+        doRestoreTest(state);
+
+        verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STOPPED);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+
+    @Test
+    public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingDisabled() throws Exception {
+        // no ProfilingStatusChange to rely on so fall back on the ProfilingState
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.DISABLED);
+        doRestoreTest(state);
+
+        verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.DISABLED);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+
+    @Test
+    public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingStarting() throws Exception {
+        // no ProfilingStatusChange to rely on so fall back on the ProfilingState
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STARTING);
+        doRestoreTest(state);
+
+        verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STARTING);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+
+    @Test
+    public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingStarted() throws Exception {
+        // no ProfilingStatusChange to rely on so fall back on the ProfilingState
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STARTED);
+        doRestoreTest(state);
+
+        verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STARTED);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+
+    @Test
+    public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingStopping() throws Exception {
+        // no ProfilingStatusChange to rely on so fall back on the ProfilingState
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STOPPING);
+        doRestoreTest(state);
+
+        verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STOPPING);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+
+    @Test
+    public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingStopped() throws Exception {
+        // no ProfilingStatusChange to rely on so fall back on the ProfilingState
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STOPPED);
+        doRestoreTest(state);
+
+        verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STOPPED);
+        verify(view, atLeastOnce()).setViewControlsEnabled(true);
+    }
+
+    private void doRestoreTest(VmProfileController.SaveState saveState) {
+        Map<VmRef, VmProfileController.SaveState> map = new HashMap<>();
+
+        map.put(vm, saveState);
+        when(appCache.getAttribute(any(String.class))).thenReturn(map);
+        controller = createController();
+
+        ArgumentCaptor<ActionListener> actionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addActionListener(actionListenerCaptor.capture());
+
+        actionListenerCaptor.getValue().actionPerformed(new ActionEvent(view, Action.VISIBLE));
+
+        verify(appCache, atLeastOnce()).getAttribute(VmProfileController.STATE_MAP_KEY);
     }
 
     private VmProfileController createController() {
