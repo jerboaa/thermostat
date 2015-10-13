@@ -69,10 +69,14 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import com.redhat.thermostat.client.swing.EdtHelper;
+import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.ModelUtils;
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ActionToggleButton;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
@@ -88,6 +92,9 @@ import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
 public class SwingVmProfileView extends VmProfileView implements SwingComponent {
 
+    private static final Icon START_ICON = IconResource.SAMPLE.getIcon();
+    private static final Icon STOP_ICON = new FontAwesomeIcon('\uf04d', START_ICON.getIconHeight());
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final double SPLIT_PANE_RATIO = 0.3;
@@ -100,8 +107,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     private HeaderPanel mainContainer;
 
-    private JToggleButton startButton;
-    private JToggleButton stopButton;
+    private ActionToggleButton toggleButton;
 
     private DefaultListModel<Profile> listModel;
     private JList<Profile> profileList;
@@ -110,6 +116,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     private DefaultTableModel tableModel;
 
     private JLabel currentStatusLabel;
+    private boolean viewControlsEnabled = true;
 
     static class ProfileItemRenderer extends DefaultListCellRenderer {
         @Override
@@ -130,22 +137,37 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     public SwingVmProfileView() {
         listModel = new DefaultListModel<>();
 
+        toggleButton = new ActionToggleButton(START_ICON, STOP_ICON, translator.localize(LocaleResources.START_PROFILING));
+        toggleButton.toggleText(false);
+        toggleButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                JToggleButton button = (JToggleButton) e.getSource();
+                if (button.isSelected()) {
+                    fireProfileAction(ProfileAction.START_PROFILING);
+                } else {
+                    fireProfileAction(ProfileAction.STOP_PROFILING);
+                }
+            }
+        });
+
         mainContainer = new HeaderPanel(translator.localize(LocaleResources.PROFILER_HEADING));
         new ComponentVisibilityNotifier().initialize(mainContainer, notifier);
 
         JPanel contentContainer = new JPanel(new BorderLayout());
         mainContainer.setContent(contentContainer);
+        mainContainer.addToolBarButton(toggleButton);
 
-        JComponent actionsPanel = createActionsPanel();
+        JComponent actionsPanel = createStatusPanel();
         contentContainer.add(actionsPanel, BorderLayout.PAGE_START);
 
         JComponent profilingResultsPanel = createInformationPanel();
         contentContainer.add(profilingResultsPanel, BorderLayout.CENTER);
     }
 
-    private JPanel createActionsPanel() {
+    private JPanel createStatusPanel() {
         GridBagLayout layout = new GridBagLayout();
-        JPanel actionsPanel = new JPanel(layout);
+        JPanel statusPanel = new JPanel(layout);
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -158,40 +180,14 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
         String wrappedText = "<html>" + translator.localize(LocaleResources.PROFILER_DESCRIPTION).getContents() + "</html>";
         JLabel descriptionLabel = new JLabel(wrappedText);
-        actionsPanel.add(descriptionLabel, constraints);
+        statusPanel.add(descriptionLabel, constraints);
 
         constraints.gridy = 1;
         constraints.gridx = 0;
         constraints.gridwidth = 1;
         currentStatusLabel = new JLabel("Current Status: {0}");
-        actionsPanel.add(currentStatusLabel, constraints);
-
-        constraints.fill = GridBagConstraints.NONE;
-        constraints.gridx = GridBagConstraints.RELATIVE;
-        constraints.weightx = 0.0;
-        startButton = new JToggleButton(translator.localize(LocaleResources.START_PROFILING).getContents());
-        startButton.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                JToggleButton button = (JToggleButton) e.getSource();
-                if (button.isSelected()) {
-                    fireProfileAction(ProfileAction.START_PROFILING);
-                }
-            }
-        });
-        actionsPanel.add(startButton, constraints);
-        stopButton = new JToggleButton(translator.localize(LocaleResources.STOP_PROFILING).getContents());
-        stopButton.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                JToggleButton button = (JToggleButton) e.getSource();
-                if (button.isSelected()) {
-                    fireProfileAction(ProfileAction.STOP_PROFILING);
-                }
-            }
-        });
-        actionsPanel.add(stopButton, constraints);
-        return actionsPanel;
+        statusPanel.add(currentStatusLabel, constraints);
+        return statusPanel;
     }
 
     private JComponent createInformationPanel() {
@@ -299,40 +295,38 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     }
 
     @Override
-    public void enableStartProfiling(final boolean start) {
+    public void setProfilingState(final ProfilingState profilingState) {
+        final String status, buttonLabel;
+        if (!viewControlsEnabled) {
+            status = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_DEAD).getContents();
+            buttonLabel = translator.localize(LocaleResources.START_PROFILING).getContents();
+        } else if (profilingState == ProfilingState.STOPPING || profilingState == ProfilingState.STARTED) {
+            status = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_ACTIVE).getContents();
+            buttonLabel = translator.localize(LocaleResources.STOP_PROFILING).getContents();
+        } else {
+            status = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_INACTIVE).getContents();
+            buttonLabel = translator.localize(LocaleResources.START_PROFILING).getContents();
+        }
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                startButton.setEnabled(start);
-            }
-        });
-    }
-
-    @Override
-    public void enableStopProfiling(final boolean stop) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                stopButton.setEnabled(stop);
-            }
-        });
-    }
-
-    @Override
-    public void setProfilingStatus(final String text, final boolean active) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                currentStatusLabel.setText(text);
-                if (active) {
-                    startButton.setSelected(true);
-                    stopButton.setSelected(false);
+                currentStatusLabel.setText(status);
+                if (!viewControlsEnabled) {
+                    toggleButton.setToggleActionState(ProfilingState.DISABLED);
                 } else {
-                    startButton.setSelected(false);
-                    stopButton.setSelected(true);
+                    toggleButton.setToggleActionState(profilingState);
                 }
+                toggleButton.setText(buttonLabel);
             }
         });
+    }
+
+    @Override
+    public void setViewControlsEnabled(boolean enabled) {
+        this.viewControlsEnabled = enabled;
+        if (!enabled) {
+            setProfilingState(ProfilingState.DISABLED);
+        }
     }
 
     @Override

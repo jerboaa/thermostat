@@ -41,6 +41,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -184,7 +185,7 @@ public class VmProfileControllerTest {
         ProfileInfo profile = new ProfileInfo(AGENT_ID, VM_ID, PROFILE_TIMESTAMP, PROFILE_ID);
 
         when(profileDao.getAllProfileInfo(vm,
-                new Range<>(SOME_TIMESTAMP - TimeUnit.DAYS.toMillis(1) , SOME_TIMESTAMP)))
+                new Range<>(SOME_TIMESTAMP - TimeUnit.DAYS.toMillis(1), SOME_TIMESTAMP)))
             .thenReturn(Arrays.asList(profile));
 
         ProfileStatusChange status = new ProfileStatusChange(AGENT_ID, VM_ID, PROFILE_TIMESTAMP, false);
@@ -199,9 +200,7 @@ public class VmProfileControllerTest {
         assertEquals(1, resultList.size());
         assertEquals(PROFILE_TIMESTAMP, resultList.get(0).timeStamp);
 
-        verify(view).setProfilingStatus("Currently profiling: no", false);
-        verify(view).enableStartProfiling(true);
-        verify(view).enableStopProfiling(false);
+        verify(view, times(2)).setViewControlsEnabled(true);
     }
 
     @Test
@@ -217,8 +216,6 @@ public class VmProfileControllerTest {
         Runnable runnable = runnableCaptor.getValue();
         runnable.run();
 
-        verify(view).enableStartProfiling(false);
-        verify(view).enableStopProfiling(false);
     }
 
     @Test
@@ -230,14 +227,13 @@ public class VmProfileControllerTest {
 
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.START_PROFILING));
 
-        verify(view).enableStartProfiling(false);
-        verify(view).enableStopProfiling(false);
-
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(queue).putRequest(requestCaptor.capture());
         Request expectedRequest = ProfileRequest.create(AGENT_ADDRESS, VM_ID, ProfileRequest.START_PROFILING);
         Request actualRequest = requestCaptor.getValue();
         assertRequestEquals(actualRequest, expectedRequest);
+
+        verify(view).setProfilingState(VmProfileView.ProfilingState.STARTING);
     }
 
     @Test
@@ -249,9 +245,6 @@ public class VmProfileControllerTest {
 
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.START_PROFILING));
 
-        verify(view).enableStartProfiling(false);
-        verify(view).enableStopProfiling(false);
-
         ProfileStatusChange status = new ProfileStatusChange(AGENT_ID, VM_ID, PROFILE_TIMESTAMP, true);
         when(profileDao.getLatestStatus(vm)).thenReturn(status);
 
@@ -260,7 +253,7 @@ public class VmProfileControllerTest {
 
         runnableCaptor.getValue().run();
 
-        verify(view).enableStopProfiling(true);
+        verify(view, times(2)).setProfilingState(VmProfileView.ProfilingState.STARTING);
     }
 
     @Test
@@ -279,6 +272,8 @@ public class VmProfileControllerTest {
         Request actualRequest = requestCaptor.getValue();
 
         assertRequestEquals(actualRequest, expectedRequest);
+
+        verify(view).setProfilingState(VmProfileView.ProfilingState.STOPPING);
     }
 
     @Test
@@ -290,8 +285,7 @@ public class VmProfileControllerTest {
 
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.STOP_PROFILING));
 
-        verify(view).enableStartProfiling(false);
-        verify(view).enableStopProfiling(false);
+        verify(view).setProfilingState(VmProfileView.ProfilingState.STOPPING);
 
         ProfileStatusChange status = new ProfileStatusChange(AGENT_ID, VM_ID, PROFILE_TIMESTAMP, false);
         when(profileDao.getLatestStatus(vm)).thenReturn(status);
@@ -301,7 +295,7 @@ public class VmProfileControllerTest {
 
         runnableCaptor.getValue().run();
 
-        verify(view).enableStartProfiling(true);
+        verify(view, times(2)).setProfilingState(VmProfileView.ProfilingState.STOPPING);
     }
 
     @Test

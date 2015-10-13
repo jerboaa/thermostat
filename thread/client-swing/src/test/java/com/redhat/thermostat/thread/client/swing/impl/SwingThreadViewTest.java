@@ -48,6 +48,7 @@ import java.util.Locale;
 
 import javax.swing.JFrame;
 
+import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
@@ -147,11 +148,11 @@ public class SwingThreadViewTest {
         
         // now try "programmatically"
         
-        view.setRecording(true, true);
+        view.setRecording(ThreadView.MonitoringState.STARTED, true);
         
         togglefixture.requireToolTip(t.localize(LocaleResources.STOP_RECORDING).getContents());
     
-        view.setRecording(false, false);
+        view.setRecording(ThreadView.MonitoringState.STOPPED, false);
         
         togglefixture.requireToolTip(t.localize(LocaleResources.START_RECORDING).getContents());
     }

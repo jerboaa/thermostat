@@ -212,7 +212,7 @@ public class ThreadInformationControllerTest {
                                                      viewFactory, notifier);
 
         verify(collector).isHarvesterCollecting();
-        verify(view, times(1)).setRecording(false, false);
+        verify(view, times(1)).setRecording(ThreadView.MonitoringState.STOPPED, false);
 
         // each action event posts a task to the executor.
         // make sure the task is posted and execute it manually in tests to see its effects.
@@ -223,7 +223,8 @@ public class ThreadInformationControllerTest {
         verify(appExecutor, times(1)).execute(isA(Runnable.class));
         longRunningTaskCaptor.getValue().run();
 
-        verify(view, times(1)).setRecording(false, false);
+        verify(view, times(1)).setRecording(ThreadView.MonitoringState.STARTING, false);
+        verify(view, times(1)).setRecording(ThreadView.MonitoringState.STARTED, false);
         verify(collector).startHarvester();
 
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.STOP_LIVE_RECORDING));
@@ -232,7 +233,8 @@ public class ThreadInformationControllerTest {
         longRunningTaskCaptor.getValue().run();
 
         verify(collector).stopHarvester();
-        verify(view, times(1)).setRecording(false, false);
+        verify(view, times(1)).setRecording(ThreadView.MonitoringState.STOPPING, false);
+        verify(view, times(2)).setRecording(ThreadView.MonitoringState.STOPPED, false);
 
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.STOP_LIVE_RECORDING));
 
@@ -240,9 +242,8 @@ public class ThreadInformationControllerTest {
         longRunningTaskCaptor.getValue().run();
 
         verify(collector, times(2)).stopHarvester();
-        verify(view, times(1)).setRecording(true, false);
-
-        verify(view, times(0)).setEnableRecordingControl(false);
+        verify(view, times(2)).setRecording(ThreadView.MonitoringState.STOPPING, false);
+        verify(view, times(3)).setRecording(ThreadView.MonitoringState.STOPPED, false);
     }
 
     @Test

@@ -40,6 +40,7 @@ import javax.swing.AbstractButton;
 import javax.swing.Icon;
 import javax.swing.JToggleButton;
 
+import com.redhat.thermostat.client.core.ToggleActionState;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 @SuppressWarnings("serial")
@@ -47,17 +48,27 @@ public class ActionToggleButton extends JToggleButton implements ToolbarButton {
         
     private String lastText;
     private boolean showText;
+    private ActionToggleButtonUI buttonUI;
+
     public ActionToggleButton(final Icon icon) {
         this(icon, LocalizedString.EMPTY_STRING);
     }
     
     public ActionToggleButton(final Icon icon, LocalizedString text) {
-        super(icon);
-                
+        this(icon, icon, text);
+    }
+
+    public ActionToggleButton(final Icon defaultStateIcon, final Icon selectedStateIcon, LocalizedString text) {
+        super();
+
+        setIcon(defaultStateIcon);
+        setSelectedIcon(selectedStateIcon);
+
         showText = true;
         setText(text.getContents());
-        
-        setUI(new ActionButtonUI());
+
+        buttonUI = new ActionToggleButtonUI();
+        setUI(buttonUI);
         setOpaque(false);
         setContentAreaFilled(false);
         setBorder(new ToolbarButtonBorder(this));
@@ -88,6 +99,14 @@ public class ActionToggleButton extends JToggleButton implements ToolbarButton {
         } else {
             setText_noClient("");
         }
-    }    
+    }
+
+    public void setToggleActionState(ToggleActionState toggleActionState) {
+        setEnabled(!toggleActionState.isTransitionState() && toggleActionState.isButtonEnabled());
+        setSelected(toggleActionState.isActionEnabled());
+        buttonUI.setState(toggleActionState);
+        repaint();
+    }
+
 }
 

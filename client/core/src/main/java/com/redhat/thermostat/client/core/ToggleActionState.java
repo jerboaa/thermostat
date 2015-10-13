@@ -34,37 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.client.swing.internal;
+package com.redhat.thermostat.client.core;
 
-import com.redhat.thermostat.shared.locale.Translate;
-
-public enum LocaleResources {
-
-    PROFILER_TAB_NAME,
-
-    PROFILER_HEADING,
-    PROFILER_DESCRIPTION,
-
-    PROFILER_CURRENT_STATUS_ACTIVE,
-    PROFILER_CURRENT_STATUS_INACTIVE,
-    PROFILER_CURRENT_STATUS_DEAD,
-    START_PROFILING,
-    STARTING_PROFILING,
-    STOP_PROFILING,
-    STOPPING_PROFILING,
-
-    PROFILER_LIST_ITEM,
-    PROFILER_RESULTS_METHOD,
-    PROFILER_RESULTS_PERCENTAGE_TIME,
-    PROFILER_RESULTS_TIME,
-
-    PROFILER_NO_RESULTS,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.profiler.client.swing.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
-    }
-
+public interface ToggleActionState {
+    boolean isTransitionState();
+    boolean isActionEnabled();
+    boolean isButtonEnabled();
 }

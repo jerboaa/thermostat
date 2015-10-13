@@ -67,7 +67,9 @@ import javax.swing.event.ChangeListener;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.LocalizedLabel;
 import com.redhat.thermostat.client.swing.components.experimental.EventTimeline;
 import com.redhat.thermostat.client.swing.components.experimental.EventTimelineRangeChangeListener;
@@ -89,6 +91,9 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
     private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
     private List<ActionListener<NotificationAction>> listeners = new CopyOnWriteArrayList<>();
 
+    private static final Icon START_ICON = IconResource.SAMPLE.getIcon();
+    private static final Icon STOP_ICON = new FontAwesomeIcon('\uf04d', START_ICON.getIconHeight());
+
     private final HeaderPanel visiblePanel;
 
     private ActionToggleButton toolbarButton;
@@ -98,6 +103,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
     private DetailPanel timelineDetails;
     private Timeline ruler;
     private EventTimeline timeline;
+    private boolean viewControlsEnabled = true;
 
     public JmxNotificationsSwingView() {
 
@@ -155,7 +161,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
 
         new ComponentVisibilityNotifier().initialize(contents, notifier);
 
-        toolbarButton = new ActionToggleButton(IconResource.SAMPLE.getIcon(), translate.localize(LocaleResources.NOTIFICATIONS_ENABLE));
+        toolbarButton = new ActionToggleButton(START_ICON, STOP_ICON, translate.localize(LocaleResources.NOTIFICATIONS_ENABLE));
         toolbarButton.setName("toggleNotifications");
         toolbarButton.setToolTipText(translate.localize(LocaleResources.NOTIFICATIONS_ENABLE_DESCRIPTION).getContents());
         toolbarButton.addActionListener(new java.awt.event.ActionListener() {
@@ -199,30 +205,32 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
         listeners.remove(listener);
     }
 
+    @Override
+    public void setMonitoringState(final MonitoringState monitoringState) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (!viewControlsEnabled) {
+                    toolbarButton.setToggleActionState(MonitoringState.DISABLED);
+                } else {
+                    toolbarButton.setToggleActionState(monitoringState);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void setViewControlsEnabled(boolean enabled) {
+        this.viewControlsEnabled = enabled;
+        if (!enabled) {
+            setMonitoringState(MonitoringState.DISABLED);
+        }
+    }
+
     private void fireNotificationAction(NotificationAction action) {
         for (ActionListener<NotificationAction> listener : listeners) {
             listener.actionPerformed(new ActionEvent<>(this, action));
         }
-    }
-
-    @Override
-    public void setViewControlsEnabled(final boolean enabled) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                toolbarButton.setEnabled(enabled);
-            }
-        });
-    }
-
-    @Override
-    public void setNotificationsEnabled(final boolean enabled) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                toolbarButton.setSelected(enabled);
-            }
-        });
     }
 
     @Override

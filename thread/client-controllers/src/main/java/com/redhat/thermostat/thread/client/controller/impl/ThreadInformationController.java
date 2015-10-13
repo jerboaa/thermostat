@@ -96,12 +96,10 @@ public class ThreadInformationController implements InformationServiceController
 
         initControllers();
         
-        view.setRecording(isRecording(), false);
+        view.setRecording(isRecording() ? ThreadView.MonitoringState.STARTED : ThreadView.MonitoringState.STOPPED, false);
         view.addThreadActionListener(new ThreadActionListener());
 
-        if (!vmInfoDao.getVmInfo(ref).isAlive()) {
-            view.setEnableRecordingControl(false);
-        }
+        view.setEnableRecordingControl(vmInfoDao.getVmInfo(ref).isAlive());
     }
 
     private boolean isRecording() {
@@ -125,11 +123,15 @@ public class ThreadInformationController implements InformationServiceController
         public void actionPerformed(ActionEvent<ThreadAction> actionEvent) {
             switch (actionEvent.getActionId()) {
             case START_LIVE_RECORDING:
+                view.setRecording(ThreadView.MonitoringState.STARTING, false);
                 startHarvester();
+                view.setRecording(ThreadView.MonitoringState.STARTED, false);
                 break;
             
             case STOP_LIVE_RECORDING:
+                view.setRecording(ThreadView.MonitoringState.STOPPING, false);
                 stopHarvester();
+                view.setRecording(ThreadView.MonitoringState.STOPPED, false);
                 break;
                 
             default:
@@ -145,7 +147,8 @@ public class ThreadInformationController implements InformationServiceController
                     boolean result = collector.startHarvester();
                     if (!result) {
                         view.displayWarning(t.localize(LocaleResources.WARNING_CANNOT_ENABLE));
-                        view.setRecording(false, false);
+                        view.setEnableRecordingControl(false);
+                        view.setRecording(ThreadView.MonitoringState.DISABLED, false);
                     }
                 }
             }, translator.localize(LocaleResources.STARTING_MONITORING));
@@ -158,7 +161,8 @@ public class ThreadInformationController implements InformationServiceController
                     boolean result = collector.stopHarvester();
                     if (!result) {
                         view.displayWarning(t.localize(LocaleResources.WARNING_CANNOT_DISABLE));
-                        view.setRecording(true, false);
+                        view.setEnableRecordingControl(false);
+                        view.setRecording(ThreadView.MonitoringState.DISABLED, false);
                     }
                 }
             }, translator.localize(LocaleResources.STOPPING_MONITORING));

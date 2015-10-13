@@ -59,13 +59,13 @@ import com.redhat.thermostat.client.ui.Palette;
 
 class ActionButtonUI extends MetalButtonUI {
 
-    private BufferedImage sourceIcon;
-    private BufferedImage rollOverIcon;
-    private Image disabledIcon;
+    protected BufferedImage sourceIcon;
+    protected BufferedImage rollOverIcon;
+    protected Image disabledIcon;
     
     ActionButtonUI() {}
     
-    private BufferedImage getBrighterImage(BufferedImage source) {
+    protected BufferedImage getBrighterImage(BufferedImage source) {
         float[] kernel = new float[] { 0, 0, 0, 0, 1.2f, 0, 0, 0, 0 };
 
         BufferedImageOp brighterOp = new ConvolveOp(new Kernel(3, 3, kernel),

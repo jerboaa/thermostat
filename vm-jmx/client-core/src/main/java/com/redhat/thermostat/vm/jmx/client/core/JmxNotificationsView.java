@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.jmx.client.core;
 
+import com.redhat.thermostat.client.core.ToggleActionState;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
@@ -48,11 +49,46 @@ public abstract class JmxNotificationsView extends BasicView implements UICompon
         TOGGLE_NOTIFICATIONS,
     }
 
+    public enum MonitoringState implements ToggleActionState {
+        STARTED(true, false, true),
+        STOPPED(true, false, false),
+        STARTING(true, true, true),
+        STOPPING(true, true, false),
+        DISABLED(false, false, false),
+        ;
+
+        private final boolean isTransitionState;
+        private final boolean isActionEnabled;
+        private final boolean isButtonEnabled;
+
+        MonitoringState(boolean isButtonEnabled, boolean isTransitionState, boolean isActionEnabled) {
+            this.isButtonEnabled = isButtonEnabled;
+            this.isTransitionState = isTransitionState;
+            this.isActionEnabled = isActionEnabled;
+        }
+
+        @Override
+        public boolean isTransitionState() {
+            return isTransitionState;
+        }
+
+        @Override
+        public boolean isActionEnabled() {
+            return isActionEnabled;
+        }
+
+        @Override
+        public boolean isButtonEnabled() {
+            return isButtonEnabled;
+        }
+    }
+
+
     public abstract void addNotificationActionListener(ActionListener<NotificationAction> listener);
     public abstract void removeNotificationActionListener(ActionListener<NotificationAction> listener);
 
     public abstract void setViewControlsEnabled(boolean enabled);
-    public abstract void setNotificationsEnabled(boolean enabled);
+    public abstract void setMonitoringState(MonitoringState monitoringState);
     public abstract void clearNotifications();
     public abstract void addNotification(JmxNotification data);
     public abstract void displayWarning(LocalizedString warning);

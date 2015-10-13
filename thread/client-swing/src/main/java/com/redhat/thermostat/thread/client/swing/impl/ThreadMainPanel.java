@@ -44,12 +44,18 @@ import javax.swing.JSplitPane;
 
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 
 @SuppressWarnings("serial")
 class ThreadMainPanel extends JPanel {
+
+    private static final Icon START_ICON = IconResource.SAMPLE.getIcon();
+    private static final Icon STOP_ICON = new FontAwesomeIcon('\uf04d', START_ICON.getIconHeight());
+
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private JSplitPane splitPane;
     
@@ -64,7 +70,7 @@ class ThreadMainPanel extends JPanel {
         JPanel content = new JPanel();
         headerPanel.setContent(content);
         
-        toggleButton = new ActionToggleButton(IconResource.SAMPLE.getIcon());
+        toggleButton = new ActionToggleButton(START_ICON, STOP_ICON, t.localize(LocaleResources.THREAD_MONITOR_SWITCH));
         toggleButton.setName("recordButton");
         headerPanel.addToolBarButton(toggleButton);
         

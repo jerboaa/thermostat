@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.thread.client.common.view;
 
+import com.redhat.thermostat.client.core.ToggleActionState;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
@@ -50,6 +51,40 @@ public abstract class ThreadView extends BasicView implements UIComponent {
         START_LIVE_RECORDING,
         STOP_LIVE_RECORDING
     };
+
+    public enum MonitoringState implements ToggleActionState {
+        STARTED(true, false, true),
+        STOPPED(true, false, false),
+        STARTING(true, true, true),
+        STOPPING(true, true, false),
+        DISABLED(false, false, false),
+        ;
+
+        private final boolean isTransitionState;
+        private final boolean isActionEnabled;
+        private final boolean isButtonEnabled;
+
+        MonitoringState(boolean isButtonEnabled, boolean isTransitionState, boolean isActionEnabled) {
+            this.isButtonEnabled = isButtonEnabled;
+            this.isTransitionState = isTransitionState;
+            this.isActionEnabled = isActionEnabled;
+        }
+
+        @Override
+        public boolean isTransitionState() {
+            return isTransitionState;
+        }
+
+        @Override
+        public boolean isActionEnabled() {
+            return isActionEnabled;
+        }
+
+        @Override
+        public boolean isButtonEnabled() {
+            return isButtonEnabled;
+        }
+    }
     
     protected ApplicationService appService;
     protected String uniqueId;
@@ -68,7 +103,7 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     }
     
     public abstract void setEnableRecordingControl(boolean enable);
-    public abstract void setRecording(boolean recording, boolean notify);
+    public abstract void setRecording(MonitoringState monitoringState, boolean notify);
     
     public abstract ThreadTableView createThreadTableView();
     public abstract ThreadTimelineView createThreadTimelineView();

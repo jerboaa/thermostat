@@ -41,6 +41,7 @@ import java.util.Objects;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.ToggleActionState;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 
@@ -81,6 +82,40 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
         PROFILE_SELECTED,
     }
 
+    enum ProfilingState implements ToggleActionState {
+        STARTED(true, false, true),
+        STOPPED(true, false, false),
+        STARTING(true, true, true),
+        STOPPING(true, true, false),
+        DISABLED(false, false, false),
+        ;
+
+        private final boolean isTransitionState;
+        private final boolean isActionEnabled;
+        private final boolean isButtonEnabled;
+
+        ProfilingState(boolean isButtonEnabled, boolean isTransitionState, boolean isActionEnabled) {
+            this.isButtonEnabled = isButtonEnabled;
+            this.isTransitionState = isTransitionState;
+            this.isActionEnabled = isActionEnabled;
+        }
+
+        @Override
+        public boolean isTransitionState() {
+            return isTransitionState;
+        }
+
+        @Override
+        public boolean isActionEnabled() {
+            return isActionEnabled;
+        }
+
+        @Override
+        public boolean isButtonEnabled() {
+            return isButtonEnabled;
+        }
+    }
+
     public abstract void addProfileActionListener(ActionListener<ProfileAction> listener);
 
     public abstract void removeProfileActionlistener(ActionListener<ProfileAction> listener);
@@ -91,11 +126,8 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
      * indicating profiling in the UI
      */
 
-    /** Enable (or disable) UI that starts profiling */
-    public abstract void enableStartProfiling(boolean start);
-    /** Enable (or disable) UI that stops profiling */
-    public abstract void enableStopProfiling(boolean stop);
-    public abstract void setProfilingStatus(String text, boolean enabled);
+    public abstract void setProfilingState(ProfilingState profilingState);
+    public abstract void setViewControlsEnabled(boolean enabled);
 
     public abstract void setAvailableProfilingRuns(List<Profile> data);
 

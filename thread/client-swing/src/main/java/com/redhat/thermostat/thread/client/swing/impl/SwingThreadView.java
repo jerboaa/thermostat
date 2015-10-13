@@ -77,7 +77,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
 
     private JTabbedPane topPane;
     private JTabbedPane bottomPane;
-    
+
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private boolean skipNotification = false;
@@ -85,6 +85,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     private int threadDetailsPaneID = 0;
     
     private UIDefaults uiDefaults;
+    private boolean viewControlsEnabled = true;
 
     public SwingThreadView(UIDefaults uiDefaults) {
         
@@ -94,13 +95,13 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         // TODO use ComponentVisiblityNotifier instead
         // sadly, the BasicView.notifier field can not be accessed here
         panel.addHierarchyListener(new ComponentVisibleListener() {
-            
+
             @Override
             public void componentShown(Component component) {
                 SwingThreadView.this.notify(Action.VISIBLE);
                 restoreDivider();
             }
-            
+
             @Override
             public void componentHidden(Component component) {
                 SwingThreadView.this.notify(Action.HIDDEN);
@@ -108,17 +109,15 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         });
         
         panel.getSplitPane().addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
-                                                       new PropertyChangeListener()
-        {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                JSplitPane sourceSplitPane = (JSplitPane) evt.getSource();
-                saveDivider(sourceSplitPane.getDividerLocation());
-            }
-        });
-        
+                new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent evt) {
+                        JSplitPane sourceSplitPane = (JSplitPane) evt.getSource();
+                        saveDivider(sourceSplitPane.getDividerLocation());
+                    }
+                });
+
         panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING).getContents());
-        panel.getToggleButton().setText(t.localize(LocaleResources.THREAD_MONITOR_SWITCH).getContents());
         panel.getToggleButton().addItemListener(new ItemListener()
         {
             @Override
@@ -198,21 +197,23 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
 
     @Override
     public void setEnableRecordingControl(final boolean enable) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                panel.getToggleButton().setEnabled(enable);
-            }
-        });
+        this.viewControlsEnabled = enable;
+        if (!enable) {
+            setRecording(MonitoringState.DISABLED, false);
+        }
     }
     
     @Override
-    public void setRecording(final boolean recording, final boolean notify) {
+    public void setRecording(final MonitoringState monitoringState, final boolean notify) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 if (!notify) skipNotification = true;
-                panel.getToggleButton().setSelected(recording);
+                if (!viewControlsEnabled) {
+                    panel.getToggleButton().setToggleActionState(MonitoringState.DISABLED);
+                } else {
+                    panel.getToggleButton().setToggleActionState(monitoringState);
+                }
                 if (!notify) skipNotification = false;
             }
         });

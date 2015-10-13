@@ -74,6 +74,7 @@ import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Profile;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.ProfileAction;
+import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.ProfilingState;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
@@ -148,6 +149,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                         updater.stop();
                         break;
                     case VISIBLE:
+                        view.setViewControlsEnabled(isAlive());
                         updater.start();
                         break;
                     default:
@@ -162,10 +164,10 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                 ProfileAction id = actionEvent.getActionId();
                 switch (id) {
                 case START_PROFILING:
-                    startProfiling(view);
+                    startProfiling();
                     break;
                 case STOP_PROFILING:
-                    stopProfiling(view);
+                    stopProfiling();
                     break;
                 case PROFILE_SELECTED:
                     updateViewWithProfileRunData();
@@ -177,20 +179,19 @@ public class VmProfileController implements InformationServiceController<VmRef> 
 
         });
 
+        view.setViewControlsEnabled(isAlive());
     }
 
-    private void startProfiling(final VmProfileView view) {
-        disableViewControlsAndSendRequest(view, true);
+    private void startProfiling() {
+        setProgressNotificationAndSendRequest(true);
     }
 
-    private void stopProfiling(final VmProfileView view) {
-        disableViewControlsAndSendRequest(view, false);
+    private void stopProfiling() {
+        setProgressNotificationAndSendRequest(false);
     }
 
-    private void disableViewControlsAndSendRequest(VmProfileView view, boolean start) {
+    private void setProgressNotificationAndSendRequest(boolean start) {
         showProgressNotification(start);
-        // disable the UI until we get a update in storage
-        disableViewControls();
         sendProfilingRequest(start);
     }
 
@@ -203,15 +204,15 @@ public class VmProfileController implements InformationServiceController<VmRef> 
             @Override
             public void fireComplete(Request request, Response response) {
                 switch (response.getType()) {
-                case OK:
-                    updateViewWithCurrentProfilingStatus();
-                    break;
-                default:
-                    // FIXME show message to user
+                    case OK:
+                        updateViewWithCurrentProfilingStatus();
+                        break;
+                    default:
+                        // FIXME show message to user
 
-                    hideProgressNotificationIfVisible();
-                    profilingStartOrStopRequested = false;
-                    break;
+                        hideProgressNotificationIfVisible();
+                        profilingStartOrStopRequested = false;
+                        break;
                 }
             }
         });
@@ -220,54 +221,46 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     }
 
     private void updateViewWithCurrentProfilingStatus() {
-        boolean currentlyActive = false;
+        ProfilingState profilingState = ProfilingState.STOPPED;
 
         ProfileStatusChange currentStatus = profileDao.getLatestStatus(vm);
         if (currentStatus != null) {
-            currentlyActive = currentStatus.isStarted();
+            boolean currentlyActive = currentStatus.isStarted();
+            if (currentlyActive && profilingStartOrStopRequested) {
+                profilingState = ProfilingState.STARTING;
+            } else if (currentlyActive) {
+                profilingState = ProfilingState.STARTED;
+            } else if (profilingStartOrStopRequested) {
+                profilingState = ProfilingState.STOPPING;
+            } else {
+                profilingState = ProfilingState.STOPPED;
+            }
         }
 
-        String message;
-        if (currentlyActive) {
-            message = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_ACTIVE).getContents();
-        } else {
-            message = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_INACTIVE).getContents();
-        }
-
+        view.setViewControlsEnabled(isAlive());
         if (!isAlive()) {
-            disableViewControls();
-            view.setProfilingStatus(message, currentlyActive);
+            view.setProfilingState(ProfilingState.DISABLED);
         } else if (profilingStartOrStopRequested) {
             boolean statusChanged = (previousStatus == null && currentStatus != null)
                     || (currentStatus != null && !(currentStatus.equals(previousStatus)));
             if (statusChanged) {
-                enableViewControlsFor(currentlyActive);
-                view.setProfilingStatus(message, currentlyActive);
+                view.setProfilingState(profilingState);
                 profilingStartOrStopRequested = false;
                 hideProgressNotificationIfVisible();
             }
         } else {
-            enableViewControlsFor(currentlyActive);
-            view.setProfilingStatus(message, currentlyActive);
+            view.setProfilingState(profilingState);
         }
 
         previousStatus = currentStatus;
     }
 
-    private void disableViewControls() {
-        view.enableStartProfiling(false);
-        view.enableStopProfiling(false);
-    }
-
-    private void enableViewControlsFor(boolean currentlyActive) {
-        view.enableStartProfiling(!currentlyActive);
-        view.enableStopProfiling(currentlyActive);
-    }
-
     private void showProgressNotification(boolean start) {
         if (start) {
+            view.setProfilingState(ProfilingState.STARTING);
             progressDisplay = new ProgressHandle(translator.localize(LocaleResources.STARTING_PROFILING));
         } else {
+            view.setProfilingState(ProfilingState.STOPPING);
             progressDisplay = new ProgressHandle(translator.localize(LocaleResources.STOPPING_PROFILING));
         }
         progressDisplay.setIndeterminate(true);

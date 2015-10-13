@@ -101,11 +101,15 @@ public class JmxNotificationsViewController implements InformationServiceControl
         
         // Callbacks for toggle notifications
         final Runnable successAction = new Runnable() {
-
             @Override
             public void run() {
-                notificationsEnabled.set(!notificationsEnabled.get());
-                view.setNotificationsEnabled(notificationsEnabled.get());
+                boolean val = notificationsEnabled.get();
+                notificationsEnabled.set(!val);
+                if (val) {
+                    view.setMonitoringState(JmxNotificationsView.MonitoringState.STOPPED);
+                } else {
+                    view.setMonitoringState(JmxNotificationsView.MonitoringState.STARTED);
+                }
             }
         };
 
@@ -116,12 +120,11 @@ public class JmxNotificationsViewController implements InformationServiceControl
                 LocalizedString warning;
                 if (notificationsEnabled.get()) {
                     warning = t.localize(LocaleResources.NOTIFICATIONS_CANNOT_DISABLE);
-                }
-                else {
+                } else {
                     warning = t.localize(LocaleResources.NOTIFICATIONS_CANNOT_ENABLE);
                 }
                 view.displayWarning(warning);
-                view.setNotificationsEnabled(notificationsEnabled.get());
+                view.setViewControlsEnabled(false);
             }
         };
         
@@ -138,6 +141,11 @@ public class JmxNotificationsViewController implements InformationServiceControl
                     stopUpdatingView();
                     break;
                 case VISIBLE:
+                    if (notificationsEnabled.get() && isVmAlive()) {
+                        view.setMonitoringState(JmxNotificationsView.MonitoringState.STARTED);
+                    } else {
+                        view.setMonitoringState(JmxNotificationsView.MonitoringState.STOPPED);
+                    }
                     view.setViewControlsEnabled(isVmAlive());
                     startUpdatingView();
                     break;
@@ -149,6 +157,12 @@ public class JmxNotificationsViewController implements InformationServiceControl
             @Override
             public void actionPerformed(ActionEvent<NotificationAction> actionEvent) {
                 if (actionEvent.getActionId() == NotificationAction.TOGGLE_NOTIFICATIONS) {
+                    final boolean enabled = notificationsEnabled.get();
+                    if (!enabled) {
+                        view.setMonitoringState(JmxNotificationsView.MonitoringState.STARTING);
+                    } else {
+                        view.setMonitoringState(JmxNotificationsView.MonitoringState.STOPPING);
+                    }
                     // This can block on network, do outside EDT/UI thread
                     appSvc.getApplicationExecutor().execute(new Runnable() {
                         @Override
@@ -179,8 +193,13 @@ public class JmxNotificationsViewController implements InformationServiceControl
                     return;
                 }
 
-                notificationsEnabled.set(status.isEnabled());
-                view.setNotificationsEnabled(notificationsEnabled.get());
+                boolean monitoring = status.isEnabled();
+                notificationsEnabled.set(monitoring);
+                if (monitoring) {
+                    view.setMonitoringState(JmxNotificationsView.MonitoringState.STARTED);
+                } else {
+                    view.setMonitoringState(JmxNotificationsView.MonitoringState.STOPPED);
+                }
 
                 List<JmxNotification> notifications = dao.getNotifications(vm, lastTimeStamp);
                 for (JmxNotification notification : notifications) {
@@ -189,6 +208,8 @@ public class JmxNotificationsViewController implements InformationServiceControl
                 }
             }
         });
+
+        view.setViewControlsEnabled(true);
 
     }
 

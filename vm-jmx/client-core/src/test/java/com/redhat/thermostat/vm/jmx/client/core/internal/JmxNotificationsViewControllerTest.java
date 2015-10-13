@@ -201,7 +201,7 @@ public class JmxNotificationsViewControllerTest {
         JmxNotificationStatus status = mock(JmxNotificationStatus.class);
         when(notificationDao.getLatestNotificationStatus(vm)).thenReturn(null);
 
-        verify(view, never()).setNotificationsEnabled(anyBoolean());
+        verify(view, never()).setMonitoringState(any(JmxNotificationsView.MonitoringState.class));
         verify(view, never()).addNotification(isA(JmxNotification.class));
     }
 
@@ -245,7 +245,8 @@ public class JmxNotificationsViewControllerTest {
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
 
         verify(toggleReq).sendEnableNotificationsRequestToAgent(eq(vm), eq(true));
-        verify(view).setNotificationsEnabled(true);
+        verify(view).setMonitoringState(JmxNotificationsView.MonitoringState.STARTING);
+        verify(view).setMonitoringState(JmxNotificationsView.MonitoringState.STARTED);
     }
     
     @Test
@@ -258,9 +259,10 @@ public class JmxNotificationsViewControllerTest {
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
 
         verify(toggleReq).sendEnableNotificationsRequestToAgent(vm, true);
-        verify(view, never()).setNotificationsEnabled(true);
-        verify(view).setNotificationsEnabled(false);
-        
+        verify(view).setMonitoringState(JmxNotificationsView.MonitoringState.STARTING);
+        verify(view, never()).setMonitoringState(JmxNotificationsView.MonitoringState.STARTED);
+        verify(view).setViewControlsEnabled(false);
+
         ArgumentCaptor<LocalizedString> warningCaptor = ArgumentCaptor.forClass(LocalizedString.class);
         verify(view).displayWarning(warningCaptor.capture());
         assertEquals(translator.localize(LocaleResources.NOTIFICATIONS_CANNOT_ENABLE).getContents(),
@@ -280,7 +282,8 @@ public class JmxNotificationsViewControllerTest {
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
 
         verify(toggleReq).sendEnableNotificationsRequestToAgent(vm, false);
-        verify(view).setNotificationsEnabled(false);
+        verify(view).setMonitoringState(JmxNotificationsView.MonitoringState.STOPPING);
+        verify(view).setMonitoringState(JmxNotificationsView.MonitoringState.STOPPED);
     }
 
     @Test
@@ -339,8 +342,10 @@ public class JmxNotificationsViewControllerTest {
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
 
         verify(toggleReq).sendEnableNotificationsRequestToAgent(vm, false);
-        verify(view, never()).setNotificationsEnabled(false);
-        verify(view, times(2)).setNotificationsEnabled(true);
+        verify(view, times(1)).setMonitoringState(JmxNotificationsView.MonitoringState.STARTED);
+        verify(view, times(1)).setMonitoringState(JmxNotificationsView.MonitoringState.STOPPING);
+        verify(view, times(1)).setMonitoringState(JmxNotificationsView.MonitoringState.STARTING);
+        verify(view).setViewControlsEnabled(false);
         
         ArgumentCaptor<LocalizedString> warningCaptor = ArgumentCaptor.forClass(LocalizedString.class);
         verify(view).displayWarning(warningCaptor.capture());
