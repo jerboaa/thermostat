@@ -328,7 +328,7 @@ public class SquarifiedTreeMap {
      * @return the sum of the elements.
      */
     private double getSum(List<TreeMapNode> nodes) {
-        int sum = 0;
+        double sum = 0;
         for (TreeMapNode n : nodes) {
             sum += n.getWeight();
         }
@@ -433,7 +433,7 @@ public class SquarifiedTreeMap {
         
         // recalculate weights in percentage of their sum
         for (TreeMapNode node : elements) {
-            int w = (int) Math.round((node.getWeight()/sum) * totArea);
+            double w = (node.getWeight()/sum) * totArea;
             node.setWeight(w);
         }
     }

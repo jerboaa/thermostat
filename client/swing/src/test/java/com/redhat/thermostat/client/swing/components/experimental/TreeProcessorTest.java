@@ -36,15 +36,20 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.awt.geom.Rectangle2D;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class TreeProcessorTest {
+
+    private static final double DELTA = 0.1;
+    private static final double BASE = 2.0;
 
     TreeMapNode node;
     Rectangle2D.Double area;
@@ -57,35 +62,35 @@ public class TreeProcessorTest {
 
     @Test
     public final void testTreeProcessor() {
-        boolean catched = false;
+        boolean caught = false;
         // this test check all wrong combinations for constructor parameters
         try {
             TreeProcessor.processTreeMap(null, area);
         } catch(NullPointerException e) {
-            catched = true;
+            caught = true;
         }
-        assertTrue(catched);
-        catched = false;
+        assertTrue(caught);
+        caught = false;
 
         try {
             TreeProcessor.processTreeMap(node, null);
         } catch(NullPointerException e) {
-            catched = true;
+            caught = true;
         }
-        assertTrue(catched);
-        catched = false;
+        assertTrue(caught);
+        caught = false;
 
         try {
             TreeProcessor.processTreeMap(null, null);
         } catch(NullPointerException e) {
-            catched = true;
+            caught = true;
         }
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
 
     @Test
-    public final void testProcessTreeMap() {
+    public final void testProcessTreeMapProcessesWholeTree() {
         generateTree(node, 5, 5);
         TreeProcessor.processTreeMap(node, area);
 
@@ -113,6 +118,48 @@ public class TreeProcessorTest {
             for (TreeMapNode child : root.getChildren()) {
                 generateTree(child, levels-1, childrenNumber);
             }
+        }
+    }
+
+    @Test
+    public final void testProcessTreeMapNodeSizing() {
+        final int numSiblings = 5;
+        final double originalDimension = 64.0;
+        final double smallerDimension = 32.0;
+
+        generateSiblingTree(node, numSiblings);
+
+        TreeProcessor.processTreeMap(node, new Rectangle2D.Double(0, 0, originalDimension, originalDimension));
+        checkNodeWeightRatios(numSiblings);
+
+        //now resize smaller
+        TreeProcessor.processTreeMap(node, new Rectangle2D.Double(0, 0, smallerDimension, smallerDimension));
+
+        //now resize back to original size
+        TreeProcessor.processTreeMap(node, new Rectangle2D.Double(0, 0, originalDimension, originalDimension));
+        //if the first call to checkNodeWeightRatios(numSiblings) worked, this should too
+        checkNodeWeightRatios(numSiblings);
+    }
+
+    private void generateSiblingTree(TreeMapNode root, int numSiblings) {
+        assertTrue(numSiblings > 1);
+        root.addChild(new TreeMapNode(1.0)); //this is not a random weight
+        for(int i = 0; i < (numSiblings - 1); i++) {
+            root.addChild(new TreeMapNode(Math.pow(BASE, i)));
+        }
+    }
+
+    private void checkNodeWeightRatios(int numSiblings) {
+        List<TreeMapNode> children = node.getChildren();
+        assertEquals(numSiblings, children.size());
+        TreeMapNode.sort(children);
+
+        double weight = children.get(0).getWeight();
+        for(int i = 1; i < numSiblings - 1; i++) {
+            double currentWeight = children.get(i).getWeight();
+            //check that the ratio between node weights is approximately 2 (which is the BASE)
+            assertEquals(BASE, weight/currentWeight, DELTA);
+            weight = currentWeight;
         }
     }
 }

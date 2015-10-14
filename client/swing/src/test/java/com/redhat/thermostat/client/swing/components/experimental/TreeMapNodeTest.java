@@ -56,6 +56,7 @@ import org.junit.Test;
 public class TreeMapNodeTest {
 
     private TreeMapNode node;
+    private static final double DELTA = 0.001;
 
     @Before
     public void setUp() {
@@ -125,9 +126,9 @@ public class TreeMapNodeTest {
 
     @Test
     public final void testGetSetWeight() {
-        assertTrue(1 == node.getWeight());
+        assertEquals(1.0, node.getWeight(), DELTA);
         node.setWeight(5);
-        assertTrue(5 == node.getWeight());
+        assertEquals(5.0, node.getWeight(), DELTA);
     }
 
     @Test
@@ -150,22 +151,21 @@ public class TreeMapNodeTest {
     @Test
     public final void testGetSetRealWeight() {
         node = new TreeMapNode(null, 5);
-        assertTrue(node.getRealWeight() == 5);
+        assertEquals(5.0, node.getRealWeight(), DELTA);
         node.setRealWeight(8);
-        assertTrue(node.getRealWeight() == 8);
+        assertEquals(8.0, node.getRealWeight(), DELTA);
     }
 
     @Test
     public final void testAllowNonPositiveWeight() {
         assertFalse(TreeMapNode.isAllowNonPositiveWeight());
         node.setWeight(-5);
-        assertTrue(node.getWeight() == 1); // the real node weight
-        assertTrue(node.getRealWeight() == 1); 
-
+        assertEquals(1.0, node.getWeight(), DELTA);
+        assertEquals(1.0, node.getRealWeight(), DELTA);
 
         TreeMapNode.setAllowNonPositiveWeight(true);
         node.setWeight(-5);
-        assertTrue(node.getWeight() == -5);
+        assertEquals(-5.0, node.getWeight(), DELTA);
     }
 
     @Test

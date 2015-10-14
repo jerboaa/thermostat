@@ -54,6 +54,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
@@ -498,6 +501,14 @@ public class TreeMapComponentTest {
         );
     }
 
+    private static void findAllNodes(List<TreeMapNode> allNodes, final TreeMapNode node) {
+        for(TreeMapNode child : node.getChildren()) {
+            findAllNodes(allNodes, child);
+        }
+
+        allNodes.add(node);
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
 
@@ -511,13 +522,21 @@ public class TreeMapComponentTest {
                 modelA.addChild(new TreeMapNode("AB", 3.0));
 
                 final TreeMapNode modelB = new TreeMapNode("B", 5.0);
-                modelB.addChild(new TreeMapNode("BA", 10.0));
-                modelB.addChild(new TreeMapNode("BB", 10.0));
+                final Random generator = new Random();
+                for (int i = 0; i < 100; i++) {
+                    List<TreeMapNode> allNodes = new ArrayList<>();
+                    findAllNodes(allNodes, modelB);
+                    int parentInt = generator.nextInt(allNodes.size());
+                    TreeMapNode parent = allNodes.get(parentInt);
+                    double weight = Math.pow(10, generator.nextInt(4));
+                    parent.addChild(new TreeMapNode("n" + i,  weight));
+                }
 
                 // FIXME this hack should not be needed
                 UIManager.put("thermostat-default-font", Font.decode(Font.MONOSPACED));
 
                 final TreeMapComponent treeMap = new TreeMapComponent();
+                treeMap.setToolTipRenderer(new WeightRenderer());
                 treeMap.setModel(modelA);
 
                 JPanel container = new JPanel(new BorderLayout());
@@ -533,29 +552,51 @@ public class TreeMapComponentTest {
                 });
                 buttonPanel.add(changeModelButton);
 
-                JButton addNewNodeButton = new JButton("Add new node");
-                addNewNodeButton.addActionListener(new ActionListener() {
+                JButton addChildToRootButton = new JButton("Add child to root");
+                addChildToRootButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         TreeMapNode currentModel = treeMap.getTreeMapRoot();
-                        currentModel.addChild(new TreeMapNode("new", 10.0));
+                        currentModel.addChild(new TreeMapNode("new", 5.0));
 
                         treeMap.setModel(currentModel);
                     }
                 });
-                buttonPanel.add(addNewNodeButton);
+                buttonPanel.add(addChildToRootButton);
+
+                JButton addRandomNodeButton = new JButton("Add random node");
+                addRandomNodeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        TreeMapNode currentModel = treeMap.getTreeMapRoot();
+                        List<TreeMapNode> allNodes = new ArrayList<>();
+                        findAllNodes(allNodes, currentModel);
+                        TreeMapNode parent = allNodes.get(generator.nextInt(allNodes.size()));
+                        double weight = Math.pow(10, generator.nextInt(4));
+                        parent.addChild(new TreeMapNode("rand", weight));
+
+                        treeMap.setModel(currentModel);
+                    }
+                });
+                buttonPanel.add(addRandomNodeButton);
 
                 container.add(buttonPanel, BorderLayout.PAGE_START);
                 container.add(treeMap, BorderLayout.CENTER);
 
                 mainWindow.add(container, BorderLayout.CENTER);
 
-                mainWindow.setSize(400, 200);
+                mainWindow.setSize(500, 200);
                 mainWindow.setVisible(true);
             }
         });
     }
 
+    public static class WeightRenderer implements TreeMapComponent.ToolTipRenderer {
+        @Override
+        public String render(TreeMapNode node) {
+            return node.getLabel() + " RW:" + node.getRealWeight() + " W:" + node.getWeight();
+        }
+    }
     interface KeyShortcutTestResultHandler {
         void handle(KeyShortcutTestResults results);
     }
