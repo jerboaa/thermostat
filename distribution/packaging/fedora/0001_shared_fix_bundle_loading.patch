@@ -220,10 +220,26 @@ diff --git a/storage-profile/distribution/thermostat-plugin.xml b/storage-profil
          <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
          <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
          <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+diff --git a/vm-find/distribution/thermostat-plugin.xml b/vm-find/distribution/thermostat-plugin.xml
+--- a/vm-find/distribution/thermostat-plugin.xml
++++ b/vm-find/distribution/thermostat-plugin.xml
+@@ -220,9 +220,12 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
+       </bundles>
+     </command>
+   </commands>
 diff --git a/vm-gc/distribution/thermostat-plugin.xml b/vm-gc/distribution/thermostat-plugin.xml
 --- a/vm-gc/distribution/thermostat-plugin.xml
 +++ b/vm-gc/distribution/thermostat-plugin.xml
-@@ -76,7 +76,7 @@
+@@ -76,9 +76,11 @@
          <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
@@ -231,8 +247,12 @@ diff --git a/vm-gc/distribution/thermostat-plugin.xml b/vm-gc/distribution/therm
 +        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
          <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
          <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
        </bundles>
-@@ -128,7 +128,7 @@
+     </command>
+     <command>
+@@ -134,9 +136,11 @@
          <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
@@ -240,7 +260,11 @@ diff --git a/vm-gc/distribution/thermostat-plugin.xml b/vm-gc/distribution/therm
 +        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
          <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
          <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
        </bundles>
+     </command>
+   </commands>
 diff --git a/vm-heap-analysis/distribution/thermostat-plugin.xml b/vm-heap-analysis/distribution/thermostat-plugin.xml
 --- a/vm-heap-analysis/distribution/thermostat-plugin.xml
 +++ b/vm-heap-analysis/distribution/thermostat-plugin.xml

@@ -65,7 +65,7 @@
         <bundle><symbolic-name>org.eclipse.jetty.servlet</symbolic-name><version>${jetty.version}</version></bundle>
         <bundle><symbolic-name>org.eclipse.jetty.xml</symbolic-name><version>${jetty.version}</version></bundle>
         <bundle><symbolic-name>org.eclipse.jetty.jaas</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>javax.servlet-api</symbolic-name><version>${jetty.javax.servlet.osgi.version}</version></bundle>
+        <bundle><symbolic-name>${javax.servlet.bsn}</symbolic-name><version>${jetty.javax.servlet.osgi.version}</version></bundle>
         <!-- Required for running agent on top of http.
              It should be the equivalent of $THERMOSTAT_HOME/etc/commands/agent.properties -->
         <bundle><symbolic-name>com.redhat.thermostat.agent.core</symbolic-name><version>${project.version}</version></bundle>

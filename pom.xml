@@ -218,6 +218,7 @@
          suitable for that jetty version. Note that the servlet impl we
          ship requires API version >= ${javax.servlet.version}. -->
     <jetty.javax.servlet.osgi.version>3.1.0</jetty.javax.servlet.osgi.version>
+    <javax.servlet.bsn>javax.servlet-api</javax.servlet.bsn>
     <!-- used in thermostat-web-server tests only -->
     <jetty8-tests.version>8.1.5.v20120716</jetty8-tests.version>
     <!-- This isn't really the lowest possible servlet API we require.

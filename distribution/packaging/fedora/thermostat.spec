@@ -51,7 +51,7 @@ __DEFAULT_RELEASE__ 6
   %global codec_bundle_version       1.10.0
   # apache-commons-logging
   %global logging_bundle_version     1.2.0
-  %global hc_core_bundle_version     4.4.3
+  %global hc_core_bundle_version     4.4.4
   %global hc_client_bundle_version   4.5.1
   %global gson_bundle_version        2.3.1
   # Real OSGi Bundle-Version is 2.13.2.RELEASE
@@ -61,6 +61,10 @@ __DEFAULT_RELEASE__ 6
   # with version suffix. See 0001_shared_fix_bundle_loading.patch
   %global jansi_version              1.11
   %global lucene_analysis_core_bsn   org.apache.lucene.analyzers-common
+  # The javax.servlet bundle version used by the
+  # endpoint plugin: a.k.a web-storage-service
+  %global javax_servlet_bundle_version 3.1.0
+  %global javax_servlet_bsn            javax.servlet-api
 
 %else
 
@@ -87,6 +91,12 @@ __DEFAULT_RELEASE__ 6
   # with version suffix. See 0001_shared_fix_bundle_loading.patch
   %global jansi_version              1.9
   %global lucene_analysis_core_bsn   org.apache.lucene.analysis
+  # The javax.servlet bundle version used by the
+  # endpoint plugin: a.k.a web-storage-service
+  # Comming from rh-java-common-tomcat-servlet-XXX-api
+  # package.
+  %global javax_servlet_bundle_version 3.0.0
+  %global javax_servlet_bsn            javax.servlet
 
 %endif
 
@@ -354,6 +364,8 @@ BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpcore
 BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpclient) = %{hc_client_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpmime) = %{hc_client_bundle_version}
 BuildRequires: %{?scl_prefix}osgi(com.mxgraph) = %{jgraphx_bundle_version}
+# The web endpoint plugin gets this bundle baked into the bundles list.
+BuildRequires: %{?scl_prefix_java_common}osgi(%{javax_servlet_bsn}) = %{javax_servlet_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}mvn(%{object_web_asm_maven_coords}) >= 5
 
 %{?!scl:
@@ -668,7 +680,9 @@ popd
                  -Dlucene-analysis.bundle.symbolic-name=%{lucene_analysis_core_bsn} \
                  -Dosgi.compendium.bundle.symbolic-name=org.osgi.compendium \
                  -Dosgi.compendium.osgi-version=4.1.0 \
-                 -Djgraphx.osgi.version=%{jgraphx_bundle_version}
+                 -Djgraphx.osgi.version=%{jgraphx_bundle_version} \
+                 -Djetty.javax.servlet.osgi.version=%{javax_servlet_bundle_version} \
+                 -Djavax.servlet.bsn=%{javax_servlet_bsn}
 
 # Make path to java so that it keeps working after updates.
 # We require java >= 1.7.0
@@ -793,6 +807,9 @@ ln -s ./netty-%{netty_bundle_version}.jar \
 # Remove duplicate tools*.jar files which makes the resulting
 # RPM insanely large (21 * 20 MB) ~= 410 MB => ~90 to 100 MB compressed
 find %{buildroot}%{thermostat_home} -name 'tools*.jar' | xargs rm
+# Remove jzlib.jar/jzlib-any.jar which maven thinks we need but we don't
+# actually need.
+rm -rf %{buildroot}%{thermostat_home}/libs/jzlib*.jar
 
 pushd %{buildroot}%{_libdir}/%{pkg_name}
 # symlink JNI jars
@@ -867,6 +884,11 @@ ln -s %{thermostat_catalina_base}/webapps/%{pkg_name} %{buildroot}%{thermostat_h
 pushd %{buildroot}%{thermostat_catalina_base}/webapps/%{pkg_name}/WEB-INF/lib
   xmvn-subst .
 popd
+
+# Remove tools.jar (coming from the JVM). We also don't need jzlib.jars.
+# The latter jar might be a (broken?) symlink which makes web-storage-service fail.
+rm -rf %{buildroot}%{thermostat_catalina_base}/webapps/%{pkg_name}/WEB-INF/lib/jzlib*.jar
+rm -rf %{buildroot}%{thermostat_catalina_base}/webapps/%{pkg_name}/WEB-INF/lib/tools*.jar
 
 # We use a custom CATALINA_BASE with core tomcat directories
 # symlinked. This allows us to deploy the thermostat webapp
