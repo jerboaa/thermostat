@@ -45,12 +45,16 @@ import javax.swing.SwingUtilities;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
+import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 
 public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     /** For TESTING only! */
     static final String TAB_NAME = "tabs";
@@ -65,7 +69,16 @@ public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingCompon
         visiblePane.add(tabPane, BorderLayout.CENTER);
 
         tabPane.setName(TAB_NAME);
+        tabPane.addTab(
+                translator.localize(LocaleResources.HEAP_DUMP_SECTION_TREEMAP).getContents(), null);
+        tabPane.addTab(
+                translator.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER).getContents(), null);
+        tabPane.addTab(
+                translator.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM).getContents(), null);
+        tabPane.setSelectedIndex(0);
     }
+
+
 
     @Override
     public void addSubView(final LocalizedString title, final HeapHistogramView view) {
@@ -124,6 +137,27 @@ public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingCompon
             @Override
             public void run() {
                 tabPane.insertTab(title.getContents(), null, ((SwingComponent)view).getUiComponent(), null, 0);
+            }
+        });
+    }
+
+    @Override
+    public void updateView(final HeapHistogramView histogramView,
+                           final ObjectDetailsView detailsView,
+                           final HeapTreeMapView treeMapView) {
+
+        verifyIsSwingComponent(histogramView);
+        verifyIsSwingComponent(detailsView);
+        verifyIsSwingComponent(treeMapView);
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                tabPane.setComponentAt(0, ((SwingComponent) treeMapView).getUiComponent());
+                tabPane.setComponentAt(1, ((SwingComponent) detailsView).getUiComponent());
+                tabPane.setComponentAt(2, ((SwingComponent) histogramView).getUiComponent());
+                tabPane.revalidate();
+                tabPane.repaint();
             }
         });
     }

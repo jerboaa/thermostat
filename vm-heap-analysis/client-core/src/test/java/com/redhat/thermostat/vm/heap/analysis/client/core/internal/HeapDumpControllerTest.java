@@ -49,6 +49,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,6 +97,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvide
 import com.redhat.thermostat.vm.heap.analysis.common.DumpFile;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
+import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
@@ -286,10 +288,13 @@ public class HeapDumpControllerTest {
     }
     
     @Test
-    public void testOpenDumpCalledWhenPreviousDump() {
+    public void testOpenDumpCalledWhenPreviousDump() throws IOException {
 
         setUpTimers();
         HeapDump dump = mock(HeapDump.class);
+
+        ObjectHistogram histogram = mock(ObjectHistogram.class);
+        when(dump.getHistogram()).thenReturn(histogram);
         
         HeapInfo info1 = mock(HeapInfo.class);
         when(dump.getInfo()).thenReturn(info1);

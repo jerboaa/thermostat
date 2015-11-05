@@ -46,5 +46,8 @@ public abstract class HeapDumpDetailsView extends BasicView implements UICompone
     public abstract void addSubView(LocalizedString title, ObjectDetailsView child);
     public abstract void addSubView(LocalizedString title, HeapTreeMapView child);
     public abstract void removeSubView(LocalizedString title);
+    public abstract void updateView(final HeapHistogramView histogramView,
+                                    final ObjectDetailsView detailsView,
+                                    final HeapTreeMapView treeMapView);
 }
 

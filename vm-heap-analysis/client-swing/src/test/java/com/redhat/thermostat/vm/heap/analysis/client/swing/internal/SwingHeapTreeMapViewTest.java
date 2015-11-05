@@ -38,7 +38,9 @@ package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
 
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapNode;
@@ -50,6 +52,11 @@ public class SwingHeapTreeMapViewTest {
 
     private SwingHeapTreeMapView.WeightAsSizeRenderer renderer;
     private TreeMapNode root;
+
+    @BeforeClass
+    public static void setUpOnce() {
+        FailOnThreadViolationRepaintManager.install();
+    }
 
     @Before
     public void setUp() {

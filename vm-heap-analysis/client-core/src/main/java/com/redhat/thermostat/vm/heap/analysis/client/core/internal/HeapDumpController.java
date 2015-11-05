@@ -107,6 +107,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     private ObjectDetailsViewProvider objectDetailsViewProvider;
     private ObjectRootsViewProvider objectRootsViewProvider;
     private HeapDumpListViewProvider heapDumpListViewProvider;
+    private HeapDumpDetailsController heapDumpDetailsController;
 
     private ProgressNotifier notifier;
     
@@ -155,6 +156,14 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         this.vmDao = vmMemoryStatDao;
         this.heapDAO = heapDao;
         this.heapDumpListViewProvider = heapDumpListViewProvider;
+
+        this.heapDumpDetailsController = new HeapDumpDetailsController(
+                        appService,
+                        detailsViewProvider,
+                        histogramViewProvider,
+                        treeMapViewProvider,
+                        objectDetailsViewProvider,
+                        objectRootsViewProvider);
         
         model = new OverviewChart(
                     null,
@@ -374,15 +383,9 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     }
 
     private void showHeapDumpDetails(HeapDump dump) {
-        HeapDumpDetailsController controller =
-                new HeapDumpDetailsController(appService, detailsViewProvider,
-                                              histogramViewProvider,
-                                              treeMapViewProvider,
-                                              objectDetailsViewProvider,
-                                              objectRootsViewProvider);
-        controller.setDump(dump);
+        heapDumpDetailsController.setDump(dump);
         view.setActiveDump(dump);
-        view.setChildView(controller.getView());
+        view.setChildView(heapDumpDetailsController.getView());
         view.openDumpView();
     }
 

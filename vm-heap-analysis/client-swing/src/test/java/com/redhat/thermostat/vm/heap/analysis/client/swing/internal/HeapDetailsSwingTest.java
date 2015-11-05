@@ -36,17 +36,23 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
+import junit.framework.Assert;
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+import javax.swing.SwingUtilities;
 
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -54,6 +60,7 @@ import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JTabbedPaneFixture;
+import org.fest.swing.util.Triple;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -64,13 +71,21 @@ import org.junit.runner.RunWith;
 import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
+import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class HeapDetailsSwingTest {
 
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
     private JFrame frame;
     private FrameFixture frameFixture;
+    private JTabbedPaneFixture tabPane;
     private HeapDetailsSwing view;
 
     @BeforeClass
@@ -100,57 +115,192 @@ public class HeapDetailsSwingTest {
 
     @GUITest
     @Test
-    public void verifyTabsAdded() throws InvocationTargetException, InterruptedException {
+    public void testTabSetup() throws InvocationTargetException, InterruptedException {
         frameFixture.show();
 
-        JTabbedPaneFixture tabPane = frameFixture.tabbedPane("tabs");
-        assertNotNull(tabPane);
-
-        HistogramPanel histogramView = mock(HistogramPanel.class);
-        when(histogramView.getUiComponent()).thenReturn(new EdtHelper().callAndWait(new Callable<JPanel>() {
+        SwingUtilities.invokeAndWait(new Runnable() {
             @Override
-            public JPanel call() throws Exception {
-                return new JPanel();
-            }
-        }));
+            public void run() {
+                tabPane = frameFixture.tabbedPane("tabs");
+                assertNotNull(tabPane);
 
-        ObjectDetailsPanel objectDetailsView = mock(ObjectDetailsPanel.class);
-        when(objectDetailsView.getUiComponent()).thenReturn(new EdtHelper().callAndWait(new Callable<JPanel>() {
-            @Override
-            public JPanel call() throws Exception {
-                return new JPanel();
-            }
-        }));
-        view.addSubView(new LocalizedString("test1"), histogramView);
-        view.addSubView(new LocalizedString("test2"), objectDetailsView);
+                ArrayList<String> tabTitles = new ArrayList<>();
+                tabTitles.addAll(Arrays.asList(tabPane.tabTitles()));
 
-        tabPane.requireTabTitles("test1", "test2");
+                assertEquals(0, tabPane.component().getSelectedIndex());
+                assertEquals(3, tabTitles.size());
+                assertTrue(tabTitles.contains(
+                        translator.localize(LocaleResources.HEAP_DUMP_SECTION_TREEMAP).getContents()));
+                assertTrue(tabTitles.contains(
+                        translator.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER).getContents()));
+                assertTrue(tabTitles.contains(
+                        translator.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM).getContents()));
+            }
+        });
     }
-
 
     @GUITest
     @Test
-    public void verifyAddRemove() throws InvocationTargetException, InterruptedException {
+    public void testUpdateView() throws InvocationTargetException, InterruptedException {
         frameFixture.show();
 
-        JTabbedPaneFixture tabPane = frameFixture.tabbedPane("tabs");
-        assertNotNull(tabPane);
-
-        HistogramPanel histogramView = mock(HistogramPanel.class);
-        when(histogramView.getUiComponent()).thenReturn(new EdtHelper().callAndWait(new Callable<JPanel>() {
+        SwingUtilities.invokeAndWait(new Runnable() {
             @Override
-            public JPanel call() throws Exception {
-                return new JPanel();
+            public void run() {
+                tabPane = frameFixture.tabbedPane("tabs");
+                assertNotNull(tabPane);
+                assertEquals(0, tabPane.component().getComponents().length);
             }
-        }));
+        });
 
-        view.addSubView(new LocalizedString("test1"), histogramView);
+        Triple<HistogramPanel, ObjectDetailsPanel, SwingHeapTreeMapView> setup = setupViews();
 
-        tabPane.requireTabTitles("test1");
+        String exceptionMessage = "";
+        try {
+            view.updateView(null, setup.ii, setup.iii);
+        } catch (IllegalArgumentException e) {
+            exceptionMessage = e.getMessage();
+        }
+        assertEquals("component is not swing", exceptionMessage);
 
-        view.removeSubView(new LocalizedString("test1"));
+        exceptionMessage = "";
+        try {
+            view.updateView(setup.i, null, setup.iii);
+        } catch (IllegalArgumentException e) {
+            exceptionMessage = e.getMessage();
+        }
+        assertEquals("component is not swing", exceptionMessage);
 
-        tabPane.requireTabTitles();
+        exceptionMessage = "";
+        try {
+            view.updateView(setup.i, setup.ii, null);
+        } catch (IllegalArgumentException e) {
+            exceptionMessage = e.getMessage();
+        }
+        assertEquals("component is not swing", exceptionMessage);
+
+        try {
+            view.updateView(setup.i, setup.ii, setup.iii);
+        } catch (IllegalArgumentException e) {
+            Assert.fail("no illegal argument exception expected");
+        }
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                assertEquals(3, tabPane.component().getComponents().length);
+            }
+        });
     }
+
+    @GUITest
+    @Test
+    public void testAddRemove() throws InvocationTargetException, InterruptedException {
+        frameFixture.show();
+
+        final ArrayList<String> tabNames = new ArrayList<>();
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                tabPane = frameFixture.tabbedPane("tabs");
+                assertNotNull(tabPane);
+                tabNames.addAll(Arrays.asList(tabPane.tabTitles()));
+            }
+        });
+
+        for (String tabName : tabNames) {
+            view.removeSubView(new LocalizedString(tabName));
+        }
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                assertEquals(0, tabPane.tabTitles().length);
+            }
+        });
+
+        String exceptionMessage = "";
+        try {
+            view.addSubView(new LocalizedString("test1"), (HeapHistogramView) null);
+        } catch (IllegalArgumentException e) {
+            exceptionMessage = e.getMessage();
+        }
+        assertEquals("component is not swing", exceptionMessage);
+
+        exceptionMessage = "";
+        try {
+            view.addSubView(new LocalizedString("test2"), (ObjectDetailsView) null);
+        } catch (IllegalArgumentException e) {
+            exceptionMessage = e.getMessage();
+        }
+        assertEquals("component is not swing", exceptionMessage);
+
+        exceptionMessage = "";
+        try {
+            view.addSubView(new LocalizedString("test3"), (HeapTreeMapView) null);
+        } catch (IllegalArgumentException e) {
+            exceptionMessage = e.getMessage();
+        }
+        assertEquals("component is not swing", exceptionMessage);
+
+        Triple<HistogramPanel, ObjectDetailsPanel, SwingHeapTreeMapView> setup = setupViews();
+        try {
+            view.addSubView(new LocalizedString("test1"), setup.i);
+            view.addSubView(new LocalizedString("test2"), setup.ii);
+            view.addSubView(new LocalizedString("test3"), setup.iii);
+        } catch (IllegalArgumentException e) {
+            Assert.fail("no illegal argument exception expected");
+        }
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<String> tabTitles = new ArrayList<>();
+                tabTitles.addAll(Arrays.asList(tabPane.tabTitles()));
+
+                assertEquals(3, tabTitles.size());
+                assertTrue(tabTitles.contains("test1"));
+                assertTrue(tabTitles.contains("test2"));
+                assertTrue(tabTitles.contains("test3"));
+            }
+        });
+    }
+
+
+    private Triple<HistogramPanel, ObjectDetailsPanel, SwingHeapTreeMapView> setupViews() {
+        HistogramPanel histogramView = mock(HistogramPanel.class);
+        ObjectDetailsPanel objectDetailsView = mock(ObjectDetailsPanel.class);
+        SwingHeapTreeMapView treeMapView = mock(SwingHeapTreeMapView.class);
+
+        try {
+            when(histogramView.getUiComponent()).thenReturn(new EdtHelper().callAndWait(new Callable<JPanel>() {
+                @Override
+                public JPanel call() throws Exception {
+                    return new JPanel();
+                }
+            }));
+
+
+            when(objectDetailsView.getUiComponent()).thenReturn(new EdtHelper().callAndWait(new Callable<JPanel>() {
+                @Override
+                public JPanel call() throws Exception {
+                    return new JPanel();
+                }
+            }));
+
+
+            when(treeMapView.getUiComponent()).thenReturn(new EdtHelper().callAndWait(new Callable<JPanel>() {
+                @Override
+                public JPanel call() throws Exception {
+                    return new JPanel();
+                }
+            }));
+        } catch (InvocationTargetException | InterruptedException e) {
+            Assert.fail("Did not expect exception");
+        }
+
+        return new Triple<>(histogramView, objectDetailsView, treeMapView);
+    }
+
 }
 
