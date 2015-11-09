@@ -46,7 +46,8 @@ public class CommandChannelServerMain {
     private static ServerCreator serverCreator = new ServerCreator();
     private static ShutdownHookHandler shutdownHandler = new ShutdownHookHandler();
     private static Sleeper sleeper = new Sleeper();
-    
+    private static CommandChannelServerImpl impl = null;
+
     // TODO Add some keep alive check
     public static void main(String[] args) {
         if (args.length != 2) {
@@ -65,7 +66,7 @@ public class CommandChannelServerMain {
         try {
             SSLConfiguration config = sslConfParser.parse(System.in);
             
-            final CommandChannelServerImpl impl = serverCreator.createServer(config);
+            impl = serverCreator.createServer(config);
             
             // Start listening on server
             impl.startListening(hostname, port);
@@ -81,6 +82,9 @@ public class CommandChannelServerMain {
         } catch (IOException e) {
             System.err.println("Failed to start command channel server");
             e.printStackTrace();
+            if (impl != null) {
+                impl.stopListening();
+            }
         }
     }
     
