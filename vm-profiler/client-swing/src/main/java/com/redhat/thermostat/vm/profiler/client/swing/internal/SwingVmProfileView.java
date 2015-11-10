@@ -239,13 +239,17 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             }
         };
 
+        final SimpleTextRenderer simpleRenderer = new SimpleTextRenderer();
         final PlainTextMethodDeclarationRenderer plainRenderer = new PlainTextMethodDeclarationRenderer();
         final SyntaxHighlightedMethodDeclarationRenderer colorRenderer = new SyntaxHighlightedMethodDeclarationRenderer();
 
         profileTable = new ThermostatTable(tableModel) {
             public javax.swing.table.TableCellRenderer getCellRenderer(int row, int column) {
                 if (column == COLUMN_METHOD_NAME) {
-                    if (profileTable.isCellSelected(row, column)) {
+                    if(tableModel.getRowCount() == 1 && tableModel.getValueAt(0,0).equals(
+                            translator.localize(LocaleResources.PROFILER_NO_RESULTS).getContents())) {
+                        return simpleRenderer;
+                    } else if (profileTable.isCellSelected(row, column)) {
                         return plainRenderer;
                     } else {
                         return colorRenderer;
@@ -392,6 +396,21 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         return mainContainer;
     }
 
+    static class SimpleTextRenderer extends ThermostatTableRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+
+            if (!(value instanceof String)) {
+                throw new AssertionError("Unexpected value");
+            }
+
+            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row,
+                    column);
+        }
+    }
+
     static class PlainTextMethodDeclarationRenderer extends ThermostatTableRenderer {
 
         @Override
@@ -473,8 +492,10 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 window.setVisible(true);
 
                 List<MethodInfo> data = new ArrayList<>();
-                data.add(new MethodInfo(new MethodDeclaration("foo", list("int"), "int"), 1000, 1.0));
-                data.add(new MethodInfo(new MethodDeclaration("bar", list("foo.bar.Baz", "int"), "Bar"), 100000, 100));
+                data.add(new MethodInfo(new MethodDeclaration(
+                        "foo", list("int"), "int"), 1000, 1.0));
+                data.add(new MethodInfo(new MethodDeclaration(
+                        "bar", list("foo.bar.Baz", "int"), "Bar"), 100000, 100));
                 ProfilingResult results = new ProfilingResult(data);
                 view.setProfilingDetailData(results);
             }
