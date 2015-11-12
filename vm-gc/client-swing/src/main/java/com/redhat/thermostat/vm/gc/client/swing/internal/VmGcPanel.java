@@ -433,16 +433,19 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
             javaVersionRange = null;
         }
         this.javaVersionRange = javaVersionRange;
-        if (commonName != CollectorCommonName.UNKNOWN_COLLECTOR) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (commonName != CollectorCommonName.UNKNOWN_COLLECTOR) {
                     gcAlgoLabelDescr.setText(GC_ALGO_LABEL_NAME);
                     commonNameLabel.setText(collectorCommonName.getHumanReadableString());
+                    gcParamsButton.setVisible(true);
                     gcParamsButton.setEnabled(VmGcPanel.this.javaVersionRange != null);
+                } else {
+                    gcParamsButton.setVisible(false);
                 }
-            });
-        }
+            }
+        });
     }
 
     @Override
