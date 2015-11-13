@@ -37,12 +37,9 @@
 package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.util.Objects;
 
 import javax.swing.Box;
@@ -108,17 +105,6 @@ public class TreeMapToolbar extends JComponent {
             }
         });
         breadcrumbPanel.add(scrollPane);
-        
-        // when the component is resized the new dimension is used to arrange 
-        // the scrollpane, in order to use all available space.
-        breadcrumbPanel.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent arg0) {
-                Dimension d = breadcrumbPanel.getSize();
-                d.height = 20;
-                scrollPane.setPreferredSize(d);
-            }
-        });
     }
 
 }
