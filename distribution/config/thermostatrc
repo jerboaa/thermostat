@@ -44,10 +44,15 @@
 #####################################################################
 
 #
+# Use a different JDK for running thermostat
+#
+#JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+
+#
 # Extra jar files which need to be on the classpath when
 # Thermostat boots.
 # 
-THERMOSTAT_EXT_BOOT_CLASSPATH="@java.home@/../lib/tools.jar"
+THERMOSTAT_EXT_BOOT_CLASSPATH="${JAVA_HOME}/lib/tools.jar"
 # FIXME: Remove once jfreechart is a real OSGi bundle upstream
 THERMOSTAT_EXT_BOOT_CLASSPATH="${THERMOSTAT_EXT_BOOT_CLASSPATH}:${THERMOSTAT_HOME}/libs/jfreechart-@jfreechart.version@.jar"
 THERMOSTAT_EXT_BOOT_CLASSPATH="${THERMOSTAT_EXT_BOOT_CLASSPATH}:${THERMOSTAT_HOME}/libs/jcommon-@jcommon.version@.jar"
@@ -66,3 +71,4 @@ export THERMOSTAT_EXT_BOOT_CLASSPATH
 #
 #THERMOSTAT_EXT_OPTS="--ignore-bundle-versions"
 #export THERMOSTAT_EXT_OPTS
+

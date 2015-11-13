@@ -44,7 +44,7 @@ fi
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
 
 # Need tools from the JVM
-TOOLS_JAR="@java.home@/../lib/tools.jar"
+TOOLS_JAR="${JAVA_HOME}/lib/tools.jar"
 
 # JARs necessary for the server
 SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"

@@ -68,7 +68,33 @@ THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 # Duplicated in ThermostatVmMainLabelDecorator
 THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
 
-JAVA="@java.home@/bin/java"
+if [[ "${JAVA_HOME}" = "" ]]; then
+  jdk_home_candidate="@thermostat.jdk.home@"
+  if [[ -e "${jdk_home_candidate}/bin/javac" ]]; then
+    JAVA_HOME="${jdk_home_candidate}"
+  else
+    # Got likely a JRE, but thermostat expects a full JDK, try
+    # one level up and hope this will work. We check
+    # if JAVA_HOME is a valid value below.
+    JAVA_HOME="${jdk_home_candidate}/.."
+  fi
+fi
+
+# Source system thermostat profile
+. ${THERMOSTAT_HOME}/etc/thermostatrc 
+# Source user thermostat profile (if any)
+if [[ -f ${USER_THERMOSTAT_HOME}/etc/thermostatrc ]]; then
+  . ${USER_THERMOSTAT_HOME}/etc/thermostatrc
+fi
+
+# Verify that JAVA_HOME is a real JDK
+if [[ ! -e "${JAVA_HOME}/bin/javac" ]]; then
+  echo "JAVA_HOME does not seem to be a JDK. Thermostat needs a JDK to run." 1>&2
+  echo "JAVA_HOME was set to '${JAVA_HOME}'" 1>&2
+  exit 2
+fi
+
+JAVA="${JAVA_HOME}/bin/java"
 
 SYSTEM_LOG_CONFIG_FILE="${THERMOSTAT_HOME}/etc/logging.properties"
 if [ -f "${SYSTEM_LOG_CONFIG_FILE}" ] ; then

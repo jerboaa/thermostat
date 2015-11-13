@@ -481,6 +481,9 @@ security.
 %patch4 -p1
 }
 
+# Replace thermostatrc with Fedora's version
+cp %{SOURCE4} distribution/config/thermostatrc
+
 
 # Fix up artifact names which have different name upstream
 #  lucene
@@ -661,6 +664,7 @@ popd
 #    install javadoc:aggregate
 # Everything after '--' is passed to plain xmvn/mvn
 %mvn_build -f -- -Dthermostat.home=%{thermostat_home} \
+                 -Dthermostat.jdk.home=%{jdk_base} \
                  -Dthermostat.system.user=thermostat \
                  -Dthermostat.system.group=thermostat \
                  -Dnetty.version=%{netty_bundle_version}.Final \
@@ -684,12 +688,6 @@ popd
                  -Djetty.javax.servlet.osgi.version=%{javax_servlet_bundle_version} \
                  -Djavax.servlet.bsn=%{javax_servlet_bsn}
 
-# Make path to java so that it keeps working after updates.
-# We require java >= 1.7.0
-sed -i 's|^JAVA=.*|JAVA="%{jdk_base}/bin/java"|' distribution/target/image/bin/thermostat-common
-# Fix path to tools.jar, replace system thermostatrc
-sed 's|__TOOLS_PATH__|%{jdk_base}/lib/tools.jar|' %{SOURCE4} > distribution/target/image/etc/thermostatrc
-sed -i 's|^TOOLS_JAR=.*|TOOLS_JAR="%{jdk_base}/lib/tools.jar"|' distribution/target/image/bin/thermostat-agent-proxy
 %{?scl:EOF}
 
 
@@ -953,15 +951,10 @@ mkdir -p %{buildroot}/%{_root_localstatedir}/log/%{thermostat_tomcat_service_nam
 %{?scl:EOF}
 
 %check
-# Perform some sanity checks on paths to JAVA/TOOLS_JAR
-# in important boot scripts. See RHBZ#1052992 and
-# RHBZ#1053123
-TOOLS_JAR="$(grep -E THERMOSTAT_EXT_BOOT_CLASSPATH='.*tools.jar' %{buildroot}/%{_sysconfdir}/%{pkg_name}/thermostatrc | cut -d= -f2 | cut -d\" -f2)"
-test "${TOOLS_JAR}" = "%{jdk_base}/lib/tools.jar"
-TOOLS_JAR="$(grep 'TOOLS_JAR=' %{buildroot}/%{thermostat_home}/bin/thermostat-agent-proxy | cut -d= -f2 | cut -d\" -f2)"
-test "${TOOLS_JAR}" = "%{jdk_base}/lib/tools.jar"
-JAVA="$(grep 'JAVA=' %{buildroot}/%{thermostat_home}/bin/thermostat-common | cut -d= -f2 | cut -d\" -f2)"
-test "${JAVA}" = "%{jdk_base}/bin/java"
+# Perform a sanity check so as to ensure that JAVA_HOME will point to a
+# stable path (across OpenJDK package updates).
+JDK_HOME_CANDIDATE=$(grep 'jdk_home_candidate=' %{buildroot}/%{thermostat_home}/bin/thermostat-common | cut -d= -f2 | cut -d\" -f2)
+test "${JDK_HOME_CANDIDATE}" = "%{jdk_base}"
 
 %pre
 %{?scl:

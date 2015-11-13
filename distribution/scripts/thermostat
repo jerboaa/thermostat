@@ -39,13 +39,6 @@
 # Source thermostat-common from same directory as this script
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
 
-# Source system thermostat profile
-. ${THERMOSTAT_HOME}/etc/thermostatrc 
-# Source user thermostat profile (if any)
-if [ -f ${USER_THERMOSTAT_HOME}/etc/thermostatrc ]; then
-  . ${USER_THERMOSTAT_HOME}/etc/thermostatrc
-fi
-
 # NOTE: The following variables come from the system/user
 #       profiles (if any)
 #
@@ -64,7 +57,6 @@ BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@p
 if [ ! -z ${THERMOSTAT_EXT_BOOT_CLASSPATH} ]; then
   BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_EXT_BOOT_CLASSPATH}"
 fi
-
 
 function usage() {
     echo "$0 [-J<java-opt>] [-Tbg PIDFILE] [THERMOSTAT_ARGS]" >&2

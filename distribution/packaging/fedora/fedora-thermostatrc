@@ -44,10 +44,15 @@
 #####################################################################
 
 #
+# Use a different JDK for running thermostat
+#
+#JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+
+#
 # Extra jar files which need to be on the classpath when
 # Thermostat boots.
 # 
-THERMOSTAT_EXT_BOOT_CLASSPATH="__TOOLS_PATH__"
+THERMOSTAT_EXT_BOOT_CLASSPATH="${JAVA_HOME}/lib/tools.jar"
 THERMOSTAT_EXT_BOOT_CLASSPATH="${THERMOSTAT_EXT_BOOT_CLASSPATH}:${THERMOSTAT_HOME}/plugins/embedded-web-endpoint/jetty-schemas-3.1.M0.jar"
 export THERMOSTAT_EXT_BOOT_CLASSPATH
 

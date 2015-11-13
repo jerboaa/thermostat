@@ -41,13 +41,6 @@
 CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$CWD"/thermostat-common
 
-# Source system thermostat profile
-. ${THERMOSTAT_HOME}/etc/thermostatrc 
-# Source user thermostat profile (if any)
-if [ -f ${USER_THERMOSTAT_HOME}/etc/thermostatrc ]; then
-  . ${USER_THERMOSTAT_HOME}/etc/thermostatrc
-fi
-
 # NOTE: The following variables come from the system/user
 #       profiles (if any)
 #
