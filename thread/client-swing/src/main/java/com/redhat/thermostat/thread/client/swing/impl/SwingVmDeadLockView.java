@@ -79,12 +79,12 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
     private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
 
     private final JPanel actualComponent = new JPanel();
+    private final JButton checkForDeadlockButton;
 
     private final JSplitPane deadlockTextAndVisualization = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
     private final JPanel graphical = new JPanel();
     private final ThermostatTextArea description = new ThermostatTextArea();
-
     /**
      * Whether to set the divider's location. Do this only once to set a sane
      * initial value but don't change anything after and allow the user to tweak
@@ -98,15 +98,15 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
         GridBagConstraints c = new GridBagConstraints();
         c.gridy = 0;
         c.anchor = GridBagConstraints.LINE_END;
-        JButton recheckButton = new JButton(translate.localize(LocaleResources.CHECK_FOR_DEADLOCKS).getContents());
-        recheckButton.addActionListener(new ActionListener() {
+        checkForDeadlockButton = new JButton(translate.localize(LocaleResources.CHECK_FOR_DEADLOCKS).getContents());
+        checkForDeadlockButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 deadLockNotifier.fireAction(VmDeadLockViewAction.CHECK_FOR_DEADLOCK);
             }
         });
 
-        actualComponent.add(recheckButton, c);
+        actualComponent.add(checkForDeadlockButton, c);
 
         c.anchor = GridBagConstraints.LINE_START;
         c.gridy++;
@@ -213,6 +213,16 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
         layout.execute(graph.getDefaultParent());
 
         return graphComponent;
+    }
+
+    @Override
+    public void setCheckDeadlockControlEnabled(final boolean enabled) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                SwingVmDeadLockView.this.checkForDeadlockButton.setEnabled(enabled);
+            }
+        });
     }
 
     private static void addDeadlockToGraph(Information info, mxGraph graph, Object parent, FontMetrics metrics) {

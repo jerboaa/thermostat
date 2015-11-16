@@ -67,6 +67,7 @@ public class ThreadInformationController implements InformationServiceController
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private VmRef ref;
+    private VmInfoDAO vmInfoDAO;
 
     private static final Logger logger = LoggingUtils.getLogger(ThreadInformationController.class);
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
@@ -88,6 +89,7 @@ public class ThreadInformationController implements InformationServiceController
         this.appService = appService;
         this.ref = ref;
         this.notifier = notifier;
+        this.vmInfoDAO = vmInfoDao;
 
         collector = collectorFactory.getCollector(ref);
 
@@ -193,7 +195,7 @@ public class ThreadInformationController implements InformationServiceController
         TimerFactory tf = appService.getTimerFactory();
 
         VmDeadLockController deadLockController =
-                new VmDeadLockController(view.createDeadLockView(), collector, tf.createTimer(),
+                new VmDeadLockController(vmInfoDAO, ref, view.createDeadLockView(), collector, tf.createTimer(),
                         appService.getApplicationExecutor(), notifier);
         deadLockController.initialize();
 

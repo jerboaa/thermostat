@@ -53,6 +53,8 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.thread.client.common.DeadlockParser;
 import com.redhat.thermostat.thread.client.common.DeadlockParser.Information;
 import com.redhat.thermostat.thread.client.common.DeadlockParser.ParseException;
@@ -67,6 +69,9 @@ public class VmDeadLockController {
 
     private static final String NO_DEADLOCK = translate.localize(LocaleResources.NO_DEADLOCK_DETECTED).getContents();
 
+    private VmInfoDAO vmInfoDAO;
+    private VmRef vmRef;
+
     private VmDeadLockView view;
     private ThreadCollector collector;
     private Timer timer;
@@ -77,8 +82,10 @@ public class VmDeadLockController {
     private String previousDeadlockData = null;
 
 
-    public VmDeadLockController(VmDeadLockView view, ThreadCollector collector, Timer timer,
-            ExecutorService executor, ProgressNotifier notifier) {
+    public VmDeadLockController(VmInfoDAO vmInfoDAO, VmRef vmRef, VmDeadLockView view, ThreadCollector collector, Timer timer,
+                                ExecutorService executor, ProgressNotifier notifier) {
+        this.vmInfoDAO = vmInfoDAO;
+        this.vmRef = vmRef;
         this.view = view;
         this.collector = collector;
         this.timer = timer;
@@ -142,6 +149,8 @@ public class VmDeadLockController {
                 }
             }
         });
+
+        view.setCheckDeadlockControlEnabled(vmInfoDAO.getVmInfo(vmRef).isAlive());
     }
 
     private void checkForDeadLock() {

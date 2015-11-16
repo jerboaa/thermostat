@@ -64,5 +64,7 @@ public abstract class VmDeadLockView extends BasicView {
 
     public abstract void setDeadLockInformation(Information parsed, String rawText);
 
+    public abstract void setCheckDeadlockControlEnabled(boolean enabled);
+
 }
 

@@ -36,24 +36,23 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.core.progress.ProgressHandle;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
@@ -68,6 +67,9 @@ import com.redhat.thermostat.thread.model.VmDeadLockData;
 
 public class VmDeadLockControllerTest {
 
+    private VmInfoDAO vmInfoDao;
+    private VmInfo vmInfo;
+    private VmRef vmRef;
     private Timer timer;
     private VmDeadLockView view;
     private ThreadCollector collector;
@@ -78,6 +80,14 @@ public class VmDeadLockControllerTest {
 
     @Before
     public void setUp() {
+        vmInfoDao = mock(VmInfoDAO.class);
+
+        vmInfo = mock(VmInfo.class);
+        when(vmInfoDao.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
+        when(vmInfo.isAlive()).thenReturn(true);
+
+        vmRef = mock(VmRef.class);
+
         timer = mock(Timer.class);
 
         view = mock(VmDeadLockView.class);
@@ -88,7 +98,7 @@ public class VmDeadLockControllerTest {
 
         notifier = mock(ProgressNotifier.class);
 
-        controller = new VmDeadLockController(view, collector, timer, executor, notifier);
+        controller = new VmDeadLockController(vmInfoDao, vmRef, view, collector, timer, executor, notifier);
     }
 
     @Test
@@ -217,6 +227,19 @@ public class VmDeadLockControllerTest {
         action.run();
 
         // pass if no exceptions thrown
+    }
+
+    @Test
+    public void verifyDeadlockControlEnabledWhenVmAlive() {
+        controller.initialize();
+        verify(view).setCheckDeadlockControlEnabled(true);
+    }
+
+    @Test
+    public void verifyDeadlockControlDisabledWhenVmDead() {
+        when(vmInfo.isAlive()).thenReturn(false);
+        controller.initialize();
+        verify(view).setCheckDeadlockControlEnabled(false);
     }
 }
 
