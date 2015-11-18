@@ -36,10 +36,16 @@
 
 package com.redhat.thermostat.client.swing;
 
+import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -65,6 +71,7 @@ public class MenuHelper {
 
     private static final Logger logger = LoggingUtils.getLogger(MenuHelper.class);
 
+    private static final Map<JMenu, Menu> parentMenuMap = new HashMap<>();
     private final Set<JMenu> dynamicallyPopulatedMenus = new HashSet<>();
     private final JMenuBar menuBar;
 
@@ -112,7 +119,7 @@ public class MenuHelper {
                             action.execute();
                         }
                     });
-                    parent.add(new Menu(menu));
+                    parent.add(new SortedMenuItem(menu, action.sortOrder()));
 
                     menuBar.revalidate();
                     menuBar.repaint();
@@ -169,7 +176,12 @@ public class MenuHelper {
         for (int i = 0; i < mainMenuCount; i++) {
             JMenu menu = menuBar.getMenu(i);
             if (menu.getText().equals(path[0].getContents())) {
-                parent = new Menu(menuBar.getMenu(i));
+                if (parentMenuMap.containsKey(menuBar.getMenu(i))) {
+                    parent = parentMenuMap.get(menuBar.getMenu(i));
+                } else {
+                    parent = new Menu(menuBar.getMenu(i));
+                    parentMenuMap.put(menuBar.getMenu(i), parent);
+                }
                 break;
             }
         }
@@ -178,6 +190,7 @@ public class MenuHelper {
                 JMenu delegate = new JMenu(path[0].getContents());
                 parent = new Menu(delegate);
                 menuBar.add(delegate);
+                parentMenuMap.put(delegate, parent);
             } else {
                 throw new IllegalArgumentException("top-level " + path[0].getContents() + " not found (using path" + Arrays.toString(path) + ")");
             }
@@ -195,9 +208,11 @@ public class MenuHelper {
             }
             if (!found) {
                 if (createIfNotFound) {
-                    Menu newMenu = new Menu(new JMenu(path[i].getContents()));
+                    JMenu menu = new JMenu(path[i].getContents());
+                    Menu newMenu = new Menu(menu);
                     parent.add(newMenu);
                     parent = newMenu;
+                    parentMenuMap.put(menu, parent);
                 } else {
                     throw new IllegalArgumentException("path not found");
                 }
@@ -227,6 +242,7 @@ public class MenuHelper {
      * is a hack around that.
      */
     private static final class Menu {
+        private List<SortedMenuItem> sortedChildren = new ArrayList<>();
         private Object swingDelegate;
 
         public Menu(JMenuItem actual) {
@@ -256,13 +272,32 @@ public class MenuHelper {
             return new Menu[0];
         }
 
-        public void add(Menu menu) {
+        private void add(Menu menu) {
             if (swingDelegate instanceof JPopupMenu) {
                 ((JPopupMenu) swingDelegate).add((JMenuItem) menu.swingDelegate);
             } else if (swingDelegate instanceof JMenu) {
                 ((JMenu) swingDelegate).add((JMenuItem) menu.swingDelegate);
             } else {
                 logger.warning("Unable to add menu. Menu is of unrecognized type: " + menu.swingDelegate);
+            }
+        }
+
+        public void add(SortedMenuItem menuItem) {
+            if (swingDelegate instanceof Container) {
+                for (SortedMenuItem m : sortedChildren) {
+                    ((Container) swingDelegate).remove(m.getMenuItem());
+                }
+            }
+            sortedChildren.add(menuItem);
+            Collections.sort(sortedChildren);
+            if (swingDelegate instanceof JPopupMenu) {
+                for (SortedMenuItem m : sortedChildren) {
+                    ((JPopupMenu) swingDelegate).add(m.getMenuItem());
+                }
+            } else if (swingDelegate instanceof JMenu) {
+                for (SortedMenuItem m : sortedChildren) {
+                    ((JMenu) swingDelegate).add(m.getMenuItem());
+                }
             }
         }
 
@@ -297,6 +332,36 @@ public class MenuHelper {
         @Override
         public String toString() {
             return "Menu [" + swingDelegate.toString() + "]";
+        }
+    }
+
+    public static class SortedMenuItem implements Comparable<SortedMenuItem> {
+
+        private JMenuItem menuItem;
+        private int sortOrder;
+
+        public SortedMenuItem(JMenuItem menuItem, int sortOrder) {
+            this.menuItem = menuItem;
+            this.sortOrder = sanitizeSortOrder(sortOrder);
+        }
+
+        private static int sanitizeSortOrder(int in) {
+            if (in < MenuAction.SORT_TOP) {
+                return MenuAction.SORT_TOP;
+            } else if (in > MenuAction.SORT_BOTTOM) {
+                return MenuAction.SORT_BOTTOM;
+            } else {
+                return in;
+            }
+        }
+
+        public JMenuItem getMenuItem() {
+            return menuItem;
+        }
+
+        @Override
+        public int compareTo(SortedMenuItem menuItem) {
+            return Integer.compare(sortOrder, menuItem.sortOrder);
         }
     }
 

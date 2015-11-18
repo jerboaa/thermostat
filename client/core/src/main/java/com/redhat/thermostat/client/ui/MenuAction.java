@@ -59,19 +59,29 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 @ExtensionPoint
 public interface MenuAction extends ContextAction {
 
-    public static enum Type {
+    enum Type {
         CHECK,
         RADIO,
         STANDARD
     }
 
+    /**
+     * Constant for {@link #sortOrder()} to mark that this MenuAction should appear at the top of its menu.
+     */
+    int SORT_TOP = 0;
+
+    /**
+     * Constant for {@link #sortOrder()} to mark that this MenuAction should appear at the bottom of its menu.
+     */
+    int SORT_BOTTOM = 100;
+
     /** The user-visible text displayed as the menu item. */
     @Override
-    public LocalizedString getName();
+    LocalizedString getName();
 
     /** A user-visible description of what this {@code MenuAction} does. */
     @Override
-    public LocalizedString getDescription();
+    LocalizedString getDescription();
 
     /** Invoked when the user selects this menu item */
     void execute();
@@ -81,6 +91,15 @@ public interface MenuAction extends ContextAction {
 
     /** The path to the menu action. The last element must equal getName() */
     LocalizedString[] getPath();
+
+    /** The sort order priority of this menu action. Lower numbers are ordered first in the menu.
+     * Sort orders should always be between SORT_TOP and SORT_BOTTOM provided by this interface,
+     * inclusive. SORT_TOP is strictly less than SORT_BOTTOM.
+     * If there is a sort order collision between different menu actions then their ordering is only
+     * guaranteed relative to other menu actions with greater/smaller orders; their ordering relative
+     * to each other is arbitrary.
+     */
+    int sortOrder();
 
 }
 

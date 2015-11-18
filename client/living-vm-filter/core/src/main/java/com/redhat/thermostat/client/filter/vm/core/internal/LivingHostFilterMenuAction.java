@@ -74,5 +74,11 @@ public class LivingHostFilterMenuAction implements MenuAction {
     public LocalizedString[] getPath() {
         return new LocalizedString[] { t.localize(LocaleResources.VIEW_MENU), getName() };
     }
+
+    @Override
+    public int sortOrder() {
+        return SORT_TOP;
+    }
+
 }
 

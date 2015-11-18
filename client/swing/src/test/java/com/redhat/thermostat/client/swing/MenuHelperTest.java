@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
@@ -48,6 +49,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 
@@ -78,6 +80,7 @@ public class MenuHelperTest {
     private FrameFixture frameFixture;
     private JFrame window;
     private MenuHelper menu;
+    private JMenuBar menuBar;
 
     @BeforeClass
     public static void setUpOnce() {
@@ -90,7 +93,7 @@ public class MenuHelperTest {
             @Override
             protected void executeInEDT() throws Throwable {
                 window = new JFrame();
-                JMenuBar menuBar = new JMenuBar();
+                menuBar = new JMenuBar();
                 window.setJMenuBar(menuBar);
                 JMenu fileMenu = new JMenu("File");
                 fileMenu.setName("File");
@@ -269,6 +272,103 @@ public class MenuHelperTest {
 
         assertThat(window.getJMenuBar().getMenu(0).getMenuComponentCount(), is(2));
         assertThat(window.getJMenuBar().getMenu(0).getMenuComponent(0), instanceOf(JSeparator.class));
+    }
+
+    @Category(GUITest.class)
+    @Test
+    public void menuActionsAreSorted() {
+        final LocalizedString PARENT_NAME = new LocalizedString("File");
+
+        final LocalizedString MENU_A = new LocalizedString("MenuA");
+        MenuAction actionA = mock(MenuAction.class);
+        when(actionA.getName()).thenReturn(MENU_A);
+        when(actionA.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionA.getPath()).thenReturn(new LocalizedString[] {PARENT_NAME, MENU_A});
+        when(actionA.sortOrder()).thenReturn(MenuAction.SORT_BOTTOM);
+
+        final LocalizedString MENU_B = new LocalizedString("MenuB");
+        MenuAction actionB = mock(MenuAction.class);
+        when(actionB.getName()).thenReturn(MENU_B);
+        when(actionB.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionB.getPath()).thenReturn(new LocalizedString[] {PARENT_NAME, MENU_B});
+        when(actionB.sortOrder()).thenReturn(MenuAction.SORT_TOP + 10);
+
+        final LocalizedString MENU_C = new LocalizedString("MenuC");
+        MenuAction actionC = mock(MenuAction.class);
+        when(actionC.getName()).thenReturn(MENU_C);
+        when(actionC.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionC.getPath()).thenReturn(new LocalizedString[] {PARENT_NAME, MENU_C});
+        when(actionC.sortOrder()).thenReturn(MenuAction.SORT_TOP);
+
+        frameFixture.show();
+
+        menu.addMenuAction(actionA);
+        menu.addMenuAction(actionB);
+        menu.addMenuAction(actionC);
+
+        assertThat(window.getJMenuBar().getMenu(0).getMenuComponentCount(), is(4));
+        assertThat(((JMenuItem) window.getJMenuBar().getMenu(0).getMenuComponent(1)).getText(), is(MENU_C.getContents()));
+        assertThat(((JMenuItem) window.getJMenuBar().getMenu(0).getMenuComponent(2)).getText(), is(MENU_B.getContents()));
+        assertThat(((JMenuItem) window.getJMenuBar().getMenu(0).getMenuComponent(3)).getText(), is(MENU_A.getContents()));
+    }
+
+    @Category(GUITest.class)
+    @Test
+    public void menuActionSortingWorksCorrectlyWithMultipleMenus() {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                JMenu editMenu = new JMenu("Edit");
+                editMenu.setName("Edit");
+                menuBar.add(editMenu);
+            }
+        });
+
+        final LocalizedString PARENT_NAME = new LocalizedString("File");
+        final LocalizedString PARENT2_NAME = new LocalizedString("Edit");
+
+        final LocalizedString MENU_A = new LocalizedString("MenuA");
+        MenuAction actionA = mock(MenuAction.class);
+        when(actionA.getName()).thenReturn(MENU_A);
+        when(actionA.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionA.getPath()).thenReturn(new LocalizedString[] {PARENT_NAME, MENU_A});
+        when(actionA.sortOrder()).thenReturn(MenuAction.SORT_BOTTOM);
+
+        final LocalizedString MENU_B = new LocalizedString("MenuB");
+        MenuAction actionB = mock(MenuAction.class);
+        when(actionB.getName()).thenReturn(MENU_B);
+        when(actionB.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionB.getPath()).thenReturn(new LocalizedString[] {PARENT_NAME, MENU_B});
+        when(actionB.sortOrder()).thenReturn(MenuAction.SORT_TOP + 20);
+
+        final LocalizedString MENU_C = new LocalizedString("MenuC");
+        MenuAction actionC = mock(MenuAction.class);
+        when(actionC.getName()).thenReturn(MENU_C);
+        when(actionC.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionC.getPath()).thenReturn(new LocalizedString[] {PARENT2_NAME, MENU_C});
+        when(actionC.sortOrder()).thenReturn(MenuAction.SORT_TOP + 10);
+
+        final LocalizedString MENU_D = new LocalizedString("MenuD");
+        MenuAction actionD = mock(MenuAction.class);
+        when(actionD.getName()).thenReturn(MENU_D);
+        when(actionD.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionD.getPath()).thenReturn(new LocalizedString[] {PARENT2_NAME, MENU_D});
+        when(actionD.sortOrder()).thenReturn(MenuAction.SORT_TOP);
+
+        frameFixture.show();
+
+        menu.addMenuAction(actionA);
+        menu.addMenuAction(actionB);
+        menu.addMenuAction(actionC);
+        menu.addMenuAction(actionD);
+
+        assertThat(window.getJMenuBar().getMenu(0).getMenuComponentCount(), is(3));
+        assertThat(window.getJMenuBar().getMenu(1).getMenuComponentCount(), is(3));
+        assertThat(((JMenuItem) window.getJMenuBar().getMenu(0).getMenuComponent(1)).getText(), is(MENU_B.getContents()));
+        assertThat(((JMenuItem) window.getJMenuBar().getMenu(0).getMenuComponent(2)).getText(), is(MENU_A.getContents()));
+
+        assertThat(((JMenuItem) window.getJMenuBar().getMenu(1).getMenuComponent(1)).getText(), is(MENU_D.getContents()));
+        assertThat(((JMenuItem) window.getJMenuBar().getMenu(1).getMenuComponent(2)).getText(), is(MENU_C.getContents()));
     }
 
     private String[] fromLocalizedArray(LocalizedString[] localized) {
