@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.numa.client.swing.internal;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.beans.PropertyChangeEvent;
@@ -44,6 +45,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -149,6 +151,17 @@ public class VmNumaPanel extends VmNumaView implements SwingComponent {
         }
         JFreeChart chart = initializeChart(name, collection);
         chartPanel.addChart(chart);
+    }
+
+    @Override
+    public void showNumaUnavailable() {
+        JPanel statusPanel = new JPanel(new BorderLayout());
+
+        String wrappedText = "<html>" + translator.localize(LocaleResources.VM_NUMA_UNAVAILABLE).getContents() + "</html>";
+        JLabel descriptionLabel = new JLabel(wrappedText);
+        statusPanel.add(descriptionLabel, BorderLayout.PAGE_START);
+
+        visiblePanel.setContent(statusPanel);
     }
 
     @Override

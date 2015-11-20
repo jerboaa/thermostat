@@ -43,6 +43,7 @@ public enum LocaleResources {
     VM_NUMA_TITLE,
     VM_NUMA_TIME_LABEL,
     VM_NUMA_MEMORY_LABEL,
+    VM_NUMA_UNAVAILABLE
     ;
 
     static final String RESOURCE_BUNDLE =

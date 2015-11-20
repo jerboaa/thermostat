@@ -84,26 +84,31 @@ public class VmNumaController implements InformationServiceController<VmRef> {
         int numNumaNodes = numaDAO.getNumberOfNumaNodes(new HostRef(agentId.get(), ""));
 
         this.view = vmNumaViewProvider.createView();
-        for (NumaMemoryLocations location : NumaMemoryLocations.values()) {
-            view.addChart(numNumaNodes, location.getName());
-        }
 
-        setupTimer(appSvc.getTimerFactory().createTimer());
-
-        view.addUserActionListener(new ActionListener<VmNumaView.UserAction>() {
-            @Override
-            public void actionPerformed(ActionEvent<VmNumaView.UserAction> actionEvent) {
-                switch (actionEvent.getActionId()) {
-                    case USER_CHANGED_TIME_RANGE:
-                        Duration duration = view.getUserDesiredDuration();
-                        lastSeenTimestamp = System.currentTimeMillis() - duration.unit.toMillis(duration.value);
-                        view.setVisibleDataRange(duration.value, duration.unit);
-                        break;
-                    default:
-                        throw new AssertionError("Unhandled action type: " + actionEvent.getActionId());
-                }
+        if (numNumaNodes > 1) {
+            for (NumaMemoryLocations location : NumaMemoryLocations.values()) {
+                view.addChart(numNumaNodes, location.getName());
             }
-        });
+
+            setupTimer(appSvc.getTimerFactory().createTimer());
+
+            view.addUserActionListener(new ActionListener<VmNumaView.UserAction>() {
+                @Override
+                public void actionPerformed(ActionEvent<VmNumaView.UserAction> actionEvent) {
+                    switch (actionEvent.getActionId()) {
+                        case USER_CHANGED_TIME_RANGE:
+                            Duration duration = view.getUserDesiredDuration();
+                            lastSeenTimestamp = System.currentTimeMillis() - duration.unit.toMillis(duration.value);
+                            view.setVisibleDataRange(duration.value, duration.unit);
+                            break;
+                        default:
+                            throw new AssertionError("Unhandled action type: " + actionEvent.getActionId());
+                    }
+                }
+            });
+        } else {
+            view.showNumaUnavailable();
+        }
     }
 
     private void setupTimer(final Timer timer) {

@@ -62,4 +62,6 @@ public abstract class VmNumaView extends BasicView implements UIComponent {
 
     public abstract void addChart(int numNumaNodes, String name);
 
+    public abstract void showNumaUnavailable();
+
 }
