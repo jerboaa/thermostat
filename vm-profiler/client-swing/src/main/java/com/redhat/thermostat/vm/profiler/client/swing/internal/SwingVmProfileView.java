@@ -125,10 +125,8 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 boolean cellHasFocus) {
             if (value instanceof Profile) {
                 Profile profile = (Profile) value;
-                value = translator
-                        .localize(LocaleResources.PROFILER_LIST_ITEM,
-                                profile.name, new Date(profile.timeStamp).toString())
-                        .getContents();
+                value = translator.localize(LocaleResources.PROFILER_LIST_ITEM,
+                        profile.name, new Date(profile.timeStamp).toString()).getContents();
             }
             return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         }
@@ -137,7 +135,9 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     public SwingVmProfileView() {
         listModel = new DefaultListModel<>();
 
-        toggleButton = new ActionToggleButton(START_ICON, STOP_ICON, translator.localize(LocaleResources.START_PROFILING));
+        toggleButton = new ActionToggleButton(START_ICON, STOP_ICON, translator.localize(
+                LocaleResources.START_PROFILING));
+        toggleButton.setName("TOGGLE_PROFILING_BUTTON");
         toggleButton.toggleText(false);
         toggleButton.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -186,16 +186,14 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         constraints.gridx = 0;
         constraints.gridwidth = 1;
         currentStatusLabel = new JLabel("Current Status: {0}");
+        currentStatusLabel.setName("CURRENT_STATUS_LABEL");
         statusPanel.add(currentStatusLabel, constraints);
         return statusPanel;
     }
 
     private JComponent createInformationPanel() {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            throw new AssertionError("Not in the EDT!");
-        }
-
         profileList = new JList<>(listModel);
+        profileList.setName("PROFILE_LIST");
         profileList.setCellRenderer(new ProfileItemRenderer());
         profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         profileList.addListSelectionListener(new ListSelectionListener() {
@@ -258,6 +256,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 return super.getCellRenderer(row, column);
             }
         };
+        profileTable.setName("METHOD_TABLE");
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 profileListPane, profileTable.wrap());
@@ -278,10 +277,6 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     }
 
     private void fireProfileAction(final ProfileAction action) {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            throw new AssertionError("Not in the EDT!");
-        }
-
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
@@ -372,9 +367,8 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 tableModel.setRowCount(0);
 
                 if (results.getMethodInfo().size() == 0) {
-                    String noResultsMessage = translator
-                            .localize(LocaleResources.PROFILER_NO_RESULTS)
-                            .getContents();
+                    String noResultsMessage = translator.localize(
+                            LocaleResources.PROFILER_NO_RESULTS).getContents();
                     tableModel.addRow(new Object[] { noResultsMessage, null, null });
                     return;
                 }
@@ -428,6 +422,10 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     static class SyntaxHighlightedMethodDeclarationRenderer extends ThermostatTableRenderer {
 
+        static final Color METHOD_COLOR = Palette.PALE_RED.getColor();
+        static final Color PARAMETER_COLOR = Palette.VIOLET.getColor();
+        static final Color RETURN_TYPE_COLOR = Palette.GRANITA_ORANGE.getColor();
+
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
@@ -441,10 +439,6 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         }
 
         private String syntaxHighlightMethod(MethodDeclaration decl) {
-            final Color METHOD_COLOR = Palette.PALE_RED.getColor();
-            final Color PARAMETER_COLOR = Palette.VIOLET.getColor();
-            final Color RETURN_TYPE_COLOR = Palette.GRANITA_ORANGE.getColor();
-
             String highlightedName = htmlColorText(decl.getName(), METHOD_COLOR);
             String highlightedReturnType = htmlColorText(decl.getReturnType(), RETURN_TYPE_COLOR);
 
@@ -473,7 +467,10 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
         }
 
-        private String htmlColorText(String unescapedText, Color color) {
+        /**
+         * Package-private for testing purposes.
+         */
+        static String htmlColorText(String unescapedText, Color color) {
             String hexColorString = "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
             return "<font color='" + hexColorString + "'>"
                     + StringUtils.htmlEscape(unescapedText) + "</font>";
