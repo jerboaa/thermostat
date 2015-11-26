@@ -36,61 +36,32 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.experimental.TreeConverter;
-import com.redhat.thermostat.client.swing.components.experimental.TreeMapComponent;
+import com.redhat.thermostat.client.swing.components.experimental.AbstractTreeAssembler;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapNode;
-import com.redhat.thermostat.client.swing.components.experimental.TreeMapToolbar;
-import com.redhat.thermostat.common.Size;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
+import com.redhat.thermostat.common.utils.DescriptorConverter;
+import com.redhat.thermostat.vm.heap.analysis.common.HistogramRecord;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 
-public class SwingHeapTreeMapView extends HeapTreeMapView implements SwingComponent {
-    
-    private TreeMapComponent treeMap;
-    private JPanel panel;
+public class ObjectHistogramTreeAssembler extends AbstractTreeAssembler<ObjectHistogram> {
 
-    public SwingHeapTreeMapView() {
-        treeMap = new TreeMapComponent();
-        treeMap.setToolTipRenderer(new WeightAsSizeRenderer());
-
-        panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-    }
+    /**
+     * Key used to put into nodes the <i>number of instances</i> information
+     * stored in histogram records.
+     */
+    private static final String NUMBER_OF = "Number Of Instances";
 
     @Override
-    public void display(final ObjectHistogram histogram) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                TreeMapNode model = TreeConverter.convertToTreeMap(
-                        histogram, new ObjectHistogramTreeAssembler());
-                treeMap.setModel(model);
-                panel.removeAll();
-                panel.add(treeMap, BorderLayout.CENTER);
-                panel.add(new TreeMapToolbar(treeMap), BorderLayout.NORTH);
-                panel.revalidate();
-                panel.repaint();
-            }
-        });
-    }
+    public void buildTree(ObjectHistogram histogram, TreeMapNode root) {
+        for (HistogramRecord record : histogram.getHistogram()) {
+            String className = record.getClassname();
 
-    @Override
-    public Component getUiComponent() {
-        return panel;
-    }
+            // if className is a primitive type it is converted with its full name
+            className = DescriptorConverter.toJavaType(className);
+            TreeMapNode lastProcessed = processRecord(className, ".", root);
 
-    public static class WeightAsSizeRenderer implements TreeMapComponent.ToolTipRenderer {
-        @Override
-        public String render(TreeMapNode node) {
-            Size size = new Size(node.getRealWeight(), Size.Unit.B);
-            return node.getLabel() + " - " + size.toString("%.2f");
+            // at this point lastProcessed references to a leaf
+            lastProcessed.setRealWeight(record.getTotalSize());
+            lastProcessed.addInfo(NUMBER_OF, Long.toString(record.getNumberOf()));
         }
     }
 }
