@@ -78,8 +78,11 @@ public class HostInfoLabelDecorator implements ReferenceFieldLabelDecorator {
                 }
             }
         }
-        result.deleteCharAt(result.length() - 2);
-        return result.toString();
+        // Avoid IOOBE if there are no network interfaces
+        if (result.length() >= 2) {
+            result.deleteCharAt(result.length() - 2);
+        }
+        return result.toString().trim();
     }
 }
 
