@@ -13,6 +13,10 @@
          "name": "vm-info",
          "number": 50,
          "alive": 40
+       },
+       {
+         "name": "network-info",
+         "number": 50
        }
     ],
     
@@ -25,6 +29,11 @@
       {
         "from": "agent-config",
         "to": "host-info",
+        "key": "agentId"
+      },
+      {
+        "from": "agent-config",
+        "to": "network-info",
         "key": "agentId"
       }
     ]
