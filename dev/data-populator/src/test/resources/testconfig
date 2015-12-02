@@ -1,0 +1,55 @@
+{
+"records":
+[
+{
+ "name": "vm-gc-stats",
+ "number": 1000,
+ "alive": 1000
+},
+{
+ "name": "agent-config",
+ "number": 100,
+ "alive": 20
+},
+{
+ "name": "host-info",
+ "number": 10
+},
+{
+ "name": "cpu-stats",
+ "number": 50000
+},
+{
+ "name": "memory-stats",
+ "number": 50000
+},
+{
+ "name": "network-info",
+ "number": 4
+},
+{
+ "name": "vm-info",
+ "number": 50,
+ "alive": 40
+}
+],
+"relationships":
+[
+{ "from": "agent-config",
+  "to": "vm-info",
+  "key": "agentId"
+},
+{ "from": "agent-config",
+  "to": "host-info",
+  "key": "agentId"
+},
+{ "from": "agent-config",
+  "to": "network-info",
+  "key": "agentId"
+},
+{ "from": "vm-info",
+  "to": "vm-gc-stats",
+  "key": "vmId"
+}
+]
+}

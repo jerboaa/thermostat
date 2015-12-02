@@ -1,0 +1,3 @@
+com.redhat.thermostat.dev.populator.impl.AgentInfoPopulator
+com.redhat.thermostat.dev.populator.impl.VmInfoPopulator
+com.redhat.thermostat.dev.populator.impl.HostInfoPopulator

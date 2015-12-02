@@ -1,0 +1,31 @@
+{
+    "records": [
+       {
+         "name": "agent-config",
+         "number": 100,
+         "alive": 20
+       },
+       {
+         "name": "host-info",
+         "number": 1
+       },
+       {
+         "name": "vm-info",
+         "number": 50,
+         "alive": 40
+       }
+    ],
+    
+    "relationships": [
+      {
+        "from": "agent-config",
+        "to": "vm-info",
+        "key": "agentId"
+      },
+      {
+        "from": "agent-config",
+        "to": "host-info",
+        "key": "agentId"
+      }
+    ]
+}
