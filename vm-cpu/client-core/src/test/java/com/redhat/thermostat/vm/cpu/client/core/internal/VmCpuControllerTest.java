@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -62,12 +63,21 @@ import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuControllerTest {
+    
+    private ActionListener<VmCpuView.Action> listener;
+    private Timer timer;
+    private Runnable timerAction;
+    private VmCpuView view;
+    private VmRef ref;
+    
+    @Before
+    public void setup() {
+        ref = mock(VmRef.class);
+    }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
+    @SuppressWarnings({ "unchecked"}) // any(List.class)
     @Test
     public void testChartUpdate() {
-        VmRef ref = mock(VmRef.class);
-
         VmCpuStat stat1 = new VmCpuStat("foo-agent", 123, "vmId", 50.5);
         List<VmCpuStat> stats = new ArrayList<VmCpuStat>();
         stats.add(stat1);
@@ -76,8 +86,32 @@ public class VmCpuControllerTest {
         when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class), any(Long.class))).thenThrow(new AssertionError("Unbounded queries are bad!"));
         when(vmCpuStatDAO.getOldest(ref)).thenReturn(stat1);
         when(vmCpuStatDAO.getNewest(ref)).thenReturn(stat1);
+        
+        setupWithVmCPUStatDAO(vmCpuStatDAO);
 
-        Timer timer = mock(Timer.class);
+        listener.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.VISIBLE));
+
+        verify(timer).start();
+
+        timerAction.run();
+
+        listener.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.HIDDEN));
+
+        verify(timer).stop();
+
+        verify(view).addData(any(List.class));
+        // We don't verify atMost() since we might increase the update rate in the future.
+    }
+    
+    @Test
+    public void verifyNoNPEWhenNoCpuData() {
+        setupWithVmCPUStatDAO(mock(VmCpuStatDAO.class));
+        timerAction.run();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setupWithVmCPUStatDAO(VmCpuStatDAO dao) {
+        timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(timerActionCaptor.capture());
 
@@ -86,7 +120,8 @@ public class VmCpuControllerTest {
         ApplicationService appSvc = mock(ApplicationService.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
-        final VmCpuView view = mock(VmCpuView.class);
+        view = mock(VmCpuView.class);
+        @SuppressWarnings("rawtypes")
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
 
@@ -96,22 +131,9 @@ public class VmCpuControllerTest {
         when(viewProvider.createView()).thenReturn(view);
 
         @SuppressWarnings("unused")
-        VmCpuController controller = new VmCpuController(appSvc, vmCpuStatDAO, ref, viewProvider);
-
-        ActionListener<VmCpuView.Action> l = viewArgumentCaptor.getValue();
-
-        l.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.VISIBLE));
-
-        verify(timer).start();
-
-        timerActionCaptor.getValue().run();
-
-        l.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.HIDDEN));
-
-        verify(timer).stop();
-
-        verify(view).addData(any(List.class));
-        // We don't verify atMost() since we might increase the update rate in the future.
+        VmCpuController controller = new VmCpuController(appSvc, dao, ref, viewProvider);
+        listener = viewArgumentCaptor.getValue();
+        timerAction = timerActionCaptor.getValue();
     }
 }
 

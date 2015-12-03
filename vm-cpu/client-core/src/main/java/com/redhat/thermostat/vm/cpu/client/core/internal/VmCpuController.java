@@ -137,10 +137,15 @@ public class VmCpuController implements InformationServiceController<VmRef> {
     }
 
     private void updateData() {
-        final List<DiscreteTimeData<? extends Number>> data = new ArrayList<>();
-
         VmCpuStat oldest = dao.getOldest(ref);
         VmCpuStat newest = dao.getNewest(ref);
+        // Do nothing when there is no data
+        if (oldest == null || newest == null) {
+            return;
+        }
+        
+        final List<DiscreteTimeData<? extends Number>> data = new ArrayList<>();
+
 
         Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 
