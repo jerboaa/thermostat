@@ -45,6 +45,8 @@ import static org.mockito.Mockito.when;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
+import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
@@ -67,6 +69,8 @@ import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+
+import java.io.File;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -92,6 +96,10 @@ public class MainWindowTest {
                 window = new MainWindow();
                 l = mock(ActionListener.class);
                 window.addActionListener(l);
+                CommonPaths commonPaths = mock(CommonPaths.class);
+                File sharedPrefs = File.createTempFile("thermostat-mainwindowtest", null);
+                when(commonPaths.getUserSharedPreferencesFile()).thenReturn(sharedPrefs);
+                window.setCommonPaths(commonPaths);
             }
         });
 

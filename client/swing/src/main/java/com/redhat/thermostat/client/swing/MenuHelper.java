@@ -58,8 +58,10 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.MenuElement;
 
 import com.redhat.thermostat.client.ui.MenuAction;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
@@ -71,11 +73,20 @@ public class MenuHelper {
 
     private static final Logger logger = LoggingUtils.getLogger(MenuHelper.class);
 
+    private final MenuStates menuStates;
     private static final Map<JMenu, Menu> parentMenuMap = new HashMap<>();
     private final Set<JMenu> dynamicallyPopulatedMenus = new HashSet<>();
+    private final Set<Pair<String, JMenuItem>> menuItemKeys = new HashSet<>();
     private final JMenuBar menuBar;
 
-    public MenuHelper(JMenuBar menuBar) {
+    public MenuHelper(CommonPaths commonPaths, JMenuBar menuBar) {
+        this.menuStates = new MenuStates(commonPaths);
+        this.menuBar = menuBar;
+    }
+
+    // Test hook
+    MenuHelper(MenuStates menuStates, JMenuBar menuBar) {
+        this.menuStates = menuStates;
         this.menuBar = menuBar;
     }
 
@@ -110,6 +121,7 @@ public class MenuHelper {
                             jmenu.addSeparator();
                         }
                         dynamicallyPopulatedMenus.add(jmenu);
+                        menuItemKeys.add(new Pair<>(action.getPersistenceID(), menu));
                     }
 
                     menu.setText(action.getName().getContents());
@@ -120,6 +132,9 @@ public class MenuHelper {
                         }
                     });
                     parent.add(new SortedMenuItem(menu, action.sortOrder()));
+                    if (getSavedMenuState(action)) {
+                        menu.doClick();
+                    }
 
                     menuBar.revalidate();
                     menuBar.repaint();
@@ -167,7 +182,18 @@ public class MenuHelper {
             }
             throw new RuntimeException(cause);
         }
+    }
 
+    private boolean getSavedMenuState(MenuAction action) {
+        return menuStates.getMenuState(action.getPersistenceID());
+    }
+
+    public void saveMenuStates() {
+        Map<String, Boolean> states = new HashMap<>();
+        for (Pair<String, JMenuItem> pair : menuItemKeys) {
+            states.put(pair.getFirst(), pair.getSecond().isSelected());
+        }
+        menuStates.setMenuStates(states);
     }
 
     private static Menu findMenuParent(JMenuBar menuBar, LocalizedString[] path, boolean createIfNotFound) {

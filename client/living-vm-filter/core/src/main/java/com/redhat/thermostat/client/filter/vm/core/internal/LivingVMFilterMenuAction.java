@@ -80,5 +80,9 @@ class LivingVMFilterMenuAction implements MenuAction {
         return SORT_TOP + 5;
     }
 
+    @Override
+    public String getPersistenceID() {
+        return MENU_KEY + "-living-vm";
+    }
 }
 

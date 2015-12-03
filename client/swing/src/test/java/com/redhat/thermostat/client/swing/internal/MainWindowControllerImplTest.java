@@ -44,6 +44,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 
@@ -143,6 +144,7 @@ public class MainWindowControllerImplTest {
         Keyring keyring = mock(Keyring.class);
         context.registerService(Keyring.class, keyring, null);
         CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getUserClientConfigurationFile()).thenReturn(mock(File.class));
         context.registerService(CommonPaths.class, paths, null);
         
         mockHostsDAO = mock(HostInfoDAO.class);

@@ -36,13 +36,14 @@
 
 package com.redhat.thermostat.client.swing;
 
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import javax.swing.JCheckBoxMenuItem;
@@ -73,10 +74,14 @@ import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class MenuHelperTest {
 
+    private MenuStates menuStates;
     private FrameFixture frameFixture;
     private JFrame window;
     private MenuHelper menu;
@@ -89,6 +94,7 @@ public class MenuHelperTest {
 
     @Before
     public void setUp() {
+        menuStates = mock(MenuStates.class);
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
@@ -98,7 +104,7 @@ public class MenuHelperTest {
                 JMenu fileMenu = new JMenu("File");
                 fileMenu.setName("File");
                 menuBar.add(fileMenu);
-                menu = new MenuHelper(menuBar);
+                menu = new MenuHelper(menuStates, menuBar);
                 window.pack();
             }
         });
@@ -369,6 +375,91 @@ public class MenuHelperTest {
 
         assertThat(((JMenuItem) window.getJMenuBar().getMenu(1).getMenuComponent(1)).getText(), is(MENU_D.getContents()));
         assertThat(((JMenuItem) window.getJMenuBar().getMenu(1).getMenuComponent(2)).getText(), is(MENU_C.getContents()));
+    }
+
+    @Category(GUITest.class)
+    @Test
+    public void testMenuActionsStatesAreSaved() {
+        LocalizedString parentName = new LocalizedString("File");
+        LocalizedString menuAName = new LocalizedString("Menu A");
+        LocalizedString menuBName = new LocalizedString("Menu B");
+
+        String menuAKey = "menu-a-key";
+        MenuAction actionA = mock(MenuAction.class);
+        when(actionA.getName()).thenReturn(menuAName);
+        when(actionA.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionA.getPath()).thenReturn(new LocalizedString[] { parentName, menuAName });
+        when(actionA.sortOrder()).thenReturn(MenuAction.SORT_TOP);
+        when(actionA.getPersistenceID()).thenReturn(menuAKey);
+
+        String menuBKey = "menu-b-key";
+        MenuAction actionB = mock(MenuAction.class);
+        when(actionB.getName()).thenReturn(menuBName);
+        when(actionB.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionB.getPath()).thenReturn(new LocalizedString[] { parentName, menuBName });
+        when(actionB.sortOrder()).thenReturn(MenuAction.SORT_TOP + 1);
+        when(actionB.getPersistenceID()).thenReturn(menuBKey);
+
+        frameFixture.show();
+
+        menu.addMenuAction(actionA);
+        menu.addMenuAction(actionB);
+
+        JMenuItemFixture menuA = frameFixture.menuItemWithPath(parentName.getContents(), menuAName.getContents());
+
+        menuA.click();
+
+        menu.saveMenuStates();
+
+        Map<String, Boolean> expected = new HashMap<>();
+        expected.put(menuAKey, true);
+        expected.put(menuBKey, false);
+
+        verify(menuStates).setMenuStates(expected);
+    }
+
+
+    @Category(GUITest.class)
+    @Test
+    public void testMenuActionsStatesAreRestored() {
+        LocalizedString parentName = new LocalizedString("File");
+        LocalizedString menuAName = new LocalizedString("Menu A");
+        LocalizedString menuBName = new LocalizedString("Menu B");
+
+        String menuAKey = "menu-a-key";
+        MenuAction actionA = mock(MenuAction.class);
+        when(actionA.getName()).thenReturn(menuAName);
+        when(actionA.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionA.getPath()).thenReturn(new LocalizedString[] { parentName, menuAName });
+        when(actionA.sortOrder()).thenReturn(MenuAction.SORT_TOP);
+        when(actionA.getPersistenceID()).thenReturn(menuAKey);
+        when(menuStates.getMenuState(menuAKey)).thenReturn(true);
+
+        String menuBKey = "menu-b-key";
+        MenuAction actionB = mock(MenuAction.class);
+        when(actionB.getName()).thenReturn(menuBName);
+        when(actionB.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(actionB.getPath()).thenReturn(new LocalizedString[] { parentName, menuBName });
+        when(actionB.sortOrder()).thenReturn(MenuAction.SORT_TOP + 1);
+        when(actionB.getPersistenceID()).thenReturn(menuBKey);
+        when(menuStates.getMenuState(menuBKey)).thenReturn(false);
+
+        frameFixture.show();
+
+        menu.addMenuAction(actionA);
+        menu.addMenuAction(actionB);
+
+        JMenuItemFixture menuA = frameFixture.menuItemWithPath(parentName.getContents(), menuAName.getContents());
+        JMenuItemFixture menuB = frameFixture.menuItemWithPath(parentName.getContents(), menuBName.getContents());
+
+        verify(menuStates).getMenuState(menuAKey);
+        verify(menuStates).getMenuState(menuBKey);
+
+        assertThat(menuA.component().isSelected(), is(true));
+        assertThat(menuB.component().isSelected(), is(false));
+
+        verify(actionA).execute();
+        verify(actionB, never()).execute();
     }
 
     private String[] fromLocalizedArray(LocalizedString[] localized) {

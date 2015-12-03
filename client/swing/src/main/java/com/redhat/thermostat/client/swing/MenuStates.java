@@ -34,55 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.core.internal;
+package com.redhat.thermostat.client.swing;
 
-import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
-import com.redhat.thermostat.client.ui.MenuAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
-public class LivingHostFilterMenuAction implements MenuAction {
+import java.io.IOException;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-    private LivingHostFilter filter;
-    
-    public LivingHostFilterMenuAction(LivingHostFilter filter) {
-        this.filter = filter;
-    }
-    
-    @Override
-    public LocalizedString getName() {
-        return t.localize(LocaleResources.SHOW_DEAD_HOST_NAME);
-    }
+/**
+ * Provides a way for main window toolbar menu items states to be persisted to disk.
+ */
+public class MenuStates {
 
-    @Override
-    public LocalizedString getDescription() {
-        return t.localize(LocaleResources.SHOW_DEAD_HOST_DESC);
+    private static final Logger logger = LoggingUtils.getLogger(MenuStates.class);
+
+    private final SharedPreferences preferences;
+
+    public MenuStates(CommonPaths commonPaths) {
+        this.preferences = SharedPreferences.getInstance(commonPaths, getClass());
     }
 
-    @Override
-    public void execute() {
-        filter.setActive(!filter.isActive());
+    // Testing hook with injectable SharedPreferences
+    MenuStates(SharedPreferences preferences) {
+        this.preferences = preferences;
     }
 
-    @Override
-    public Type getType() {
-        return Type.CHECK;
+    /**
+     * Set the enabled/disabled state of each toggleable menu item. These states will be persisted to disk
+     * and available via {@link #getMenuState(String)}.
+     */
+    public void setMenuStates(Map<String, Boolean> states) {
+        SharedPreferences.Editor editor = preferences.edit();
+        for (Map.Entry<String, Boolean> state : states.entrySet()) {
+            editor.set(state.getKey(), state.getValue());
+        }
+        try {
+            editor.commit();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, e.getLocalizedMessage());
+        }
     }
 
-    @Override
-    public LocalizedString[] getPath() {
-        return new LocalizedString[] { t.localize(LocaleResources.VIEW_MENU), getName() };
+    /**
+     * Retrieve the enabled/disabled state of the specified menu item.
+     */
+    public boolean getMenuState(String key) {
+        return preferences.getBoolean(key, false);
     }
 
-    @Override
-    public int sortOrder() {
-        return SORT_TOP;
-    }
-
-    @Override
-    public String getPersistenceID() {
-        return MENU_KEY + "-living-host";
-    }
 }
-

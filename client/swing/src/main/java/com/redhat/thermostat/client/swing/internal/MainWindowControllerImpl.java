@@ -323,6 +323,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
     
     private void initView() {
+        view.setCommonPaths(paths);
         view.setWindowTitle(appInfo.getName());
 
         initHostVMTree();

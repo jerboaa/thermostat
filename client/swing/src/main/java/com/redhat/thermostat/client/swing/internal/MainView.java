@@ -45,6 +45,7 @@ import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActi
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.Ref;
 
@@ -71,7 +72,9 @@ public interface MainView {
     void setSubView(BasicView view);
 
     void setStatusBarPrimaryStatus(LocalizedString primaryStatus);
-    
+
+    void setCommonPaths(CommonPaths commonPaths);
+
     /**
      * Adds a menu item to the window. Assumes the menu path is valid (has a
      * non-zero length) and doesn't collide with existing menus.

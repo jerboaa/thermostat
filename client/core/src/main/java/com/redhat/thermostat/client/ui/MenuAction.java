@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
+import com.redhat.thermostat.common.config.Persistable;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
@@ -57,7 +58,7 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
  * the main window only.
  */
 @ExtensionPoint
-public interface MenuAction extends ContextAction {
+public interface MenuAction extends ContextAction, Persistable {
 
     enum Type {
         CHECK,
@@ -74,6 +75,8 @@ public interface MenuAction extends ContextAction {
      * Constant for {@link #sortOrder()} to mark that this MenuAction should appear at the bottom of its menu.
      */
     int SORT_BOTTOM = 100;
+
+    String MENU_KEY = "swing-client-menu-action";
 
     /** The user-visible text displayed as the menu item. */
     @Override

@@ -34,55 +34,57 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.core.internal;
+package com.redhat.thermostat.client.swing;
 
-import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
-import com.redhat.thermostat.client.ui.MenuAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.shared.locale.Translate;
+import org.junit.Before;
+import org.junit.Test;
 
-public class LivingHostFilterMenuAction implements MenuAction {
+import java.util.Collections;
 
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-    private LivingHostFilter filter;
-    
-    public LivingHostFilterMenuAction(LivingHostFilter filter) {
-        this.filter = filter;
-    }
-    
-    @Override
-    public LocalizedString getName() {
-        return t.localize(LocaleResources.SHOW_DEAD_HOST_NAME);
-    }
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.contains;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-    @Override
-    public LocalizedString getDescription() {
-        return t.localize(LocaleResources.SHOW_DEAD_HOST_DESC);
-    }
+public class MenuStatesTest {
 
-    @Override
-    public void execute() {
-        filter.setActive(!filter.isActive());
-    }
+    private SharedPreferences prefs;
+    private SharedPreferences.Editor editor;
+    private MenuStates menuStates;
 
-    @Override
-    public Type getType() {
-        return Type.CHECK;
+    @Before
+    public void setup() {
+        prefs = mock(SharedPreferences.class);
+        editor = mock(SharedPreferences.Editor.class);
+        when(prefs.edit()).thenReturn(editor);
+        menuStates = new MenuStates(prefs);
     }
 
-    @Override
-    public LocalizedString[] getPath() {
-        return new LocalizedString[] { t.localize(LocaleResources.VIEW_MENU), getName() };
+    @Test
+    public void testSetMenuState() {
+        menuStates.setMenuStates(Collections.singletonMap("someKey", true));
+        verify(editor).set(contains("someKey"), eq(true));
+
+        menuStates.setMenuStates(Collections.singletonMap("someKey", false));
+        verify(editor).set(contains("someKey"), eq(false));
     }
 
-    @Override
-    public int sortOrder() {
-        return SORT_TOP;
+    @Test
+    public void testGetMenuState() {
+        String falseKey = "falseKey";
+        String trueKey = "trueKey";
+        when(prefs.getBoolean(contains(falseKey), any(Boolean.TYPE))).thenReturn(false);
+        when(prefs.getBoolean(contains(trueKey), any(Boolean.TYPE))).thenReturn(true);
+
+        boolean resA = menuStates.getMenuState(falseKey);
+        boolean resB = menuStates.getMenuState(trueKey);
+
+        assertThat(resA, is(false));
+        assertThat(resB, is(true));
     }
 
-    @Override
-    public String getPersistenceID() {
-        return MENU_KEY + "-living-host";
-    }
 }
-

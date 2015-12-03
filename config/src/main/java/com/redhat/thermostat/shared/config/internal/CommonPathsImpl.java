@@ -293,6 +293,12 @@ public class CommonPathsImpl implements CommonPaths {
     }
 
     @Override
+    public File getUserSharedPreferencesFile() throws InvalidConfigurationException {
+        File preferences = new File(getUserConfigurationDirectory(), "sharedprefs.properties");
+        return preferences;
+    }
+
+    @Override
     public File getUserHistoryFile() throws InvalidConfigurationException {
         File history = new File(getUserPersistentDataDirectory(), "cli-history");
         return history;

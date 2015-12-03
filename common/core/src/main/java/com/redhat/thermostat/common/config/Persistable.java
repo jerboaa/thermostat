@@ -34,55 +34,8 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.core.internal;
+package com.redhat.thermostat.common.config;
 
-import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
-import com.redhat.thermostat.client.ui.MenuAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.shared.locale.Translate;
-
-public class LivingHostFilterMenuAction implements MenuAction {
-
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-    private LivingHostFilter filter;
-    
-    public LivingHostFilterMenuAction(LivingHostFilter filter) {
-        this.filter = filter;
-    }
-    
-    @Override
-    public LocalizedString getName() {
-        return t.localize(LocaleResources.SHOW_DEAD_HOST_NAME);
-    }
-
-    @Override
-    public LocalizedString getDescription() {
-        return t.localize(LocaleResources.SHOW_DEAD_HOST_DESC);
-    }
-
-    @Override
-    public void execute() {
-        filter.setActive(!filter.isActive());
-    }
-
-    @Override
-    public Type getType() {
-        return Type.CHECK;
-    }
-
-    @Override
-    public LocalizedString[] getPath() {
-        return new LocalizedString[] { t.localize(LocaleResources.VIEW_MENU), getName() };
-    }
-
-    @Override
-    public int sortOrder() {
-        return SORT_TOP;
-    }
-
-    @Override
-    public String getPersistenceID() {
-        return MENU_KEY + "-living-host";
-    }
+public interface Persistable {
+    String getPersistenceID();
 }
-

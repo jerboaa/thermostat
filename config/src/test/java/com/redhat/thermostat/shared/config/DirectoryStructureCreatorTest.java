@@ -235,6 +235,12 @@ public class DirectoryStructureCreatorTest {
         }
 
         @Override
+        public File getUserSharedPreferencesFile()
+                throws InvalidConfigurationException {
+            return null; // Only directories need to be created
+        }
+
+        @Override
         public File getUserHistoryFile() throws InvalidConfigurationException {
             return null; // Only directories need to be created
         }

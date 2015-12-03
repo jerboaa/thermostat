@@ -67,6 +67,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.TreeNode;
 
+import com.redhat.thermostat.shared.config.CommonPaths;
 import sun.misc.Signal;
 
 import com.redhat.thermostat.client.core.views.BasicView;
@@ -111,9 +112,10 @@ public class MainWindow extends JFrame implements MainView {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private SwingProgressNotifier notifier;
-    
+
+    private CommonPaths commonPaths;
     private final JMenuBar mainMenuBar = new JMenuBar();
-    private final MenuHelper mainMenuHelper = new MenuHelper(mainMenuBar);
+    private MenuHelper mainMenuHelper;
     private JPanel contentArea = null;
     
     private final ShutdownClient shutdownAction;
@@ -129,12 +131,12 @@ public class MainWindow extends JFrame implements MainView {
     private ContextActionController contextActionController;
 
     private ReferenceFieldSearchFilter filter;
-    
+
     public MainWindow() {
         super();
 
         setName(MAIN_WINDOW_NAME);
-        
+
         shutdownAction = new ShutdownClient();
 
         contentArea = new JPanel(new BorderLayout());
@@ -391,6 +393,7 @@ public class MainWindow extends JFrame implements MainView {
 
         private void shutdown() {
             dispose();
+            mainMenuHelper.saveMenuStates();
             fireViewAction(Action.SHUTDOWN);
         }
 
@@ -488,6 +491,14 @@ public class MainWindow extends JFrame implements MainView {
             logger.severe(message);
             throw new AssertionError(message);
         }
+    }
+
+    @Override
+    public void setCommonPaths(CommonPaths commonPaths) {
+        if (mainMenuHelper == null) {
+            mainMenuHelper = new MenuHelper(commonPaths, mainMenuBar);
+        }
+        this.commonPaths = commonPaths;
     }
 
     @Override
