@@ -37,42 +37,25 @@
 package com.redhat.thermostat.host.memory.client.swing.internal;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.Box;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.data.RangeType;
-import org.jfree.data.time.FixedMillisecond;
-import org.jfree.data.time.RegularTimePeriod;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
-import com.redhat.thermostat.client.swing.components.LegendCheckBox;
-import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
+import com.redhat.thermostat.client.swing.components.MultiChartPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
-import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Size;
@@ -81,7 +64,6 @@ import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
-import com.redhat.thermostat.swing.components.experimental.WrapLayout;
 
 public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
@@ -89,19 +71,9 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
     private JPanel visiblePanel;
 
-    private final MemoryCheckboxListener memoryCheckboxListener = new MemoryCheckboxListener();
-
     private final JTextComponent totalMemory = new ValueField("");
 
-    private final JPanel memoryCheckBoxPanel = new JPanel(new WrapLayout(FlowLayout.LEADING));
-    private final CopyOnWriteArrayList<GraphVisibilityChangeListener> listeners = new CopyOnWriteArrayList<>();
-    private final TimeSeriesCollection memoryCollection = new TimeSeriesCollection();
-    private final Map<String, TimeSeries> dataset = new HashMap<>();
-    private final Map<String, JCheckBox> checkBoxes = new HashMap<>();
-    private final Map<String, Color> colors = new HashMap<>();
-
-    private JFreeChart chart;
-    private RecentTimeSeriesChartController chartController;
+    private MultiChartPanel multiChartPanel;
 
     public HostMemoryPanel() {
         super();
@@ -130,22 +102,9 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                int colorIndex = colors.size();
-                colors.put(tag, ChartColors.getColor(colorIndex));
-                TimeSeries series = new TimeSeries(tag);
-                dataset.put(tag, series);
-                JCheckBox newCheckBox = new LegendCheckBox(name, colors.get(tag));
-                newCheckBox.setActionCommand(tag);
-                newCheckBox.setSelected(true);
-                newCheckBox.addActionListener(memoryCheckboxListener);
-                newCheckBox.setOpaque(false);
-                checkBoxes.put(tag, newCheckBox);
-                memoryCheckBoxPanel.add(newCheckBox);
-
-                updateColors();
+                multiChartPanel.addChart(tag, name);
             }
         });
-
     }
 
     @Override
@@ -153,12 +112,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TimeSeries series = dataset.remove(tag);
-                memoryCollection.removeSeries(series);
-                JCheckBox box = checkBoxes.remove(tag);
-                memoryCheckBoxPanel.remove(box);
-
-                updateColors();
+                multiChartPanel.removeChart(tag);
             }
         });
     }
@@ -168,10 +122,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TimeSeries series = dataset.get(tag);
-                memoryCollection.addSeries(series);
-
-                updateColors();
+                multiChartPanel.showChart(tag);
             }
         });
     }
@@ -181,10 +132,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TimeSeries series = dataset.get(tag);
-                memoryCollection.removeSeries(series);
-
-                updateColors();
+                multiChartPanel.hideChart(tag);
             }
         });
     }
@@ -195,16 +143,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                final TimeSeries series = dataset.get(tag);
-                for (DiscreteTimeData<? extends Number> timeData: copy) {
-                    RegularTimePeriod period = new FixedMillisecond(timeData.getTimeInMillis());
-                    if (series.getDataItem(period) == null) {
-                        Long sizeInBytes = (Long) timeData.getData();
-                        Double sizeInMegaBytes = Size.bytes(sizeInBytes).convertTo(Size.Unit.MiB).getValue();
-                        series.add(new FixedMillisecond(timeData.getTimeInMillis()), sizeInMegaBytes, false);
-                    }
-                }
-                series.fireSeriesChanged();
+                multiChartPanel.addData(tag, copy);
             }
         });
     }
@@ -214,20 +153,9 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TimeSeries series = dataset.get(tag);
-                series.clear();
+                multiChartPanel.clearData(tag);
             }
         });
-    }
-
-    @Override
-    public void addGraphVisibilityListener(GraphVisibilityChangeListener listener) {
-        listeners.add(listener);
-    }
-
-    @Override
-    public void removeGraphVisibilityListener(GraphVisibilityChangeListener listener) {
-        listeners.remove(listener);
     }
 
     @Override
@@ -244,17 +172,13 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         visiblePanel = new JPanel();
         visiblePanel.setOpaque(false);
 
-        chart = createMemoryChart();
-
-        chartController = new RecentTimeSeriesChartController(chart);
-        JPanel chartPanel = new RecentTimeSeriesChartPanel(chartController);
-        chartPanel.setOpaque(false);
+        String xAxisLabel = translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL).getContents();
+        String yAxisLabel = translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()).getContents();
+        multiChartPanel = new MultiChartPanel(xAxisLabel, yAxisLabel);
 
         JLabel lblMemory = new SectionHeader(translator.localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
 
         JLabel totalMemoryLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
-
-        memoryCheckBoxPanel.setOpaque(false);
 
         JPanel mainPanel = new JPanel();
 
@@ -283,9 +207,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
         mainPanel.add(northPanel, BorderLayout.NORTH);
         mainPanel.add(Box.createGlue(), BorderLayout.WEST);
-        mainPanel.add(chartPanel, BorderLayout.CENTER);
-        mainPanel.add(Box.createGlue(), BorderLayout.EAST);
-        mainPanel.add(memoryCheckBoxPanel, BorderLayout.SOUTH);
+        mainPanel.add(multiChartPanel, BorderLayout.CENTER);
 
         BorderLayout visiblePanelBorderLayout = new BorderLayout();
         visiblePanelBorderLayout.setVgap(10);
@@ -295,67 +217,9 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         visiblePanel.add(Box.createGlue(), BorderLayout.SOUTH);
     }
 
-    private JFreeChart createMemoryChart() {
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                null, // Title
-                translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL).getContents(), // x-axis Label
-                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()).getContents(), // y-axis Label
-                memoryCollection, // Dataset
-                false, // Show Legend
-                false, // Use tooltips
-                false // Configure chart to generate URLs?
-                );
-
-        chart.getPlot().setBackgroundPaint( new Color(255,255,255,0) );
-        chart.getPlot().setBackgroundImageAlpha(0.0f);
-        chart.getPlot().setOutlinePaint(new Color(0,0,0,0));
-
-        NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
-        rangeAxis.setAutoRangeMinimumSize(100);
-        rangeAxis.setRangeType(RangeType.POSITIVE);
-
-        return chart;
-    }
-
-    private void fireShowHideHandlers(boolean show, String tag) {
-        for (GraphVisibilityChangeListener listener: listeners) {
-            if (show) {
-                listener.show(tag);
-            } else {
-                listener.hide(tag);
-            }
-        }
-    }
-
-    /**
-     * Adding or removing series to the series collection may change the order
-     * of existing items. Plus the paint for the index is now out-of-date. So
-     * let's walk through all the series and set the right paint for those.
-     */
-    private void updateColors() {
-        XYItemRenderer itemRenderer = chart.getXYPlot().getRenderer();
-        for (int i = 0; i < memoryCollection.getSeriesCount(); i++) {
-            String tag = (String) memoryCollection.getSeriesKey(i);
-            Color color = colors.get(tag);
-            itemRenderer.setSeriesPaint(i, color);
-        }
-    }
-
-    private class MemoryCheckboxListener implements java.awt.event.ActionListener {
-        @Override
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            JCheckBox source = (JCheckBox) e.getSource();
-            fireShowHideHandlers(source.isSelected(), source.getActionCommand());
-        }
-
-    }
-
     @Override
     public Duration getUserDesiredDuration() {
-        if (chartController == null) {
-            return new Duration(10, TimeUnit.MINUTES);
-        }
-        return new Duration(chartController.getTimeValue(), chartController.getTimeUnit());
+        return multiChartPanel.getUserDesiredDuration();
     }
 }
 

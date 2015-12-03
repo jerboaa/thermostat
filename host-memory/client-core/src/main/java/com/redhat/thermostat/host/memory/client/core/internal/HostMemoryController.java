@@ -54,7 +54,6 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
-import com.redhat.thermostat.host.memory.client.core.HostMemoryView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
@@ -76,7 +75,6 @@ public class HostMemoryController implements InformationServiceController<HostRe
     private final HostRef ref;
 
     private final Timer backgroundUpdateTimer;
-    private final GraphVisibilityChangeListener listener = new ShowHideGraph();
 
     private TimeRangeController<MemoryStat, HostRef> timeRangeController;
 
@@ -94,7 +92,6 @@ public class HostMemoryController implements InformationServiceController<HostRe
         view.addMemoryChart(MemoryType.SWAP_FREE.name(), translator.localize(LocaleResources.HOST_SWAP_FREE));
         view.addMemoryChart(MemoryType.BUFFERS.name(), translator.localize(LocaleResources.HOST_BUFFERS));
 
-        view.addGraphVisibilityListener(listener);
         view.addActionListener(new ActionListener<HostMemoryView.Action>() {
             @Override
             public void actionPerformed(ActionEvent<Action> actionEvent) {
@@ -171,12 +168,16 @@ public class HostMemoryController implements InformationServiceController<HostRe
             @Override
             public void run(MemoryStat stat) {
                 long timeStamp = stat.getTimeStamp();
-                memFree.add(new DiscreteTimeData<>(timeStamp, stat.getFree()));
-                memTotal.add(new DiscreteTimeData<>(timeStamp, stat.getTotal()));
-                memUsed.add(new DiscreteTimeData<>(timeStamp, stat.getTotal() - stat.getFree()));
-                buf.add(new DiscreteTimeData<>(timeStamp, stat.getBuffers()));
-                swapTotal.add(new DiscreteTimeData<>(timeStamp, stat.getSwapTotal()));
-                swapFree.add(new DiscreteTimeData<>(timeStamp, stat.getSwapFree()));
+                memFree.add(new DiscreteTimeData<>(timeStamp, toMegaBytes(stat.getFree())));
+                memTotal.add(new DiscreteTimeData<>(timeStamp, toMegaBytes(stat.getTotal())));
+                memUsed.add(new DiscreteTimeData<>(timeStamp, toMegaBytes(stat.getTotal() - stat.getFree())));
+                buf.add(new DiscreteTimeData<>(timeStamp, toMegaBytes(stat.getBuffers())));
+                swapTotal.add(new DiscreteTimeData<>(timeStamp, toMegaBytes(stat.getSwapTotal())));
+                swapFree.add(new DiscreteTimeData<>(timeStamp, toMegaBytes(stat.getSwapFree())));
+            }
+
+            double toMegaBytes(long sizeInBytes) {
+                return Size.bytes(sizeInBytes).convertTo(Size.Unit.MiB).getValue();
             }
         };
 
@@ -188,17 +189,6 @@ public class HostMemoryController implements InformationServiceController<HostRe
         view.addMemoryData(MemoryType.BUFFERS.name(), buf);
         view.addMemoryData(MemoryType.SWAP_FREE.name(), swapFree);
         view.addMemoryData(MemoryType.SWAP_TOTAL.name(), swapTotal);
-    }
-
-    private class ShowHideGraph implements GraphVisibilityChangeListener {
-        @Override
-        public void show(String tag) {
-            view.showMemoryChart(tag);
-        }
-        @Override
-        public void hide(String tag) {
-            view.hideMemoryChart(tag);
-        }
     }
 
     @Override

@@ -34,33 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.memory.client.core;
+package com.redhat.thermostat.host.memory.client.swing.internal;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
-public abstract class HostMemoryView extends BasicView implements UIComponent {
+public class HostMemoryPanelTest {
 
-    public abstract void setTotalMemory(String totalMemory);
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame frame = new JFrame("Test");
 
-    public abstract void addMemoryChart(String tag, LocalizedString name);
+                HostMemoryPanel classPanel = new HostMemoryPanel();
 
-    public abstract void removeMemoryChart(String tag);
+                frame.add(classPanel.getUiComponent());
+                frame.setVisible(true);
 
-    public abstract void showMemoryChart(String tag);
+                classPanel.addMemoryChart("foo", new LocalizedString("foo"));
+                classPanel.showMemoryChart("foo");
 
-    public abstract void hideMemoryChart(String tag);
+                List<DiscreteTimeData<? extends Number>> data = new ArrayList<DiscreteTimeData<? extends Number>>();
+                data.add(new DiscreteTimeData<>(new Date().getTime(), 10l));
+                data.add(new DiscreteTimeData<>(new Date().getTime() + TimeUnit.MINUTES.toMillis(1), 1000000l));
+                data.add(new DiscreteTimeData<>(new Date().getTime() + TimeUnit.MINUTES.toMillis(10), 100l));
 
-    public abstract void addMemoryData(String tag, List<DiscreteTimeData<? extends Number>> data);
-
-    public abstract void clearMemoryData(String tag);
-
-    public abstract Duration getUserDesiredDuration();
-
+                classPanel.addMemoryData("foo", data);
+            }
+        });
+    }
 }
-
