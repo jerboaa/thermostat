@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -86,8 +85,7 @@ public class HostCpuControllerTest {
     private Runnable timerAction;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Before
-    public void setUp() {
+    public void setUpWithCpuDAO(CpuStatDAO cpuStatDAO) {
         // Setup timer.
         timer = mock(Timer.class);
         ArgumentCaptor<Runnable> actionCaptor = ArgumentCaptor.forClass(Runnable.class);
@@ -102,15 +100,6 @@ public class HostCpuControllerTest {
         HostInfo hostInfo = new HostInfo("foo-agent", "fluffhost1", "fluffOs1", "fluffKernel1", "fluffCpu1", 12345, 98765);
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         when(hostInfoDAO.getHostInfo(any(HostRef.class))).thenReturn(hostInfo);
-
-        CpuStat cpuStat1 = new CpuStat("foo", 1l, new double[] {10.0, 20.0, 30.0});
-        CpuStat cpuStat2 = new CpuStat("foo", 2l, new double[] {15.0, 25.0, 35.0});
-        CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
-
-        when(cpuStatDAO.getOldest(any(HostRef.class))).thenReturn(cpuStat1);
-        when(cpuStatDAO.getNewest(any(HostRef.class))).thenReturn(cpuStat2);
-
-        when(cpuStatDAO.getCpuStats(any(HostRef.class), anyLong(), anyLong())).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
 
         // Set up View
         view = mock(HostCpuView.class);
@@ -138,6 +127,8 @@ public class HostCpuControllerTest {
 
     @Test
     public void testTimer() {
+        setUpWithCpuDAO(mock(CpuStatDAO.class));
+        
         viewListener.actionPerformed(new ActionEvent<>(view, HostCpuView.Action.VISIBLE));
 
         verify(timer).setAction(isNotNull(Runnable.class));
@@ -155,6 +146,17 @@ public class HostCpuControllerTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testTimerAction() {
+        CpuStat cpuStat1 = new CpuStat("foo", 1l, new double[] {10.0, 20.0, 30.0});
+        CpuStat cpuStat2 = new CpuStat("foo", 2l, new double[] {15.0, 25.0, 35.0});
+        CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
+
+        when(cpuStatDAO.getOldest(any(HostRef.class))).thenReturn(cpuStat1);
+        when(cpuStatDAO.getNewest(any(HostRef.class))).thenReturn(cpuStat2);
+
+        when(cpuStatDAO.getCpuStats(any(HostRef.class), anyLong(), anyLong())).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
+        
+        setUpWithCpuDAO(cpuStatDAO);
+        
         timerAction.run();
         verify(view).setCpuModel("fluffCpu1");
         verify(view).setCpuCount("12345");
@@ -167,6 +169,17 @@ public class HostCpuControllerTest {
         assertEquals(10.0, cpuLoadData.get(0).getData().doubleValue(), 0.0001);
         assertEquals(2, cpuLoadData.get(1).getTimeInMillis());
         assertEquals(15.0, cpuLoadData.get(1).getData().doubleValue(), 0.0001);
+    }
+    
+    /**
+     * Verifies that chart update does not throw a NPE due to no CPU stats
+     * available.
+     */
+    @Test
+    public void testViewUpdateNoCPUDatat() {
+        // will return null on getlattest/getOldest
+        setUpWithCpuDAO(mock(CpuStatDAO.class));
+        timerAction.run();
     }
 }
 

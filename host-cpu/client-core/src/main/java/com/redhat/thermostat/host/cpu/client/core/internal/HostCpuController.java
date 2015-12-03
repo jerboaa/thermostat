@@ -139,6 +139,10 @@ public class HostCpuController implements InformationServiceController<HostRef> 
     private void doCpuChartUpdate() {
         CpuStat oldest = cpuStatDAO.getOldest(ref);
         CpuStat newest = cpuStatDAO.getNewest(ref);
+        // Do nothing if there is no data
+        if (oldest == null || newest == null) {
+            return;
+        }
 
         final List<CpuStat> cpuStats = new ArrayList<>();
 
