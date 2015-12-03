@@ -126,6 +126,12 @@
       </properties>
     </profile>
     <profile>
+      <id>code-coverage</id>
+      <properties>
+        <coverageSkip>false</coverageSkip>
+      </properties>
+    </profile>
+    <profile>
       <id>skip-license-check-on-test-skip</id>
       <activation>
         <property>
@@ -232,6 +238,7 @@
     <surefire-argline/> <!-- intentionally empty -->
     <mongodb.dev.username> mongodevuser </mongodb.dev.username>
     <mongodb.dev.password> mongodevpassword </mongodb.dev.password>
+    <coverageSkip> true </coverageSkip>
   </properties>
 
   <modules>
@@ -414,6 +421,7 @@
             </goals>
             <configuration>
               <propertyName>coverageAgent</propertyName>
+              <skip>${coverageSkip}</skip>
             </configuration>
           </execution>
         </executions>
