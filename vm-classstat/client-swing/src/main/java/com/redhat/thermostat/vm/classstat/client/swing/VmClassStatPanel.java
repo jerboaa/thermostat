@@ -37,33 +37,23 @@
 package com.redhat.thermostat.vm.classstat.client.swing;
 
 import java.awt.Component;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Callable;
 
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
-import com.redhat.thermostat.common.model.Range;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.NumberTickUnit;
-import org.jfree.chart.axis.TickUnits;
-import org.jfree.data.RangeType;
-import org.jfree.data.time.FixedMillisecond;
-import org.jfree.data.time.RegularTimePeriod;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.MultiChartPanel;
+import com.redhat.thermostat.client.swing.components.MultiChartPanel.DataGroup;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
@@ -73,62 +63,33 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    private static final int DEFAULT_VALUE = 10;
-    private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
+    private final HeaderPanel visiblePanel;
 
-    private Duration duration;
+    private final MultiChartPanel multiChartPanel;
 
-    private HeaderPanel visiblePanel;
-    
-    private final TimeSeriesCollection dataset = new TimeSeriesCollection();
-
-    private SingleValueChartPanel chartPanel;
-
-    private ActionNotifier<UserAction> userActionActionNotifier = new ActionNotifier<VmClassStatView.UserAction>(this);
-
-    private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
+    private DataGroup GROUP_NUMBER;
+    private DataGroup GROUP_SIZE;
 
     public VmClassStatPanel() {
         visiblePanel = new HeaderPanel();
-        // any name works
-        dataset.addSeries(new TimeSeries("class-stat"));
 
-        duration = new Duration(DEFAULT_VALUE, DEFAULT_UNIT);
+        visiblePanel.setHeader(t.localize(LocaleResources.VM_CLASSES_HEADER));
 
-        visiblePanel.setHeader(t.localize(LocaleResources.VM_LOADED_CLASSES));
+        String xAxisLabel = t.localize(LocaleResources.VM_CLASSES_CHART_TIME_LABEL).getContents();
+        String classesAxisLabel = t.localize(LocaleResources.VM_CLASSES_CHART_CLASSES_LABEL).getContents();
+        String sizeAxisLabel = t.localize(LocaleResources.VM_CLASSES_CHART_SIZE_LABEL).getContents();
 
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                null,
-                t.localize(LocaleResources.VM_CLASSES_CHART_REAL_TIME_LABEL).getContents(),
-                t.localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL).getContents(),
-                dataset,
-                false, false, false);
+        multiChartPanel = new MultiChartPanel();
 
-        TickUnits tickUnits = new TickUnits();
-        tickUnits.add(new NumberTickUnit(1));
-        tickUnits.add(new NumberTickUnit(10));
-        tickUnits.add(new NumberTickUnit(100));
-        tickUnits.add(new NumberTickUnit(1000));
-        tickUnits.add(new NumberTickUnit(10000));
-        tickUnits.add(new NumberTickUnit(100000));
-        tickUnits.add(new NumberTickUnit(1000000));
+        GROUP_NUMBER = multiChartPanel.createGroup();
+        GROUP_SIZE = multiChartPanel.createGroup();
 
-        NumberAxis axis = (NumberAxis) chart.getXYPlot().getRangeAxis();
-        axis.setStandardTickUnits(tickUnits);
-        axis.setRangeType(RangeType.POSITIVE);
-        axis.setAutoRangeMinimumSize(10);
+        multiChartPanel.setDomainAxisLabel(xAxisLabel);
 
-        chartPanel = new SingleValueChartPanel(chart, duration);
+        multiChartPanel.getRangeAxis(GROUP_NUMBER).setLabel(classesAxisLabel);
+        multiChartPanel.getRangeAxis(GROUP_SIZE).setLabel(sizeAxisLabel);
 
-        visiblePanel.setContent(chartPanel);
-
-        chartPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent evt) {
-                duration = (Duration) evt.getNewValue();
-                userActionActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE);
-            }
-        });
+        visiblePanel.setContent(multiChartPanel);
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
     }
@@ -144,58 +105,76 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
     }
 
     @Override
-    public void addClassCount(List<DiscreteTimeData<Long>> data) {
-        final List<DiscreteTimeData<Long>> copy = new ArrayList<>(data);
+    public void addClassChart(final Group group, final String tag, final LocalizedString name) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TimeSeries series = dataset.getSeries(0);
-                for (DiscreteTimeData<Long> data: copy) {
-                    RegularTimePeriod period = new FixedMillisecond(data.getTimeInMillis());
-                    if (series.getDataItem(period) == null) {
-                        series.add(period, data.getData(), false);
-                    }
-                }
-                series.fireSeriesChanged();
+                multiChartPanel.addChart(getGroup(group), tag, name);
+                multiChartPanel.showChart(getGroup(group), tag);
             }
         });
+    }
+    @Override
+    public void removeClassChart(final Group group, final String tag) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                multiChartPanel.hideChart(getGroup(group), tag);
+                multiChartPanel.removeChart(getGroup(group), tag);
+            }
+        });
+    }
 
+    private MultiChartPanel.DataGroup getGroup(Group group) {
+        switch (group) {
+        case NUMBER:
+            return GROUP_NUMBER;
+        case SIZE:
+            return GROUP_SIZE;
+        default:
+            throw new AssertionError("Unknown data group");
+        }
     }
 
     @Override
-    public void addUserActionListener(final ActionListener<UserAction> listener) {
-        userActionActionNotifier.addActionListener(listener);
+    public void addClassData(final String tag, final List<DiscreteTimeData<? extends Number>> data) {
+        final List<DiscreteTimeData<? extends Number>> copy = new ArrayList<>(data);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                multiChartPanel.addData(tag, copy);
+            }
+        });
     }
 
     @Override
-    public void removeUserActionListener(final ActionListener<UserAction> listener) {
-        userActionActionNotifier.removeActionListener(listener);
+    public void clearMemoryData(final String tag) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                multiChartPanel.clearData(tag);
+            }
+        });
     }
 
     @Override
     public Duration getUserDesiredDuration() {
-        return duration;
-    }
-
-    @Override
-    public void setVisibleDataRange(final int time, final TimeUnit unit) {
-        chartPanel.setTimeRangeToShow(time, unit);
+        try {
+            return new EdtHelper().callAndWait(new Callable<Duration>() {
+                @Override
+                public Duration call() throws Exception {
+                    return multiChartPanel.getUserDesiredDuration();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
     public void setAvailableDataRange(final Range<Long> availableDataRange) {
         // FIXME indicate the total data range to the user somehow
-    }
-
-    @Override
-    public void clearClassCount() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                TimeSeries series = dataset.getSeries(0);
-                series.clear();
-            }
-        });
     }
 
     @Override

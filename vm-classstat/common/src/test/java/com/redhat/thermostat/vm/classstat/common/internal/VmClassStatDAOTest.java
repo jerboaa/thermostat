@@ -67,13 +67,22 @@ public class VmClassStatDAOTest {
     private static final Long TIMESTAMP = 1234L;
     private static final String VM_ID = "vmId";
     private static final Long LOADED_CLASSES = 12345L;
+    private static final Long LOADED_BYTES = 2345L;
+    private static final Long UNLOADED_CLASSES = 3456L;
+    private static final Long UNLOADED_BYTES = 4567L;
+    private static final Long CLASS_LOAD_TIME = 5678L;
 
     @Test
     public void testStatementDescriptorsAreSane() {
         String addVmClassStat = "ADD vm-class-stats SET 'agentId' = ?s , " +
                                                 "'vmId' = ?s , " +
                                                 "'timeStamp' = ?l , " +
-                                                "'loadedClasses' = ?l";
+                                                "'loadedClasses' = ?l , " +
+                                                "'loadedBytes' = ?l , " +
+                                                "'unloadedClasses' = ?l , " +
+                                                "'unloadedBytes' = ?l , " +
+                                                "'classLoadTime' = ?l";
+
         assertEquals(addVmClassStat, VmClassStatDAOImpl.DESC_ADD_VM_CLASS_STAT);
     }
     
@@ -85,7 +94,11 @@ public class VmClassStatDAOTest {
         assertTrue(keys.contains(new Key<Integer>("vmId")));
         assertTrue(keys.contains(new Key<Long>("timeStamp")));
         assertTrue(keys.contains(new Key<Long>("loadedClasses")));
-        assertEquals(4, keys.size());
+        assertTrue(keys.contains(new Key<Long>("loadedBytes")));
+        assertTrue(keys.contains(new Key<Long>("unloadedClasses")));
+        assertTrue(keys.contains(new Key<Long>("unloadedBytes")));
+        assertTrue(keys.contains(new Key<Long>("classLoadTime")));
+        assertEquals(8, keys.size());
     }
 
     @Test
@@ -134,7 +147,10 @@ public class VmClassStatDAOTest {
     }
 
     private VmClassStat getClassStat() {
-        return new VmClassStat("foo-agent", VM_ID, TIMESTAMP, LOADED_CLASSES);
+        return new VmClassStat("foo-agent", VM_ID, TIMESTAMP,
+                LOADED_CLASSES, LOADED_BYTES,
+                UNLOADED_CLASSES, UNLOADED_BYTES,
+                CLASS_LOAD_TIME);
     }
 
     @SuppressWarnings("unchecked")
@@ -145,7 +161,8 @@ public class VmClassStatDAOTest {
         PreparedStatement<VmClassStat> add = mock(PreparedStatement.class);
         when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
-        VmClassStat stat = new VmClassStat("foo-agent", VM_ID, TIMESTAMP, LOADED_CLASSES);
+        VmClassStat stat = new VmClassStat("foo-agent", VM_ID, TIMESTAMP,
+                LOADED_CLASSES, LOADED_BYTES, UNLOADED_CLASSES, UNLOADED_BYTES, CLASS_LOAD_TIME);
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
         dao.putVmClassStat(stat);
         
@@ -160,6 +177,10 @@ public class VmClassStatDAOTest {
         verify(add).setString(1, stat.getVmId());
         verify(add).setLong(2, stat.getTimeStamp());
         verify(add).setLong(3, stat.getLoadedClasses());
+        verify(add).setLong(4, stat.getLoadedBytes());
+        verify(add).setLong(5, stat.getUnloadedClasses());
+        verify(add).setLong(6, stat.getUnloadedBytes());
+        verify(add).setLong(7, stat.getClassLoadTime());
         verify(add).execute();
         verifyNoMoreInteractions(add);
     }

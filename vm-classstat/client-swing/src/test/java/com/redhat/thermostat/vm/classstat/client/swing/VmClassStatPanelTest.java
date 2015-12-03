@@ -36,26 +36,25 @@
 
 package com.redhat.thermostat.vm.classstat.client.swing;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import javax.swing.JPanel;
-
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
-import org.fest.swing.edt.GuiActionRunner;
-import org.fest.swing.edt.GuiTask;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.annotations.internal.CacioTest;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
+
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -66,21 +65,33 @@ public class VmClassStatPanelTest {
         FailOnThreadViolationRepaintManager.install();
     }
 
-    @Test
-    public void testAddDataTwice() {
-        GuiActionRunner.execute(new GuiTask() {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
-            protected void executeInEDT() throws Throwable {
-                VmClassStatPanel panel = new VmClassStatPanel();
-                List<DiscreteTimeData<Long>> data = new ArrayList<>();
-                panel.addClassCount(data);
-                int numComponents = ((JPanel)panel.getUiComponent()).getComponentCount();
-                assertTrue(numComponents > 0);
-                panel.addClassCount(data);
-                assertEquals(numComponents, ((JPanel)panel.getUiComponent()).getComponentCount());
+            public void run() {
+                JFrame frame = new JFrame("Test");
+
+                VmClassStatPanel classPanel = new VmClassStatPanel();
+
+                List<DiscreteTimeData<? extends Number>> data = new ArrayList<DiscreteTimeData<? extends Number>>();
+                data.add(new DiscreteTimeData<>(new Date().getTime(), 10l));
+                data.add(new DiscreteTimeData<>(new Date().getTime() + TimeUnit.MINUTES.toMillis(1), 1000l));
+
+                classPanel.addClassChart(VmClassStatView.Group.NUMBER, "classes", new LocalizedString("classes"));
+                classPanel.addClassData("classes", data);
+
+                List<DiscreteTimeData<? extends Number>> data2 = new ArrayList<DiscreteTimeData<? extends Number>>();
+                data2.add(new DiscreteTimeData<Number>(new Date().getTime(), 10));
+                data2.add(new DiscreteTimeData<Number>(new Date().getTime() + TimeUnit.MINUTES.toMillis(1), 20));
+                classPanel.addClassChart(VmClassStatView.Group.SIZE, "size", new LocalizedString("size"));
+                classPanel.addClassData("size", data2);
+
+                frame.add(classPanel.getUiComponent());
+                frame.pack();
+                frame.setVisible(true);
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             }
         });
     }
-
 }
 

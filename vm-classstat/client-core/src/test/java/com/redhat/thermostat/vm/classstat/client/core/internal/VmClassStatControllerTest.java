@@ -37,8 +37,10 @@
 package com.redhat.thermostat.vm.classstat.client.core.internal;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,10 +48,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -67,7 +69,11 @@ public class VmClassStatControllerTest {
     @Test
     public void testChartUpdate() {
 
-        VmClassStat stat1 = new VmClassStat("foo-agent", "vmId", 12345, 1234);
+        final long SOME_TIMESTAMP = 12345;
+        final int SOME_VALUE = 1234;
+
+        VmClassStat stat1 = new VmClassStat("foo-agent", "vmId", SOME_TIMESTAMP,
+                SOME_VALUE, SOME_VALUE, SOME_VALUE, SOME_VALUE, SOME_VALUE);
         List<VmClassStat> stats = new ArrayList<VmClassStat>();
         stats.add(stat1);
 
@@ -106,7 +112,7 @@ public class VmClassStatControllerTest {
 
         verify(timer).start();
         timerActionCaptor.getValue().run();
-        verify(view).addClassCount(any(List.class));
+        verify(view, times(4)).addClassData(isA(String.class), isA(List.class));
 
         l.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.HIDDEN));
 

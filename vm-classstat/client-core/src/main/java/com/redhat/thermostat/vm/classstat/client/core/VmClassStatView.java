@@ -37,34 +37,37 @@
 package com.redhat.thermostat.vm.classstat.client.core;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class VmClassStatView extends BasicView implements UIComponent {
 
-    public enum UserAction {
-        USER_CHANGED_TIME_RANGE,
+    public enum Group {
+        NUMBER,
+        SIZE,
+        ;
     }
 
-    public abstract void addUserActionListener(ActionListener<UserAction> listener);
-
-    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
+    public static final String TAG_LOADED_CLASSES = "loadedClasses";
+    public static final String TAG_LOADED_BYTES = "loadedBytes";
+    public static final String TAG_UNLOADED_CLASSES = "unloadedClasses";
+    public static final String TAG_UNLOADED_BYTES = "unloadedBytes";
+    public static final String TAG_CLASS_LOAD_TIME= "classLoadTime";
 
     public abstract Duration getUserDesiredDuration();
 
-    public abstract void setVisibleDataRange(int time, TimeUnit unit);
-
     public abstract void setAvailableDataRange(Range<Long> availableDataRange);
 
-    public abstract void clearClassCount();
+    public abstract void addClassChart(Group group, String tag, LocalizedString name);
+    public abstract void removeClassChart(Group group, String tag);
 
-    public abstract void addClassCount(List<DiscreteTimeData<Long>> data);
+    public abstract void addClassData(String tag, List<DiscreteTimeData<? extends Number>> data);
+    public abstract void clearMemoryData(String tag);
 
 }
 

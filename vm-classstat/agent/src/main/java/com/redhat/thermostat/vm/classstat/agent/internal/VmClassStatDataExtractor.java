@@ -59,6 +59,8 @@ public class VmClassStatDataExtractor {
      * http://docs.oracle.com/javase/6/docs/api/java/lang/String.html#intern()
      */
 
+    // For the definitions of the values, see VmClassStat.
+
     private final VmUpdate update;
 
     public VmClassStatDataExtractor(VmUpdate update) {
@@ -66,8 +68,28 @@ public class VmClassStatDataExtractor {
     }
 
     public Long getLoadedClasses() throws VmUpdateException {
-        return update.getPerformanceCounterLong("java.cls.loadedClasses");
+        return update.getPerformanceCounterLong("java.cls.loadedClasses")
+                + update.getPerformanceCounterLong("java.cls.sharedLoadedClasses");
+    }
+
+    public Long getLoadedBytes() throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.cls.loadedBytes")
+                + update.getPerformanceCounterLong("sun.cls.sharedLoadedBytes");
+    }
+
+    public Long getUnloadedClasses() throws VmUpdateException {
+        return update.getPerformanceCounterLong("java.cls.unloadedClasses")
+                + update.getPerformanceCounterLong("java.cls.sharedUnloadedClasses");
+    }
+
+    public Long getUnloadedBytes() throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.cls.unloadedBytes")
+                + update.getPerformanceCounterLong("sun.cls.sharedUnloadedBytes");
+    }
+
+    public Long getClassLoadTime() throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.cls.time")
+                / update.getPerformanceCounterLong("sun.os.hrt.frequency");
     }
 
 }
-

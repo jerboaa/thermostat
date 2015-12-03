@@ -58,12 +58,20 @@ class VmClassStatDAOImpl extends AbstractDao implements VmClassStatDAO {
     // ADD vm-class-stats SET 'agentId' = ?s , \
     //                        'vmId' = ?s , \
     //                        'timeStamp' = ?l , \ 
-    //                        'loadedClasses' = ?l
+    //                        'loadedClasses' = ?l , \
+    //                        'loadedBytes' = ?l , \
+    //                        'unloadedClasses' = ?l , \
+    //                        'unloadedBytes' = ?l , \
+    //                        'classLoadTime' = ?l
     static final String DESC_ADD_VM_CLASS_STAT = "ADD " + vmClassStatsCategory.getName() +
             " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
                  "'" + Key.VM_ID.getName() + "' = ?s , " +
                  "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
-                 "'" + loadedClassesKey.getName() + "' = ?l";
+                 "'" + loadedClassesKey.getName() + "' = ?l , " +
+                 "'" + loadedBytesKey.getName() + "' = ?l , " +
+                 "'" + unloadedClassesKey.getName() + "' = ?l , " +
+                 "'" + unloadedBytesKey.getName() + "' = ?l , " +
+                 "'" + classLoadTimeKey.getName() + "' = ?l";
 
     private final Storage storage;
     private final VmLatestPojoListGetter<VmClassStat> latestGetter;
@@ -97,6 +105,10 @@ class VmClassStatDAOImpl extends AbstractDao implements VmClassStatDAO {
                 preparedStatement.setString(1, stat.getVmId());
                 preparedStatement.setLong(2, stat.getTimeStamp());
                 preparedStatement.setLong(3, stat.getLoadedClasses());
+                preparedStatement.setLong(4, stat.getLoadedBytes());
+                preparedStatement.setLong(5, stat.getUnloadedClasses());
+                preparedStatement.setLong(6, stat.getUnloadedBytes());
+                preparedStatement.setLong(7, stat.getClassLoadTime());
                 return preparedStatement;
             }
         });

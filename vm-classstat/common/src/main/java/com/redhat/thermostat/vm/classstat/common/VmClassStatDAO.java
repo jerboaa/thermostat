@@ -49,10 +49,19 @@ import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 public interface VmClassStatDAO {
 
     static final Key<Long> loadedClassesKey = new Key<>("loadedClasses");
+    static final Key<Long> loadedBytesKey = new Key<>("loadedBytes");
+    static final Key<Long> unloadedClassesKey = new Key<>("unloadedClasses");
+    static final Key<Long> unloadedBytesKey = new Key<>("unloadedBytes");
+    static final Key<Long> classLoadTimeKey = new Key<>("classLoadTime");
 
     static final Category<VmClassStat> vmClassStatsCategory = new Category<>(
             "vm-class-stats", VmClassStat.class,
-            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, loadedClassesKey), Arrays.<Key<?>>asList(Key.TIMESTAMP));
+            Arrays.<Key<?>>asList(
+                    Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
+                    loadedClassesKey, loadedBytesKey,
+                    unloadedClassesKey, unloadedBytesKey,
+                    classLoadTimeKey),
+            Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public List<VmClassStat> getLatestClassStats(VmRef ref, long since);
 

@@ -36,19 +36,22 @@
 
 package com.redhat.thermostat.vm.classstat.client.core.internal;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.experimental.TimeRangeController;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Size;
+import com.redhat.thermostat.common.Size.Unit;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.model.Range;
@@ -71,10 +74,13 @@ public class VmClassStatController implements InformationServiceController<VmRef
     private class UpdateChartData implements Runnable {
         @Override
         public void run() {
-            final List<DiscreteTimeData<Long>> data = new ArrayList<>();
-
             VmClassStat oldest = dao.getOldest(ref);
             VmClassStat newest = dao.getNewest(ref);
+
+            final List<DiscreteTimeData<? extends Number>> loadedClasses = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> loadedBytes = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> unloadedClasses = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> unloadedBytes = new LinkedList<>();
 
             Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 
@@ -87,15 +93,27 @@ public class VmClassStatController implements InformationServiceController<VmRef
 
             TimeRangeController.SingleArgRunnable<VmClassStat> runnable = new TimeRangeController.SingleArgRunnable<VmClassStat>() {
                 @Override
-                public void run(VmClassStat arg) {
-                    data.add(new DiscreteTimeData<>(arg.getTimeStamp(), arg.getLoadedClasses()));
+                public void run(VmClassStat stat) {
+                    long timeStamp = stat.getTimeStamp();
+
+                    loadedClasses.add(new DiscreteTimeData<Number>(timeStamp, stat.getLoadedClasses()));
+                    loadedBytes.add(new DiscreteTimeData<Number>(timeStamp, bytesToMegaBytes(stat.getLoadedBytes())));
+                    unloadedClasses.add(new DiscreteTimeData<Number>(timeStamp, stat.getUnloadedClasses()));
+                    unloadedBytes.add(new DiscreteTimeData<Number>(timeStamp, bytesToMegaBytes(stat.getUnloadedBytes())));
+                }
+
+                private long bytesToMegaBytes(long bytes) {
+                    return (long) Size.bytes(bytes).convertTo(Unit.MiB).getValue();
                 }
             };
 
             timeRangeController.update(userDesiredDuration, newAvailableRange, singleValueSupplier, ref, runnable);
             classesView.setAvailableDataRange(timeRangeController.getAvailableRange());
 
-            classesView.addClassCount(data);
+            classesView.addClassData(VmClassStatView.TAG_LOADED_CLASSES, loadedClasses);
+            classesView.addClassData(VmClassStatView.TAG_LOADED_BYTES, loadedBytes);
+            classesView.addClassData(VmClassStatView.TAG_UNLOADED_CLASSES, unloadedClasses);
+            classesView.addClassData(VmClassStatView.TAG_UNLOADED_BYTES, unloadedBytes);
         }
     }
 
@@ -118,6 +136,14 @@ public class VmClassStatController implements InformationServiceController<VmRef
         timer.setInitialDelay(0);
 
         classesView = viewProvider.createView();
+        classesView.addClassChart(VmClassStatView.Group.NUMBER, VmClassStatView.TAG_LOADED_CLASSES,
+                translator.localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LENGEND));
+        classesView.addClassChart(VmClassStatView.Group.SIZE, VmClassStatView.TAG_LOADED_BYTES,
+                translator.localize(LocaleResources.VM_CLASSES_CHART_LOADED_BYTES_LENGEND));
+        classesView.addClassChart(VmClassStatView.Group.NUMBER, VmClassStatView.TAG_UNLOADED_CLASSES,
+                translator.localize(LocaleResources.VM_CLASSES_CHART_UNLOADED_CLASSES_LENGEND));
+        classesView.addClassChart(VmClassStatView.Group.SIZE, VmClassStatView.TAG_UNLOADED_BYTES,
+                translator.localize(LocaleResources.VM_CLASSES_CHART_UNLOADED_BYTES_LENGEND));
 
         classesView.addActionListener(new ActionListener<VmClassStatView.Action>() {
             @Override
@@ -131,22 +157,6 @@ public class VmClassStatController implements InformationServiceController<VmRef
                         break;
                     default:
                         throw new NotImplementedException("unknown action: " + actionEvent.getActionId());
-                }
-            }
-        });
-
-        classesView.addUserActionListener(new ActionListener<VmClassStatView.UserAction>() {
-
-            @Override
-            public void actionPerformed(final ActionEvent<VmClassStatView.UserAction> actionEvent) {
-                switch (actionEvent.getActionId()) {
-                case USER_CHANGED_TIME_RANGE:
-                    Duration duration = classesView.getUserDesiredDuration();
-                    userDesiredDuration = duration;
-                    classesView.setVisibleDataRange(duration.value, duration.unit);
-                    break;
-                default:
-                    throw new AssertionError("Unhandled action type");
                 }
             }
         });

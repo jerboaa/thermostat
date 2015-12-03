@@ -66,21 +66,32 @@ class VmClassStatVmListener implements VmUpdateListener {
     public void countersUpdated(VmUpdate update) {
         VmClassStatDataExtractor extractor = new VmClassStatDataExtractor(update);
         try {
-            Long loadedClasses = extractor.getLoadedClasses();
-            if (loadedClasses != null) {
-                long timestamp = System.currentTimeMillis();
-                VmClassStat stat = new VmClassStat(writerId, vmId, timestamp, loadedClasses);
-                dao.putVmClassStat(stat);
-            }
-            else {
-                logWarningOnce("Unable to determine number of loaded classes for VM " 
-                        + vmId);
-            }
+            long loadedClasses = valueOrUnknown(extractor.getLoadedClasses(), "number of loaded classes", vmId);
+            long loadedBytes = valueOrUnknown(extractor.getLoadedBytes(), "number of loaded bytes", vmId);
+            long unloadedClasses = valueOrUnknown(extractor.getUnloadedClasses(), "number of unloaded", vmId);
+            long unloadedBytes = valueOrUnknown(extractor.getUnloadedBytes(), "number of unloaded bytes", vmId);
+            long classLoadTime = valueOrUnknown(extractor.getClassLoadTime(), "class load time", vmId);
+
+            long timestamp = System.currentTimeMillis();
+            VmClassStat stat = new VmClassStat(writerId, vmId, timestamp,
+                    loadedClasses, loadedBytes,
+                    unloadedClasses, unloadedBytes,
+                    classLoadTime);
+
+            dao.putVmClassStat(stat);
+
         } catch (VmUpdateException e) {
             logger.log(Level.WARNING, "Error gathering class info for VM " + vmId, e);
         }
     }
-    
+
+    private long valueOrUnknown(Long value, String valudDescription, String vmId) {
+        if (value == null) {
+            logWarningOnce("Unable to determine " + valudDescription + " for VM " + vmId);
+        }
+        return value == null ? VmClassStat.UNKNOWN : value;
+    }
+
     private void logWarningOnce(String message) {
         if (!error) {
             logger.log(Level.WARNING, message);

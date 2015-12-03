@@ -44,19 +44,39 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 @Entity
 public class VmClassStat extends BasePojo implements TimeStampedPojo {
 
+    // See the jdk sources for more information:
+    // - jdk/src/share/classes/sun/tools/jstat/resources/jstat_options
+    // - jdk/src/share/classes/sun/tools/jstat/resources/jstat_unsupported_options
+
+    public static final int UNKNOWN = -1;
+
     private String vmId;
     private long timestamp;
     private long loadedClasses;
+    private long loadedBytes;
+    private long unloadedClasses;
+    private long unloadedBytes;
+    private long classLoadTime;
 
     public VmClassStat() {
-        this(null, null, -1, -1);
+        this(null, null, UNKNOWN,
+                UNKNOWN, UNKNOWN,
+                UNKNOWN, UNKNOWN,
+                UNKNOWN);
     }
 
-    public VmClassStat(String writerId, String vmId, long timestamp, long loadedClasses) {
+    public VmClassStat(String writerId, String vmId, long timestamp,
+            long loadedClasses, long loadedBytes,
+            long unloadedClasses, long unloadedBytes,
+            long classLoadTime) {
         super(writerId);
         this.vmId = vmId;
         this.timestamp = timestamp;
         this.loadedClasses = loadedClasses;
+        this.loadedBytes = loadedBytes;
+        this.unloadedClasses = unloadedClasses;
+        this.unloadedBytes = unloadedBytes;
+        this.classLoadTime = classLoadTime;
     }
 
     @Persist
@@ -80,6 +100,7 @@ public class VmClassStat extends BasePojo implements TimeStampedPojo {
         this.timestamp = timestamp;
     }
 
+    /** Number of classes loaded */
     @Persist
     public long getLoadedClasses() {
         return loadedClasses;
@@ -89,5 +110,49 @@ public class VmClassStat extends BasePojo implements TimeStampedPojo {
     public void setLoadedClasses(long loadedClasses) {
         this.loadedClasses = loadedClasses;
     }
-}
 
+    /** Accumulated Size of classes loaded */
+    @Persist
+    public long getLoadedBytes() {
+        return loadedBytes;
+    }
+
+    @Persist
+    public void setLoadedBytes(long bytes) {
+        this.loadedBytes = bytes;
+    }
+
+    /** Number of classes unloaded */
+    @Persist
+    public long getUnloadedClasses() {
+        return unloadedClasses;
+    }
+
+    @Persist
+    public void setUnloadedClasses(long classes) {
+        this.unloadedClasses = classes;
+    }
+
+    /** Accumulated size of classes unloaded */
+    @Persist
+    public long getUnloadedBytes() {
+        return unloadedBytes;
+    }
+
+    @Persist
+    public void setUnloadedBytes(long bytes) {
+        this.unloadedBytes = bytes;
+    }
+
+    /** Accumulated time for class loading. In seconds */
+    @Persist
+    public long getClassLoadTime() {
+        return classLoadTime;
+    }
+
+    @Persist
+    public void setClassLoadTime(long seconds) {
+        this.classLoadTime = seconds;
+    }
+
+}

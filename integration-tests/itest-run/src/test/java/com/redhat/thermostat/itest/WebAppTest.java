@@ -670,8 +670,12 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
         // manually for this test.
         String strDesc = "ADD vm-class-stats SET 'agentId' = ?s , " +
                                 "'vmId' = ?s , " +
-                                "'timeStamp' = ?l , " + 
-                                "'loadedClasses' = ?l";
+                                "'timeStamp' = ?l , " +
+                                "'loadedClasses' = ?l , " +
+                                "'loadedBytes' = ?l , " +
+                                "'unloadedClasses' = ?l , " +
+                                "'unloadedBytes' = ?l , " +
+                                "'classLoadTime' = ?l";
         StatementDescriptor<VmClassStat> desc = new StatementDescriptor<>(VmClassStatDAO.vmClassStatsCategory, strDesc);
         VmClassStat pojo = new VmClassStat();
         pojo.setAgentId("fluff");
@@ -707,6 +711,10 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
         add.setString(1, pojo.getVmId());
         add.setLong(2, pojo.getTimeStamp());
         add.setLong(3, pojo.getLoadedClasses());
+        add.setLong(4, pojo.getLoadedBytes());
+        add.setLong(5, pojo.getUnloadedClasses());
+        add.setLong(6, pojo.getUnloadedBytes());
+        add.setLong(7, pojo.getClassLoadTime());
         add.execute();
     }
     

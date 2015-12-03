@@ -58,22 +58,51 @@ import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 public class VmClassStatVmListenerTest {
 
     private static final String VM_ID = "vmId";
-    private static final Long LOADED_CLASSES = 1234L;
+    private static final Long LOADED_CLASSES_NON_SHARED = 1234L;
+    private static final Long LOADED_CLASSES_SHARED = 1234L;
+    private static final Long LOADED_CLASSES = LOADED_CLASSES_NON_SHARED + LOADED_CLASSES_SHARED;
+    private static final Long LOADED_BYTES_NON_SHARED = 1234L;
+    private static final Long LOADED_BYTES_SHARED = 1234L;
+    private static final Long LOADED_BYTES = LOADED_BYTES_NON_SHARED + LOADED_BYTES_SHARED;
+    private static final Long UNLOADED_CLASSES_NON_SHARED = 1234L;
+    private static final Long UNLOADED_CLASSES_SHARED = 1234L;
+    private static final Long UNLOADED_CLASSES = UNLOADED_CLASSES_NON_SHARED + UNLOADED_CLASSES_SHARED;
+    private static final Long UNLOADED_BYTES_NON_SHARED = 1234L;
+    private static final Long UNLOADED_BYTES_SHARED = 1234L;
+    private static final Long UNLOADED_BYTES = UNLOADED_BYTES_NON_SHARED + UNLOADED_BYTES_SHARED;
+    private static final Long CLASS_TIME_TICKS = 4242L;
+    private static final Long FREQUENCY = 2L;
+    private static final Long CLASS_TIME = CLASS_TIME_TICKS / FREQUENCY;
 
     private VmClassStatDAO dao;
     private VmClassStatVmListener listener;
 
+    private VmUpdate update;
+
     @Before
-    public void setUp() {
+    public void setUp() throws VmUpdateException {
         dao = mock(VmClassStatDAO.class);
         listener = new VmClassStatVmListener("foo-agent", dao, VM_ID);
+
+        update = mock(VmUpdate.class);
+        when(update.getPerformanceCounterLong("java.cls.loadedClasses")).thenReturn(LOADED_CLASSES_NON_SHARED);
+        when(update.getPerformanceCounterLong("java.cls.sharedLoadedClasses")).thenReturn(LOADED_CLASSES_SHARED);
+
+        when(update.getPerformanceCounterLong("sun.cls.loadedBytes")).thenReturn(LOADED_BYTES_NON_SHARED);
+        when(update.getPerformanceCounterLong("sun.cls.sharedLoadedBytes")).thenReturn(LOADED_BYTES_SHARED);
+
+        when(update.getPerformanceCounterLong("java.cls.unloadedClasses")).thenReturn(UNLOADED_CLASSES_NON_SHARED);
+        when(update.getPerformanceCounterLong("java.cls.sharedUnloadedClasses")).thenReturn(UNLOADED_CLASSES_SHARED);
+
+        when(update.getPerformanceCounterLong("sun.cls.unloadedBytes")).thenReturn(UNLOADED_BYTES_NON_SHARED);
+        when(update.getPerformanceCounterLong("sun.cls.sharedUnloadedBytes")).thenReturn(UNLOADED_BYTES_SHARED);
+
+        when(update.getPerformanceCounterLong("sun.cls.time")).thenReturn(CLASS_TIME_TICKS);
+        when(update.getPerformanceCounterLong("sun.os.hrt.frequency")).thenReturn(FREQUENCY);
     }
 
     @Test
     public void testMonitorUpdatedClassStat() throws Exception {
-        VmUpdate update = mock(VmUpdate.class);
-        when(update.getPerformanceCounterLong(eq("java.cls.loadedClasses"))).thenReturn(LOADED_CLASSES);
-
         listener.countersUpdated(update);
 
         ArgumentCaptor<VmClassStat> arg = ArgumentCaptor.forClass(VmClassStat.class);
@@ -85,9 +114,6 @@ public class VmClassStatVmListenerTest {
 
     @Test
     public void testMonitorUpdatedClassStatTwice() throws Exception {
-        VmUpdate update = mock(VmUpdate.class);
-        when(update.getPerformanceCounterLong(eq("java.cls.loadedClasses"))).thenReturn(LOADED_CLASSES);
-
         listener.countersUpdated(update);
         listener.countersUpdated(update);
 
@@ -97,21 +123,11 @@ public class VmClassStatVmListenerTest {
 
     @Test
     public void testMonitorUpdateFails() throws VmUpdateException {
-        VmUpdate update = mock(VmUpdate.class);
         when(update.getPerformanceCounterLong(anyString())).thenThrow(new VmUpdateException());
         listener.countersUpdated(update);
 
         verifyNoMoreInteractions(dao);
     }
-    
-    @Test
-    public void testMonitorUpdatedClassStatNoCounter() throws Exception {
-        VmUpdate update = mock(VmUpdate.class);
-        when(update.getPerformanceCounterLong(eq("java.cls.loadedClasses"))).thenReturn(null);
 
-        listener.countersUpdated(update);
-
-        verify(dao, never()).putVmClassStat(any(VmClassStat.class));
-    }
 }
 
