@@ -135,10 +135,15 @@ public class VmIoController implements InformationServiceController<VmRef> {
     }
 
     private void updateData() {
-        final List<VmIoStat> data = new ArrayList<>();
-
         VmIoStat oldest = dao.getOldest(ref);
         VmIoStat newest = dao.getNewest(ref);
+        // Do nothing if there is no data
+        if (oldest == null || newest == null) {
+            return;
+        }
+        
+        final List<VmIoStat> data = new ArrayList<>();
+
 
         Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 
