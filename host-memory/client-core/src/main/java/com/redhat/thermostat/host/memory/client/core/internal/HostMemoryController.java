@@ -145,15 +145,19 @@ public class HostMemoryController implements InformationServiceController<HostRe
     }
 
     private void doMemoryChartUpdate() {
+        MemoryStat oldest = memoryStatDAO.getOldest(ref);
+        MemoryStat newest = memoryStatDAO.getNewest(ref);
+        // Do nothing if no memory data is available
+        if (oldest == null || newest == null) {
+            return;
+        }
+        
         final List<DiscreteTimeData<? extends Number>> memFree = new LinkedList<>();
         final List<DiscreteTimeData<? extends Number>> memTotal = new LinkedList<>();
         final List<DiscreteTimeData<? extends Number>> memUsed = new LinkedList<>();
         final List<DiscreteTimeData<? extends Number>> buf = new LinkedList<>();
         final List<DiscreteTimeData<? extends Number>> swapTotal = new LinkedList<>();
         final List<DiscreteTimeData<? extends Number>> swapFree = new LinkedList<>();
-
-        MemoryStat oldest = memoryStatDAO.getOldest(ref);
-        MemoryStat newest = memoryStatDAO.getNewest(ref);
 
         Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 

@@ -67,24 +67,20 @@ import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.HostInfo;
 
 public class HostMemoryControllerTest {
-
+    
+    private static final long TOTAL_MEMORY = 512;
+    private ActionListener<HostMemoryView.Action> listener;
+    private Timer timer;
+    private Runnable timerAction;
+    private HostMemoryView view;
+    
     @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
-    @Test
-    public void testUpdate() {
-        final long TOTAL_MEMORY = 512;
+    private void setupWithMemoryDAO(MemoryStatDAO memoryStatDAO) {
         HostInfo hostInfo = new HostInfo("foo-agent", "someHost", "someOS", "linux_0.0.1", "lreally_fast_cpu", 2, TOTAL_MEMORY);
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         when(hostInfoDAO.getHostInfo(any(HostRef.class))).thenReturn(hostInfo);
 
-        MemoryStat memoryStat = new MemoryStat("foo", 1, 2, 3, 4, 5, 6, 7, 8);
-        List<MemoryStat> memoryStats = new LinkedList<>();
-        memoryStats.add(memoryStat);
-        MemoryStatDAO memoryStatDAO = mock(MemoryStatDAO.class);
-        when(memoryStatDAO.getMemoryStats(any(HostRef.class), anyLong(), anyLong())).thenReturn(memoryStats);
-        when(memoryStatDAO.getOldest(any(HostRef.class))).thenReturn(memoryStat);
-        when(memoryStatDAO.getNewest(any(HostRef.class))).thenReturn(memoryStat);
-
-        Timer timer = mock(Timer.class);
+        timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(timerActionCaptor.capture());
 
@@ -95,7 +91,7 @@ public class HostMemoryControllerTest {
 
         HostRef ref = mock(HostRef.class);
 
-        HostMemoryView view = mock(HostMemoryView.class);
+        view = mock(HostMemoryView.class);
         when(view.getUserDesiredDuration()).thenReturn(new Duration(10, TimeUnit.MINUTES));
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
@@ -105,21 +101,46 @@ public class HostMemoryControllerTest {
 
         @SuppressWarnings("unused")
         HostMemoryController controller = new HostMemoryController(appSvc, hostInfoDAO, memoryStatDAO, ref, viewProvider);
+        timerAction = timerActionCaptor.getValue();
 
-        ActionListener<HostMemoryView.Action> l = viewArgumentCaptor.getValue();
+        listener = viewArgumentCaptor.getValue();
+    }
 
-        l.actionPerformed(new ActionEvent<>(view, HostMemoryView.Action.VISIBLE));
+    
+    @SuppressWarnings("unchecked") // any(List.class)
+    @Test
+    public void testUpdate() {
+        MemoryStat memoryStat = new MemoryStat("foo", 1, 2, 3, 4, 5, 6, 7, 8);
+        List<MemoryStat> memoryStats = new LinkedList<>();
+        memoryStats.add(memoryStat);
+        MemoryStatDAO memoryStatDAO = mock(MemoryStatDAO.class);
+        when(memoryStatDAO.getMemoryStats(any(HostRef.class), anyLong(), anyLong())).thenReturn(memoryStats);
+        when(memoryStatDAO.getOldest(any(HostRef.class))).thenReturn(memoryStat);
+        when(memoryStatDAO.getNewest(any(HostRef.class))).thenReturn(memoryStat);
+
+        setupWithMemoryDAO(memoryStatDAO);
+
+        listener.actionPerformed(new ActionEvent<>(view, HostMemoryView.Action.VISIBLE));
 
         verify(timer).start();
-        timerActionCaptor.getValue().run();
+        timerAction.run();
 
         verify(view, times(1)).setTotalMemory(eq(TOTAL_MEMORY + " B"));
         verify(view, times(6)).addMemoryData(any(String.class), any(List.class));
 
-        l.actionPerformed(new ActionEvent<>(view, HostMemoryView.Action.HIDDEN));
+        listener.actionPerformed(new ActionEvent<>(view, HostMemoryView.Action.HIDDEN));
 
         verify(timer).stop();
-
+    }
+    
+    /**
+     * Verify that no NPE is thrown when the memory view is shown with no
+     * host memory data.
+     */
+    @Test
+    public void testUpdateNoMemoryData() {
+        setupWithMemoryDAO(mock(MemoryStatDAO.class));
+        timerAction.run(); // must not throw NPE
     }
 }
 
