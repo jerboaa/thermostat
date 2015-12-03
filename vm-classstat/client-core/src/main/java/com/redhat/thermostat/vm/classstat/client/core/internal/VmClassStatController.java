@@ -76,7 +76,11 @@ public class VmClassStatController implements InformationServiceController<VmRef
         public void run() {
             VmClassStat oldest = dao.getOldest(ref);
             VmClassStat newest = dao.getNewest(ref);
-
+            // Do nothing when there is no data
+            if (oldest == null || newest == null) {
+                return;
+            }
+            
             final List<DiscreteTimeData<? extends Number>> loadedClasses = new LinkedList<>();
             final List<DiscreteTimeData<? extends Number>> loadedBytes = new LinkedList<>();
             final List<DiscreteTimeData<? extends Number>> unloadedClasses = new LinkedList<>();

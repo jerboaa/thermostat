@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -64,11 +65,21 @@ import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
 public class VmClassStatControllerTest {
+    
+    private ActionListener<VmClassStatView.Action> listener;
+    private Timer timer;
+    private VmClassStatView view;
+    private VmRef ref;
+    private Runnable timerAction;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
+    @Before
+    public void setup() {
+        ref = mock(VmRef.class);
+    }
+    
+    @SuppressWarnings({ "unchecked" })
     @Test
     public void testChartUpdate() {
-
         final long SOME_TIMESTAMP = 12345;
         final int SOME_VALUE = 1234;
 
@@ -79,13 +90,33 @@ public class VmClassStatControllerTest {
 
         VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
 
-        VmRef ref = mock(VmRef.class);
-
         when(vmClassStatDAO.getLatestClassStats(any(VmRef.class), any(Long.class))).thenThrow(new AssertionError("Unbounded queries are bad!"));
         when(vmClassStatDAO.getOldest(ref)).thenReturn(stat1);
         when(vmClassStatDAO.getNewest(ref)).thenReturn(stat1);
+        
+        setupWithVmClassStatDAO(vmClassStatDAO);
 
-        Timer timer = mock(Timer.class);
+        listener.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.VISIBLE));
+
+        verify(timer).start();
+        timerAction.run();
+        verify(view, times(4)).addClassData(isA(String.class), isA(List.class));
+
+        listener.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.HIDDEN));
+
+        verify(timer).stop();
+    }
+    
+    @Test
+    public void verifyNoClassStatDataDoesNotNPE() {
+        setupWithVmClassStatDAO(mock(VmClassStatDAO.class));
+        timerAction.run();
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void setupWithVmClassStatDAO(VmClassStatDAO vmClassStatDAO) {
+
+        timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(timerActionCaptor.capture());
 
@@ -94,7 +125,8 @@ public class VmClassStatControllerTest {
         ApplicationService appSvc = mock(ApplicationService.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
-        VmClassStatView view = mock(VmClassStatView.class);
+        view = mock(VmClassStatView.class);
+        @SuppressWarnings("rawtypes")
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
 
@@ -106,17 +138,8 @@ public class VmClassStatControllerTest {
         @SuppressWarnings("unused")
         VmClassStatController controller = new VmClassStatController(appSvc, vmClassStatDAO, ref, viewProvider);
 
-        ActionListener<VmClassStatView.Action> l = viewArgumentCaptor.getValue();
-
-        l.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.VISIBLE));
-
-        verify(timer).start();
-        timerActionCaptor.getValue().run();
-        verify(view, times(4)).addClassData(isA(String.class), isA(List.class));
-
-        l.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.HIDDEN));
-
-        verify(timer).stop();
+        listener = viewArgumentCaptor.getValue();
+        timerAction = timerActionCaptor.getValue();
     }
 
 }
