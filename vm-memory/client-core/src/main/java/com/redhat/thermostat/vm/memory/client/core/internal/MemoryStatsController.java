@@ -102,6 +102,10 @@ public class MemoryStatsController implements InformationServiceController<VmRef
         public void run() {
             VmMemoryStat oldest = vmDao.getOldestMemoryStat(ref);
             VmMemoryStat newest = vmDao.getNewestMemoryStat(ref);
+            // Do nothing if there is no data
+            if (oldest == null || newest == null) {
+                return;
+            }
 
             Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 

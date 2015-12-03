@@ -54,7 +54,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -84,7 +83,6 @@ public class MemoryStatsControllerTest {
     private Generation[] generations = new Generation[2];
 
     private VmInfoDAO infoDao;
-    private VmMemoryStatDAO memoryStatDao;
     private MemoryStatsView view;
     private Timer timer;
 
@@ -103,13 +101,7 @@ public class MemoryStatsControllerTest {
     private Long[] timestamps = new Long[5];
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Before
-    public void setUp() {
-        initialize(true);
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void initialize(boolean vmIsAlive) {
+    private void setupVMAliveAndWithDAO(boolean vmIsAlive, VmMemoryStatDAO dao) {
 
         timer = mock(Timer.class);
         ArgumentCaptor<Runnable> actionCaptor = ArgumentCaptor.forClass(Runnable.class);
@@ -125,6 +117,30 @@ public class MemoryStatsControllerTest {
         infoDao = mock(VmInfoDAO.class);
         when(infoDao.getVmInfo(any(VmRef.class))).thenReturn(vmOverallInformation);
 
+        view = mock(MemoryStatsView.class);
+        MemoryStatsViewProvider viewProvider = mock(MemoryStatsViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
+
+        ArgumentCaptor<ActionListener> viewArgumentCaptor =
+                ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
+
+        ArgumentCaptor<ActionListener> gcArgumentCaptor =
+                ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addGCActionListener(gcArgumentCaptor.capture());
+
+        ref = mock(VmRef.class);
+
+        agentDAO = mock(AgentInfoDAO.class);
+        gcRequest = mock(GCRequest.class);
+
+        controller = new MemoryStatsController(appSvc, infoDao, dao, ref, viewProvider, agentDAO, gcRequest);
+
+        viewListener = viewArgumentCaptor.getValue();
+        gcActionListener = gcArgumentCaptor.getValue();
+    }
+
+    private VmMemoryStatDAO setupVmMemoryStatDAOWithData() {
         List<VmMemoryStat> vmInfo = new ArrayList<>();
 
         for (int i = 0; i < 2; i++) {
@@ -161,38 +177,18 @@ public class MemoryStatsControllerTest {
             timestamp++;
         }
 
-        memoryStatDao = mock(VmMemoryStatDAO.class);
+        VmMemoryStatDAO memoryStatDao = mock(VmMemoryStatDAO.class);
 
         when(memoryStatDao.getVmMemoryStats(any(VmRef.class), anyLong(), anyLong())).thenReturn(vmInfo);
 
         when(memoryStatDao.getOldestMemoryStat(any(VmRef.class))).thenReturn(vmInfo.get(0));
         when(memoryStatDao.getNewestMemoryStat(any(VmRef.class))).thenReturn(vmInfo.get(4));
-
-        view = mock(MemoryStatsView.class);
-        MemoryStatsViewProvider viewProvider = mock(MemoryStatsViewProvider.class);
-        when(viewProvider.createView()).thenReturn(view);
-
-        ArgumentCaptor<ActionListener> viewArgumentCaptor =
-                ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
-
-        ArgumentCaptor<ActionListener> gcArgumentCaptor =
-                ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addGCActionListener(gcArgumentCaptor.capture());
-
-        ref = mock(VmRef.class);
-
-        agentDAO = mock(AgentInfoDAO.class);
-        gcRequest = mock(GCRequest.class);
-
-        controller = new MemoryStatsController(appSvc, infoDao, memoryStatDao, ref, viewProvider, agentDAO, gcRequest);
-
-        viewListener = viewArgumentCaptor.getValue();
-        gcActionListener = gcArgumentCaptor.getValue();
+        return memoryStatDao;
     }
 
     @Test
     public void testStartStopTimer() {
+        setupVMAliveAndWithDAO(true, mock(VmMemoryStatDAO.class));
         viewListener.actionPerformed(new ActionEvent<>(view, MemoryStatsView.Action.VISIBLE));
 
         verify(timer).start();
@@ -205,19 +201,21 @@ public class MemoryStatsControllerTest {
 
     @Test
     public void testGCIsDisabledForDeadVms() {
-        initialize(false);
+        setupVMAliveAndWithDAO(false, mock(VmMemoryStatDAO.class));
 
         verify(view).setEnableGCAction(false);
     }
 
     @Test
     public void testGCInvoked() {
+        setupVMAliveAndWithDAO(true, mock(VmMemoryStatDAO.class));
         gcActionListener.actionPerformed(new ActionEvent<>(view, GCAction.REQUEST_GC));
         verify(gcRequest).sendGCRequestToAgent(eq(ref), eq(agentDAO), isA(RequestResponseListener.class));
     }
 
     @Test
     public void testPayloadContainSpaces() {
+        setupVMAliveAndWithDAO(true, setupVmMemoryStatDAOWithData());
         Runnable collector = controller.getCollector();
         collector.run();
 
@@ -234,6 +232,7 @@ public class MemoryStatsControllerTest {
 
     @Test
     public void testValues() {
+        setupVMAliveAndWithDAO(true, setupVmMemoryStatDAOWithData());
         Runnable collector = controller.getCollector();
         collector.run();
 
@@ -264,6 +263,8 @@ public class MemoryStatsControllerTest {
 
     @Test
     public void testTimerFetchesMemoryDataDeltaOnly() throws InterruptedException {
+        VmMemoryStatDAO memoryStatDao = setupVmMemoryStatDAOWithData();
+        setupVMAliveAndWithDAO(true, memoryStatDao);
         ArgumentCaptor<Long> timeStampCaptor = ArgumentCaptor.forClass(Long.class);
 
         Runnable timerAction = controller.getCollector();
@@ -303,18 +304,23 @@ public class MemoryStatsControllerTest {
 
     @Test
     public void verifyGcEnabled() {
+        setupVMAliveAndWithDAO(true, mock(VmMemoryStatDAO.class));
         viewListener.actionPerformed(new ActionEvent<>(view, MemoryStatsView.Action.VISIBLE));
         verify(view, atLeastOnce()).setEnableGCAction(true);
     }
 
     @Test
     public void verifyGcDisabledWhenVmDead() {
-        VmInfo vmInfo = mock(VmInfo.class);
-        when(vmInfo.isAlive()).thenReturn(false);
-        when(infoDao.getVmInfo(any(VmRef.class))).thenReturn(vmInfo);
-
+        setupVMAliveAndWithDAO(false, mock(VmMemoryStatDAO.class));
         viewListener.actionPerformed(new ActionEvent<>(view, MemoryStatsView.Action.VISIBLE));
         verify(view, atLeastOnce()).setEnableGCAction(false);
+    }
+    
+    @Test
+    public void verifyNoMemoryDataDoesNotThrowNPE() {
+        setupVMAliveAndWithDAO(true, mock(VmMemoryStatDAO.class));
+        Runnable timerAction = controller.getCollector();
+        timerAction.run();
     }
 
     private void assertTimeStampIsAround(long expected, long actual) {
