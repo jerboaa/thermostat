@@ -52,12 +52,16 @@ import javax.swing.border.EmptyBorder;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.RangeType;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.XYDataset;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.ui.ChartColors;
@@ -68,33 +72,43 @@ import com.redhat.thermostat.storage.model.DiscreteTimeData;
 /**
  * Displays multiple time-series data sets in a single chart, allowing users to
  * select the data range and the individual data sets to show.
+ * <p>
+ * Each time-series data belongs to a data group ({@link DataGroup}). A data
+ * group is used to collected a related set of data that represent similar
+ * units. For example, all data items representing a size.
+ * <p>
+ * A {@code tag} identifies each unique set of data points. Each {@code tag}
+ * belongs to a particular data group.
  */
 public class MultiChartPanel extends JPanel {
 
+    private static final String KEY_TAG = "tag";
+    private static final String KEY_GROUP = "group";
+
     private final JFreeChart chart;
     private final RecentTimeSeriesChartController chartController;
-    private final TimeSeriesCollection collection;
 
     private final CheckboxListener checkboxListener = new CheckboxListener();
 
     private final JPanel checkBoxPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    private final JScrollPane checkBoxContainer = new JScrollPane(checkBoxPanel);
 
     private final Map<String, TimeSeries> dataset = new HashMap<>();
     private final Map<String, JCheckBox> checkBoxes = new HashMap<>();
     private final Map<String, Color> colors = new HashMap<>();
 
-    public MultiChartPanel(String xAxisLabel, String yAxisLabel) {
-        this.collection = new TimeSeriesCollection();
+    private int highestGroupIndex = -1;
 
-        chart = createChart(xAxisLabel, yAxisLabel);
+    public MultiChartPanel() {
 
+        chart = createChart();
         chartController = new RecentTimeSeriesChartController(chart);
 
         setOpaque(false);
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(chartController);
         chartPanel.setOpaque(false);
+
+        JScrollPane checkBoxContainer = new JScrollPane(checkBoxPanel);
 
         checkBoxPanel.setOpaque(false);
         checkBoxPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -107,12 +121,12 @@ public class MultiChartPanel extends JPanel {
         add(checkBoxContainer, BorderLayout.SOUTH);
     }
 
-    private JFreeChart createChart(String xAxisLabel, String yAxisLabel) {
+    private JFreeChart createChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null, // Title
-                xAxisLabel,
-                yAxisLabel,
-                collection, // Dataset
+                null, // x axis label
+                null, // y axis label
+                null, // Dataset
                 false, // Show Legend
                 false, // Use tooltips
                 false // Configure chart to generate URLs?
@@ -129,18 +143,55 @@ public class MultiChartPanel extends JPanel {
         return chart;
     }
 
+    public void setDomainAxisLabel(String label) {
+        ValueAxis axis = chart.getXYPlot().getDomainAxis();
+        axis.setLabel(label);
+    }
+
+    /**
+     * side effect: sets up the axis for the groupIndex if it was not setup
+     * before
+     */
+    public NumberAxis getRangeAxis(final DataGroup group) {
+        NumberAxis axis = (NumberAxis) chart.getXYPlot().getRangeAxis(group.index);
+        if (axis == null) {
+            try {
+                axis = (NumberAxis) chart.getXYPlot().getRangeAxis().clone();
+                chart.getXYPlot().setRangeAxis(group.index, axis);
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError("cloneable can not clone?!?!?");
+            }
+        }
+        return axis;
+    }
+
     /**
      * The chart will not be displayed until {@link #showChart(String)} is called.
      */
-    public void addChart(final String tag, final LocalizedString name) {
+    public void addChart(final DataGroup group, final String tag, final LocalizedString name) {
         assertTagIsAbsent(tag);
 
         int colorIndex = colors.size();
         colors.put(tag, ChartColors.getColor(colorIndex));
+
         TimeSeries series = new TimeSeries(tag);
         dataset.put(tag, series);
+
+        if (!group.addedToChart) {
+            chart.getXYPlot().setDataset(group.index, group.collection);
+            chart.getXYPlot().mapDatasetToRangeAxis(group.index, group.index);
+
+            XYItemRenderer renderer = new XYLineAndShapeRenderer(true, false);
+            chart.getXYPlot().setRenderer(group.index, renderer);
+
+            getRangeAxis(group); // side-effect: set up the axis
+
+            group.addedToChart = true;
+        }
+
         JCheckBox newCheckBox = new LegendCheckBox(name, colors.get(tag));
-        newCheckBox.setActionCommand(tag);
+        newCheckBox.putClientProperty(KEY_TAG, tag);
+        newCheckBox.putClientProperty(KEY_GROUP, group);
         newCheckBox.setSelected(true);
         newCheckBox.addActionListener(checkboxListener);
         newCheckBox.setOpaque(false);
@@ -148,13 +199,13 @@ public class MultiChartPanel extends JPanel {
         checkBoxPanel.add(newCheckBox);
 
         updateColors();
-
     }
 
-    public void removeChart(final String tag) {
+    public void removeChart(final DataGroup group, final String tag) {
         assertTagIsPresent(tag);
 
         TimeSeries series = dataset.remove(tag);
+        TimeSeriesCollection collection = group.collection;
         collection.removeSeries(series);
         JCheckBox box = checkBoxes.remove(tag);
         checkBoxPanel.remove(box);
@@ -162,19 +213,21 @@ public class MultiChartPanel extends JPanel {
         updateColors();
     }
 
-    public void showChart(final String tag) {
+    public void showChart(final DataGroup group, final String tag) {
         assertTagIsPresent(tag);
 
         TimeSeries series = dataset.get(tag);
+        TimeSeriesCollection collection = group.collection;
         collection.addSeries(series);
 
         updateColors();
     }
 
-    public void hideChart(final String tag) {
+    public void hideChart(final DataGroup group, final String tag) {
         assertTagIsPresent(tag);
 
         TimeSeries series = dataset.get(tag);
+        TimeSeriesCollection collection = group.collection;
         collection.removeSeries(series);
 
         updateColors();
@@ -237,11 +290,15 @@ public class MultiChartPanel extends JPanel {
      * let's walk through all the series and set the right paint for those.
      */
     private void updateColors() {
-        XYItemRenderer itemRenderer = chart.getXYPlot().getRenderer();
-        for (int i = 0; i < collection.getSeriesCount(); i++) {
-            String tag = (String) collection.getSeriesKey(i);
-            Color color = colors.get(tag);
-            itemRenderer.setSeriesPaint(i, color);
+        XYPlot plot = chart.getXYPlot();
+        for (int j = 0; j < plot.getDatasetCount(); j++) {
+            XYItemRenderer itemRenderer = plot.getRenderer(j);
+            XYDataset series = plot.getDataset(j);
+            for (int i = 0; i < series.getSeriesCount(); i++) {
+                String tag = (String) series.getSeriesKey(i);
+                Color color = colors.get(tag);
+                itemRenderer.setSeriesPaint(i, color);
+            }
         }
     }
 
@@ -250,13 +307,32 @@ public class MultiChartPanel extends JPanel {
         public void actionPerformed(java.awt.event.ActionEvent e) {
             JCheckBox source = (JCheckBox) e.getSource();
             boolean show = source.isSelected();
-            String tag = source.getActionCommand();
+            String tag = (String) source.getClientProperty(KEY_TAG);
+            DataGroup group = (DataGroup) source.getClientProperty(KEY_GROUP);
             if (show) {
-                showChart(tag);
+                showChart(group, tag);
             } else {
-                hideChart(tag);
+                hideChart(group, tag);
             }
         }
     }
 
+    public DataGroup createGroup() {
+        return new DataGroup();
+    }
+
+    public class DataGroup {
+
+        private final int index;
+        private final TimeSeriesCollection collection;
+        private boolean addedToChart = false;
+
+        private DataGroup() {
+            highestGroupIndex++;
+            this.index = highestGroupIndex;
+            
+            this.collection = new TimeSeriesCollection();
+        }
+    }
+    
 }

@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import com.redhat.thermostat.client.swing.components.MultiChartPanel.DataGroup;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
@@ -56,29 +57,38 @@ public class MultiChartPanelTest {
                 JFrame window = new JFrame("Test");
                 window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                MultiChartPanel panel = new MultiChartPanel("X", "Y");
+                MultiChartPanel panel = new MultiChartPanel();
+                DataGroup GROUP1 = panel.createGroup();
+                DataGroup GROUP2 = panel.createGroup();
 
-                panel.addChart("1", new LocalizedString("foo"));
-                panel.showChart("1");
+                panel.setDomainAxisLabel("foobar");
+                panel.addChart(GROUP1, "1", new LocalizedString("foo"));
+                panel.showChart(GROUP1, "1");
 
                 List<DiscreteTimeData<? extends Number>> data1 = new ArrayList<>();
                 data1.add(new DiscreteTimeData<Number>(new Date().getTime(), 20l));
                 data1.add(new DiscreteTimeData<Number>(new Date().getTime() + TimeUnit.MINUTES.toMillis(100), 1000l));
                 panel.addData("1", data1);
 
-                panel.addChart("2", new LocalizedString("bar"));
-                panel.showChart("2");
+                panel.addChart(GROUP1, "2", new LocalizedString("bar"));
+                panel.showChart(GROUP1, "2");
 
                 List<DiscreteTimeData<? extends Number>> data2 = new ArrayList<>();
                 data2.add(new DiscreteTimeData<Number>(new Date().getTime(), 15));
                 data2.add(new DiscreteTimeData<Number>(new Date().getTime() + TimeUnit.MINUTES.toMillis(100), 30));
                 panel.addData("2", data2);
 
-                panel.addChart("3", new LocalizedString("Eggs"));
-                panel.addChart("4", new LocalizedString("Spam"));
-                panel.addChart("5", new LocalizedString("Ham"));
-                panel.addChart("6", new LocalizedString("Sausage"));
-                panel.addChart("7", new LocalizedString("Baked Beans"));
+                panel.addChart(GROUP2, "3", new LocalizedString("Eggs"));
+                panel.showChart(GROUP2, "3");
+                List<DiscreteTimeData<? extends Number>> data3 = new ArrayList<>();
+                data3.add(new DiscreteTimeData<Number>(new Date().getTime(), 1000));
+                data3.add(new DiscreteTimeData<Number>(new Date().getTime() + TimeUnit.MINUTES.toMillis(100), 3000));
+                panel.addData("3", data3);
+
+                panel.addChart(GROUP2, "4", new LocalizedString("Spam"));
+                panel.addChart(GROUP2, "5", new LocalizedString("Ham"));
+                panel.addChart(GROUP2, "6", new LocalizedString("Sausage"));
+                panel.addChart(GROUP2, "7", new LocalizedString("Baked Beans"));
 
                 window.add(panel);
                 window.pack();

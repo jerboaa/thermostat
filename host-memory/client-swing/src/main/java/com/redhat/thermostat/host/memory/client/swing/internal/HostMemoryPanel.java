@@ -48,11 +48,13 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.MultiChartPanel;
+import com.redhat.thermostat.client.swing.components.MultiChartPanel.DataGroup;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
@@ -75,8 +77,11 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
     private MultiChartPanel multiChartPanel;
 
+    private final DataGroup DEFAULT_GROUP;
+
     public HostMemoryPanel() {
-        super();
+        multiChartPanel = new MultiChartPanel();
+        DEFAULT_GROUP = multiChartPanel.createGroup();
         initializePanel();
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
@@ -102,7 +107,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                multiChartPanel.addChart(tag, name);
+                multiChartPanel.addChart(DEFAULT_GROUP, tag, name);
             }
         });
     }
@@ -112,7 +117,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                multiChartPanel.removeChart(tag);
+                multiChartPanel.removeChart(DEFAULT_GROUP, tag);
             }
         });
     }
@@ -122,7 +127,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                multiChartPanel.showChart(tag);
+                multiChartPanel.showChart(DEFAULT_GROUP, tag);
             }
         });
     }
@@ -132,7 +137,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                multiChartPanel.hideChart(tag);
+                multiChartPanel.hideChart(DEFAULT_GROUP, tag);
             }
         });
     }
@@ -174,7 +179,9 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
         String xAxisLabel = translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL).getContents();
         String yAxisLabel = translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()).getContents();
-        multiChartPanel = new MultiChartPanel(xAxisLabel, yAxisLabel);
+        multiChartPanel.setDomainAxisLabel(xAxisLabel);
+        NumberAxis axis = multiChartPanel.getRangeAxis(DEFAULT_GROUP);
+        axis.setLabel(yAxisLabel);
 
         JLabel lblMemory = new SectionHeader(translator.localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
 
