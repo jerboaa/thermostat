@@ -44,26 +44,11 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
-import org.junit.BeforeClass;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-
-import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
 
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
-
-@Category(CacioTest.class)
-@RunWith(CacioFESTRunner.class)
 public class VmClassStatPanelTest {
-
-    @BeforeClass
-    public static void setUpOnce() {
-        FailOnThreadViolationRepaintManager.install();
-    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
