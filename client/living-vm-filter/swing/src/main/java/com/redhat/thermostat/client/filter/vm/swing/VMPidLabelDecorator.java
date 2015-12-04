@@ -36,20 +36,29 @@
 
 package com.redhat.thermostat.client.filter.vm.swing;
 
-import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
+import com.redhat.thermostat.client.ui.ToggleableReferenceFieldLabelDecorator;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Replaces the given ReferenceField label with the pid of the current
  * {@link VmRef}.
  */
-public class VMLabelDecorator implements ReferenceFieldLabelDecorator {
+public class VMPidLabelDecorator implements ToggleableReferenceFieldLabelDecorator {
 
     private VmInfoDAO dao;
+    private boolean enabled = false;
+    private final Map<VmRef, Integer> referencePidMap = new HashMap<>();
+
+    private final ActionNotifier<StatusEvent> notifier = new ActionNotifier<>(this);
     
-    public VMLabelDecorator(VmInfoDAO dao) {
+    public VMPidLabelDecorator(VmInfoDAO dao) {
         this.dao = dao;
     }
     
@@ -60,14 +69,46 @@ public class VMLabelDecorator implements ReferenceFieldLabelDecorator {
     
     @Override
     public String getLabel(String originalLabel, Ref reference) {
-        
+
+        if (!isEnabled()) {
+            return originalLabel;
+        }
+
         if (!(reference instanceof VmRef)) {
             return originalLabel;
         }
-        
-        // replace the label with the information we really care about
-        int pid =  dao.getVmInfo((VmRef) reference).getVmPid();
-        return "Pid: " + pid;
+
+        VmRef vmRef = (VmRef) reference;
+
+        if (!referencePidMap.containsKey(vmRef)) {
+            int pid =  dao.getVmInfo(vmRef).getVmPid();
+            referencePidMap.put(vmRef, pid);
+        }
+
+        return "Pid: " + referencePidMap.get(vmRef);
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        if (this.enabled != enabled) {
+            this.enabled = enabled;
+            notifier.fireAction(StatusEvent.STATUS_CHANGED);
+        }
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public void addStatusEventListener(ActionListener<StatusEvent> listener) {
+        notifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeStatusEventListener(ActionListener<StatusEvent> listener) {
+        notifier.removeActionListener(listener);
     }
 }
 

@@ -40,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.client.ui.MenuAction;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -75,12 +76,14 @@ public class VMFilterActivatorTest {
         ctx.registerService(NetworkInterfaceInfoDAO.class, netDao, null);
         ctx.registerService(UIDefaults.class, uiDefaults, null);
 
-        assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), VMLabelDecorator.class));
+        assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), VMPidLabelDecorator.class));
         assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), HostInfoLabelDecorator.class));
         assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), DeadHostIconDecorator.class));
 
         assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), VMIconDecorator.class));
         assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), DeadVMIconDecorator.class));
+
+        assertTrue(ctx.isServiceRegistered(MenuAction.class.getName(), VMPidLabelMenuAction.class));
     }
 }
 

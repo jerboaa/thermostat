@@ -36,10 +36,16 @@
 
 package com.redhat.thermostat.client.swing.internal.registry.decorator;
 
+import static org.hamcrest.core.IsAnything.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
+import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.client.ui.ToggleableReferenceFieldLabelDecorator;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.InvalidSyntaxException;
@@ -47,6 +53,8 @@ import org.osgi.framework.InvalidSyntaxException;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorListener;
+
+import java.util.Collections;
 
 /**
  *
@@ -114,18 +122,23 @@ public class DecoratorRegistryControllerTest {
         controller.start();
         
         verify(infoLabel).addActionListener(l0);
+        verify(infoLabel).addActionListener(controller.getToggleableFilterListener());
         verify(infoLabel).start();
         
         verify(mainLabel).addActionListener(l1);
+        verify(mainLabel).addActionListener(controller.getToggleableFilterListener());
         verify(mainLabel).start();
         
         verify(mainLabel).addActionListener(l1);
+        verify(mainLabel).addActionListener(controller.getToggleableFilterListener());
         verify(mainLabel).start();
         
         verify(mainLabel).addActionListener(l1);
+        verify(mainLabel).addActionListener(controller.getToggleableFilterListener());
         verify(mainLabel).start();
         
         verify(icon).addActionListener(l2);
+        verify(icon).addActionListener(controller.getToggleableFilterListener());
         verify(icon).start();
     }
 
@@ -134,26 +147,87 @@ public class DecoratorRegistryControllerTest {
         DecoratorRegistryController controller =
                 new DecoratorRegistryController(registryFactory);
         controller.init(hostController);
-        
+
         // since it's all mocked, we don't need to start anything
         // controller.start();
-        
+
         controller.stop();
 
         verify(infoLabel).removeActionListener(l0);
+        verify(infoLabel).removeActionListener(controller.getToggleableFilterListener());
         verify(infoLabel).stop();
-        
+
         verify(mainLabel).removeActionListener(l1);
+        verify(mainLabel).removeActionListener(controller.getToggleableFilterListener());
         verify(mainLabel).stop();
-        
+
         verify(mainLabel).removeActionListener(l1);
+        verify(mainLabel).removeActionListener(controller.getToggleableFilterListener());
         verify(mainLabel).stop();
-        
+
         verify(mainLabel).removeActionListener(l1);
+        verify(mainLabel).removeActionListener(controller.getToggleableFilterListener());
         verify(mainLabel).stop();
-        
+
         verify(icon).removeActionListener(l2);
+        verify(icon).removeActionListener(controller.getToggleableFilterListener());
         verify(icon).stop();
-    } 
+    }
+
+    @Test @SuppressWarnings("unchecked")
+    public void testToggleableDecoratorFilterListenerOnServiceAdded() {
+        ActionListener<ToggleableReferenceFieldLabelDecorator.StatusEvent> statusEventActionListener =
+                (ActionListener<ToggleableReferenceFieldLabelDecorator.StatusEvent>) mock(ActionListener.class);
+
+        ToggleableReferenceFieldLabelDecorator decorator = mock(ToggleableReferenceFieldLabelDecorator.class);
+
+        ActionEvent<ThermostatExtensionRegistry.Action> event =
+                new ActionEvent<>(decorator, ThermostatExtensionRegistry.Action.SERVICE_ADDED);
+        event.setPayload(decorator);
+
+        DecoratorRegistryController.ToggleableDecoratorFilterListener filterListener =
+                new DecoratorRegistryController.ToggleableDecoratorFilterListener(statusEventActionListener);
+
+        filterListener.actionPerformed(event);
+        verify(decorator).addStatusEventListener(statusEventActionListener);
+    }
+
+    @Test @SuppressWarnings("unchecked")
+    public void testToggleableDecoratorFilterListenerOnServiceRemoved() {
+        ActionListener<ToggleableReferenceFieldLabelDecorator.StatusEvent> statusEventActionListener =
+                (ActionListener<ToggleableReferenceFieldLabelDecorator.StatusEvent>) mock(ActionListener.class);
+
+        ToggleableReferenceFieldLabelDecorator decorator = mock(ToggleableReferenceFieldLabelDecorator.class);
+
+        ActionEvent<ThermostatExtensionRegistry.Action> event =
+                new ActionEvent<>(decorator, ThermostatExtensionRegistry.Action.SERVICE_REMOVED);
+        event.setPayload(decorator);
+
+        DecoratorRegistryController.ToggleableDecoratorFilterListener filterListener =
+                new DecoratorRegistryController.ToggleableDecoratorFilterListener(statusEventActionListener);
+
+        filterListener.actionPerformed(event);
+        verify(decorator).removeStatusEventListener(statusEventActionListener);
+    }
+
+    @Test @SuppressWarnings("unchecked")
+    public void testToggleStatusListener() {
+        DecoratorListener<ToggleableReferenceFieldLabelDecorator> decoratorListener =
+                (DecoratorListener<ToggleableReferenceFieldLabelDecorator>) mock(DecoratorListener.class);
+
+        DecoratorRegistryController.ToggleStatusListener toggleStatusListener =
+                new DecoratorRegistryController.ToggleStatusListener(
+                        Collections.<DecoratorListener<? extends Decorator>>singleton(decoratorListener)
+                );
+
+        ActionEvent<ToggleableReferenceFieldLabelDecorator.StatusEvent> event =
+                new ActionEvent<>(decoratorListener, ToggleableReferenceFieldLabelDecorator.StatusEvent.STATUS_CHANGED);
+        event.setPayload(decoratorListener);
+
+        toggleStatusListener.actionPerformed(event);
+
+        verify(decoratorListener).fireDecorationChanged();
+    }
+
 }
 

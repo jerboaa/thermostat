@@ -39,7 +39,6 @@ package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 import java.util.HashMap;
 
 import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
 import com.redhat.thermostat.client.swing.internal.vmlist.ReferenceComponent;
 import com.redhat.thermostat.client.swing.internal.vmlist.ReferenceTitle;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorNotifier.DecorationEvent;
@@ -48,6 +47,8 @@ import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.storage.core.Ref;
+
+import javax.swing.SwingUtilities;
 
 public class DecoratorManager {
 
@@ -150,7 +151,7 @@ public class DecoratorManager {
     public DecoratorListener<ReferenceFieldIconDecorator> getIconDecoratorListener() {
         return iconDecorator;
     }
-    
+
     private class ListenerPayload {
         ActionListener<DecoratorNotifier.DecorationEvent> main;
         ActionListener<DecoratorNotifier.DecorationEvent> info;
@@ -167,8 +168,13 @@ public class DecoratorManager {
         @Override
         public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
             Ref ref = component.getReference();
-            String label = createComponentLabel(infoLabelDecorator, ref, "");
-            component.setInfoLabelText(label);
+            final String label = createComponentLabel(infoLabelDecorator, ref, "");
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    component.setInfoLabelText(label);
+                }
+            });
         }
     }
     
@@ -182,8 +188,13 @@ public class DecoratorManager {
         @Override
         public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
             Ref ref = component.getReference();
-            String label = createComponentLabel(mainLabelDecorator, ref, "");
-            component.setMainLabelText(label);
+            final String label = createComponentLabel(mainLabelDecorator, ref, "");
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    component.setMainLabelText(label);
+                }
+            });
         }
     }
     
@@ -196,7 +207,12 @@ public class DecoratorManager {
         
         @Override
         public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
-            setIcons(component);
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    setIcons(component);
+                }
+            });
         }
     }
 }

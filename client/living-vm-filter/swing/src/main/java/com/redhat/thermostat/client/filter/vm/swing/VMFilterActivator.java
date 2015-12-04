@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.redhat.thermostat.client.ui.MenuAction;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -103,19 +104,25 @@ public class VMFilterActivator implements BundleActivator {
 
                 Dictionary<String, String> decoratorProperties = new Hashtable<>();
                 
-                VMLabelDecorator vmLabelDecorator = new VMLabelDecorator(vmDao);
+                VMPidLabelDecorator vmPidLabelDecorator = new VMPidLabelDecorator(vmDao);
                 decoratorProperties = new Hashtable<>();
                 decoratorProperties.put(ReferenceFieldLabelDecorator.ID,
                                         ReferenceFieldDecoratorLayout.LABEL_INFO.name());
 
                 registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
-                        vmLabelDecorator, decoratorProperties);
-                
+                        vmPidLabelDecorator, decoratorProperties);
+
                 registeredServices.add(registration);
-                
+
+                VMPidLabelMenuAction vmPidMenuAction = new VMPidLabelMenuAction(vmPidLabelDecorator);
+                registration = context.registerService(MenuAction.class.getName(),
+                        vmPidMenuAction, null);
+
+                registeredServices.add(registration);
+
                 NetworkInterfaceInfoDAO networkDao = (NetworkInterfaceInfoDAO)
                             services.get(NetworkInterfaceInfoDAO.class.getName());
-                
+
                 HostInfoLabelDecorator hostLabelDecorator =
                             new HostInfoLabelDecorator(networkDao);
                 decoratorProperties = new Hashtable<>();
@@ -164,6 +171,7 @@ public class VMFilterActivator implements BundleActivator {
                 
                 registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
                                                        mainDecorator, decoratorProperties);
+                registeredServices.add(registration);
                 
                 ThermostatVmMainLabelDecorator thermostatDecorator = new ThermostatVmMainLabelDecorator(vmDao);
                 decoratorProperties = new Hashtable<>();
