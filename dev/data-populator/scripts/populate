@@ -2,6 +2,7 @@
 JAVA=@thermostat.jdk.home@/bin/java
 THERMOSTAT_HOME=@thermostat.home@
 LIBS=$THERMOSTAT_HOME/libs
+PLUGINS=$THERMOSTAT_HOME/plugins
 CP="$LIBS/thermostat-storage-mongodb-@project.version@.jar"
 CP="$CP:$LIBS/thermostat-storage-core-@project.version@.jar"
 CP="$CP:$LIBS/thermostat-shared-config-@project.version@.jar"
@@ -12,6 +13,7 @@ CP="$CP:$LIBS/mongo-java-driver-@mongo-driver.version@.jar"
 CP="$CP:$LIBS/gson-@gson.version@.jar"
 CP="$CP:$LIBS/commons-beanutils-@commons-beanutils.version@.jar"
 CP="$CP:$LIBS/commons-logging-@commons-logging.version@.jar"
+CP="$CP:$PLUGINS/thread/thermostat-thread-collector-@project.version@.jar"
 CP="$CP:@project.build.directory@/thermostat-data-populator-@project.version@.jar"
 $JAVA -cp $CP \
   -DTHERMOSTAT_HOME=$THERMOSTAT_HOME \

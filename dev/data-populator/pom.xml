@@ -92,6 +92,12 @@
       <artifactId>thermostat-storage-mongodb</artifactId>
       <version>${project.version}</version>
     </dependency>
+    
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-thread-collector</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
   
   <build>
