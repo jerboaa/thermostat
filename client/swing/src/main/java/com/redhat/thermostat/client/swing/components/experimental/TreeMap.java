@@ -37,26 +37,62 @@
 package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
-public class TreeConverter {
-
-    /**
-     * This method builds a tree map model of the {@link T} data provided, using the
-     * specified {@link TreeAssembler} assembler.
-     *
-     * @return the root of the resulting tree
-     */
-    public static <T> TreeMapNode convertToTreeMap(T data, TreeAssembler<T> assembler) {
-        TreeMapNode root = new TreeMapNode("", 0);
-
-        assembler.buildTree(data, root);
+/**
+ * This class represents a treemap and facilitates its construction from information available in
+ * the {@link S} dataset.
+ *
+ * @param <S> a dataset that aggregates elements of type {@link T}
+ * @param <T> an element, holding some weight and labelled by some key (e.g. a pathname) that
+ *           expresses a delimited set of (hierarchical) nodes
+ */
+public class TreeMap<S, T> {
+    
+    private final TreeMapNode root;
+    
+    public TreeMap(S data, NodeDataExtractor<S, T> extractor) {
+        root = new TreeMapNode("", 0);
+        buildTree(data, root, extractor);
         // calculates weights for inner nodes
         fillWeights(root);
         // collapse nodes with only one child
         packTree(root);
+    }
+    
+    public TreeMapNode getRoot() {
         return root;
     }
 
+    private static <S, T> void buildTree(S data, TreeMapNode root, NodeDataExtractor<S, T> extractor) {
+
+        for(T element: extractor.getAsCollection(data)) {
+            String key = extractor.getKey(element);
+            String splitToken = extractor.getNodeSeparator();
+            double weight = extractor.getWeight(element);
+
+            TreeMapNode lastProcessed = root;
+            while (!key.equals("")) {
+
+                String nodeId = key.split(Pattern.quote(splitToken))[0];
+
+                TreeMapNode child = searchNode(lastProcessed, nodeId);
+                if (child == null) {
+                    child = new TreeMapNode(nodeId, 0);
+                    lastProcessed.addChild(child);
+                }
+
+                lastProcessed = child;
+
+                key = key.substring(nodeId.length());
+                if (key.startsWith(splitToken)) {
+                    key = key.substring(1);
+                }
+            }
+            lastProcessed.setRealWeight(weight);
+        }
+    }
+    
     /**
      * This method calculates the real weights using a bottom-up traversal.  The weight of a
      * parent node is the sum of its children's weights.
@@ -78,7 +114,7 @@ public class TreeConverter {
         node.setRealWeight(sum);
         return node.getRealWeight();
     }
-
+    
     /**
      * This method allows the collapse of a series of nodes, each with at most one child, into a
      * single node placed at the root of the series.
@@ -99,5 +135,15 @@ public class TreeConverter {
                 packTree(child);
             }
         }
+    }
+    
+    public static TreeMapNode searchNode(TreeMapNode startingPoint, String nodeId) {
+        List<TreeMapNode> children = startingPoint.getChildren();
+        for (TreeMapNode node : children) {
+            if (node.getLabel().equals(nodeId)) {
+                return node;
+            }
+        }
+        return null;
     }
 }

@@ -36,53 +36,22 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.util.Collection;
 
-import java.util.List;
+/**
+ * This interface facilitates the extraction of a collection of elements from a dataset and
+ * provides methods for reading information from these elements.
+ *
+ * @param <S> a dataset that aggregates elements of type {@link T}
+ * @param <T> an element, holding some weight and labelled by some key (e.g. a pathname) that
+ *           expresses a delimited set of (hierarchical) nodes
+ */
+public interface NodeDataExtractor<S, T> {
 
-import org.junit.Before;
-import org.junit.Test;
+    String getNodeSeparator();
 
-public class AbstractTreeAssemblerTest {
+    String getKey(T element);
+    double getWeight(T element);
 
-    final private String SOME_ROOT_LABEL = "root";
-    final private double SOME_ROOT_WEIGHT = 25.0;
-    final private String SPLIT_TOKEN = ".";
-
-    private TreeMapNode root;
-
-    @Before
-    public void setup() {
-        root = new TreeMapNode(SOME_ROOT_LABEL, SOME_ROOT_WEIGHT);
-    }
-
-    @Test
-    public void testProcessRecord() {
-        String class1 = "com.Class1";
-        AbstractTreeAssembler.processRecord(class1, SPLIT_TOKEN, root);
-
-        List<TreeMapNode> children = root.getChildren();
-        assertEquals(1, children.size());
-        assertEquals("com", children.get(0).getLabel());
-
-        children = children.get(0).getChildren();
-        assertEquals(1, children.size());
-        assertEquals("Class1", children.get(0).getLabel());
-        assertEquals(0, children.get(0).getChildren().size());
-
-        String class2 = "com.Class2";
-        AbstractTreeAssembler.processRecord(class2, SPLIT_TOKEN, root);
-
-        children = root.getChildren();
-        assertEquals(1, children.size());
-        assertEquals("com", children.get(0).getLabel());
-
-        children = children.get(0).getChildren();
-        assertEquals(2, children.size());
-        assertNotNull(AbstractTreeAssembler.searchNode(children, "Class1"));
-        assertNotNull(AbstractTreeAssembler.searchNode(children, "Class2"));
-        assertEquals(0, children.get(0).getChildren().size());
-        assertEquals(0, children.get(1).getChildren().size());
-    }
+    Collection<T> getAsCollection(S data);
 }

@@ -43,12 +43,13 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.experimental.TreeConverter;
+import com.redhat.thermostat.client.swing.components.experimental.TreeMap;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapComponent;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapNode;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapToolbar;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
+import com.redhat.thermostat.vm.heap.analysis.common.HistogramRecord;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 
 public class SwingHeapTreeMapView extends HeapTreeMapView implements SwingComponent {
@@ -69,8 +70,8 @@ public class SwingHeapTreeMapView extends HeapTreeMapView implements SwingCompon
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TreeMapNode model = TreeConverter.convertToTreeMap(
-                        histogram, new ObjectHistogramTreeAssembler());
+                TreeMap<ObjectHistogram, HistogramRecord> map = new TreeMap<>(histogram, new ObjectHistogramNodeDataExtractor());
+                TreeMapNode model = map.getRoot();
                 treeMap.setModel(model);
                 panel.removeAll();
                 panel.add(treeMap, BorderLayout.CENTER);

@@ -34,9 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components.experimental;
+package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-public interface TreeAssembler<T> {
+import java.util.Collection;
 
-    void buildTree(T data, TreeMapNode root);
+import com.redhat.thermostat.client.swing.components.experimental.NodeDataExtractor;
+import com.redhat.thermostat.common.utils.DescriptorConverter;
+import com.redhat.thermostat.vm.heap.analysis.common.HistogramRecord;
+import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
+
+public class ObjectHistogramNodeDataExtractor implements NodeDataExtractor<ObjectHistogram, HistogramRecord> {
+
+    @Override
+    public String getNodeSeparator() {
+        return ".";
+    }
+
+    @Override
+    public String getKey(HistogramRecord record) {
+        String className = record.getClassname();
+        // if className is a primitive type it is converted with its full name
+        return DescriptorConverter.toJavaType(className);
+    }
+
+    @Override
+    public double getWeight(HistogramRecord record) {
+        return record.getTotalSize();
+    }
+
+    @Override
+    public Collection<HistogramRecord> getAsCollection(ObjectHistogram histogram) {
+        return histogram.getHistogram();
+    }
 }
