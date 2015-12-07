@@ -43,6 +43,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.core.progress.ProgressHandle;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
@@ -51,6 +53,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -65,6 +68,7 @@ import com.redhat.thermostat.thread.model.VmDeadLockData;
 
 public class VmDeadLockController {
 
+    private static final Logger logger = LoggingUtils.getLogger(VmDeadLockController.class);
     private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
 
     private static final String NO_DEADLOCK = translate.localize(LocaleResources.NO_DEADLOCK_DETECTED).getContents();
@@ -187,7 +191,7 @@ public class VmDeadLockController {
                 try {
                     parsed = new DeadlockParser().parse(new BufferedReader(new StringReader(rawDeadlockData)));
                 } catch (IOException | ParseException e) {
-                    // TODO log this message
+                    logger.log(Level.FINE, "Failed to parse deadlock data. Visualizations might not show up correctly.", e);
                 }
             }
 
