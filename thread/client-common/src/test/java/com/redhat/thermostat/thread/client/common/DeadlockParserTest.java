@@ -42,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -53,6 +54,7 @@ import org.junit.Test;
 import com.redhat.thermostat.thread.client.common.DeadlockParser;
 import com.redhat.thermostat.thread.client.common.DeadlockParser.Information;
 import com.redhat.thermostat.thread.client.common.DeadlockParser.Lock;
+import com.redhat.thermostat.thread.client.common.DeadlockParser.ParseException;
 import com.redhat.thermostat.thread.client.common.DeadlockParser.Thread;
 import com.redhat.thermostat.thread.client.common.DeadlockParser.Thread.State;
 
@@ -112,6 +114,134 @@ public class DeadlockParserTest {
             assertNotNull(stackTrace);
             assertEquals(3, stackTrace.size());
             assertTrue(stackTrace.get(2).contains("Bar.java:1337"));
+        }
+    }
+    
+    @Test
+    public void testParsingMultipleThreadInfo() throws Exception {
+        String trace = "" +
+                "\"Mallory\" Id=12 WAITING on java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7 owned by \"Alice\" Id=10\n" +
+                "\tat sun.misc.Unsafe.park(Native Method)\n" +
+                "\t-  waiting on java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7\n" +
+                "\tat java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)\n" +
+                "\tat java.util.concurrent.locks.AbstractQueuedSynchronizer.parkAndCheckInterrupt(AbstractQueuedSynchronizer.java:836)\n" +
+                "\tat java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireQueued(AbstractQueuedSynchronizer.java:870)\n" +
+                "\tat java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:1199)\n" +
+                "\tat java.util.concurrent.locks.ReentrantLock$NonfairSync.lock(ReentrantLock.java:209)\n" +
+                "\tat java.util.concurrent.locks.ReentrantLock.lock(ReentrantLock.java:285)\n" +
+                "\tat com.redhat.thermostat.tests.DeadLock$Philosopher.run(DeadLock.java:57)\n" +
+                "\t...\n\n" +
+                "\tNumber of locked synchronizers = 1\n" +
+                "\t- java.util.concurrent.locks.ReentrantLock$NonfairSync@441634c2" +
+                "\n\n\n" +
+                "\"Alice\" Id=10 WAITING on java.util.concurrent.locks.ReentrantLock$NonfairSync@105ff84e owned by \"Bob\" Id=11\n" +
+                "\tat sun.misc.Unsafe.park(Native Method)\n" +
+                "\t-  waiting on java.util.concurrent.locks.ReentrantLock$NonfairSync@105ff84e\n" + 
+                "\tat java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)\n" + 
+                "\tat java.util.concurrent.locks.AbstractQueuedSynchronizer.parkAndCheckInterrupt(AbstractQueuedSynchronizer.java:836)\n" +
+                "\tat java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireQueued(AbstractQueuedSynchronizer.java:870)\n" +
+                "\tat java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:1199)\n" +
+                "\tat java.util.concurrent.locks.ReentrantLock$NonfairSync.lock(ReentrantLock.java:209)\n" +
+                "\tat java.util.concurrent.locks.ReentrantLock.lock(ReentrantLock.java:285)\n" + 
+                "\tat com.redhat.thermostat.tests.DeadLock$Philosopher.run(DeadLock.java:57)\n" +
+                "\t...\n\n" + 
+                "\tNumber of locked synchronizers = 1\n" +
+                "\t- java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7\n" +
+                "\n\n" +
+                "\"Bob\" Id=11 WAITING on java.util.concurrent.locks.ReentrantLock$NonfairSync@441634c2 owned by \"Mallory\" Id=12\n" +
+                "\tat sun.misc.Unsafe.park(Native Method)\n" +
+                "\t-  waiting on java.util.concurrent.locks.ReentrantLock$NonfairSync@441634c2\n" +
+                "\tat java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)\n" + 
+                "\tat java.util.concurrent.locks.AbstractQueuedSynchronizer.parkAndCheckInterrupt(AbstractQueuedSynchronizer.java:836)\n" +
+                "\tat java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireQueued(AbstractQueuedSynchronizer.java:870)\n" + 
+                "\tat java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:1199)\n" + 
+                "\tat java.util.concurrent.locks.ReentrantLock$NonfairSync.lock(ReentrantLock.java:209)\n" +
+                "\tat java.util.concurrent.locks.ReentrantLock.lock(ReentrantLock.java:285)\n" +
+                "\tat com.redhat.thermostat.tests.DeadLock$Philosopher.run(DeadLock.java:57)\n" + 
+                "\t...\n\n" +
+                "\tNumber of locked synchronizers = 1\n" +
+                "\t- java.util.concurrent.locks.ReentrantLock$NonfairSync@105ff84e\n\n\n";
+        doTestMultiTrace(trace);
+    }
+    
+    @Test
+    public void testParsingMultipleThreadInfoNoTabs() throws Exception {
+        String trace = "" +
+                "\"Mallory\" Id=12 WAITING on java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7 owned by \"Alice\" Id=10\n" +
+                "at sun.misc.Unsafe.park(Native Method)\n" +
+                "-  waiting on java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7\n" +
+                "at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)\n" +
+                "at java.util.concurrent.locks.AbstractQueuedSynchronizer.parkAndCheckInterrupt(AbstractQueuedSynchronizer.java:836)\n" +
+                "at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireQueued(AbstractQueuedSynchronizer.java:870)\n" +
+                "at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:1199)\n" +
+                "at java.util.concurrent.locks.ReentrantLock$NonfairSync.lock(ReentrantLock.java:209)\n" +
+                "at java.util.concurrent.locks.ReentrantLock.lock(ReentrantLock.java:285)\n" +
+                "at com.redhat.thermostat.tests.DeadLock$Philosopher.run(DeadLock.java:57)\n" +
+                "...\n\n" +
+                "Number of locked synchronizers = 1\n" +
+                "- java.util.concurrent.locks.ReentrantLock$NonfairSync@441634c2" +
+                "\n\n\n" +
+                "\"Alice\" Id=10 WAITING on java.util.concurrent.locks.ReentrantLock$NonfairSync@105ff84e owned by \"Bob\" Id=11\n" +
+                "at sun.misc.Unsafe.park(Native Method)\n" +
+                "-  waiting on java.util.concurrent.locks.ReentrantLock$NonfairSync@105ff84e\n" + 
+                "at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)\n" + 
+                "at java.util.concurrent.locks.AbstractQueuedSynchronizer.parkAndCheckInterrupt(AbstractQueuedSynchronizer.java:836)\n" +
+                "at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireQueued(AbstractQueuedSynchronizer.java:870)\n" +
+                "at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:1199)\n" +
+                "at java.util.concurrent.locks.ReentrantLock$NonfairSync.lock(ReentrantLock.java:209)\n" +
+                "at java.util.concurrent.locks.ReentrantLock.lock(ReentrantLock.java:285)\n" + 
+                "at com.redhat.thermostat.tests.DeadLock$Philosopher.run(DeadLock.java:57)\n" +
+                "...\n\n" + 
+                "Number of locked synchronizers = 1\n" +
+                "- java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7\n" +
+                "\n\n" +
+                "\"Bob\" Id=11 WAITING on java.util.concurrent.locks.ReentrantLock$NonfairSync@441634c2 owned by \"Mallory\" Id=12\n" +
+                "at sun.misc.Unsafe.park(Native Method)\n" +
+                "-  waiting on java.util.concurrent.locks.ReentrantLock$NonfairSync@441634c2\n" +
+                "at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)\n" + 
+                "at java.util.concurrent.locks.AbstractQueuedSynchronizer.parkAndCheckInterrupt(AbstractQueuedSynchronizer.java:836)\n" +
+                "at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireQueued(AbstractQueuedSynchronizer.java:870)\n" + 
+                "at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:1199)\n" + 
+                "at java.util.concurrent.locks.ReentrantLock$NonfairSync.lock(ReentrantLock.java:209)\n" +
+                "at java.util.concurrent.locks.ReentrantLock.lock(ReentrantLock.java:285)\n" +
+                "at com.redhat.thermostat.tests.DeadLock$Philosopher.run(DeadLock.java:57)\n" + 
+                "...\n\n" +
+                "Number of locked synchronizers = 1\n" +
+                "- java.util.concurrent.locks.ReentrantLock$NonfairSync@105ff84e\n\n\n";
+        doTestMultiTrace(trace);
+    }
+
+    private void doTestMultiTrace(String trace)
+            throws IOException, ParseException {
+        try (BufferedReader reader = new BufferedReader(new StringReader(trace))) {
+            Information parsed = new DeadlockParser().parse(reader);
+
+            assertNotNull(parsed);
+            assertEquals(3, parsed.threads.size());
+
+            Thread mallory = parsed.threads.get(0);
+            assertEquals("Mallory", mallory.name);
+            assertEquals("12", mallory.id);
+            assertEquals(State.WAITING, mallory.state);
+            assertEquals(new Lock("java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7", "10"),
+                    mallory.waitingOn);
+
+            assertEquals(1, mallory.ownedLocks.size());
+            assertEquals(new Lock("java.util.concurrent.locks.ReentrantLock$NonfairSync@441634c2", "12"),
+                    mallory.ownedLocks.get(0));
+
+            List<String> stackTrace = mallory.stackTrace;
+            assertNotNull(stackTrace);
+            assertEquals(8, stackTrace.size());
+            assertTrue(stackTrace.get(7).contains("DeadLock.java:57"));
+            
+            Thread bob = parsed.threads.get(2);
+            assertEquals("Bob", bob.name);
+            assertEquals("11", bob.id);
+            assertEquals(State.WAITING, bob.state);
+            assertEquals(1, bob.ownedLocks.size());
+            List<String> bobStackTrace = bob.stackTrace;
+            assertTrue(bobStackTrace.get(7).contains("Philosopher.run"));
         }
     }
 

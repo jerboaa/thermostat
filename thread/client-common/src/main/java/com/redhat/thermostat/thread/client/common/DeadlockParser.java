@@ -41,7 +41,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -50,6 +49,7 @@ import java.util.regex.Pattern;
 
 public class DeadlockParser {
 
+    @SuppressWarnings("serial")
     public static class ParseException extends Exception {
         public ParseException(String message) {
             super(message);
@@ -166,21 +166,20 @@ public class DeadlockParser {
 
         List<String> stackTrace = new ArrayList<>();
 
-        String PREFIX = "\t";
-
         // read stack trace
         while (true) {
             line = reader.readLine();
 
-            if (line.equals("")) {
+            if (line == null || line.equals("")) {
                 break;
             }
+            line = line.trim();
 
-            if (line.startsWith(PREFIX + "at ")) {
-                stackTrace.add(line.substring((PREFIX + "at ").length()));
-            } else if (line.startsWith(PREFIX + "-  waiting on")) {
+            if (line.startsWith("at ")) {
+                stackTrace.add(line.substring("at ".length()));
+            } else if (line.startsWith("-  waiting on")) {
                 // ignore this
-            } else if (line.startsWith(PREFIX + "...")) {
+            } else if (line.startsWith("...")) {
                 // nothing to do
             } else {
                 throw new ParseException("Unrecognized input: '" + line + "'");
@@ -196,11 +195,12 @@ public class DeadlockParser {
             if (line == null || line.equals("")) {
                 break;
             }
+            line = line.trim();
 
-            if (line.startsWith(PREFIX + TEXT_BEFORE)) {
-                acquiredLocks = Integer.valueOf(line.substring((PREFIX + TEXT_BEFORE).length()));
-            } else if (line.startsWith(PREFIX + "- ")){
-                ownedLocks.add(new Lock(line.substring((PREFIX + "- ").length()), id));
+            if (line.startsWith(TEXT_BEFORE)) {
+                acquiredLocks = Integer.valueOf(line.substring(TEXT_BEFORE.length()));
+            } else if (line.startsWith("- ")){
+                ownedLocks.add(new Lock(line.substring("- ".length()), id));
             }
         }
 
