@@ -42,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +55,7 @@ public class TreeMapTest {
     final private double SOME_ROOT_WEIGHT = 25.0;
     final private double DELTA = 0.01;
     final private double SOME_WEIGHT = 3.14;
+    final private String NODE_SEPARATOR = ".";
 
     private ArrayList<Pair<String, Double>> data;
     private TreeMapNode root;
@@ -108,13 +110,8 @@ public class TreeMapTest {
                 new NodeDataExtractor<ArrayList<Pair<String, Double>>, Pair<String, Double>>() {
 
                     @Override
-                    public String getNodeSeparator() {
-                        return ".";
-                    }
-
-                    @Override
-                    public String getKey(Pair<String, Double> element) {
-                        return element.getFirst();
+                    public String[] getNodes(Pair<String, Double> element) {
+                        return element.getFirst().split(Pattern.quote(NODE_SEPARATOR));
                     }
 
                     @Override

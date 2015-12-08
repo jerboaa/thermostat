@@ -37,7 +37,6 @@
 package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * This class represents a treemap and facilitates its construction from information available in
@@ -64,32 +63,22 @@ public class TreeMap<S, T> {
         return root;
     }
 
-    private static <S, T> void buildTree(S data, TreeMapNode root, NodeDataExtractor<S, T> extractor) {
+    private static <S, T> void buildTree(S data, TreeMapNode root,
+                                         NodeDataExtractor<S, T> extractor) {
 
-        for(T element: extractor.getAsCollection(data)) {
-            String key = extractor.getKey(element);
-            String splitToken = extractor.getNodeSeparator();
-            double weight = extractor.getWeight(element);
-
+        for (T element: extractor.getAsCollection(data)) {
             TreeMapNode lastProcessed = root;
-            while (!key.equals("")) {
+            for (String node : extractor.getNodes(element)) {
+                TreeMapNode child = searchNode(lastProcessed, node);
 
-                String nodeId = key.split(Pattern.quote(splitToken))[0];
-
-                TreeMapNode child = searchNode(lastProcessed, nodeId);
                 if (child == null) {
-                    child = new TreeMapNode(nodeId, 0);
+                    child = new TreeMapNode(node, 0);
                     lastProcessed.addChild(child);
                 }
 
                 lastProcessed = child;
-
-                key = key.substring(nodeId.length());
-                if (key.startsWith(splitToken)) {
-                    key = key.substring(1);
-                }
             }
-            lastProcessed.setRealWeight(weight);
+            lastProcessed.setRealWeight(extractor.getWeight(element));
         }
     }
     

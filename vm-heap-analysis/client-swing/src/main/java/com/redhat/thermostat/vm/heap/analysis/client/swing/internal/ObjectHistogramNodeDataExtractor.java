@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 import com.redhat.thermostat.client.swing.components.experimental.NodeDataExtractor;
 import com.redhat.thermostat.common.utils.DescriptorConverter;
@@ -46,15 +47,10 @@ import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 public class ObjectHistogramNodeDataExtractor implements NodeDataExtractor<ObjectHistogram, HistogramRecord> {
 
     @Override
-    public String getNodeSeparator() {
-        return ".";
-    }
-
-    @Override
-    public String getKey(HistogramRecord record) {
+    public String[] getNodes(HistogramRecord record) {
         String className = record.getClassname();
         // if className is a primitive type it is converted with its full name
-        return DescriptorConverter.toJavaType(className);
+        return DescriptorConverter.toJavaType(className).split(Pattern.quote("."));
     }
 
     @Override
