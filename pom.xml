@@ -97,10 +97,10 @@
       </properties>
     </profile>
     <profile>
-      <!-- Temporary workaround for PR2282: Caciocavallo tests fail with JDK 8 u40 -->
-      <id>java-8-skip-cacio-tests</id>
+      <!-- Workaround for PR2282: Caciocavallo tests fail with JDK 8 u40+ -->
+      <id>java-8-plus-skip-cacio-tests</id>
       <activation>
-        <jdk>1.8</jdk>
+        <jdk>[1.8,)</jdk>
       </activation>
       <build>
         <plugins>
