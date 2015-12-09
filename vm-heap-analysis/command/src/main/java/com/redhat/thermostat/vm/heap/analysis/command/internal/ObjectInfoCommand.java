@@ -51,11 +51,11 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaField;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
-import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
-import com.sun.tools.hat.internal.model.Snapshot;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaClass;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaField;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObjectVisitor;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.Snapshot;
 
 public class ObjectInfoCommand extends AbstractCommand {
 

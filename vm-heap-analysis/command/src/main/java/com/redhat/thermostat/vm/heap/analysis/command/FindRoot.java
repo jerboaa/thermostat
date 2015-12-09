@@ -44,7 +44,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 public class FindRoot {
 

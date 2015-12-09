@@ -84,7 +84,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapObjectUI;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 /**
  * A Panel that displays JavaHeapObjects and referrers and references.

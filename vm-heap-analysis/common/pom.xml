@@ -113,6 +113,12 @@
       <artifactId>thermostat-storage-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- jhat forked sources -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-heap-analysis-hprof</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.servicemix.bundles</groupId>
       <artifactId>org.apache.servicemix.bundles.lucene</artifactId>

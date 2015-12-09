@@ -65,6 +65,7 @@
       </environments>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.hprof</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
@@ -122,6 +123,7 @@
       </environments>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.hprof</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
@@ -182,6 +184,7 @@
       </environments>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.hprof</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
@@ -236,6 +239,7 @@
       </environments>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.hprof</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
@@ -290,6 +294,7 @@
       </environments>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.hprof</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
@@ -344,6 +349,7 @@
       </environments>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.hprof</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
@@ -392,6 +398,7 @@
       </environments>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.hprof</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
@@ -422,6 +429,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.client.core</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.client.swing</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.hprof</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
@@ -434,6 +442,7 @@
       <name>agent</name>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.hprof</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.agent</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
         <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>

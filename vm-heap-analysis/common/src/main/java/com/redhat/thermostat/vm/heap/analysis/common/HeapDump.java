@@ -69,9 +69,9 @@ import org.apache.lucene.store.RAMDirectory;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
-import com.sun.tools.hat.internal.model.Snapshot;
-import com.sun.tools.hat.internal.parser.Reader;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.Snapshot;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.parser.Reader;
 
 /**
  * NOTE: This class is thread-safe with respect to loading the heapdump and creating the index.

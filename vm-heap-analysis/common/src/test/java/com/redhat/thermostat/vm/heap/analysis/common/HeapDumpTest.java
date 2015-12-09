@@ -54,9 +54,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
-import com.sun.tools.hat.internal.model.Snapshot;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaClass;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.Snapshot;
 
 /*
  * This testcase uses a minimalistic heapdump that is stored as binary in

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 public class PrintObjectUtils {
 

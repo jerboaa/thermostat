@@ -53,7 +53,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.command.FindRoot;
 import com.redhat.thermostat.vm.heap.analysis.command.HeapPath;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 import static com.redhat.thermostat.common.utils.IteratorUtils.head;
 

@@ -58,8 +58,8 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvide
 import com.redhat.thermostat.vm.heap.analysis.command.FindRoot;
 import com.redhat.thermostat.vm.heap.analysis.command.HeapPath;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaClass;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 public class ObjectRootsControllerTest {
 

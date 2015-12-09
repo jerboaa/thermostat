@@ -42,9 +42,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaClass;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
+
+@SuppressWarnings("serial")
 public class ObjectHistogram implements Serializable {
 
     private Map<String, HistogramRecord> histogram = new HashMap<>();

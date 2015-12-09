@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Iterator;
@@ -53,11 +55,9 @@ import com.redhat.thermostat.vm.heap.analysis.command.HeapPath;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
-import com.sun.tools.hat.internal.model.Root;
-import com.sun.tools.hat.internal.model.Snapshot;
-
-import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.Root;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.Snapshot;
 
 public class FindRootCommand extends AbstractCommand {
 

@@ -40,9 +40,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 
-import com.sun.tools.hat.internal.model.JavaHeapObject;
-import com.sun.tools.hat.internal.model.Snapshot;
-import com.sun.tools.hat.internal.parser.Reader;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.Snapshot;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.parser.Reader;
 
 public class HistogramLoader {
 

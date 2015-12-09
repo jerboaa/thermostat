@@ -52,11 +52,11 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView.Obje
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaField;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
-import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
-import com.sun.tools.hat.internal.model.JavaThing;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaClass;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaField;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObjectVisitor;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaThing;
 
 public class ObjectDetailsController {
 

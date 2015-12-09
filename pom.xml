@@ -469,6 +469,7 @@
            <excludes>
              <exclude>**/src/test/resources/**</exclude>
              <exclude>**/archetype-resources/**</exclude>
+             <exclude>vm-heap-analysis/hprof/**</exclude>
            </excludes>
          </configuration>
          <executions>

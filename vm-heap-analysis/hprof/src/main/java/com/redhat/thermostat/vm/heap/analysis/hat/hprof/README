@@ -1,0 +1,15 @@
+The jhat tool has been removed from OpenJDK proper (JEP 241[1]). jhat
+hprof file parser/validator are needed for parsing heap-dumps in hprof
+binary format. The old packages from OpenJDK 9's test library were copied
+here (retrieved at revision 5825bc3649dd - top level directory):
+
+jdk.test.lib.hprof.model -> com.redhat.thermostat.vm.heap.analysis.common.hat.hprof.model
+jdk.test.lib.hprof.parser -> com.redhat.thermostat.vm.heap.analysis.common.hat.hprof.parser
+jdk.test.lib.hprof.util -> com.redhat.thermostat.vm.heap.analysis.common.hat.hprof.util
+ 
+jhat was added in OpenJDK 6 and its original implementation was from 
+java.net HAT project [3].
+
+[1] https://bugs.openjdk.java.net/browse/JDK-8059039
+[2] https://bugs.openjdk.java.net/browse/JDK-8059047
+[3] https://java.net/projects/hat

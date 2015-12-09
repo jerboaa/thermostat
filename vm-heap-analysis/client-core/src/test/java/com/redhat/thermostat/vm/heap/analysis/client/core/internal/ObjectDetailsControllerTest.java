@@ -70,8 +70,8 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvi
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaClass;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 public class ObjectDetailsControllerTest {
 
