@@ -435,8 +435,10 @@ public class IntegrationTest {
 
     private static int getPid(Process process) throws Exception {
         final String UNIX_PROCESS_CLASS = "java.lang.UNIXProcess";
-        if (!process.getClass().getName().equals(UNIX_PROCESS_CLASS)) {
-            throw new IllegalArgumentException("can only kill " + UNIX_PROCESS_CLASS + "; input is a " + process.getClass());
+        // JDK 9 renamed this class to ProcessImpl
+        final String PROCESS_IMPL_CLASS = "java.lang.ProcessImpl";
+        if (!(process.getClass().getName().equals(UNIX_PROCESS_CLASS) || process.getClass().getName().equals(PROCESS_IMPL_CLASS))) {
+            throw new IllegalArgumentException("can only kill " + UNIX_PROCESS_CLASS + " or " + PROCESS_IMPL_CLASS + "; input is a " + process.getClass());
         }
 
         Class<?> processClass = process.getClass();
