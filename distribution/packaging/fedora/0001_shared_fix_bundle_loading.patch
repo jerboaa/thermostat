@@ -159,7 +159,7 @@ diff --git a/distribution/config/commands/vm-stat.properties b/distribution/conf
 diff --git a/distribution/scripts/thermostat-command-channel b/distribution/scripts/thermostat-command-channel
 --- a/distribution/scripts/thermostat-command-channel
 +++ b/distribution/scripts/thermostat-command-channel
-@@ -61,7 +61,7 @@
+@@ -54,7 +54,7 @@
  BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
  BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
  BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
@@ -187,12 +187,12 @@ diff --git a/killvm/distribution/thermostat-plugin.xml b/killvm/distribution/the
 diff --git a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
 --- a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
 +++ b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
-@@ -5,4 +5,5 @@
-         thermostat-plugin-validator-${project.version}.jar, \
-         thermostat-launcher-${project.version}.jar, \
+@@ -7,3 +7,6 @@
          jline-${jline.version}.jar, \
--        commons-cli-${commons-cli.version}.jar
-+        commons-cli-${commons-cli.version}.jar, \
+         commons-cli-${commons-cli.version}.jar, \
+         org.apache.felix.scr-${felix.scr.version}.jar, \
++        org.osgi.compendium-${osgi.compendium.version}.jar, \
++        kxml2-${kxml2.version}.jar, \
 +        jansi-${jansi.version}.jar
 diff --git a/setup/distribution/thermostat-plugin.xml b/setup/distribution/thermostat-plugin.xml
 --- a/setup/distribution/thermostat-plugin.xml

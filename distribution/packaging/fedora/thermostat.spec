@@ -100,6 +100,9 @@ __DEFAULT_RELEASE__ 6
 
 %endif
 
+%global kxml2_version                 2.3.0
+%global osgi_compendium_maven_version 1.4.0
+
 # apache-commons-collections
 %global collections_bundle_version 3.2.1
 
@@ -298,6 +301,14 @@ BuildRequires: automake
 BuildRequires: libtool
 # laf-utils JNI need pkconfig files for gtk2+
 BuildRequires: gtk2-devel
+# maven-scr-plugin is needed for DS annotation processing at build-time
+BuildRequires: %{?scl_prefix}mvn(org.apache.felix:maven-scr-plugin)
+# DS annotation processing at build-time (felix annotations)
+BuildRequires: %{?scl_prefix}mvn(org.apache.felix:org.apache.felix.scr.annotations)
+# felix-scr is the DS runtime we use
+BuildRequires: %{?scl_prefix}mvn(org.apache.felix:org.apache.felix.scr)
+BuildRequires: %{?scl_prefix}mvn(org.osgi:org.osgi.compendium)
+BuildRequires: %{?scl_prefix}mvn(net.sf.kxml:kxml2)
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.felix:org.apache.felix.framework)
 BuildRequires: %{?scl_prefix_maven}mvn(org.fusesource:fusesource-pom:pom:)
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.commons:commons-cli)
@@ -686,7 +697,9 @@ popd
                  -Dosgi.compendium.osgi-version=4.1.0 \
                  -Djgraphx.osgi.version=%{jgraphx_bundle_version} \
                  -Djetty.javax.servlet.osgi.version=%{javax_servlet_bundle_version} \
-                 -Djavax.servlet.bsn=%{javax_servlet_bsn}
+                 -Djavax.servlet.bsn=%{javax_servlet_bsn} \
+                 -Dkxml2.version=%{kxml2_version} \
+                 -Dosgi.compendium.version=%{osgi_compendium_maven_version}
 
 %{?scl:EOF}
 
@@ -797,6 +810,16 @@ for plugin_name in $(ls); do
   popd
 done
 popd
+
+# For some reason the osgi-compendium symlink gets created with a
+# SYSTEM version, but we expect the real version in bootstrap bundles
+# config in main jar.
+pushd %{buildroot}%{thermostat_home}/libs
+  if [ ! -e org.osgi.compendium-%{osgi_compendium_maven_version}.jar ]; then
+    ln -s org.osgi.compendium*.jar org.osgi.compendium-%{osgi_compendium_maven_version}.jar
+  fi
+popd
+
 
 # Add unversioned symlink to netty for command channel script
 ln -s ./netty-%{netty_bundle_version}.jar \

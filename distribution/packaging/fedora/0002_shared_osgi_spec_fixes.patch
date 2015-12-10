@@ -482,7 +482,7 @@ diff --git a/host-overview/client-swing/pom.xml b/host-overview/client-swing/pom
 diff --git a/keyring/pom.xml b/keyring/pom.xml
 --- a/keyring/pom.xml
 +++ b/keyring/pom.xml
-@@ -146,14 +146,8 @@
+@@ -170,14 +170,8 @@
      </dependency>
      
      <dependency>
@@ -706,7 +706,7 @@ diff --git a/numa/common/pom.xml b/numa/common/pom.xml
 diff --git a/pom.xml b/pom.xml
 --- a/pom.xml
 +++ b/pom.xml
-@@ -197,14 +197,26 @@
+@@ -198,14 +198,26 @@
      <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>
      <lucene-core.bundle.symbolic-name>org.apache.servicemix.bundles.lucene</lucene-core.bundle.symbolic-name>
      <!--
@@ -735,9 +735,9 @@ diff --git a/pom.xml b/pom.xml
      <osgi.compendium.bundle.symbolic-name>osgi.cmpn</osgi.compendium.bundle.symbolic-name>
 -    <felix.framework.version>4.2.0</felix.framework.version>
  
-     <netty.version>3.2.4.Final</netty.version>
-     <httpcomponents.core.version>4.3.2</httpcomponents.core.version>
-@@ -568,16 +580,6 @@
+     <felix.scr.version>1.8.2</felix.scr.version>
+     <felix.scr.annotations.version>1.9.12</felix.scr.annotations.version>
+@@ -573,16 +585,6 @@
        </dependency>
  
        <dependency>
@@ -1353,7 +1353,7 @@ diff --git a/vm-heap-analysis/command/pom.xml b/vm-heap-analysis/command/pom.xml
 diff --git a/vm-heap-analysis/common/pom.xml b/vm-heap-analysis/common/pom.xml
 --- a/vm-heap-analysis/common/pom.xml
 +++ b/vm-heap-analysis/common/pom.xml
-@@ -93,14 +93,8 @@
+@@ -107,14 +107,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
