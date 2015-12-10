@@ -71,6 +71,7 @@
         <include>com.redhat.thermostat:thermostat-system-backend</include>
         <include>com.redhat.thermostat:thermostat-laf-utils</include>
         <include>org.osgi:org.osgi.compendium</include>
+        <include>org.apache:org.apache.felix.scr</include>
       </includes>
       <excludes>
         <exclude>org.osgi:org.osgi.core</exclude>

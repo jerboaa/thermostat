@@ -213,6 +213,10 @@
     <osgi.compendium.bundle.symbolic-name>osgi.cmpn</osgi.compendium.bundle.symbolic-name>
     <felix.framework.version>4.2.0</felix.framework.version>
 
+    <felix.scr.version>1.8.2</felix.scr.version>
+    <felix.scr.annotations.version>1.9.12</felix.scr.annotations.version>
+    <kxml2.version>2.3.0</kxml2.version>
+
     <netty.version>3.2.4.Final</netty.version>
     <httpcomponents.core.version>4.3.2</httpcomponents.core.version>
     <httpcomponents.client.version>4.3.4</httpcomponents.client.version>
@@ -591,6 +595,22 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.framework</artifactId>
         <version>${felix.framework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.scr</artifactId>
+        <version>${felix.scr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.sf.kxml</groupId>
+        <artifactId>kxml2</artifactId>
+        <version>${kxml2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.scr.annotations</artifactId>
+        <version>${felix.scr.annotations.version}</version>
       </dependency>
     
     </dependencies>
