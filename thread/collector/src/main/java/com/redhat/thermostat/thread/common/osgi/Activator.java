@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.thread.common.osgi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -43,34 +46,46 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.dao.impl.LockInfoDaoImpl;
 import com.redhat.thermostat.thread.dao.impl.ThreadDaoImpl;
 
 public class Activator implements BundleActivator {
 
     @SuppressWarnings("rawtypes")
-    private ServiceRegistration reg;
+    private List<ServiceRegistration> registrations = new ArrayList<>();
 
     @Override
     public void start(BundleContext context) throws Exception {
-
-
         @SuppressWarnings({ "rawtypes", "unchecked" })
         ServiceTracker tracker = new ServiceTracker(context, Storage.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
                 Storage storage = (Storage) context.getService(reference);
                 ThreadDao threadDao = new ThreadDaoImpl(storage);
-                reg = context.registerService(ThreadDao.class.getName(), threadDao, null);
+                registrations.add(context.registerService(ThreadDao.class.getName(), threadDao, null));
                 return super.addingService(reference);
             }
         };
         tracker.open();
+
+        ServiceTracker lockInfoDaoTracker = new ServiceTracker(context, Storage.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) context.getService(reference);
+                LockInfoDao lockInfoDao = new LockInfoDaoImpl(storage);
+                registrations.add(context.registerService(LockInfoDao.class.getName(), lockInfoDao, null));
+                return super.addingService(reference);
+            }
+        };
+        lockInfoDaoTracker.open();
+
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (reg != null) {
+        for (ServiceRegistration reg : registrations) {
             reg.unregister();
         }
     }

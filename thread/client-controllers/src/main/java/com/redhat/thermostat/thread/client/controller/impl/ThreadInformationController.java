@@ -58,6 +58,7 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSel
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView.ThreadAction;
 import com.redhat.thermostat.thread.client.controller.impl.cache.AppCache;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,6 +69,7 @@ public class ThreadInformationController implements InformationServiceController
 
     private VmRef ref;
     private VmInfoDAO vmInfoDAO;
+    private LockInfoDao lockInfoDao;
 
     private static final Logger logger = LoggingUtils.getLogger(ThreadInformationController.class);
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
@@ -82,6 +84,7 @@ public class ThreadInformationController implements InformationServiceController
 
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        VmInfoDAO vmInfoDao,
+                                       LockInfoDao lockInfoDao,
                                        ThreadCollectorFactory collectorFactory, 
                                        ThreadViewProvider viewFactory,
                                        ProgressNotifier notifier)
@@ -90,6 +93,7 @@ public class ThreadInformationController implements InformationServiceController
         this.ref = ref;
         this.notifier = notifier;
         this.vmInfoDAO = vmInfoDao;
+        this.lockInfoDao = lockInfoDao;
 
         collector = collectorFactory.getCollector(ref);
 
@@ -215,6 +219,13 @@ public class ThreadInformationController implements InformationServiceController
                                              collector,
                                              tf.createTimer());
         threadTimeline.initialize();
+
+        CommonController lockTableController =
+                new LockController(view.createLockView(),
+                                   tf.createTimer(),
+                                   lockInfoDao,
+                                   ref);
+        lockTableController.initialize();
     }
 }
 

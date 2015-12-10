@@ -108,6 +108,7 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     public abstract ThreadTableView createThreadTableView();
     public abstract ThreadTimelineView createThreadTimelineView();
     public abstract ThreadCountView createThreadCountView();
+    public abstract LockView createLockView();
     
     public abstract void displayWarning(LocalizedString warning);
 

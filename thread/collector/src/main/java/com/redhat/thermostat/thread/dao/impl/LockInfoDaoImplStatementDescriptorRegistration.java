@@ -34,46 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.thread.dao.impl;
 
-import org.junit.Test;
+import java.util.HashSet;
+import java.util.Set;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
+import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
+import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
 
-import static org.junit.Assert.assertEquals;
+public class LockInfoDaoImplStatementDescriptorRegistration
+    implements StatementDescriptorRegistration {
 
-public class ThreadModelPojosTest {
+    @Override
+    public Set<String> getStatementDescriptors() {
+        Set<String> set = new HashSet<>();
 
-    private static final Class<?>[] CLASSES_LIST = new Class[] {
-        LockInfo.class,
-        ThreadHarvestingStatus.class,
-        ThreadState.class,
-        ThreadSummary.class,
-        ThreadContentionSample.class,
-        VmDeadLockData.class,
-    };
+        set.add(LockInfoDaoImpl.ADD_LOCK_INFO);
 
-    @Test
-    public void testBasicInstantiation() {
-        ArrayList<Class<?>> failureClasses = new ArrayList<>();
-        for (Class<?> clazz : CLASSES_LIST) {
-            try {
-                // pojo converters use this
-                clazz.newInstance();
-                // pass
+        String latestStatDescriptor = String.format(
+                VmBoundaryPojoGetter.DESC_NEWEST_VM_STAT,
+                LockInfoDao.LOCK_INFO_CATEGORY.getName());
 
-                // pojo converters fail at runtime if the constructor is not public
-                if (!Modifier.isPublic(clazz.getConstructor().getModifiers())) {
-                    throw new IllegalAccessError("constructor is not public");
-                }
-            } catch (ReflectiveOperationException e) {
-                failureClasses.add(clazz);
-            }
-        }
-        String msg = "Should be able to instantiate class using no-arg constructor: "
-                + failureClasses;
-        assertEquals(msg, 0, failureClasses.size());
+        set.add(latestStatDescriptor);
+
+        String rangeStatDescriptor = String.format(
+                VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
+                LockInfoDao.LOCK_INFO_CATEGORY.getName());
+        set.add(rangeStatDescriptor);
+
+        return set;
     }
-}
 
+}

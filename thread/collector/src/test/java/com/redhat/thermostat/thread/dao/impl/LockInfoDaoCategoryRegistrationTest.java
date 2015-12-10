@@ -34,46 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.thread.dao.impl;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
 
 import org.junit.Test;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-
-import static org.junit.Assert.assertEquals;
-
-public class ThreadModelPojosTest {
-
-    private static final Class<?>[] CLASSES_LIST = new Class[] {
-        LockInfo.class,
-        ThreadHarvestingStatus.class,
-        ThreadState.class,
-        ThreadSummary.class,
-        ThreadContentionSample.class,
-        VmDeadLockData.class,
-    };
+public class LockInfoDaoCategoryRegistrationTest {
 
     @Test
-    public void testBasicInstantiation() {
-        ArrayList<Class<?>> failureClasses = new ArrayList<>();
-        for (Class<?> clazz : CLASSES_LIST) {
-            try {
-                // pojo converters use this
-                clazz.newInstance();
-                // pass
-
-                // pojo converters fail at runtime if the constructor is not public
-                if (!Modifier.isPublic(clazz.getConstructor().getModifiers())) {
-                    throw new IllegalAccessError("constructor is not public");
-                }
-            } catch (ReflectiveOperationException e) {
-                failureClasses.add(clazz);
-            }
-        }
-        String msg = "Should be able to instantiate class using no-arg constructor: "
-                + failureClasses;
-        assertEquals(msg, 0, failureClasses.size());
+    public void verifyKnownsCategory() {
+        Set<String> names =
+                new LockInfoDaoCategoryRegistration().getCategoryNames();
+        assertEquals(1, names.size());
+        assertTrue(names.contains("vm-thread-lock"));
     }
-}
 
+}

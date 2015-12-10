@@ -34,46 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.thread.harvester;
 
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
 
-import static org.junit.Assert.assertEquals;
+public class LockInfoBackendTest {
 
-public class ThreadModelPojosTest {
+    private LockInfoBackend backend;
 
-    private static final Class<?>[] CLASSES_LIST = new Class[] {
-        LockInfo.class,
-        ThreadHarvestingStatus.class,
-        ThreadState.class,
-        ThreadSummary.class,
-        ThreadContentionSample.class,
-        VmDeadLockData.class,
-    };
+    @Before
+    public void setup() {
+        LockInfoDao lockInfoDao = mock(LockInfoDao.class);
+
+        Version version = mock(Version.class);
+        when(version.getVersionNumber()).thenReturn("0.0.0");
+
+        VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
+
+        WriterID id = mock(WriterID.class);
+        backend = new LockInfoBackend(lockInfoDao, version, registrar, id);
+    }
 
     @Test
-    public void testBasicInstantiation() {
-        ArrayList<Class<?>> failureClasses = new ArrayList<>();
-        for (Class<?> clazz : CLASSES_LIST) {
-            try {
-                // pojo converters use this
-                clazz.newInstance();
-                // pass
-
-                // pojo converters fail at runtime if the constructor is not public
-                if (!Modifier.isPublic(clazz.getConstructor().getModifiers())) {
-                    throw new IllegalAccessError("constructor is not public");
-                }
-            } catch (ReflectiveOperationException e) {
-                failureClasses.add(clazz);
-            }
-        }
-        String msg = "Should be able to instantiate class using no-arg constructor: "
-                + failureClasses;
-        assertEquals(msg, 0, failureClasses.size());
+    public void testOrderValue() {
+        int order = backend.getOrderValue();
+        assertTrue(order >= Ordered.ORDER_THREAD_GROUP);
+        assertTrue(order < Ordered.ORDER_USER_GROUP);
     }
-}
 
+}

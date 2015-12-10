@@ -45,6 +45,7 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.thread.client.common.view.LockView;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
@@ -74,6 +75,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     private SwingVmDeadLockView vmDeadLockView;
     private SwingThreadTimelineView threadTimelineView;
     private SwingThreadDetailsView threadDetailsView;
+    private SwingLockView lockView;
 
     private JTabbedPane topPane;
     private JTabbedPane bottomPane;
@@ -86,6 +88,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     
     private UIDefaults uiDefaults;
     private boolean viewControlsEnabled = true;
+
 
     public SwingThreadView(UIDefaults uiDefaults) {
         
@@ -164,6 +167,11 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         comp.setName("timeline");
         topPane.addTab(t.localize(LocaleResources.TIMELINE).getContents(), comp);
         
+        lockView = new SwingLockView();
+        comp = lockView.getUiComponent();
+        comp.setName("lock");
+        topPane.addTab("Locks", comp);
+
         panel.getSplitPane().setTopComponent(topPane);
     }
     
@@ -275,6 +283,11 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     @Override
     public ThreadCountView createThreadCountView() {
         return threadCountView;
+    }
+
+    @Override
+    public LockView createLockView() {
+        return lockView;
     }
 }
 

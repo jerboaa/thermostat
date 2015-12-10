@@ -55,7 +55,9 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.harvester.LockInfoBackend;
 import com.redhat.thermostat.thread.harvester.ThreadBackend;
 import com.redhat.thermostat.thread.harvester.ThreadCountBackend;
 import com.redhat.thermostat.thread.harvester.ThreadHarvester;
@@ -73,6 +75,8 @@ public class Activator implements BundleActivator {
     private ThreadBackend backend;
 
     private MultipleServiceTracker threadCountTracker;
+
+    private MultipleServiceTracker lockInfoTracker;
     
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -104,7 +108,32 @@ public class Activator implements BundleActivator {
             }
         });
         threadCountTracker.open();
-        
+
+        Class<?>[] lockInfoDeps = new Class<?>[] {
+            WriterID.class,
+            LockInfoDao.class,
+        };
+        lockInfoTracker = new MultipleServiceTracker(context, lockInfoDeps, new Action() {
+
+            private ServiceRegistration<Backend> registration;
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                LockInfoDao dao = (LockInfoDao) services.get(LockInfoDao.class.getName());
+                Objects.requireNonNull(dao);
+                LockInfoBackend lockInfoBackend = new LockInfoBackend(dao, VERSION, VM_STATUS_REGISTRAR, writerId);
+                registration = context.registerService(Backend.class, lockInfoBackend, null);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                registration.unregister();
+                registration = null;
+            }
+        });
+        lockInfoTracker.open();
+
         Class<?>[] deps = new Class<?>[] {
                 MXBeanConnectionPool.class,
                 WriterID.class,
@@ -162,6 +191,7 @@ public class Activator implements BundleActivator {
         }
 
         threadCountTracker.close();
+        lockInfoTracker.close();
 
         backendRegistration.unregister();
 

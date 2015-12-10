@@ -86,18 +86,26 @@ public class ThreadDAOCategoryRegistrationTest {
         Set<String> expectedClassNames = new HashSet<>();
         expectedClassNames.add(ThreadDAOCategoryRegistration.class.getName());
         expectedClassNames.add(DAOImplCategoryRegistration.class.getName());
-        ServiceLoader<CategoryRegistration> loader = ServiceLoader.load(CategoryRegistration.class, ThreadDAOCategoryRegistration.class.getClassLoader());
+        List<String> loadedCategories = new ArrayList<>();
+        for (CategoryRegistration r: ServiceLoader.load(CategoryRegistration.class, ThreadDAOCategoryRegistration.class.getClassLoader())) {
+            loadedCategories.add(r.getClass().getName());
+        }
+
+        for (String name : expectedClassNames) {
+            assertTrue(loadedCategories.contains(name));
+        }
+
         List<CategoryRegistration> registrations = new ArrayList<>(1);
         CategoryRegistration threadCatReg = null;
-        for (CategoryRegistration r: loader) {
-            assertTrue(expectedClassNames.contains(r.getClass().getName()));
+        for (CategoryRegistration r: ServiceLoader.load(CategoryRegistration.class, ThreadDAOCategoryRegistration.class.getClassLoader())) {
             if (r.getClass().getName().equals(ThreadDAOCategoryRegistration.class.getName())) {
                 threadCatReg = r;
             }
             registrations.add(r);
         }
+
         // storage-core + this module
-        assertEquals(2, registrations.size());
+        assertEquals(3, registrations.size());
         assertNotNull(threadCatReg);
         assertEquals(EXPECTED_CATEGORIES, threadCatReg.getCategoryNames().size());
     }

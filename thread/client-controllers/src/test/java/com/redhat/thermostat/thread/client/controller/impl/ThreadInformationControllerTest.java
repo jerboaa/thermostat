@@ -51,9 +51,11 @@ import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
+import com.redhat.thermostat.thread.client.common.view.LockView;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
@@ -86,11 +88,13 @@ public class ThreadInformationControllerTest {
 
     private VmInfo vmInfo;
     private VmInfoDAO vmInfoDao;
+    private LockInfoDao lockInfoDao;
 
     private ThreadTableView threadTableView;
     private VmDeadLockView deadLockView;
     private ThreadTimelineView threadTimelineView;
     private ThreadCountView threadCountView;
+    private LockView lockView;
 
     @Before
     public void setUp() {
@@ -100,6 +104,7 @@ public class ThreadInformationControllerTest {
         when(vmInfo.isAlive()).thenReturn(true);
         vmInfoDao = mock(VmInfoDAO.class);
         when(vmInfoDao.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
+        lockInfoDao = mock(LockInfoDao.class);
         setUpTimers();
         setupCache();
         setupExecutor();
@@ -111,6 +116,7 @@ public class ThreadInformationControllerTest {
         threadTableView = mock(ThreadTableView.class);
         threadTimelineView = mock(ThreadTimelineView.class);
         threadCountView = mock(ThreadCountView.class);
+        lockView = mock(LockView.class);
         
         view = mock(ThreadView.class);
         viewFactory = mock(ThreadViewProvider.class);
@@ -120,6 +126,7 @@ public class ThreadInformationControllerTest {
         when(view.createThreadTableView()).thenReturn(threadTableView);
         when(view.createThreadTimelineView()).thenReturn(threadTimelineView);
         when(view.createThreadCountView()).thenReturn(threadCountView);
+        when(view.createLockView()).thenReturn(lockView);
 
     }
     
@@ -165,7 +172,7 @@ public class ThreadInformationControllerTest {
 
         ProgressNotifier notifier = mock(ProgressNotifier.class);
 
-        controller = new ThreadInformationController(ref, appService, vmInfoDao,
+        controller = new ThreadInformationController(ref, appService, vmInfoDao, lockInfoDao,
                                                      collectorFactory,
                                                      viewFactory, notifier);
     }
@@ -207,7 +214,8 @@ public class ThreadInformationControllerTest {
         ArgumentCaptor<Runnable> longRunningTaskCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(appExecutor).execute(longRunningTaskCaptor.capture());
 
-        controller = new ThreadInformationController(ref, appService, vmInfoDao,
+        controller = new ThreadInformationController(ref, appService,
+                                                     vmInfoDao, lockInfoDao,
                                                      collectorFactory,
                                                      viewFactory, notifier);
 

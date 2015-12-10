@@ -37,64 +37,48 @@
 package com.redhat.thermostat.thread.dao.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
+import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 
-public class ThreadDAOImplStatementBeanAdapterRegistrationTest {
-    
+public class LockInfoDaoImplStatementDescriptorRegistrationTest {
+
     @Test
-    public void registersAllDescriptors() {
-        ThreadDaoImplStatementDescriptorRegistration reg = new ThreadDaoImplStatementDescriptorRegistration();
-        Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(14, descriptors.size());
-        assertFalse("null statement not allowed", descriptors.contains(null));
+    public void verifyExportsStatements() {
+        Set<String> statements =
+                new LockInfoDaoImplStatementDescriptorRegistration().getStatementDescriptors();
+
+        assertEquals(3, statements.size());
     }
-    
+
     /*
      * The web storage end-point uses service loader in order to determine the
-     * list of trusted/known registrations. This test is to ensure service loading
+     * list of trusted/known categories. This test is to ensure service loading
      * works for this module's regs. E.g. renaming of the impl class without
-     * changing META-INF/services/com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration
+     * changing META-INF/com.redhat.thermostat.storage.core.auth.CategoryRegistration
      */
     @Test
-    public void serviceLoaderCanLoadRegistration() {
-        Set<String> expectedClassNames = new HashSet<>();
-        expectedClassNames.add(DAOImplStatementDescriptorRegistration.class.getName());
-        expectedClassNames.add(ThreadDaoImplStatementDescriptorRegistration.class.getName());
-        List<String> loadedCategories = new ArrayList<>();
-        for (StatementDescriptorRegistration r: ServiceLoader.load(StatementDescriptorRegistration.class, ThreadDaoImplStatementDescriptorRegistration.class.getClassLoader())) {
-            loadedCategories.add(r.getClass().getName());
-        }
-
-        for (String name : expectedClassNames) {
-            assertTrue(loadedCategories.contains(name));
-        }
-
-        List<StatementDescriptorRegistration> registrations = new ArrayList<>(1);
-        StatementDescriptorRegistration threadDaoReg = null;
-        for (StatementDescriptorRegistration r: ServiceLoader.load(StatementDescriptorRegistration.class, ThreadDaoImplStatementDescriptorRegistration.class.getClassLoader())) {
-            if (r.getClass().getName().equals(ThreadDaoImplStatementDescriptorRegistration.class.getName())) {
-                threadDaoReg = r;
+    public void verifyServiceLoaderCanFindLockInfoDaoCategoryRegistration() {
+        String expectedClass = LockInfoDaoCategoryRegistration.class.getName();
+        ServiceLoader<CategoryRegistration> loader = ServiceLoader.load(CategoryRegistration.class, LockInfoDaoCategoryRegistration.class.getClassLoader());
+        List<CategoryRegistration> registrations = new ArrayList<>(1);
+        boolean matchFound = false;
+        for (CategoryRegistration r: loader) {
+            if (r.getClass().getName().equals(expectedClass)) {
+                matchFound = true;
             }
             registrations.add(r);
         }
-        // storage-core + this module
-        assertEquals(3, registrations.size());
-        assertNotNull(threadDaoReg);
-        assertEquals(14, threadDaoReg.getStatementDescriptors().size());
+        assertTrue(matchFound);
     }
 
-}
 
+}

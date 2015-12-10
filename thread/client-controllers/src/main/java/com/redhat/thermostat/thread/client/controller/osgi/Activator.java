@@ -48,6 +48,7 @@ import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.controller.ThreadInformationService;
 import com.redhat.thermostat.thread.client.controller.impl.ThreadInformationServiceImpl;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -68,6 +69,7 @@ public class Activator implements BundleActivator {
                 ThreadCollectorFactory.class,
                 ApplicationService.class,
                 VmInfoDAO.class,
+                LockInfoDao.class,
                 ThreadViewProvider.class,
                 ProgressNotifier.class,
         };
@@ -81,12 +83,14 @@ public class Activator implements BundleActivator {
                 ThreadCollectorFactory collectorFactory = (ThreadCollectorFactory) services.get(ThreadCollectorFactory.class.getName());
                 ApplicationService applicationService = (ApplicationService) services.get(ApplicationService.class.getName());
                 VmInfoDAO vmInfoDao = Objects.requireNonNull((VmInfoDAO) services.get(VmInfoDAO.class.getName()));
+                LockInfoDao lockInfoDao = Objects.requireNonNull((LockInfoDao) services.get(LockInfoDao.class.getName()));
                 ThreadViewProvider viewFactory = (ThreadViewProvider) services.get(ThreadViewProvider.class.getName());
                 ProgressNotifier notifier = (ProgressNotifier) services.get(ProgressNotifier.class.getName());
 
                 ThreadInformationService vmInfoService =
                         new ThreadInformationServiceImpl(applicationService,
                                                          vmInfoDao,
+                                                         lockInfoDao,
                                                          collectorFactory,
                                                          viewFactory,
                                                          notifier);

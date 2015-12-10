@@ -49,6 +49,7 @@ import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFacto
 import com.redhat.thermostat.thread.client.controller.ThreadInformationService;
 import com.redhat.thermostat.thread.client.controller.impl.cache.AppCache;
 import com.redhat.thermostat.thread.client.controller.impl.cache.AppCacheKey;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
 
 public class ThreadInformationServiceImpl implements ThreadInformationService {
     
@@ -57,17 +58,20 @@ public class ThreadInformationServiceImpl implements ThreadInformationService {
     private Filter<VmRef> filter = new NameMatchingRefFilter<>();
     private ApplicationService service;
     private VmInfoDAO vmInfoDao;
+    private LockInfoDao lockInfoDao;
     private ThreadCollectorFactory collectorFactory;
     private ThreadViewProvider viewFactory;
     private ProgressNotifier notifier;
 
     public ThreadInformationServiceImpl(ApplicationService appService,
                                         VmInfoDAO vmInfoDao,
+                                        LockInfoDao lockInfoDao,
                                         ThreadCollectorFactory collectorFactory,
                                         ThreadViewProvider viewFactory, ProgressNotifier notifier)
     {
         this.service = appService;
         this.vmInfoDao = vmInfoDao;
+        this.lockInfoDao = lockInfoDao;
         this.collectorFactory = collectorFactory;
         this.viewFactory = viewFactory;
         this.notifier = notifier;
@@ -97,6 +101,7 @@ public class ThreadInformationServiceImpl implements ThreadInformationService {
         if (controller == null) {
             controller = new ThreadInformationController(ref, service,
                                                          vmInfoDao,
+                                                         lockInfoDao,
                                                          collectorFactory,
                                                          viewFactory,
                                                          notifier);

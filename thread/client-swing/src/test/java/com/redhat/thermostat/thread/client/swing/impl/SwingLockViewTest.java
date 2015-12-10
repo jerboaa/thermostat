@@ -34,46 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.thread.client.swing.impl;
 
-import org.junit.Test;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
+import com.redhat.thermostat.thread.model.LockInfo;
 
-import static org.junit.Assert.assertEquals;
+public class SwingLockViewTest {
 
-public class ThreadModelPojosTest {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame mainWindow = new JFrame("mainWindow");
 
-    private static final Class<?>[] CLASSES_LIST = new Class[] {
-        LockInfo.class,
-        ThreadHarvestingStatus.class,
-        ThreadState.class,
-        ThreadSummary.class,
-        ThreadContentionSample.class,
-        VmDeadLockData.class,
-    };
+                SwingLockView view = new SwingLockView();
+                mainWindow.add(view.getUiComponent());
 
-    @Test
-    public void testBasicInstantiation() {
-        ArrayList<Class<?>> failureClasses = new ArrayList<>();
-        for (Class<?> clazz : CLASSES_LIST) {
-            try {
-                // pojo converters use this
-                clazz.newInstance();
-                // pass
+                LockInfo lockData = new LockInfo(System.currentTimeMillis(), "writer", "vm",
+                        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18);
 
-                // pojo converters fail at runtime if the constructor is not public
-                if (!Modifier.isPublic(clazz.getConstructor().getModifiers())) {
-                    throw new IllegalAccessError("constructor is not public");
-                }
-            } catch (ReflectiveOperationException e) {
-                failureClasses.add(clazz);
+                view.setLatestLockData(lockData);
+                mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                mainWindow.pack();
+                mainWindow.setVisible(true);
             }
-        }
-        String msg = "Should be able to instantiate class using no-arg constructor: "
-                + failureClasses;
-        assertEquals(msg, 0, failureClasses.size());
+        });
     }
 }
-

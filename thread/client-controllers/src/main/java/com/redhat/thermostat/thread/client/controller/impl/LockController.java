@@ -34,46 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.thread.client.controller.impl;
 
-import org.junit.Test;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.thread.client.common.view.LockView;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
+import com.redhat.thermostat.thread.model.LockInfo;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
+public class LockController extends CommonController {
 
-import static org.junit.Assert.assertEquals;
+    private LockInfoDao dao;
+    private VmRef vm;
 
-public class ThreadModelPojosTest {
+    public LockController(LockView view, Timer timer, LockInfoDao lockInfoDao, VmRef vm) {
+        super(timer, view);
+        this.dao = lockInfoDao;
+        this.vm = vm;
+        timer.setAction(new LockInfoUpdateAction());
+    }
 
-    private static final Class<?>[] CLASSES_LIST = new Class[] {
-        LockInfo.class,
-        ThreadHarvestingStatus.class,
-        ThreadState.class,
-        ThreadSummary.class,
-        ThreadContentionSample.class,
-        VmDeadLockData.class,
-    };
-
-    @Test
-    public void testBasicInstantiation() {
-        ArrayList<Class<?>> failureClasses = new ArrayList<>();
-        for (Class<?> clazz : CLASSES_LIST) {
-            try {
-                // pojo converters use this
-                clazz.newInstance();
-                // pass
-
-                // pojo converters fail at runtime if the constructor is not public
-                if (!Modifier.isPublic(clazz.getConstructor().getModifiers())) {
-                    throw new IllegalAccessError("constructor is not public");
-                }
-            } catch (ReflectiveOperationException e) {
-                failureClasses.add(clazz);
+    class LockInfoUpdateAction implements Runnable {
+        @Override
+        public void run() {
+            LockInfo result = dao.getLatestLockInfo(vm);
+            if (result != null) {
+                ((LockView) view).setLatestLockData(result);
             }
         }
-        String msg = "Should be able to instantiate class using no-arg constructor: "
-                + failureClasses;
-        assertEquals(msg, 0, failureClasses.size());
     }
 }
-
