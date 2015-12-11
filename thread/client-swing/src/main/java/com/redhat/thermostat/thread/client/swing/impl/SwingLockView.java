@@ -48,10 +48,14 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.thread.client.common.view.LockView;
 import com.redhat.thermostat.thread.model.LockInfo;
 
 public class SwingLockView extends LockView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final int VALUE_COLUMN = 1;
 
@@ -65,27 +69,29 @@ public class SwingLockView extends LockView implements SwingComponent {
 
         model = new NonEditableTableModel(18, 2);
         Object[][] dataVector = new Object[][] {
-            new Object[] { "Contended Lock Attempts", 0 },
-            new Object[] { "Deflations", 0 },
-            new Object[] { "Empty Notification", 0 },
-            new Object[] { "Failed Spins", 0 },
-            new Object[] { "Futile Wakeups", 0 },
-            new Object[] { "Inflations", 0 },
-            new Object[] { "Extant Monitors ", 0 },
-            new Object[] { "Monitors In Circulation", 0 },
-            new Object[] { "Monitors Scavenged", 0 },
-            new Object[] { "Notifications", 0 },
-            new Object[] { "Parks", 0 },
-            new Object[] { "Private A", 0 },
-            new Object[] { "Private B", 0 },
-            new Object[] { "Slow Enter", 0 },
-            new Object[] { "Slow Exit", 0 },
-            new Object[] { "Slow Notify", 0 },
-            new Object[] { "Slow Notify All", 0 },
-            new Object[] { "Successful Spins", 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_CONTENDED_LOCK_ATTEMPS).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_DEFLATIONS).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_EMPTY_NOTIFICATIONS).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_FAILED_SPINS).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_FUTILE_WAKEUPS).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_INFLATIONS).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_MON_EXTANT).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_MON_IN_CIRCULATION).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_MON_SCAVENGED).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_NOTIFICATIONS).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_PARKS).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_PRIVATE_A).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_PRIVATE_B).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_SLOW_ENTER).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_SLOW_EXIT).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_SLOW_NOTIFY).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_SLOW_NOTIFY_ALL).getContents(), 0 },
+            new Object[] { translator.localize(LocaleResources.LOCK_DESCRIPTION_SUCCESSFUL_SPINS).getContents(), 0 },
         };
 
-        Object[] columnIdentifiers = new Object[] { "Name", "Value" };
+        Object[] columnIdentifiers = new Object[] {
+                translator.localize(LocaleResources.LOCK_COLUMN_NAME).getContents(),
+                translator.localize(LocaleResources.LOCK_COLUMN_VALUE).getContents()};
         model.setDataVector(dataVector, columnIdentifiers);
 
         table = new ThermostatTable(model);

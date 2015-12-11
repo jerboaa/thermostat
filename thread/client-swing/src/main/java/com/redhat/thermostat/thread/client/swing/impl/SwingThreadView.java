@@ -170,7 +170,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         lockView = new SwingLockView();
         comp = lockView.getUiComponent();
         comp.setName("lock");
-        topPane.addTab("Locks", comp);
+        topPane.addTab(t.localize(LocaleResources.LOCKS).getContents(), comp);
 
         panel.getSplitPane().setTopComponent(topPane);
     }
