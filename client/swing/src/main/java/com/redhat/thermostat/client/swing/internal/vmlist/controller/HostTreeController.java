@@ -36,7 +36,9 @@
 
 package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.SwingUtilities;
@@ -63,25 +65,32 @@ import com.redhat.thermostat.storage.core.VmRef;
 
 public class HostTreeController {
 
-    public static enum ReferenceSelection {
-        ITEM_SELECTED;
+    public enum ReferenceSelection {
+        ITEM_SELECTED,
     }
 
     private DecoratorManager decoratorManager;
     private HostTreeComponentFactory componentFactory;
-    
+
     private final ActionNotifier<ReferenceSelection> referenceNotifier;
 
+    /* The list of filters is updated infrequently and irregularly, but the list is iterated over and each filter
+     * checked and applied for all Refs in the AccordionModel on every rebuildTree. This is a significant slowdown,
+     * particularly at first start up if a large number of hosts and VMs are present. This map is used to cache the
+     * filter results, giving a significant performance improvement.
+     */
+    private final Map<Ref, Boolean> filterMap = new HashMap<>();
     private CopyOnWriteArrayList<ReferenceFilter> filters;
-    
+
     private FilterListener filterListener;
-    
+
     private Accordion<HostRef, VmRef> accordion;
-    
+
     // we keep a private fullModel updated with all the references, while we
     // apply filters and decorations to the accordion original model only 
     private AccordionModel<HostRef, VmRef> proxyModel;
     private AccordionModel<HostRef, VmRef> fullModel;
+
     private class AccordionModelProxy implements AccordionModelChangeListener<HostRef, VmRef> {
         @Override
         public synchronized void headerAdded(AccordionHeaderEvent<HostRef> e) {
@@ -103,21 +112,21 @@ public class HostTreeController {
             proxyModel.removeComponent(e.getHeader(), e.getComponent());
         }
     }
-    
+
     public HostTreeController(Accordion<HostRef, VmRef> accordion,
                               DecoratorManager decoratorManager,
                               HostTreeComponentFactory componentFactory)
     {
         this.accordion = accordion;
         this.componentFactory = componentFactory;
-        
+
         filterListener = new FilterListener();
-        
+
         filters = new CopyOnWriteArrayList<>();
-        
+
         fullModel = new AccordionModel<>();
         fullModel.addAccordionModelChangeListener(new AccordionModelProxy());
-        
+
         this.decoratorManager = decoratorManager;
         referenceNotifier = new ActionNotifier<>(this);
         this.proxyModel = accordion.getModel();
@@ -129,39 +138,39 @@ public class HostTreeController {
             }
         });
     }
-    
+
     public void addReferenceSelectionChangeListener(ActionListener<ReferenceSelection> listener) {
         referenceNotifier.addActionListener(listener);
     }
-    
+
     public void removeReferenceSelectionChangeListener(ActionListener<ReferenceSelection> listener) {
         referenceNotifier.removeActionListener(listener);
     }
-    
+
     public synchronized void registerHost(final HostRef host) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fullModel.addHeader(host);
-                if (filter(filters, host)) {
+                if (filter(host)) {
                     proxyModel.removeHeader(host);
                 }
             }
         });
     }
-    
+
     public synchronized void updateHostStatus(final HostRef host) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (filter(filters, host)) {
+                if (filter(host)) {
                     proxyModel.removeHeader(host);
                 }
                 fireDecoratorChanged();
             }
         });
     }
-    
+
     private void addHostToProxy(final HostRef host) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -170,7 +179,7 @@ public class HostTreeController {
             }
         });
     }
-    
+
     private void setAccordionExpanded(final HostRef ref, final boolean expanded) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -179,7 +188,7 @@ public class HostTreeController {
             }
         });
     }
-    
+
     private void addVmToProxy(final VmRef vm) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -188,39 +197,45 @@ public class HostTreeController {
             }
         });
     }
-    
+
     private void addVMImpl(final VmRef vm) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fullModel.addComponent(vm.getHostRef(), vm);
-                
+
                 // adding a vm may add an host, so we need to be sure
                 // the host is not filtered before checking the vm itself
-                if (filter(filters, vm.getHostRef())) {
-                    
+                if (filter(vm.getHostRef())) {
+
                     // this will also remove all the vm, so we can skip the
                     // next filtering step
                     proxyModel.removeHeader(vm.getHostRef());
-                    
-                } else if (filter(filters, vm)) {
+
+                } else if (filter(vm)) {
                     proxyModel.removeComponent(vm.getHostRef(), vm);
                 }
             }
         });
     }
 
-    private boolean filter(CopyOnWriteArrayList<ReferenceFilter> filters, Ref ref) {
+    private boolean filter(Ref ref) {
+        if (filterMap.containsKey(ref)) {
+            return filterMap.get(ref);
+        }
+        boolean filtered = false;
         for (ReferenceFilter filter : filters) {
             if (filter.applies(ref)) {
                 if (!filter.matches(ref)) {
-                    return true;
+                    filtered = true;
+                    break;
                 }
             }
         }
-        return false;
+        filterMap.put(ref, filtered);
+        return filtered;
     }
-    
+
     public synchronized void registerVM(final VmRef vm) {
         addVMImpl(vm);
     }
@@ -233,7 +248,7 @@ public class HostTreeController {
         }
         return component;
     }
-    
+
     private void selectComponent(final Ref _selected) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -251,11 +266,11 @@ public class HostTreeController {
                         selected = reference.getHostRef();
                     }
                 }
-                
+
                 if (selected instanceof HostRef) {
                     component = getHostComponent((HostRef) selected);
                 }
-                
+
                 // if this is not the case, let's just not select anything
                 if (component != null) {
                     accordion.setSelectedComponent(component);
@@ -263,25 +278,25 @@ public class HostTreeController {
             }
         });
     }
-    
+
     public synchronized void updateVMStatus(final VmRef vm) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (filter(filters, vm)) {
+                if (filter(vm)) {
                     proxyModel.removeComponent(vm.getHostRef(), vm);
                 }
                 fireDecoratorChanged();
             }
         });
     }
-            
+
     private void fireDecoratorChanged() {
         decoratorManager.getInfoLabelDecoratorListener().fireDecorationChanged();
         decoratorManager.getMainLabelDecoratorListener().fireDecorationChanged();
         decoratorManager.getIconDecoratorListener().fireDecorationChanged();
     }
-    
+
     private synchronized void rebuildTree() {
         Ref selected = null;
         AccordionComponent component = accordion.getSelectedComponent();
@@ -290,72 +305,80 @@ public class HostTreeController {
             // in the first place, but anyway... 
             selected = ((ReferenceProvider) component).getReference();
         }
-        
+
         // operate on a copy first since we need to know which of the ones we
         // have now was previously collapsed/expanded, we can't do this
         // if we empty the model first
         AccordionModel<RefPayload<HostRef>, RefPayload<VmRef>> _model = new AccordionModel<>();
         List<HostRef> hosts = fullModel.getHeaders();
         for (HostRef host : hosts) {
-            if (!filter(filters, host)) {
-                
-                RefPayload<HostRef> hostPayload = new RefPayload<>(); 
+            if (!filter(host)) {
+
+                RefPayload<HostRef> hostPayload = new RefPayload<>();
                 hostPayload.reference = host;
                 hostPayload.expanded = accordion.isExpanded(host);
 
                 _model.addHeader(hostPayload);
                 List<VmRef> vms = fullModel.getComponents(host);
                 for (VmRef vm : vms) {
-                    if (!filter(filters, vm)) {
-                        
-                        RefPayload<VmRef> vmPayload = new RefPayload<>(); 
-                        vmPayload.reference = vm;                        
+                    if (!filter(vm)) {
+
+                        RefPayload<VmRef> vmPayload = new RefPayload<>();
+                        vmPayload.reference = vm;
                         _model.addComponent(hostPayload, vmPayload);
                     }
                 }
             }
         }
-        
+
         // clear and refill, then expand as appropriate
         proxyModel.clear();
         List<RefPayload<HostRef>> payloadsHosts = _model.getHeaders();
         for (RefPayload<HostRef> host : payloadsHosts) {
             addHostToProxy(host.reference);
-            
+
             List<RefPayload<VmRef>> vms = _model.getComponents(host);
             for (RefPayload<VmRef> vm : vms) {
                 addVmToProxy(vm.reference);
             }
-            
+
             // need to do this after we add content to the host
             // or it won't take effect
             setAccordionExpanded(host.reference, host.expanded);
         }
-        
+
         // now select the entry that was originally selected, or its parent...
         // ... or nothing
         if (selected != null) {
             selectComponent(selected);
         }
     }
-    
+
     private class FilterListener implements ActionListener<Filter.FilterEvent> {
         @Override
-        public void actionPerformed(ActionEvent<FilterEvent> actionEvent) {
+        public void actionPerformed(final ActionEvent<FilterEvent> actionEvent) {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    Object payload = actionEvent.getPayload();
+                    if (payload == null) {
+                        filterMap.clear();
+                    } else if (payload instanceof FilterRefRemovedPayload) {
+                        FilterRefRemovedPayload<?> refRemovedPayload =
+                                (FilterRefRemovedPayload) payload;
+                        filterMap.remove(refRemovedPayload.getRef());
+                    }
                     rebuildTree();
                 }
             });
         }
     }
-    
+
     private class RefPayload<R extends Ref> {
         R reference;
         boolean expanded;
     }
-    
+
     // decorator accessors
 
     public DecoratorManager getDecoratorManager() {
@@ -363,12 +386,14 @@ public class HostTreeController {
     }
 
     public void addFilter(ReferenceFilter filter) {
+        filterMap.clear();
         filters.add(filter);
         filter.addFilterEventListener(filterListener);
         rebuildTree();
     }
 
     public void removeFilter(ReferenceFilter filter) {
+        filterMap.clear();
         filters.remove(filter);
         filter.removeFilterEventListener(filterListener);
         rebuildTree();
@@ -382,5 +407,28 @@ public class HostTreeController {
             }
         });
     }
+
+    protected static abstract class FilterPayload<T extends Ref> {
+
+        private final T ref;
+
+        public FilterPayload(T ref) {
+            this.ref = ref;
+        }
+
+        public T getRef() {
+            return ref;
+        }
+
+    }
+
+    public static class FilterRefAddedPayload {}
+
+    public static class FilterRefRemovedPayload<T extends Ref> extends FilterPayload<T> {
+        public FilterRefRemovedPayload(T ref) {
+            super(ref);
+        }
+    }
+
 }
 

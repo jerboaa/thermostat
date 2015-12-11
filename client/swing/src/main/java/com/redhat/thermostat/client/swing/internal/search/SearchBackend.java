@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing.internal.search;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -89,8 +90,18 @@ class SearchBackend {
         hosts.get(ref).add(vm);
     }
 
+    public synchronized void addVMs(HostRef host, Collection<VmRef> vms) {
+        hosts.get(host).addAll(vms);
+    }
+
     public synchronized void addHost(HostRef host) {
         hosts.put(host, new HashSet<VmRef>());
+    }
+
+    public synchronized void addHosts(Collection<HostRef> hosts) {
+        for (HostRef host : hosts) {
+            addHost(host);
+        }
     }
 }
 

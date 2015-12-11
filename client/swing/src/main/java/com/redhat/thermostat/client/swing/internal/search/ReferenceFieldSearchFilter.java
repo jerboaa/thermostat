@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing.internal.search;
 
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
@@ -54,7 +55,8 @@ import com.redhat.thermostat.storage.core.VmRef;
  * place.
  */
 public class ReferenceFieldSearchFilter extends ReferenceFilter implements ActionListener<SearchAction> {
-        private SearchProvider searchProvider;
+
+    private SearchProvider searchProvider;
     private AtomicReference<String> searchString;
     
     private HostTreeController hostTreeController;
@@ -123,19 +125,34 @@ public class ReferenceFieldSearchFilter extends ReferenceFilter implements Actio
             notify(FilterEvent.FILTER_CHANGED);
         }
     }
-    
+
     public void addHost(HostRef host) {
         backend.addHost(host);
-        notify(FilterEvent.FILTER_CHANGED);
+        notify(FilterEvent.FILTER_CHANGED, new HostTreeController.FilterRefAddedPayload());
     }
 
-    public void removeHost(HostRef host) {}
+    public void addHosts(Collection<HostRef> hosts) {
+        backend.addHosts(hosts);
+        notify(FilterEvent.FILTER_CHANGED, new HostTreeController.FilterRefAddedPayload());
+    }
+
+    public void removeHost(HostRef host) {
+        notify(FilterEvent.FILTER_CHANGED, new HostTreeController.FilterRefRemovedPayload<>(host));
+    }
 
     public void addVM(VmRef vm) {
         backend.addVM(vm);
-        notify(FilterEvent.FILTER_CHANGED);
+        notify(FilterEvent.FILTER_CHANGED, new HostTreeController.FilterRefAddedPayload());
     }
 
-    public void removeVM(VmRef vm) {}
+    public void addVMs(HostRef host, Collection<VmRef> vms) {
+        backend.addVMs(host, vms);
+        notify(FilterEvent.FILTER_CHANGED, new HostTreeController.FilterRefAddedPayload());
+    }
+
+    public void removeVM(VmRef vm) {
+        notify(FilterEvent.FILTER_CHANGED, new HostTreeController.FilterRefRemovedPayload<>(vm));
+    }
+
 }
 

@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.isA;
@@ -46,8 +48,16 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
+import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.junit.After;
 import org.junit.Before;
@@ -119,7 +129,15 @@ public class MainWindowControllerImplTest {
     private DecoratorRegistryController decoratorController;
     
     private ContextActionController contextController;
-    
+    private ReferenceFieldSearchFilter referenceFieldSearchFilter;
+    private HostMonitor hostMonitor;
+    private NetworkMonitor networkMonitor;
+    private HostRef host;
+    private List<HostRef> hosts;
+    private VmRef vm1;
+    private VmRef vm2;
+    private List<VmRef> vms;
+
     @BeforeClass
     public static void setUpOnce() {
         // TODO remove when controller uses mocked objects rather than real swing objects
@@ -177,10 +195,19 @@ public class MainWindowControllerImplTest {
         ClientConfigViewProvider clientConfigViewProvider = mock(ClientConfigViewProvider.class);
         context.registerService(ClientConfigViewProvider.class, clientConfigViewProvider, null);
 
-        HostMonitor hostMonitor = mock(HostMonitor.class);
+        hostMonitor = mock(HostMonitor.class);
         context.registerService(HostMonitor.class, hostMonitor, null);
-        NetworkMonitor networkMonitor = mock(NetworkMonitor.class);
+        networkMonitor = mock(NetworkMonitor.class);
         context.registerService(NetworkMonitor.class, networkMonitor, null);
+
+        host = mock(HostRef.class);
+        hosts = Collections.singletonList(host);
+        when(networkMonitor.getHosts(any(Filter.class))).thenReturn(hosts);
+
+        vm1 = mock(VmRef.class);
+        vm2 = mock(VmRef.class);
+        vms = Arrays.asList(vm1, vm2);
+        when(hostMonitor.getVirtualMachines(any(HostRef.class), any(Filter.class))).thenReturn(vms);
 
         // Setup View
         view = mock(MainView.class);
@@ -189,6 +216,9 @@ public class MainWindowControllerImplTest {
         
         contextController = mock(ContextActionController.class);
         when(view.getContextActionController()).thenReturn(contextController);
+
+        referenceFieldSearchFilter = mock(ReferenceFieldSearchFilter.class);
+        when(view.getSearchFilter()).thenReturn(referenceFieldSearchFilter);
         
         treeController = mock(HostTreeController.class);
         ArgumentCaptor<ActionListener> hostTreeCaptor = ArgumentCaptor.forClass(ActionListener.class);
@@ -244,10 +274,15 @@ public class MainWindowControllerImplTest {
         verify(decoratorController, times(1)).stop();
     }
 
-    @Test
+    @Test @SuppressWarnings("unchecked")
     public void verifyShowMainWindowActuallyCallsView() {
         controller.showMainMainWindow();
         verify(view).showMainWindow();
+        verify(referenceFieldSearchFilter).addHosts(any(Collection.class));
+        verify(referenceFieldSearchFilter).addVMs(eq(host), any(Collection.class));
+        verify(treeController).registerHost(host);
+        verify(treeController).registerVM(vm1);
+        verify(treeController).registerVM(vm2);
     }
 
     @Test

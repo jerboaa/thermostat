@@ -97,6 +97,10 @@ public abstract class Filter<T> {
      */
     protected void notify(FilterEvent action) {
         notifier.fireAction(action);
-    }    
+    }
+
+    protected void notify(FilterEvent action, Object payload) {
+        notifier.fireAction(action, payload);
+    }
 }
 

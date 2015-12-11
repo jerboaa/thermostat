@@ -309,16 +309,16 @@ public class MainWindowControllerImpl implements MainWindowController {
         // initially fill out with all known host and vms
         List<HostRef> hosts = networkMonitor.getHosts(new AllPassFilter<HostRef>());
         AllPassFilter<VmRef> vmFilter = new AllPassFilter<>();
+        filter.addHosts(hosts);
         for (HostRef host : hosts) {
             hostController.registerHost(host);
-            filter.addHost(host);
             
             // get the vm for this host
             List<VmRef> vms = hostMonitor.getVirtualMachines(host, vmFilter);
             for (VmRef vm : vms) {
                 hostController.registerVM(vm);
-                filter.addVM(vm);
             }
+            filter.addVMs(host, vms);
         }
     }
     
