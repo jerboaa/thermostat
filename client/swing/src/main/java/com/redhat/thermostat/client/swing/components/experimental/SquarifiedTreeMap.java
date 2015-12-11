@@ -52,6 +52,23 @@ import java.util.Objects;
  *  @see TreMapBuilder
  */
 public class SquarifiedTreeMap {
+
+    /*
+     * The algorithm this implements is described in detail here:
+     *
+     * https://bitbucket.org/Ammirate/thermostat-treemap/src/tip/TreeMap%20documentation.pdf
+     *
+     * Which is an improvement on:
+     *
+     * Mark Bruls, Kees Huizing and Jarke J. van Wijk, "Squarified
+     * Treemaps" in Data Visualization 2000: Proceedings of the Joint
+     * EUROGRAPHICS and IEEE TCVG Symposium on Visualization in Amsterdam,
+     * The Netherlands, May 29–30, 2000. Berlin, Germany: Springer Science
+     * & Business Media, 2012
+     *
+     * The paper itself is also available online at:
+     * https://www.win.tue.nl/~vanwijk/stm.pdf
+     */
     
     /**
      * List of node to represent as TreeMap.
