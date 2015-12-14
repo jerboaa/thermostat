@@ -36,18 +36,14 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
-import org.jfree.chart.renderer.category.GradientBarPainter;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -58,13 +54,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class TreeMapComponentTest {
 
@@ -521,6 +522,10 @@ public class TreeMapComponentTest {
                 modelA.addChild(new TreeMapNode("AA", 2.0));
                 modelA.addChild(new TreeMapNode("AB", 3.0));
 
+                final TreeMapNode modelC = new TreeMapNode("C", 1.0);
+                modelC.addChild(new TreeMapNode("CA", 2.0));
+                modelC.addChild(new TreeMapNode("CB", 3.0));
+
                 final TreeMapNode modelB = new TreeMapNode("B", 5.0);
                 final Random generator = new Random();
                 for (int i = 0; i < 100; i++) {
@@ -535,19 +540,29 @@ public class TreeMapComponentTest {
                 // FIXME this hack should not be needed
                 UIManager.put("thermostat-default-font", Font.decode(Font.MONOSPACED));
 
-                final TreeMapComponent treeMap = new TreeMapComponent();
-                treeMap.setToolTipRenderer(new WeightRenderer());
-                treeMap.setModel(modelA);
-
                 JPanel container = new JPanel(new BorderLayout());
+                final JTabbedPane tabbedPane = new JTabbedPane();
+
+                final TreeMapComponent treeMapA = new TreeMapComponent();
+                treeMapA.setToolTipRenderer(new WeightRenderer());
+                treeMapA.setModel(modelA);
+
+                final TreeMapComponent treeMapC = new TreeMapComponent();
+                treeMapC.setToolTipRenderer(new WeightRenderer());
+                treeMapC.setModel(modelC);
 
                 JPanel buttonPanel = new JPanel();
                 JButton changeModelButton = new JButton("Change model");
                 changeModelButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        TreeMapNode newModel = treeMap.getTreeMapRoot() == modelA ? modelB : modelA;
-                        treeMap.setModel(newModel);
+                        if (tabbedPane.getSelectedIndex() == 0) {
+                            TreeMapNode newModel = treeMapA.getTreeMapRoot() == modelA ? modelB : modelA;
+                            treeMapA.setModel(newModel);
+                        } else {
+                            TreeMapNode newModel = treeMapC.getTreeMapRoot() == modelC ? modelB : modelC;
+                            treeMapC.setModel(newModel);
+                        }
                     }
                 });
                 buttonPanel.add(changeModelButton);
@@ -556,10 +571,15 @@ public class TreeMapComponentTest {
                 addChildToRootButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        TreeMapNode currentModel = treeMap.getTreeMapRoot();
-                        currentModel.addChild(new TreeMapNode("new", 5.0));
-
-                        treeMap.setModel(currentModel);
+                        if (tabbedPane.getSelectedIndex() == 0) {
+                            TreeMapNode currentModel = treeMapA.getTreeMapRoot();
+                            currentModel.addChild(new TreeMapNode("new", 5.0));
+                            treeMapA.setModel(currentModel);
+                        } else {
+                            TreeMapNode currentModel = treeMapC.getTreeMapRoot();
+                            currentModel.addChild(new TreeMapNode("new", 5.0));
+                            treeMapC.setModel(currentModel);
+                        }
                     }
                 });
                 buttonPanel.add(addChildToRootButton);
@@ -568,21 +588,34 @@ public class TreeMapComponentTest {
                 addRandomNodeButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        TreeMapNode currentModel = treeMap.getTreeMapRoot();
-                        List<TreeMapNode> allNodes = new ArrayList<>();
-                        findAllNodes(allNodes, currentModel);
-                        TreeMapNode parent = allNodes.get(generator.nextInt(allNodes.size()));
-                        double weight = Math.pow(10, generator.nextInt(4));
-                        parent.addChild(new TreeMapNode("rand", weight));
+                        if (tabbedPane.getSelectedIndex() == 0) {
+                            TreeMapNode currentModel = treeMapA.getTreeMapRoot();
+                            List<TreeMapNode> allNodes = new ArrayList<>();
+                            findAllNodes(allNodes, currentModel);
+                            TreeMapNode parent = allNodes.get(generator.nextInt(allNodes.size()));
+                            double weight = Math.pow(10, generator.nextInt(4));
+                            parent.addChild(new TreeMapNode("rand", weight));
 
-                        treeMap.setModel(currentModel);
+                            treeMapA.setModel(currentModel);
+                        } else {
+                            TreeMapNode currentModel = treeMapC.getTreeMapRoot();
+                            List<TreeMapNode> allNodes = new ArrayList<>();
+                            findAllNodes(allNodes, currentModel);
+                            TreeMapNode parent = allNodes.get(generator.nextInt(allNodes.size()));
+                            double weight = Math.pow(10, generator.nextInt(4));
+                            parent.addChild(new TreeMapNode("rand", weight));
+
+                            treeMapC.setModel(currentModel);
+                        }
                     }
                 });
                 buttonPanel.add(addRandomNodeButton);
 
                 container.add(buttonPanel, BorderLayout.PAGE_START);
-                container.add(treeMap, BorderLayout.CENTER);
+                tabbedPane.addTab("TMA", treeMapA);
+                tabbedPane.addTab("TMC", treeMapC);
 
+                container.add(tabbedPane, BorderLayout.CENTER);
                 mainWindow.add(container, BorderLayout.CENTER);
 
                 mainWindow.setSize(500, 200);

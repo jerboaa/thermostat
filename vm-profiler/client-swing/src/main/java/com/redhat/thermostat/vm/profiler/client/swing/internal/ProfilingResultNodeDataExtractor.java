@@ -36,37 +36,29 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.Collection;
+import java.util.regex.Pattern;
 
-public enum LocaleResources {
+import com.redhat.thermostat.client.swing.components.experimental.NodeDataExtractor;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
-    PROFILER_TAB_NAME,
+public class ProfilingResultNodeDataExtractor implements NodeDataExtractor<ProfilingResult, MethodInfo> {
 
-    PROFILER_HEADING,
-    PROFILER_DESCRIPTION,
+    static final String DELIMITER = ".";
 
-    PROFILER_CURRENT_STATUS_ACTIVE,
-    PROFILER_CURRENT_STATUS_INACTIVE,
-    PROFILER_CURRENT_STATUS_DEAD,
-    START_PROFILING,
-    STARTING_PROFILING,
-    STOP_PROFILING,
-    STOPPING_PROFILING,
-
-    PROFILER_LIST_ITEM,
-    PROFILER_RESULTS_TABLE,
-    PROFILER_RESULTS_TREEMAP,
-    PROFILER_RESULTS_METHOD,
-    PROFILER_RESULTS_PERCENTAGE_TIME,
-    PROFILER_RESULTS_TIME,
-
-    PROFILER_NO_RESULTS,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.profiler.client.swing.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    @Override
+    public String[] getNodes(MethodInfo methodInfo) {
+        return methodInfo.decl.getName().split(Pattern.quote(DELIMITER));
     }
 
+    @Override
+    public double getWeight(MethodInfo methodInfo) {
+        return methodInfo.totalTimeInMillis;
+    }
+
+    @Override
+    public Collection<MethodInfo> getAsCollection(ProfilingResult result) {
+        return result.getMethodInfo();
+    }
 }

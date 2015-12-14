@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
+import junit.framework.Assert;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -52,6 +54,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.awt.Component;
 import java.io.ByteArrayInputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -62,8 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.common.ApplicationCache;
-import org.hamcrest.core.IsNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -71,8 +72,10 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationCache;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Timer;
@@ -118,6 +121,7 @@ public class VmProfileControllerTest {
     private Clock clock;
     private VmProfileView view;
     private VmRef vm;
+    private VmProfileTreeMapViewProvider treeMapViewProvider;
 
     private VmProfileController controller;
     private AgentId agentId;
@@ -157,10 +161,33 @@ public class VmProfileControllerTest {
         when(vm.getHostRef()).thenReturn(hostRef);
         when(vm.getVmId()).thenReturn(VM_ID);
 
+        treeMapViewProvider = mock(VmProfileTreeMapViewProvider.class);
+        VmProfileTreeMapView vmProfileTreeMapView = mock(SwingVmProfileTreeMapView.class);
+        when(treeMapViewProvider.createView()).thenReturn(vmProfileTreeMapView);
+        when(((SwingComponent) vmProfileTreeMapView).getUiComponent()).thenReturn(mock(Component.class));
+
         AgentInformation agentInfo = new AgentInformation();
         agentInfo.setAlive(true);
         agentInfo.setConfigListenAddress(AGENT_HOST + ":" + AGENT_PORT);
         when(agentInfoDao.getAgentInformation(agentId)).thenReturn(agentInfo);
+    }
+
+    @Test (expected = NullPointerException.class)
+    public void testMainConstructorFailsWithInvalidViewProvider() {
+        VmProfileTreeMapViewProvider viewProvider = mock(VmProfileTreeMapViewProvider.class);
+        when(viewProvider.createView()).thenReturn(null);
+        new VmProfileController(appService, notifier, agentInfoDao, vmInfoDao, profileDao,
+                queue, clock, view, vm, viewProvider);
+    }
+
+    @Test
+    public void testMainConstructorAcceptsValidParameters() {
+        try {
+            new VmProfileController(appService, notifier, agentInfoDao, vmInfoDao, profileDao,
+                    queue, clock, view, vm, treeMapViewProvider);
+        } catch (NullPointerException e) {
+            Assert.fail("No exception expected");
+        }
     }
 
     @Test
@@ -484,7 +511,8 @@ public class VmProfileControllerTest {
     }
 
     private VmProfileController createController() {
-        return new VmProfileController(appService, notifier, agentInfoDao, vmInfoDao, profileDao, queue, clock, view, vm);
+        return new VmProfileController(appService, notifier, agentInfoDao, vmInfoDao, profileDao,
+                queue, clock, view, vm, treeMapViewProvider);
     }
 
     private void assertRequestEquals(Request actual, Request expected) {

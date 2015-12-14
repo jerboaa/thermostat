@@ -56,16 +56,18 @@ public class VmProfileService implements InformationService<VmRef> {
     private VmInfoDAO vmInfoDao;
     private ProfileDAO dao;
     private RequestQueue queue;
+    private VmProfileTreeMapViewProvider treeMapViewProvider;
 
     public VmProfileService(ApplicationService service, ProgressNotifier notifier,
             AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
-            RequestQueue queue) {
+            RequestQueue queue, VmProfileTreeMapViewProvider treeMapViewProvider) {
         this.service = service;
         this.notifier = notifier;
         this.agentInfoDao = agentInfoDao;
         this.vmInfoDao = vmInfoDao;
         this.dao = dao;
         this.queue = queue;
+        this.treeMapViewProvider = treeMapViewProvider;
     }
 
     @Override
@@ -81,7 +83,8 @@ public class VmProfileService implements InformationService<VmRef> {
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new VmProfileController(service, notifier, agentInfoDao, vmInfoDao, dao, queue, ref);
+        return new VmProfileController(service, notifier, agentInfoDao, vmInfoDao, dao, queue,
+                treeMapViewProvider, ref);
     }
 
 }

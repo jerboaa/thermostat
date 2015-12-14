@@ -36,37 +36,10 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-public enum LocaleResources {
+public interface VmProfileTreeMapViewProvider extends ViewProvider {
 
-    PROFILER_TAB_NAME,
-
-    PROFILER_HEADING,
-    PROFILER_DESCRIPTION,
-
-    PROFILER_CURRENT_STATUS_ACTIVE,
-    PROFILER_CURRENT_STATUS_INACTIVE,
-    PROFILER_CURRENT_STATUS_DEAD,
-    START_PROFILING,
-    STARTING_PROFILING,
-    STOP_PROFILING,
-    STOPPING_PROFILING,
-
-    PROFILER_LIST_ITEM,
-    PROFILER_RESULTS_TABLE,
-    PROFILER_RESULTS_TREEMAP,
-    PROFILER_RESULTS_METHOD,
-    PROFILER_RESULTS_PERCENTAGE_TIME,
-    PROFILER_RESULTS_TIME,
-
-    PROFILER_NO_RESULTS,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.profiler.client.swing.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
-    }
-
+    @Override
+    public VmProfileTreeMapView createView();
 }

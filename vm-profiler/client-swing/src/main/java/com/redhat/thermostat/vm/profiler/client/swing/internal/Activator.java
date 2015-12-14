@@ -61,6 +61,9 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
+        VmProfileTreeMapViewProvider vmProfileTreeMapViewProvider = new SwingVmProfileTreeMapViewProvider();
+        context.registerService(VmProfileTreeMapViewProvider.class.getName(),
+                vmProfileTreeMapViewProvider, null);
 
         Class<?>[] deps = new Class<?>[] {
                 ApplicationService.class,
@@ -69,6 +72,7 @@ public class Activator implements BundleActivator {
                 VmInfoDAO.class,
                 ProfileDAO.class,
                 RequestQueue.class,
+                VmProfileTreeMapViewProvider.class,
         };
 
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
@@ -80,8 +84,11 @@ public class Activator implements BundleActivator {
                 VmInfoDAO vmInfoDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 ProfileDAO profileDao = (ProfileDAO) services.get(ProfileDAO.class.getName());
                 RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
+                VmProfileTreeMapViewProvider treeMapViewProvider = (VmProfileTreeMapViewProvider) services
+                        .get(VmProfileTreeMapViewProvider.class.getName());
 
-                InformationService<VmRef> profileService = new VmProfileService(service, notifier, agentInfoDao, vmInfoDao, profileDao, queue);
+                InformationService<VmRef> profileService = new VmProfileService(service, notifier,
+                        agentInfoDao, vmInfoDao, profileDao, queue, treeMapViewProvider);
 
                 Hashtable<String,String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());

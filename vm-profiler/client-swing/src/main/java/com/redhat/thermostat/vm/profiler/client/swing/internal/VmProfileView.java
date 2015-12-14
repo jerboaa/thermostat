@@ -36,13 +36,15 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
+import java.awt.Component;
 import java.util.List;
 import java.util.Objects;
 
+import com.redhat.thermostat.client.core.ToggleActionState;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.ToggleActionState;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 
 public abstract class VmProfileView extends BasicView implements UIComponent {
@@ -134,5 +136,7 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
     public abstract Profile getSelectedProfile();
 
     public abstract void setProfilingDetailData(ProfilingResult results);
+
+    public abstract void addTabToTabbedPane(final LocalizedString title, final Component component);
 
 }

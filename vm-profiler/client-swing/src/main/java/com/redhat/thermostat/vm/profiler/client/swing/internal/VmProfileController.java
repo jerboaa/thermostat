@@ -44,6 +44,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.command.RequestQueue;
@@ -53,6 +54,7 @@ import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -97,6 +99,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     private final VmRef vm;
 
     private VmProfileView view;
+    private VmProfileTreeMapView treeMapView;
 
     private Timer updater;
 
@@ -111,15 +114,15 @@ public class VmProfileController implements InformationServiceController<VmRef> 
 
     public VmProfileController(ApplicationService service, ProgressNotifier notifier,
             AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
-            RequestQueue queue,
-            VmRef vm) {
-        this(service, notifier, agentInfoDao, vmInfoDao, dao, queue, new SystemClock(), new SwingVmProfileView(), vm);
+            RequestQueue queue, VmProfileTreeMapViewProvider treeMapViewProvider, VmRef vm) {
+        this(service, notifier, agentInfoDao, vmInfoDao, dao, queue, new SystemClock(),
+                new SwingVmProfileView(), vm, treeMapViewProvider);
     }
 
     VmProfileController(final ApplicationService service, ProgressNotifier notifier,
             AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
-            RequestQueue queue, Clock clock,
-            final VmProfileView view, VmRef vm) {
+            RequestQueue queue, Clock clock, final VmProfileView view, VmRef vm,
+            VmProfileTreeMapViewProvider treeMapViewProvider) {
         this.service = service;
         this.notifier = notifier;
         this.agentInfoDao = agentInfoDao;
@@ -133,6 +136,10 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         if (service.getApplicationCache().getAttribute(STATE_MAP_KEY) == null) {
             service.getApplicationCache().addAttribute(STATE_MAP_KEY, STATE_BUNDLE_MAP);
         }
+
+        this.treeMapView = Objects.requireNonNull(treeMapViewProvider.createView());
+        view.addTabToTabbedPane(translator.localize(LocaleResources.PROFILER_RESULTS_TREEMAP),
+                ((SwingComponent) this.treeMapView).getUiComponent());
 
         // TODO dispose the timer when done
         updater = service.getTimerFactory().createTimer();
@@ -341,7 +348,9 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         String profileId = selectedProfile.name;
         InputStream in = profileDao.loadProfileDataById(vm, profileId);
         ProfilingResult result = new ProfilingResultParser().parse(in);
+
         view.setProfilingDetailData(result);
+        treeMapView.display(result);
     }
 
     @Override

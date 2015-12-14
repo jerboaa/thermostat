@@ -76,8 +76,6 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
 import com.redhat.thermostat.client.swing.ThermostatSwingCursors;
-import com.redhat.thermostat.common.Size;
-import com.redhat.thermostat.common.Size.Unit;
 
 /**
  * This class allows to represent a hierarchical data structure as a TreeMap.
@@ -145,7 +143,7 @@ public class TreeMapComponent extends JComponent {
     /**
      * Variable in which store last resize event call time.
      */
-    private static long lastCall = 0;
+    private long lastCall = 0;
 
     /**
      * Wait time in millisec to resize the TreeMap.
@@ -162,7 +160,7 @@ public class TreeMapComponent extends JComponent {
      * This object stores the last clicked rectangle in the TreeMap, in order to 
      * repaint it when another rectangle will be selected.
      */
-    private static Comp lastClicked;
+    private Comp lastClicked;
     
     /**
      * List of objects observing this.
@@ -591,7 +589,7 @@ public class TreeMapComponent extends JComponent {
     /**
      * Switch the component's border style to the one given in input.
      *
-     * @param borderStyle the border style to use
+     * @param newBorderStyle the border style to use
      */
     public void setBorderStyle(int newBorderStyle) {
         Border border;

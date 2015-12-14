@@ -68,8 +68,8 @@ public class ActivatorTest {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         bundleContext.registerService(VmInfoDAO.class, vmInfoDao, null);
 
-        ProfileDAO profielDao = mock(ProfileDAO.class);
-        bundleContext.registerService(ProfileDAO.class, profielDao, null);
+        ProfileDAO profileDao = mock(ProfileDAO.class);
+        bundleContext.registerService(ProfileDAO.class, profileDao, null);
 
         RequestQueue requestQueue = mock(RequestQueue.class);
         bundleContext.registerService(RequestQueue.class, requestQueue, null);
@@ -79,6 +79,7 @@ public class ActivatorTest {
         activator.start(bundleContext);
 
         assertTrue(bundleContext.isServiceRegistered(InformationService.class.getName(), VmProfileService.class));
+        assertTrue(bundleContext.isServiceRegistered(VmProfileTreeMapViewProvider.class.getName(), SwingVmProfileTreeMapViewProvider.class));
 
         activator.stop(bundleContext);
     }

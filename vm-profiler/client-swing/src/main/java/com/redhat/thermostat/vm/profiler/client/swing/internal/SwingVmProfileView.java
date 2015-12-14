@@ -58,6 +58,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
@@ -86,6 +87,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
 import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
@@ -106,6 +108,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     private final CopyOnWriteArrayList<ActionListener<ProfileAction>> listeners = new CopyOnWriteArrayList<>();
 
     private HeaderPanel mainContainer;
+    private JTabbedPane tabPane;
 
     private ActionToggleButton toggleButton;
 
@@ -134,6 +137,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     public SwingVmProfileView() {
         listModel = new DefaultListModel<>();
+        tabPane = new JTabbedPane();
 
         toggleButton = new ActionToggleButton(START_ICON, STOP_ICON, translator.localize(
                 LocaleResources.START_PROFILING));
@@ -258,8 +262,10 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         };
         profileTable.setName("METHOD_TABLE");
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                profileListPane, profileTable.wrap());
+        tabPane.addTab(translator.localize(LocaleResources.PROFILER_RESULTS_TABLE).getContents(),
+                profileTable.wrap());
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, profileListPane, tabPane);
         splitPane.setDividerLocation(SPLIT_PANE_RATIO);
         splitPane.setResizeWeight(0.5);
 
@@ -381,6 +387,16 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                     };
                     tableModel.addRow(data);
                 }
+            }
+        });
+    }
+
+    @Override
+    public void addTabToTabbedPane(final LocalizedString title, final Component component) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                tabPane.addTab(title.getContents(), component);
             }
         });
     }

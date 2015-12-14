@@ -36,37 +36,41 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-public enum LocaleResources {
+import org.junit.Before;
+import org.junit.Test;
 
-    PROFILER_TAB_NAME,
+import com.redhat.thermostat.client.swing.components.experimental.TreeMap;
+import com.redhat.thermostat.client.swing.components.experimental.TreeMapNode;
+import com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileTreeMapView.TimeToolTipRenderer;
 
-    PROFILER_HEADING,
-    PROFILER_DESCRIPTION,
+public class TimeToolTipRendererTest {
 
-    PROFILER_CURRENT_STATUS_ACTIVE,
-    PROFILER_CURRENT_STATUS_INACTIVE,
-    PROFILER_CURRENT_STATUS_DEAD,
-    START_PROFILING,
-    STARTING_PROFILING,
-    STOP_PROFILING,
-    STOPPING_PROFILING,
+    private static final String ROOT_LABEL = "root";
+    private static final String CHILD_LABEL = "child";
+    private static final double ROOT_WEIGHT = 1024.0;
+    private static final double CHILD_WEIGHT = 3.14;
 
-    PROFILER_LIST_ITEM,
-    PROFILER_RESULTS_TABLE,
-    PROFILER_RESULTS_TREEMAP,
-    PROFILER_RESULTS_METHOD,
-    PROFILER_RESULTS_PERCENTAGE_TIME,
-    PROFILER_RESULTS_TIME,
+    private TimeToolTipRenderer renderer;
+    private TreeMapNode root;
 
-    PROFILER_NO_RESULTS,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.profiler.client.swing.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    @Before
+    public void setUp() {
+        root = new TreeMapNode(ROOT_LABEL, ROOT_WEIGHT);
+        root.addChild(new TreeMapNode(CHILD_LABEL, CHILD_WEIGHT));
+        renderer = new TimeToolTipRenderer();
     }
 
+    @Test
+    public void testTimeToolTipRenderer() {
+        String result = renderer.render(root);
+        assertEquals("root - 1024ms", result);
+
+        TreeMapNode child = TreeMap.searchNode(root, CHILD_LABEL);
+        assertNotNull(child);
+        result = renderer.render(child);
+        assertEquals("child - 3ms", result);
+    }
 }
