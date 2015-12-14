@@ -55,6 +55,8 @@ import com.redhat.thermostat.thread.model.LockInfo;
 
 public class SwingLockView extends LockView implements SwingComponent {
 
+    protected static final String TABLE_NAME = "locks-table";
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final int VALUE_COLUMN = 1;
@@ -95,6 +97,8 @@ public class SwingLockView extends LockView implements SwingComponent {
         model.setDataVector(dataVector, columnIdentifiers);
 
         table = new ThermostatTable(model);
+        table.setName(TABLE_NAME);
+
         ThermostatScrollPane scrollPane = new ThermostatScrollPane(table);
         topPanel.add(scrollPane, BorderLayout.CENTER);
 
