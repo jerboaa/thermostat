@@ -45,6 +45,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
@@ -62,9 +63,6 @@ import com.redhat.thermostat.host.overview.client.core.HostOverviewView;
 import com.redhat.thermostat.host.overview.client.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.swing.components.experimental.dial.RadialControl;
-
-import javax.swing.border.TitledBorder;
-import javax.swing.border.LineBorder;
 
 import java.awt.Color;
 
@@ -370,7 +368,10 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
         panel.setLayout(new BorderLayout(0, 0));
 
         networkTable = new JTable(networkTableModel);
-        panel.add(networkTable);
+        ThermostatScrollPane networkScrollPane = new ThermostatScrollPane(networkTable);
+        networkScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        networkScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        panel.add(networkScrollPane);
         JTableHeader header = networkTable.getTableHeader();
         panel.add(header, BorderLayout.PAGE_START);
 
