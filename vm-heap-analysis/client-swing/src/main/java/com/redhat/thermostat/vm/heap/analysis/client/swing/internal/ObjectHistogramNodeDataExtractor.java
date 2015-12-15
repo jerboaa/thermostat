@@ -46,11 +46,13 @@ import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 
 public class ObjectHistogramNodeDataExtractor implements NodeDataExtractor<ObjectHistogram, HistogramRecord> {
 
+    static final String DELIMITER = ".";
+
     @Override
     public String[] getNodes(HistogramRecord record) {
         String className = record.getClassname();
         // if className is a primitive type it is converted with its full name
-        return DescriptorConverter.toJavaType(className).split(Pattern.quote("."));
+        return DescriptorConverter.toJavaType(className).split(Pattern.quote(DELIMITER));
     }
 
     @Override
