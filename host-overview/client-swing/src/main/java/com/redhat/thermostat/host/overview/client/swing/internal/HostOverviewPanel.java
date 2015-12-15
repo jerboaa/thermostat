@@ -330,10 +330,10 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
         
         radialControl_1 = new RadialControl();
         
-        JLabel lblCpu = new JLabel("CPU");
+        JLabel lblCpu = new JLabel(translator.localize(LocaleResources.CPU).getContents());
         lblCpu.setHorizontalAlignment(SwingConstants.CENTER);
         
-        JLabel lblMemory = new JLabel("Memory");
+        JLabel lblMemory = new JLabel(translator.localize(LocaleResources.MEMORY).getContents());
         lblMemory.setHorizontalAlignment(SwingConstants.CENTER);
         GroupLayout gl_radialSummaryPanel = new GroupLayout(radialSummaryPanel);
         gl_radialSummaryPanel.setHorizontalGroup(

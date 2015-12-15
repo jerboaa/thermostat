@@ -39,6 +39,9 @@ package com.redhat.thermostat.host.overview.client.locale;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
+    CPU,
+    MEMORY,
+
     NUMBER_AND_UNIT,
 
     HOST_INFO_TAB_OVERVIEW,
