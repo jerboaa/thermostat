@@ -59,6 +59,7 @@
         <include>com.redhat.thermostat:thermostat-validate-distribution</include>
         <include>com.redhat.thermostat:thermostat-setup-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-classstat-distribution</include>
+        <include>com.redhat.thermostat:thermostat-vm-compiler-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-cpu-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-find-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-gc-distribution</include>

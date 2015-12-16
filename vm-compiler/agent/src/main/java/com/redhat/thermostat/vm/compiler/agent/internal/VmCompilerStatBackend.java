@@ -34,38 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.testutils;
+package com.redhat.thermostat.vm.compiler.agent.internal;
 
-import java.util.Hashtable;
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.backend.VmListenerBackend;
+import com.redhat.thermostat.backend.VmUpdateListener;
+import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
 
-public class Asserts {
+public class VmCompilerStatBackend extends VmListenerBackend {
 
-    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, true);
+    private final VmCompilerStatDao vmCompilerStats;
+
+    public VmCompilerStatBackend(VmCompilerStatDao vmCompilerStatDao, Version version,
+            VmStatusListenerRegistrar registrar, WriterID writerId) {
+        super("VM Compiler Backend",
+              "Gathers compiler statistics about a JVM",
+              "Red Hat, Inc.", version.getVersionNumber(), true, registrar, writerId);
+        this.vmCompilerStats = vmCompilerStatDao;
     }
 
-    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, false);
+    @Override
+    public int getOrderValue() {
+        return ORDER_CODE_GROUP;
     }
 
-    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
-        // The Command class is not visible to this module, so we have to live
-        // with hardcoding some details here
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put("COMMAND_NAME", name);
-        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
-        if (!isRegistered && wantRegistered) {
-            throw new AssertionError("Command " + name + " is not registered but should be");
-        }
-        if (isRegistered && !wantRegistered) {
-            throw new AssertionError("Command " + name + " is registered but should not be");
-        }
+    @Override
+    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
+        return new VmCompilerStatVmListener(writerId, vmCompilerStats, vmId);
     }
 
-    public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
-            throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
-        }
-    }
 }
 

@@ -34,38 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.testutils;
+package com.redhat.thermostat.vm.compiler.client.swing;
 
-import java.util.Hashtable;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
-public class Asserts {
+import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatViewProvider;
 
-    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, true);
+public class Activator implements BundleActivator {
+
+    @Override
+    public void start(final BundleContext context) throws Exception {
+        VmCompilerStatViewProvider viewProvider = new SwingVmCompilerStatViewProvider();
+        // Unregistered on Activator.stop
+        context.registerService(VmCompilerStatViewProvider.class.getName(), viewProvider, null);
     }
 
-    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, false);
-    }
-
-    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
-        // The Command class is not visible to this module, so we have to live
-        // with hardcoding some details here
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put("COMMAND_NAME", name);
-        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
-        if (!isRegistered && wantRegistered) {
-            throw new AssertionError("Command " + name + " is not registered but should be");
-        }
-        if (isRegistered && !wantRegistered) {
-            throw new AssertionError("Command " + name + " is registered but should not be");
-        }
-    }
-
-    public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
-            throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
-        }
+    @Override
+    public void stop(BundleContext context) throws Exception {
     }
 }
 

@@ -34,38 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.testutils;
+package com.redhat.thermostat.vm.compiler.client.core.internal;
 
-import java.util.Hashtable;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatService;
+import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatViewProvider;
+import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
 
-public class Asserts {
+public class VmCompilerStatServiceImpl implements VmCompilerStatService {
 
-    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, true);
+    private static final int ORDER = ORDER_CODE_GROUP;
+    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
+
+    private ApplicationService appSvc;
+    private VmCompilerStatDao vmCompilerStatDao;
+    private VmCompilerStatViewProvider viewProvider;
+
+    public VmCompilerStatServiceImpl(ApplicationService appSvc,
+            VmCompilerStatDao vmCompilerStatDao, VmCompilerStatViewProvider viewProvider) {
+        this.appSvc = appSvc;
+        this.vmCompilerStatDao = vmCompilerStatDao;
+        this.viewProvider = viewProvider;
     }
 
-    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, false);
+    @Override
+    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
+        return new VmCompilerStatController(appSvc, vmCompilerStatDao, ref, viewProvider);
     }
 
-    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
-        // The Command class is not visible to this module, so we have to live
-        // with hardcoding some details here
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put("COMMAND_NAME", name);
-        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
-        if (!isRegistered && wantRegistered) {
-            throw new AssertionError("Command " + name + " is not registered but should be");
-        }
-        if (isRegistered && !wantRegistered) {
-            throw new AssertionError("Command " + name + " is registered but should not be");
-        }
+    @Override
+    public Filter<VmRef> getFilter() {
+        return filter;
     }
 
-    public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
-            throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
-        }
+    @Override
+    public int getOrderValue() {
+        return ORDER;
     }
 }
 

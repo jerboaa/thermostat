@@ -34,38 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.testutils;
+package com.redhat.thermostat.vm.compiler.common.internal;
 
-import java.util.Hashtable;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-public class Asserts {
+import org.junit.Test;
 
-    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, true);
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
+import com.redhat.thermostat.vm.compiler.common.internal.Activator;
+import com.redhat.thermostat.vm.compiler.common.internal.VmCompilerStatDaoImpl;
+
+public class ActivatorTest {
+
+    @Test
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertEquals(0, context.getAllServices().size());
+        assertEquals(1, context.getServiceListeners().size());
+
+        activator.stop(context);
     }
 
-    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, false);
+    @Test
+    public void verifyActivatorRegistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        Storage storage = mock(Storage.class);
+
+        context.registerService(Storage.class, storage, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(VmCompilerStatDao.class.getName(), VmCompilerStatDaoImpl.class));
+
+        activator.stop(context);
+
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(1, context.getAllServices().size());
     }
 
-    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
-        // The Command class is not visible to this module, so we have to live
-        // with hardcoding some details here
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put("COMMAND_NAME", name);
-        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
-        if (!isRegistered && wantRegistered) {
-            throw new AssertionError("Command " + name + " is not registered but should be");
-        }
-        if (isRegistered && !wantRegistered) {
-            throw new AssertionError("Command " + name + " is registered but should not be");
-        }
-    }
-
-    public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
-            throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
-        }
-    }
 }
 

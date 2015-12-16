@@ -34,38 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.testutils;
+package com.redhat.thermostat.vm.compiler.client.locale;
 
-import java.util.Hashtable;
+import com.redhat.thermostat.shared.locale.Translate;
 
-public class Asserts {
+public enum LocaleResources {
 
-    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, true);
-    }
+    VM_INFO_TAB_COMPILER,
+    VM_COMPILER_HEADER,
 
-    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, false);
-    }
+    STATS_TABLE_COLUMN_NAME,
+    STATS_TABLE_COLUMN_VALUE,
 
-    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
-        // The Command class is not visible to this module, so we have to live
-        // with hardcoding some details here
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put("COMMAND_NAME", name);
-        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
-        if (!isRegistered && wantRegistered) {
-            throw new AssertionError("Command " + name + " is not registered but should be");
-        }
-        if (isRegistered && !wantRegistered) {
-            throw new AssertionError("Command " + name + " is registered but should not be");
-        }
-    }
+    STATS_TABLE_TOTAL_COMPILES,
+    STATS_TABLE_TOTAL_BAILOUTS,
+    STATS_TABLE_TOTAL_INVALIDATES,
+    STATS_TABLE_COMPILATION_TIME,
+    STATS_TABLE_LAST_SIZE,
+    STATS_TABLE_LAST_TYPE,
+    STATS_TABLE_LAST_METHOD,
+    STATS_TABLE_LAST_FAILED_TYPE,
+    STATS_TABLE_LAST_FAILED_METHOD,
 
-    public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
-            throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
-        }
+    ;
+
+    public static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.vm.compiler.client.locale.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 }
 

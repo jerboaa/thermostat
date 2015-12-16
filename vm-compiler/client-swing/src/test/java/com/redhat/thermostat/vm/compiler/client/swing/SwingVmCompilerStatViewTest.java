@@ -34,38 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.testutils;
+package com.redhat.thermostat.vm.compiler.client.swing;
 
-import java.util.Hashtable;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
-public class Asserts {
+import com.redhat.thermostat.vm.compiler.client.swing.SwingVmCompilerStatView;
+import com.redhat.thermostat.vm.compiler.common.VmCompilerStat;
 
-    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, true);
-    }
+public class SwingVmCompilerStatViewTest {
 
-    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, false);
-    }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
 
-    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
-        // The Command class is not visible to this module, so we have to live
-        // with hardcoding some details here
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put("COMMAND_NAME", name);
-        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
-        if (!isRegistered && wantRegistered) {
-            throw new AssertionError("Command " + name + " is not registered but should be");
-        }
-        if (isRegistered && !wantRegistered) {
-            throw new AssertionError("Command " + name + " is registered but should not be");
-        }
-    }
+                JFrame frame = new JFrame("Test");
 
-    public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
-            throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
-        }
+                SwingVmCompilerStatView compilerPanel = new SwingVmCompilerStatView();
+
+                int totalCompiles = 200;
+                int totalBailouts = 10;
+                int totalInvalidates = 5;
+
+                long compilationTime = 10; // ms
+
+                int lastSize = 10;
+                int lastType = 1;
+                String lastMethod = "lastMethod()";
+
+                int lastFailedType = 1;
+                String lastFailedMethod = "lastFailedMethod()";
+
+                VmCompilerStat stat = new VmCompilerStat("agent-id", "vm-id", 1234L,
+                        totalCompiles, totalBailouts, totalInvalidates,
+                        compilationTime,
+                        lastSize, lastType, lastMethod,
+                        lastFailedType, lastFailedMethod);
+
+                compilerPanel.setData(stat);
+
+                frame.add(compilerPanel.getUiComponent());
+                frame.pack();
+                frame.setVisible(true);
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            }
+        });
     }
 }
 

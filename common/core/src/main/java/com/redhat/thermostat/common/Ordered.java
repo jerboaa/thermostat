@@ -72,6 +72,13 @@ public interface Ordered {
      * or VM's threads.
      */
     public static final int ORDER_THREAD_GROUP = 500;
+
+    /**
+     * Order group for services that provide information about code running in a
+     * Host or a VM.
+     */
+    public static final int ORDER_CODE_GROUP = 600;
+
     /**
      * Order group for user-defined services. This should always be
      * the last order group.

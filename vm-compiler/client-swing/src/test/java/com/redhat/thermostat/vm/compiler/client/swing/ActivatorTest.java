@@ -34,38 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.testutils;
+package com.redhat.thermostat.vm.compiler.client.swing;
 
-import java.util.Hashtable;
+import static com.redhat.thermostat.testutils.Asserts.assertServiceIsRegistered;
+import static org.junit.Assert.assertEquals;
 
-public class Asserts {
+import org.junit.Test;
 
-    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, true);
-    }
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatViewProvider;
+import com.redhat.thermostat.vm.compiler.client.swing.Activator;
+import com.redhat.thermostat.vm.compiler.client.swing.SwingVmCompilerStatViewProvider;
 
-    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, false);
-    }
+public class ActivatorTest {
 
-    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
-        // The Command class is not visible to this module, so we have to live
-        // with hardcoding some details here
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put("COMMAND_NAME", name);
-        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
-        if (!isRegistered && wantRegistered) {
-            throw new AssertionError("Command " + name + " is not registered but should be");
-        }
-        if (isRegistered && !wantRegistered) {
-            throw new AssertionError("Command " + name + " is registered but should not be");
-        }
-    }
+    @Test
+    public void verifyStartRegistersViewProvider() throws Exception {
+        StubBundleContext ctx = new StubBundleContext();
+        Activator activator = new Activator();
+        activator.start(ctx);
 
-    public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
-            throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
-        }
+        assertServiceIsRegistered(ctx, VmCompilerStatViewProvider.class, SwingVmCompilerStatViewProvider.class);
+
+        assertEquals(1, ctx.getAllServices().size());
     }
 }
 

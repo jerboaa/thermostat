@@ -34,38 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.testutils;
+package com.redhat.thermostat.vm.compiler.common.internal;
 
-import java.util.Hashtable;
+import java.util.HashSet;
+import java.util.Set;
 
-public class Asserts {
+import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
+import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
 
-    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, true);
+/**
+ * Registers the prepared query issued by this maven module via
+ * {@link VmLatestPojoListGetter}.
+ *
+ */
+public class VmCompilerStatDaoImplStatementDescriptorRegistration implements
+        StatementDescriptorRegistration {
+
+    static final String LATEST = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT,
+            VmCompilerStatDao.vmCompilerStatsCategory.getName());
+    static final String RANGE = String.format(VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
+            VmCompilerStatDao.vmCompilerStatsCategory.getName());
+    static final String LATEST_STAT = String.format(VmBoundaryPojoGetter.DESC_NEWEST_VM_STAT,
+            VmCompilerStatDao.vmCompilerStatsCategory.getName());
+    static final String OLDEST_STAT = String.format(VmBoundaryPojoGetter.DESC_OLDEST_VM_STAT,
+            VmCompilerStatDao.vmCompilerStatsCategory.getName());
+
+    @Override
+    public Set<String> getStatementDescriptors() {
+        Set<String> descs = new HashSet<>(1);
+        descs.add(LATEST);
+        descs.add(RANGE);
+        descs.add(LATEST_STAT);
+        descs.add(OLDEST_STAT);
+        descs.add(VmCompilerStatDaoImpl.DESC_ADD_VM_COMPILER_STAT);
+        return descs;
     }
 
-    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, false);
-    }
-
-    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
-        // The Command class is not visible to this module, so we have to live
-        // with hardcoding some details here
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put("COMMAND_NAME", name);
-        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
-        if (!isRegistered && wantRegistered) {
-            throw new AssertionError("Command " + name + " is not registered but should be");
-        }
-        if (isRegistered && !wantRegistered) {
-            throw new AssertionError("Command " + name + " is registered but should not be");
-        }
-    }
-
-    public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
-            throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
-        }
-    }
 }
 

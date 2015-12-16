@@ -270,6 +270,7 @@
     <module>vm-find</module>
     <module>vm-gc</module>
     <module>vm-classstat</module>
+    <module>vm-compiler</module>
     <module>vm-memory</module>
     <module>vm-heap-analysis</module>
     <module>vm-io</module>

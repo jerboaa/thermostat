@@ -34,38 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.testutils;
+package com.redhat.thermostat.vm.compiler.agent.internal;
 
-import java.util.Hashtable;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-public class Asserts {
+import org.junit.Before;
+import org.junit.Test;
 
-    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, true);
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.compiler.agent.internal.VmCompilerStatBackend;
+import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
+
+public class VmClassStatBackendTest {
+
+    private VmCompilerStatBackend backend;
+
+    @Before
+    public void setup() {
+        VmCompilerStatDao vmCompilerStatDao = mock(VmCompilerStatDao.class);
+
+        Version version = mock(Version.class);
+        when(version.getVersionNumber()).thenReturn("0.0.0");
+
+        VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
+
+        WriterID id = mock(WriterID.class);
+        backend = new VmCompilerStatBackend(vmCompilerStatDao, version, registrar, id);
     }
 
-    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
-        assertCommandRegistration(context, name, klass, false);
+    @Test
+    public void testOrderValue() {
+        int orderValue = backend.getOrderValue();
+        assertTrue(orderValue >= Ordered.ORDER_CODE_GROUP);
+        assertTrue(orderValue < Ordered.ORDER_USER_GROUP);
     }
 
-    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
-        // The Command class is not visible to this module, so we have to live
-        // with hardcoding some details here
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put("COMMAND_NAME", name);
-        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
-        if (!isRegistered && wantRegistered) {
-            throw new AssertionError("Command " + name + " is not registered but should be");
-        }
-        if (isRegistered && !wantRegistered) {
-            throw new AssertionError("Command " + name + " is registered but should not be");
-        }
-    }
-
-    public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
-            throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
-        }
-    }
 }
 
