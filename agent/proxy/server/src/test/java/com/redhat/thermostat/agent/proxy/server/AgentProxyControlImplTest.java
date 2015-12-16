@@ -38,6 +38,7 @@ package com.redhat.thermostat.agent.proxy.server;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -48,6 +49,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -58,6 +61,9 @@ import com.sun.tools.attach.VirtualMachine;
 
 public class AgentProxyControlImplTest {
     
+    private static final int SUCCESS = 0;
+    private static final int FAILURE = 3;
+    private static final int VM_PID = 0;
     private AgentProxyControlImpl control;
     private VirtualMachine vm;
     private VirtualMachineUtils vmUtils;
@@ -77,14 +83,52 @@ public class AgentProxyControlImplTest {
         when(vm.getSystemProperties()).thenReturn(sysProps);
         
         when(vmUtils.attach(anyString())).thenReturn(vm);
-        control = new AgentProxyControlImpl(0, vmUtils);
+        control = new AgentProxyControlImpl(VM_PID, vmUtils);
     }
     
     @Test
-    public void testAttach() throws Exception {
-        control.attach();
+    public void testAttachJcmd() throws Exception {
+        final Process process = mock(Process.class);
+        when(process.waitFor()).thenReturn(SUCCESS);
+        @SuppressWarnings("unchecked")
+        final List<String>[] startProcessArgs = new List[1];
+        AgentProxyControlImpl controlUnderTest = new AgentProxyControlImpl(VM_PID, vmUtils) {
+            @Override
+            Process startProcess(List<String> args) {
+                startProcessArgs[0] = args;
+                return process;
+            }
+        };
+        controlUnderTest.attach();
+        List<String> args = startProcessArgs[0];
+        assertNotNull(args);
+        String[] expectedArgs = new String[] {
+                "/path/to/java/bin/jcmd", // Uses the jrePath.getParentFile() path
+                Integer.toString(VM_PID),
+                "ManagementAgent.start_local"
+        };
+        List<String> expectedList = Arrays.asList(expectedArgs);
+        assertEquals(expectedList, args);
         
-        verify(vmUtils).attach("0");
+        verify(vmUtils).attach(Integer.toString(VM_PID));
+        verify(vm, times(2)).getAgentProperties();
+        verify(vm).getSystemProperties();
+        verify(vm, times(0)).loadAgent("/path/to/java/home" + File.separator + "lib" + File.separator + "management-agent.jar");
+    }
+    
+    @Test
+    public void testAttachManagementJar() throws Exception {
+        final Process process = mock(Process.class);
+        when(process.waitFor()).thenReturn(FAILURE);
+        AgentProxyControlImpl controlUnderTest = new AgentProxyControlImpl(VM_PID, vmUtils) {
+            @Override
+            Process startProcess(List<String> args) {
+                return process; // pretending jcmd process start fails
+            }
+        };
+        controlUnderTest.attach();
+        
+        verify(vmUtils).attach(Integer.toString(VM_PID));
         verify(vm, times(2)).getAgentProperties();
         verify(vm).getSystemProperties();
         verify(vm).loadAgent("/path/to/java/home" + File.separator + "lib" + File.separator + "management-agent.jar");

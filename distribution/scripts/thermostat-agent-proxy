@@ -38,6 +38,7 @@
 #
 if [ "$#" -lt 2 ]; then
   echo "usage: $0 <pidOfTargetJvm> <userNameOfJvmOwner>" >&2
+  exit 1
 fi
 
 # Source thermostat-common from same directory as this script

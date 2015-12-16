@@ -39,7 +39,10 @@ package com.redhat.thermostat.agent.proxy.server;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -51,9 +54,10 @@ import com.sun.tools.attach.VirtualMachine;
 class AgentProxyControlImpl {
     
     private static final Logger logger = LoggingUtils.getLogger(AgentProxyControlImpl.class);
-
     private static final String CONNECTOR_ADDRESS_PROPERTY = "com.sun.management.jmxremote.localConnectorAddress";
-    
+    private static final String JCMD_NAME = "jcmd";
+    private static final String JCMD_MANAGEMENT_AGENT_START_LOCAL = "ManagementAgent.start_local";
+
     private final int pid;
     private final VirtualMachineUtils vmUtils;
     
@@ -81,17 +85,60 @@ class AgentProxyControlImpl {
             String agent = null;
             try {
                 props = vm.getSystemProperties();
-                home = props.getProperty("java.home");
-                agent = home + File.separator + "lib" + File.separator + "management-agent.jar";
-                logger.fine("Loading '" + agent + "' into VM (pid: " + pid + ")");
-                vm.loadAgent(agent);
-
+                startManagementAgent(props);
+                logger.fine("Started management agent for vm '" + pid + "'");
                 props = vm.getAgentProperties();
                 connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
             } catch (IOException | AgentLoadException | AgentInitializationException e) {
                 throw new RemoteException("Failed to load agent ('" + agent + "', from home '" + home + "') into VM (pid: " + pid + ")", e);
             }
         }
+    }
+
+    private void startManagementAgent(Properties props) throws IOException,
+                                                               AgentLoadException,
+                                                               AgentInitializationException {
+        String home = props.getProperty("java.home");
+        try {
+            // JDK 7 and up have jcmd with JMX management agent start support.
+            startManagementAgentUsingJcmd(home, pid);
+        } catch (Exception e) {
+            // Fall back to old management-agent.jar behaviour.
+            logger.log(Level.FINE, "Failed to activate JMX agent via jcmd.", e);
+            startManagementAgentUsingJavaAgent(home);
+        }
+    }
+
+    private void startManagementAgentUsingJcmd(String home, int vmPid) throws IOException, InterruptedException {
+        String jcmd = home + File.separator + "bin" + File.separator + JCMD_NAME;
+        File jcmdFile = new File(jcmd);
+        if (!jcmdFile.exists()) {
+            // java.home might be JRE home. Try one level up.
+            File binDir = new File(new File(home).getParentFile(), "bin");
+            jcmd = binDir.getAbsolutePath() + File.separator + JCMD_NAME;
+        }
+        String[] args = new String[] { jcmd,
+                                       Integer.toString(vmPid),
+                                       JCMD_MANAGEMENT_AGENT_START_LOCAL };
+        List<String> jcmdArgs = Arrays.asList(args);
+        logger.fine("Starting JMX management agent via JCMD: " + jcmdArgs);
+        Process process = startProcess(jcmdArgs);
+        int result = process.waitFor();
+        if (result != 0) {
+            throw new IllegalStateException("Failed to execute jcmd. Exit code was: " + result);
+        }
+    }
+
+    // Package private for testing
+    Process startProcess(List<String> jcmdArgs) throws IOException {
+        ProcessBuilder builder = new ProcessBuilder(jcmdArgs);
+        return builder.start();
+    }
+
+    private void startManagementAgentUsingJavaAgent(String home) throws AgentLoadException, AgentInitializationException, IOException {
+        String agent = home + File.separator + "lib" + File.separator + "management-agent.jar";
+        logger.fine("Loading '" + agent + "' into VM (pid: " + pid + ")");
+        vm.loadAgent(agent);
     }
 
     boolean isAttached() {
