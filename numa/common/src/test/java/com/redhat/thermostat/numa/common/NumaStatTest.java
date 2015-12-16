@@ -41,7 +41,9 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-public class NumaStatTest {
+import com.redhat.thermostat.testutils.DataObjectTest;
+
+public class NumaStatTest extends DataObjectTest {
 
     @Test
     public void testDefaults() {
@@ -65,15 +67,11 @@ public class NumaStatTest {
         assertSame(nodeStat1, numaStat.getNodeStats()[0]);
         assertSame(nodeStat2, numaStat.getNodeStats()[1]);
     }
-    
-    @Test
-    public void testBasicInstantiation() {
-        try {
-            // pojo converters use this
-            NumaStat.class.newInstance();
-        } catch (Exception e) {
-            fail("should be able to instantiate using no-arg constructor");
-        }
+
+    @Override
+    public Class<?>[] getDataClasses() {
+        return new Class[] { NumaStat.class };
     }
+
 }
 

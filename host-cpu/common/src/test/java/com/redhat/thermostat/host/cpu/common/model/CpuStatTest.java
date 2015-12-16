@@ -36,20 +36,13 @@
 
 package com.redhat.thermostat.host.cpu.common.model;
 
-import static org.junit.Assert.fail;
+import com.redhat.thermostat.testutils.DataObjectTest;
 
-import org.junit.Test;
+public class CpuStatTest extends DataObjectTest {
 
-public class CpuStatTest {
-
-    @Test
-    public void testBasicInstantiation() {
-        try {
-            // pojo converters use this
-            CpuStat.class.newInstance();
-        } catch (Exception e) {
-            fail("should be able to instantiate using no-arg constructor");
-        }
+    @Override
+    public Class<?>[] getDataClasses() {
+        return new Class[] { CpuStat.class };
     }
 }
 

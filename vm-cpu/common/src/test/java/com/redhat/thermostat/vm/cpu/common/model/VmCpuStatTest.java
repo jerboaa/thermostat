@@ -36,20 +36,13 @@
 
 package com.redhat.thermostat.vm.cpu.common.model;
 
-import static org.junit.Assert.fail;
+import com.redhat.thermostat.testutils.DataObjectTest;
 
-import org.junit.Test;
+public class VmCpuStatTest extends DataObjectTest {
 
-public class MemoryStatTest {
-
-    @Test
-    public void testBasicInstantiation() {
-        try {
-            // pojo converters use this
-            VmCpuStat.class.newInstance();
-        } catch (Exception e) {
-            fail("should be able to instantiate using no-arg constructor");
-        }
+    @Override
+    public Class<?>[] getDataClasses() {
+        return new Class[] { VmCpuStat.class };
     }
 }
 

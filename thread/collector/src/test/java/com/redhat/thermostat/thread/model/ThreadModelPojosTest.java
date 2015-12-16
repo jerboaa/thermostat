@@ -36,14 +36,9 @@
 
 package com.redhat.thermostat.thread.model;
 
-import org.junit.Test;
+import com.redhat.thermostat.testutils.DataObjectTest;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-
-import static org.junit.Assert.assertEquals;
-
-public class ThreadModelPojosTest {
+public class ThreadModelPojosTest extends DataObjectTest {
 
     private static final Class<?>[] CLASSES_LIST = new Class[] {
         LockInfo.class,
@@ -54,26 +49,10 @@ public class ThreadModelPojosTest {
         VmDeadLockData.class,
     };
 
-    @Test
-    public void testBasicInstantiation() {
-        ArrayList<Class<?>> failureClasses = new ArrayList<>();
-        for (Class<?> clazz : CLASSES_LIST) {
-            try {
-                // pojo converters use this
-                clazz.newInstance();
-                // pass
-
-                // pojo converters fail at runtime if the constructor is not public
-                if (!Modifier.isPublic(clazz.getConstructor().getModifiers())) {
-                    throw new IllegalAccessError("constructor is not public");
-                }
-            } catch (ReflectiveOperationException e) {
-                failureClasses.add(clazz);
-            }
-        }
-        String msg = "Should be able to instantiate class using no-arg constructor: "
-                + failureClasses;
-        assertEquals(msg, 0, failureClasses.size());
+    @Override
+    public Class<?>[] getDataClasses() {
+        return CLASSES_LIST;
     }
+
 }
 

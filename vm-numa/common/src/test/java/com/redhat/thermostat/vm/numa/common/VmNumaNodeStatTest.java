@@ -40,14 +40,12 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-public class VmNumaNodeStatTest {
-    @Test
-    public void testBasicInstantiation() {
-        try {
-            // pojo converters use this
-            VmNumaNodeStat.class.newInstance();
-        } catch (Exception e) {
-            fail("should be able to instantiate using no-arg constructor");
-        }
+import com.redhat.thermostat.testutils.DataObjectTest;
+
+public class VmNumaNodeStatTest extends DataObjectTest {
+
+    @Override
+    public Class<?>[] getDataClasses() {
+        return new Class[] { VmNumaNodeStat.class };
     }
 }

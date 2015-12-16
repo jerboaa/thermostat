@@ -34,51 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.common.model;
+package com.redhat.thermostat.testutils;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
-import org.junit.Before;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+
 import org.junit.Test;
 
-import com.redhat.thermostat.testutils.DataObjectTest;
-
-public class HeapInfoTest extends DataObjectTest {
-
-    private HeapInfo heapInfo;
-
-    @Before
-    public void setUp() {
-        String agentId = "test-agent";
-        heapInfo = new HeapInfo(agentId, "vmId", 12345);
-    }
+public abstract class DataObjectTest {
 
     @Test
-    public void testProperties() {
-        assertEquals("test-agent", heapInfo.getAgentId());
-        assertEquals("vmId", heapInfo.getVmId());
-        assertEquals(12345, heapInfo.getTimeStamp());
+    public void testBasicInstantiation() {
+        ArrayList<Class<?>> failureClasses = new ArrayList<>();
+        for (Class<?> clazz : getDataClasses()) {
+            try {
+                // pojo converters use this
+                clazz.newInstance();
+
+                // pojo converters fail at runtime if the constructor is not public
+                if (!Modifier.isPublic(clazz.getConstructor().getModifiers())) {
+                    throw new IllegalAccessError("constructor is not public");
+                }
+            } catch (ReflectiveOperationException e) {
+                failureClasses.add(clazz);
+            }
+        }
+        String msg = "Should be able to instantiate class using no-arg constructor: "
+                + failureClasses;
+        assertEquals(msg, 0, failureClasses.size());
     }
 
-    @Test
-    public void testHeapDumpId() {
-        assertNull(heapInfo.getHeapDumpId());
-        heapInfo.setHeapDumpId("test");
-        assertEquals("test", heapInfo.getHeapDumpId());
-    }
-
-    @Test
-    public void testHistogramId() {
-        assertNull(heapInfo.getHistogramId());
-        heapInfo.setHistogramId("test");
-        assertEquals("test", heapInfo.getHistogramId());
-    }
-
-    @Override
-    public Class<?>[] getDataClasses() {
-        return new Class[] { HeapInfo.class };
-    }
-
+    /**
+     * Returns a list of classes representing data objects. These classes are
+     * checked to make sure they comply with the requirements for use as
+     * data-storage objects.
+     */
+    public abstract Class<?>[] getDataClasses();
 }
-

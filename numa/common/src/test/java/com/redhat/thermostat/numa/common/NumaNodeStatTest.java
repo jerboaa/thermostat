@@ -38,13 +38,14 @@
 package com.redhat.thermostat.numa.common;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class NumaNodeStatTest {
+import com.redhat.thermostat.testutils.DataObjectTest;
+
+public class NumaNodeStatTest extends DataObjectTest {
 
     private NumaNodeStat stat;
 
@@ -105,15 +106,11 @@ public class NumaNodeStatTest {
         String expected = "NumaStat: nodeId: 1, numaHit: 2, numaMiss: 3, numaForeign: 4, interleaveHit: 5, localNode: 6, otherNode: 7";
         assertEquals(expected, str);
     }
-    
-    @Test
-    public void testBasicInstantiation() {
-        try {
-            // pojo converters use this
-            NumaNodeStat.class.newInstance();
-        } catch (Exception e) {
-            fail("should be able to instantiate using no-arg constructor");
-        }
+
+    @Override
+    public Class<?>[] getDataClasses() {
+        return new Class[] { NumaNodeStat.class };
     }
+    
 }
 

@@ -36,13 +36,9 @@
 
 package com.redhat.thermostat.storage.model;
 
-import static org.junit.Assert.assertEquals;
+import com.redhat.thermostat.testutils.DataObjectTest;
 
-import java.util.ArrayList;
-
-import org.junit.Test;
-
-public class PojoModelInstantiationTest {
+public class PojoModelInstantiationTest extends DataObjectTest {
     
     private static final Class<?>[] CLASSES_LIST = new Class[] {
         AgentInformation.class,
@@ -52,21 +48,9 @@ public class PojoModelInstantiationTest {
         HostInfo.class
     };
 
-    @Test
-    public void testBasicInstantiation() {
-        ArrayList<Class<?>> failureClasses = new ArrayList<>();
-        for (Class<?> clazz : CLASSES_LIST) {
-            try {
-                // pojo converters use this
-                clazz.newInstance();
-                // pass
-            } catch (InstantiationException | IllegalAccessException e) {
-                failureClasses.add(clazz);
-            }
-        }
-        String msg = "Should be able to instantiate class using no-arg constructor: "
-                + failureClasses;
-        assertEquals(msg, 0, failureClasses.size());
+    @Override
+    public Class<?>[] getDataClasses() {
+        return CLASSES_LIST;
     }
 }
 

@@ -36,20 +36,13 @@
 
 package com.redhat.thermostat.vm.io.common;
 
-import static org.junit.Assert.fail;
+import com.redhat.thermostat.testutils.DataObjectTest;
 
-import org.junit.Test;
+public class VmIoStatTest extends DataObjectTest {
 
-public class VmIoStatTest {
-
-    @Test
-    public void testBasicInstantiation() {
-        try {
-            // pojo converters use this
-            VmIoStat.class.newInstance();
-        } catch (Exception e) {
-            fail("should be able to instantiate using no-arg constructor");
-        }
-    }
+    @Override
+    public Class<?>[] getDataClasses() {
+        return new Class[] { VmIoStat.class };
+   }
 }
 
