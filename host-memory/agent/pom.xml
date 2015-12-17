@@ -41,7 +41,7 @@
   <parent>
     <artifactId>thermostat-host-memory</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>1.99.7-SNAPSHOT</version>
+    <version>1.99.8-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-host-memory-agent</artifactId>
   <packaging>bundle</packaging>
