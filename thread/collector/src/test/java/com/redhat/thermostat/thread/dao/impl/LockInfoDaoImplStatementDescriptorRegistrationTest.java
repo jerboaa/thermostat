@@ -37,19 +37,19 @@
 package com.redhat.thermostat.thread.dao.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.testutils.ServiceLoaderTest;
 
-public class LockInfoDaoImplStatementDescriptorRegistrationTest {
+public class LockInfoDaoImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
+
+    public LockInfoDaoImplStatementDescriptorRegistrationTest() {
+        super(StatementDescriptorRegistration.class, STORAGE_SERVICES + 1 /* from thread dao */, LockInfoDaoImplStatementDescriptorRegistration.class);
+    }
 
     @Test
     public void verifyExportsStatements() {
@@ -58,27 +58,5 @@ public class LockInfoDaoImplStatementDescriptorRegistrationTest {
 
         assertEquals(3, statements.size());
     }
-
-    /*
-     * The web storage end-point uses service loader in order to determine the
-     * list of trusted/known categories. This test is to ensure service loading
-     * works for this module's regs. E.g. renaming of the impl class without
-     * changing META-INF/com.redhat.thermostat.storage.core.auth.CategoryRegistration
-     */
-    @Test
-    public void verifyServiceLoaderCanFindLockInfoDaoCategoryRegistration() {
-        String expectedClass = LockInfoDaoCategoryRegistration.class.getName();
-        ServiceLoader<CategoryRegistration> loader = ServiceLoader.load(CategoryRegistration.class, LockInfoDaoCategoryRegistration.class.getClassLoader());
-        List<CategoryRegistration> registrations = new ArrayList<>(1);
-        boolean matchFound = false;
-        for (CategoryRegistration r: loader) {
-            if (r.getClass().getName().equals(expectedClass)) {
-                matchFound = true;
-            }
-            registrations.add(r);
-        }
-        assertTrue(matchFound);
-    }
-
 
 }

@@ -39,16 +39,18 @@ package com.redhat.thermostat.storage.internal.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.testutils.ServiceLoaderTest;
 
-public class DAOImplStatementDescriptorRegistrationTest {
+public class DAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
+
+    public DAOImplStatementDescriptorRegistrationTest() {
+        super(StatementDescriptorRegistration.class, NO_EXTRA_SERVICES, DAOImplStatementDescriptorRegistration.class);
+    }
 
     @Test
     public void registersAllQueries() {
@@ -57,23 +59,6 @@ public class DAOImplStatementDescriptorRegistrationTest {
         assertEquals(24, descriptors.size());
         assertFalse(descriptors.contains(null));
     }
-    
-    /*
-     * The web storage end-point uses service loader in order to determine the
-     * list of trusted/known registrations. This test is to ensure service loading
-     * works for this module's regs. E.g. renaming of the impl class without
-     * changing META-INF/services/com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration
-     */
-    @Test
-    public void serviceLoaderCanLoadRegistration() {
-        ServiceLoader<StatementDescriptorRegistration> loader = ServiceLoader.load(StatementDescriptorRegistration.class, DAOImplStatementDescriptorRegistration.class.getClassLoader());
-        List<StatementDescriptorRegistration> registrations = new ArrayList<>(1);
-        for (StatementDescriptorRegistration r: loader) {
-            registrations.add(r);
-        }
-        assertEquals(1, registrations.size());
-        assertEquals(24, registrations.get(0).getStatementDescriptors().size());
-    }
-    
+
 }
 

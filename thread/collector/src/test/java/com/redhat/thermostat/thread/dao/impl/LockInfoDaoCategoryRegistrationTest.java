@@ -43,7 +43,15 @@ import java.util.Set;
 
 import org.junit.Test;
 
-public class LockInfoDaoCategoryRegistrationTest {
+import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
+import com.redhat.thermostat.testutils.ServiceLoaderTest;
+
+public class LockInfoDaoCategoryRegistrationTest extends ServiceLoaderTest<CategoryRegistration> {
+
+    public LockInfoDaoCategoryRegistrationTest() {
+        super(CategoryRegistration.class, STORAGE_SERVICES + 1, /* from TheadDao */
+                LockInfoDaoCategoryRegistration.class);
+    }
 
     @Test
     public void verifyKnownsCategory() {

@@ -38,22 +38,21 @@ package com.redhat.thermostat.vm.cpu.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplCategoryRegistration;
+import com.redhat.thermostat.testutils.ServiceLoaderTest;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
-public class VmCpuStatCategoryRegistrationTest {
+public class VmCpuStatCategoryRegistrationTest extends ServiceLoaderTest<CategoryRegistration> {
+
+    public VmCpuStatCategoryRegistrationTest() {
+        super(CategoryRegistration.class, STORAGE_SERVICES, VmCpuStatCategoryRegistration.class);
+    }
 
     @Test
     public void registersAllCategories() {
@@ -63,32 +62,6 @@ public class VmCpuStatCategoryRegistrationTest {
         assertFalse("null descriptor not allowed", categories.contains(null));
         assertTrue(categories.contains(VmCpuStatDAO.vmCpuStatCategory.getName()));
     }
-    
-    /*
-     * The web storage end-point uses service loader in order to determine the
-     * list of trusted/known categories. This test is to ensure service loading
-     * works for this module's regs. E.g. renaming of the impl class without
-     * changing META-INF/com.redhat.thermostat.storage.core.auth.CategoryRegistration
-     */
-    @Test
-    public void serviceLoaderCanLoadRegistration() {
-        Set<String> expectedClassNames = new HashSet<>();
-        expectedClassNames.add(VmCpuStatCategoryRegistration.class.getName());
-        expectedClassNames.add(DAOImplCategoryRegistration.class.getName());
-        ServiceLoader<CategoryRegistration> loader = ServiceLoader.load(CategoryRegistration.class, VmCpuStatCategoryRegistration.class.getClassLoader());
-        List<CategoryRegistration> registrations = new ArrayList<>(1);
-        CategoryRegistration vmCpuStatCatReg = null;
-        for (CategoryRegistration r: loader) {
-            assertTrue(expectedClassNames.contains(r.getClass().getName()));
-            if (r.getClass().getName().equals(VmCpuStatCategoryRegistration.class.getName())) {
-                vmCpuStatCatReg = r;
-            }
-            registrations.add(r);
-        }
-        // storage-core + this module
-        assertEquals(2, registrations.size());
-        assertNotNull(vmCpuStatCatReg);
-        assertEquals(1, vmCpuStatCatReg.getCategoryNames().size());
-    }
+
 }
 

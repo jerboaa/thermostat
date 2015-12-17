@@ -36,24 +36,27 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplCategoryRegistration;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Set;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class ThreadDAOCategoryRegistrationTest {
+import java.util.HashSet;
+import java.util.Set;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
+import com.redhat.thermostat.testutils.ServiceLoaderTest;
+import com.redhat.thermostat.thread.dao.ThreadDao;
+
+public class ThreadDAOCategoryRegistrationTest extends ServiceLoaderTest<CategoryRegistration> {
 
     private static final int EXPECTED_CATEGORIES = 6;
+
+    public ThreadDAOCategoryRegistrationTest() {
+        super(CategoryRegistration.class, STORAGE_SERVICES + 1 /* from lock dao */,
+                ThreadDAOCategoryRegistration.class);
+    }
 
     @Test
     public void registersAllCategories() {
@@ -74,40 +77,6 @@ public class ThreadDAOCategoryRegistrationTest {
             assertTrue(categories.contains(category));
         }
     }
-    
-    /*
-     * The web storage end-point uses service loader in order to determine the
-     * list of trusted/known categories. This test is to ensure service loading
-     * works for this module's regs. E.g. renaming of the impl class without
-     * changing META-INF/com.redhat.thermostat.storage.core.auth.CategoryRegistration
-     */
-    @Test
-    public void serviceLoaderCanLoadRegistration() {
-        Set<String> expectedClassNames = new HashSet<>();
-        expectedClassNames.add(ThreadDAOCategoryRegistration.class.getName());
-        expectedClassNames.add(DAOImplCategoryRegistration.class.getName());
-        List<String> loadedCategories = new ArrayList<>();
-        for (CategoryRegistration r: ServiceLoader.load(CategoryRegistration.class, ThreadDAOCategoryRegistration.class.getClassLoader())) {
-            loadedCategories.add(r.getClass().getName());
-        }
 
-        for (String name : expectedClassNames) {
-            assertTrue(loadedCategories.contains(name));
-        }
-
-        List<CategoryRegistration> registrations = new ArrayList<>(1);
-        CategoryRegistration threadCatReg = null;
-        for (CategoryRegistration r: ServiceLoader.load(CategoryRegistration.class, ThreadDAOCategoryRegistration.class.getClassLoader())) {
-            if (r.getClass().getName().equals(ThreadDAOCategoryRegistration.class.getName())) {
-                threadCatReg = r;
-            }
-            registrations.add(r);
-        }
-
-        // storage-core + this module
-        assertEquals(3, registrations.size());
-        assertNotNull(threadCatReg);
-        assertEquals(EXPECTED_CATEGORIES, threadCatReg.getCategoryNames().size());
-    }
 }
 

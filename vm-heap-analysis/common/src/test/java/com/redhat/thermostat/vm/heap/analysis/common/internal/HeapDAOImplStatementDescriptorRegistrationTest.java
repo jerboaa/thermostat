@@ -38,21 +38,19 @@ package com.redhat.thermostat.vm.heap.analysis.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
+import com.redhat.thermostat.testutils.ServiceLoaderTest;
 
-public class HeapDAOImplStatementDescriptorRegistrationTest {
+public class HeapDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
+
+    public HeapDAOImplStatementDescriptorRegistrationTest() {
+        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, HeapDAOImplStatementDescriptorRegistration.class);
+    }
 
     @Test
     public void registersAllDescriptors() {
@@ -60,33 +58,6 @@ public class HeapDAOImplStatementDescriptorRegistrationTest {
         Set<String> descriptors = reg.getStatementDescriptors();
         assertEquals(3, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
-    }
-    
-    /*
-     * The web storage end-point uses service loader in order to determine the
-     * list of trusted/known registrations. This test is to ensure service loading
-     * works for this module's regs. E.g. renaming of the impl class without
-     * changing META-INF/services/com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration
-     */
-    @Test
-    public void serviceLoaderCanLoadRegistration() {
-        Set<String> expectedClassNames = new HashSet<>();
-        expectedClassNames.add(DAOImplStatementDescriptorRegistration.class.getName());
-        expectedClassNames.add(HeapDAOImplStatementDescriptorRegistration.class.getName());
-        ServiceLoader<StatementDescriptorRegistration> loader = ServiceLoader.load(StatementDescriptorRegistration.class, HeapDAOImplStatementDescriptorRegistration.class.getClassLoader());
-        List<StatementDescriptorRegistration> registrations = new ArrayList<>(1);
-        StatementDescriptorRegistration heapDaoReg = null;
-        for (StatementDescriptorRegistration r: loader) {
-            assertTrue(expectedClassNames.contains(r.getClass().getName()));
-            if (r.getClass().getName().equals(HeapDAOImplStatementDescriptorRegistration.class.getName())) {
-                heapDaoReg = r;
-            }
-            registrations.add(r);
-        }
-        // storage-core + this module
-        assertEquals(2, registrations.size());
-        assertNotNull(heapDaoReg);
-        assertEquals(3, heapDaoReg.getStatementDescriptors().size());
     }
 
 }

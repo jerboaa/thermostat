@@ -38,22 +38,22 @@ package com.redhat.thermostat.vm.numa.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplCategoryRegistration;
+import com.redhat.thermostat.testutils.ServiceLoaderTest;
 import com.redhat.thermostat.vm.numa.common.VmNumaDAO;
 
-public class VmNumaCategoryRegistrationTest {
+public class VmNumaCategoryRegistrationTest extends ServiceLoaderTest<CategoryRegistration> {
+
+    public VmNumaCategoryRegistrationTest() {
+        super(CategoryRegistration.class, STORAGE_SERVICES, VmNumaCategoryRegistration.class);
+    }
+
     @Test
     public void registersAllCategories() {
         VmNumaCategoryRegistration reg = new VmNumaCategoryRegistration();
@@ -63,30 +63,4 @@ public class VmNumaCategoryRegistrationTest {
         assertTrue(categories.contains(VmNumaDAO.vmNumaStatCategory.getName()));
     }
 
-    /*
-     * The web storage end-point uses service loader in order to determine the
-     * list of trusted/known categories. This test is to ensure service loading
-     * works for this module's regs. E.g. renaming of the impl class without
-     * changing META-INF/com.redhat.thermostat.storage.core.auth.CategoryRegistration
-     */
-    @Test
-    public void serviceLoaderCanLoadRegistration() {
-        Set<String> expectedClassNames = new HashSet<>();
-        expectedClassNames.add(VmNumaCategoryRegistration.class.getName());
-        expectedClassNames.add(DAOImplCategoryRegistration.class.getName());
-        ServiceLoader<CategoryRegistration> loader = ServiceLoader.load(CategoryRegistration.class, VmNumaCategoryRegistration.class.getClassLoader());
-        List<CategoryRegistration> registrations = new ArrayList<>(1);
-        CategoryRegistration vmNumaStatReg = null;
-        for (CategoryRegistration r: loader) {
-            assertTrue(expectedClassNames.contains(r.getClass().getName()));
-            if (r.getClass().getName().equals(VmNumaCategoryRegistration.class.getName())) {
-                vmNumaStatReg = r;
-            }
-            registrations.add(r);
-        }
-        // storage-core + this module
-        assertEquals(2, registrations.size());
-        assertNotNull(vmNumaStatReg);
-        assertEquals(1, vmNumaStatReg.getCategoryNames().size());
-    }
 }

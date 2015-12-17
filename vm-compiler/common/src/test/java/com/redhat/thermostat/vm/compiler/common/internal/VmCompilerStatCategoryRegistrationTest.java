@@ -38,23 +38,21 @@ package com.redhat.thermostat.vm.compiler.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplCategoryRegistration;
+import com.redhat.thermostat.testutils.ServiceLoaderTest;
 import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
-import com.redhat.thermostat.vm.compiler.common.internal.VmCompilerStatCategoryRegistration;
 
-public class VmCompilerStatCategoryRegistrationTest {
+public class VmCompilerStatCategoryRegistrationTest extends ServiceLoaderTest<CategoryRegistration> {
+
+    public VmCompilerStatCategoryRegistrationTest() {
+        super(CategoryRegistration.class, STORAGE_SERVICES, VmCompilerStatCategoryRegistration.class);
+    }
 
     @Test
     public void registersAllCategories() {
@@ -65,31 +63,5 @@ public class VmCompilerStatCategoryRegistrationTest {
         assertTrue(categories.contains(VmCompilerStatDao.vmCompilerStatsCategory.getName()));
     }
 
-    /*
-     * The web storage end-point uses service loader in order to determine the
-     * list of trusted/known categories. This test is to ensure service loading
-     * works for this module's regs. E.g. renaming of the impl class without
-     * changing META-INF/com.redhat.thermostat.storage.core.auth.CategoryRegistration
-     */
-    @Test
-    public void serviceLoaderCanLoadRegistration() {
-        Set<String> expectedClassNames = new HashSet<>();
-        expectedClassNames.add(VmCompilerStatCategoryRegistration.class.getName());
-        expectedClassNames.add(DAOImplCategoryRegistration.class.getName());
-        ServiceLoader<CategoryRegistration> loader = ServiceLoader.load(CategoryRegistration.class, VmCompilerStatCategoryRegistration.class.getClassLoader());
-        List<CategoryRegistration> registrations = new ArrayList<>(1);
-        CategoryRegistration vmCompilerStatCatReg = null;
-        for (CategoryRegistration r: loader) {
-            assertTrue(expectedClassNames.contains(r.getClass().getName()));
-            if (r.getClass().getName().equals(VmCompilerStatCategoryRegistration.class.getName())) {
-                vmCompilerStatCatReg = r;
-            }
-            registrations.add(r);
-        }
-        // storage-core + this module
-        assertEquals(2, registrations.size());
-        assertNotNull(vmCompilerStatCatReg);
-        assertEquals(1, vmCompilerStatCatReg.getCategoryNames().size());
-    }
 }
 
