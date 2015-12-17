@@ -67,7 +67,7 @@ public abstract class VmClassStatView extends BasicView implements UIComponent {
     public abstract void removeClassChart(Group group, String tag);
 
     public abstract void addClassData(String tag, List<DiscreteTimeData<? extends Number>> data);
-    public abstract void clearMemoryData(String tag);
+    public abstract void clearClassData(String tag);
 
 }
 

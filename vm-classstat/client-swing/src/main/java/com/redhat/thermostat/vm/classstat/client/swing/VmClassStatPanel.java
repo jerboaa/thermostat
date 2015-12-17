@@ -148,7 +148,7 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
     }
 
     @Override
-    public void clearMemoryData(final String tag) {
+    public void clearClassData(final String tag) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
