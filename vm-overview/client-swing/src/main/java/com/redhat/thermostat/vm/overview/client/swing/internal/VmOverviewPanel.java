@@ -40,11 +40,11 @@ import java.awt.Component;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
@@ -53,7 +53,6 @@ import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
-import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewView;
 import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
@@ -81,16 +80,6 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
         initializePanel();
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
-    }
-
-    @Override
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
-
-    @Override
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
     }
 
     @Override

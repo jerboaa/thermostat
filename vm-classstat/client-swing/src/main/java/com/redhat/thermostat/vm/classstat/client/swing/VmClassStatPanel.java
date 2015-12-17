@@ -51,7 +51,6 @@ import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.MultiChartPanel;
 import com.redhat.thermostat.client.swing.components.MultiChartPanel.DataGroup;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
-import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -92,16 +91,6 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
         visiblePanel.setContent(multiChartPanel);
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
-    }
-
-    @Override
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
-
-    @Override
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
     }
 
     @Override

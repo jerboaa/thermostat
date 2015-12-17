@@ -75,11 +75,6 @@ import javax.swing.WindowConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.text.JTextComponent;
 
-import com.redhat.thermostat.client.swing.OverlayContainer;
-import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
-import com.redhat.thermostat.client.swing.components.OverlayPanel;
-import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -92,9 +87,13 @@ import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.OverlayPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
 import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
@@ -102,6 +101,7 @@ import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
 import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
@@ -205,16 +205,6 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
     @Override
     public void removeUserActionListener(ActionListener<UserAction> listener) {
         userActionNotifier.removeActionListener(listener);
-    }
-
-    @Override
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
-
-    @Override
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
     }
 
     @Override

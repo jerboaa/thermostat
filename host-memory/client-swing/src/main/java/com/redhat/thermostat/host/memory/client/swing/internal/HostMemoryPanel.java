@@ -47,7 +47,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
-import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
@@ -58,8 +57,6 @@ import com.redhat.thermostat.client.swing.components.MultiChartPanel.DataGroup;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
-import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
-import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
@@ -161,16 +158,6 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
                 multiChartPanel.clearData(tag);
             }
         });
-    }
-
-    @Override
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
-
-    @Override
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
     }
 
     private void initializePanel() {

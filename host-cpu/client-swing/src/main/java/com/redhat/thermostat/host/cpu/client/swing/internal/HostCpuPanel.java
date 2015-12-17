@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.host.cpu.client.swing.internal;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
-import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -47,11 +47,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
-import javax.swing.Box;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -71,7 +71,6 @@ import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
-import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
 import com.redhat.thermostat.host.cpu.client.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -104,16 +103,6 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
         initializePanel();
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
-    }
-
-    @Override
-    public void addActionListener(ActionListener<Action> listener) {
-       notifier.addActionListener(listener);
-    }
-
-    @Override
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
     }
 
     @Override
