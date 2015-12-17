@@ -42,7 +42,7 @@
   <parent>
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat</artifactId>
-    <version>1.99.6-SNAPSHOT</version>
+    <version>1.99.7-SNAPSHOT</version>
   </parent>
 
   <artifactId>thermostat-vm-profiler</artifactId>
