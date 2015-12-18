@@ -1066,6 +1066,7 @@ fi
 %{_datadir}/%{pkg_name}/plugins/validate
 %{_datadir}/%{pkg_name}/plugins/setup
 %{_datadir}/%{pkg_name}/plugins/vm-classstat
+%{_datadir}/%{pkg_name}/plugins/vm-compiler
 %{_datadir}/%{pkg_name}/plugins/vm-cpu
 %{_datadir}/%{pkg_name}/plugins/vm-gc
 %{_datadir}/%{pkg_name}/plugins/vm-heap-analysis
