@@ -34,59 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.command.locale;
+package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public enum LocaleResources {
-    HOST_SERVICE_UNAVAILABLE,
-    VM_SERVICE_UNAVAILABLE,
-    HEAP_SERVICE_UNAVAILABLE,
-    AGENT_SERVICE_UNAVAILABLE,
-    REQUEST_QUEUE_UNAVAILABLE,
-    
-    HEADER_TIMESTAMP,
-    HEADER_AGENT_ID,
-    HEADER_VM_ID,
-    HEADER_HEAP_ID,
-    HEADER_OBJECT_ID,
-    HEADER_OBJECT_TYPE,
-    
-    FILE_REQUIRED,
-    INVALID_LIMIT,
-    HEAP_ID_NOT_FOUND,
-    HEAP_ID_REQUIRED,
-    SEARCH_TERM_REQUIRED,
-    OBJECT_ID_REQUIRED,
-    HEAP_DUMP_ERROR,
-    
-    COMMAND_HEAP_DUMP_DONE,
+public class LRUMap<K, V> extends LinkedHashMap<K, V> {
 
-    COMMAND_FIND_ROOT_NO_ROOT_FOUND,
+    private final int maximumSize;
 
-    COMMAND_OBJECT_INFO_OBJECT_ID,
-    COMMAND_OBJECT_INFO_TYPE,
-    COMMAND_OBJECT_INFO_SIZE,
-    COMMAND_OBJECT_INFO_HEAP_ALLOCATED,
-    COMMAND_OBJECT_INFO_REFERENCES,
-    COMMAND_OBJECT_INFO_REFERRERS,
-
-    OBJECT_NOT_FOUND_MESSAGE,
-    ERROR_READING_HISTOGRAM_MESSAGE,
-
-    COMMAND_SAVE_HEAP_DUMP_SAVED_TO_FILE,
-    COMMAND_SAVE_HEAP_DUMP_ERROR_SAVING,
-    COMMAND_SAVE_HEAP_DUMP_ERROR_CLOSING_STREAM,
-    
-    TABLE_CLASS_NAME,
-    TABLE_NUMBER_INSTANCES,
-    TABLE_TOTAL_SIZE,
-    ;
-    
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.heap.analysis.command.locale.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public LRUMap(int maximumSize) {
+        super(maximumSize + 1, 0.75f, true);
+        this.maximumSize = maximumSize;
     }
-}
 
+    @Override
+    public boolean removeEldestEntry(Map.Entry eldest) {
+        return size() > maximumSize;
+    }
+
+}

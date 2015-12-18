@@ -177,6 +177,7 @@ public class ObjectInfoCommandTest {
 
     }
 
+    @Test
     public void testHeapNotFound() throws CommandException {
         StubBundleContext context = new StubBundleContext();
         context.registerService(HeapDAO.class, dao, null);
@@ -195,6 +196,7 @@ public class ObjectInfoCommandTest {
         }
     }
 
+    @Test
     public void testObjectNotFound() throws CommandException {
         StubBundleContext context = new StubBundleContext();
         context.registerService(HeapDAO.class, dao, null);

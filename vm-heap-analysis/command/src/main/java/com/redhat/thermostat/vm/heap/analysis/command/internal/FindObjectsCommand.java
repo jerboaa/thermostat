@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 import java.util.Collection;
 import java.util.List;
 
+import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -50,19 +51,17 @@ import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
-import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 public class FindObjectsCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String HEAP_ID_ARG = "heapId";
-    private static final String LIMIT_ARG = "limit";
     private static final String HEADER_OBJECT_ID = translator.localize(LocaleResources.HEADER_OBJECT_ID).getContents();
     private static final String HEADER_TYPE = translator.localize(LocaleResources.HEADER_OBJECT_TYPE).getContents();
     private static final int DEFAULT_LIMIT = 10;
+
+    private static final String LIMIT_ARG = "limit";
 
     private BundleContext context;
 
@@ -88,30 +87,14 @@ public class FindObjectsCommand extends AbstractCommand {
     }
 
     private void run(CommandContext ctx, HeapDAO heapDAO) throws CommandException {
-        String heapId = ctx.getArguments().getArgument(HEAP_ID_ARG);
-        HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
-        if (heapInfo == null) {
-            throw new HeapNotFoundException(heapId);
-        }
-        HeapDump heapDump = heapDAO.getHeapDump(heapInfo);
-        if (heapDump == null) {
-            throw new HeapNotFoundException(heapId);
-        }
-
-        List<String> terms = ctx.getArguments().getNonOptionArguments();
-        if (terms.size() == 0) {
-            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.SEARCH_TERM_REQUIRED).getContents());
-            return;
-        }
-        String searchTerm = terms.get(0);
-        if (searchTerm.trim().length() == 0) {
-            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.SEARCH_TERM_REQUIRED).getContents());
-            return;
-        }
+        String searchTerm = getSearchTerm(ctx);
+        HeapCommandHelper helper = HeapCommandHelper.getHelper(ctx, heapDAO);
+        HeapDump heapDump = helper.getHeapDump();
 
         String limitArg = ctx.getArguments().getArgument(LIMIT_ARG);
         int limit = parseLimit(limitArg);
         Collection<String> results = heapDump.searchObjects(searchTerm, limit);
+
         TableRenderer table = new TableRenderer(2);
         table.printHeader(HEADER_OBJECT_ID, HEADER_TYPE);
         for (String objectId : results) {
@@ -121,6 +104,23 @@ public class FindObjectsCommand extends AbstractCommand {
             table.printLine(id, className);
         }
         table.render(ctx.getConsole().getOutput());
+    }
+
+    private static String getSearchTerm(CommandContext ctx) throws SearchTermRequiredException {
+        assertSearchTermProvided(ctx);
+        List<String> terms = ctx.getArguments().getNonOptionArguments();
+        return terms.get(0);
+    }
+
+    private static void assertSearchTermProvided(CommandContext ctx) throws SearchTermRequiredException {
+        List<String> terms = ctx.getArguments().getNonOptionArguments();
+        if (terms.size() == 0) {
+            throw new SearchTermRequiredException();
+        }
+        String searchTerm = terms.get(0);
+        if (searchTerm.trim().length() == 0) {
+            throw new SearchTermRequiredException();
+        }
     }
 
     private int parseLimit(String limitArg) throws CommandException {

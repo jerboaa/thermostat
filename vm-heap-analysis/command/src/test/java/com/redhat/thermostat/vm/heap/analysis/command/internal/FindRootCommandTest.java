@@ -265,6 +265,7 @@ public class FindRootCommandTest {
 
     }
 
+    @Test
     public void testHeapNotFound() throws CommandException {
         TestCommandContextFactory factory = new TestCommandContextFactory();
         SimpleArguments args = new SimpleArguments();
@@ -279,6 +280,7 @@ public class FindRootCommandTest {
         }
     }
 
+    @Test
     public void testObjectNotFound() throws CommandException {
         TestCommandContextFactory factory = new TestCommandContextFactory();
         SimpleArguments args = new SimpleArguments();

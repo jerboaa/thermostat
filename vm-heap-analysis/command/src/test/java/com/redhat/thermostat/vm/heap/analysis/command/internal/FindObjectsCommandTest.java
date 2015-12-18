@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
+import com.redhat.thermostat.common.cli.Arguments;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -182,6 +183,7 @@ public class FindObjectsCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
         SimpleArguments args = new SimpleArguments();
         args.addArgument("heapId", INVALID_HEAP_ID);
+        args.addNonOptionArgument("fluff");
 
         try {
             cmd.run(factory.createContext(args));
@@ -189,6 +191,15 @@ public class FindObjectsCommandTest {
         } catch (CommandException e) {
             assertEquals("Heap ID not found: " + INVALID_HEAP_ID, e.getMessage());
         }
+    }
+
+    @Test(expected = SearchTermRequiredException.class)
+    public void testSearchWithNoSearchTerm() throws CommandException {
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("heapId", HEAP_ID);
+
+        cmd.run(factory.createContext(args));
     }
 }
 

@@ -62,7 +62,6 @@ public class ObjectInfoCommand extends AbstractCommand {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final BundleContext context;
-    private Snapshot snapshot;
 
     public ObjectInfoCommand() {
         this(FrameworkUtil.getBundle(ObjectInfoCommand.class).getBundleContext());
@@ -86,31 +85,30 @@ public class ObjectInfoCommand extends AbstractCommand {
     }
 
     private void run(CommandContext ctx, HeapDAO heapDao) throws CommandException {
-        ObjectCommandHelper objCmdHelper = new ObjectCommandHelper(ctx, heapDao);
+        HeapCommandHelper objCmdHelper = HeapCommandHelper.getHelper(ctx, heapDao);
         HeapDump heapDump = objCmdHelper.getHeapDump();
-        snapshot = heapDump.getSnapshot();
-        JavaHeapObject obj = objCmdHelper.getJavaHeapObject();
+        Snapshot snapshot = heapDump.getSnapshot();
+        JavaHeapObject obj = objCmdHelper.getJavaHeapObject(ctx);
         TableRenderer table = new TableRenderer(2);
         table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID).getContents(), obj.getIdString());
         table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE).getContents(), obj.getClazz().getName());
         table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE).getContents(), String.valueOf(obj.getSize()) + " bytes");
         table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED).getContents(), String.valueOf(obj.isHeapAllocated()));
         table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERENCES).getContents(), "");
-        printReferences(table, obj);
+        printReferences(table, obj, snapshot);
         table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERRERS).getContents(), "");
-        printReferrers(table, obj);
+        printReferrers(table, obj, snapshot);
 
         PrintStream out = ctx.getConsole().getOutput();
         table.render(out);
-
     }
 
-    private void printReferences(final TableRenderer table, final JavaHeapObject obj) {
+    private void printReferences(final TableRenderer table, final JavaHeapObject obj, final Snapshot snapshot) {
         JavaHeapObjectVisitor v = new JavaHeapObjectVisitor() {
             
             @Override
             public void visit(JavaHeapObject ref) {
-                table.printLine("", describeReference(obj, ref) + " -> " + PrintObjectUtils.objectToString(ref));
+                table.printLine("", describeReference(obj, ref, snapshot) + " -> " + PrintObjectUtils.objectToString(ref));
             }
             
             @Override
@@ -126,15 +124,15 @@ public class ObjectInfoCommand extends AbstractCommand {
         obj.visitReferencedObjects(v);
     }
 
-    private void printReferrers(TableRenderer table, JavaHeapObject obj) {
+    private void printReferrers(TableRenderer table, JavaHeapObject obj, Snapshot snapshot) {
         Enumeration<?> referrers = obj.getReferers();
         while (referrers.hasMoreElements()) {
             JavaHeapObject ref = (JavaHeapObject) referrers.nextElement();
-            table.printLine("", PrintObjectUtils.objectToString(ref) + " -> " + describeReference(ref, obj));
+            table.printLine("", PrintObjectUtils.objectToString(ref) + " -> " + describeReference(ref, obj, snapshot));
         }
     }
 
-    private String describeReference(JavaHeapObject from, JavaHeapObject to) {
+    private String describeReference(JavaHeapObject from, JavaHeapObject to, Snapshot snapshot) {
         return "[" + from.describeReferenceTo(to, snapshot) + "]";
     }
 

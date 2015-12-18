@@ -89,10 +89,10 @@ public class FindRootCommand extends AbstractCommand {
     }
 
     private void run(CommandContext ctx, HeapDAO heapDao) throws CommandException {
-        ObjectCommandHelper objCmdHelper = new ObjectCommandHelper(ctx, heapDao);
+        HeapCommandHelper objCmdHelper = HeapCommandHelper.getHelper(ctx, heapDao);
         HeapDump heapDump = objCmdHelper.getHeapDump();
         Snapshot snapshot = heapDump.getSnapshot();
-        JavaHeapObject obj = objCmdHelper.getJavaHeapObject();
+        JavaHeapObject obj = objCmdHelper.getJavaHeapObject(ctx);
         boolean findAll = ctx.getArguments().hasArgument(ALL_ARG);
         FindRoot findRoot = new FindRoot();
         Collection<HeapPath<JavaHeapObject>> pathsToRoot = findRoot.findShortestPathsToRoot(obj, findAll);

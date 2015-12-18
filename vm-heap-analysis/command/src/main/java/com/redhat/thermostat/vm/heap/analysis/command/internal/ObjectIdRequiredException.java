@@ -36,54 +36,16 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
-import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
-import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
-public class ObjectCommandHelper {
+public class ObjectIdRequiredException extends CommandException {
 
-    private static final String OBJECT_ID_ARG = "objectId";
-    private static final String HEAP_ID_ARG = "heapId";
+    private static final Translate<LocaleResources> tr = LocaleResources.createLocalizer();
 
-    private CommandContext ctx;
-    private HeapDAO dao;
-    private HeapDump heapDump;
-
-    public ObjectCommandHelper(CommandContext ctx, HeapDAO dao) {
-        this.ctx = ctx;
-        this.dao = dao;
+    ObjectIdRequiredException() {
+        super(tr.localize(LocaleResources.OBJECT_ID_REQUIRED));
     }
 
-    public HeapDump getHeapDump() throws CommandException {
-        if (heapDump == null) {
-            loadHeapDump();
-        }
-        return heapDump;
-    }
-
-    private void loadHeapDump() throws CommandException {
-        Arguments args = ctx.getArguments();
-        String heapId = args.getArgument(HEAP_ID_ARG);
-        HeapInfo heapInfo = dao.getHeapInfo(heapId);
-        if (heapInfo == null) {
-            throw new HeapNotFoundException(heapId);
-        }
-        heapDump = dao.getHeapDump(heapInfo);
-    }
-
-    public JavaHeapObject getJavaHeapObject() throws CommandException {
-        HeapDump heapDump = getHeapDump();
-        Arguments args = ctx.getArguments();
-        String objectId = args.getArgument(OBJECT_ID_ARG);
-        JavaHeapObject obj = heapDump.findObject(objectId);
-        if (obj == null) {
-            throw new ObjectNotFoundException(objectId);
-        }
-        return obj;
-    }
 }
-
