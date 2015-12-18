@@ -89,7 +89,10 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     // when you change those!
     private static final String VERBOSE_MODE_AGENT_STOPPED_MSG = "Agent stopped.";
     private static final String VERBOSE_MODE_AGENT_STARTED_MSG = "Agent started.";
-    
+
+    private static final String SIGINT_NAME = "INT";
+    private static final String SIGTERM_NAME = "TERM";
+
     private static final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
     
     private final BundleContext bundleContext;
@@ -104,6 +107,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private final ExitStatus exitStatus;
     private final WriterID writerId;
     private CountDownLatch shutdownLatch;
+
+    private CustomSignalHandler handler;
 
     public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId) {
         this(bundleContext, exitStatus, writerId, new ConfigurationCreator(), new DbServiceFactory());
@@ -203,6 +208,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             shutdownLatch.await();
             logger.fine("terminating agent cmd");
         } catch (InterruptedException e) {
+            // Ensure proper shutdown if interrupted
+            handler.handle(new Signal(SIGINT_NAME));
             return;
         }
     }
@@ -323,9 +330,9 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                         .get(BackendInfoDAO.class.getName());
 
                 Agent agent = startAgent(storage, agentInfoDAO, backendInfoDAO);
-                SignalHandler handler = new CustomSignalHandler(agent, configServer);
-                Signal.handle(new Signal("INT"), handler);
-                Signal.handle(new Signal("TERM"), handler);
+                handler = new CustomSignalHandler(agent, configServer);
+                Signal.handle(new Signal(SIGINT_NAME), handler);
+                Signal.handle(new Signal(SIGTERM_NAME), handler);
             }
 
             @Override
