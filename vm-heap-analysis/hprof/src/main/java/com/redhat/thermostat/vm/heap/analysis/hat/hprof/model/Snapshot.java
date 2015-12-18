@@ -225,15 +225,10 @@ public class Snapshot implements AutoCloseable {
         }
     }
 
-    // To show heap parsing progress, we print a '.' after this limit
-    private static final int DOT_LIMIT = 5000;
-
     /**
      * Called after reading complete, to initialize the structure
      */
     public void resolve(boolean calculateRefs) {
-        System.out.println("Resolving " + heapObjects.size() + " objects...");
-
         // First, resolve the classes.  All classes must be resolved before
         // we try any objects, because the objects use classes in their
         // resolution.
@@ -289,21 +284,11 @@ public class Snapshot implements AutoCloseable {
 
         if (calculateRefs) {
             calculateReferencesToObjects();
-            System.out.print("Eliminating duplicate references");
-            System.out.flush();
-            // This println refers to the *next* step
         }
         int count = 0;
         for (JavaHeapObject t : heapObjects.values()) {
             t.setupReferers();
             ++count;
-            if (calculateRefs && count % DOT_LIMIT == 0) {
-                System.out.print(".");
-                System.out.flush();
-            }
-        }
-        if (calculateRefs) {
-            System.out.println("");
         }
 
         // to ensure that Iterator.remove() on getClasses()
@@ -312,9 +297,6 @@ public class Snapshot implements AutoCloseable {
     }
 
     private void calculateReferencesToObjects() {
-        System.out.print("Chasing references, expect "
-                         + (heapObjects.size() / DOT_LIMIT) + " dots");
-        System.out.flush();
         int count = 0;
         MyVisitor visitor = new MyVisitor();
         for (JavaHeapObject t : heapObjects.values()) {
@@ -322,12 +304,7 @@ public class Snapshot implements AutoCloseable {
             // call addReferenceFrom(t) on all objects t references:
             t.visitReferencedObjects(visitor);
             ++count;
-            if (count % DOT_LIMIT == 0) {
-                System.out.print(".");
-                System.out.flush();
-            }
         }
-        System.out.println();
         for (Root r : roots) {
             r.resolve(this);
             JavaHeapObject t = findThing(r.getId());

@@ -185,7 +185,7 @@ public class HprofReader extends Reader /* imports */ implements ArrayTypeCodes 
         if (identifierSize != 4 && identifierSize != 8) {
             throw new IOException("I'm sorry, but I can't deal with an identifier size of " + identifierSize + ".  I can only deal with 4 or 8.");
         }
-        System.out.println("Dump file created " + (new Date(in.readLong())));
+        /* long creationDateTimeStampInMillis = */ in.readLong();
         currPos += 8;
 
         for (;;) {
