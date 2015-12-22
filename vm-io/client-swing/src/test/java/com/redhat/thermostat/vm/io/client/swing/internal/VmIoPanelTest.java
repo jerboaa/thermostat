@@ -34,30 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.io.client.core;
+package com.redhat.thermostat.vm.io.client.swing.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
-public enum LocaleResources {
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
-    VM_INFO_TAB_IO,
+import com.redhat.thermostat.vm.io.common.VmIoStat;
 
-    VM_IO_TITLE,
-    VM_IO_CHART_TIME_LABEL,
+public class VmIoPanelTest {
 
-    VM_IO_CHART_CHARACTERS_AXIS_LABEL,
-    VM_IO_CHART_SYSCALLS_AXIS_LABEL,
-    VM_IO_CHART_CHARACTERS_READ_LABEL,
-    VM_IO_CHART_CHARACTERS_WRITTEN_LABEL,
-    VM_IO_CHART_READ_SYSCALLS_LABEL,
-    VM_IO_CHART_WRITE_SYSCALLS_LABEL,
-    ;
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame mainWindow = new JFrame("Testing!");
 
-    static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.vm.io.client.core.strings";
+                int first = 0;
+                VmIoPanel view = new VmIoPanel();
+                VmIoStat stat1 = new VmIoStat("writer-id", "agent-id", first,
+                        10, 20, 30, 40);
+                VmIoStat stat2 = new VmIoStat("writer-id", "agent-id", first + TimeUnit.MINUTES.toMillis(1),
+                        100, 200, 300, 400);
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+                view.addData(Arrays.asList(stat1, stat2));
+
+                mainWindow.add(view.getUiComponent());
+                mainWindow.setVisible(true);
+            }
+        });
     }
-}
 
+}

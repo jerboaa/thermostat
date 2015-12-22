@@ -71,8 +71,6 @@ public class VmIoController implements InformationServiceController<VmRef> {
 
     private final Timer timer;
 
-    private Duration userDesiredDuration;
-
     private TimeRangeController<VmIoStat, VmRef> timeRangeController;
 
     public VmIoController(ApplicationService appSvc, VmIoStatDAO vmIoStatDao, VmRef ref, VmIoViewProvider provider) {
@@ -109,24 +107,6 @@ public class VmIoController implements InformationServiceController<VmRef> {
             }
         });
 
-        view.addUserActionListener(new ActionListener<VmIoView.UserAction>() {
-
-            @Override
-            public void actionPerformed(ActionEvent<VmIoView.UserAction> actionEvent) {
-                switch (actionEvent.getActionId()) {
-                case USER_CHANGED_TIME_RANGE:
-                    Duration duration = view.getUserDesiredDuration();
-                    userDesiredDuration = duration;
-                    view.setVisibleDataRange(duration.value, duration.unit);
-                    break;
-                default:
-                    throw new AssertionError("Unhandled action type");
-                }
-            }
-        });
-
-        userDesiredDuration = view.getUserDesiredDuration();
-
         timeRangeController = new TimeRangeController<>();
     }
 
@@ -161,9 +141,12 @@ public class VmIoController implements InformationServiceController<VmRef> {
             }
         };
 
-        timeRangeController.update(userDesiredDuration, newAvailableRange, singleValueSupplier, ref, runnable);
-        view.setAvailableDataRange(timeRangeController.getAvailableRange());
-        view.addData(data);
+        Duration duration = view.getUserDesiredDuration();
+        if (duration != null) { // only update view if it is working correctly
+            timeRangeController.update(view.getUserDesiredDuration(), newAvailableRange, singleValueSupplier, ref, runnable);
+            view.setAvailableDataRange(timeRangeController.getAvailableRange());
+            view.addData(data);
+        }
     }
 
     private void stop() {
