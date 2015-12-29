@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.vm.compiler.client.core.internal;
 
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -57,6 +57,7 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatView;
+import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatView.ViewData;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatViewProvider;
 import com.redhat.thermostat.vm.compiler.common.VmCompilerStat;
 import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
@@ -78,12 +79,13 @@ public class VmCompilerStatControllerTest {
     public void testChartUpdate() {
         final long SOME_TIMESTAMP = 12345;
         final int SOME_VALUE = 1234;
+        final int LAST_TYPE = 2;
 
         VmCompilerStat stat1 = new VmCompilerStat("foo-agent", "vmId", SOME_TIMESTAMP,
                 SOME_VALUE, SOME_VALUE, SOME_VALUE,
                 SOME_VALUE,
-                SOME_VALUE, SOME_VALUE, "lastMethod",
-                SOME_VALUE, "lastFailedMethod");
+                SOME_VALUE, LAST_TYPE, "Foo lastMethod",
+                LAST_TYPE, "Bar lastFailedMethod");
 
         List<VmCompilerStat> stats = new ArrayList<VmCompilerStat>();
         stats.add(stat1);
@@ -98,7 +100,7 @@ public class VmCompilerStatControllerTest {
 
         verify(timer).start();
         timerAction.run();
-        verify(view).setData(stat1);
+        verify(view).setData(isA(ViewData.class));
 
         listener.actionPerformed(new ActionEvent<>(view, VmCompilerStatView.Action.HIDDEN));
 

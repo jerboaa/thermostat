@@ -38,11 +38,22 @@ package com.redhat.thermostat.vm.compiler.client.core;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.vm.compiler.common.VmCompilerStat;
 
 public abstract class VmCompilerStatView extends BasicView implements UIComponent {
 
-    public abstract void setData(VmCompilerStat stat);
+    public static class ViewData {
+        public String totalCompiles;
+        public String totalBailouts;
+        public String totalInvalidates;
+        public String compilationTime;
+        public String lastSize;
+        public String lastType;
+        public String lastMethod;
+        public String lastFailedType;
+        public String lastFailedMethod;
+    }
+
+    public abstract void setData(ViewData stat);
 
 }
 

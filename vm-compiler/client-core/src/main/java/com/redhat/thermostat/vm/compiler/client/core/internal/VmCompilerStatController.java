@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.compiler.client.core.internal;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
@@ -51,14 +53,26 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatView;
+import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatView.ViewData;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatViewProvider;
 import com.redhat.thermostat.vm.compiler.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.compiler.common.ParsedVmCompilerStat;
+import com.redhat.thermostat.vm.compiler.common.ParsedVmCompilerStat.CompileType;
 import com.redhat.thermostat.vm.compiler.common.VmCompilerStat;
 import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
 
 public class VmCompilerStatController implements InformationServiceController<VmRef> {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    private static final Map<CompileType, String> COMPILATION_TYPES = new HashMap<>();
+
+    static {
+        COMPILATION_TYPES.put(CompileType.NO_COMPILE, "No Compiles");
+        COMPILATION_TYPES.put(CompileType.NORMAL_COMPILE, "Normal Compile");
+        COMPILATION_TYPES.put(CompileType.OSR_COMPILE, "OSR Compile");
+        COMPILATION_TYPES.put(CompileType.NATIVE_COMPILE, "Native Compile");
+    }
 
     private class UpdateChartData implements Runnable {
         @Override
@@ -69,8 +83,26 @@ public class VmCompilerStatController implements InformationServiceController<Vm
                 return;
             }
 
-            compilerView.setData(newest);
+            ParsedVmCompilerStat stat = new ParsedVmCompilerStat(newest);
+
+            ViewData data = new ViewData();
+            data.totalCompiles = String.valueOf(stat.getTotalCompiles());
+            data.totalBailouts = String.valueOf(stat.getTotalBailouts());
+            data.totalInvalidates = String.valueOf(stat.getTotalInvalidates());
+            data.compilationTime = stat.getCompilationTime();
+            data.lastSize = stat.getLastSize().toString();
+            data.lastType = translateCompileDescription(stat.getLastType());
+            data.lastMethod = stat.getLastMethod();
+            data.lastFailedType = translateCompileDescription(stat.getLastFailedType());
+            data.lastFailedMethod = stat.getLastFailedMethod();
+
+            compilerView.setData(data);
         }
+
+        private String translateCompileDescription(CompileType type) {
+            return COMPILATION_TYPES.get(type);
+        }
+
     }
 
     private final VmCompilerStatView compilerView;

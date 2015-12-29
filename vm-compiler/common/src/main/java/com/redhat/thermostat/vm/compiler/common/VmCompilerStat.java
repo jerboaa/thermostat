@@ -52,14 +52,41 @@ public class VmCompilerStat extends BasePojo implements TimeStampedPojo {
 
     private String vmId;
     private long timestamp;
+
     private long totalCompiles;
     private long totalBailouts;
     private long totalInvalidates;
+
+    /**
+     * There's unit no explicitly mentioned for this jstat value anywhere
+     * that I could find. The closest thing I got was the hotspot
+     * implementation referring to ComplilationMXBean which mentions the
+     * return value is in milliseconds.
+     */
     private long compilationTime;
+
     private long lastSize;
+
+    /**
+     * From hotspot code, this is an enum with the values:
+     * { no_compile, normal_compile, osr_compile, native_compile }
+     */
     private long lastType;
+
+    /**
+     *  is of the form "name/of/package/Class$InnerClass methodName"
+     */
     private String lastMethod;
+
+    /**
+     * From hotspot code, this is an enum with the values:
+     * { no_compile, normal_compile, osr_compile, native_compile }
+     */
     private long lastFailedType;
+
+    /**
+     *  is of the form "name/of/package/Class$InnerClass methodName"
+     */
     private String lastFailedMethod;
 
     public VmCompilerStat() {
@@ -143,12 +170,13 @@ public class VmCompilerStat extends BasePojo implements TimeStampedPojo {
         this.totalInvalidates = totalInvalidates;
     }
 
-    /** Time spent in compilation */
+    /** Time spent in compilation. Cumulative, measured in ms */
     @Persist
     public long getCompilationTime() {
         return compilationTime;
     }
 
+    /** Time spent in compilation. Cumulative, measured in ms */
     @Persist
     public void setCompilationTime(long compilationTime) {
         this.compilationTime = compilationTime;

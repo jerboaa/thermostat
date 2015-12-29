@@ -50,7 +50,6 @@ import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifi
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatView;
 import com.redhat.thermostat.vm.compiler.client.locale.LocaleResources;
-import com.redhat.thermostat.vm.compiler.common.VmCompilerStat;
 
 public class SwingVmCompilerStatView extends VmCompilerStatView implements SwingComponent {
 
@@ -97,21 +96,31 @@ public class SwingVmCompilerStatView extends VmCompilerStatView implements Swing
     }
 
     @Override
-    public void setData(final VmCompilerStat stat) {
+    public void setData(final ViewData data) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 final int VALUE_COLUMN = 1;
-                model.setValueAt(stat.getTotalCompiles(), 0, VALUE_COLUMN);
-                model.setValueAt(stat.getTotalBailouts(), 1, VALUE_COLUMN);
-                model.setValueAt(stat.getTotalInvalidates(), 2, VALUE_COLUMN);
-                model.setValueAt(stat.getCompilationTime(), 3, VALUE_COLUMN);
-                model.setValueAt(stat.getLastSize(), 4, VALUE_COLUMN);
-                model.setValueAt(stat.getLastType(), 5, VALUE_COLUMN);
-                model.setValueAt(stat.getLastMethod(), 6, VALUE_COLUMN);
-                model.setValueAt(stat.getLastFailedType(), 7, VALUE_COLUMN);
-                model.setValueAt(stat.getLastFailedMethod(), 8, VALUE_COLUMN);
+
+                String[] values = {
+                        data.totalCompiles,
+                        data.totalBailouts,
+                        data.totalInvalidates,
+                        data.compilationTime,
+                        data.lastSize,
+                        data.lastType,
+                        data.lastMethod,
+                        data.lastFailedType,
+                        data.lastFailedMethod,
+                };
+
+                int row = 0;
+                for (String value : values) {
+                    model.setValueAt(value, row, VALUE_COLUMN);
+                    row++;
+                }
             }
+
         });
     }
 

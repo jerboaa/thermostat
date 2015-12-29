@@ -39,8 +39,7 @@ package com.redhat.thermostat.vm.compiler.client.swing;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.vm.compiler.client.swing.SwingVmCompilerStatView;
-import com.redhat.thermostat.vm.compiler.common.VmCompilerStat;
+import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatView.ViewData;
 
 public class SwingVmCompilerStatViewTest {
 
@@ -57,22 +56,27 @@ public class SwingVmCompilerStatViewTest {
                 int totalBailouts = 10;
                 int totalInvalidates = 5;
 
-                long compilationTime = 10; // ms
+                String compilationTime = "12.3 s";
 
-                int lastSize = 10;
-                int lastType = 1;
-                String lastMethod = "lastMethod()";
+                String lastSize = "10 bytes";
+                String lastType = "OSR Compile";
+                String lastMethod = "org.foo.Bar.lastMethod()";
 
-                int lastFailedType = 1;
-                String lastFailedMethod = "lastFailedMethod()";
+                String lastFailedType = "Native Compile";
+                String lastFailedMethod = "org.Baz.lastFailedMethod()";
 
-                VmCompilerStat stat = new VmCompilerStat("agent-id", "vm-id", 1234L,
-                        totalCompiles, totalBailouts, totalInvalidates,
-                        compilationTime,
-                        lastSize, lastType, lastMethod,
-                        lastFailedType, lastFailedMethod);
+                ViewData data = new ViewData();
+                data.totalCompiles = String.valueOf(totalCompiles);
+                data.totalBailouts = String.valueOf(totalBailouts);
+                data.totalInvalidates = String.valueOf(totalInvalidates);
+                data.compilationTime = compilationTime;
+                data.lastSize = lastSize;
+                data.lastType = lastType;
+                data.lastMethod = lastMethod;
+                data.lastFailedType = lastFailedType;
+                data.lastFailedType = lastFailedMethod;
 
-                compilerPanel.setData(stat);
+                compilerPanel.setData(data);
 
                 frame.add(compilerPanel.getUiComponent());
                 frame.pack();
