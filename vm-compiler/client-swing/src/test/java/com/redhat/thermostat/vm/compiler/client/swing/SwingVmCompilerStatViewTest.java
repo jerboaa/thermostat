@@ -76,7 +76,7 @@ public class SwingVmCompilerStatViewTest {
                 data.lastFailedType = lastFailedType;
                 data.lastFailedType = lastFailedMethod;
 
-                compilerPanel.setData(data);
+                compilerPanel.setCurrentDisplay(data);
 
                 frame.add(compilerPanel.getUiComponent());
                 frame.pack();

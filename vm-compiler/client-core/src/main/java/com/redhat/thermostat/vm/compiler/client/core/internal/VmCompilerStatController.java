@@ -36,11 +36,15 @@
 
 package com.redhat.thermostat.vm.compiler.client.core.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -49,9 +53,11 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatView;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatView.ViewData;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatViewProvider;
@@ -74,41 +80,12 @@ public class VmCompilerStatController implements InformationServiceController<Vm
         COMPILATION_TYPES.put(CompileType.NATIVE_COMPILE, "Native Compile");
     }
 
-    private class UpdateChartData implements Runnable {
-        @Override
-        public void run() {
-            VmCompilerStat newest = dao.getNewest(ref);
-            // Do nothing when there is no data
-            if (newest == null) {
-                return;
-            }
-
-            ParsedVmCompilerStat stat = new ParsedVmCompilerStat(newest);
-
-            ViewData data = new ViewData();
-            data.totalCompiles = String.valueOf(stat.getTotalCompiles());
-            data.totalBailouts = String.valueOf(stat.getTotalBailouts());
-            data.totalInvalidates = String.valueOf(stat.getTotalInvalidates());
-            data.compilationTime = stat.getCompilationTime();
-            data.lastSize = stat.getLastSize().toString();
-            data.lastType = translateCompileDescription(stat.getLastType());
-            data.lastMethod = stat.getLastMethod();
-            data.lastFailedType = translateCompileDescription(stat.getLastFailedType());
-            data.lastFailedMethod = stat.getLastFailedMethod();
-
-            compilerView.setData(data);
-        }
-
-        private String translateCompileDescription(CompileType type) {
-            return COMPILATION_TYPES.get(type);
-        }
-
-    }
-
     private final VmCompilerStatView compilerView;
     private final VmRef ref;
     private final VmCompilerStatDao dao;
     private final Timer timer;
+
+    private TimeRangeController<VmCompilerStat, VmRef> timeRangeController;
 
     public VmCompilerStatController(ApplicationService appSvc, VmCompilerStatDao vmCompilerStatDao, VmRef ref, VmCompilerStatViewProvider viewProvider) {
         this.ref = ref;
@@ -138,6 +115,9 @@ public class VmCompilerStatController implements InformationServiceController<Vm
                 }
             }
         });
+
+
+        timeRangeController = new TimeRangeController<>();
     }
 
     private void start() {
@@ -156,6 +136,78 @@ public class VmCompilerStatController implements InformationServiceController<Vm
     @Override
     public UIComponent getView() {
         return (UIComponent) compilerView;
+    }
+
+    private class UpdateChartData implements Runnable {
+        @Override
+        public void run() {
+            VmCompilerStat oldest = dao.getOldest(ref);
+            VmCompilerStat newest = dao.getNewest(ref);
+            // Do nothing when there is no data
+            if (oldest == null || newest == null) {
+                return;
+            }
+
+            ParsedVmCompilerStat stat = new ParsedVmCompilerStat(newest);
+
+            ViewData data = new ViewData();
+            data.totalCompiles = String.valueOf(stat.getTotalCompiles());
+            data.totalBailouts = String.valueOf(stat.getTotalBailouts());
+            data.totalInvalidates = String.valueOf(stat.getTotalInvalidates());
+            data.compilationTime = stat.getCompilationTime();
+            data.lastSize = stat.getLastSize().toString();
+            data.lastType = translateCompileDescription(stat.getLastType());
+            data.lastMethod = stat.getLastMethod();
+            data.lastFailedType = translateCompileDescription(stat.getLastFailedType());
+            data.lastFailedMethod = stat.getLastFailedMethod();
+
+            compilerView.setCurrentDisplay(data);
+
+            final List<DiscreteTimeData<? extends Number>> totalCompiles = new ArrayList<>();
+            final List<DiscreteTimeData<? extends Number>> totalInvalidates = new ArrayList<>();
+            final List<DiscreteTimeData<? extends Number>> totalBailouts = new ArrayList<>();
+            final List<DiscreteTimeData<? extends Number>> compileTime = new ArrayList<>();
+
+            Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
+
+            TimeRangeController.StatsSupplier<VmCompilerStat, VmRef> singleValueSupplier = new TimeRangeController.StatsSupplier<VmCompilerStat, VmRef>() {
+                @Override
+                public List<VmCompilerStat> getStats(final VmRef ref, final long since, final long to) {
+                    return dao.getCompilerStats(ref, since, to);
+                }
+            };
+
+            TimeRangeController.SingleArgRunnable<VmCompilerStat> runnable = new TimeRangeController.SingleArgRunnable<VmCompilerStat>() {
+                @Override
+                public void run(VmCompilerStat stat) {
+                    long timeStamp = stat.getTimeStamp();
+
+                    totalCompiles.add(new DiscreteTimeData<Number>(timeStamp, stat.getTotalCompiles()));
+                    totalInvalidates.add(new DiscreteTimeData<Number>(timeStamp, stat.getTotalInvalidates()));
+                    totalBailouts.add(new DiscreteTimeData<Number>(timeStamp, stat.getTotalBailouts()));
+
+                    compileTime.add(new DiscreteTimeData<Number>(timeStamp, stat.getCompilationTime()));
+                }
+
+            };
+
+            Duration userDesiredDuration = compilerView.getUserDesiredDuration();
+            if (userDesiredDuration != null) {
+                timeRangeController.update(userDesiredDuration, newAvailableRange, singleValueSupplier, ref, runnable);
+                compilerView.setAvailableDataRange(timeRangeController.getAvailableRange());
+
+                compilerView.addCompilerData(VmCompilerStatView.Type.TOTAL_COMPILES, totalCompiles);
+                compilerView.addCompilerData(VmCompilerStatView.Type.TOTAL_BAILOUTS, totalBailouts);
+                compilerView.addCompilerData(VmCompilerStatView.Type.TOTAL_INVALIDATES, totalInvalidates);
+
+                compilerView.addCompilerData(VmCompilerStatView.Type.TOTAL_TIME, compileTime);
+            }
+        }
+
+        private String translateCompileDescription(CompileType type) {
+            return COMPILATION_TYPES.get(type);
+        }
+
     }
 
 }

@@ -37,17 +37,27 @@
 package com.redhat.thermostat.vm.compiler.client.swing;
 
 import java.awt.Component;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import java.util.concurrent.Callable;
 
+import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.MultiChartPanel;
+import com.redhat.thermostat.client.swing.components.MultiChartPanel.DataGroup;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatView;
 import com.redhat.thermostat.vm.compiler.client.locale.LocaleResources;
 
@@ -58,20 +68,39 @@ public class SwingVmCompilerStatView extends VmCompilerStatView implements Swing
     private final HeaderPanel visiblePanel;
 
     private DefaultTableModel model;
+    private MultiChartPanel multiChart;
+
+    private DataGroup numberGroup;
+    private DataGroup timeGroup;
 
     public SwingVmCompilerStatView() {
         visiblePanel = new HeaderPanel();
 
         visiblePanel.setHeader(t.localize(LocaleResources.VM_COMPILER_HEADER));
 
+        JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setOneTouchExpandable(true);
+
+        visiblePanel.setContent(splitPane);
+
         model = createTableModel();
 
         ThermostatTable table = new ThermostatTable(model);
         ThermostatScrollPane tablePane = new ThermostatScrollPane(table);
 
-        visiblePanel.setContent(tablePane);
+        splitPane.setTopComponent(tablePane);
+
+        multiChart = new MultiChartPanel();
+        numberGroup = multiChart.createGroup();
+        timeGroup = multiChart.createGroup();
+
+        splitPane.setBottomComponent(multiChart);
+        splitPane.setResizeWeight(0.5);
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
+
+        addChartTypes();
     }
 
     private DefaultTableModel createTableModel() {
@@ -81,22 +110,36 @@ public class SwingVmCompilerStatView extends VmCompilerStatView implements Swing
                 t.localize(LocaleResources.STATS_TABLE_COLUMN_VALUE).getContents()
         };
         Object[][] dataVector = new Object[][] {
-            new Object[] { t.localize(LocaleResources.STATS_TABLE_TOTAL_COMPILES).getContents(), 0 },
-            new Object[] { t.localize(LocaleResources.STATS_TABLE_TOTAL_BAILOUTS).getContents(), 0 },
-            new Object[] { t.localize(LocaleResources.STATS_TABLE_TOTAL_INVALIDATES).getContents(), 0 },
-            new Object[] { t.localize(LocaleResources.STATS_TABLE_COMPILATION_TIME).getContents(), 0 },
-            new Object[] { t.localize(LocaleResources.STATS_TABLE_LAST_SIZE).getContents(), 0 },
-            new Object[] { t.localize(LocaleResources.STATS_TABLE_LAST_TYPE).getContents(), 0 },
-            new Object[] { t.localize(LocaleResources.STATS_TABLE_LAST_METHOD).getContents(), 0 },
-            new Object[] { t.localize(LocaleResources.STATS_TABLE_LAST_FAILED_TYPE).getContents(), 0 },
-            new Object[] { t.localize(LocaleResources.STATS_TABLE_LAST_FAILED_METHOD).getContents(), 0 },
+            new Object[] { t.localize(LocaleResources.STATS_TOTAL_COMPILES).getContents(), 0 },
+            new Object[] { t.localize(LocaleResources.STATS_TOTAL_BAILOUTS).getContents(), 0 },
+            new Object[] { t.localize(LocaleResources.STATS_TOTAL_INVALIDATES).getContents(), 0 },
+            new Object[] { t.localize(LocaleResources.STATS_COMPILATION_TIME).getContents(), 0 },
+            new Object[] { t.localize(LocaleResources.STATS_LAST_SIZE).getContents(), 0 },
+            new Object[] { t.localize(LocaleResources.STATS_LAST_TYPE).getContents(), 0 },
+            new Object[] { t.localize(LocaleResources.STATS_LAST_METHOD).getContents(), 0 },
+            new Object[] { t.localize(LocaleResources.STATS_LAST_FAILED_TYPE).getContents(), 0 },
+            new Object[] { t.localize(LocaleResources.STATS_LAST_FAILED_METHOD).getContents(), 0 },
         };
         model.setDataVector(dataVector, columnIdentifiers);
         return model;
     }
 
+    private void addChartTypes() {
+        for (Type type : Type.values()) {
+            DataGroup group = getGroup(type);
+            String tag = getTag(type);
+            multiChart.addChart(group, tag, type.getLabel());
+            multiChart.showChart(group, tag);
+        }
+
+        multiChart.getRangeAxis(numberGroup).setLabel(
+                t.localize(LocaleResources.STAT_CHART_NUMBER_AXIS).getContents());
+        multiChart.getRangeAxis(timeGroup).setLabel(
+                t.localize(LocaleResources.STAT_CHART_TIME_AXIS).getContents());
+    }
+
     @Override
-    public void setData(final ViewData data) {
+    public void setCurrentDisplay(final ViewData data) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -122,6 +165,60 @@ public class SwingVmCompilerStatView extends VmCompilerStatView implements Swing
             }
 
         });
+    }
+
+    @Override
+    public Duration getUserDesiredDuration() {
+        try {
+            return new EdtHelper().callAndWait(new Callable<Duration>(){
+                public Duration call() {
+                    return multiChart.getUserDesiredDuration();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public void setAvailableDataRange(Range<Long> availableDataRange) {
+        // TODO
+    }
+
+    @Override
+    public void addCompilerData(final Type type, final List<DiscreteTimeData<? extends Number>> data) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                String tag = getTag(type);
+                multiChart.addData(tag, data);
+            }
+        });
+    }
+
+    @Override
+    public void clearCompilerData(final Type type) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                String tag = getTag(type);
+                multiChart.clearData(tag);
+            }
+        });
+    }
+
+    private DataGroup getGroup(final Type type) {
+        final DataGroup group;
+        if (type == Type.TOTAL_BAILOUTS || type == Type.TOTAL_COMPILES || type == Type.TOTAL_INVALIDATES) {
+            group = numberGroup;
+        } else {
+            group = timeGroup;
+        }
+        return group;
+    }
+
+    private String getTag(final Type type) {
+        return type.name();
     }
 
     @Override

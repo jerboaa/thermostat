@@ -93,6 +93,7 @@ public class VmCompilerStatControllerTest {
         VmCompilerStatDao vmCompilerStatDAO = mock(VmCompilerStatDao.class);
 
         when(vmCompilerStatDAO.getNewest(ref)).thenReturn(stat1);
+        when(vmCompilerStatDAO.getOldest(ref)).thenReturn(stat1);
 
         setupWithVmCompilerStatDAO(vmCompilerStatDAO);
 
@@ -100,7 +101,7 @@ public class VmCompilerStatControllerTest {
 
         verify(timer).start();
         timerAction.run();
-        verify(view).setData(isA(ViewData.class));
+        verify(view).setCurrentDisplay(isA(ViewData.class));
 
         listener.actionPerformed(new ActionEvent<>(view, VmCompilerStatView.Action.HIDDEN));
 

@@ -36,10 +36,39 @@
 
 package com.redhat.thermostat.vm.compiler.client.core;
 
+import java.util.List;
+
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.vm.compiler.client.locale.LocaleResources;
 
 public abstract class VmCompilerStatView extends BasicView implements UIComponent {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
+    public enum Type {
+        TOTAL_COMPILES(LocaleResources.STATS_TOTAL_COMPILES),
+        TOTAL_INVALIDATES(LocaleResources.STATS_TOTAL_INVALIDATES),
+        TOTAL_BAILOUTS(LocaleResources.STATS_TOTAL_BAILOUTS),
+
+        TOTAL_TIME(LocaleResources.STATS_COMPILATION_TIME),
+        ;
+
+        private final LocalizedString label;
+
+        Type(LocaleResources resource) {
+            this.label = t.localize(resource);
+        }
+
+        public LocalizedString getLabel() {
+            return this.label;
+        }
+    }
 
     public static class ViewData {
         public String totalCompiles;
@@ -53,7 +82,13 @@ public abstract class VmCompilerStatView extends BasicView implements UIComponen
         public String lastFailedMethod;
     }
 
-    public abstract void setData(ViewData stat);
+    public abstract void setCurrentDisplay(ViewData stat);
+
+    public abstract Duration getUserDesiredDuration();
+    public abstract void setAvailableDataRange(Range<Long> availableDataRange);
+
+    public abstract void addCompilerData(Type type, List<DiscreteTimeData<? extends Number>> data);
+    public abstract void clearCompilerData(Type type);
 
 }
 
