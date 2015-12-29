@@ -43,6 +43,7 @@ public enum LocaleResources {
     PID_LABEL_MENU_NAME,
     PID_LABEL_MENU_DESCRIPTION,
     PID_LABEL_MENU_PATH,
+    PID_LABEL_DECORATOR,
     ;
 
     static final String RESOURCE_BUNDLE =

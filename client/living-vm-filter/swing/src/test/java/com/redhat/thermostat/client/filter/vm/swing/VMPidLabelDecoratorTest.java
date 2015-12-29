@@ -80,8 +80,9 @@ public class VMPidLabelDecoratorTest {
         when(dao.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
 
         VmRef ref = mock(VmRef.class);
-        String str = decorator.getLabel("", ref);
-        assertThat(str, containsString("Pid"));
+        String str = decorator.getLabel("Foo", ref);
+        assertThat(str, containsString("Foo"));
+        assertThat(str, containsString("PID"));
         assertThat(str, containsString("100"));
     }
 

@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.filter.vm.swing;
 import com.redhat.thermostat.client.ui.ToggleableReferenceFieldLabelDecorator;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -51,6 +52,8 @@ import java.util.Map;
  * {@link VmRef}.
  */
 public class VMPidLabelDecorator implements ToggleableReferenceFieldLabelDecorator {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private VmInfoDAO dao;
     private boolean enabled = false;
@@ -85,7 +88,8 @@ public class VMPidLabelDecorator implements ToggleableReferenceFieldLabelDecorat
             referencePidMap.put(vmRef, pid);
         }
 
-        return "Pid: " + referencePidMap.get(vmRef);
+        String pid = Integer.toString(referencePidMap.get(vmRef));
+        return t.localize(LocaleResources.PID_LABEL_DECORATOR, originalLabel, pid).getContents();
     }
 
     @Override
