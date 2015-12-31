@@ -48,7 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Replaces the given ReferenceField label with the pid of the current
+ * Appends the given ReferenceField label with the PID of the current
  * {@link VmRef}.
  */
 public class VMPidLabelDecorator implements ToggleableReferenceFieldLabelDecorator {
