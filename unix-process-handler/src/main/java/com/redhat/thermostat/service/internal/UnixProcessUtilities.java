@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.service.process;
+package com.redhat.thermostat.service.internal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -48,8 +48,10 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ProcessStartException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.UNIXSignal;
 
-public class UnixProcessUtilities implements UNIXProcessHandler {
+class UnixProcessUtilities implements UNIXProcessHandler {
 
     private static final Logger logger = LoggingUtils.getLogger(UnixProcessUtilities.class);
     
@@ -101,13 +103,15 @@ public class UnixProcessUtilities implements UNIXProcessHandler {
         return result;
     }
     
-    public BufferedReader getProcessOutput(Process process) {
+    /** package-private for testing */
+    BufferedReader getProcessOutput(Process process) {
         InputStream in = process.getInputStream();
         InputStreamReader isr = new InputStreamReader(in);
         return new BufferedReader(isr);
     }
     
-    public Process createAndRunProcess(List<String> args) throws IOException, ApplicationException {
+    /** package-private for testing */
+    Process createAndRunProcess(List<String> args) throws IOException, ApplicationException {
         ProcessBuilder builder = new ProcessBuilder(args);
         Process process = null;
         try {

@@ -60,6 +60,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
@@ -77,6 +78,7 @@ public class StorageCommandTest {
 
     private String tmpDir;
     private ExitStatus exitStatus;
+    private UNIXProcessHandler processHandler;
     private CommonPaths paths;
     
     @Before
@@ -93,6 +95,8 @@ public class StorageCommandTest {
         } catch (IOException e) {
             Assert.fail("cannot setup tests: " + e);
         }
+
+        processHandler = mock(UNIXProcessHandler.class);
 
         paths = mock(CommonPathsImpl.class);
         File baseDir = new File(tmpDir);
@@ -130,7 +134,7 @@ public class StorageCommandTest {
         CommandContext ctx = mock(CommandContext.class);
         when(ctx.getArguments()).thenReturn(args);
 
-        StorageCommand service = new StorageCommand(exitStatus, paths) {
+        StorageCommand service = new StorageCommand(exitStatus, processHandler, paths) {
             @Override
             MongoProcessRunner createRunner() {
                 throw new AssertionError("dry run should never create an actual runner");
@@ -157,7 +161,7 @@ public class StorageCommandTest {
         // TODO: stop not tested yet, but be sure it's not called from the code
         doThrow(new ApplicationException("mock exception")).when(runner).stopService();
         
-        StorageCommand service = new StorageCommand(exitStatus, paths) {
+        StorageCommand service = new StorageCommand(exitStatus, processHandler, paths) {
             @Override
             MongoProcessRunner createRunner() {
                 return runner;

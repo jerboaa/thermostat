@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -55,14 +54,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.storage.cli.internal.DBStartupConfiguration;
-import com.redhat.thermostat.storage.cli.internal.MongoProcessRunner;
 
 public class MongoProcessRunnerTest {
 
     private MongoProcessRunner runner;
     private DBStartupConfiguration config;
+    private UNIXProcessHandler processHandler;
 
     private static final String NO_JOURNAL_MONGODB_VERSION = "2.0.0";
     private static final String JOURNAL_MONGODB_VERSION = "1.8.0";
@@ -85,7 +84,10 @@ public class MongoProcessRunnerTest {
         when(config.getDBPath()).thenReturn(dbPath);
         when(config.getLogFile()).thenReturn(logPath);
         when(config.getPidFile()).thenReturn(pidFile);
-        runner = new MongoProcessRunner(config, false, false);
+
+        processHandler = mock(UNIXProcessHandler.class);
+
+        runner = new MongoProcessRunner(processHandler, config, false, false);
     }
     
     @After
@@ -149,7 +151,7 @@ public class MongoProcessRunnerTest {
      */
     @Test
     public void testLocalhostExcptnDisabled() throws Exception {
-        runner = new MongoProcessRunner(config, false, true);
+        runner = new MongoProcessRunner(processHandler, config, false, true);
         List<String> cmds = runner.getStartupCommand(MongoProcessRunner.LOCALHOST_EXPTN_FIRST_VERSION);
         assertFalse(cmds.contains("enableLocalhostAuthBypass=0"));
     }

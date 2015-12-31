@@ -64,8 +64,8 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.service.process.UnixProcessUtilities;
 
 class MongodbUserSetup implements UserSetup {
 
@@ -75,6 +75,7 @@ class MongodbUserSetup implements UserSetup {
     private static final String MONGO_PROCESS = "mongod";
     private static final Logger logger = LoggingUtils.getLogger(MongodbUserSetup.class);
     private final UserCredsValidator validator;
+    private final UNIXProcessHandler processHandler;
     private final Launcher launcher;
     private final CredentialFinder finder;
     private final CredentialsFileCreator fileCreator;
@@ -88,8 +89,9 @@ class MongodbUserSetup implements UserSetup {
     private String userComment;
     private Integer pid;
     
-    MongodbUserSetup(UserCredsValidator validator, Launcher launcher, CredentialFinder finder, CredentialsFileCreator fileCreator, CommonPaths paths, StampFiles stampFiles, StructureInformation structureInfo, AuthFileWriter authWriter, KeyringWriter keyringWriter) {
+    MongodbUserSetup(UserCredsValidator validator, Launcher launcher, UNIXProcessHandler processHandler, CredentialFinder finder, CredentialsFileCreator fileCreator, CommonPaths paths, StampFiles stampFiles, StructureInformation structureInfo, AuthFileWriter authWriter, KeyringWriter keyringWriter) {
         this.validator = validator;
+        this.processHandler = processHandler;
         this.launcher = launcher;
         this.finder = finder;
         this.fileCreator = fileCreator;
@@ -178,7 +180,7 @@ class MongodbUserSetup implements UserSetup {
         if (!checkPid(pidFile)) {
             return false;
         }
-        String processName = UnixProcessUtilities.getInstance().getProcessName(pid);
+        String processName = processHandler.getProcessName(pid);
         // TODO: check if we want mongos or mongod from the configs
         return (processName != null && processName.equalsIgnoreCase(MONGO_PROCESS));
     }

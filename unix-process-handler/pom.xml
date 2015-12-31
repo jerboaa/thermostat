@@ -56,9 +56,9 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Private-Package>com.redhat.thermostat.service.activator</Private-Package>
+            <Private-Package>com.redhat.thermostat.service.internal</Private-Package>
             <Export-Package>com.redhat.thermostat.service.process</Export-Package>
-            <Bundle-Activator>com.redhat.thermostat.service.activator.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.service.internal.Activator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.process</Bundle-SymbolicName>
             <!-- Do not autogenerate uses clauses in Manifests -->

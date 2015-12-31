@@ -66,6 +66,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.setup.command.internal.SetupCommand;
 import com.redhat.thermostat.setup.command.internal.cli.CharArrayMatcher;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
@@ -82,12 +83,14 @@ public class SetupCommandTest {
     private ByteArrayOutputStream outputBaos, errorBaos;
     private PrintStream output, error;
     private CommonPaths paths;
+    private UNIXProcessHandler processHandler;
     private Launcher launcher;
     private Keyring keyring;
     private ThermostatSetup thermostatSetup;
 
     @Before
     public void setUp() {
+        processHandler = mock(UNIXProcessHandler.class);
         paths = mock(CommonPaths.class);
         when(paths.getUserClientConfigurationFile()).thenReturn(mock(File.class));
         ctxt = mock(CommandContext.class);
@@ -308,6 +311,7 @@ public class SetupCommandTest {
         cmd.setPaths(paths);
         cmd.setLauncher(launcher);
         cmd.setKeyring(keyring);
+        cmd.setProcessHandler(processHandler);
     }
     
     private static class ArgsMatcher extends BaseMatcher<String[]> {

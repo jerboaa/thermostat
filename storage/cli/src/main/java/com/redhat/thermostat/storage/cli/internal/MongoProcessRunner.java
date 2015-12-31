@@ -53,7 +53,7 @@ import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
-import com.redhat.thermostat.service.process.UnixProcessUtilities;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -86,12 +86,14 @@ public class MongoProcessRunner {
     static final String NO_JOURNAL_FIRST_VERSION = "1.9.2";
     static final String LOCALHOST_EXPTN_FIRST_VERSION = "2.4.0";
 
+    private final UNIXProcessHandler processHandler;
     private DBStartupConfiguration configuration;
     private Integer pid;
     private final boolean isQuiet;
     private final boolean permitLocalhostExpn;
     
-    public MongoProcessRunner(DBStartupConfiguration configuration, boolean quiet, boolean permitLocalhostException) {
+    public MongoProcessRunner(UNIXProcessHandler processHandler, DBStartupConfiguration configuration, boolean quiet, boolean permitLocalhostException) {
+        this.processHandler = processHandler;
         this.configuration = configuration;
         this.isQuiet = quiet;
         this.permitLocalhostExpn = permitLocalhostException;
@@ -146,7 +148,7 @@ public class MongoProcessRunner {
             return false;
         }
         
-        String processName = UnixProcessUtilities.getInstance().getProcessName(pid);
+        String processName = processHandler.getProcessName(pid);
         // TODO: check if we want mongos or mongod from the configs
         boolean processIsRunning = processName != null && processName.equalsIgnoreCase(MONGO_PROCESS);
         if (!processIsRunning) {

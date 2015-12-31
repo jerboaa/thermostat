@@ -42,6 +42,7 @@ import java.text.SimpleDateFormat;
 
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -135,7 +136,7 @@ public class ThermostatSetup implements PersistableSetup {
         }
     }
     
-    public static ThermostatSetup create(Launcher launcher, CommonPaths paths, Keyring keyring) {
+    public static ThermostatSetup create(Launcher launcher, CommonPaths paths, UNIXProcessHandler processHandler, Keyring keyring) {
         CredentialFinder finder = new CredentialFinder(paths);
         CredentialsFileCreator creator = new CredentialsFileCreator();
         StampFiles stampFiles = new StampFiles(paths);
@@ -143,7 +144,7 @@ public class ThermostatSetup implements PersistableSetup {
         ClientPreferences prefs = new ClientPreferences(paths);
         KeyringWriter keyringWriter = new KeyringWriter(prefs, keyring);
         AuthFileWriter authWriter = new AuthFileWriter(paths, creator);
-        MongodbUserSetup mongoSetup = new MongodbUserSetup(new UserCredsValidator(), launcher, finder, creator , paths, stampFiles, info, authWriter, keyringWriter);
+        MongodbUserSetup mongoSetup = new MongodbUserSetup(new UserCredsValidator(), launcher, processHandler, finder, creator , paths, stampFiles, info, authWriter, keyringWriter);
         ThermostatUserSetup userSetup = new ThermostatUserSetup(new UserPropertiesFinder(finder), new UserCredsValidator(), creator, stampFiles);
         return new ThermostatSetup(userSetup, mongoSetup, info, authWriter, keyringWriter);
     }

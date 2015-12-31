@@ -74,6 +74,7 @@ import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.setup.command.internal.cli.CharArrayMatcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.config.FileStorageCredentials;
@@ -82,6 +83,7 @@ public class MongodbUserSetupTest {
 
     private MongodbUserSetup mongoSetup;
     private StampFiles stampFiles;
+    private UNIXProcessHandler processHandler;
     private Launcher mockLauncher;
     private CredentialFinder finder;
     private CredentialsFileCreator fileCreator;
@@ -100,7 +102,7 @@ public class MongodbUserSetupTest {
         mockLauncher = mock(Launcher.class);
         authFileWriter = mock(AuthFileWriter.class);
         keyringWriter = mock(KeyringWriter.class);
-        mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
+        mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, processHandler, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
             @Override
             int runMongo() {
                 //instead of running mongo through ProcessBuilder
@@ -242,7 +244,7 @@ public class MongodbUserSetupTest {
         createUserJsFile.createNewFile();
         when(paths.getSystemThermostatHome()).thenReturn(testRoot.toFile());
         try {
-            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
+            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, processHandler, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
                 @Override
                 int runMongo() {
                     //return non-zero val to test failure
@@ -365,7 +367,7 @@ public class MongodbUserSetupTest {
                 }
             }).when(mockLauncher).run(eq(MongodbUserSetup.STORAGE_STOP_ARGS), isA(Collection.class), anyBoolean());
             
-            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
+            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, processHandler, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
                 @Override
                 int runMongo() {
                     //instead of running mongo through ProcessBuilder
@@ -470,7 +472,7 @@ public class MongodbUserSetupTest {
                 }
             }).when(mockLauncher).run(eq(MongodbUserSetup.STORAGE_STOP_ARGS), isA(Collection.class), anyBoolean());
             
-            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
+            mongoSetup = new MongodbUserSetup(new UserCredsValidator(), mockLauncher, processHandler, finder, fileCreator, paths, stampFiles, info, authFileWriter, keyringWriter) {
                 @Override
                 int runMongo() {
                     //instead of running mongo through ProcessBuilder

@@ -42,6 +42,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
 import org.osgi.framework.BundleActivator;
@@ -64,7 +65,8 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
                 CommonPaths.class,
                 Launcher.class,
-                Keyring.class
+                Keyring.class,
+                UNIXProcessHandler.class,
         };
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
@@ -72,9 +74,11 @@ public class Activator implements BundleActivator {
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 Launcher launcher = (Launcher) services.get(Launcher.class.getName());
                 Keyring keyring = (Keyring) services.get(Keyring.class.getName());
+                UNIXProcessHandler processHandler = (UNIXProcessHandler) services.get(UNIXProcessHandler.class.getName());
                 setupCommand.setPaths(paths);
                 setupCommand.setLauncher(launcher);
                 setupCommand.setKeyring(keyring);
+                setupCommand.setProcessHandler(processHandler);
             }
 
             @Override

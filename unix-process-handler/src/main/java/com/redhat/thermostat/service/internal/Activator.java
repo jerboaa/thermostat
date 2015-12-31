@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.service.activator;
+package com.redhat.thermostat.service.internal;
 
 import java.util.Hashtable;
 import java.util.logging.Level;
@@ -45,7 +45,6 @@ import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
-import com.redhat.thermostat.service.process.UnixProcessUtilities;
 
 public class Activator implements BundleActivator {
 

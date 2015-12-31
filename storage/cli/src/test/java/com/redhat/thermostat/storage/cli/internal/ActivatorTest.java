@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
@@ -54,8 +55,10 @@ public class ActivatorTest {
 
         ExitStatus exitStatus = mock(ExitStatus.class);
         CommonPaths paths = mock(CommonPaths.class);
+        UNIXProcessHandler processHandler = mock(UNIXProcessHandler.class);
         bundleContext.registerService(ExitStatus.class, exitStatus, null);
         bundleContext.registerService(CommonPaths.class, paths, null);
+        bundleContext.registerService(UNIXProcessHandler.class, processHandler, null);
         
         Activator activator = new Activator();
 
@@ -63,14 +66,14 @@ public class ActivatorTest {
         
         activator.start(bundleContext);
         
-        assertEquals(2, bundleContext.getServiceListeners().size());
+        assertEquals(3, bundleContext.getServiceListeners().size());
         
         assertCommandIsRegistered(bundleContext, "storage", StorageCommand.class);
 
         activator.stop(bundleContext);
 
         assertEquals(0, bundleContext.getServiceListeners().size());
-        assertEquals(2, bundleContext.getAllServices().size());
+        assertEquals(3, bundleContext.getAllServices().size());
     }
 }
 
