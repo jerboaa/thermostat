@@ -34,37 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.agent.internal;
+package com.redhat.thermostat.vm.classstat.common;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.classstat.common.Constants;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
+import com.redhat.thermostat.common.Ordered;
 
-public class VmClassStatBackend extends VmListenerBackend {
+public class Constants {
 
-    private final VmClassStatDAO vmClassStats;
+    public static final int ORDER = Ordered.ORDER_CODE_GROUP + 20;
 
-    public VmClassStatBackend(VmClassStatDAO vmClassStatDAO, Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super("VM Classes Backend",
-                "Gathers class loading statistics about a JVM",
-                "Red Hat, Inc.", version.getVersionNumber(), true, registrar, writerId);
-        this.vmClassStats = vmClassStatDAO;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER;
-    }
-
-    @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmClassStatVmListener(writerId, vmClassStats, vmId);
+    private Constants() {
+        throw new AssertionError("Do not instantiate this");
     }
 
 }
-

@@ -43,11 +43,11 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
+import com.redhat.thermostat.vm.classstat.common.Constants;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
 public class VmClassStatServiceImpl implements VmClassStatService {
     
-    private static final int ORDER = ORDER_MEMORY_GROUP + 20;
     private Filter<VmRef> filter = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -73,7 +73,7 @@ public class VmClassStatServiceImpl implements VmClassStatService {
 
     @Override
     public int getOrderValue() {
-        return ORDER;
+        return Constants.ORDER;
     }
 }
 

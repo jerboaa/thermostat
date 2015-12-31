@@ -69,8 +69,8 @@ public class VmClassStatBackendTest {
     @Test
     public void testOrderValue() {
         int orderValue = backend.getOrderValue();
-        assertTrue(orderValue >= Ordered.ORDER_MEMORY_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_NETWORK_GROUP);
+        assertTrue(orderValue >= Ordered.ORDER_CODE_GROUP);
+        assertTrue(orderValue < Ordered.ORDER_USER_GROUP);
     }
 }
 
