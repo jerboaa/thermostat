@@ -36,9 +36,12 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.TabbedPaneAction.TABLE_TAB_SELECTED;
+
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -76,6 +79,7 @@ import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo.AliveStatus;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser;
+import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.TabbedPaneAction;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Profile;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.ProfileAction;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.ProfilingState;
@@ -100,6 +104,9 @@ public class VmProfileController implements InformationServiceController<VmRef> 
 
     private VmProfileView view;
     private VmProfileTreeMapView treeMapView;
+
+    private TabbedPaneAction lastTabSelection;
+    private ProfilingResult selectedResult;
 
     private Timer updater;
 
@@ -140,6 +147,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         this.treeMapView = Objects.requireNonNull(treeMapViewProvider.createView());
         view.addTabToTabbedPane(translator.localize(LocaleResources.PROFILER_RESULTS_TREEMAP),
                 ((SwingComponent) this.treeMapView).getUiComponent());
+        this.lastTabSelection = TABLE_TAB_SELECTED;
 
         // TODO dispose the timer when done
         updater = service.getTimerFactory().createTimer();
@@ -180,20 +188,38 @@ public class VmProfileController implements InformationServiceController<VmRef> 
             public void actionPerformed(ActionEvent<ProfileAction> actionEvent) {
                 ProfileAction id = actionEvent.getActionId();
                 switch (id) {
-                case START_PROFILING:
-                    startProfiling();
-                    break;
-                case STOP_PROFILING:
-                    stopProfiling();
-                    break;
-                case PROFILE_SELECTED:
-                    updateViewWithProfileRunData();
-                    break;
-                default:
-                    throw new AssertionError("Unknown event: " + id);
+                    case START_PROFILING:
+                        startProfiling();
+                        break;
+                    case STOP_PROFILING:
+                        stopProfiling();
+                        break;
+                    case PROFILE_SELECTED:
+                        loadSelectedProfileRunData();
+                        updateViewWithSelectedProfileRunData();
+                        break;
+                    default:
+                        throw new AssertionError("Unknown event: " + id);
                 }
             }
 
+        });
+
+        view.setTabbedPaneActionListener(new ActionListener<TabbedPaneAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<TabbedPaneAction> actionEvent) {
+                TabbedPaneAction id = actionEvent.getActionId();
+                boolean validTabSelection = Arrays.asList(VmProfileView.TabbedPaneAction.values()).contains(id);
+
+                if (validTabSelection && selectedResult != null) {
+                    lastTabSelection = id;
+                    updateViewWithSelectedProfileRunData();
+                } else if (validTabSelection) {
+                    lastTabSelection = id;
+                } else {
+                    throw new AssertionError("Unknown event: " + id);
+                }
+            }
         });
 
         view.setViewControlsEnabled(isAlive());
@@ -343,14 +369,23 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         view.setAvailableProfilingRuns(profiles);
     }
 
-    private void updateViewWithProfileRunData() {
-        Profile selectedProfile = view.getSelectedProfile();
-        String profileId = selectedProfile.name;
+    private void loadSelectedProfileRunData() {
+        String profileId = view.getSelectedProfile().name;
         InputStream in = profileDao.loadProfileDataById(vm, profileId);
-        ProfilingResult result = new ProfilingResultParser().parse(in);
+        selectedResult = new ProfilingResultParser().parse(in);
+    }
 
-        view.setProfilingDetailData(result);
-        treeMapView.display(result);
+    private void updateViewWithSelectedProfileRunData() {
+        switch (lastTabSelection) {
+            case TABLE_TAB_SELECTED:
+                view.setProfilingDetailData(selectedResult);
+                break;
+            case TREEMAP_TAB_SELECTED:
+                treeMapView.display(selectedResult);
+                break;
+            default:
+                throw new AssertionError("Unknown selection: " + lastTabSelection);
+        }
     }
 
     @Override

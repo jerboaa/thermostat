@@ -77,6 +77,11 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
 
     }
 
+    enum TabbedPaneAction {
+        TABLE_TAB_SELECTED,
+        TREEMAP_TAB_SELECTED,
+    }
+
     enum ProfileAction {
         START_PROFILING,
         STOP_PROFILING,
@@ -121,6 +126,8 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
     public abstract void addProfileActionListener(ActionListener<ProfileAction> listener);
 
     public abstract void removeProfileActionlistener(ActionListener<ProfileAction> listener);
+
+    public abstract void setTabbedPaneActionListener(ActionListener<TabbedPaneAction> listener);
 
     /*
      * Because of the latency between asking for starting profiling and actually

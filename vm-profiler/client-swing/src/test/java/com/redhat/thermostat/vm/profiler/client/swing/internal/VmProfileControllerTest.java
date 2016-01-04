@@ -52,6 +52,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.awt.Component;
@@ -120,6 +121,7 @@ public class VmProfileControllerTest {
     private RequestQueue queue;
     private Clock clock;
     private VmProfileView view;
+    private SwingVmProfileTreeMapView treeMapView;
     private VmRef vm;
     private VmProfileTreeMapViewProvider treeMapViewProvider;
 
@@ -152,6 +154,7 @@ public class VmProfileControllerTest {
 
         clock = mock(Clock.class);
         view = mock(VmProfileView.class);
+        treeMapView = mock(SwingVmProfileTreeMapView.class);
 
         agentId = new AgentId(AGENT_ID);
         HostRef hostRef = mock(HostRef.class);
@@ -162,9 +165,8 @@ public class VmProfileControllerTest {
         when(vm.getVmId()).thenReturn(VM_ID);
 
         treeMapViewProvider = mock(VmProfileTreeMapViewProvider.class);
-        VmProfileTreeMapView vmProfileTreeMapView = mock(SwingVmProfileTreeMapView.class);
-        when(treeMapViewProvider.createView()).thenReturn(vmProfileTreeMapView);
-        when(((SwingComponent) vmProfileTreeMapView).getUiComponent()).thenReturn(mock(Component.class));
+        when(treeMapViewProvider.createView()).thenReturn(treeMapView);
+        when(((SwingComponent) treeMapView).getUiComponent()).thenReturn(mock(Component.class));
 
         AgentInformation agentInfo = new AgentInformation();
         agentInfo.setAlive(true);
@@ -344,20 +346,35 @@ public class VmProfileControllerTest {
     }
 
     @Test
-    public void selectingAProfileShowsDetails() throws Exception {
-        final String PROFILE_DATA = "1 foo";
-
+    public void testSelectingAndDisplayingAProfileAsTableAndTreeMap() throws Exception {
         controller = createController();
 
-        ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
-        verify(view).addProfileActionListener(listenerCaptor.capture());
-
+        final String PROFILE_DATA = "1 foo";
         Profile PROFILE = new Profile(PROFILE_ID, 10);
 
         when(view.getSelectedProfile()).thenReturn(PROFILE);
-        when(profileDao.loadProfileDataById(vm, PROFILE_ID)).thenReturn(new ByteArrayInputStream(PROFILE_DATA.getBytes(StandardCharsets.UTF_8)));
+        when(profileDao.loadProfileDataById(vm, PROFILE_ID)).thenReturn(
+                new ByteArrayInputStream(PROFILE_DATA.getBytes(StandardCharsets.UTF_8)));
 
-        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.PROFILE_SELECTED));
+        ArgumentCaptor<ActionListener> tabListenerCaptor =
+                ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).setTabbedPaneActionListener(tabListenerCaptor.capture());
+        tabListenerCaptor.getValue().actionPerformed(
+                new ActionEvent<>(view, VmProfileView.TabbedPaneAction.TREEMAP_TAB_SELECTED));
+
+        verify(treeMapView).getUiComponent();
+        verifyNoMoreInteractions(treeMapView);
+
+        ArgumentCaptor<ActionListener> profileListenerCaptor =
+                ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addProfileActionListener(profileListenerCaptor.capture());
+        profileListenerCaptor.getValue().actionPerformed(
+                new ActionEvent<>(view, ProfileAction.PROFILE_SELECTED));
+
+        verify(treeMapView).display(isA(ProfilingResult.class));
+
+        tabListenerCaptor.getValue().actionPerformed(
+                new ActionEvent<>(view, VmProfileView.TabbedPaneAction.TABLE_TAB_SELECTED));
 
         verify(view).setProfilingDetailData(isA(ProfilingResult.class));
     }

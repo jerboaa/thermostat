@@ -39,9 +39,11 @@ package com.redhat.thermostat.vm.profiler.client.swing.internal;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -67,7 +69,8 @@ import org.fest.swing.fixture.Containers;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JLabelFixture;
 import org.fest.swing.fixture.JListFixture;
-import org.fest.swing.fixture.JTableFixture;
+import org.fest.swing.fixture.JScrollPaneFixture;
+import org.fest.swing.fixture.JTabbedPaneFixture;
 import org.fest.swing.fixture.JToggleButtonFixture;
 import org.junit.After;
 import org.junit.Before;
@@ -79,10 +82,14 @@ import org.junit.runner.RunWith;
 import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.utils.MethodDescriptorConverter;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -253,14 +260,15 @@ public class SwingVmProfileViewTest {
 
         frame.show();
 
-        final JTableFixture profileTable = frame.table("METHOD_TABLE");
+        final JScrollPaneFixture scrollPane = frame.scrollPane("METHOD_TABLE");
 
-        view.setProfilingDetailData(new ProfilingResult(new ArrayList<ProfilingResult.MethodInfo>()));
+        view.setProfilingDetailData(new ProfilingResult(new ArrayList<MethodInfo>()));
 
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
-                TableModel model =  profileTable.component().getModel();
+                TableModel model =
+                        ((ThermostatTable) scrollPane.component().getViewport().getView()).getModel();
                 assertEquals(1, model.getRowCount());
                 assertEquals(translator.localize(LocaleResources.PROFILER_NO_RESULTS).getContents(),
                         model.getValueAt(0, 0));
@@ -275,7 +283,7 @@ public class SwingVmProfileViewTest {
 
         frame.show();
 
-        final JTableFixture profileTable = frame.table("METHOD_TABLE");
+        final JScrollPaneFixture scrollPane = frame.scrollPane("METHOD_TABLE");
 
         List<ProfilingResult.MethodInfo> data = new ArrayList<>();
         data.add(new ProfilingResult.MethodInfo(new MethodDescriptorConverter.MethodDeclaration(
@@ -289,7 +297,8 @@ public class SwingVmProfileViewTest {
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
-                TableModel model =  profileTable.component().getModel();
+                TableModel model =
+                        ((ThermostatTable) scrollPane.component().getViewport().getView()).getModel();
                 assertEquals(2, model.getRowCount());
 
                 ArrayList<String> methodNames = new ArrayList<>();
@@ -297,6 +306,57 @@ public class SwingVmProfileViewTest {
                 methodNames.add(model.getValueAt(1, 0).toString());
                 assertTrue(methodNames.contains("int foo(int)"));
                 assertTrue(methodNames.contains("double bar(double)"));
+            }
+        });
+    }
+
+    @GUITest
+    @Test
+    public void testTabAddingAndSwitching() throws InvocationTargetException, InterruptedException {
+        frame.show();
+        final JTabbedPaneFixture tabPaneFixture = frame.tabbedPane();
+
+        view.setTabbedPaneActionListener(mock(ActionListener.class));
+
+        view.setProfilingDetailData(new ProfilingResult(new ArrayList<MethodInfo>()));
+        Component testComp = mock(Component.class);
+        final String testCompName = "testComp";
+        when(testComp.getName()).thenReturn(testCompName);
+        final LocalizedString testTabName = new LocalizedString("testTab");
+        view.addTabToTabbedPane(testTabName, testComp);
+        final LocalizedString tableTabName =
+                translator.localize(LocaleResources.PROFILER_RESULTS_TABLE);
+        tabPaneFixture.requireTabTitles(tableTabName.getContents(), testTabName.getContents());
+
+        final Component selected1 = tabPaneFixture.selectedComponent();
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                assertNotNull(selected1);
+                assertEquals("METHOD_TABLE", selected1.getName());
+            }
+        });
+
+        tabPaneFixture.selectTab(testTabName.getContents());
+        final Component selected2 = tabPaneFixture.selectedComponent();
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                assertNotNull(selected2);
+                assertEquals(testCompName, selected2.getName());
+            }
+        });
+
+        tabPaneFixture.selectTab(tableTabName.getContents());
+        final Component selected3 = tabPaneFixture.selectedComponent();
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                assertNotNull(selected3);
+                assertEquals("METHOD_TABLE", selected3.getName());
             }
         });
     }

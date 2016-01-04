@@ -43,4 +43,5 @@ import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 public abstract class VmProfileTreeMapView extends BasicView implements UIComponent{
 
     public abstract void display(ProfilingResult result);
+
 }

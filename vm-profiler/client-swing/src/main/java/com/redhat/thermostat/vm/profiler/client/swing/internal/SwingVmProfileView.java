@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.TabbedPaneAction.TABLE_TAB_SELECTED;
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.TabbedPaneAction.TREEMAP_TAB_SELECTED;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -57,14 +60,18 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
+import javax.swing.SingleSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -109,6 +116,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     private HeaderPanel mainContainer;
     private JTabbedPane tabPane;
+    private TabbedPaneAction lastTabSelection;
 
     private ActionToggleButton toggleButton;
 
@@ -120,6 +128,8 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     private JLabel currentStatusLabel;
     private boolean viewControlsEnabled = true;
+
+    private ActionListener<TabbedPaneAction> tabListener;
 
     static class ProfileItemRenderer extends DefaultListCellRenderer {
         @Override
@@ -137,7 +147,32 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     public SwingVmProfileView() {
         listModel = new DefaultListModel<>();
+
         tabPane = new JTabbedPane();
+        tabPane.getModel().addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                SingleSelectionModel model = (SingleSelectionModel) e.getSource();
+
+                switch (model.getSelectedIndex()) {
+                    case 0:
+                        if (lastTabSelection != TABLE_TAB_SELECTED) {
+                            fireTabbedPaneAction(TABLE_TAB_SELECTED);
+                            lastTabSelection = TABLE_TAB_SELECTED;
+                        }
+                        break;
+                    case 1:
+                        if (lastTabSelection != TREEMAP_TAB_SELECTED) {
+                            fireTabbedPaneAction(TREEMAP_TAB_SELECTED);
+                            lastTabSelection = TREEMAP_TAB_SELECTED;
+                        }
+                        break;
+                    default:
+                        throw new AssertionError("Unexpected index " + model.getSelectedIndex());
+                }
+            }
+        });
+        lastTabSelection = TABLE_TAB_SELECTED;
 
         toggleButton = new ActionToggleButton(START_ICON, STOP_ICON, translator.localize(
                 LocaleResources.START_PROFILING));
@@ -220,6 +255,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             }
         });
         ThermostatScrollPane profileListPane = new ThermostatScrollPane(profileList);
+        profileListPane.setName("PROFILE_LIST_PANE");
 
         Vector<String> columnNames = new Vector<>();
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_METHOD).getContents());
@@ -260,16 +296,38 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 return super.getCellRenderer(row, column);
             }
         };
-        profileTable.setName("METHOD_TABLE");
 
+        JScrollPane scrollPaneProfileTable = profileTable.wrap();
+        scrollPaneProfileTable.setName("METHOD_TABLE");
         tabPane.addTab(translator.localize(LocaleResources.PROFILER_RESULTS_TABLE).getContents(),
-                profileTable.wrap());
+                scrollPaneProfileTable);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, profileListPane, tabPane);
         splitPane.setDividerLocation(SPLIT_PANE_RATIO);
         splitPane.setResizeWeight(0.5);
 
         return splitPane;
+    }
+
+    @Override
+    public void setTabbedPaneActionListener(ActionListener<TabbedPaneAction> listener) {
+        this.tabListener = listener;
+    }
+
+    private void fireTabbedPaneAction(final TabbedPaneAction action) {
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                try {
+                    ActionEvent<TabbedPaneAction> event =
+                            new ActionEvent<>(this, action);
+                    tabListener.actionPerformed(event);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+                return null;
+            }
+        }.execute();
     }
 
     @Override
