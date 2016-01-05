@@ -38,8 +38,12 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -115,11 +119,9 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         }
 
         Set<AgentId> hosts = agentId != null ? Collections.singleton(agentId) : agentDAO.getAgentIds();
-        for (AgentId host : hosts) {
-            Set<VmId> vms = vmId != null ? Collections.singleton(vmId) : vmDAO.getVmIds(host);
-            for (VmId vm : vms) {
-                printDumpsForVm(heapDAO, host, vm, renderer);
-            }
+        SortedSet<HeapInfo> heapInfos = getSortedHeapInfos(vmDAO, heapDAO, hosts, vmId);
+        for (HeapInfo heap : heapInfos) {
+            printHeap(heap, renderer);
         }
 
         context.ungetService(heapDAORef);
@@ -129,14 +131,36 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         renderer.render(ctx.getConsole().getOutput());
     }
 
-    private void printDumpsForVm(HeapDAO heapDAO, AgentId agentId, VmId vmId, TableRenderer renderer) {
-        Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(agentId, vmId);
-        for (HeapInfo info : infos) {
-            renderer.printLine(agentId.get(),
-                               vmId.get(),
-                               info.getHeapId(),
-                               new Date(info.getTimeStamp()).toString());
+    private SortedSet<HeapInfo> getSortedHeapInfos(VmInfoDAO vmDao, HeapDAO heapDao, Iterable<AgentId> agents, VmId vmId) {
+        SortedSet<HeapInfo> result = new TreeSet<>(new Comparator<HeapInfo>() {
+            @Override
+            public int compare(HeapInfo a, HeapInfo b) {
+                return Long.compare(a.getTimeStamp(), b.getTimeStamp());
+            }
+        });
+
+        for (AgentId agent : agents) {
+            Set<VmId> vms;
+            if (vmId != null) {
+                vms = Collections.singleton(vmId);
+            } else {
+                vms = vmDao.getVmIds(agent);
+            }
+            for (VmId vm : vms) {
+                Collection<HeapInfo> heaps = heapDao.getAllHeapInfo(agent, vm);
+                result.addAll(heaps);
+            }
         }
+        return result;
+    }
+
+    private void printHeap(HeapInfo heapInfo, TableRenderer renderer) {
+        renderer.printLine(
+                heapInfo.getAgentId(),
+                heapInfo.getVmId(),
+                heapInfo.getHeapId(),
+                new Date(heapInfo.getTimeStamp()).toString()
+        );
     }
 
 }

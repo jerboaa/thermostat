@@ -118,11 +118,13 @@ public class ListHeapDumpsCommandTest {
         AgentId agentId = new AgentId("host-id");
         VmId vmId = new VmId("1");
 
-        HeapInfo heapInfo = mock(HeapInfo.class);
+        HeapInfo heapInfo = new HeapInfo();
         Calendar timestamp = Calendar.getInstance();
         timestamp.set(2012, 5, 7, 15, 32, 0);
-        when(heapInfo.getTimeStamp()).thenReturn(timestamp.getTimeInMillis());
-        when(heapInfo.getHeapId()).thenReturn("0001");
+        heapInfo.setTimeStamp(timestamp.getTimeInMillis());
+        heapInfo.setHeapId("0001");
+        heapInfo.setVmId(vmId.get());
+        heapInfo.setAgentId(agentId.get());
 
         HeapDAO heapDao = mock(HeapDAO.class);
 
@@ -157,11 +159,13 @@ public class ListHeapDumpsCommandTest {
         AgentId agentId2 = new AgentId("host2");
         VmId vmId2 = new VmId("2");
 
-        HeapInfo heapInfo = mock(HeapInfo.class);
+        HeapInfo heapInfo = new HeapInfo();
         Calendar timestamp = Calendar.getInstance();
         timestamp.set(2012, 5, 7, 15, 32, 0);
-        when(heapInfo.getTimeStamp()).thenReturn(timestamp.getTimeInMillis());
-        when(heapInfo.getHeapId()).thenReturn("0001");
+        heapInfo.setTimeStamp(timestamp.getTimeInMillis());
+        heapInfo.setHeapId("0001");
+        heapInfo.setVmId(vmId1.get());
+        heapInfo.setAgentId(agentId1.get());
 
         HeapDAO heapDao = mock(HeapDAO.class);
 
@@ -201,11 +205,13 @@ public class ListHeapDumpsCommandTest {
         AgentId agentId2 = new AgentId("host2");
         VmId vmId2 = new VmId("2");
 
-        HeapInfo heapInfo = mock(HeapInfo.class);
+        HeapInfo heapInfo = new HeapInfo();
         Calendar timestamp = Calendar.getInstance();
         timestamp.set(2012, 5, 7, 15, 32, 0);
-        when(heapInfo.getTimeStamp()).thenReturn(timestamp.getTimeInMillis());
-        when(heapInfo.getHeapId()).thenReturn("0001");
+        heapInfo.setTimeStamp(timestamp.getTimeInMillis());
+        heapInfo.setHeapId("0001");
+        heapInfo.setVmId(vmId1.get());
+        heapInfo.setAgentId(agentId1.get());
 
         HeapDAO heapDao = mock(HeapDAO.class);
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
