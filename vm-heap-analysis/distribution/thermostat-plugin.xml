@@ -210,21 +210,21 @@
     <command>
       <name>list-heap-dumps</name>
       <summary>list all heap dumps</summary>
-      <description>List all heap dumps.</description>
+      <description>List all heap dumps, or all dumps from a particular agent or VM.</description>
       <options>
         <option>
           <long>agentId</long>
           <short>a</short>
           <argument>agent</argument>
           <required>false</required>
-          <description>the ID of the agent to monitor</description>
+          <description>an agent ID to filter heap dumps by</description>
         </option>
         <option>
           <long>vmId</long>
           <short>v</short>
           <argument>vm</argument>
           <required>false</required>
-          <description>the ID of the VM to monitor</description>
+          <description>a VM ID to filter heap dumps by</description>
         </option>
         <option common="true">
           <long>dbUrl</long>
