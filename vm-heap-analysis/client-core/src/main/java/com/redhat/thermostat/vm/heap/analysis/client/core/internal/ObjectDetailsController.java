@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -157,6 +158,7 @@ public class ObjectDetailsController {
     private void searchForObject() {
         String searchText = view.getSearchText();
         if (searchText == null || searchText.trim().isEmpty()) {
+            view.setMatchingObjects(Collections.<HeapObjectUI>emptySet());
             return;
         }
 
