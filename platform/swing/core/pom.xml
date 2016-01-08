@@ -44,7 +44,7 @@
     <parent>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-platform-swing</artifactId>
-        <version>1.99.6-SNAPSHOT</version>
+        <version>1.99.8-SNAPSHOT</version>
     </parent>
 
     <artifactId>thermostat-platform-swing-core</artifactId>
@@ -124,57 +124,6 @@
         </resources>
         <plugins>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <compilerArgument>-Aname=template
-                        <outputDirectory>${basedir}/target/</outputDirectory>
-                        <processor>com.redhat.thermostat.annotations.internal.SelfAnnotationProcessor</processor>
-                    </compilerArgument>
-
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.redhat.thermostat</groupId>
-                        <artifactId>thermostat-platform-core</artifactId>
-                        <version>${parent.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-<!--
-            <plugin>
-                <groupId>org.bsc.maven</groupId>
-                <artifactId>maven-processor-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>process</id>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <compilerArguments>-Aname=template
-                            </compilerArguments>
-                            <outputDirectory>${basedir}/target/
-                            </outputDirectory>
-                            <processors>
-                                <processor>
-                                    com.redhat.thermostat.platform.annotations.processor.PlatformConfigurationProcessor
-                                </processor>
-                            </processors>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.redhat.thermostat</groupId>
-                        <artifactId>thermostat-platform-core</artifactId>
-                        <version>${parent.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
--->
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>

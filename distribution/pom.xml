@@ -195,6 +195,7 @@
                   <filtering>true</filtering>
                   <includes>
                     <include>shell-command/shell-prompt.conf</include>
+                    <include>platform/*.json</include>
                   </includes>
                 </resource>
                 <resource>
@@ -282,6 +283,8 @@
                       todir="${project.build.directory}/image/libs/native" />
                 <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils.so"
                       todir="${project.build.directory}/image/libs/native" />
+                <copy file="${main.basedir}/platform/swing/core/target/generated-sources/annotations/template.json"
+                      todir="${project.build.directory}/image/etc/plugins.d/platform" />
               </target>
             </configuration>
             <goals>

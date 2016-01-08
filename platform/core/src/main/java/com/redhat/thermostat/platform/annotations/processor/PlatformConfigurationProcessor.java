@@ -134,7 +134,7 @@ public class PlatformConfigurationProcessor extends AbstractProcessor {
         Map<String, String> options = processingEnv.getOptions();
         String jsonFileName = options.get("name");
         if (jsonFileName == null) {
-            jsonFileName = "Application_" + info.applications.get(0).name;
+            jsonFileName = info.applications.get(0).name;
         }
 
         Gson gson = new GsonBuilder().
