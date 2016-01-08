@@ -42,15 +42,15 @@
             <bundles>
                 <bundle>
                     <symbolic-name>com.redhat.thermostat.platform.swing.core</symbolic-name>
-                    <version>1.99.6-SNAPSHOT</version>
+                    <version>${project.version}</version>
                 </bundle>
                 <bundle>
                     <symbolic-name>com.redhat.thermostat.ui.swing.components</symbolic-name>
-                    <version>1.99.6-SNAPSHOT</version>
+                    <version>${project.version}</version>
                 </bundle>
                 <bundle>
                     <symbolic-name>com.redhat.thermostat.platform</symbolic-name>
-                    <version>1.99.6-SNAPSHOT</version>
+                    <version>${project.version}</version>
                 </bundle>
             </bundles>
         </extension>
