@@ -46,7 +46,7 @@ import org.junit.experimental.categories.Category;
 
 import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.filter.host.swing.DeadHostIconDecorator;
-import com.redhat.thermostat.client.filter.host.swing.HostInfoLabelDecorator;
+import com.redhat.thermostat.client.filter.host.swing.HostNetworkInterfaceLabelDecorator;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
@@ -77,7 +77,7 @@ public class VMFilterActivatorTest {
         ctx.registerService(UIDefaults.class, uiDefaults, null);
 
         assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), VMPidLabelDecorator.class));
-        assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), HostInfoLabelDecorator.class));
+        assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), HostNetworkInterfaceLabelDecorator.class));
         assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), DeadHostIconDecorator.class));
 
         assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), VMIconDecorator.class));

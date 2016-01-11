@@ -36,21 +36,44 @@
 
 package com.redhat.thermostat.client.filter.host.swing;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.redhat.thermostat.client.ui.ToggleableReferenceFieldLabelDecorator;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.storage.core.VmRef;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Matchers;
 
-public class HostInfoLabelDecoratorTest {
+public class HostNetworkInterfaceLabelDecoratorTest {
+
+    private NetworkInterfaceInfoDAO dao;
+    private HostNetworkInterfaceLabelDecorator decorator;
+
+    @Before
+    public void setup() {
+        dao = mock(NetworkInterfaceInfoDAO.class);
+        decorator = new HostNetworkInterfaceLabelDecorator(dao);
+    }
 
     @Test
     public void testBasicWithNetworkInterfaces() {
@@ -61,10 +84,9 @@ public class HostInfoLabelDecoratorTest {
         info.setIp4Addr(ip);
         networkList.add(info);
         HostRef mockHostRef = mock(HostRef.class);
-        NetworkInterfaceInfoDAO dao = mock(NetworkInterfaceInfoDAO.class);
-        HostInfoLabelDecorator decorator = new HostInfoLabelDecorator(dao);
+        decorator.setEnabled(true);
         when(dao.getNetworkInterfaces(any(HostRef.class))).thenReturn(networkList);
-        String decoratedLabel = decorator.getLabel("", mockHostRef);
+        String decoratedLabel = decorator.getLabel("", mockHostRef).trim();
         assertEquals("192.168.0.1", decoratedLabel);
     }
     
@@ -82,10 +104,9 @@ public class HostInfoLabelDecoratorTest {
         networkList.add(info);
         networkList.add(info2);
         HostRef mockHostRef = mock(HostRef.class);
-        NetworkInterfaceInfoDAO dao = mock(NetworkInterfaceInfoDAO.class);
-        HostInfoLabelDecorator decorator = new HostInfoLabelDecorator(dao);
+        decorator.setEnabled(true);
         when(dao.getNetworkInterfaces(any(HostRef.class))).thenReturn(networkList);
-        String decoratedLabel = decorator.getLabel("", mockHostRef);
+        String decoratedLabel = decorator.getLabel("", mockHostRef).trim();
         assertEquals("192.168.0.1; 10.0.0.1", decoratedLabel);
     }
     
@@ -98,10 +119,9 @@ public class HostInfoLabelDecoratorTest {
         info.setIp4Addr(""); // empty string
         networkList.add(info);
         HostRef mockHostRef = mock(HostRef.class);
-        NetworkInterfaceInfoDAO dao = mock(NetworkInterfaceInfoDAO.class);
-        HostInfoLabelDecorator decorator = new HostInfoLabelDecorator(dao);
+        decorator.setEnabled(true);
         when(dao.getNetworkInterfaces(any(HostRef.class))).thenReturn(networkList);
-        String decoratedLabel = decorator.getLabel("", mockHostRef);
+        String decoratedLabel = decorator.getLabel("", mockHostRef).trim();
         assertEquals("", decoratedLabel);
     }
     
@@ -112,10 +132,87 @@ public class HostInfoLabelDecoratorTest {
     public void testWithNoNetworkInterfaces() {
         List<NetworkInterfaceInfo> networkList = new ArrayList<>();
         HostRef mockHostRef = mock(HostRef.class);
-        NetworkInterfaceInfoDAO dao = mock(NetworkInterfaceInfoDAO.class);
-        HostInfoLabelDecorator decorator = new HostInfoLabelDecorator(dao);
+        decorator.setEnabled(true);
         when(dao.getNetworkInterfaces(any(HostRef.class))).thenReturn(networkList);
-        String decoratedLabel = decorator.getLabel("", mockHostRef);
+        String decoratedLabel = decorator.getLabel("", mockHostRef).trim();
         assertEquals("", decoratedLabel);
     }
+
+    @Test
+    public void verifyGetLabelCaches() {
+        decorator.setEnabled(true);
+        when(dao.getNetworkInterfaces(isA(HostRef.class))).thenReturn(new ArrayList<NetworkInterfaceInfo>());
+        HostRef ref = mock(HostRef.class);
+
+        decorator.getLabel("", ref);
+        verify(dao).getNetworkInterfaces(ref);
+
+        decorator.getLabel("", ref);
+        verify(dao).getNetworkInterfaces(ref); // still only once -> cached after first call
+    }
+
+    @Test
+    public void verifyGetLabelAppends() {
+        decorator.setEnabled(true);
+        when(dao.getNetworkInterfaces(isA(HostRef.class))).thenReturn(new ArrayList<NetworkInterfaceInfo>());
+        HostRef ref = mock(HostRef.class);
+
+        String str = decorator.getLabel("Foo", ref).trim();
+        assertThat(str, containsString("Foo"));
+    }
+
+    @Test
+    public void verifyNoDaoAccessWhenDisabled() {
+        decorator.setEnabled(false);
+        decorator.getLabel("", mock(HostRef.class));
+        verifyZeroInteractions(dao);
+    }
+
+    @Test
+    public void verifyNoDaoAccessWhenWrongRefType() {
+        decorator.setEnabled(true);
+        decorator.getLabel("", mock(VmRef.class));
+        verifyZeroInteractions(dao);
+    }
+
+    @Test
+    public void testSetEnabled() {
+        decorator.setEnabled(true);
+        assertThat(decorator.isEnabled(), is(true));
+        decorator.setEnabled(false);
+        assertThat(decorator.isEnabled(), is(false));
+    }
+
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testTogglingEnabledFiresEvent() {
+        ActionListener<ToggleableReferenceFieldLabelDecorator.StatusEvent> listener =
+                (ActionListener<ToggleableReferenceFieldLabelDecorator.StatusEvent>) mock(ActionListener.class);
+
+        decorator.addStatusEventListener(listener);
+
+        decorator.setEnabled(!decorator.isEnabled());
+
+        ArgumentCaptor<ActionEvent> captor = ArgumentCaptor.forClass(ActionEvent.class);
+        verify(listener).actionPerformed(captor.capture());
+
+        ActionEvent event = captor.getValue();
+        assertThat((ToggleableReferenceFieldLabelDecorator.StatusEvent) event.getActionId(),
+                is(ToggleableReferenceFieldLabelDecorator.StatusEvent.STATUS_CHANGED));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testSettingSameEnabledValueDoesNotFireEvent() {
+        ActionListener<ToggleableReferenceFieldLabelDecorator.StatusEvent> listener =
+                (ActionListener<ToggleableReferenceFieldLabelDecorator.StatusEvent>) mock(ActionListener.class);
+
+        decorator.addStatusEventListener(listener);
+
+        decorator.setEnabled(decorator.isEnabled());
+
+        verify(listener, never()).actionPerformed(Matchers.<ActionEvent<ToggleableReferenceFieldLabelDecorator.StatusEvent>>any());
+    }
+
 }

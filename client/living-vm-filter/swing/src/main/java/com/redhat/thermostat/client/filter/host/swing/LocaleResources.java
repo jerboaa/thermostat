@@ -34,18 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.swing;
+package com.redhat.thermostat.client.filter.host.swing;
 
-import org.junit.Before;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import static org.mockito.Mockito.mock;
+public enum LocaleResources {
 
-public class VMPidLabelMenuActionTest extends AbstractToggleableMenuActionTest<VMPidLabelMenuAction> {
+    NET_IFACE_LABEL_MENU_NAME,
+    NET_IFACE_LABEL_MENU_DESCRIPTION,
+    NET_IFACE_LABEL_MENU_PATH,
+    NET_IFACE_LABEL_DECORATOR,
+    ;
 
-    @Before
-    public void setup() {
-        decorator = mock(VMPidLabelDecorator.class);
-        action = new VMPidLabelMenuAction((VMPidLabelDecorator) decorator);
+    static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.client.filter.host.swing.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
 }

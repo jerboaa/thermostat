@@ -36,53 +36,52 @@
 
 package com.redhat.thermostat.client.filter.host.swing;
 
-import java.util.List;
+import com.redhat.thermostat.client.ui.MenuAction;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Ref;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
+public class HostNetworkInterfaceLabelMenuAction implements MenuAction {
 
-public class HostInfoLabelDecorator implements ReferenceFieldLabelDecorator {
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    private NetworkInterfaceInfoDAO dao;
-    
-    public HostInfoLabelDecorator(NetworkInterfaceInfoDAO  dao) {
-        this.dao = dao;
+    private HostNetworkInterfaceLabelDecorator decorator;
+
+    public HostNetworkInterfaceLabelMenuAction(HostNetworkInterfaceLabelDecorator decorator) {
+        this.decorator = decorator;
     }
-    
+
     @Override
-    public int getOrderValue() {
-        return ORDER_FIRST;
+    public LocalizedString getName() {
+        return t.localize(LocaleResources.NET_IFACE_LABEL_MENU_NAME);
     }
-    
+
     @Override
-    public String getLabel(String originalLabel, Ref reference) {
-        
-        if (!(reference instanceof HostRef)) {
-            return originalLabel;
-        }
-        
-        List<NetworkInterfaceInfo> infos =
-                dao.getNetworkInterfaces((HostRef) reference);
-        StringBuilder result = new StringBuilder();
-        
-        for (NetworkInterfaceInfo info : infos) {
-            // filter out the loopbak
-            if (!info.getInterfaceName().equals("lo")) {
-                if (info.getIp4Addr() != null) {
-                    result.append(info.getIp4Addr()).append("; ");
-                } else if (info.getIp6Addr() != null) {
-                    result.append(info.getIp6Addr()).append("; ");
-                }
-            }
-        }
-        // Avoid IOOBE if there are no network interfaces
-        if (result.length() >= 2) {
-            result.deleteCharAt(result.length() - 2);
-        }
-        return result.toString().trim();
+    public LocalizedString getDescription() {
+        return t.localize(LocaleResources.NET_IFACE_LABEL_MENU_DESCRIPTION);
+    }
+
+    @Override
+    public void execute() {
+        decorator.setEnabled(!decorator.isEnabled());
+    }
+
+    @Override
+    public Type getType() {
+        return Type.CHECK;
+    }
+
+    @Override
+    public LocalizedString[] getPath() {
+        return new LocalizedString[] { t.localize(LocaleResources.NET_IFACE_LABEL_MENU_PATH), getName() };
+    }
+
+    @Override
+    public int sortOrder() {
+        return SORT_TOP + 15;
+    }
+
+    @Override
+    public String getPersistenceID() {
+        return MENU_KEY + "host-net-iface-labels";
     }
 }
-

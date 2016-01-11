@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.redhat.thermostat.client.filter.host.swing.HostNetworkInterfaceLabelMenuAction;
 import com.redhat.thermostat.client.ui.MenuAction;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -51,7 +52,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.filter.host.swing.DeadHostIconDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostIconDecorator;
-import com.redhat.thermostat.client.filter.host.swing.HostInfoLabelDecorator;
+import com.redhat.thermostat.client.filter.host.swing.HostNetworkInterfaceLabelDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostVmMainLabelDecorator;
 import com.redhat.thermostat.client.filter.host.swing.ThermostatVmMainLabelDecorator;
 import com.redhat.thermostat.client.swing.ReferenceFieldDecoratorLayout;
@@ -123,14 +124,19 @@ public class VMFilterActivator implements BundleActivator {
                 NetworkInterfaceInfoDAO networkDao = (NetworkInterfaceInfoDAO)
                             services.get(NetworkInterfaceInfoDAO.class.getName());
 
-                HostInfoLabelDecorator hostLabelDecorator =
-                            new HostInfoLabelDecorator(networkDao);
+                HostNetworkInterfaceLabelDecorator hostLabelDecorator =
+                            new HostNetworkInterfaceLabelDecorator(networkDao);
                 decoratorProperties = new Hashtable<>();
                 decoratorProperties.put(ReferenceFieldLabelDecorator.ID,
                                         ReferenceFieldDecoratorLayout.LABEL_INFO.name());
                 
                 registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
                                                        hostLabelDecorator, decoratorProperties);
+                registeredServices.add(registration);
+
+                HostNetworkInterfaceLabelMenuAction hostNetworkMenuAction = new HostNetworkInterfaceLabelMenuAction(hostLabelDecorator);
+                registration = context.registerService(MenuAction.class.getName(), hostNetworkMenuAction, null);
+
                 registeredServices.add(registration);
                 
                 HostIconDecorator hostIconDecorator =

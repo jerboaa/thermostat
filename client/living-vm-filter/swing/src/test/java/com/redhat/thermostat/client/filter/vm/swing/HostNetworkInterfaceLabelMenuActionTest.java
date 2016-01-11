@@ -36,16 +36,17 @@
 
 package com.redhat.thermostat.client.filter.vm.swing;
 
-import org.junit.Before;
+import com.redhat.thermostat.client.filter.host.swing.HostNetworkInterfaceLabelDecorator;
+import com.redhat.thermostat.client.filter.host.swing.HostNetworkInterfaceLabelMenuAction;
 
 import static org.mockito.Mockito.mock;
 
-public class VMPidLabelMenuActionTest extends AbstractToggleableMenuActionTest<VMPidLabelMenuAction> {
+public class HostNetworkInterfaceLabelMenuActionTest extends AbstractToggleableMenuActionTest<HostNetworkInterfaceLabelMenuAction> {
 
-    @Before
+    @Override
     public void setup() {
-        decorator = mock(VMPidLabelDecorator.class);
-        action = new VMPidLabelMenuAction((VMPidLabelDecorator) decorator);
+        decorator = mock(HostNetworkInterfaceLabelDecorator.class);
+        action = new HostNetworkInterfaceLabelMenuAction((HostNetworkInterfaceLabelDecorator) decorator);
     }
 
 }
