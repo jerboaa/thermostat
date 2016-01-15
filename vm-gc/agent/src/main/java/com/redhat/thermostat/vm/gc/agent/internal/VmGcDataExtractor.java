@@ -81,5 +81,9 @@ public class VmGcDataExtractor {
         return update.getPerformanceCounterLong("sun.gc.collector." + collector + ".invocations");
     }
 
+    public Long getFrequency() throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.os.hrt.frequency");
+    }
+
 }
 

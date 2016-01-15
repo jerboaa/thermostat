@@ -79,9 +79,12 @@ public class VmGcVmListener implements VmUpdateListener {
                         Long invocations = extractor.getCollectorInvocations(i);
                         if (invocations != null) {
                             Long time = extractor.getCollectorTime(i);
-                            if (time != null) {
+                            Long frequency = extractor.getFrequency();
+                            if (time != null && frequency!= null) {
+                                // TODO check for overflow
+                                long wallTimeInMicros = ((long) (1.0E6 * time / frequency));
                                 VmGcStat stat = new VmGcStat(writerId, vmId, timestamp,
-                                        name, invocations, time);
+                                        name, invocations, wallTimeInMicros);
                                 gcDAO.putVmGcStat(stat);
                             }
                             else {

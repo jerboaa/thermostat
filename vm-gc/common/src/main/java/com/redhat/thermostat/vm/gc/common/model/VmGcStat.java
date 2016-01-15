@@ -48,19 +48,19 @@ public class VmGcStat extends BasePojo implements TimeStampedPojo {
     private String vmId;
     private String collectorName;
     private long runCount;
-    private long wallTime;
+    private long wallTimeInMicros;
 
     public VmGcStat() {
         super(null);
     }
 
-    public VmGcStat(String writerId, String vmId, long timestamp, String collectorName, long runCount, long wallTime) {
+    public VmGcStat(String writerId, String vmId, long timestamp, String collectorName, long runCount, long wallTimeInMicros) {
         super(writerId);
         this.timeStamp = timestamp;
         this.vmId = vmId;
         this.collectorName = collectorName;
         this.runCount = runCount;
-        this.wallTime = wallTime;
+        this.wallTimeInMicros = wallTimeInMicros;
     }
 
     @Persist
@@ -93,14 +93,15 @@ public class VmGcStat extends BasePojo implements TimeStampedPojo {
         this.runCount = runCount;
     }
 
+    /** In microseconds */
     @Persist
     public long getWallTime() {
-        return wallTime;
+        return wallTimeInMicros;
     }
 
     @Persist
-    public void setWallTime(long wallTime) {
-        this.wallTime = wallTime;
+    public void setWallTime(long wallTimeInMicros) {
+        this.wallTimeInMicros = wallTimeInMicros;
     }
 
     @Override

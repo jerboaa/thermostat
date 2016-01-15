@@ -45,6 +45,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -55,6 +56,9 @@ import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 public class VmGcVmListenerTest {
+
+    private static final long OS_TICKS_PER_SECOND = 1_000_000;
+
     private static final String[] GC_NAMES = new String[] { "GC1", "GC2" };
     private static final Long[] GC_INVOCS = new Long[] { 500L, 1000L };
     private static final Long[] GC_TIMES = new Long[] { 5000L, 10000L };
@@ -77,6 +81,7 @@ public class VmGcVmListenerTest {
             mockCollectorTime(i);
         }
         
+        when(extractor.getFrequency()).thenReturn(OS_TICKS_PER_SECOND);
         when(extractor.getTotalCollectors()).thenReturn((long) GC_NAMES.length);
     }
 
@@ -165,5 +170,21 @@ public class VmGcVmListenerTest {
         vmListener.recordGcStat(extractor);
         verify(vmGcStatDAO, never()).putVmGcStat(any(VmGcStat.class));
     }
+
+    @Test
+    public void testRecordMemoryFrequencyMismatch() throws VmUpdateException {
+        final long SOME_FREQUENCY = 100l;
+        when(extractor.getFrequency()).thenReturn(SOME_FREQUENCY);
+        vmListener.recordGcStat(extractor);
+        ArgumentCaptor<VmGcStat> captor = ArgumentCaptor.forClass(VmGcStat.class);
+        verify(vmGcStatDAO, times(2)).putVmGcStat(captor.capture());
+        List<VmGcStat> gcStats = captor.getAllValues();
+
+        VmGcStat stat = gcStats.get(0);
+        assertEquals(GC_NAMES[0], stat.getCollectorName());
+        assertEquals(GC_INVOCS[0], (Long) stat.getRunCount());
+        assertEquals(TimeUnit.SECONDS.toMicros(GC_TIMES[0]/SOME_FREQUENCY), stat.getWallTime());
+    }
+
 }
 
