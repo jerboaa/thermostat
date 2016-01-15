@@ -46,6 +46,7 @@ import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import com.redhat.thermostat.client.swing.components.HtmlShadowLabel;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
 
@@ -57,7 +58,7 @@ import com.redhat.thermostat.storage.core.Ref;
 public class ReferenceComponent extends JPanel implements AccordionComponent, ReferenceProvider {
 
     private ShadowLabel mainLabel;
-    private ShadowLabel infoLabel;
+    private HtmlShadowLabel infoLabel;
 
     private JLabel iconLabel;
 
@@ -94,7 +95,7 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
         mainLabel = new ShadowLabel();
         mainLabel.setText(vm.getName());
         
-        infoLabel = new ShadowLabel();
+        infoLabel = new HtmlShadowLabel();
         infoLabel.setFont(infoLabel.getFont().deriveFont(8.0f));
         infoLabel.setText(vm.getStringID());
         
