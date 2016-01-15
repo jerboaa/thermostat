@@ -40,10 +40,14 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -239,5 +243,100 @@ public class DepthFirstSearchTest {
         assertEquals(new Integer(9), depthWeights.get(0));
         
         assertEquals(4, depthWeights.size());
+    }
+
+    private class TopologicalSort extends DefaultTraversalListener {
+        private Stack<Node> ordered;
+        private Set<Node> discovered;
+
+        public TopologicalSort(Stack<Node> ordered, Set<Node> discovered) {
+            this.ordered = ordered;
+            this.discovered = discovered;
+        }
+
+        public Stack<Node> getOrdered() {
+            return ordered;
+        }
+
+        @Override
+        protected void preProcessNodeImpl(Node node) {
+            discovered.add(node);
+        }
+
+        @Override
+        protected void postProcessNodeImpl(Node node) {
+            ordered.add(node);
+        }
+
+        @Override
+        public Status processRelationship(Relationship relationship,
+                                          SearchPayload payload)
+        {
+            RelationshipType type =
+                    DepthFirstSearch.classify(relationship, (DFSPayload) payload);
+
+            if (type.equals(RelationshipType.BACK)) {
+                throw new IllegalStateException("back node! " + relationship);
+            }
+
+            return Status.CONTINUE;
+        }
+    }
+
+    @Test
+    public void testBackNodes2() {
+        Graph graph = new HashGraph();
+
+        Node a = new Node("A");
+        Node b = new Node("B");
+        Node c = new Node("C");
+        Node d = new Node("D");
+        Node e = new Node("E");
+        Node f = new Node("F");
+        Node g = new Node("G");
+
+        Node h = new Node("H");
+
+        Node i = new Node("I");
+        Node l = new Node("L");
+
+        Relationship ab = graph.addRelationship(a, b, "knows");
+        Relationship ac = graph.addRelationship(a, c, "knows");
+        Relationship ae = graph.addRelationship(a, e, "knows");
+        Relationship ad = graph.addRelationship(a, d, "knows");
+        Relationship al = graph.addRelationship(a, l, "knows");
+
+        Relationship bc = graph.addRelationship(b, c, "knows");
+        Relationship bd = graph.addRelationship(b, d, "knows");
+
+        Relationship ce = graph.addRelationship(c, e, "knows");
+        Relationship cf = graph.addRelationship(c, f, "knows");
+
+        Relationship ed = graph.addRelationship(e, d, "knows");
+
+        Relationship fe = graph.addRelationship(f, e, "knows");
+
+        Relationship gf = graph.addRelationship(g, f, "knows");
+        Relationship ga = graph.addRelationship(g, a, "knows");
+
+        Relationship hc = graph.addRelationship(h, c, "knows");
+
+        Relationship il = graph.addRelationship(i, l, "knows");
+
+        DepthFirstSearch dfs = new DepthFirstSearch(graph);
+
+        Stack<Node> ordered = new Stack<>();
+        Set<Node> discovered = new HashSet<>();
+
+        dfs.search(a, new TopologicalSort(ordered, discovered));
+
+        for (Node node : graph) {
+            if (!discovered.contains(node)) {
+                TopologicalSort topological = new TopologicalSort(ordered, discovered);
+                dfs.search(node, topological);
+            }
+        }
+
+        assertFalse(ordered.isEmpty());
     }
 }

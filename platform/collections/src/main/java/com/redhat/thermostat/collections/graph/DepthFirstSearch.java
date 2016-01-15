@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.collections.graph;
 
+import com.redhat.thermostat.collections.graph.TraversalListener.Status;
+
 import java.util.Map;
 import java.util.Set;
-
-import com.redhat.thermostat.collections.graph.TraversalListener.Status;
 
 /**
  *
@@ -142,14 +142,13 @@ public class DepthFirstSearch {
         if (parent != null && parent.equals(source)) {
             return RelationshipType.TREE;
         }
-        
-        if (payload.getDiscovered().contains(destination)) {
-            parent = payload.getParents().get(source);
-            if (parent != null && !parent.equals(destination)) {
-                return RelationshipType.BACK;
-            }
+
+        if (payload.getDiscovered().contains(destination) &&
+           !payload.getProcessed().contains(destination))
+        {
+            return RelationshipType.BACK;
         }
-        
+
         if (payload.getProcessed().contains(destination)) {
             Map<Node, Integer> entryTimes = payload.getEntryTimes();
             if (!entryTimes.containsKey(source) || !entryTimes.containsKey(destination)) {
