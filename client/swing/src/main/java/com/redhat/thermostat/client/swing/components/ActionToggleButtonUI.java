@@ -46,6 +46,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.util.Objects;
 
 /**
  * An ActionButtonUI which is intended specifically for "togglebuttons", which
@@ -68,6 +69,10 @@ public class ActionToggleButtonUI extends ActionButtonUI {
     protected Image rolledOverSelectedIcon;
     protected Image disabledSelectedIcon;
     private ToggleActionState toggleActionState;
+
+    ActionToggleButtonUI(ToggleActionState initialState) {
+        this.toggleActionState = Objects.requireNonNull(initialState);
+    }
 
     @Override
     protected void paintIcon(Graphics g, JComponent c, Rectangle iconRect) {
@@ -115,16 +120,9 @@ public class ActionToggleButtonUI extends ActionButtonUI {
             x = button.getWidth() / 2 - w / 2;
         }
 
-        boolean transitionState, actionEnabled, buttonEnabled;
-        if (toggleActionState == null) {
-            transitionState = false;
-            actionEnabled = false;
-            buttonEnabled = false;
-        } else {
-            transitionState = toggleActionState.isTransitionState();
-            actionEnabled = toggleActionState.isActionEnabled();
-            buttonEnabled = toggleActionState.isButtonEnabled();
-        }
+        boolean transitionState = toggleActionState.isTransitionState();
+        boolean actionEnabled = toggleActionState.isActionEnabled();
+        boolean buttonEnabled = toggleActionState.isButtonEnabled();
 
         boolean stopped = !transitionState && !actionEnabled;
         boolean starting = transitionState && actionEnabled;
@@ -153,7 +151,7 @@ public class ActionToggleButtonUI extends ActionButtonUI {
     }
 
     void setState(ToggleActionState toggleActionState) {
-        this.toggleActionState = toggleActionState;
+        this.toggleActionState = Objects.requireNonNull(toggleActionState);
     }
 
 }

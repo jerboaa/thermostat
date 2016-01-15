@@ -43,8 +43,12 @@ import javax.swing.JToggleButton;
 import com.redhat.thermostat.client.core.ToggleActionState;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
+import java.util.Objects;
+
 @SuppressWarnings("serial")
 public class ActionToggleButton extends JToggleButton implements ToolbarButton {
+
+    private static final ToggleActionState DEFAULT_TOGGLE_ACTION_STATE = new DefaultToggleActionState();
         
     private String lastText;
     private boolean showText;
@@ -67,11 +71,12 @@ public class ActionToggleButton extends JToggleButton implements ToolbarButton {
         showText = true;
         setText(text.getContents());
 
-        buttonUI = new ActionToggleButtonUI();
+        buttonUI = new ActionToggleButtonUI(DEFAULT_TOGGLE_ACTION_STATE);
         setUI(buttonUI);
         setOpaque(false);
         setContentAreaFilled(false);
         setBorder(new ToolbarButtonBorder(this));
+        setToggleActionState(DEFAULT_TOGGLE_ACTION_STATE);
     }
     
     @Override
@@ -102,10 +107,28 @@ public class ActionToggleButton extends JToggleButton implements ToolbarButton {
     }
 
     public void setToggleActionState(ToggleActionState toggleActionState) {
+        Objects.requireNonNull(toggleActionState);
         setEnabled(!toggleActionState.isTransitionState() && toggleActionState.isButtonEnabled());
         setSelected(toggleActionState.isActionEnabled());
         buttonUI.setState(toggleActionState);
         repaint();
+    }
+
+    private static class DefaultToggleActionState implements ToggleActionState {
+        @Override
+        public boolean isTransitionState() {
+            return false;
+        }
+
+        @Override
+        public boolean isActionEnabled() {
+            return false;
+        }
+
+        @Override
+        public boolean isButtonEnabled() {
+            return true;
+        }
     }
 
 }
