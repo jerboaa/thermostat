@@ -36,58 +36,34 @@
 
 package com.redhat.thermostat.client.swing.components;
 
-import org.junit.Test;
-
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
+import java.awt.Dimension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+/**
+ * Manual Test for FontAwesomeIcon, it lets you display an icon to see if it's
+ * rendered correctly. If not, try adding debugging borders around the icon
+ * (in the drawing code) to see the proper bounds and alignment.
+ * If no icon is displayed check that the the fonts are loaded correctly and
+ * then that the chosen character is still present.
+ */
+public class FontAwesomeIconTestManual {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame frame = new JFrame();
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setMinimumSize(new Dimension(600, 600));
+                javax.swing.Icon icon = new FontAwesomeIcon('\uf004', 250, new Color(168, 172, 168));
+                JLabel label = new JLabel(icon, JLabel.CENTER);
+                label.setBorder(new DebugBorder());
+                frame.add(label);
 
-public class FontAwesomeIconTest {
-
-    @Test
-    public void testIcon() {
-        FontAwesomeIcon icon = new FontAwesomeIcon('\uf004', 20);
-        
-        assertEquals(20, icon.getIconHeight());
-        assertEquals(20, icon.getIconWidth());
-        
-        BufferedImage buffer = new BufferedImage(25, 25, BufferedImage.TYPE_INT_ARGB);
-        Graphics g = buffer.getGraphics();
-        
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, 25, 25);
-        
-        icon.paintIcon(null, g, 0, 0);
-        
-        g.dispose();
-        
-        int rgb = buffer.getRGB(0, 0);
-        
-        assertEquals(0xFFFFFFFF, rgb);
-        
-        rgb = buffer.getRGB(12, 8);
-        assertEquals(0xFF000000, rgb);
-        
-        rgb = buffer.getRGB(12, 12);
-        assertEquals(0xFF000000, rgb);
-        
-        rgb = buffer.getRGB(10, 16);
-        assertEquals(0xFF000000, rgb);
-
-        // on the border of the image, this is some gray due to antialiasing
-        rgb = buffer.getRGB(10, 18);
-        assertFalse(0xFF000000 == rgb);
-        assertFalse(0xFFFFFFFF == rgb);
-
-        rgb = buffer.getRGB(10, 20);
-        assertEquals(0xFFFFFFFF, rgb);
-
-        rgb = buffer.getRGB(20, 20);
-        assertEquals(0xFFFFFFFF, rgb);
+                frame.setVisible(true);
+            }
+        });
     }
-
 }
-

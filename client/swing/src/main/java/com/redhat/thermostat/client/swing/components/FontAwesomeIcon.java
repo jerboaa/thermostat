@@ -36,8 +36,12 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.FontMetrics;
@@ -46,6 +50,9 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Paint;
 import java.awt.RenderingHints;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,9 +78,8 @@ public class FontAwesomeIcon extends Icon {
     private Paint color;
     
     static {
-        try {
-            InputStream stream =
-                    FontAwesomeIcon.class.getClassLoader().getResourceAsStream(AWESOME_SET);
+        ClassLoader loader = FontAwesomeIcon.class.getClassLoader();
+        try (InputStream stream = loader.getResourceAsStream(AWESOME_SET)) {
             awesome = Font.createFont(Font.TRUETYPE_FONT, stream);
 
         } catch (FontFormatException | IOException ex) {
@@ -131,13 +137,20 @@ public class FontAwesomeIcon extends Icon {
 
             graphics.setFont(font);
             graphics.setPaint(color);
-            
-            FontMetrics metrics = graphics.getFontMetrics(font);
-            int width = metrics.charWidth(iconID);
 
-            int stringX = (int) (getIconWidth()/2 - width/2 + .5);
-            int stringY = getIconHeight() - (getIconHeight()/4) + 1;
-            graphics.drawString(String.valueOf(iconID), stringX, stringY);            
+            String icon = String.valueOf(iconID);
+
+            FontRenderContext fontRenderContext = graphics.getFontRenderContext();
+            TextLayout layout = new TextLayout(icon, font, fontRenderContext);
+
+            FontMetrics metrics = graphics.getFontMetrics(font);
+
+            int stringX = (getIconWidth() - metrics.stringWidth(icon))/2;
+            int stringY = (metrics.getAscent() + (getIconHeight() - (metrics.getAscent() + metrics.getDescent())) / 2);
+
+            graphics.drawString(String.valueOf(iconID), stringX, stringY);
+
+            graphics.setColor(Color.RED);
             graphics.dispose();
         }
         
@@ -158,5 +171,6 @@ public class FontAwesomeIcon extends Icon {
     public int getIconWidth() {
         return size;
     }
+
 }
 
