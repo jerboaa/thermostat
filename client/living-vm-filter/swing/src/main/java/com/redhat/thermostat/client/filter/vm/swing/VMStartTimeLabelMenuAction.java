@@ -36,26 +36,52 @@
 
 package com.redhat.thermostat.client.filter.vm.swing;
 
+import com.redhat.thermostat.client.ui.MenuAction;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
-public enum LocaleResources {
+public class VMStartTimeLabelMenuAction implements MenuAction {
 
-    PID_LABEL_MENU_NAME,
-    PID_LABEL_MENU_DESCRIPTION,
-    PID_LABEL_MENU_PATH,
-    PID_LABEL_DECORATOR,
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    STARTTIME_LABEL_MENU_NAME,
-    STARTTIME_LABEL_MENU_DESCRIPTION,
-    STARTTIME_LABEL_MENU_PATH,
-    STARTTIME_LABEL_DECORATOR,
-    ;
+    private VMStartTimeLabelDecorator decorator;
 
-    static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.filter.vm.swing.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public VMStartTimeLabelMenuAction(VMStartTimeLabelDecorator decorator) {
+        this.decorator = decorator;
     }
 
+    @Override
+    public LocalizedString getName() {
+        return t.localize(LocaleResources.STARTTIME_LABEL_MENU_NAME);
+    }
+
+    @Override
+    public LocalizedString getDescription() {
+        return t.localize(LocaleResources.STARTTIME_LABEL_MENU_DESCRIPTION);
+    }
+
+    @Override
+    public void execute() {
+        decorator.setEnabled(!decorator.isEnabled());
+    }
+
+    @Override
+    public Type getType() {
+        return Type.CHECK;
+    }
+
+    @Override
+    public LocalizedString[] getPath() {
+        return new LocalizedString[] { t.localize(LocaleResources.STARTTIME_LABEL_MENU_PATH), getName() };
+    }
+
+    @Override
+    public int sortOrder() {
+        return SORT_TOP + 15;
+    }
+
+    @Override
+    public String getPersistenceID() {
+        return MENU_KEY + "-start-time-labels";
+    }
 }

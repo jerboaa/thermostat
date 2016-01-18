@@ -121,6 +121,22 @@ public class VMFilterActivator implements BundleActivator {
 
                 registeredServices.add(registration);
 
+                VMStartTimeLabelDecorator vmStartTimeLabelDecorator = new VMStartTimeLabelDecorator(vmDao);
+                decoratorProperties = new Hashtable<>();
+                decoratorProperties.put(ReferenceFieldLabelDecorator.ID,
+                        ReferenceFieldDecoratorLayout.LABEL_INFO.name());
+
+                registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
+                        vmStartTimeLabelDecorator, decoratorProperties);
+
+                registeredServices.add(registration);
+
+                VMStartTimeLabelMenuAction vmStartTimeLabelMenuAction = new VMStartTimeLabelMenuAction(vmStartTimeLabelDecorator);
+                registration = context.registerService(MenuAction.class.getName(),
+                        vmStartTimeLabelMenuAction, null);
+
+                registeredServices.add(registration);
+
                 NetworkInterfaceInfoDAO networkDao = (NetworkInterfaceInfoDAO)
                             services.get(NetworkInterfaceInfoDAO.class.getName());
 

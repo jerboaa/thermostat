@@ -77,6 +77,7 @@ public class VMFilterActivatorTest {
         ctx.registerService(UIDefaults.class, uiDefaults, null);
 
         assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), VMPidLabelDecorator.class));
+        assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), VMStartTimeLabelDecorator.class));
         assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), HostNetworkInterfaceLabelDecorator.class));
         assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), DeadHostIconDecorator.class));
 
@@ -84,6 +85,7 @@ public class VMFilterActivatorTest {
         assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), DeadVMIconDecorator.class));
 
         assertTrue(ctx.isServiceRegistered(MenuAction.class.getName(), VMPidLabelMenuAction.class));
+        assertTrue(ctx.isServiceRegistered(MenuAction.class.getName(), VMStartTimeLabelMenuAction.class));
     }
 }
 
