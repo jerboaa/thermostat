@@ -154,12 +154,15 @@ public class TreeProcessorTest {
         assertEquals(numSiblings, children.size());
         TreeMapNode.sort(children);
 
-        double weight = children.get(0).getWeight();
-        for(int i = 1; i < numSiblings - 1; i++) {
-            double currentWeight = children.get(i).getWeight();
-            //check that the ratio between node weights is approximately 2 (which is the BASE)
-            assertEquals(BASE, weight/currentWeight, DELTA);
-            weight = currentWeight;
+        Rectangle2D.Double referenceRectangle = children.get(0).getRectangle();
+        double referenceArea = referenceRectangle.getHeight() * referenceRectangle.getWidth();
+
+        for (int i = 1; i < numSiblings - 1; i++) {
+            Rectangle2D.Double currentRectangle = children.get(i).getRectangle();
+            double currentArea = currentRectangle.getHeight() * currentRectangle.getWidth();
+            //check that the ratio between areas is approximately 2 (which is the BASE)
+            assertEquals(BASE, referenceArea / currentArea, DELTA);
+            referenceArea = currentArea;
         }
     }
 }

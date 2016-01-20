@@ -74,9 +74,9 @@ public class TreeProcessor {
      * node who has children.
      * @param node the subtree's root to process
      */
-    private static void process(TreeMapNode node) {                                                                                                                            
-        
-        SquarifiedTreeMap algorithm = new SquarifiedTreeMap(getSubArea(node.getRectangle()), node.getChildren());
+    private static void process(TreeMapNode node) {
+        SquarifiedTreeMap algorithm =
+                new SquarifiedTreeMap(getSubArea(node.getRectangle()), node.getChildren());
         node.setChildren(algorithm.squarify());
 
         Color c = node.getNextColor();

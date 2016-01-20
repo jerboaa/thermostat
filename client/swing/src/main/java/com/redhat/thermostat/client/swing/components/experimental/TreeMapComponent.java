@@ -204,17 +204,7 @@ public class TreeMapComponent extends JComponent {
         this.tree = Objects.requireNonNull(tree);
         this.zoomStack.clear();
         this.zoomStack.push(this.tree);
-        resetTreeMapNodeWeights(this.tree);
         processAndDrawTreeMap(this.tree);
-    }
-
-    private void resetTreeMapNodeWeights(TreeMapNode node) {
-        Objects.requireNonNull(node);
-        node.setWeight(node.getRealWeight());
-
-        for(TreeMapNode child : node.getChildren()) {
-            resetTreeMapNodeWeights(child);
-        }
     }
 
     public void setToolTipRenderer(ToolTipRenderer renderer) {
@@ -429,13 +419,18 @@ public class TreeMapComponent extends JComponent {
      */
     void processAndDrawTreeMap(TreeMapNode root) {
         tree = Objects.requireNonNull(root);
-        Rectangle2D.Double newArea = tree.getRectangle();
+
+        if (getSize().width == 0 || getSize().height == 0) {
+            return;
+        }
+
+        Rectangle2D.Double region = tree.getRectangle();
         // give to the root node the size of this object so it can be recalculated
-        newArea.width = getSize().width;
-        newArea.height = getSize().height;
+        region.width = getSize().width;
+        region.height = getSize().height;
 
         // recalculate the tree
-        TreeProcessor.processTreeMap(tree, newArea);
+        TreeProcessor.processTreeMap(tree, region);
 
         removeAll();
         drawTreeMap(tree);

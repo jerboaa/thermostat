@@ -125,13 +125,6 @@ public class TreeMapNodeTest {
     }
 
     @Test
-    public final void testGetSetWeight() {
-        assertEquals(1.0, node.getWeight(), DELTA);
-        node.setWeight(5);
-        assertEquals(5.0, node.getWeight(), DELTA);
-    }
-
-    @Test
     public final void testGetSetRectangle() {        
         Rectangle2D.Double r = new Rectangle2D.Double(5, 5, 5, 5);
         node.setRectangle(r);
@@ -154,18 +147,6 @@ public class TreeMapNodeTest {
         assertEquals(5.0, node.getRealWeight(), DELTA);
         node.setRealWeight(8);
         assertEquals(8.0, node.getRealWeight(), DELTA);
-    }
-
-    @Test
-    public final void testAllowNonPositiveWeight() {
-        assertFalse(TreeMapNode.isAllowNonPositiveWeight());
-        node.setWeight(-5);
-        assertEquals(1.0, node.getWeight(), DELTA);
-        assertEquals(1.0, node.getRealWeight(), DELTA);
-
-        TreeMapNode.setAllowNonPositiveWeight(true);
-        node.setWeight(-5);
-        assertEquals(-5.0, node.getWeight(), DELTA);
     }
 
     @Test

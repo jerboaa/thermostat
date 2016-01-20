@@ -97,26 +97,14 @@ public class TreeMapNode {
     private List<TreeMapNode> children;
     
     /**
-     * The node's weight.
-     */
-    private double weight;
-    
-    /**
      * The node's label. It can be the same of another node.
      */
     private String label;
     
     /**
-     * The node's weight which has been set inside the constructor. All
-     * operations which refers to node's weight work on the weight field, that 
-     * is used to make calcs.
+     * The node's weight.
      */
     private double realWeight;
-    
-    /**
-     * This flag indicates if weight value can be a non positive number.
-     */
-    static boolean allowNonPositiveWeight = false;
     
     /**
      * The color of this node.
@@ -173,7 +161,6 @@ public class TreeMapNode {
         this.children = new ArrayList<TreeMapNode>();
         this.rectangle = new Rectangle2D.Double();
         this.info = new HashMap<String, String>();
-        this.weight = realWeight;
         this.realWeight = realWeight;
     }
 
@@ -292,22 +279,6 @@ public class TreeMapNode {
     }
 
     /**
-     * Return the weight of this object. In case of allowNonPositiveWeight is 
-     * set to false and the weight is 0, less than 0 or not a number 
-     * ({@link Double.Nan}), this method returns a value that can be transformed
-     * by external objects, so if you need the real weight you have to
-     * invoke getrealWeight().
-     * 
-     * @return the node's weight.
-     */
-    public double getWeight() {
-        if ((weight <= 0 || weight == Double.NaN) && !allowNonPositiveWeight) {
-            return realWeight;
-        }
-        return this.weight;
-    }
-    
-    /**
      * Use this method to retrieve the real weight assigned to this node.
      * @return the weight corresponding to this node.
      */
@@ -322,16 +293,6 @@ public class TreeMapNode {
     public void setRealWeight(double w) {
         this.realWeight = w;
     }
-
-    /**
-     * Set the weight of this object. If a negative value is given, it is set 
-     * automatically to 0.
-     * @param weight the new weight for this object.
-     */
-    public void setWeight(double w) {
-        this.weight = w < 0 && !allowNonPositiveWeight ? 0 : w;
-    }
-
 
     /**
      * Return the rectangle representing this object.
@@ -351,23 +312,6 @@ public class TreeMapNode {
     public void setRectangle(Rectangle2D.Double rectangle) {
         this.rectangle = rectangle;
     }    
-
-    /**
-     * 
-     * @return true if non positive value can be used as weight, else false.
-     */
-    public static boolean isAllowNonPositiveWeight() {
-        return allowNonPositiveWeight;
-    }
-
-    /**
-     * Set this value to false and nodes will be not able to manage non positive
-     * values for weight field, otherwise set to true.
-     * @param allowed the flag value for managing non positive values as weight
-     */
-    public static void setAllowNonPositiveWeight(boolean allowed) {
-        allowNonPositiveWeight = allowed;
-    }
 
     /**
      * This method assess if the rectangle associated to this node is drawable,
@@ -425,7 +369,7 @@ public class TreeMapNode {
           @Override
           public int compare(TreeMapNode o1, TreeMapNode o2) {
               // inverting the result to descending sort the list
-              return -(Double.compare(o1.getWeight(), o2.getWeight()));
+              return -(Double.compare(o1.getRealWeight(), o2.getRealWeight()));
           }
       };
       Collections.sort(nodes, c);

@@ -627,7 +627,7 @@ public class TreeMapComponentTest {
     public static class WeightRenderer implements TreeMapComponent.ToolTipRenderer {
         @Override
         public String render(TreeMapNode node) {
-            return node.getLabel() + " RW:" + node.getRealWeight() + " W:" + node.getWeight();
+            return node.getLabel() + " RW:" + node.getRealWeight();
         }
     }
     interface KeyShortcutTestResultHandler {

@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -74,7 +75,9 @@ public class SquarifiedTreeMap {
      * List of node to represent as TreeMap.
      */
     private LinkedList<TreeMapNode> elements;
-    
+
+    private double totalRealWeight;
+
     /**
      * Represent the area in which draw nodes.
      */
@@ -93,7 +96,9 @@ public class SquarifiedTreeMap {
     /**
      * The rectangles area available for drawing.
      */
-    private Rectangle2D.Double availableArea;
+    private Rectangle2D.Double availableRegion;
+
+    private double initialArea;
 
     /**
      * List of the calculated rectangles.
@@ -111,77 +116,91 @@ public class SquarifiedTreeMap {
     private double lastX = 0;
     private double lastY = 0;
 
-
-    /**
-     * Constructor.
-     * 
-     * @param d the dimension of the total area in which draw elements.
-     * @param list the list of elements to draw as TreeMap.
-     * 
-     * @throws a NullPointerException if one of the arguments is null.
-     */
     public SquarifiedTreeMap(Rectangle2D.Double bounds, List<TreeMapNode> list) {
         this.elements = new LinkedList<>();
-        elements.addAll(Objects.requireNonNull(list));
+        this.elements.addAll(Objects.requireNonNull(list));
+        this.totalRealWeight = getRealSum(elements);
         this.container = Objects.requireNonNull(bounds);
+        this.squarifiedNodes = new ArrayList<>();
+        this.currentRow = new ArrayList<>();
     }
 
     /**
-     * Invoke this method to calculate the rectangles for the TreeMap.
-     * 
-     * @return a list of node having a rectangle built in percentage to the 
-     * available area.
+     * This method prepares for and initiates the process of determining rectangles to represent
+     * nodes.
+     *
+     * @return a list of nodes, each containing their respective rectangle.
      */
     public List<TreeMapNode> squarify() {
-        initializeArea();
-        prepareData(elements);
+        if (elements.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        initialArea = container.getWidth() * container.getHeight();
+        availableRegion = new Rectangle2D.Double(container.getX(), container.getY(),
+                container.getWidth(), container.getHeight());
+        lastX = 0;
+        lastY = 0;
+        updateDirection();
+
+        TreeMapNode.sort(elements);
+
         List<TreeMapNode> row = new ArrayList<>();
-        double w = getPrincipalSide();	
-        squarify(elements, row, w);
+        squarifyHelper(elements, row, 0, getPrincipalSide());
         return getSquarifiedNodes();
     }
 
     /**
-     * Calculate recursively the rectangles to draw and their size.
-     * 
-     * @param nodes the list of elements to draw.
-     * @param row the list of current rectangles to process.
-     * @param w the side against which to calculate the rectangles.
+     * Recursively determine the rectangles that represent the set of nodes.
+     *
+     * @param nodes remaining nodes to be processed.
+     * @param row the nodes that have been included in the row currently under construction.
+     * @param rowArea the total area allocated to this row.
+     * @param side the length of the side against which to calculate the the aspect ratio.
      */
-    private void squarify(LinkedList<TreeMapNode> nodes, List<TreeMapNode> row, double w) {
+    private void squarifyHelper(LinkedList<TreeMapNode> nodes, List<TreeMapNode> row,
+                                double rowArea, double side) {
+
         if (nodes.isEmpty() && row.isEmpty()) {
-            // work done
+            // nothing to do here, just return
             return;
         }
         if (nodes.isEmpty()) {
-            // no more element to process, just draw current row
-            finalizeRow(row);
+            // no more nodes to process, just finalize current row
+            finalizeRow(row, rowArea);
             return;
         }
         if (row.isEmpty()) {
-            // add the first element to the row and iterate the process over it
+            // add the first element to the row and process any remaining nodes recursively
             row.add(nodes.getFirst());
+            double realWeight = nodes.getFirst().getRealWeight();
             nodes.removeFirst();
-            squarify(nodes, row, w);
+            double nodeArea = (realWeight / totalRealWeight) * initialArea;
+            squarifyHelper(nodes, row, nodeArea, side);
             return;
         }
-        
-        /*  Greedy step: calculate the best aspect ratio of actual row and the
-         *  best aspect ratio given by adding another rectangle to the row.
-         *  If the current row can not be improved then finalize it
-         *  else add the next element, to improve the global aspect ratio
+
+        /*
+         * Determine if adding another rectangle to the current row improves the overall aspect
+         * ratio.  If the current row is not (and therefore cannot be) improved then it is
+         * finalized, and the algorithm is run recursively on the remaining nodes that have not yet
+         * been placed in a row.
          */
-        List<TreeMapNode> expandedRow = new ArrayList<TreeMapNode>(row);
+        List<TreeMapNode> expandedRow = new ArrayList<>(row);
         expandedRow.add(nodes.getFirst());
-        double actualAspectRatio = bestAspectRatio(row, w);
-        double expandedAspectRatio = bestAspectRatio(expandedRow, w);
+        double realWeight = nodes.getFirst().getRealWeight();
+        double nodeArea = (realWeight / totalRealWeight) * initialArea;
+        double expandedRowArea = rowArea + nodeArea;
+
+        double actualAspectRatio = maxAspectRatio(row, rowArea, side);
+        double expandedAspectRatio = maxAspectRatio(expandedRow, expandedRowArea, side);
 
         if (!willImprove(actualAspectRatio, expandedAspectRatio)) {
-            finalizeRow(row);
-            squarify(nodes, new ArrayList<TreeMapNode>(), getPrincipalSide());
+            finalizeRow(row, rowArea);
+            squarifyHelper(nodes, new ArrayList<TreeMapNode>(), 0, getPrincipalSide());
         } else {
             nodes.removeFirst();
-            squarify(nodes, expandedRow, w);
+            squarifyHelper(nodes, expandedRow, expandedRowArea, side);
         }
     }
 
@@ -192,25 +211,12 @@ public class SquarifiedTreeMap {
     public List<TreeMapNode> getSquarifiedNodes() {
         return squarifiedNodes;
     }
-    
-    /**
-     * Initialize the available area used to create the tree map
-     */
-    private void initializeArea() {
-        availableArea = new Rectangle2D.Double(container.getX(), container.getY(), 
-                container.getWidth(), container.getHeight());
-        lastX = 0;
-        lastY = 0;
-        squarifiedNodes = new ArrayList<>();
-        currentRow = new ArrayList<>();
-        updateDirection();
-    }
-    
+
     /**
      * Recalculate the drawing direction.
      */
     private void updateDirection() {
-        drawingDir = availableArea.getWidth() > availableArea.getHeight() ? 
+        drawingDir = availableRegion.getWidth() > availableRegion.getHeight() ?
                 DIRECTION.TOP_BOTTOM : DIRECTION.LEFT_RIGHT;
     }
 
@@ -224,31 +230,27 @@ public class SquarifiedTreeMap {
     }
     
     /**
-     * Keep the current list of nodes which produced the best aspect ratio
-     * in the available area, draw their respective rectangles and reinitialize 
-     * the current row to draw.
-     * <p>
-     * @param nodes the list of numbers which represent the rectangles' area.
-     * @return the number of Rectangles created.
+     * For each node in the row, this method creates a rectangle to represent it graphically.
+     *
+     * @param row the set of nodes that constitute a row.
+     * @param rowArea the area allocated to the row.
      */
-    private void finalizeRow(List<TreeMapNode> nodes) {
-        if (nodes == null || nodes.isEmpty()) {
+    private void finalizeRow(List<TreeMapNode> row, double rowArea) {
+        if (row == null || row.isEmpty()) {
             return;
         }
-        // get the total weight of nodes in order to calculate their percentages
-        double sum = getSum(nodes);
-        // greedy optimization step: get the best aspect ratio for nodes drawn 
+
+        // greedy optimization step: get the best aspect ratio for nodes drawn
         // on the longer and on the smaller side, to evaluate the best.
-        double actualAR = bestAspectRatio(nodes, getPrincipalSide());
-        double alternativeAR = bestAspectRatio(nodes, getSecondarySide());
+        double actualAR = maxAspectRatio(row, rowArea, getPrincipalSide());
+        double alternativeAR = maxAspectRatio(row, rowArea, getSecondarySide());
       
         if (willImprove(actualAR, alternativeAR)) {
             invertDirection();
         }
 
-        for (TreeMapNode node: nodes) {
-            // assign a rectangle calculated as percentage of the total weight
-            Rectangle2D.Double r = createRectangle(sum, node.getWeight());
+        for (TreeMapNode node: row) {
+            Rectangle2D.Double r = createRectangle(rowArea, node.getRealWeight() / getRealSum(row));
             node.setRectangle(r);
             
             // recalculate coordinates to draw next rectangle
@@ -257,53 +259,40 @@ public class SquarifiedTreeMap {
             // add the node to the current list of rectangles in processing
             currentRow.add(node);
         }
-        // recalculate the area in which new rectangles will be drawn and 
+        // recalculate the area in which new rectangles will be drawn and
         // reinitialize the current list of node to represent.
         reduceAvailableArea();
         newRow();
     }
     
-
     /**
-     * Create a rectangle having area = @param area in percentage of @param sum. 
-     * <p>
-     * For example: assume @param area = 4 and @param sum = 12 and the 
-     * drawing direction is top to bottom. <br>
-     * <p>
-     *   __ __ __ __
-     *  |     |     | 
-     *  |__ __|     |  
-     *  |__ __ __ __|
-     * 
-     * <br>the internal rectangle will be calculated as follow:<br>
-     *  {@code height = (4 / 9) * 3} <--note that the principal side for actual  
-     *  drawing direction is 3.
-     *  <br>Now it is possible to calculate the width:<br>
-     *  {@code width = 4 / 1.3} <-- note this is the height value
-     *  
-     * <p>
-     * @param sum the total size of all rectangles in the actual row.
-     * @param area this Rectangle's area.
-     * @return the Rectangle which correctly fill the available area.
+     * Create a rectangle that has a size determined by what fraction of the total row area is
+     * allocated to it.
+     *
+     * @param rowArea the total area allocated to the row.
+     * @param fraction the portion of the total area allocated to the rectangle being created.
+     * @return the created rectangle.
      */
-    private Rectangle2D.Double createRectangle(Double sum, Double area) {
+    private Rectangle2D.Double createRectangle(Double rowArea, Double fraction) {
         double side = getPrincipalSide();
         double w = 0;
         double h = 0;
         
-        //don't want division by 0
-        if (validate(area) == 0 || validate(sum) == 0 || validate(side) == 0) {
+        if (validate(fraction) == 0 || validate(rowArea) == 0 || validate(side) == 0) {
             return new Rectangle2D.Double(lastX, lastY, 0, 0);
         }
-        
-        // calculate the rectangle's principal side relatively to the container 
-        // rectangle's principal side.
+
         if (drawingDir == DIRECTION.TOP_BOTTOM) {
-            h = (area / sum) * side;
-            w = area / h;
+            // the length of the secondary side (width here) of the rectangle is consistent between
+            // rectangles in the row
+            w = rowArea / side;
+
+            // as the width is consistent, the length of the principal side (height here) of the
+            // rectangle is proportional to the ratio rectangleArea / rowArea = fraction.
+            h = fraction * side;
         } else {
-            w = (area / sum) * side;
-            h = area / w;
+            w = fraction * side;
+            h = rowArea / side;
         }        
         return new Rectangle2D.Double(lastX, lastY, w, h);
     }
@@ -327,7 +316,7 @@ public class SquarifiedTreeMap {
      */
     private double getPrincipalSide() {
         return drawingDir == DIRECTION.LEFT_RIGHT ? 
-                availableArea.getWidth() : availableArea.getHeight();
+                availableRegion.getWidth() : availableRegion.getHeight();
     }
 
     /**
@@ -335,19 +324,14 @@ public class SquarifiedTreeMap {
      * @return the secondary available area's side.
      */
     private double getSecondarySide() {
-        return drawingDir == DIRECTION.LEFT_RIGHT ? 
-                availableArea.getHeight() : availableArea.getWidth();
+        return drawingDir == DIRECTION.LEFT_RIGHT ?
+                availableRegion.getHeight() : availableRegion.getWidth();
     }
 
-    /**
-     * Sum the elements in the list.
-     * @param nodes the list which contains elements to sum.
-     * @return the sum of the elements.
-     */
-    private double getSum(List<TreeMapNode> nodes) {
+    private double getRealSum(List<TreeMapNode> nodes) {
         double sum = 0;
-        for (TreeMapNode n : nodes) {
-            sum += n.getWeight();
+        for (TreeMapNode node : nodes) {
+            sum += node.getRealWeight();
         }
         return sum;
     }
@@ -382,17 +366,17 @@ public class SquarifiedTreeMap {
     private void reduceAvailableArea() {
         if (drawingDir == DIRECTION.LEFT_RIGHT) {
             // all rectangles inside the row have the same height
-            availableArea.height -= currentRow.get(0).getRectangle().height;
-            availableArea.y = lastY + currentRow.get(0).getRectangle().height;
-            availableArea.x = currentRow.get(0).getRectangle().x;
+            availableRegion.height -= currentRow.get(0).getRectangle().height;
+            availableRegion.y = lastY + currentRow.get(0).getRectangle().height;
+            availableRegion.x = currentRow.get(0).getRectangle().x;
         } else {
             // all rectangles inside the row have the same width
-            availableArea.width -= currentRow.get(0).getRectangle().width;
-            availableArea.x = lastX + currentRow.get(0).getRectangle().width;
-            availableArea.y = currentRow.get(0).getRectangle().y;
+            availableRegion.width -= currentRow.get(0).getRectangle().width;
+            availableRegion.x = lastX + currentRow.get(0).getRectangle().width;
+            availableRegion.y = currentRow.get(0).getRectangle().y;
         }
         updateDirection();
-        initializeXY(availableArea);
+        initializeXY(availableRegion);
     }
     
     /**
@@ -404,55 +388,34 @@ public class SquarifiedTreeMap {
     }
 
     /**
-     * Calculate the aspect ratio for all the rectangles in the list and
-     * return the max of them.
-     * @param row the list of rectangles.
-     * @param side the side against which to calculate the the aspect ratio.
-     * @return the max aspect ratio calculated for the row.
+     * For each node in the row, determine the ratio longer side / shorter side of the rectangle
+     * that would represent it.  Return the maximum ratio.
+     *
+     * @param row the list of nodes in this row.
+     * @param rowArea the area allocated to this row.
+     * @param side the length of the side against which to calculate the the aspect ratio.
+     * @return the maximum ratio calculated for this row.
      */
-    private double bestAspectRatio(List<TreeMapNode> row, double side) {
+    private double maxAspectRatio(List<TreeMapNode> row, double rowArea, double side) {
         if (row == null || row.isEmpty()) {
             return Double.MAX_VALUE;
         }
-        double sum = getSum(row);
-        double max = 0;
-        // calculate the aspect ratio against the main side, and also its inverse.
-        // this is because aspect ratio of rectangle 6x4 can be calculated as 
-        // 6/4 but also 4/6. Here the aspect ratio has been calculated as 
-        // indicated in the Squarified algorithm.
-        for (TreeMapNode node : row) {
-            double m1 = (Math.pow(side, 2) * node.getWeight()) / Math.pow(sum, 2);
-            double m2 = Math.pow(sum, 2) / (Math.pow(side, 2) * node.getWeight());
-            double m = Math.max(m1, m2);
 
-            if (m > max) {
-                max = m;
+        double realSum = getRealSum(row);
+        double maxRatio = 0;
+
+        for (TreeMapNode node : row) {
+            double fraction = node.getRealWeight() / realSum;
+            double length = rowArea / side;
+            double width = fraction * side;
+            double currentRatio = Math.max(length / width, width / length);
+
+            if (currentRatio > maxRatio) {
+                maxRatio = currentRatio;
             }
         }
-        return max;
-    }
 
-    
-    /**
-     * Prepare the elements in the list, sorting them and transforming them
-     * proportionally the given dimension.
-     * @param dim the dimension in which rectangles will be drawn.
-     * @param elements the list of elements to draw.
-     * @return the list sorted and proportioned to the dimension.
-     */
-    private void  prepareData(List<TreeMapNode> elements) {
-        if (elements == null || elements.isEmpty()) {
-            return;
-        }
-        TreeMapNode.sort(elements);
-        double totArea = availableArea.width * availableArea.height;
-        double sum = getSum(elements);
-        
-        // recalculate weights in percentage of their sum
-        for (TreeMapNode node : elements) {
-            double w = (node.getWeight()/sum) * totArea;
-            node.setWeight(w);
-        }
+        return maxRatio;
     }
 
     /**
