@@ -36,50 +36,55 @@
 
 package com.redhat.thermostat.client.swing.components;
 
-import java.awt.Component;
+import static org.junit.Assert.assertEquals;
 
+import javax.swing.Icon;
+import javax.swing.JLabel;
 import javax.swing.JTable;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
+import javax.swing.DefaultListCellRenderer.UIResource;
 
-import com.redhat.thermostat.client.ui.Palette;
+import org.fest.swing.annotation.GUITest;
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
+import org.fest.swing.edt.GuiActionRunner;
+import org.fest.swing.edt.GuiTask;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
-/**
- * A {@link TableCellRenderer} that colors rows to make them easier to read.
- */
-@SuppressWarnings("serial")
-public class ThermostatTableRenderer extends DefaultTableCellRenderer {
+import com.redhat.thermostat.client.swing.IconResource;
 
-    @Override
-    public Component getTableCellRendererComponent(JTable table, Object value,
-            boolean isSelected, boolean hasFocus, int row, int column) {
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
-        Component result = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-        if (result == null || isSelected) {
-            // do nothing
-        } else if (!isEven(row)) {
-            result.setBackground(Palette.LIGHT_GRAY.getColor());
-        } else {
-            result.setBackground(Palette.WHITE.getColor());
-        }
-        
-        return result;
+@RunWith(CacioFESTRunner.class)
+public class ThermostatTableRendererTest {
+
+    private Icon icon;
+
+    @BeforeClass
+    public static void setupOnce() {
+        FailOnThreadViolationRepaintManager.install();
     }
 
-    @Override
-    protected void setValue(Object value) {
-        // lets this renderer display icons correctly
-        if (value instanceof Icon) {
-            setAlignmentX(CENTER_ALIGNMENT);
-            setIcon((Icon) value);
-        } else {
-            setAlignmentX(LEFT_ALIGNMENT);
-            super.setValue(value);
-        }
+    @Before
+    public void setup() {
+        icon = new FontAwesomeIcon('\uf188', 30);
     }
 
-    private boolean isEven(int row) {
-        return row % 2 == 0;
+    @GUITest
+    @Category(GUITest.class)
+    @Test
+    public void verifyIconIsSet() {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                JTable table = new JTable();
+                ThermostatTableRenderer renderer = new ThermostatTableRenderer();
+                JLabel comp = (JLabel) renderer.getTableCellRendererComponent(table, icon, true, true, 0, 0);
+                assertEquals(icon, comp.getIcon());
+            }
+        });
     }
+
 }
-
