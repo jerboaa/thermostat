@@ -54,9 +54,11 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.annotations.internal.CacioTest;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class ThermostatTableRendererTest {
 
