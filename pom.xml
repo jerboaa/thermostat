@@ -198,7 +198,7 @@
     <commons-codec.osgi-version>1.7.0</commons-codec.osgi-version>
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
 
-    <jline.version>2.9</jline.version>
+    <jline.version>2.13</jline.version>
     <lucene.version>5.1.0_1</lucene.version>
     <lucene.osgi-version>5.1.0.1</lucene.osgi-version>
     <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>

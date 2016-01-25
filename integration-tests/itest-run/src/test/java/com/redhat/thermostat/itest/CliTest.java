@@ -37,6 +37,8 @@
 package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -235,7 +237,29 @@ public class CliTest extends IntegrationTest {
         shell.send("exit\n");
         shell.expectClose();
 
-        assertTrue(shell.getCurrentStandardErrContents().contains("!?!: event not found"));
+        assertFalse(shell.getCurrentStandardErrContents().contains("!?!: event not found"));
+        assertNoExceptions(shell.getCurrentStandardOutContents(), shell.getCurrentStandardErrContents());
+    }
+
+    @Test
+    public void testRecognizedEventsInShell() throws Exception {
+        // test '!' events
+        Spawn shell = spawnThermostat("shell");
+
+        shell.expect(SHELL_DISCONNECT_PROMPT);
+        shell.send("help\n");
+        shell.expect(SHELL_DISCONNECT_PROMPT);
+        shell.send("!hel\n");
+        shell.expect(SHELL_DISCONNECT_PROMPT);
+        shell.send("exit\n");
+        shell.expectClose();
+
+        String EXPECTED_OUTPUT_FROM_HELP = "list of commands";
+        String stdOut = shell.getCurrentStandardOutContents();
+        int firstIndex = stdOut.indexOf(EXPECTED_OUTPUT_FROM_HELP);
+        assertFalse(firstIndex == -1);
+        int secondIndex = stdOut.indexOf(EXPECTED_OUTPUT_FROM_HELP, firstIndex + 1);
+        assertFalse(secondIndex == -1);
         assertNoExceptions(shell.getCurrentStandardOutContents(), shell.getCurrentStandardErrContents());
     }
 

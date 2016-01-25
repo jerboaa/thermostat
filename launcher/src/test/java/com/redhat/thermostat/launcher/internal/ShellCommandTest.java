@@ -45,17 +45,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
-
-import com.redhat.thermostat.common.config.ClientPreferences;
-import jline.TerminalFactory;
-import jline.TerminalFactory.Flavor;
-import jline.TerminalFactory.Type;
-import jline.UnixTerminal;
-import jline.console.history.PersistentHistory;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -65,16 +59,23 @@ import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.launcher.internal.ShellCommand.HistoryProvider;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.launcher.internal.ShellCommand.HistoryProvider;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+
+import jline.TerminalFactory;
+import jline.TerminalFactory.Flavor;
+import jline.TerminalFactory.Type;
+import jline.UnixTerminal;
+import jline.console.history.PersistentHistory;
 
 public class ShellCommandTest {
 
@@ -157,7 +158,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(INTRO + PROMPT + "quit\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "quit\n", makeNewlinesConsistent(ctxFactory.getOutput()));
         assertEquals("", ctxFactory.getError());
     }
 
@@ -168,7 +169,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(INTRO + PROMPT + "q\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "q\n", makeNewlinesConsistent(ctxFactory.getOutput()));
         assertEquals("", ctxFactory.getError());
     }
 
@@ -179,7 +180,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(INTRO + PROMPT, ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT, makeNewlinesConsistent(ctxFactory.getOutput()));
         assertEquals("", ctxFactory.getError());
     }
 
@@ -190,7 +191,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(INTRO + PROMPT + "\n" + PROMPT + "exit\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "\n" + PROMPT + "exit\n", makeNewlinesConsistent(ctxFactory.getOutput()));
     }
 
     @Test
@@ -214,7 +215,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        assertEquals(INTRO + PROMPT + "old-history-value\n" + PROMPT + "exit\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "old-history-value\n" + PROMPT + "exit\n", makeNewlinesConsistent(ctxFactory.getOutput()));
         assertEquals("", ctxFactory.getError());
 
         verify(launcher).run(new String[] {"old-history-value"}, true);
@@ -240,7 +241,7 @@ public class ShellCommandTest {
         verify(mockHistory).add("add-to-history");
         verify(mockHistory).flush();
 
-        assertEquals(INTRO + PROMPT + "add-to-history\n" + PROMPT + "exit\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "add-to-history\n" + PROMPT + "exit\n", makeNewlinesConsistent(ctxFactory.getOutput()));
         assertEquals("", ctxFactory.getError());
     }
 
@@ -287,23 +288,6 @@ public class ShellCommandTest {
         assertTrue(tabOutput.contains("test1"));
         assertTrue(tabOutput.contains("test2longname"));
         assertEquals("", ctxFactory.getError());
-    }
-
-    private String getOutputWithoutIntro(final TestCommandContextFactory ctxFactory) {
-        String[] allOutput = ctxFactory.getOutput().split("\n");
-        String[] outputWithoutIntro = Arrays.copyOfRange(allOutput, 2, allOutput.length);
-        return StringUtils.join("\n", Arrays.asList(outputWithoutIntro));
-    }
-
-    private String getTabOutput(final String outputToProcess) {
-        String[] allOutput = outputToProcess.split("\n");
-        String tabOutput = "";
-        for (String output : allOutput) {
-            if (!output.startsWith("Thermostat")) {
-                tabOutput += output;
-            }
-        }
-        return tabOutput;
     }
 
     @Test
@@ -728,6 +712,40 @@ public class ShellCommandTest {
         assertEquals("", ctxFactory.getError());
     }
 
+    private String getOutputWithoutIntro(final TestCommandContextFactory ctxFactory) {
+        String[] allOutput = makeNewlinesConsistent(ctxFactory.getOutput()).split("\n");
+        String[] outputWithoutIntro = Arrays.copyOfRange(allOutput, 2, allOutput.length);
+        return StringUtils.join("\n", Arrays.asList(outputWithoutIntro));
+    }
+
+    private String getTabOutput(final String outputToProcess) {
+        String[] allOutput = outputToProcess.split("\n");
+        String tabOutput = "";
+        for (String output : allOutput) {
+            if (!output.startsWith("Thermostat")) {
+                tabOutput += output;
+            }
+        }
+        return tabOutput;
+    }
+
+    private String getTabbedInline(TestCommandContextFactory ctxFactory, String input) {
+        String inline = "";
+        String[] lines = makeNewlinesConsistent(ctxFactory.getOutput()).split("\n");
+        for(String line : lines) {
+            if (line.contains(input)) {
+                inline = line.split(PROMPT + input)[1];
+                inline = inline.replaceAll(" ", "");
+                return inline;
+            }
+        }
+        return inline;
+    }
+
+    private String makeNewlinesConsistent(String input) {
+        return input.replace("\r\n", "\n");
+    }
+
     private void createTempFile(String name) throws IOException {
         File file = new File(dir, name);
         file.deleteOnExit();
@@ -738,19 +756,6 @@ public class ShellCommandTest {
         File file = new File(dir, name);
         file.deleteOnExit();
         file.createNewFile();
-    }
-
-    private String getTabbedInline(TestCommandContextFactory ctxFactory, String input) {
-        String inline = "";
-        String[] lines = ctxFactory.getOutput().split("\n");
-        for(String line : lines) {
-            if (line.contains(input)) {
-                inline = line.split(PROMPT + input)[1];
-                inline = inline.replaceAll(" ", "");
-                return inline;
-            }
-        }
-        return inline;
     }
 
     private File makeTempDir(String name) {
@@ -852,5 +857,6 @@ public class ShellCommandTest {
         when(infos.getCommandInfos()).thenReturn(infoList);
         cmd.setCommandInfoSource(infos);
     }
+
 }
 

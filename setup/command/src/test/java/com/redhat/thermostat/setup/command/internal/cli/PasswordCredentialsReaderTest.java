@@ -79,7 +79,8 @@ public class PasswordCredentialsReaderTest {
         char[] password = credsReader.readPassword();
         assertEquals("second", new String(password));
         assertEquals("Passwords did not match!\n", new String(berr.toByteArray()));
-        assertEquals("tell me the password: \nrepeat the password: \ntell me the password: \nrepeat the password: \n", new String(bout.toByteArray()));
+        assertEquals("tell me the password: \nrepeat the password: \ntell me the password: \nrepeat the password: \n",
+                makeNewlinesConsistent(new String(bout.toByteArray())));
     }
     
     @Test
@@ -88,8 +89,9 @@ public class PasswordCredentialsReaderTest {
         when(console.getInput()).thenReturn(new ByteArrayInputStream(input.getBytes()));
         char[] password = credsReader.readPassword();
         assertEquals("a", new String(password));
-        assertEquals("Chosen password invalid!\n", new String(berr.toByteArray()));
-        assertEquals("tell me the password: \nrepeat the password: \ntell me the password: \nrepeat the password: \n", new String(bout.toByteArray()));
+        assertEquals("Chosen password invalid!\n", makeNewlinesConsistent(new String(berr.toByteArray())));
+        assertEquals("tell me the password: \nrepeat the password: \ntell me the password: \nrepeat the password: \n",
+                makeNewlinesConsistent(new String(bout.toByteArray())));
     }
     
     @Test
@@ -99,7 +101,7 @@ public class PasswordCredentialsReaderTest {
         char[] password = credsReader.readPassword();
         assertArrayEquals(new char[] { 'b', 'a', 'r' }, password);
         assertEquals("Expected no errors", "", new String(berr.toByteArray()));
-        assertEquals("tell me the password: \nrepeat the password: \n", new String(bout.toByteArray()));
+        assertEquals("tell me the password: \nrepeat the password: \n", makeNewlinesConsistent(new String(bout.toByteArray())));
     }
     
     @Test
@@ -109,7 +111,7 @@ public class PasswordCredentialsReaderTest {
         char[] password = credsReader.readPassword();
         assertArrayEquals(new char[] { 'b', 'a', 'r' }, password);
         assertEquals("Expected no errors", "", new String(berr.toByteArray()));
-        assertEquals("tell me the password: \nrepeat the password: \n", new String(bout.toByteArray()));
+        assertEquals("tell me the password: \nrepeat the password: \n", makeNewlinesConsistent(new String(bout.toByteArray())));
     }
     
     /*
@@ -172,4 +174,9 @@ public class PasswordCredentialsReaderTest {
         }
         return builder.toString();
     }
+
+    private String makeNewlinesConsistent(String input) {
+        return input.replace("\r\n", "\n");
+    }
+
 }

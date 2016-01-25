@@ -37,12 +37,13 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.config.ClientPreferences;
 import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
@@ -59,6 +60,7 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
@@ -115,12 +117,40 @@ public class ShellCommand extends AbstractCommand {
         this.prefs = prefs;
         this.shellPrompt = new ShellPrompt();
 
+        disableJlineLogging();
+
         try {
             Map<String, String> promptConfig = config.getConfiguration("shell-command", "shell-prompt.conf");
             this.shellPrompt.overridePromptConfig(promptConfig);
         } catch (IOException e) {
             //Do nothing
         }
+    }
+
+    private void disableJlineLogging() {
+        /*
+         * newer versions of jline will always log event expansion errors with
+         * stack trace to stderr. Disable that.
+         */
+        OutputStream nullOutputStream = new OutputStream() {
+
+            @Override
+            public void write(int b) throws IOException {
+                // do not write anything
+            }
+
+            @Override
+            public void write(byte[] b) throws IOException {
+                // do not write anything
+            }
+
+            @Override
+            public void write(byte[] b, int off, int len) throws IOException {
+                // do not write anything
+            }
+        };
+
+        jline.internal.Log.setOutput(new PrintStream(nullOutputStream));
     }
     
     @Override
@@ -172,15 +202,7 @@ public class ShellCommand extends AbstractCommand {
      */
     private boolean handleConsoleInput(ConsoleReader reader, Console console) throws IOException, CommandException {
         String line;
-        try {
-            line = reader.readLine(shellPrompt.getPrompt());
-        } catch (IllegalArgumentException iae) {
-            if (iae.getMessage().endsWith(": event not found")) {
-                console.getError().println(iae.getMessage());
-                return true;
-            }
-            throw iae;
-        }
+        line = reader.readLine(shellPrompt.getPrompt());
         if (line == null) {
             return false;
         }

@@ -77,7 +77,7 @@ public class UsernameCredentialsReaderTest {
         String username = credsReader.read();
         assertEquals("foo-user", username);
         assertEquals("Expected no errors", "", new String(berr.toByteArray()));
-        assertEquals("tell me the username: foo-user\n", new String(bout.toByteArray()));
+        assertEquals("tell me the username: foo-user\n", makeNewlinesConsistent(new String(bout.toByteArray())));
     }
     
     @Test
@@ -87,7 +87,7 @@ public class UsernameCredentialsReaderTest {
         String username = credsReader.read();
         assertEquals("try-second-time", username);
         assertEquals("Chosen username '' invalid!\n", new String(berr.toByteArray()));
-        assertEquals("tell me the username: \ntell me the username: try-second-time\n", new String(bout.toByteArray()));
+        assertEquals("tell me the username: \ntell me the username: try-second-time\n", makeNewlinesConsistent(new String(bout.toByteArray())));
     }
     
     /*
@@ -124,4 +124,9 @@ public class UsernameCredentialsReaderTest {
         }
         return builder.toString();
     }
+
+    private String makeNewlinesConsistent(String input) {
+        return input.replace("\r\n", "\n");
+    }
+
 }
