@@ -131,11 +131,13 @@ public class MemoryStatsController implements InformationServiceController<VmRef
             for (Generation generation : generations) {
                 updateGeneration(generation, memoryStats.getTimeStamp());
             }
-            updateMetaspace(memoryStats.getTimeStamp(),
-                    memoryStats.getMetaspaceMaxCapacity(),
-                    memoryStats.getMetaspaceMinCapacity(),
-                    memoryStats.getMetaspaceCapacity(),
-                    memoryStats.getMetaspaceUsed());
+            if (memoryStats.isMetaspacePresent()) {
+                updateMetaspace(memoryStats.getTimeStamp(),
+                        memoryStats.getMetaspaceMaxCapacity(),
+                        memoryStats.getMetaspaceMinCapacity(),
+                        memoryStats.getMetaspaceCapacity(),
+                        memoryStats.getMetaspaceUsed());
+            }
         }
 
         private void updateGeneration(Generation generation, long timeStamp) {
@@ -158,11 +160,6 @@ public class MemoryStatsController implements InformationServiceController<VmRef
         }
 
         private void updateMetaspace(long timeStamp, long maxCapacity, long minCapacity, long capacity, long used) {
-            // metaspace is only present on OpenJDK >= 8
-            if (capacity == VmMemoryStat.UNKNOWN || used == VmMemoryStat.UNKNOWN) {
-                return;
-            }
-
             Payload payload = getPayload(VmMemoryStat.METASPACE_NAME);
             updatePayloadModel(payload, timeStamp, used);
             setPayloadFields(payload, used, capacity, maxCapacity);

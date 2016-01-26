@@ -203,6 +203,7 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
         this.metaspaceMinCapacity = metaspaceMinCapacity;
         this.metaspaceCapacity = metaspaceCapacity;
         this.metaspaceUsed = metaspaceUsed;
+        checkSaneValuesForMetaspace();
     }
 
     @Persist
@@ -285,5 +286,23 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
         this.metaspaceUsed = used;
     }
 
+    public boolean isMetaspacePresent() {
+        checkSaneValuesForMetaspace();
+        if (metaspaceCapacity == UNKNOWN) {
+            return false;
+        }
+        return true;
+    }
+
+    private void checkSaneValuesForMetaspace() {
+        // either all values must be unknown or no values must be unknown
+        if (metaspaceMaxCapacity == UNKNOWN && metaspaceMinCapacity == UNKNOWN &&
+                metaspaceCapacity == UNKNOWN && metaspaceUsed == UNKNOWN) {
+            return;
+        } else if (metaspaceMaxCapacity == UNKNOWN || metaspaceMinCapacity == UNKNOWN ||
+                metaspaceCapacity == UNKNOWN || metaspaceUsed == UNKNOWN) {
+            throw new AssertionError("Invalid values for metaspace");
+        }
+    }
 }
 

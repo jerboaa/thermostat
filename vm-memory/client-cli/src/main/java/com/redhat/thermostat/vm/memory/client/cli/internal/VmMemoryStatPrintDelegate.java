@@ -88,8 +88,7 @@ public class VmMemoryStatPrintDelegate implements VMStatPrintDelegate {
                 spacesNames.add(translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.getName()).getContents());
             }
         }
-        if (memStat.getMetaspaceCapacity() != VmMemoryStat.UNKNOWN
-                || memStat.getMetaspaceUsed() != VmMemoryStat.UNKNOWN) {
+        if (memStat.isMetaspacePresent()) {
             spacesNames.add(translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, VmMemoryStat.METASPACE_NAME).getContents());
         }
 
@@ -104,8 +103,7 @@ public class VmMemoryStatPrintDelegate implements VMStatPrintDelegate {
                 memoryUsage.add(Size.bytes(space.getUsed()).toString());
             }
         }
-        if (memStat.getMetaspaceCapacity() != VmMemoryStat.UNKNOWN
-                || memStat.getMetaspaceUsed() != VmMemoryStat.UNKNOWN) {
+        if (memStat.isMetaspacePresent()) {
             memoryUsage.add(Size.bytes(memStat.getMetaspaceUsed()).toString());
         }
         return memoryUsage;
