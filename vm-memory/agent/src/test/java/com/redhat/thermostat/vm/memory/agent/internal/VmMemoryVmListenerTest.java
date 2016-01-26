@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.memory.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -78,6 +79,11 @@ public class VmMemoryVmListenerTest {
         { 125L, 175L },
         { 900L }
     };
+
+    private static final long METASPACE_MAX_CAPACITY = 10;
+    private static final long METASPACE_MIN_CAPACITY = 0;
+    private static final long METASPACE_CAPACITY = 10;
+    private static final long METASPACE_USED = 5;
     
     private VmMemoryVmListener vmListener;
     private VmMemoryDataExtractor extractor;
@@ -106,6 +112,8 @@ public class VmMemoryVmListenerTest {
                 mockSpaceUsed(i, j);
             }
         }
+
+        mockMetaspace();
     }
 
     private void mockTotalGenerations(long gens) throws VmUpdateException {
@@ -148,6 +156,13 @@ public class VmMemoryVmListenerTest {
         when(extractor.getSpaceUsed(gen, space)).thenReturn(SPACE_USED[gen][space]);
     }
 
+    private void mockMetaspace() {
+        when(extractor.getMetaspaceMaxCapacity(anyLong())).thenReturn(METASPACE_MAX_CAPACITY);
+        when(extractor.getMetaspaceMinCapacity(anyLong())).thenReturn(METASPACE_MIN_CAPACITY);
+        when(extractor.getMetaspaceCapacity(anyLong())).thenReturn(METASPACE_CAPACITY);
+        when(extractor.getMetaspaceUsed(anyLong())).thenReturn(METASPACE_USED);
+    }
+
     @Test
     public void testMonitorsUpdated() throws VmUpdateException {
         VmUpdate update = mock(VmUpdate.class);
@@ -181,6 +196,10 @@ public class VmMemoryVmListenerTest {
                 assertEquals(SPACE_USED[i][j], (Long) space.getUsed());
             }
         }
+        assertEquals(METASPACE_MAX_CAPACITY, memoryStat.getMetaspaceMaxCapacity());
+        assertEquals(METASPACE_MIN_CAPACITY, memoryStat.getMetaspaceMinCapacity());
+        assertEquals(METASPACE_CAPACITY, memoryStat.getMetaspaceCapacity());
+        assertEquals(METASPACE_USED, memoryStat.getMetaspaceUsed());
     }
 
     @Test

@@ -172,7 +172,7 @@ public class MemoryStatsControllerTest {
         String vmID = "vmId";
         for (int i = 0; i < 5; i++) {
             timestamps[i] = timestamp;
-            VmMemoryStat vmMemory = new VmMemoryStat("foo-agent", timestamp, vmID, generations);
+            VmMemoryStat vmMemory = new VmMemoryStat("foo-agent", timestamp, vmID, generations, 1, 2, 3, 4);
             vmInfo.add(vmMemory);
             timestamp++;
         }
@@ -220,12 +220,14 @@ public class MemoryStatsControllerTest {
         collector.run();
 
         Map<String, Payload> regions = controller.getRegions();
-        assertEquals(5, regions.size());
+        assertEquals(6, regions.size());
 
         assertTrue(regions.containsKey("fluffer00"));
         assertTrue(regions.containsKey("fluffer01"));
         assertTrue(regions.containsKey("fluffer10"));
         assertTrue(regions.containsKey("fluffer11"));
+
+        assertTrue(regions.containsKey("metaspace"));
 
         assertTrue(regions.containsKey("canary"));
     }

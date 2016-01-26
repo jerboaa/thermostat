@@ -75,6 +75,12 @@ public class VmMemoryVmListener implements VmUpdateListener {
     void recordMemoryStat(VmMemoryDataExtractor extractor) {
         try {
             long timestamp = System.currentTimeMillis();
+
+            long metaspaceMaxCapacity = extractor.getMetaspaceMaxCapacity(VmMemoryStat.UNKNOWN);
+            long metaspaceMinCapacity = extractor.getMetaspaceMinCapacity(VmMemoryStat.UNKNOWN);
+            long metaspaceCapacity = extractor.getMetaspaceCapacity(VmMemoryStat.UNKNOWN);
+            long metaspaceUsed = extractor.getMetaspaceUsed(VmMemoryStat.UNKNOWN);
+
             Long maxGenerations = extractor.getTotalGcGenerations();
             if (maxGenerations != null) {
                 List<Generation> generations = new ArrayList<Generation>(maxGenerations.intValue());
@@ -101,7 +107,8 @@ public class VmMemoryVmListener implements VmUpdateListener {
                     }
                 }
                 VmMemoryStat stat = new VmMemoryStat(writerId, timestamp, vmId, 
-                        generations.toArray(new Generation[generations.size()]));
+                        generations.toArray(new Generation[generations.size()]),
+                        metaspaceMaxCapacity, metaspaceMinCapacity, metaspaceCapacity, metaspaceUsed);
                 memDAO.putVmMemoryStat(stat);
             }
             else {

@@ -115,6 +115,10 @@ public class VmMemoryStatDAOTest {
         String addVmMemoryStat = "ADD vm-memory-stats SET 'agentId' = ?s , " +
                                         "'vmId' = ?s , " +
                                         "'timeStamp' = ?l , " +
+                                        "'metaspaceMaxCapacity' = ?l , " +
+                                        "'metaspaceMinCapacity' = ?l , " +
+                                        "'metaspaceCapacity' = ?l , " +
+                                        "'metaspaceUsed' = ?l , " +
                                         "'generations' = ?p[";
         assertEquals(addVmMemoryStat, VmMemoryStatDAOImpl.DESC_ADD_VM_MEMORY_STAT);
     }
@@ -128,8 +132,12 @@ public class VmMemoryStatDAOTest {
         assertTrue(keys.contains(new Key<>("agentId")));
         assertTrue(keys.contains(new Key<Integer>("vmId")));
         assertTrue(keys.contains(new Key<Long>("timeStamp")));
+        assertTrue(keys.contains(new Key<Long>("metaspaceMaxCapacity")));
+        assertTrue(keys.contains(new Key<Long>("metaspaceMinCapacity")));
+        assertTrue(keys.contains(new Key<Long>("metaspaceCapacity")));
+        assertTrue(keys.contains(new Key<Long>("metaspaceUsed")));
         assertTrue(keys.contains(new Key<Generation[]>("generations")));
-        assertEquals(4, keys.size());
+        assertEquals(8, keys.size());
     }
 
     @Test
@@ -218,7 +226,8 @@ public class VmMemoryStatDAOTest {
             }
             gen.setSpaces(spaces.toArray(new Space[spaces.size()]));
         }
-        VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]));
+        VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]),
+                2, 3, 4, 5);
 
         Storage storage = mock(Storage.class);
         PreparedStatement<VmMemoryStat> add = mock(PreparedStatement.class);
@@ -237,7 +246,11 @@ public class VmMemoryStatDAOTest {
         verify(add).setString(0, stat.getAgentId());
         verify(add).setString(1, stat.getVmId());
         verify(add).setLong(2, stat.getTimeStamp());
-        verify(add).setPojoList(3, stat.getGenerations());
+        verify(add).setLong(3, stat.getMetaspaceMaxCapacity());
+        verify(add).setLong(4, stat.getMetaspaceMinCapacity());
+        verify(add).setLong(5, stat.getMetaspaceCapacity());
+        verify(add).setLong(6, stat.getMetaspaceUsed());
+        verify(add).setPojoList(7, stat.getGenerations());
         verify(add).execute();
         Mockito.verifyNoMoreInteractions(add);
     }

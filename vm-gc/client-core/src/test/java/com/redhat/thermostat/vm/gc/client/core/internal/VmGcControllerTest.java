@@ -111,7 +111,7 @@ public class VmGcControllerTest {
         gen = new Generation();
         gen.setName("generation 1");
         gen.setCollector("collector1");
-        VmMemoryStat memoryStat = new VmMemoryStat("foo-agent", 1, "vmId", new Generation[] { gen });
+        VmMemoryStat memoryStat = new VmMemoryStat("foo-agent", 1, "vmId", new Generation[] { gen }, 2,3,4,5);
 
         VmInfo vmInfo = new VmInfo("foo", "vm1", 1, 0, -1, "1.8.0_45", "", "", "", "", "", "", "", null, null, null, -1, null);
 

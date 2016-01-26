@@ -45,6 +45,10 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 @Entity
 public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
 
+    public static final long UNKNOWN = -1;
+
+    public static final String METASPACE_NAME = "metaspace";
+
     @Entity
     public static class Generation implements Pojo {
         public static final String COLLECTOR_NONE = "none";
@@ -178,18 +182,27 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
     private Generation[] generations;
     private long timestamp;
     private String vmId;
+    private long metaspaceMaxCapacity;
+    private long metaspaceMinCapacity;
+    private long metaspaceCapacity;
+    private long metaspaceUsed;
 
     public VmMemoryStat() {
-        this(null, -1, null, null);
+        this(null, UNKNOWN, null, null, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN);
     }
 
-    public VmMemoryStat(String writerId, long timestamp, String vmId, Generation[] generations) {
+    public VmMemoryStat(String writerId, long timestamp, String vmId, Generation[] generations,
+            long metaspaceMaxCapacity, long metaspaceMinCapacity, long metaspaceCapacity, long metaspaceUsed) {
         super(writerId);
         this.timestamp = timestamp;
         this.vmId = vmId;
         if (generations != null) {
             this.generations = generations;
         }
+        this.metaspaceMaxCapacity = metaspaceMaxCapacity;
+        this.metaspaceMinCapacity = metaspaceMinCapacity;
+        this.metaspaceCapacity = metaspaceCapacity;
+        this.metaspaceUsed = metaspaceUsed;
     }
 
     @Persist
@@ -230,6 +243,46 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
             }
         }
         return null;
+    }
+
+    @Persist
+    public long getMetaspaceCapacity() {
+        return metaspaceCapacity;
+    }
+
+    @Persist
+    public void setMetaspaceCapacity(long capacity) {
+        this.metaspaceCapacity = capacity;
+    }
+
+    @Persist
+    public long getMetaspaceMaxCapacity() {
+        return metaspaceMaxCapacity;
+    }
+
+    @Persist
+    public void setMetaspaceMaxCapacity(long maxCapacity) {
+        this.metaspaceMaxCapacity = maxCapacity;
+    }
+
+    @Persist
+    public long getMetaspaceMinCapacity() {
+        return metaspaceMinCapacity;
+    }
+
+    @Persist
+    public void setMetaspaceMinCapacity(long minCapacity) {
+        this.metaspaceMinCapacity = minCapacity;
+    }
+
+    @Persist
+    public long getMetaspaceUsed() {
+        return metaspaceUsed;
+    }
+
+    @Persist
+    public void setMetaspaceUsed(long used) {
+        this.metaspaceUsed = used;
     }
 
 }

@@ -61,11 +61,19 @@ class VmMemoryStatDAOImpl extends AbstractDao implements VmMemoryStatDAO {
     // ADD vm-memory-stats SET 'agentId' = ?s , \
     //                         'vmId' = ?s , \
     //                         'timeStamp' = ?s , \
+    //                         'metaspaceMaxCapacity' = ?l , \
+    //                         'metaspaceMinCapacity' = ?l , \
+    //                         'metaspaceCapacity' = ?l , \
+    //                         'metaspaceUsed' = ?l , \
     //                         'generations' = ?p[
     static final String DESC_ADD_VM_MEMORY_STAT = "ADD " + vmMemoryStatsCategory.getName() +
             " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
                  "'" + Key.VM_ID.getName() + "' = ?s , " +
                  "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + KEY_METASPACE_MAX_CAPACITY.getName() + "' = ?l , " +
+                 "'" + KEY_METASPACE_MIN_CAPACITY.getName() + "' = ?l , " +
+                 "'" + KEY_METASPACE_CAPACITY.getName() + "' = ?l , " +
+                 "'" + KEY_METASPACE_USED.getName() + "' = ?l , " +
                  "'" + generationsKey.getName() + "' = ?p[";
     
     private final Storage storage;
@@ -99,7 +107,11 @@ class VmMemoryStatDAOImpl extends AbstractDao implements VmMemoryStatDAO {
                 preparedStatement.setString(0, stat.getAgentId());
                 preparedStatement.setString(1, stat.getVmId());
                 preparedStatement.setLong(2, stat.getTimeStamp());
-                preparedStatement.setPojoList(3, stat.getGenerations());
+                preparedStatement.setLong(3, stat.getMetaspaceMaxCapacity());
+                preparedStatement.setLong(4, stat.getMetaspaceMinCapacity());
+                preparedStatement.setLong(5, stat.getMetaspaceCapacity());
+                preparedStatement.setLong(6, stat.getMetaspaceUsed());
+                preparedStatement.setPojoList(7, stat.getGenerations());
                 return preparedStatement;
             }
         });

@@ -97,7 +97,7 @@ public class VmMemoryStatPrintDelegateTest {
 
         VmMemoryStat.Generation[] gens1 = new VmMemoryStat.Generation[] { gen1_1, gen1_2 };
 
-        VmMemoryStat memStat1 = new VmMemoryStat("foo-agent", 1, vmId.get(), gens1);
+        VmMemoryStat memStat1 = new VmMemoryStat("foo-agent", 1, vmId.get(), gens1, 3, 4, 5, 6);
 
         VmMemoryStat.Space space2_1_1 = newSpace("space1", 123456, 12345, 2, 0);
         VmMemoryStat.Space space2_1_2 = newSpace("space2", 123456, 12345, 2, 0);
@@ -111,7 +111,7 @@ public class VmMemoryStatPrintDelegateTest {
 
         VmMemoryStat.Generation[] gens2 = new VmMemoryStat.Generation[] { gen2_1, gen2_2 };
 
-        VmMemoryStat memStat2 = new VmMemoryStat("foo-agent", 2, vmId.get(), gens2);
+        VmMemoryStat memStat2 = new VmMemoryStat("foo-agent", 2, vmId.get(), gens2, 7, 8, 9, 10);
 
         VmMemoryStat.Space space3_1_1 = newSpace("space1", 123456, 12345, 4, 0);
         VmMemoryStat.Space space3_1_2 = newSpace("space2", 123456, 12345, 5, 0);
@@ -125,7 +125,7 @@ public class VmMemoryStatPrintDelegateTest {
 
         VmMemoryStat.Generation[] gens3 = new VmMemoryStat.Generation[] { gen3_1, gen3_2 };
 
-        VmMemoryStat memStat3 = new VmMemoryStat("foo-agent", 3, vmId.get(), gens3);
+        VmMemoryStat memStat3 = new VmMemoryStat("foo-agent", 3, vmId.get(), gens3, 11, 12, 13, 14);
 
         vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         memoryStats = Arrays.asList(memStat1, memStat2, memStat3);
@@ -167,14 +167,14 @@ public class VmMemoryStatPrintDelegateTest {
     @Test
     public void testGetHeaders() {
         List<String> headers = delegate.getHeaders(memoryStats.get(0));
-        assertEquals(Arrays.asList("MEM.space1", "MEM.space2", "MEM.space3", "MEM.space4"), headers);
+        assertEquals(Arrays.asList("MEM.space1", "MEM.space2", "MEM.space3", "MEM.space4", "MEM.metaspace"), headers);
     }
 
     @Test
     public void testGetStatRow() throws CommandException {
-        final List<String> row1 = Arrays.asList("1 B", "1 B", "1 B", "1 B");
-        final List<String> row2 = Arrays.asList("2 B", "2 B", "3 B", "4 B");
-        final List<String> row3 = Arrays.asList("4 B", "5 B", "6 B", "7 B");
+        final List<String> row1 = Arrays.asList("1 B", "1 B", "1 B", "1 B", "6 B");
+        final List<String> row2 = Arrays.asList("2 B", "2 B", "3 B", "4 B", "10 B");
+        final List<String> row3 = Arrays.asList("4 B", "5 B", "6 B", "7 B", "14 B");
         assertEquals(row1, delegate.getStatRow(memoryStats.get(0)));
         assertEquals(row2, delegate.getStatRow(memoryStats.get(1)));
         assertEquals(row3, delegate.getStatRow(memoryStats.get(2)));

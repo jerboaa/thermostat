@@ -112,5 +112,32 @@ public class VmMemoryDataExtractor {
         return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".space." + space + ".used");
     }
 
+    public long getMetaspaceMaxCapacity(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.metaspace.maxCapacity", defaultValue);
+    }
+
+    public long getMetaspaceMinCapacity(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.metaspace.minCapacity", defaultValue);
+    }
+
+    public long getMetaspaceCapacity(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.metaspace.capacity", defaultValue);
+    }
+
+    public long getMetaspaceUsed(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.metaspace.used", defaultValue);
+    }
+
+    private long getLongValueOrDefault(String name, long defaultValue) {
+        try {
+            Long value = update.getPerformanceCounterLong(name);
+            if (value == null) {
+                return defaultValue;
+            }
+            return value.longValue();
+        } catch (VmUpdateException e) {
+            return defaultValue;
+        }
+    }
 }
 

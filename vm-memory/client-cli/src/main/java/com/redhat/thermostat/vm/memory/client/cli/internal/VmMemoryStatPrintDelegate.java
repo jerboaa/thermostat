@@ -88,15 +88,25 @@ public class VmMemoryStatPrintDelegate implements VMStatPrintDelegate {
                 spacesNames.add(translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.getName()).getContents());
             }
         }
+        if (memStat.getMetaspaceCapacity() != VmMemoryStat.UNKNOWN
+                || memStat.getMetaspaceUsed() != VmMemoryStat.UNKNOWN) {
+            spacesNames.add(translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, VmMemoryStat.METASPACE_NAME).getContents());
+        }
+
         return spacesNames;
     }
 
     private List<String> getMemoryUsage(TimeStampedPojo stat) {
         List<String> memoryUsage = new ArrayList<>();
-        for (VmMemoryStat.Generation gen : ((VmMemoryStat) stat).getGenerations()) {
+        VmMemoryStat memStat = ((VmMemoryStat) stat);
+        for (VmMemoryStat.Generation gen : memStat.getGenerations()) {
             for (VmMemoryStat.Space space : gen.getSpaces()) {
                 memoryUsage.add(Size.bytes(space.getUsed()).toString());
             }
+        }
+        if (memStat.getMetaspaceCapacity() != VmMemoryStat.UNKNOWN
+                || memStat.getMetaspaceUsed() != VmMemoryStat.UNKNOWN) {
+            memoryUsage.add(Size.bytes(memStat.getMetaspaceUsed()).toString());
         }
         return memoryUsage;
     }
