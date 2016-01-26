@@ -40,15 +40,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -56,14 +53,12 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,19 +69,17 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.MongoURI;
-import com.mongodb.WriteResult;
-import com.mongodb.gridfs.GridFS;
-import com.mongodb.gridfs.GridFSDBFile;
-import com.mongodb.gridfs.GridFSInputFile;
+import com.mongodb.MongoClient;
+import com.mongodb.client.DistinctIterable;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AggregateQuery;
@@ -108,7 +101,6 @@ import com.redhat.thermostat.storage.core.SaveFileListener.EventType;
 import com.redhat.thermostat.storage.core.SchemaInfo;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StorageCredentials;
-import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -126,7 +118,7 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 //to solve the issue.
 @PowerMockIgnore( {"javax.management.*"})
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ DBCollection.class, DB.class, Mongo.class, MongoStorage.class, MongoConnection.class })
+@PrepareForTest({ MongoCollection.class, MongoDatabase.class, MongoStorage.class, MongoConnection.class })
 public class MongoStorageTest {
 
     @Entity
@@ -193,10 +185,10 @@ public class MongoStorageTest {
     private String url;
     private StorageCredentials creds;
     private SSLConfiguration sslConf;
-    private Mongo m;
-    private DB db;
-    private DBCollection testCollection, emptyTestCollection, mockedCollection;
-    private DBCursor cursor;
+    private MongoClient m;
+    private MongoDatabase db;
+    private MongoCollection<Document> testCollection, emptyTestCollection, mockedCollection;
+    private FindIterable<Document> cursor;
     private ExpressionFactory factory;
 
     private MongoStorage makeStorage() {
@@ -206,60 +198,63 @@ public class MongoStorageTest {
         return storage;
     }
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
         url = "mongodb://127.0.0.1:27518";
         creds = mock(StorageCredentials.class);
         sslConf = mock(SSLConfiguration.class);
-        db = PowerMockito.mock(DB.class);
-        m = PowerMockito.mock(Mongo.class);
-        mockedCollection = mock(DBCollection.class);
-        when(m.getDB(anyString())).thenReturn(db);
+        db = PowerMockito.mock(MongoDatabase.class);
+        m = PowerMockito.mock(MongoClient.class);
+        mockedCollection = mock(MongoCollection.class);
+        when(m.getDatabase(anyString())).thenReturn(db);
         when(db.getCollection("agent-config")).thenReturn(mockedCollection);
-        when(db.collectionExists(anyString())).thenReturn(true);
 
-        BasicDBObject value1 = new BasicDBObject();
+        Document value1 = new Document();
         value1.put("key1", "test1");
         value1.put("key2", "test2");
-        BasicDBObject value2 = new BasicDBObject();
+        Document value2 = new Document();
         value2.put("key3", "test3");
         value2.put("key4", "test4");
 
-        cursor = mock(DBCursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
+        cursor = mock(FindIterable.class);
+        com.mongodb.client.MongoCursor<Document> mongoCursor = mock(com.mongodb.client.MongoCursor.class);
+        
+        when(cursor.iterator()).thenReturn(mongoCursor);
+        when(mongoCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(mongoCursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
 
-        testCollection = PowerMockito.mock(DBCollection.class);
-        when(testCollection.find(any(DBObject.class))).thenReturn(cursor);
+        testCollection = PowerMockito.mock(MongoCollection.class);
+        when(testCollection.find(any(Document.class))).thenReturn(cursor);
         when(testCollection.find()).thenReturn(cursor);
-        when(testCollection.findOne(any(DBObject.class))).thenReturn(value1);
-        when(testCollection.getCount()).thenReturn(2L);
+        when(testCollection.count()).thenReturn(2L);
         
-        WriteResult mockWriteResult = mock(WriteResult.class);
-        // fake that 1 record was affected for all db write ops.
-        when(mockWriteResult.getN()).thenReturn(1);
         // mock for remove
-        when(testCollection.remove(any(DBObject.class))).thenReturn(mockWriteResult);
+        DeleteResult result = mock(DeleteResult.class);
+        when(testCollection.deleteOne(any(Document.class))).thenReturn(result);
+        when(result.getDeletedCount()).thenReturn(1L);
         // mock for update
-        when(testCollection.update(any(DBObject.class), any(DBObject.class))).thenReturn(mockWriteResult);
+        UpdateResult updateResult = mock(UpdateResult.class);
+        when(updateResult.getModifiedCount()).thenReturn(1L);
+        when(testCollection.updateOne(any(Document.class), any(Document.class))).thenReturn(updateResult);
         // mock for replace
-        when(testCollection.update(any(DBObject.class), any(DBObject.class), eq(true), eq(false))).thenReturn(mockWriteResult);
-        // mock for add
-        when(testCollection.insert(any(DBObject.class))).thenReturn(mockWriteResult);
+        UpdateResult replaceResult = mock(UpdateResult.class);
+        when(replaceResult.getModifiedCount()).thenReturn(2L);
+        when(testCollection.replaceOne(any(Document.class), any(Document.class))).thenReturn(replaceResult);
         
-        emptyTestCollection = PowerMockito.mock(DBCollection.class);
-        when(emptyTestCollection.getCount()).thenReturn(0L);
-        when(db.collectionExists(anyString())).thenReturn(false);
-        when(db.createCollection(anyString(), any(DBObject.class))).thenReturn(testCollection);
+        emptyTestCollection = PowerMockito.mock(MongoCollection.class);
+        when(emptyTestCollection.count()).thenReturn(0L);
         
         factory = new ExpressionFactory();
         
-        Set<String> collectionNames = new LinkedHashSet<>();
-        collectionNames.add("testCollection");
-        collectionNames.add("emptyTestCollection");
-        when(db.getCollectionNames()).thenReturn(collectionNames);
-        when(db.getCollectionFromString("testCollection")).thenReturn(testCollection);
-        when(db.getCollectionFromString("emptyTestCollection")).thenReturn(emptyTestCollection);
+        MongoIterable<String> mongoIterable = mock(MongoIterable.class);
+        com.mongodb.client.MongoCursor<String> it = mock(com.mongodb.client.MongoCursor.class);
+        when(it.hasNext()).thenReturn(true).thenReturn(true);
+        when(it.next()).thenReturn("testCollection").thenReturn("emptyTestCollection");
+        when(mongoIterable.iterator()).thenReturn(it);
+        when(db.listCollectionNames()).thenReturn(mongoIterable);
+        when(db.getCollection("testCollection")).thenReturn(testCollection);
+        when(db.getCollection("emptyTestCollection")).thenReturn(emptyTestCollection);
     }
 
     @After
@@ -288,9 +283,18 @@ public class MongoStorageTest {
         verify(mockConnection).addListener(captor.capture());
         ConnectionListener listener = captor.getValue();
         assertNotNull(listener);
-        when(mockConnection.getDB()).thenReturn(db);
+        when(mockConnection.getDatabase()).thenReturn(db);
+        @SuppressWarnings("unchecked")
+        MongoIterable<String> mockIterable = mock(MongoIterable.class);
+        when(db.listCollectionNames()).thenReturn(mockIterable);
+        @SuppressWarnings("unchecked")
+        com.mongodb.client.MongoCursor<String> mockCursor = mock(com.mongodb.client.MongoCursor.class);
+        when(mockCursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(mockCursor.next()).thenReturn("foo-bar-collection");
+        when(mockIterable.iterator()).thenReturn(mockCursor);
         listener.changed(ConnectionStatus.CONNECTED);
-        verify(mockConnection).getDB();
+        verify(mockConnection).getDatabase();
+        verify(db).createCollection(eq("schema-info"), any(CreateCollectionOptions.class));
     }
     
     @Test(expected=NullPointerException.class)
@@ -309,7 +313,7 @@ public class MongoStorageTest {
         listener.changed(ConnectionStatus.CONNECTING);
         
         listener.changed(ConnectionStatus.CONNECTED);
-        verify(mockConnection).getDB();
+        verify(mockConnection).getDatabase();
         
         // This should set the db instance to null
         listener.changed(ConnectionStatus.DISCONNECTED);
@@ -323,15 +327,15 @@ public class MongoStorageTest {
     
     @Test
     public void testRegisterCategory() throws Exception {
-        DB db = PowerMockito.mock(DB.class);
+        MongoDatabase db = PowerMockito.mock(MongoDatabase.class);
         CountDownLatch latch = new CountDownLatch(1);
         MongoStorage storage = new MongoStorage(db, latch);
         latch.countDown();
         
         when(db.getCollection(SchemaInfo.CATEGORY.getName())).thenReturn(testCollection);
         storage.registerCategory(SchemaInfo.CATEGORY);
-        verify(db,times(0)).createCollection(eq(SchemaInfo.CATEGORY.getName()), any(BasicDBObject.class));
-        verify(testCollection,times(0)).update(any(BasicDBObject.class), any(BasicDBObject.class), eq(true), eq(false));
+        verify(db, times(0)).createCollection(eq(SchemaInfo.CATEGORY.getName()), any(CreateCollectionOptions.class));
+        verify(testCollection, times(0)).replaceOne(any(Document.class), any(Document.class));
         try {
             storage.registerCategory(SchemaInfo.CATEGORY);
             fail();
@@ -339,23 +343,28 @@ public class MongoStorageTest {
             assertEquals("Category may only be associated with one backend.", ex.getMessage());
         }
         
+        @SuppressWarnings("unchecked")
+        MongoIterable<String> mockIterable = mock(MongoIterable.class);
+        when(db.listCollectionNames()).thenReturn(mockIterable);
+        @SuppressWarnings("unchecked")
+        com.mongodb.client.MongoCursor<String> mockCursor = mock(com.mongodb.client.MongoCursor.class);
+        when(mockIterable.iterator()).thenReturn(mockCursor);
         storage.registerCategory(HostInfoDAO.hostInfoCategory);
         Category<AggregateCount> countCat = new CategoryAdapter<HostInfo, AggregateCount>(HostInfoDAO.hostInfoCategory).getAdapted(AggregateCount.class);
         storage.registerCategory(countCat);
-        verify(db).collectionExists(eq(HostInfoDAO.hostInfoCategory.getName()));
         
-        ArgumentCaptor<BasicDBObject> msgCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
-        ArgumentCaptor<BasicDBObject> msgCaptor2 = ArgumentCaptor.forClass(BasicDBObject.class);
-        BasicDBObject expetedObject1 = new BasicDBObject(SchemaInfo.NAME.getName(), HostInfoDAO.hostInfoCategory.getName());
+        ArgumentCaptor<Document> msgCaptor = ArgumentCaptor.forClass(Document.class);
+        ArgumentCaptor<Document> msgCaptor2 = ArgumentCaptor.forClass(Document.class);
+        Document expectedObject1 = new Document(SchemaInfo.NAME.getName(), HostInfoDAO.hostInfoCategory.getName());
         
-        verify(testCollection).update(msgCaptor.capture(), msgCaptor2.capture(), eq(true), eq(false));
+        verify(testCollection).replaceOne(msgCaptor.capture(), msgCaptor2.capture(), any(UpdateOptions.class));
         
-        BasicDBObject resultObject1 = msgCaptor.getValue();
-        BasicDBObject resultObject2 = msgCaptor2.getValue();
+        Document resultObject1 = msgCaptor.getValue();
+        Document resultObject2 = msgCaptor2.getValue();
        
-        assertEquals(expetedObject1, resultObject1);
-        assertTrue(resultObject2.containsField(SchemaInfo.NAME.getName()));
-        assertTrue(resultObject2.containsField(Key.TIMESTAMP.getName()));
+        assertEquals(expectedObject1, resultObject1);
+        assertTrue(resultObject2.get(SchemaInfo.NAME.getName()) != null);
+        assertTrue(resultObject2.get(Key.TIMESTAMP.getName()) != null);
         
         assertEquals(HostInfoDAO.hostInfoCategory.getName(), resultObject2.get(SchemaInfo.NAME.getName()));
         assertNotNull(resultObject2.get(Key.TIMESTAMP.getName()));
@@ -377,7 +386,7 @@ public class MongoStorageTest {
         Expression expr = factory.equalTo(key1, "fluff");
         query.where(expr);
         query.execute();
-        verify(testCollection).find(any(DBObject.class));
+        verify(testCollection).find(any(Document.class));
     }
 
     @Test
@@ -387,7 +396,7 @@ public class MongoStorageTest {
         @SuppressWarnings("unchecked")
         MongoQuery<TestClass> query = mock(MongoQuery.class);
         when(query.hasClauses()).thenReturn(true);
-        DBObject generatedQuery = mock(DBObject.class);
+        Document generatedQuery = mock(Document.class);
         when(query.getGeneratedQuery()).thenReturn(generatedQuery);
         when(query.getCategory()).thenReturn(testCategory);
 
@@ -419,9 +428,9 @@ public class MongoStorageTest {
         Cursor<TestClass> cursor = query.execute();
 
         verifyDefaultCursor(cursor);
-        ArgumentCaptor<DBObject> orderBy = ArgumentCaptor.forClass(DBObject.class);
+        ArgumentCaptor<Document> orderBy = ArgumentCaptor.forClass(Document.class);
         verify(this.cursor).sort(orderBy.capture());
-        assertTrue(orderBy.getValue().containsField("key1"));
+        assertTrue(orderBy.getValue().get("key1") != null);
         assertEquals(1, orderBy.getValue().get("key1"));
         verify(this.cursor).limit(3);
     }
@@ -475,38 +484,22 @@ public class MongoStorageTest {
         byte[] data = new byte[] { 1, 2, 3 };
         InputStream dataStream = new ByteArrayInputStream(data);
 
-        GridFSInputFile gridFSFile = mock(GridFSInputFile.class);
-        GridFS gridFS = mock(GridFS.class);
-        when(gridFS.createFile(same(dataStream), eq("test"))).thenReturn(gridFSFile);
-        PowerMockito.whenNew(GridFS.class).withArguments(any()).thenReturn(gridFS);
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         SaveFileListener saveFileListener = mock(SaveFileListener.class);
 
-        MongoStorage storage = makeStorage();
+        CountDownLatch latch = new CountDownLatch(0);
+        MongoDatabase db = mock(MongoDatabase.class);
+        final GridFSBucket mockBucket = mock(GridFSBucket.class);
+        MongoStorage storage = new MongoStorage(db, latch) {
+            
+            @Override
+            GridFSBucket createGridFSBucket() {
+                return mockBucket;
+            }
+        };
         storage.saveFile("test", dataStream, saveFileListener);
 
-        verify(gridFSFile).save();
         verify(saveFileListener).notify(EventType.SAVE_COMPLETE, null);
-    }
-
-    @Test
-    public void verifySaveFileErrorIsPassedToListener() throws Exception {
-        byte[] data = new byte[] { 1, 2, 3 };
-        InputStream dataStream = new ByteArrayInputStream(data);
-
-        GridFSInputFile gridFSFile = mock(GridFSInputFile.class);
-        doThrow(new MongoException("test")).when(gridFSFile).save();
-        GridFS gridFS = mock(GridFS.class);
-        when(gridFS.createFile(same(dataStream), eq("test"))).thenReturn(gridFSFile);
-        PowerMockito.whenNew(GridFS.class).withArguments(any()).thenReturn(gridFS);
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
-        SaveFileListener saveFileListener = mock(SaveFileListener.class);
-
-        MongoStorage storage = makeStorage();
-        storage.saveFile("test", dataStream, saveFileListener);
-
-        verify(gridFSFile).save();
-        verify(saveFileListener).notify(eq(EventType.EXCEPTION_OCCURRED), isA(StorageException.class));
+        verify(mockBucket).uploadFromStream("test", dataStream);
     }
 
     @Test
@@ -517,9 +510,9 @@ public class MongoStorageTest {
         Add<TestClass> add = storage.createAdd(testCategory);
         add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
         add.apply();
-        ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
-        verify(testCollection).insert(dbobj.capture());
-        DBObject val = dbobj.getValue();
+        ArgumentCaptor<Document> dbobj = ArgumentCaptor.forClass(Document.class);
+        verify(testCollection).insertOne(dbobj.capture());
+        Document val = dbobj.getValue();
         assertEquals("123", val.get("agentId"));
     }
     
@@ -539,11 +532,11 @@ public class MongoStorageTest {
         add.set("agentId", "ignored");
         add.set("foo-pojo-key", pojo);
         add.apply();
-        ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
-        verify(testCollection).insert(dbobj.capture());
-        DBObject val = dbobj.getValue();
-        assertTrue(val.get("foo-pojo-key") instanceof DBObject);
-        DBObject pojoVal = (DBObject)val.get("foo-pojo-key");
+        ArgumentCaptor<Document> dbobj = ArgumentCaptor.forClass(Document.class);
+        verify(testCollection).insertOne(dbobj.capture());
+        Document val = dbobj.getValue();
+        assertTrue(val.get("foo-pojo-key") instanceof Document);
+        Document pojoVal = (Document)val.get("foo-pojo-key");
         assertEquals("val1", pojoVal.get("key1"));
         assertEquals("val3", pojoVal.get("key3"));
     }
@@ -559,14 +552,14 @@ public class MongoStorageTest {
         add.set("agentId", "ignored");
         add.set("foo-pojo-key", list);
         add.apply();
-        ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
-        verify(testCollection).insert(dbobj.capture());
-        DBObject val = dbobj.getValue();
+        ArgumentCaptor<Document> dbobj = ArgumentCaptor.forClass(Document.class);
+        verify(testCollection).insertOne(dbobj.capture());
+        Document val = dbobj.getValue();
         assertTrue(val.get("foo-pojo-key") instanceof List);
         @SuppressWarnings("unchecked")
-        List<DBObject> result = (List<DBObject>)val.get("foo-pojo-key");
+        List<Document> result = (List<Document>)val.get("foo-pojo-key");
         assertEquals(1, result.size());
-        DBObject pojoVal = result.get(0);
+        Document pojoVal = result.get(0);
         assertEquals("val1", pojoVal.get("key1"));
         assertEquals("val3", pojoVal.get("key3"));
     }
@@ -574,10 +567,14 @@ public class MongoStorageTest {
     @Test
     public void verifyAggregateDistinct() throws Exception {
         // setup
-        List<Integer> mockList = new ArrayList<>();
-        mockList.add(-1);
-        mockList.add(200);
-        when(testCollection.distinct(eq(key1.getName()), any(DBObject.class))).thenReturn(mockList);
+        @SuppressWarnings("unchecked")
+        DistinctIterable<String> iterable = mock(DistinctIterable.class);
+        @SuppressWarnings("unchecked")
+        com.mongodb.client.MongoCursor<String> mockCursor = mock(com.mongodb.client.MongoCursor.class);
+        when(iterable.iterator()).thenReturn(mockCursor);
+        when(mockCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(mockCursor.next()).thenReturn("-1").thenReturn("200");
+        when(testCollection.distinct(eq(key1.getName()), any(Document.class), eq(String.class))).thenReturn(iterable);
         
         MongoStorage storage = makeStorage();
         CategoryAdapter<TestClass, DistinctResult> adapter = new CategoryAdapter<>(testCategory);
@@ -592,11 +589,14 @@ public class MongoStorageTest {
         assertEquals(key1, r.getKey());
         
         // do it again with a list of booleans
-        List<Boolean> boolList = new ArrayList<>();
-        boolList.add(false);
-        boolList.add(true);
-        boolList.add(true);
-        when(testCollection.distinct(eq(key2.getName()), any(DBObject.class))).thenReturn(boolList);
+        @SuppressWarnings("unchecked")
+        DistinctIterable<String> iterable2 = mock(DistinctIterable.class);
+        @SuppressWarnings("unchecked")
+        com.mongodb.client.MongoCursor<String> mockCursor2 = mock(com.mongodb.client.MongoCursor.class);
+        when(iterable2.iterator()).thenReturn(mockCursor2);
+        when(mockCursor2.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(mockCursor2.next()).thenReturn("false").thenReturn("true").thenReturn("true");
+        when(testCollection.distinct(eq(key2.getName()), any(Document.class), eq(String.class))).thenReturn(iterable2);
         aggQuery = storage.createAggregateQuery(AggregateFunction.DISTINCT, adaptedCategory);
         aggQuery.setAggregateKey(key2);
         cursor = aggQuery.execute();
@@ -682,19 +682,16 @@ public class MongoStorageTest {
 
     @Test
     public void verifyLoadFile() throws Exception {
-        InputStream stream = mock(InputStream.class);
-        GridFSDBFile file = mock(GridFSDBFile.class);
-        when(file.getInputStream()).thenReturn(stream);
-        GridFS gridFS = mock(GridFS.class);
-        when(gridFS.findOne("test")).thenReturn(file);
-        PowerMockito.whenNew(GridFS.class).withArguments(any()).thenReturn(gridFS);
-        MongoStorage storage = makeStorage();
-
-        InputStream actual = storage.loadFile("test");
-        assertSame(stream, actual);
-
-        actual = storage.loadFile("doesnotexist");
-        assertNull(actual);
+        final GridFSBucket mockBucket = mock(GridFSBucket.class);
+        MongoStorage storage = new MongoStorage(mock(MongoDatabase.class), new CountDownLatch(0)) {
+            
+            @Override
+            GridFSBucket createGridFSBucket() {
+                return mockBucket;
+            }
+        };
+        storage.loadFile("test");
+        verify(mockBucket).openDownloadStreamByName("test");
     }
 
     @Test
@@ -706,20 +703,20 @@ public class MongoStorageTest {
         update.set(key2.getName(), "test2");
         update.apply();
 
-        ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
-        ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);
+        ArgumentCaptor<Document> queryCaptor = ArgumentCaptor.forClass(Document.class);
+        ArgumentCaptor<Document> valueCaptor = ArgumentCaptor.forClass(Document.class);
         
-        verify(testCollection).update(queryCaptor.capture(), valueCaptor.capture());
-        DBObject query = queryCaptor.getValue();
-        assertTrue(query.containsField(Key.AGENT_ID.getName()));
+        verify(testCollection).updateOne(queryCaptor.capture(), valueCaptor.capture());
+        Document query = queryCaptor.getValue();
+        assertTrue(query.get(Key.AGENT_ID.getName()) != null);
         assertEquals("test1", query.get(Key.AGENT_ID.getName()));
 
-        DBObject set = valueCaptor.getValue();
+        Document set = valueCaptor.getValue();
         assertEquals(1, set.keySet().size());
-        assertTrue(set.containsField("$set"));
-        DBObject values = (DBObject) set.get("$set");
+        assertTrue(set.get("$set") != null);
+        Document values = (Document) set.get("$set");
         assertEquals(1, values.keySet().size());
-        assertTrue(values.containsField(key2.getName()));
+        assertTrue(values.get(key2.getName()) != null);
         assertEquals("test2", values.get(key2.getName()));
     }
 
@@ -733,20 +730,20 @@ public class MongoStorageTest {
         update.set(key3.getName(), "test3");
         update.apply();
 
-        ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
-        ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);
+        ArgumentCaptor<Document> queryCaptor = ArgumentCaptor.forClass(Document.class);
+        ArgumentCaptor<Document> valueCaptor = ArgumentCaptor.forClass(Document.class);
         
-        verify(testCollection).update(queryCaptor.capture(), valueCaptor.capture());
-        DBObject query = queryCaptor.getValue();
-        assertTrue(query.containsField(Key.AGENT_ID.getName()));
+        verify(testCollection).updateOne(queryCaptor.capture(), valueCaptor.capture());
+        Document query = queryCaptor.getValue();
+        assertTrue(query.get(Key.AGENT_ID.getName()) != null);
         assertEquals("test1", query.get(Key.AGENT_ID.getName()));
 
-        DBObject set = valueCaptor.getValue();
-        assertTrue(set.containsField("$set"));
-        DBObject values = (DBObject) set.get("$set");
-        assertTrue(values.containsField("key2"));
+        Document set = valueCaptor.getValue();
+        assertTrue(set.get("$set") != null);
+        Document values = (Document) set.get("$set");
+        assertTrue(values.get("key2") != null);
         assertEquals("test2", values.get("key2"));
-        assertTrue(values.containsField("key3"));
+        assertTrue(values.get("key3") != null);
         assertEquals("test3", values.get("key3"));
     }
 
@@ -761,6 +758,7 @@ public class MongoStorageTest {
         pojo.setKey5("test5");
 
         MongoStorage storage = makeStorage();
+        when(testCollection.replaceOne(any(Bson.class), any(Document.class), any(UpdateOptions.class))).thenReturn(mock(UpdateResult.class));
         Replace<TestClass> replace = storage.createReplace(testCategory);
         ExpressionFactory factory = new ExpressionFactory();
         Expression first = factory.equalTo(key1, "test1");
@@ -775,23 +773,24 @@ public class MongoStorageTest {
         replace.set(Key.AGENT_ID.getName(), pojo.getAgentId());
         replace.apply();
 
-        ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
-        ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);
-        verify(testCollection).update(queryCaptor.capture(), valueCaptor.capture(), eq(true), eq(false));
+        ArgumentCaptor<Document> queryCaptor = ArgumentCaptor.forClass(Document.class);
+        ArgumentCaptor<Document> valueCaptor = ArgumentCaptor.forClass(Document.class);
+        verify(testCollection).replaceOne(queryCaptor.capture(), valueCaptor.capture(), any(UpdateOptions.class));
 
-        DBObject query = queryCaptor.getValue();
+        Document query = queryCaptor.getValue();
         assertEquals("expected explicit and query", 1, query.keySet().size());
         Object andObj = query.get("$and");
         assertNotNull(andObj);
-        assertTrue(andObj instanceof BasicDBList);
-        BasicDBList list = (BasicDBList)andObj;
+        assertTrue(andObj instanceof List);
+        @SuppressWarnings("unchecked")
+        List<Document> list = (List<Document>)andObj;
         assertEquals("expected two operands", 2, list.size());
-        DBObject firstCond = (DBObject)list.get(0);
-        DBObject secondCond = (DBObject)list.get(1);
+        Document firstCond = list.get(0);
+        Document secondCond = list.get(1);
         assertEquals("test1", firstCond.get("key1"));
         assertEquals("test2", secondCond.get("key2"));
 
-        DBObject value = valueCaptor.getValue();
+        Document value = valueCaptor.getValue();
         assertEquals(6, value.keySet().size());
         assertEquals("test1", value.get("key1"));
         assertEquals("test2", value.get("key2"));
@@ -804,104 +803,106 @@ public class MongoStorageTest {
     @Test
     public void verifyRemove() {
         MongoStorage storage = makeStorage();
+        when(testCollection.deleteMany(any(Bson.class))).thenReturn(mock(DeleteResult.class));
         Remove<TestClass> remove = storage.createRemove(testCategory);
         Expression expr = factory.equalTo(Key.AGENT_ID, "test1");
         remove.where(expr);
 
         remove.apply();
 
-        verify(testCollection).remove(new BasicDBObject(Key.AGENT_ID.getName(), "test1"));
+        verify(testCollection).deleteMany(new Document(Key.AGENT_ID.getName(), "test1"));
     }
 
     @Test
     public void verifyRemoveWithoutWhere() {
         MongoStorage storage = makeStorage();
+        when(testCollection.deleteMany(any(Bson.class))).thenReturn(mock(DeleteResult.class));
         Remove<TestClass> remove = storage.createRemove(testCategory);
 
         remove.apply();
 
-        verify(testCollection).remove(new BasicDBObject());
-    }
-
-    @Test
-    public void verifyMongoCloseOnShutdown() throws Exception {
-        Mongo mockMongo = mock(Mongo.class);
-        when(db.getMongo()).thenReturn(mockMongo);
-        MongoStorage storage = new MongoStorage(url, creds, sslConf);
-        setDbFieldInStorage(storage);
-        storage.shutdown();
-        verify(mockMongo).close();
+        verify(testCollection).deleteMany(new Document());
     }
 
     @Test
     public void verifyDBPurge() throws Exception {
-        MongoStorage storage = makeStorage();
-        setDbFieldInStorage(storage);
+        MongoDatabase database = mock(MongoDatabase.class);
+        @SuppressWarnings("unchecked")
+        MongoIterable<String> stringIterable = mock(MongoIterable.class);
+        @SuppressWarnings("unchecked")
+        com.mongodb.client.MongoCursor<String> mockCursor = mock(com.mongodb.client.MongoCursor.class);
+        when(mockCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(mockCursor.next()).thenReturn(testCategory.getName()).thenReturn(emptyTestCategory.getName());
+        when(stringIterable.iterator()).thenReturn(mockCursor);
+        when(database.listCollectionNames()).thenReturn(stringIterable);
+        when(database.getCollection(eq(testCategory.getName()))).thenReturn(testCollection);
+        when(database.getCollection(eq(emptyTestCategory.getName()))).thenReturn(emptyTestCollection);
+        MongoStorage storage = new MongoStorage(database, new CountDownLatch(0));
         String agentId = "agentId123";
-        BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), agentId);
+        Document query = new Document(Key.AGENT_ID.getName(), agentId);
         storage.purge(agentId);
         
-        verify(testCollection, times(1)).remove(query);
-        verify(emptyTestCollection, times(1)).remove(query);
+        verify(testCollection, times(1)).deleteMany(query);
+        verify(emptyTestCollection, times(1)).deleteMany(query);
     }
 
-    private void setDbFieldInStorage(MongoStorage storage) throws Exception {
-        // use a bit of reflection to set the db field
-        Field dbField = storage.getClass().getDeclaredField("db");
-        dbField.setAccessible(true);
-        dbField.set(storage, db);
-    }
+    @SuppressWarnings("unchecked")
     @Test
     public void verifySchemaInfoNotExists() throws Exception {
-        DB db = PowerMockito.mock(DB.class);
+        MongoDatabase db = PowerMockito.mock(MongoDatabase.class);
+        MongoIterable<String> mockIterable = mock(MongoIterable.class);
+        when(db.listCollectionNames()).thenReturn(mockIterable);
+        when(mockIterable.iterator()).thenReturn(mock(com.mongodb.client.MongoCursor.class));
         CountDownLatch latch = new CountDownLatch(1);
         MongoStorage storage = new MongoStorage(db, latch);
         ArgumentCaptor<String> categoryNameCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<BasicDBObject> basicDBCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
+        ArgumentCaptor<CreateCollectionOptions> createOptions = ArgumentCaptor.forClass(CreateCollectionOptions.class);
         
-        when(db.collectionExists(SchemaInfo.CATEGORY.getName())).thenReturn(false);
         storage.createSchemaInfo();
-        verify(db, times(1)).createCollection(categoryNameCaptor.capture(), basicDBCaptor.capture());
+        verify(db, times(1)).createCollection(categoryNameCaptor.capture(), createOptions.capture());
         assertEquals(SchemaInfo.CATEGORY.getName(), categoryNameCaptor.getValue());
-        assertEquals(new BasicDBObject("capped", false), basicDBCaptor.getValue());
+        CreateCollectionOptions actual = createOptions.getValue();
+        assertFalse(actual.isCapped());
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void verifySchemaInfoExists() throws Exception {
-        DB db = PowerMockito.mock(DB.class);
+        MongoDatabase db = PowerMockito.mock(MongoDatabase.class);
+        MongoIterable<String> mockIterable = mock(MongoIterable.class);
+        when(db.listCollectionNames()).thenReturn(mockIterable);
+        com.mongodb.client.MongoCursor<String> cursor = mock(com.mongodb.client.MongoCursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(SchemaInfo.CATEGORY.getName());
+        when(mockIterable.iterator()).thenReturn(cursor);
         CountDownLatch latch = new CountDownLatch(1);
         MongoStorage storage = new MongoStorage(db, latch);
         
-        when(db.collectionExists(SchemaInfo.CATEGORY.getName())).thenReturn(true);
+        when(db.getCollection(eq(SchemaInfo.CATEGORY.getName()))).thenReturn(mock(MongoCollection.class));
         storage.createSchemaInfo();
-        verify(db, times(0)).createCollection(any(String.class), any(BasicDBObject.class));
+        verify(db, times(0)).createCollection(any(String.class), any(CreateCollectionOptions.class));
     }
     
     @Test
     public void verifyInsertSchemaInfo() throws Exception {
-        DB db = PowerMockito.mock(DB.class);
+        MongoDatabase db = PowerMockito.mock(MongoDatabase.class);
         CountDownLatch latch = new CountDownLatch(1);
         MongoStorage storage = new MongoStorage(db, latch);
-        ArgumentCaptor<BasicDBObject> basicDBCaptor1 = ArgumentCaptor.forClass(BasicDBObject.class);
-        ArgumentCaptor<BasicDBObject> basicDBCaptor2 = ArgumentCaptor.forClass(BasicDBObject.class);
-        ArgumentCaptor<Boolean> bool1 = ArgumentCaptor.forClass(Boolean.class);
-        ArgumentCaptor<Boolean> bool2 = ArgumentCaptor.forClass(Boolean.class);
-        BasicDBObject expected1 = new BasicDBObject(SchemaInfo.NAME.getName(), testCategory.getName());
+        ArgumentCaptor<Document> basicDBCaptor1 = ArgumentCaptor.forClass(Document.class);
+        ArgumentCaptor<Document> basicDBCaptor2 = ArgumentCaptor.forClass(Document.class);
+        Document expected1 = new Document(SchemaInfo.NAME.getName(), testCategory.getName());
         
         when(db.getCollection(SchemaInfo.CATEGORY.getName())).thenReturn(testCollection);
         storage.insertSchemaInfo(testCategory);
-        verify(testCollection).update(basicDBCaptor1.capture(), basicDBCaptor2.capture(), bool1.capture(), bool2.capture());
+        verify(testCollection).replaceOne(basicDBCaptor1.capture(), basicDBCaptor2.capture(), any(UpdateOptions.class));
 
         assertEquals(expected1, basicDBCaptor1.getValue());
-        BasicDBObject arg = (BasicDBObject) basicDBCaptor2.getValue();
+        Document arg = (Document) basicDBCaptor2.getValue();
         
-        assertTrue( arg.containsField(SchemaInfo.NAME.getName()));
+        assertTrue( arg.get(SchemaInfo.NAME.getName()) != null );
         assertEquals(testCategory.getName(), arg.get(SchemaInfo.NAME.getName()));
-        assertTrue( arg.containsField(Key.TIMESTAMP.getName()));
+        assertTrue( arg.get(Key.TIMESTAMP.getName()) != null );
         assertNotNull(arg.get(Key.TIMESTAMP.getName()));
-
-        assertTrue(bool1.getValue());
-        assertFalse(bool2.getValue());
     }
     
     private static class FakeDataClass implements Pojo {};

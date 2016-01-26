@@ -44,15 +44,13 @@ import static org.junit.Assert.assertNull;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bson.Document;
 import org.junit.Test;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.mongodb.internal.MongoPojoConverter;
 
 public class MongoPojoConverterTest {
 
@@ -159,7 +157,7 @@ public class MongoPojoConverterTest {
         MongoPojoConverter conv = new MongoPojoConverter();
         SimplePojo obj = new SimplePojo();
         obj.setTest("fluff");
-        DBObject dbObject = conv.convertPojoToMongo(obj);
+        Document dbObject = conv.convertPojoToMongo(obj);
         assertEquals(1, dbObject.keySet().size());
         assertEquals("fluff", dbObject.get("test"));
     }
@@ -167,7 +165,7 @@ public class MongoPojoConverterTest {
     @Test
     public void testConvertSimplePojoFromMongo() {
         MongoPojoConverter conv = new MongoPojoConverter();
-        DBObject dbObj = new BasicDBObject();
+        Document dbObj = new Document();
         dbObj.put("test", "fluff");
         SimplePojo obj = conv.convertMongoToPojo(dbObj, SimplePojo.class);
         assertEquals("fluff", obj.getTest());
@@ -177,7 +175,7 @@ public class MongoPojoConverterTest {
     @Test(expected=StorageException.class)
     public void testConvertSimplePojoFromMongoExtraProperty() {
         MongoPojoConverter conv = new MongoPojoConverter();
-        DBObject dbObj = new BasicDBObject();
+        Document dbObj = new Document();
         dbObj.put("test", "fluff");
         dbObj.put("foo", "bar");
         conv.convertMongoToPojo(dbObj, SimplePojo.class);
@@ -186,7 +184,7 @@ public class MongoPojoConverterTest {
     @Test(expected=StorageException.class)
     public void testConvertSimplePojoFromMongoBrokenPojo1() {
         MongoPojoConverter conv = new MongoPojoConverter();
-        DBObject dbObj = new BasicDBObject();
+        Document dbObj = new Document();
         dbObj.put("broken", "foo");
         conv.convertMongoToPojo(dbObj, BrokenPojo1.class);
     }
@@ -195,7 +193,7 @@ public class MongoPojoConverterTest {
     @Test(expected=StorageException.class)
     public void testConvertSimplePojoFromMongoBrokenPojo2() {
         MongoPojoConverter conv = new MongoPojoConverter();
-        DBObject dbObj = new BasicDBObject();
+        Document dbObj = new Document();
         dbObj.put("broken", "foo");
         conv.convertMongoToPojo(dbObj, BrokenPojo2.class);
     }
@@ -208,10 +206,10 @@ public class MongoPojoConverterTest {
         SimplePojo nested = new SimplePojo();
         nested.setTest("bar");
         obj.setNested(nested);
-        DBObject dbObject = conv.convertPojoToMongo(obj);
+        Document dbObject = conv.convertPojoToMongo(obj);
         assertEquals(2, dbObject.keySet().size());
         assertEquals("foo", dbObject.get("test"));
-        DBObject nestedDbObj = (DBObject) dbObject.get("nested");
+        Document nestedDbObj = (Document) dbObject.get("nested");
         assertEquals(1, nestedDbObj.keySet().size());
         assertEquals("bar", nestedDbObj.get("test"));
     }
@@ -219,9 +217,9 @@ public class MongoPojoConverterTest {
     @Test
     public void testConvertNestedPojoFromMongo() {
         MongoPojoConverter conv = new MongoPojoConverter();
-        DBObject nested = new BasicDBObject();
+        Document nested = new Document();
         nested.put("test", "bar");
-        DBObject dbObj = new BasicDBObject();
+        Document dbObj = new Document();
         dbObj.put("test", "foo");
         dbObj.put("nested", nested);
         NestedPojo obj = conv.convertMongoToPojo(dbObj, NestedPojo.class);
@@ -245,21 +243,21 @@ public class MongoPojoConverterTest {
         obj3.setTest("test3");
         obj.setIndexed(new SimplePojo[] { obj1, obj2, obj3 });
 
-        DBObject dbObject = conv.convertPojoToMongo(obj);
+        Document dbObject = conv.convertPojoToMongo(obj);
         assertEquals(2, dbObject.keySet().size());
         assertEquals("test", dbObject.get("test"));
         List<?> indexedDbObj = (List<?>) dbObject.get("indexed");
         assertEquals(3, indexedDbObj.size());
 
-        DBObject dbObj1 = (DBObject) indexedDbObj.get(0);
+        Document dbObj1 = (Document) indexedDbObj.get(0);
         assertEquals(1, dbObj1.keySet().size());
         assertEquals("test1", dbObj1.get("test"));
 
-        DBObject dbObj2 = (DBObject) indexedDbObj.get(1);
+        Document dbObj2 = (Document) indexedDbObj.get(1);
         assertEquals(1, dbObj2.keySet().size());
         assertEquals("test2", dbObj2.get("test"));
 
-        DBObject dbObj3 = (DBObject) indexedDbObj.get(2);
+        Document dbObj3 = (Document) indexedDbObj.get(2);
         assertEquals(1, dbObj3.keySet().size());
         assertEquals("test3", dbObj3.get("test"));
     }
@@ -271,7 +269,7 @@ public class MongoPojoConverterTest {
         obj.setTest("test");
         obj.setIndexed(new int[] { 1, 2, 3 });
 
-        DBObject dbObject = conv.convertPojoToMongo(obj);
+        Document dbObject = conv.convertPojoToMongo(obj);
         assertEquals(2, dbObject.keySet().size());
         assertEquals("test", dbObject.get("test"));
         List<?> indexedDbObj = (List<?>) dbObject.get("indexed");
@@ -286,13 +284,13 @@ public class MongoPojoConverterTest {
     @Test
     public void testConvertIndexedPojoFromMongo() {
         MongoPojoConverter conv = new MongoPojoConverter();
-        DBObject indexed = new BasicDBObject();
+        Document indexed = new Document();
         indexed.put("test", "test");
-        DBObject dbObj1 = new BasicDBObject();
+        Document dbObj1 = new Document();
         dbObj1.put("test", "test1");
-        DBObject dbObj2 = new BasicDBObject();
+        Document dbObj2 = new Document();
         dbObj2.put("test", "test2");
-        DBObject dbObj3 = new BasicDBObject();
+        Document dbObj3 = new Document();
         dbObj3.put("test", "test3");
         indexed.put("indexed", Arrays.asList(dbObj1, dbObj2, dbObj3));
 
@@ -312,7 +310,7 @@ public class MongoPojoConverterTest {
     @Test
     public void testConvertPrimitiveIndexedPojoFromMongo() {
         MongoPojoConverter conv = new MongoPojoConverter();
-        DBObject indexed = new BasicDBObject();
+        Document indexed = new Document();
         indexed.put("test", "test");
         indexed.put("indexed", Arrays.asList(1, 2, 3));
 

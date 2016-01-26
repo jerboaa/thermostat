@@ -39,21 +39,28 @@ package com.redhat.thermostat.storage.mongodb.internal;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.logging.Logger;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
 import com.mongodb.MongoException;
-import com.mongodb.WriteResult;
-import com.mongodb.gridfs.GridFS;
-import com.mongodb.gridfs.GridFSDBFile;
-import com.mongodb.gridfs.GridFSInputFile;
+import com.mongodb.client.DistinctIterable;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.GridFSDownloadStream;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Add;
@@ -93,6 +100,8 @@ import com.redhat.thermostat.storage.query.Expression;
  * In this implementation, each CATEGORY is given a distinct collection.
  */
 public class MongoStorage implements BackingStorage, SchemaInfoInserter {
+    
+    private static final Logger logger = LoggingUtils.getLogger(MongoStorage.class);
     
     private class MongoDistinctQuery<T extends Pojo> extends AggregateQuery<T> {
 
@@ -149,12 +158,12 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     
     private static abstract class MongoSetter<T extends Pojo> {
         
-        protected final DBObject values;
+        protected final Document values;
         protected final Category<T> category;
         
         private MongoSetter(Category<T> category) {
             this.category = category;
-            this.values = new BasicDBObject();
+            this.values = new Document();
         }
         
         private Object convertPojo(Object value) {
@@ -164,11 +173,11 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
                 MongoPojoConverter converter = new MongoPojoConverter();
                 value = converter.convertPojoToMongo(pojo);
             } else if (value instanceof Pojo[]) {
-                List<DBObject> pojos = new ArrayList<>();
+                List<Document> pojos = new ArrayList<>();
                 MongoPojoConverter converter = new MongoPojoConverter();
                 Pojo[] list = (Pojo[])value;
                 for (Pojo p: list) {
-                    DBObject converted = converter.convertPojoToMongo(p);
+                    Document converted = converter.convertPojoToMongo(p);
                     pojos.add(converted);
                 }
                 value = pojos;
@@ -211,7 +220,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     private class MongoReplace<T extends Pojo> extends MongoSetter<T>
             implements Replace<T> {
         
-        private DBObject query;
+        private Document query;
         private final MongoExpressionParser parser;
 
         private MongoReplace(Category<T> category) {
@@ -226,7 +235,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
                              "Please call where() before apply().";
                 throw new IllegalStateException(msg);
             }
-            return replaceImpl(category, values, query);
+            return (int)replaceImpl(category, values, query);
         }
 
         @Override
@@ -251,7 +260,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
 
         private static final String SET_MODIFIER = "$set";
 
-        private DBObject query;
+        private Document query;
         private final MongoExpressionParser parser;
 
         private MongoUpdate(Category<T> category) {
@@ -271,8 +280,8 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
 
         @Override
         public int apply() {
-            DBObject setValues = new BasicDBObject(SET_MODIFIER, values);
-            return updateImpl(category, setValues, query);
+            Document setValues = new Document(SET_MODIFIER, values);
+            return (int)updateImpl(category, setValues, query);
         }
 
         @Override
@@ -284,7 +293,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     private class MongoRemove<T extends Pojo> implements Remove<T> {
 
         private final Category<T> category;
-        private DBObject query;
+        private Document query;
         private final MongoExpressionParser parser;
         
         private MongoRemove(Category<T> category) {
@@ -304,9 +313,9 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
         @Override
         public int apply() {
             if (query == null) {
-                query = new BasicDBObject();
+                query = new Document();
             }
-            return removePojo(category, query);
+            return (int)removePojo(category, query);
         }
 
         @Override
@@ -317,12 +326,12 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     }
 
     private final MongoConnection conn;
-    private final Map<String, DBCollection> collectionCache = new HashMap<String, DBCollection>();
+    private final Map<String, MongoCollection<Document>> collectionCache = new HashMap<>();
     private final CountDownLatch connectedLatch;
-    private DB db = null;
+    private MongoDatabase db = null;
 
     // For testing only
-    MongoStorage(DB db, CountDownLatch latch) {
+    MongoStorage(MongoDatabase db, CountDownLatch latch) {
         this.db = db;
         this.connectedLatch = latch;
         this.conn = null;
@@ -341,7 +350,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
                 switch (newStatus) {
                 case CONNECTED:
                     // Main success entry point
-                    db = conn.getDB();
+                    db = conn.getDatabase();
                     createSchemaInfo();
                     // This is important. See comment in registerCategory().
                     connectedLatch.countDown();
@@ -385,11 +394,11 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
 
     private <T extends Pojo> Cursor<T> executeGetCount(Category<T> category, MongoQuery<T> queryToAggregate) {
         try {
-            DBCollection coll = getCachedCollection(category);
+            MongoCollection<Document> coll = getCachedCollection(category);
             long count = 0L;
-            DBObject query = queryToAggregate.getGeneratedQuery();
+            Document query = queryToAggregate.getGeneratedQuery();
             if (coll != null) {
-                count = coll.getCount(query);
+                count = coll.count(query);
             }
             AggregateCount result = new AggregateCount();
             result.setCount(count);
@@ -401,14 +410,14 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     
     private <T extends Pojo> Cursor<T> executeDistinctQuery(MongoDistinctQuery<T> aggQuery, Category<T> category, MongoQuery<T> queryToAggregate) {
         try {
-            DBCollection coll = getCachedCollection(category);
-            DBObject query = queryToAggregate.getGeneratedQuery();
+            MongoCollection<Document> coll = getCachedCollection(category);
+            Document query = queryToAggregate.getGeneratedQuery();
             String[] distinctValues;
             Key<?> aggregateKey = aggQuery.getAggregateKey();
             if (coll != null) {
                 String key = aggregateKey.getName();
-                List<?> values = coll.distinct(key, query);
-                distinctValues = convertToStringList(values, key);
+                DistinctIterable<String> iterable = coll.distinct(key, query, String.class);
+                distinctValues = convertToStringList(iterable, key);
             } else {
                 distinctValues = new String[0];
             }
@@ -421,76 +430,71 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
         }
     }
     
-    private String[] convertToStringList(List<?> values, String keyName) {
+    private String[] convertToStringList(Iterable<String> iterable, String keyName) {
         List<String> stringList = new ArrayList<>();
-        for (int i = 0; i < values.size(); i++) {
-            Object val = values.get(i);
+        Iterator<String> iter = iterable.iterator();
+        while (iter.hasNext()) {
+            String item  = iter.next();
             // Mongodb might give us null values.
-            if (val != null) {
-                stringList.add(val.toString());
+            if (item != null) {
+                stringList.add(item);
             }
         }
         return stringList.toArray(new String[0]);
     }
 
-    private <T extends Pojo> int addImpl(final Category<T> cat, final DBObject values) {
+    private <T extends Pojo> int addImpl(final Category<T> cat, final Document values) {
         try {
-            DBCollection coll = getCachedCollection(cat);
+            MongoCollection<Document> coll = getCachedCollection(cat);
             assertContainsWriterID(values);
-            WriteResult result = coll.insert(values);
-            return numAffectedRecords(result);
+            coll.insertOne(values);
+            return 1;
         } catch (MongoException me) {
             throw new StorageException(me);
         }
     }
 
-    private <T extends Pojo> int replaceImpl(final Category<T> cat, final DBObject values, final DBObject query) {
+    private <T extends Pojo> long replaceImpl(final Category<T> cat, final Document values, final Document query) {
         try {
-            DBCollection coll = getCachedCollection(cat);
+            MongoCollection<Document> coll = getCachedCollection(cat);
             assertContainsWriterID(values);
-            WriteResult result = coll.update(query, values, true, false);
-            return numAffectedRecords(result);
+            UpdateResult result = coll.replaceOne(query, values, new UpdateOptions().upsert(true));
+            return result.getModifiedCount();
         } catch (MongoException me) {
             throw new StorageException(me);
         }
     }
-    
-    private int numAffectedRecords(WriteResult result) {
-        // response code corresponds to the number of records affected.
-        int responseCode = result.getN();
-        return responseCode;
-    }
 
-    private void assertContainsWriterID(final DBObject values) {
+    private void assertContainsWriterID(final Document values) {
         if (values.get(Key.AGENT_ID.getName()) == null) {
             throw new AssertionError("agentId must be set");
         }
     }
 
-    private <T extends Pojo> int updateImpl(Category<T> category, DBObject values, DBObject query) {
+    private <T extends Pojo> long updateImpl(Category<T> category, Document values, Document query) {
         try {
-            DBCollection coll = getCachedCollection(category);
-            WriteResult result = coll.update(query, values);
-            return numAffectedRecords(result);
+            MongoCollection<Document> coll = getCachedCollection(category);
+            UpdateResult result = coll.updateOne(query, values);
+            return result.getModifiedCount();
         } catch (MongoException me) {
             throw new StorageException(me);
         }
     }
 
-    private int removePojo(Category<?> category, DBObject query) {
+    private long removePojo(Category<?> category, Document query) {
         try {
-            DBCollection coll = getCachedCollection(category);
-            WriteResult result = coll.remove(query);
-            return numAffectedRecords(result);
+            MongoCollection<Document> coll = getCachedCollection(category);
+            DeleteResult result = coll.deleteMany(query);
+            return result.getDeletedCount();
         } catch (MongoException me) {
             throw new StorageException(me);
         }
     }
 
-    private DBCollection getCachedCollection(Category<?> category) {
+    private MongoCollection<Document> getCachedCollection(Category<?> category) {
         String collName = category.getName();
-        DBCollection coll = collectionCache.get(collName);
-        if (coll == null && db.collectionExists(collName)) {
+        MongoCollection<Document> coll = collectionCache.get(collName);
+        if (coll == null && !collectionExists(collName)) {
             throw new IllegalStateException("Categories need to be registered before being used");
         }
         return coll;
@@ -499,7 +503,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     // TODO: This method is only temporary to enable tests, until we come up with a better design,
     // in particular, the collection should be stored in the category itself. It must not be called
     // from production code.
-    void mapCategoryToDBCollection(Category<?> category, DBCollection coll) {
+    void mapCategoryToDBCollection(Category<?> category, MongoCollection<Document> coll) {
         collectionCache.put(category.getName(), coll);
     }
 
@@ -507,8 +511,8 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     @Override
     public void purge(String agentId) {
         try {
-            BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), agentId);
-            for (String collectionName : db.getCollectionNames()) {
+            Document query = new Document(Key.AGENT_ID.getName(), agentId);
+            for (String collectionName : db.listCollectionNames()) {
                 // Mongodb creates an internal collection called
                 // "system.indexes". Don't delete anything in there as this
                 // would throw MongoException later (error code 12050,
@@ -516,8 +520,8 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
                 if (collectionName.startsWith("system.")) {
                     continue;
                 }
-                DBCollection coll = db.getCollectionFromString(collectionName);
-                coll.remove(query);
+                MongoCollection<Document> coll = db.getCollection(collectionName);
+                coll.deleteMany(query);
             }
         } catch (MongoException me) {
             throw new StorageException(me);
@@ -548,14 +552,22 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
                 Thread.currentThread().interrupt();
             }
 
-            DBCollection coll;
+            MongoCollection<Document> coll;
             Boolean isSchemaInfo = SchemaInfo.CATEGORY.getName().equals(category.getName());
             
             // Check if category is SchemaInfo, in this case it doesn't need to create this collection
-            if ( !isSchemaInfo && !db.collectionExists(name)) {
-                coll = db.createCollection(name, new BasicDBObject("capped", false));
-                for (Key<?> key: category.getIndexedKeys()) {
-                    coll.createIndex(key.getName());
+            if ( !isSchemaInfo && !collectionExists(name)) {
+                db.createCollection(name, new CreateCollectionOptions().capped(false));
+                coll = db.getCollection(name);
+                List<Key<?>> indexKeys = category.getIndexedKeys();
+                // primarily on the first key then on subsequent keys
+                if (indexKeys.size() >= 1) {
+                    Document indexDoc = new Document(indexKeys.get(0).getName(), 1);
+                    for (int i = 1; i < indexKeys.size(); i++) {
+                        Key<?> key = indexKeys.get(i);
+                        indexDoc.append(key.getName(), 1);
+                    }
+                    coll.createIndex(indexDoc);
                 }
             } else {
                 coll = db.getCollection(name);
@@ -586,24 +598,26 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
 
     <T extends Pojo> Cursor<T> findAllPojos(MongoQuery<T> mongoQuery, Class<T> resultClass) {
         try {
-            DBCollection coll = getCachedCollection(mongoQuery.getCategory());
-            DBCursor dbCursor;
+            MongoCollection<Document> coll = getCachedCollection(mongoQuery.getCategory());
+            FindIterable<Document> iterable;
+            Document generatedQuery = mongoQuery.getGeneratedQuery();
+            logger.fine("generated query is: " + generatedQuery);
             if (mongoQuery.hasClauses()) {
-                dbCursor = coll.find(mongoQuery.getGeneratedQuery());
+                iterable = coll.find(mongoQuery.getGeneratedQuery());
             } else {
-                dbCursor = coll.find();
+                iterable = coll.find();
             }
-            dbCursor = applySortAndLimit(mongoQuery, dbCursor);
-            Cursor<T> mongoCursor = new MongoCursor<T>(dbCursor, resultClass);
-            mongoCursor.setBatchSize(Cursor.DEFAULT_BATCH_SIZE);
+            iterable.batchSize(Cursor.DEFAULT_BATCH_SIZE);
+            iterable = applySortAndLimit(mongoQuery, iterable);
+            Cursor<T> mongoCursor = new MongoCursor<T>(iterable, resultClass);
             return mongoCursor;
         } catch (MongoException me) {
             throw new StorageException(me);
         }
     }
 
-    private DBCursor applySortAndLimit(MongoQuery<?> query, DBCursor dbCursor) {
-        BasicDBObject orderBy = new BasicDBObject();
+    private FindIterable<Document> applySortAndLimit(MongoQuery<?> query, FindIterable<Document> dbCursor) {
+        Document orderBy = new Document();
         List<Sort> sorts = query.getSorts();
         for (Sort sort : sorts) {
             orderBy.append(sort.getKey().getName(), sort.getDirection().getValue());
@@ -620,42 +634,32 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     public void saveFile(String filename, InputStream data, SaveFileListener listener) {
         Objects.requireNonNull(listener);
         try {
-            GridFS gridFS = new GridFS(db);
-            GridFSInputFile inputFile = gridFS.createFile(data, filename);
-            inputFile.save();
+            GridFSBucket gridFsBucket = createGridFSBucket();
+            gridFsBucket.uploadFromStream(filename, data);
             listener.notify(EventType.SAVE_COMPLETE, null);
         } catch (MongoException me) {
             listener.notify(EventType.EXCEPTION_OCCURRED, new StorageException(me));
         }
     }
 
+    // package-private for testing
+    GridFSBucket createGridFSBucket() {
+        return GridFSBuckets.create(db);
+    }
+
     @Override
     public InputStream loadFile(String filename) {
         try {
-            GridFS gridFS = new GridFS(db);
-            GridFSDBFile file = gridFS.findOne(filename);
-            if (file == null) {
-                return null;
-            } else {
-                return file.getInputStream();
-            }
+            GridFSBucket gridFsBucket = createGridFSBucket();
+            GridFSDownloadStream downloadStream = gridFsBucket.openDownloadStreamByName(filename);
+            return downloadStream;
         } catch (MongoException me) {
             throw new StorageException(me);
         }
     }
 
     @Override
-    public void shutdown() {
-        try {
-            // Clean up any pending connections. mongo-java-driver issue 130
-            // suggests that Mongo.close() helps with this ThreadLocal business
-            // tomcat warns about. See also:
-            // IcedTea BZ#1315 and https://jira.mongodb.org/browse/JAVA-130
-            db.getMongo().close();
-        } catch (Exception e) {
-            // ignored
-        }
-    }
+    public void shutdown() {}
 
     /*
      *  QueuedStorage decorator uses this method and "wraps" the returned
@@ -687,21 +691,32 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
 
     @Override
     public void createSchemaInfo() {
-        if (!db.collectionExists(SchemaInfo.CATEGORY.getName())) {
-            db.createCollection(SchemaInfo.CATEGORY.getName(), new BasicDBObject("capped", false));
+        if (!collectionExists(SchemaInfo.CATEGORY.getName())) {
+            db.createCollection(SchemaInfo.CATEGORY.getName(), new CreateCollectionOptions().capped(false));
         }
     }
 
     @Override
     public <T extends Pojo> void insertSchemaInfo(Category<T> category) {
-        DBCollection coll = db.getCollection(SchemaInfo.CATEGORY.getName());
+        MongoCollection<Document> coll = db.getCollection(SchemaInfo.CATEGORY.getName());
         
-        BasicDBObject categoryInfo = new BasicDBObject();
+        Document categoryInfo = new Document();
         categoryInfo.put(SchemaInfo.NAME.getName(), category.getName());
         categoryInfo.put(Key.TIMESTAMP.getName(), System.currentTimeMillis());
-        coll.update(new BasicDBObject(SchemaInfo.NAME.getName(), category.getName()),
-                    categoryInfo, true, false);
+        Document query = new Document(SchemaInfo.NAME.getName(), category.getName());
+        coll.replaceOne(query, categoryInfo, new UpdateOptions().upsert(true));
         
+    }
+    
+    private boolean collectionExists(String name) {
+        Iterator<String> it = db.listCollectionNames().iterator();
+        while (it.hasNext()) {
+            String collection = it.next();
+            if (collection.equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

@@ -96,12 +96,7 @@ public interface ThreadDao {
                                                  THREAD_CONTENTION_WAITED_COUNT_KEY,
                                                  THREAD_CONTENTION_WAITED_TIME_KEY,
                                                  ThreadDaoKeys.THREAD_HEADER_UUID, Key.TIMESTAMP),
-                           Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID,
-                                                 THREAD_CONTENTION_BLOCKED_COUNT_KEY,
-                                                 THREAD_CONTENTION_BLOCKED_TIME_KEY,
-                                                 THREAD_CONTENTION_WAITED_COUNT_KEY,
-                                                 THREAD_CONTENTION_WAITED_TIME_KEY,
-                                                 ThreadDaoKeys.THREAD_HEADER_UUID, Key.TIMESTAMP));
+                           Arrays.<Key<?>>asList(ThreadDaoKeys.THREAD_HEADER_UUID, Key.TIMESTAMP));
 
     void saveSummary(ThreadSummary summary);
     List<ThreadSummary> getSummary(VmRef ref, Range<Long> range, int limit);

@@ -39,6 +39,7 @@ package com.redhat.thermostat.storage.mongodb.internal;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,13 +47,16 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocketFactory;
 
-import com.mongodb.DB;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoDatabase;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.HostPortPair;
@@ -69,16 +73,22 @@ class MongoConnection extends Connection {
     private static final Logger logger = LoggingUtils.getLogger(MongoConnection.class);
     static final String THERMOSTAT_DB_NAME = "thermostat";
 
+    private final String url;
+    private final StorageCredentials creds;
+    private final SSLConfiguration sslConf;
+    private final MongoClientOptions.Builder builder;
     private MongoClient m = null;
-    private DB db = null;
-    private String url;
-    StorageCredentials creds;
-    SSLConfiguration sslConf;
+    private MongoDatabase db = null;
 
     MongoConnection(String url, StorageCredentials creds, SSLConfiguration sslConf) {
+        this(url, creds, sslConf, new MongoClientOptions.Builder());
+    }
+    
+    MongoConnection(String url, StorageCredentials creds, SSLConfiguration sslConf, MongoClientOptions.Builder builder) {
         this.url = url;
         this.creds = creds;
         this.sslConf = sslConf;
+        this.builder = builder;
     }
 
     @Override
@@ -109,7 +119,7 @@ class MongoConnection extends Connection {
         fireChanged(ConnectionStatus.DISCONNECTED);
     }
 
-    public DB getDB() {
+    MongoDatabase getDatabase() {
         return db;
     }
 
@@ -119,15 +129,8 @@ class MongoConnection extends Connection {
         setUsername(username);
         char[] password = creds.getPassword();
         try {
-            if (sslConf.enableForBackingStorage()) {
-                logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
-                this.m = getSSLMongo(username, password);
-            } else {
-                logger.log(Level.FINE, "Using plain socket for mongodb://");
-                MongoCredential creds = MongoCredential.createCredential(username, THERMOSTAT_DB_NAME, password);
-                this.m = new MongoClient(getServerAddress(), Arrays.asList(creds));
-            }
-            this.db = m.getDB(THERMOSTAT_DB_NAME);
+            this.m = createMongoClient(username, password, builder);
+            this.db = m.getDatabase(THERMOSTAT_DB_NAME);
         } finally {
             if (password != null) {
                 Arrays.fill(password, '\0');
@@ -135,8 +138,33 @@ class MongoConnection extends Connection {
         }
     }
 
-    MongoClient getSSLMongo(String username, char[] password) throws UnknownHostException, MongoException {
-        Builder builder = new MongoClientOptions.Builder();
+    MongoClient createMongoClient(String username, char[] password, Builder builder) throws UnknownHostException, MongoException {
+        if (sslConf.enableForBackingStorage()) {
+            logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
+            SSLSocketFactory factory = createSSLSocketFactory();
+            builder.socketFactory(factory);
+        } else {
+            logger.log(Level.FINE, "Using plain socket for mongodb://");
+        }
+        MongoCredential creds = MongoCredential.createCredential(username, THERMOSTAT_DB_NAME, password);
+        CodecRegistry defaultCodecRegistry = MongoClient.getDefaultCodecRegistry();
+        CodecRegistry arrayCodecRegistry = CodecRegistries.fromCodecs(
+                                                new DoubleArrayCodec(),
+                                                new IntegerArrayCodec(),
+                                                new StringArrayCodec());
+        CodecRegistry ourCodecRegistry = CodecRegistries.fromRegistries(
+                                                defaultCodecRegistry,
+                                                arrayCodecRegistry);
+        builder.codecRegistry(ourCodecRegistry);
+        MongoClientOptions opts = builder.build();
+        return getMongoClientInstance(getServerAddress(), Arrays.asList(creds), opts);
+    }
+    
+    MongoClient getMongoClientInstance(ServerAddress address, List<MongoCredential> creds, MongoClientOptions opts) {
+        return new MongoClient(address, creds, opts);
+    }
+
+    private SSLSocketFactory createSSLSocketFactory() {
         SSLContext ctxt = null;
         try {
             ctxt = SSLContextFactory.getClientContext(sslConf);
@@ -152,11 +180,7 @@ class MongoConnection extends Connection {
         SSLSocketFactory factory = SSLContextFactory.wrapSSLFactory(
                 ctxt.getSocketFactory(), params);
         logger.log(Level.FINE, "factory is: " + factory.getClass().getName());
-        builder.socketFactory(factory);
-        MongoClientOptions opts = builder.build();
-        MongoCredential creds = MongoCredential.createCredential(username, THERMOSTAT_DB_NAME, password);
-        MongoClient client = new MongoClient(getServerAddress(), Arrays.asList(creds), opts);
-        return client;
+        return factory;
     }
 
     ServerAddress getServerAddress() throws InvalidConfigurationException, UnknownHostException {
@@ -170,7 +194,7 @@ class MongoConnection extends Connection {
     }
 
     private void testConnection() {
-        db.getCollection("agent-config").getCount();
+        db.getCollection("agent-config").count();
     }
     
     // Testing hook

@@ -46,9 +46,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.bson.Document;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.Pojo;
@@ -59,7 +58,7 @@ import com.redhat.thermostat.storage.model.Pojo;
 @SuppressWarnings({"rawtypes", "unchecked"})
 class MongoPojoConverter {
 
-    public DBObject convertPojoToMongo(Pojo obj) {
+    public Document convertPojoToMongo(Pojo obj) {
         try {
             return convertPojoToMongoImpl(obj);
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
@@ -67,8 +66,8 @@ class MongoPojoConverter {
         }
     }
 
-    private DBObject convertPojoToMongoImpl(Pojo obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        BasicDBObject dbObj = new BasicDBObject();
+    private Document convertPojoToMongoImpl(Pojo obj) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        Document dbObj = new Document();
         PropertyDescriptor[] descs = PropertyUtils.getPropertyDescriptors(obj);
         for (PropertyDescriptor desc : descs) {
             storePropertyToDBObject(obj, dbObj, desc);
@@ -76,7 +75,7 @@ class MongoPojoConverter {
         return dbObj;
     }
 
-    private void storePropertyToDBObject(Pojo obj, BasicDBObject dbObj, PropertyDescriptor desc) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    private void storePropertyToDBObject(Pojo obj, Document dbObj, PropertyDescriptor desc) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         if (hasPersistentAnnotation(desc)) {
             String name = desc.getName();
             Object value = PropertyUtils.getProperty(obj, name);
@@ -103,7 +102,7 @@ class MongoPojoConverter {
         return list;
     }
 
-    public <T extends Pojo> T convertMongoToPojo(DBObject dbObj, Class<T> pojoClass) {
+    public <T extends Pojo> T convertMongoToPojo(Document dbObj, Class<T> pojoClass) {
         try {
             return convertMongoToPojoImpl(dbObj, pojoClass);
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException ex) {
@@ -111,7 +110,7 @@ class MongoPojoConverter {
         }
     }
 
-    private <T extends Pojo> T convertMongoToPojoImpl(DBObject dbObj, Class pojoClass) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    private <T extends Pojo> T convertMongoToPojoImpl(Document dbObj, Class pojoClass) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         if (dbObj == null) {
             return null;
         }
@@ -125,7 +124,7 @@ class MongoPojoConverter {
         return pojo;
     }
 
-    private <T extends Pojo> void storePropertyToPojo(DBObject dbObj, T pojo, String name)
+    private <T extends Pojo> void storePropertyToPojo(Document dbObj, T pojo, String name)
             throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
 
         PropertyDescriptor desc = PropertyUtils.getPropertyDescriptor(pojo, name);
@@ -134,8 +133,8 @@ class MongoPojoConverter {
             if (desc.getPropertyType().isArray()) {
                 value = convertIndexedPropertyFromMongo(desc, (List) value);
             }
-            if (value instanceof DBObject) {
-                value = convertMongoToPojoImpl((DBObject) value, desc.getPropertyType());
+            if (value instanceof Document) {
+                value = convertMongoToPojoImpl((Document) value, desc.getPropertyType());
             }
             PropertyUtils.setProperty(pojo, name, value);
         } else {
@@ -148,8 +147,8 @@ class MongoPojoConverter {
         Object array = Array.newInstance(componentType, values.size());
         int i = 0;
         for (Object value : values) {
-            if (value instanceof DBObject) {
-                value = convertMongoToPojoImpl((DBObject) value, componentType);
+            if (value instanceof Document) {
+                value = convertMongoToPojoImpl((Document) value, componentType);
             }
             Array.set(array, i, value);
             i++;

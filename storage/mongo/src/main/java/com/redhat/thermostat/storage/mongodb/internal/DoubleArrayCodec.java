@@ -36,56 +36,55 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
-import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.bson.Document;
+import org.bson.AbstractBsonReader;
+import org.bson.AbstractBsonReader.State;
+import org.bson.BsonReader;
+import org.bson.BsonType;
+import org.bson.BsonWriter;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.DoubleCodec;
+import org.bson.codecs.EncoderContext;
 
-import com.mongodb.MongoException;
-import com.mongodb.client.FindIterable;
-import com.redhat.thermostat.storage.core.BasicBatchCursor;
-import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.model.Pojo;
-
-class MongoCursor<T extends Pojo> extends BasicBatchCursor<T> {
-
-    private final FindIterable<Document> findIterable;
-    private final Class<T> resultClass;
-    private final com.mongodb.client.MongoCursor<Document> cursor;
-
-    MongoCursor(FindIterable<Document> iterable, Class<T> resultClass) {
-        this.findIterable = iterable;
-        this.resultClass = resultClass;
-        this.cursor = iterable.iterator();
-    }
-
-    @Override
-    public boolean hasNext() {
-        try {
-            return cursor.hasNext();
-        } catch (MongoException me) {
-            throw new StorageException(me);
-        }
-    }
-
-    @Override
-    public T next() {
-        try {
-            Document next = cursor.next();
-            if (next == null) {
-                throw new NoSuchElementException();
-            }
-            MongoPojoConverter converter = new MongoPojoConverter();
-            return converter.convertMongoToPojo(next, resultClass);
-        } catch (MongoException me) {
-            throw new StorageException(me);
-        }
-    }
-
-    @Override
-    public void setBatchSize(int n) throws IllegalArgumentException {
-        super.setBatchSize(n); // validates input
-        findIterable.batchSize(n);
-    }
+public class DoubleArrayCodec implements Codec<double[]> {
     
-}
+    private final DoubleCodec primitiveCodec = new DoubleCodec();
+    
+    @Override
+    public void encode(BsonWriter writer, double[] value,
+            EncoderContext encoderContext) {
+        writer.writeStartArray();
+        for (double d: value) {
+            writer.writeDouble(d);
+        }
+        writer.writeEndArray();
+    }
 
+    @Override
+    public Class<double[]> getEncoderClass() {
+        return double[].class;
+    }
+
+    @Override
+    public double[] decode(BsonReader reader, DecoderContext decoderContext) {
+        if (reader.getCurrentBsonType() != BsonType.ARRAY) {
+            throw new IllegalStateException("Expected array type, was: " + reader.getCurrentBsonType());
+        }
+        reader.readStartArray();
+        List<Double> values = new ArrayList<>();
+        while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+            double val = primitiveCodec.decode(reader, decoderContext);
+            values.add(val);
+        }
+        reader.readEndArray();
+        double[] result = new double[values.size()];
+        for (int i = 0; i < values.size(); i++) {
+            result[i] = values.get(i);
+        }
+        return result;
+    }
+
+}

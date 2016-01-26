@@ -36,56 +36,46 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
-import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.bson.Document;
+import org.bson.BsonReader;
+import org.bson.BsonType;
+import org.bson.BsonWriter;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.EncoderContext;
+import org.bson.codecs.StringCodec;
 
-import com.mongodb.MongoException;
-import com.mongodb.client.FindIterable;
-import com.redhat.thermostat.storage.core.BasicBatchCursor;
-import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.model.Pojo;
+public class StringArrayCodec implements Codec<String[]> {
 
-class MongoCursor<T extends Pojo> extends BasicBatchCursor<T> {
-
-    private final FindIterable<Document> findIterable;
-    private final Class<T> resultClass;
-    private final com.mongodb.client.MongoCursor<Document> cursor;
-
-    MongoCursor(FindIterable<Document> iterable, Class<T> resultClass) {
-        this.findIterable = iterable;
-        this.resultClass = resultClass;
-        this.cursor = iterable.iterator();
-    }
-
-    @Override
-    public boolean hasNext() {
-        try {
-            return cursor.hasNext();
-        } catch (MongoException me) {
-            throw new StorageException(me);
-        }
-    }
-
-    @Override
-    public T next() {
-        try {
-            Document next = cursor.next();
-            if (next == null) {
-                throw new NoSuchElementException();
-            }
-            MongoPojoConverter converter = new MongoPojoConverter();
-            return converter.convertMongoToPojo(next, resultClass);
-        } catch (MongoException me) {
-            throw new StorageException(me);
-        }
-    }
-
-    @Override
-    public void setBatchSize(int n) throws IllegalArgumentException {
-        super.setBatchSize(n); // validates input
-        findIterable.batchSize(n);
-    }
+    private final StringCodec primCodec = new StringCodec();
     
-}
+    @Override
+    public void encode(BsonWriter writer, String[] value,
+            EncoderContext encoderContext) {
+        writer.writeStartArray();
+        for (String val: value) {
+            primCodec.encode(writer, val, encoderContext);
+        }
+        writer.writeEndArray();
+    }
 
+    @Override
+    public Class<String[]> getEncoderClass() {
+        return String[].class;
+    }
+
+    @Override
+    public String[] decode(BsonReader reader, DecoderContext decoderContext) {
+        reader.readStartArray();
+        List<String> values = new ArrayList<>();
+        while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+            String val = primCodec.decode(reader, decoderContext);
+            values.add(val);
+        }
+        reader.readEndArray();
+        return values.toArray(new String[0]);
+    }
+
+}

@@ -44,18 +44,17 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.NoSuchElementException;
 
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
+import com.mongodb.client.FindIterable;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
@@ -108,24 +107,29 @@ public class MongoCursorTest {
         }
     }
 
-    private DBCursor dbCursor;
+    private FindIterable<Document> dbCursor;
     private Cursor<TestClass> cursor;
 
     @Before
     public void setUp() {
         
-        BasicDBObject value1 = new BasicDBObject();
+        Document value1 = new Document();
         value1.put("key1", "test1");
         value1.put("key2", "test2");
-        BasicDBObject value2 = new BasicDBObject();
+        Document value2 = new Document();
         value2.put("key3", "test3");
         value2.put("key4", "test4");
 
-        dbCursor = mock(DBCursor.class);
+        @SuppressWarnings("unchecked")
+        FindIterable<Document> local = mock(FindIterable.class);
+        dbCursor = local;
         when(dbCursor.batchSize(Cursor.DEFAULT_BATCH_SIZE)).thenReturn(dbCursor);
-        when(dbCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(dbCursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
-        when(dbCursor.sort(any(DBObject.class))).thenReturn(dbCursor);
+        @SuppressWarnings("unchecked")
+        com.mongodb.client.MongoCursor<Document> iterator = mock(com.mongodb.client.MongoCursor.class);
+        when(dbCursor.iterator()).thenReturn(iterator);
+        when(iterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(iterator.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
+        when(dbCursor.sort(any(Document.class))).thenReturn(dbCursor);
         when(dbCursor.limit(anyInt())).thenReturn(dbCursor);
         cursor = new MongoCursor<TestClass>(dbCursor, TestClass.class);
     }
@@ -159,8 +163,10 @@ public class MongoCursorTest {
     
     @Test
     public void testBatchSize() {
-        DBCursor mongoCursor = mock(DBCursor.class);
-        Cursor<TestClass> mC = new MongoCursor<>(mongoCursor, TestClass.class);
+        @SuppressWarnings("unchecked")
+        FindIterable<Document> findIterable = mock(FindIterable.class);
+        Cursor<TestClass> mC = new MongoCursor<>(findIterable, TestClass.class);
+        verify(findIterable).iterator();
         try {
             mC.setBatchSize(-1);
             fail("expected IAE for batch size of -1");
@@ -175,9 +181,10 @@ public class MongoCursorTest {
             // pass
             assertEquals("Batch size must be > 0", e.getMessage());
         }
+        // this updates the iterator
         mC.setBatchSize(333);
-        verify(mongoCursor).batchSize(333);
-        Mockito.verifyNoMoreInteractions(mongoCursor);
+        verify(findIterable).batchSize(333);
+        verifyNoMoreInteractions(findIterable);
     }
 
 }

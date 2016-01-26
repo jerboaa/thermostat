@@ -38,8 +38,8 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import java.util.Objects;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
 import com.redhat.thermostat.storage.core.AbstractQuery;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -50,7 +50,7 @@ import com.redhat.thermostat.storage.query.Expression;
 public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
 
     private MongoStorage storage;
-    private DBObject query = new BasicDBObject();
+    private Document query = new Document();
     
     private boolean hasClauses = false;
     private Category<T> category;
@@ -84,7 +84,7 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
         hasClauses = true;
     }
 
-    DBObject getGeneratedQuery() {
+    Document getGeneratedQuery() {
         return query;
     }
 

@@ -36,12 +36,12 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
@@ -51,15 +51,15 @@ import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
 import com.redhat.thermostat.storage.query.BinarySetMembershipOperator;
 import com.redhat.thermostat.storage.query.ComparisonExpression;
 import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.LiteralSetExpression;
 import com.redhat.thermostat.storage.query.LiteralExpression;
+import com.redhat.thermostat.storage.query.LiteralSetExpression;
 import com.redhat.thermostat.storage.query.UnaryLogicalExpression;
 import com.redhat.thermostat.storage.query.UnaryLogicalOperator;
 
 public class MongoExpressionParser {
     
-    public DBObject parse(Expression expr) {
-        DBObject result;
+    public Document parse(Expression expr) {
+        Document result;
         if (expr instanceof BinaryComparisonExpression) {
             result = parseBinaryComparisonExpression((BinaryComparisonExpression<?>) expr);
         }
@@ -71,13 +71,13 @@ public class MongoExpressionParser {
             BinaryLogicalExpression<?, ?> biExpr = (BinaryLogicalExpression<?, ?>) expr;
             BinaryLogicalOperator op = biExpr.getOperator();
             
-            DBObject leftResult = parse(biExpr.getLeftOperand());
-            DBObject rightResult = parse(biExpr.getRightOperand());
-            BasicDBList list = new BasicDBList();
+            Document leftResult = parse(biExpr.getLeftOperand());
+            Document rightResult = parse(biExpr.getRightOperand());
+            List<Document> list = new ArrayList<>();
             list.add(leftResult);
             list.add(rightResult);
             
-            result = new BasicDBObject(getLogicalOperator(op), list);
+            result = new Document(getLogicalOperator(op), list);
         }
         else if (expr instanceof UnaryLogicalExpression) {
             UnaryLogicalExpression<?> uniExpr = (UnaryLogicalExpression<?>) expr;
@@ -91,7 +91,7 @@ public class MongoExpressionParser {
                     throw new IllegalArgumentException("Cannot use $not with equality");
                 }
             }
-            DBObject object = parse(operand);
+            Document object = parse(operand);
             insertUnaryLogicalOperator(object, op);
             result = object;
         }
@@ -102,52 +102,46 @@ public class MongoExpressionParser {
         return result;
     }
 
-    private void insertUnaryLogicalOperator(DBObject object, UnaryLogicalOperator op) {
+    private void insertUnaryLogicalOperator(Document object, UnaryLogicalOperator op) {
         String strOp = getLogicalOperator(op);
         // OP { LHS : RHS } => { LHS : { OP : RHS }}
         // Apply operator to each key
         Set<String> keySet = object.keySet();
         for (String key : keySet) {
             Object value = object.get(key);
-            BasicDBObject newValue = new BasicDBObject(strOp, value);
+            Document newValue = new Document(strOp, value);
             object.put(key, newValue);
         }
     }
 
-    private <T> DBObject parseBinaryComparisonExpression(BinaryComparisonExpression<T> expr) {
-        BasicDBObjectBuilder builder = BasicDBObjectBuilder.start();
+    private <T> Document parseBinaryComparisonExpression(BinaryComparisonExpression<T> expr) {
+        Document document = new Document();
         LiteralExpression<Key<T>> leftExpr = expr.getLeftOperand();
         LiteralExpression<T> rightExpr = expr.getRightOperand();
         BinaryComparisonOperator op = expr.getOperator();
         if (op == BinaryComparisonOperator.EQUALS) {
             // LHS == RHS => { LHS : RHS }
-            builder.add(leftExpr.getValue().getName(), rightExpr.getValue());
+            document.append(leftExpr.getValue().getName(), rightExpr.getValue());
         }
         else {
             // LHS OP RHS => { LHS : { OP : RHS } }
-            builder.push(leftExpr.getValue().getName());
-
             String mongoOp = getComparisonOperator(op);
-            builder.add(mongoOp, rightExpr.getValue());
-
-            builder.pop();
+            Document subDoc = new Document(mongoOp, rightExpr.getValue());
+            document.append(leftExpr.getValue().getName(), subDoc);
         }
-        return builder.get();
+        return document;
     }
     
-    private <T> DBObject parseBinarySetComparisonExpression(BinarySetMembershipExpression<T> expr) {
-        BasicDBObjectBuilder builder = BasicDBObjectBuilder.start();
+    private <T> Document parseBinarySetComparisonExpression(BinarySetMembershipExpression<T> expr) {
         LiteralExpression<Key<T>> leftExpr = expr.getLeftOperand();
         LiteralSetExpression<T> rightExpr = expr.getRightOperand();
         BinarySetMembershipOperator op = expr.getOperator();
         // LHS OP [ RHS ] => { LHS : { OP : [ RHS ] } }
-        builder.push(leftExpr.getValue().getName());
-
         String mongoOp = getSetMembershipOperator(op);
-        builder.add(mongoOp, rightExpr.getValues());
+        Document subDoc = new Document(mongoOp, rightExpr.getValues());
+        Document document = new Document(leftExpr.getValue().getName(), subDoc);
 
-        builder.pop();
-        return builder.get();
+        return document;
     }
     
     private String getComparisonOperator(BinaryComparisonOperator operator) {

@@ -43,9 +43,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
@@ -59,23 +59,24 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.utils.HostPortsParser;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
@@ -121,7 +122,7 @@ public class MongoConnectionTest {
     @PrepareForTest({ MongoConnection.class })
     @Test
     public void testConnectSuccess() throws Exception {
-        setupDatabaseMocks(mock(DB.class), mock(MongoClient.class));
+        setupDatabaseMocks(mock(MongoDatabase.class), mock(MongoClient.class));
 
         conn.connect();
 
@@ -132,7 +133,7 @@ public class MongoConnectionTest {
     @Test
     public void testDisconnect() throws Exception {
         MongoClient m = mock(MongoClient.class);
-        setupDatabaseMocks(mock(DB.class), m);
+        setupDatabaseMocks(mock(MongoDatabase.class), m);
         conn.connect();
 
         verify(listener).changed(ConnectionStatus.CONNECTED);
@@ -146,7 +147,15 @@ public class MongoConnectionTest {
     @Test
     public void testConnectIOException() throws Exception {
         IOException fakeException = new IOException();
-        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class, List.class).withArguments(any(ServerAddress.class), any(List.class)).thenThrow(fakeException);
+        PowerMockito.whenNew(MongoClient.class).withParameterTypes(
+                                                    ServerAddress.class,
+                                                    List.class,
+                                                    MongoClientOptions.class)
+                                               .withArguments(
+                                                    any(ServerAddress.class),
+                                                    any(List.class),
+                                                    any(MongoClientOptions.class))
+                                               .thenThrow(fakeException);
         boolean exceptionThrown = false;
         try {
             conn.connect();
@@ -164,7 +173,15 @@ public class MongoConnectionTest {
     @Test
     public void testConnectMongoException() throws Exception {
         MongoException fakeException = new MongoException("fluff");
-        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class, List.class).withArguments(any(ServerAddress.class), any(List.class)).thenThrow(fakeException);
+        PowerMockito.whenNew(MongoClient.class).withParameterTypes(
+                                                    ServerAddress.class,
+                                                    List.class,
+                                                    MongoClientOptions.class)
+                                               .withArguments(
+                                                    any(ServerAddress.class),
+                                                    any(List.class),
+                                                    any(MongoClientOptions.class))
+                                               .thenThrow(fakeException);
         boolean exceptionThrown = false;
         try {
             conn.connect();
@@ -222,9 +239,10 @@ public class MongoConnectionTest {
         whenNew(MongoClient.class).withParameterTypes(ServerAddress.class,
                 List.class, MongoClientOptions.class).withArguments(any(ServerAddress.class),
                 any(List.class), mongoOptCaptor.capture()).thenReturn(mockMongo);
-        DB mockDb = mock(DB.class);
-        when(mockMongo.getDB(eq(MongoConnection.THERMOSTAT_DB_NAME))).thenReturn(mockDb);
-        DBCollection mockCollection = mock(DBCollection.class);
+        MongoDatabase mockDb = mock(MongoDatabase.class);
+        when(mockMongo.getDatabase(eq(MongoConnection.THERMOSTAT_DB_NAME))).thenReturn(mockDb);
+        @SuppressWarnings("unchecked")
+        MongoCollection<Document> mockCollection = mock(MongoCollection.class);
         when(mockDb.getCollection(any(String.class))).thenReturn(mockCollection);
         conn.connect();
         verify(params).setEndpointIdentificationAlgorithm("HTTPS");
@@ -236,21 +254,27 @@ public class MongoConnectionTest {
         assertEquals(factory, sockFactory);
     }
     
-    @PrepareForTest({ MongoConnection.class, SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
+    @SuppressWarnings("unchecked")
     @Test
     public void verifyNoSSLSocketFactoryUsedIfSSLDisabled() throws Exception {
-        setupDatabaseMocks(mock(DB.class), mock(MongoClient.class));
-
-        MongoConnection connection = mock(MongoConnection.class);
-        doCallRealMethod().when(connection).connect();
-        doCallRealMethod().when(connection).createConnection();
-        connection.sslConf = mock(SSLConfiguration.class);
         StorageCredentials c = mock(StorageCredentials.class);
         when(c.getUsername()).thenReturn("foo-user");
         when(c.getPassword()).thenReturn("foo-bar".toCharArray());
-        connection.creds = c;
+        MongoClientOptions.Builder builder = mock(MongoClientOptions.Builder.class);
+        final MongoClient client = mock(MongoClient.class);
+        MongoDatabase db = mock(MongoDatabase.class);
+        when(client.getDatabase(any(String.class))).thenReturn(db);
+        when(db.getCollection(any(String.class))).thenReturn(mock(MongoCollection.class));
+        MongoConnection connection = new MongoConnection("mongodb://127.0.0.1:27518", c, mock(SSLConfiguration.class), builder) {
+
+            @Override
+            MongoClient getMongoClientInstance(ServerAddress addr, List<MongoCredential> creds, MongoClientOptions opts) {
+                return client;
+            }
+
+        };
         connection.connect();
-        verify(connection, Mockito.times(0)).getSSLMongo(any(String.class), any(char[].class));
+        verify(builder, times(0)).socketFactory(any(SocketFactory.class));
     }
     
     @Test
@@ -273,7 +297,7 @@ public class MongoConnectionTest {
     public void testConnectedUsernameIsSet() throws Exception {
         String expected = "username";
 
-        DB db = mock(DB.class);
+        MongoDatabase db = mock(MongoDatabase.class);
         setupDatabaseMocks(db, mock(MongoClient.class));
 
         StorageCredentials creds = mock(StorageCredentials.class);
@@ -292,7 +316,7 @@ public class MongoConnectionTest {
         String expected = Connection.UNSET_USERNAME;
         boolean expect = false;
 
-        DB db = mock(DB.class);
+        MongoDatabase db = mock(MongoDatabase.class);
         setupDatabaseMocks(db, mock(MongoClient.class));
 
         StorageCredentials creds = mock(StorageCredentials.class);
@@ -320,12 +344,21 @@ public class MongoConnectionTest {
         assertEquals(expected, conn.getUsername());
     }
 
-    private void setupDatabaseMocks(DB db, MongoClient m) throws Exception {
-        DBCollection collection = mock(DBCollection.class);
+    private void setupDatabaseMocks(MongoDatabase db, MongoClient m) throws Exception {
+        @SuppressWarnings("unchecked")
+        MongoCollection<Document> collection = mock(MongoCollection.class);
         when(db.getCollection("agent-config")).thenReturn(collection);
 
-        when(m.getDB(MongoConnection.THERMOSTAT_DB_NAME)).thenReturn(db);
-        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class, List.class).withArguments(any(ServerAddress.class), any(List.class)).thenReturn(m);
+        when(m.getDatabase(MongoConnection.THERMOSTAT_DB_NAME)).thenReturn(db);
+        PowerMockito.whenNew(MongoClient.class).withParameterTypes(
+                                                    ServerAddress.class,
+                                                    List.class,
+                                                    MongoClientOptions.class)
+                                               .withArguments(
+                                                    any(ServerAddress.class),
+                                                    any(List.class),
+                                                    any(MongoClientOptions.class))
+                                               .thenReturn(m);
     }
 }
 

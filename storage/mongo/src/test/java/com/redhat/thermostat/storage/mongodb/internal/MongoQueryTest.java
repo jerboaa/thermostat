@@ -43,12 +43,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.bson.Document;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
@@ -62,14 +61,14 @@ public class MongoQueryTest {
     private static MongoStorage storage;
     private static Category<TestClass> category;
     private static MongoExpressionParser parser;
-    private static DBObject dbObject;
+    private static Document dbObject;
 
     @BeforeClass
     public static void setUp() {
         storage = mock(MongoStorage.class);
         category = new Category<>("some-collection", TestClass.class);
         parser = mock(MongoExpressionParser.class);
-        dbObject = new BasicDBObject();
+        dbObject = new Document();
         when(parser.parse(any(Expression.class))).thenReturn(dbObject);
     }
 
@@ -83,7 +82,7 @@ public class MongoQueryTest {
     @Test
     public void testEmptyQuery() {
         MongoQuery<TestClass> query = new MongoQuery<>(storage, category, parser);
-        DBObject mongoQuery = query.getGeneratedQuery();
+        Document mongoQuery = query.getGeneratedQuery();
         assertFalse(query.hasClauses());
         assertTrue(mongoQuery.keySet().isEmpty());
     }
@@ -99,7 +98,7 @@ public class MongoQueryTest {
         MongoQuery<TestClass> query = new MongoQuery<>(storage, category, parser);
         Expression expr = mock(Expression.class);
         query.where(expr);
-        DBObject generatedQuery = query.getGeneratedQuery();
+        Document generatedQuery = query.getGeneratedQuery();
         assertTrue(query.hasClauses());
         assertEquals(dbObject, generatedQuery);
     }
