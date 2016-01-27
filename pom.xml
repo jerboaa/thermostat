@@ -285,6 +285,7 @@
     <module>setup</module>
     <module>config</module>
     <module>platform</module>
+    <module>local</module>
     <!-- development related modules -->
     <module>integration-tests</module>
     <module>dev</module>

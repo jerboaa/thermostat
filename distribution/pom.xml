@@ -471,6 +471,12 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-local-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-overview-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
