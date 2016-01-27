@@ -36,10 +36,14 @@
 
 package com.redhat.thermostat.common;
 
+import java.text.DateFormat;
+
 /**
  * A clock. Useful for separating the source of time from a piece of code.
  */
 public interface Clock {
+
+    DateFormat DEFAULT_DATE_FORMAT = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.LONG);
 
     /**
      * Returns the current real time in milliseconds (measured since the UNIX epoch).

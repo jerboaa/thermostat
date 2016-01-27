@@ -39,22 +39,19 @@ package com.redhat.thermostat.client.filter.vm.swing;
 import com.redhat.thermostat.client.ui.ToggleableReferenceFieldLabelDecorator;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
-import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public class VMStartTimeLabelDecorator implements ToggleableReferenceFieldLabelDecorator {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-
-    private static final DateFormat DATE_FORMAT = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.LONG);
 
     private VmInfoDAO dao;
     private boolean enabled = false;
@@ -106,7 +103,7 @@ public class VMStartTimeLabelDecorator implements ToggleableReferenceFieldLabelD
             referenceTimestampMap.put(ref, new Date(timestamp));
         }
 
-        String timestamp = DATE_FORMAT.format(referenceTimestampMap.get(ref));
+        String timestamp = Clock.DEFAULT_DATE_FORMAT.format(referenceTimestampMap.get(ref));
         return t.localize(LocaleResources.STARTTIME_LABEL_DECORATOR, originalLabel, timestamp).getContents();
     }
 

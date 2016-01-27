@@ -46,6 +46,7 @@ import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
@@ -77,7 +78,7 @@ public class VmOverviewController implements InformationServiceController<VmRef>
         dao = vmDao;
         timer = appSvc.getTimerFactory().createTimer();
 
-        vmRunningTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
+        vmRunningTimeFormat = Clock.DEFAULT_DATE_FORMAT;
 
         view.addActionListener(new ActionListener<Action>() {
             @Override
