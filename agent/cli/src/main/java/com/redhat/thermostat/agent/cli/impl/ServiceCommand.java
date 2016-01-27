@@ -48,7 +48,6 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -62,7 +61,7 @@ import com.redhat.thermostat.shared.locale.Translate;
  * Simple service that allows starting Agent and DB Backend
  * in a single step.
  */
-public class ServiceCommand extends AbstractCommand implements ActionListener<ApplicationState> {
+public class ServiceCommand extends AbstractStateNotifyingCommand implements ActionListener<ApplicationState> {
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(ServiceCommand.class);
@@ -72,6 +71,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
     private BundleContext context;
     private Launcher launcher;
     private boolean storageFailed = false;
+    private boolean agentStarted = false;
     private CommandContext cmdCtx;
 
     public ServiceCommand(BundleContext context) {
@@ -93,12 +93,17 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
         if (storageFailed) {
             storageFailed = false;
             context.ungetService(launcherRef);
+            getNotifier().fireAction(ApplicationState.FAIL);
             throw new CommandException(translator.localize(LocaleResources.SERVICE_FAILED_TO_START_DB));
         }
         
         String[] storageStopArgs = new String[] { "storage", "--stop" };
         launcher.run(storageStopArgs, false);
-        
+
+        if (agentStarted) {
+            getNotifier().fireAction(ApplicationState.STOP);
+        }
+
         context.ungetService(launcherRef);
         cmdCtx = null;
     }
@@ -118,6 +123,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                     // Payload is connection URL
                     Object payload = actionEvent.getPayload();
                     if (payload == null || !(payload instanceof String)) {
+                        getNotifier().fireAction(ApplicationState.FAIL);
                         throw new CommandException(translator.localize(LocaleResources.UNEXPECTED_RESULT_STORAGE));
                     }
                     String dbUrl = (String) payload;
@@ -132,6 +138,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                     // Payload is exception
                     payload = actionEvent.getPayload();
                     if (payload == null || !(payload instanceof Exception)) {
+                        getNotifier().fireAction(ApplicationState.FAIL);
                         throw new CommandException(translator.localize(LocaleResources.UNEXPECTED_RESULT_STORAGE));
                     }
                     Exception ex = (Exception) payload;
@@ -152,7 +159,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
         return false;
     }
     
-    private static class AgentStartedListener implements ActionListener<ApplicationState> {
+    private class AgentStartedListener implements ActionListener<ApplicationState> {
 
         private final Console console;
 
@@ -169,16 +176,22 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                 // notified in the case that the command is invoked by some other means later.
                 agent.getNotifier().removeActionListener(this);
 
-                switch (actionEvent.getActionId()) {
+                ApplicationState state = actionEvent.getActionId();
+                // propagate the Agent ActionEvent if START or FAIL
+                switch (state) {
                 case START:
+                    agentStarted = true;
                     logger.fine("Agent started via service. Agent ID was: " + actionEvent.getPayload());
+                    getNotifier().fireAction(ApplicationState.START, actionEvent.getPayload());
                     break;
                 case FAIL:
                     console.getError().println(translator.localize(LocaleResources.STARTING_AGENT_FAILED).getContents());
+                    getNotifier().fireAction(ApplicationState.FAIL, actionEvent.getPayload());
                     break;
+                default:
+                    throw new AssertionError("Unexpected state " + state);
                 }
             }
-
         }
     }
 

@@ -81,7 +81,8 @@ public class ServiceCommandTest {
     private static final String[] STORAGE_START_ARGS = { "storage", "--start" };
     private static final String[] STORAGE_STOP_ARGS = { "storage", "--stop" };
     private static final String[] AGENT_ARGS = {"agent", "-d", "Test String"};
-    
+    private static final String AGENT_ID = "Test ID";
+
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
@@ -116,7 +117,7 @@ public class ServiceCommandTest {
 
     @SuppressWarnings("unchecked")
     @Test(timeout=1000)
-    public void testRunOnce() throws CommandException {
+    public void testRunOnce() throws CommandException, InterruptedException {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
@@ -130,7 +131,43 @@ public class ServiceCommandTest {
                 return null;
             }
         }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
-        
+
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
+                when(mockActionEvent.getPayload()).thenReturn(AGENT_ID);
+
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
+
+        final boolean[] result = new boolean[2];
+        final String[] agentIdFound = new String[1];
+        serviceCommand.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = false;
+                        break;
+                    case START:
+                        result[0] = true;
+                        agentIdFound[0] = (String) actionEvent.getPayload();
+                        break;
+                    case STOP:
+                        result[1] = true;
+                        break;
+                }
+            }
+        });
+
         boolean exTriggered = false;
         try {
             serviceCommand.run(mockCommandContext);
@@ -138,16 +175,72 @@ public class ServiceCommandTest {
             exTriggered = true;
         }
         Assert.assertFalse(exTriggered);
-        
+        Assert.assertTrue("Agent expected to fire START event", result[0]);
+        Assert.assertTrue("Agent expected to fire STOP event", result[1]);
+        Assert.assertEquals("Payload does not contain AgentId matching the agent started", agentIdFound[0], AGENT_ID);
+
         verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
         verify(mockLauncher, times(1)).run(eq(STORAGE_STOP_ARGS), anyBoolean());
         verify(mockLauncher, times(1)).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockActionEvent, times(2)).getActionId();
+    }
+
+    @Test(timeout=1000)
+    public void testStorageStartUnknownPath()  throws CommandException {
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
+                // Return a null payload in order to trigger unknown path
+                when(mockActionEvent.getPayload()).thenReturn(null);
+
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+
+        final boolean[] result = new boolean[1];
+        serviceCommand.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[0] = false;
+                        break;
+                }
+            }
+        });
+
+        boolean exTriggered = false;
+        try {
+            serviceCommand.run(mockCommandContext);
+        } catch (CommandException e) {
+            exTriggered = true;
+        }
+        Assert.assertFalse(exTriggered);
+        Assert.assertEquals("Unexpected result from storage.\n", stdErrOut.toString());
+        Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
+
+        verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockLauncher, times(1)).run(eq(STORAGE_STOP_ARGS), anyBoolean());
+        verify(mockLauncher, never()).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
         verify(mockActionEvent, times(1)).getActionId();
     }
 
     @SuppressWarnings("unchecked")
     @Test(timeout=1000)
-    public void testStorageFailStart()  throws CommandException {
+    public void testStorageFailStart() throws CommandException, InterruptedException {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
@@ -162,7 +255,26 @@ public class ServiceCommandTest {
                 return null;
             }
         }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
-        
+
+        final boolean[] result = new boolean[1];
+        serviceCommand.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[0] = false;
+                        break;
+                }
+            }
+        });
+
         boolean exTriggered = false;
         try {
             serviceCommand.run(mockCommandContext);
@@ -171,31 +283,51 @@ public class ServiceCommandTest {
         }
         Assert.assertTrue(exTriggered);
         Assert.assertEquals("Test Exception\n", stdErrOut.toString());
-        
+        Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
+
         verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
         verify(mockLauncher, never()).run(eq(STORAGE_STOP_ARGS), anyBoolean());
         verify(mockLauncher, never()).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
         verify(mockActionEvent, times(1)).getActionId();
     }
-    
+
     @Test(timeout=1000)
-    public void testStorageFailStartUnknown()  throws CommandException {
+    public void testStorageFailStartUnknownPath()  throws CommandException {
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 listeners = (Collection<ActionListener<ApplicationState>>)args[1];
-                
+
                 when(mockActionEvent.getActionId()).thenReturn(ApplicationState.FAIL);
                 // Return a null payload in order to trigger unknown path
                 when(mockActionEvent.getPayload()).thenReturn(null);
-                
+
                 for(ActionListener<ApplicationState> listener : listeners) {
                     listener.actionPerformed(mockActionEvent);
                 }
                 return null;
             }
         }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
-        
+
+        final boolean[] result = new boolean[1];
+        serviceCommand.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[0] = false;
+                        break;
+                }
+            }
+        });
+
         boolean exTriggered = false;
         try {
             serviceCommand.run(mockCommandContext);
@@ -204,7 +336,8 @@ public class ServiceCommandTest {
         }
         Assert.assertTrue(exTriggered);
         Assert.assertEquals("Unexpected result from storage.\n", stdErrOut.toString());
-        
+        Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
+
         verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
         verify(mockLauncher, never()).run(eq(STORAGE_STOP_ARGS), anyBoolean());
         verify(mockLauncher, never()).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
@@ -217,9 +350,9 @@ public class ServiceCommandTest {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 listeners = (Collection<ActionListener<ApplicationState>>)args[1];
-                
+
                 when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
-                
+
                 for(ActionListener<ApplicationState> listener : listeners) {
                     listener.actionPerformed(mockActionEvent);
                 }
@@ -230,16 +363,35 @@ public class ServiceCommandTest {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 listeners = (Collection<ActionListener<ApplicationState>>)args[1];
-                
+
                 when(mockActionEvent.getActionId()).thenReturn(ApplicationState.FAIL);
-                
+
                 for(ActionListener<ApplicationState> listener : listeners) {
                     listener.actionPerformed(mockActionEvent);
                 }
                 return null;
             }
         }).when(mockLauncher).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
-        
+
+        final boolean[] result = new boolean[1];
+        serviceCommand.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[0] = false;
+                        break;
+                }
+            }
+        });
+
         boolean exTriggered = false;
         try {
             serviceCommand.run(mockCommandContext);
@@ -248,7 +400,8 @@ public class ServiceCommandTest {
         }
         Assert.assertFalse(exTriggered);
         Assert.assertEquals("Thermostat agent failed to start. See logs for details.\n", stdErrOut.toString());
-        
+        Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
+
         verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
         verify(mockLauncher, times(1)).run(eq(STORAGE_STOP_ARGS), anyBoolean());
         verify(mockLauncher, times(1)).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
