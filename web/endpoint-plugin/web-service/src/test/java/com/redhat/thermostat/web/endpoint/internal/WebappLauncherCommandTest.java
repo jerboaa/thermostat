@@ -39,22 +39,37 @@ package com.redhat.thermostat.web.endpoint.internal;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.cli.Console;
 import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.ActionEvent;
@@ -69,15 +84,76 @@ import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.web.endpoint.internal.EmbeddedServletContainerConfiguration;
-import com.redhat.thermostat.web.endpoint.internal.WebappLauncherCommand;
 import com.redhat.thermostat.web.endpoint.internal.EmbeddedServletContainerConfiguration.ConfigKeys;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class WebappLauncherCommandTest {
     
     private TestLogHandler handler;
     private Logger logger;
-    
+    private Launcher mockLauncher;
+    private WebappLauncherCommand cmd;
+    private CommandContext mockCommandContext;
+    private ByteArrayOutputStream stdErrOut;
+    private JettyContainerLauncher mockJettyLauncher;
+
+    private static ActionEvent<ApplicationState> mockActionEvent;
+    private static Collection<ActionListener<ApplicationState>> listeners;
+
+    private static final String[] STORAGE_START_ARGS = { "storage", "--start" };
+    private static final String[] STORAGE_STOP_ARGS = { "storage", "--stop" };
+    private static final String[] AGENT_ARGS = {"agent", "-d", "Test String"};
+    private static final String AGENT_ID = "Test ID";
+
+    @Before
+    public void setup() {
+        mockActionEvent = mock(ActionEvent.class);
+        when(mockActionEvent.getPayload()).thenReturn(new String("Test String"));
+        AbstractStateNotifyingCommand mockNotifyingCommand = mock(AbstractStateNotifyingCommand.class);
+        ActionNotifier<ApplicationState> mockNotifier = mock(ActionNotifier.class);
+        when(mockNotifyingCommand.getNotifier()).thenReturn(mockNotifier);
+        when(mockActionEvent.getSource()).thenReturn(mockNotifyingCommand);
+
+        mockLauncher = mock(Launcher.class);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(CommonPaths.class, mock(CommonPaths.class), null);
+        context.registerService(Launcher.class, mockLauncher, null);
+        context.registerService(SSLConfiguration.class, mock(SSLConfiguration.class), null);
+        final EmbeddedServletContainerConfiguration mockConfig = mock(EmbeddedServletContainerConfiguration.class);
+        when(mockConfig.getConnectionUrl()).thenReturn("Test String");
+        mockJettyLauncher = mock(JettyContainerLauncher.class);
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                CountDownLatch webStartedLatch = (CountDownLatch) invocation.getArguments()[0];
+                webStartedLatch.countDown();
+                return null;
+            }
+        }).when(mockJettyLauncher).startContainer(isA(CountDownLatch.class));
+        when(mockJettyLauncher.isStartupSuccessFul()).thenReturn(true);
+        doNothing().when(mockJettyLauncher).stopContainer();
+        cmd = new WebappLauncherCommand(context) {
+            @Override
+            EmbeddedServletContainerConfiguration getConfiguration(CommonPaths paths) {
+                return mockConfig;
+            }
+
+            @Override
+            JettyContainerLauncher getJettyContainerLauncher(EmbeddedServletContainerConfiguration config, SSLConfiguration sslConfig) {
+                return mockJettyLauncher;
+            }
+        };
+
+        mockCommandContext = mock(CommandContext.class);
+        Console console = mock(Console.class);
+        stdErrOut = new ByteArrayOutputStream();
+        PrintStream errOut = new PrintStream(stdErrOut);
+        when(console.getError()).thenReturn(errOut);
+        when(console.getOutput()).thenReturn(errOut);
+        when(mockCommandContext.getConsole()).thenReturn(console);
+    }
+
     @After
     public void tearDown() {
         if (handler != null && logger != null) {
@@ -173,7 +249,358 @@ public class WebappLauncherCommandTest {
             assertTrue("Did not match. message was: '" + e.getMessage() + "'", handler.gotLogMessage);
         }
     }
-    
+
+    @Test
+    public void testRunCommandCommonPathsNotRegistered() {
+        StubBundleContext context = new StubBundleContext();
+        cmd = new WebappLauncherCommand(context);
+        final boolean[] result = new boolean[1];
+        cmd.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[1] = false;
+                        break;
+                }
+            }
+        });
+        try {
+            cmd.run(mockCommandContext);
+            fail("Command should have thrown an exception");
+        } catch (CommandException e) {
+            Assert.assertTrue(e.getMessage().contains("CommonPaths unavailable."));
+        }
+
+        Assert.assertTrue("WebappLauncherCommand expected to fire FAIL event", result[0]);
+    }
+
+    @Test
+    public void testRunCommandLauncherNotRegistered() {
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(CommonPaths.class, mock(CommonPaths.class), null);
+        cmd = new WebappLauncherCommand(context);
+        final boolean[] result = new boolean[1];
+        cmd.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[1] = false;
+                        break;
+                }
+            }
+        });
+        try {
+            cmd.run(mockCommandContext);
+            fail("Command should have thrown an exception");
+        } catch (CommandException e) {
+            Assert.assertTrue(e.getMessage().contains("Launcher Unavailable"));
+        }
+
+        Assert.assertTrue("WebappLauncherCommand expected to fire FAIL event", result[0]);
+    }
+
+    @Test
+    public void testRunCommandSSLConfigurationNotRegistered() {
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(CommonPaths.class, mock(CommonPaths.class), null);
+        context.registerService(Launcher.class, mockLauncher, null);
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
+
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+
+        cmd = new WebappLauncherCommand(context);
+        final boolean[] result = new boolean[1];
+        cmd.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[1] = false;
+                        break;
+                }
+            }
+        });
+        try {
+            cmd.run(mockCommandContext);
+            fail("Command should have thrown an exception");
+        } catch (CommandException e) {
+            Assert.assertTrue(e.getMessage().contains("SSLConfiguration Unavailable"));
+        }
+
+        Assert.assertTrue("WebappLauncherCommand expected to fire FAIL event", result[0]);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test(timeout=1000)
+    public void testRunOnce() throws CommandException {
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
+
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
+                when(mockActionEvent.getPayload()).thenReturn(AGENT_ID);
+
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
+
+        final boolean[] result = new boolean[2];
+        final String[] agentIdFound = new String[1];
+        cmd.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = false;
+                        break;
+                    case START:
+                        result[0] = true;
+                        agentIdFound[0] = (String) actionEvent.getPayload();
+                        break;
+                    case STOP:
+                        result[1] = true;
+                        break;
+                }
+            }
+        });
+
+        boolean exTriggered = false;
+        try {
+            cmd.run(mockCommandContext);
+        } catch (CommandException e) {
+            exTriggered = true;
+        }
+        Assert.assertFalse(exTriggered);
+        Assert.assertTrue("Agent expected to fire START event", result[0]);
+        Assert.assertTrue("Agent expected to fire STOP event", result[1]);
+        Assert.assertEquals("Payload does not contain AgentId matching the agent started", agentIdFound[0], AGENT_ID);
+
+        verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockLauncher, times(1)).run(eq(STORAGE_STOP_ARGS), anyBoolean());
+        verify(mockLauncher, times(1)).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockActionEvent, times(2)).getActionId();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test(timeout=1000)
+    public void testStorageFailStart()  throws CommandException {
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.FAIL);
+
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+
+        final boolean[] result = new boolean[1];
+        cmd.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[0] = false;
+                        break;
+                }
+            }
+        });
+
+        try {
+            cmd.run(mockCommandContext);
+            fail("Command should have thrown an exception");
+        } catch (CommandException e) {
+            Assert.assertTrue(e.getMessage().contains("Starting mongodb storage failed"));
+        }
+
+        Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
+
+        verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockLauncher, never()).run(eq(STORAGE_STOP_ARGS), anyBoolean());
+        verify(mockLauncher, never()).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockActionEvent, times(1)).getActionId();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test(timeout=1000)
+    public void testWebContainerFailStart()  throws CommandException {
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
+
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+
+        final boolean[] result = new boolean[1];
+        cmd.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[0] = false;
+                        break;
+                }
+            }
+        });
+
+        when(mockJettyLauncher.isStartupSuccessFul()).thenReturn(false);
+
+        try {
+            cmd.run(mockCommandContext);
+            fail("Command should have thrown an exception");
+        } catch (CommandException e) {
+            Assert.assertTrue(e.getMessage().contains("Failed to start embedded jetty instance"));
+        }
+
+        Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
+
+        verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockLauncher, times(1)).run(eq(STORAGE_STOP_ARGS), anyBoolean());
+        verify(mockLauncher, never()).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockActionEvent, times(1)).getActionId();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test(timeout=1000)
+    public void testAgentStartFail()  throws CommandException {
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
+
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.FAIL);
+
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
+
+        final boolean[] result = new boolean[1];
+        cmd.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    case START:
+                        result[0] = false;
+                        break;
+                    case STOP:
+                        result[0] = false;
+                        break;
+                }
+            }
+        });
+
+        boolean exTriggered = false;
+        try {
+            cmd.run(mockCommandContext);
+        } catch (CommandException e) {
+            exTriggered = true;
+        }
+        Assert.assertFalse(exTriggered);
+        Assert.assertTrue(stdErrOut.toString().contains("Thermostat agent failed to start. See logs for details."));
+
+        verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockLauncher, times(1)).run(eq(STORAGE_STOP_ARGS), anyBoolean());
+        verify(mockLauncher, times(1)).run(eq(AGENT_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockActionEvent, times(2)).getActionId();
+    }
+
     private void setupLogger(String matchString) {
         logger = Logger.getLogger("com.redhat.thermostat");
         handler = new TestLogHandler(matchString);

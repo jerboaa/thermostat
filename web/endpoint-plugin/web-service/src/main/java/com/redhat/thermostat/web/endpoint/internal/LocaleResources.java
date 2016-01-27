@@ -49,6 +49,8 @@ public enum LocaleResources {
     ERROR_STARTING_JETTY,
 
     BIND_ADDRESS_NULL,
+
+    STARTING_AGENT_FAILED,
     ;
 
     public static final String RESOURCE_BUNDLE =
