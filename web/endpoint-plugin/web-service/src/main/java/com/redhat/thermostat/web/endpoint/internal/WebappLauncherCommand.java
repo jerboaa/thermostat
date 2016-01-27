@@ -66,16 +66,10 @@ class WebappLauncherCommand implements Command {
     
     private final BundleContext context;
     private final List<ActionListener<ApplicationState>> listeners;
-    private final EmbeddedServletContainerConfiguration config;
-    
+
     WebappLauncherCommand(BundleContext context) {
-        this(context, null);
-    }
-    
-    WebappLauncherCommand(BundleContext context, EmbeddedServletContainerConfiguration config) {
         this.context = context;
         listeners = new ArrayList<>();
-        this.config = config;
     }
     
     // PRE: 1. Storage set up with credentials and credentials appropriately
@@ -155,10 +149,7 @@ class WebappLauncherCommand implements Command {
     }
     
     // testing hook
-    private EmbeddedServletContainerConfiguration getConfiguration(CommonPaths paths) {
-        if (this.config != null) {
-            return config;
-        }
+    EmbeddedServletContainerConfiguration getConfiguration(CommonPaths paths) {
         return new EmbeddedServletContainerConfiguration(paths);
     }
 

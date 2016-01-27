@@ -137,8 +137,13 @@ public class WebappLauncherCommandTest {
         Launcher launcher = new TestLauncher();
         context.registerService(Launcher.class, launcher, null);
         context.registerService(SSLConfiguration.class, mock(SSLConfiguration.class), null);
-        EmbeddedServletContainerConfiguration testConfig = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
-        WebappLauncherCommand cmd = new WebappLauncherCommand(context, testConfig);
+        final EmbeddedServletContainerConfiguration testConfig = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
+        WebappLauncherCommand cmd = new WebappLauncherCommand(context) {
+            @Override
+            EmbeddedServletContainerConfiguration getConfiguration(CommonPaths paths) {
+                return testConfig;
+            }
+        };
         CommandContextFactory factory = new CommandContextFactory(context);
         CommandContext ctxt = factory.createContext(new Arguments() {
 
