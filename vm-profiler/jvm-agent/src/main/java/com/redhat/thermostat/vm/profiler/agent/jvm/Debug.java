@@ -36,40 +36,43 @@
 
 package com.redhat.thermostat.vm.profiler.agent.jvm;
 
-import java.lang.instrument.Instrumentation;
-import java.lang.management.ManagementFactory;
+/**
+ * Central place for debugging so we can control whether output is displayed or
+ * not. In general, it's not a good idea to display output to stdout/stderr of a
+ * random program since it may not be expected at all.
+ */
+public class Debug {
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
+    private static boolean printEnabled = false;
 
-public class Main {
-
-    private Instrumentation instrumentation;
-    private MBeanServer server;
-
-    public Main(Instrumentation instrumentation) {
-        this(instrumentation, ManagementFactory.getPlatformMBeanServer());
+    private Debug() {
+        // do not instantiate
     }
 
-    public Main(Instrumentation instrumentation, MBeanServer server) {
-        this.instrumentation = instrumentation;
-        this.server = server;
+    public static void setPrintEnabled(boolean enabled) {
+        Debug.printEnabled = enabled;
     }
 
-    public void run() {
-        // System.out.println("AGENT: My classloader is " + this.getClass().getClassLoader());
+    public static boolean getPrintEnabled() {
+        return printEnabled;
+    }
 
-        InstrumentationControl control = new InstrumentationControl(instrumentation);
-        try {
-            ObjectName name = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
-            server.registerMBean(control, name);
-        } catch (Exception e) {
-            Debug.printlnError("Unable to attach agent");
-            Debug.printStackTrace(e);
+    public static void println(String message) {
+        if (printEnabled) {
+            System.out.println(message);
         }
     }
 
-    public static void main(String[] args) {
-        new Main(null).run();
+    public static void printlnError(String message) {
+        if (printEnabled) {
+            System.err.println(message);
+        }
     }
+
+    public static void printStackTrace(Throwable t) {
+        if (printEnabled) {
+            t.printStackTrace();
+        }
+    }
+
 }

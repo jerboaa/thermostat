@@ -36,40 +36,59 @@
 
 package com.redhat.thermostat.vm.profiler.agent.jvm;
 
-import java.lang.instrument.Instrumentation;
-import java.lang.management.ManagementFactory;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
+import java.io.PrintStream;
 
-public class Main {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    private Instrumentation instrumentation;
-    private MBeanServer server;
+public class DebugTest {
 
-    public Main(Instrumentation instrumentation) {
-        this(instrumentation, ManagementFactory.getPlatformMBeanServer());
+    private PrintStream originalSystemOut;
+    private PrintStream originalSystemErr;
+    private boolean originalPrintEnabled;
+
+    private PrintStream systemOut;
+    private PrintStream systemErr;
+
+    @Before
+    public void setup() {
+        originalPrintEnabled = Debug.getPrintEnabled();
+
+        originalSystemOut = System.out;
+        systemOut = mock(PrintStream.class);
+        System.setOut(systemOut);
+
+        originalSystemErr = System.err;
+        systemErr = mock(PrintStream.class);
+        System.setErr(systemErr);
     }
 
-    public Main(Instrumentation instrumentation, MBeanServer server) {
-        this.instrumentation = instrumentation;
-        this.server = server;
+    @After
+    public void tearDown() {
+        System.setErr(originalSystemErr);
+        System.setOut(originalSystemOut);
+
+        Debug.setPrintEnabled(originalPrintEnabled);
     }
 
-    public void run() {
-        // System.out.println("AGENT: My classloader is " + this.getClass().getClassLoader());
-
-        InstrumentationControl control = new InstrumentationControl(instrumentation);
-        try {
-            ObjectName name = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
-            server.registerMBean(control, name);
-        } catch (Exception e) {
-            Debug.printlnError("Unable to attach agent");
-            Debug.printStackTrace(e);
-        }
+    @Test
+    public void verifyNoOutputWhenPrintingIsDisabled() throws Exception {
+        Debug.setPrintEnabled(false);
+        Debug.println("foobar!");
+        verifyNoMoreInteractions(systemErr, systemOut);
     }
 
-    public static void main(String[] args) {
-        new Main(null).run();
+    @Test
+    public void verifyOutputWhenPrintingIsEnabled() throws Exception {
+        Debug.setPrintEnabled(true);
+        Debug.printlnError("foobar!");
+        verify(systemErr).println("foobar!");
+        verifyNoMoreInteractions(systemOut);
     }
+
 }

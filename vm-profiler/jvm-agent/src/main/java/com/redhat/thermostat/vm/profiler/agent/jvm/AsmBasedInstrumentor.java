@@ -69,8 +69,8 @@ public class AsmBasedInstrumentor extends ProfilerInstrumentor {
             return data;
 
         } catch (Exception e) {
-            System.err.println("Error transforming: " + className);
-            e.printStackTrace();
+            Debug.printlnError("Error transforming: " + className);
+            Debug.printStackTrace(e);
             throw new AssertionError(e);
         }
     }

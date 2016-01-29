@@ -145,21 +145,21 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
         }
 
         if (toTransform.size() > 0) {
-            System.out.println("AGENT: Retransforming " + toTransform.size() + " classes");
+            Debug.println("AGENT: Retransforming " + toTransform.size() + " classes");
             for (Class<?> klass : toTransform) {
                 try {
                     instrumentation.retransformClasses(klass);
                 } catch (UnmodifiableClassException e) {
                     throw new AssertionError("Tried to modify an unmodifiable class", e);
                 } catch (Error e) {
-                    System.err.println("Failed to transform: " + klass.getName());
-                    System.err.println("Unable to retransform all classes. Some classes may not have been instrumented correctly!");
-                    e.printStackTrace();
+                    Debug.printlnError("Failed to transform: " + klass.getName());
+                    Debug.printlnError("Unable to retransform all classes. Some classes may not have been instrumented correctly!");
+                    Debug.printStackTrace(e);
                 }
             }
         }
         long end = System.nanoTime();
-        System.out.println("AGENT: Retansforming took: " + (end - start) + "ns");
+        Debug.println("AGENT: Retansforming took: " + (end - start) + "ns");
     }
 
     private void writeResultsToDiskIfNotWritten() {
@@ -176,7 +176,7 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
             try {
                 out = resultsFile.getWriter();
                 Map<String, AtomicLong> data = recorder.getData();
-                System.out.println("AGENT: Writing " + data.size() + " results to: " + path);
+                Debug.println("AGENT: Writing " + data.size() + " results to: " + path);
                 for (Map.Entry<String, AtomicLong> entry : data.entrySet()) {
                     out.write(entry.getValue().get() + "\t" + entry.getKey() + "\n");
                 }
@@ -189,11 +189,11 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
                     }
                 } catch (IOException e) {
                     // well, we are screwed
-                    e.printStackTrace();
+                    Debug.printStackTrace(e);
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Debug.printStackTrace(e);
         }
     }
 

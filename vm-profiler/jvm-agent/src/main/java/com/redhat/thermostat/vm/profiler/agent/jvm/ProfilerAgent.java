@@ -66,7 +66,7 @@ public class ProfilerAgent {
 
     private static void initializeAgent(String args, Instrumentation instrumentation) {
 
-        System.out.println("AGENT: loaded");
+        Debug.println("AGENT: loaded");
 
         String jars = args;
         addJarsToClassPath(jars, instrumentation);
@@ -75,7 +75,7 @@ public class ProfilerAgent {
     }
 
     private static void addJarsToClassPath(String jars, Instrumentation instrumentation) throws AssertionError {
-        // System.out.println("Classpath: " + System.getProperty("java.class.path"));
+        Debug.println("Classpath: " + System.getProperty("java.class.path"));
         boolean addToBoot = true;
         String[] jarPaths = jars.split(":");
         for (String jarPath : jarPaths) {
@@ -89,7 +89,7 @@ public class ProfilerAgent {
                 } else {
                     instrumentation.appendToSystemClassLoaderSearch(jarFile);
                 }
-                System.out.println("AGENT: Added '" + jarPath + "' to " + (addToBoot ? "bootstrap" : "system") + " classpath");
+                Debug.println("AGENT: Added '" + jarPath + "' to " + (addToBoot ? "bootstrap" : "system") + " classpath");
             } catch (IOException e) {
                 throw new AssertionError(jarPath + " not found!");
             }
@@ -105,23 +105,23 @@ public class ProfilerAgent {
             Method runMethod = klass.getMethod("run");
             runMethod.invoke(main);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.err.println("Unable to initialize agent");
+            Debug.printStackTrace(e);
+            Debug.printlnError("Unable to initialize agent");
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-            System.err.println("Unable to initialize agent");
+            Debug.printStackTrace(e);
+            Debug.printlnError("Unable to initialize agent");
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
-            System.err.println("Unable to initialize agent");
+            Debug.printStackTrace(e);
+            Debug.printlnError("Unable to initialize agent");
         } catch (InstantiationException e) {
-            e.printStackTrace();
-            System.err.println("Unable to initialize agent");
+            Debug.printStackTrace(e);
+            Debug.printlnError("Unable to initialize agent");
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
-            System.err.println("Unable to initialize agent");
+            Debug.printStackTrace(e);
+            Debug.printlnError("Unable to initialize agent");
         } catch (SecurityException e) {
-            e.printStackTrace();
-            System.err.println("Unable to initialize agent");
+            Debug.printStackTrace(e);
+            Debug.printlnError("Unable to initialize agent");
         }
     }
 
