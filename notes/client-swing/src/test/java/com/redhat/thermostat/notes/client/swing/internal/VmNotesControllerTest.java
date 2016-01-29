@@ -42,6 +42,7 @@ import static org.mockito.Mockito.when;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -54,6 +55,7 @@ public class VmNotesControllerTest {
             @Override
             public void run() {
                 NotesView notesView = new NotesView();
+                ApplicationService appSvc = mock(ApplicationService.class);
                 VmNoteDAO dao = mock(VmNoteDAO.class);
                 HostRef host = mock(HostRef.class);
                 when(host.getAgentId()).thenReturn("t800");
@@ -62,7 +64,7 @@ public class VmNotesControllerTest {
                 when(vm.getHostRef()).thenReturn(host);
 
                 final VmNotesController notesController = new VmNotesController(
-                        new SystemClock(), vm, dao, notesView);
+                        new SystemClock(), appSvc, vm, dao, notesView);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {

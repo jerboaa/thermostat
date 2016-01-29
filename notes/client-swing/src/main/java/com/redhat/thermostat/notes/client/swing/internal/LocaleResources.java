@@ -44,7 +44,6 @@ public enum LocaleResources {
 
     NOTES_NEW,
     NOTES_REFRESH,
-    NOTES_SAVE,
     NOTES_DELETE,
 
     ;

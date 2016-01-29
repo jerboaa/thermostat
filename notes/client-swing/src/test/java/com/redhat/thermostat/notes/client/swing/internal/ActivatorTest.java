@@ -42,6 +42,7 @@ import static org.mockito.Mockito.mock;
 
 import java.util.Hashtable;
 
+import com.redhat.thermostat.common.ApplicationService;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.InformationService;
@@ -56,8 +57,10 @@ public class ActivatorTest {
     public void verifyThatSwingPluginIsRegisteredWhenNotesDAOIsAvailable() {
         StubBundleContext context = new StubBundleContext();
         VmNoteDAO dao = mock(VmNoteDAO.class);
-
         context.registerService(VmNoteDAO.class, dao, null);
+
+        ApplicationService appSvc = mock(ApplicationService.class);
+        context.registerService(ApplicationService.class, appSvc, null);
 
         Activator activator = new Activator();
         activator.start(context);

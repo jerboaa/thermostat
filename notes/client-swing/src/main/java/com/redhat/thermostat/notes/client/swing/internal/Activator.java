@@ -40,6 +40,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.ApplicationService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -71,11 +72,12 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) {
         logger.config("notes-client-swing started");
 
-        hostNotesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { HostNoteDAO.class }, new Action() {
+        hostNotesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { HostNoteDAO.class, ApplicationService.class }, new Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 HostNoteDAO hostNoteDao = (HostNoteDAO) services.get(HostNoteDAO.class.getName());
-                HostNotesProvider hostNotesService = new HostNotesProvider(new SystemClock(), hostNoteDao);
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                HostNotesProvider hostNotesService = new HostNotesProvider(new SystemClock(), appSvc, hostNoteDao);
                 Hashtable<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, hostNotesService.getClass().getName());
@@ -89,11 +91,12 @@ public class Activator implements BundleActivator {
         });
         hostNotesDaoTracker.open();
 
-        vmNotesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { VmNoteDAO.class }, new Action() {
+        vmNotesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { VmNoteDAO.class, ApplicationService.class }, new Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 VmNoteDAO vmNoteDao = (VmNoteDAO) services.get(VmNoteDAO.class.getName());
-                VmNotesProvider notesService = new VmNotesProvider(new SystemClock(), vmNoteDao);
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                VmNotesProvider notesService = new VmNotesProvider(new SystemClock(), appSvc, vmNoteDao);
                 Hashtable<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, notesService.getClass().getName());

@@ -38,6 +38,7 @@ package com.redhat.thermostat.notes.client.swing.internal;
 
 import java.util.UUID;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.notes.common.HostNote;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
@@ -45,8 +46,8 @@ import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostNotesController extends NotesController<HostRef, HostNote, HostNoteDAO> {
 
-    public HostNotesController(Clock clock, HostNoteDAO dao, HostRef host, NotesView view) {
-        super(clock, host, dao, view);
+    public HostNotesController(Clock clock, ApplicationService appSvc, HostNoteDAO dao, HostRef host, NotesView view) {
+        super(clock, appSvc, host, dao, view);
     }
 
     @Override

@@ -38,6 +38,7 @@ package com.redhat.thermostat.notes.client.swing.internal;
 
 import java.util.UUID;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.notes.common.VmNote;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
@@ -45,8 +46,8 @@ import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmNotesController extends NotesController<VmRef, VmNote, VmNoteDAO> {
 
-    public VmNotesController(Clock clock, final VmRef vm, VmNoteDAO vmNoteDao, NotesView notesView) {
-        super(clock, vm, vmNoteDao, notesView);
+    public VmNotesController(Clock clock, ApplicationService appSvc, final VmRef vm, VmNoteDAO vmNoteDao, NotesView notesView) {
+        super(clock, appSvc, vm, vmNoteDao, notesView);
     }
 
     @Override

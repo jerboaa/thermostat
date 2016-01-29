@@ -68,6 +68,7 @@ import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.plaf.LayerUI;
 
+import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
@@ -75,6 +76,7 @@ import com.redhat.thermostat.client.swing.components.ActionButton;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -95,11 +97,9 @@ public class NotesView implements UIComponent, SwingComponent {
     private JPanel notesAndToolsContainer;
 
     private ActionButton refreshButton;
-    private ActionButton saveButton;
 
     public enum Action {
         REMOTE_REFRESH,
-        REMOTE_SAVE,
 
         LOCAL_ADD,
         LOCAL_DELETE,
@@ -107,6 +107,7 @@ public class NotesView implements UIComponent, SwingComponent {
     }
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
+    private ActionNotifier<BasicView.Action> visibilityNotifier = new ActionNotifier<>(this);
 
     private Map<String, NotePanel> tagToPanel;
 
@@ -116,18 +117,13 @@ public class NotesView implements UIComponent, SwingComponent {
         tagToPanel = new HashMap<>();
 
         container = new HeaderPanel(translator.localize(LocaleResources.TAB_NAME));
+        new ComponentVisibilityNotifier().initialize(container, visibilityNotifier);
 
         refreshButton = createToolbarButton(
                 translator.localize(LocaleResources.NOTES_REFRESH),
                 '\uf021',
                 Action.REMOTE_REFRESH);
         container.addToolBarButton(refreshButton);
-
-        saveButton = createToolbarButton(
-                translator.localize(LocaleResources.NOTES_SAVE),
-                '\uf0c7',
-                Action.REMOTE_SAVE);
-        container.addToolBarButton(saveButton);
 
         notesAndToolsContainer = new JPanel();
         BoxLayout contentAndToolsLayout = new BoxLayout(notesAndToolsContainer, BoxLayout.Y_AXIS);
@@ -147,7 +143,7 @@ public class NotesView implements UIComponent, SwingComponent {
 
         notesAndToolsContainer.add(notesScrollPane);
 
-        JButton addNewNoteButton = new JButton("Add");
+        JButton addNewNoteButton = new JButton(translator.localize(LocaleResources.NOTES_NEW).getContents());
         addNewNoteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
@@ -159,7 +155,7 @@ public class NotesView implements UIComponent, SwingComponent {
         notesAndToolsContainer.add(buttonContainer);
 
         busyLayer = new BusyLayerUI();
-        containerCover = new JLayer<JPanel>(notesAndToolsContainer, busyLayer);
+        containerCover = new JLayer<>(notesAndToolsContainer, busyLayer);
 
         container.setContent(containerCover);
     }
@@ -186,6 +182,10 @@ public class NotesView implements UIComponent, SwingComponent {
         return actionNotifier;
     }
 
+    public ActionNotifier<BasicView.Action> getVisibilityNotifier() {
+        return visibilityNotifier;
+    }
+
     public void setBusy(final boolean busy) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -193,7 +193,6 @@ public class NotesView implements UIComponent, SwingComponent {
                 busyLayer.setBusy(busy);
                 containerCover.repaint();
                 refreshButton.setEnabled(!busy);
-                saveButton.setEnabled(!busy);
             }
         });
     }

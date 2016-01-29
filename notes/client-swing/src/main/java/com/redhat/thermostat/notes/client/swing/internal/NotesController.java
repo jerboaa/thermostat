@@ -40,9 +40,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.notes.common.NoteDAO;
@@ -54,36 +56,35 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
     protected static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    protected NotesView view;
     protected Clock clock;
-    protected D dao;
+    protected ApplicationService appSvc;
     protected R ref;
+    protected D dao;
+    protected NotesView view;
 
     private List<N> models;
 
-    public NotesController(Clock clock, R ref, D dao, NotesView view) {
+    public NotesController(Clock clock, final ApplicationService appSvc, R ref, D dao, NotesView view) {
         this.clock = clock;
-        this.view = view;
+        this.appSvc = appSvc;
         this.ref = ref;
         this.dao = dao;
+        this.view = view;
 
         models = new ArrayList<>();
 
         this.view.getNotifier().addActionListener(new ActionListener<NotesView.Action>() {
             @Override
             public void actionPerformed(ActionEvent<NotesView.Action> actionEvent) {
-                switch(actionEvent.getActionId()) {
+                switch (actionEvent.getActionId()) {
                     /* remote-storage operations */
                     case REMOTE_REFRESH: {
                         remoteGetNotesFromStorage();
                         break;
                     }
-                    case REMOTE_SAVE: {
-                        remoteSaveNotes();
-                        break;
-                    }
                     /* local operations */
                     case LOCAL_ADD: {
+                        remoteSaveNotes();
                         localAddNewNote();
                         break;
                     }
@@ -95,8 +96,35 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                     case LOCAL_DELETE: {
                         String noteId = /* tag = */ (String) actionEvent.getPayload();
                         localDeleteNote(noteId);
+                        remoteSaveNotes();
                         break;
                     }
+                }
+            }
+        });
+
+        view.getVisibilityNotifier().addActionListener(new ActionListener<BasicView.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<BasicView.Action> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case HIDDEN:
+                        appSvc.getApplicationExecutor().execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                remoteSaveNotes();
+                            }
+                        });
+                        break;
+                    case VISIBLE:
+                        appSvc.getApplicationExecutor().execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                remoteGetNotesFromStorage();
+                            }
+                        });
+                        break;
+                    default:
+                        throw new AssertionError("Unknown action event: " + actionEvent);
                 }
             }
         });
@@ -173,8 +201,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         // TODO only apply diff of notes to reduce UI glitches/changes
         view.clearAll();
 
-        for (int i = 0; i < vmNotes.size(); i++) {
-            N vmNote = vmNotes.get(i);
+        for (N vmNote : vmNotes) {
             view.add(vmNote);
         }
     }
