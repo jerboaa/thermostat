@@ -42,8 +42,14 @@
   <commands>
     <command>
       <name>local</name>
-      <summary>Thermostat local command</summary>
-      <description>Used to run a local instance of thermostat service and gui</description>
+      <summary>
+        start thermostat service/web-storage-service and launch the GUI client
+      </summary>
+      <description>
+        Start thermostat web-storage-service/service depending on whether webapp
+        is installed and then start the GUI client as a separate process. On exit,
+        shut them all down.
+      </description>
       <environments>
         <environment>cli</environment>
       </environments>
