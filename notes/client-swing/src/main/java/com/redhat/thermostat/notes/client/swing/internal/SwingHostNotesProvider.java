@@ -45,13 +45,13 @@ import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.storage.core.HostRef;
 
-public class HostNotesProvider implements InformationService<HostRef> {
+public class SwingHostNotesProvider implements InformationService<HostRef> {
 
     private final Clock clock;
     private final ApplicationService appSvc;
     private final HostNoteDAO dao;
 
-    public HostNotesProvider(Clock clock, ApplicationService appSvc, HostNoteDAO hostNoteDao) {
+    public SwingHostNotesProvider(Clock clock, ApplicationService appSvc, HostNoteDAO hostNoteDao) {
         this.clock = clock;
         this.appSvc = appSvc;
         this.dao = hostNoteDao;
@@ -69,8 +69,7 @@ public class HostNotesProvider implements InformationService<HostRef> {
 
     @Override
     public InformationServiceController<HostRef> getInformationServiceController(HostRef host) {
-        NotesView view = new NotesView();
-        return new HostNotesController(clock, appSvc, dao, host, view);
+        return new HostNotesController(clock, appSvc, dao, host, new SwingNotesView());
     }
 
 }

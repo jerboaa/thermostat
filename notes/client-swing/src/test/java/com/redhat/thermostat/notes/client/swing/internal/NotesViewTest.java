@@ -44,7 +44,7 @@ public class NotesViewTest {
     public static void main(String[] args) {
         JFrame frame = new JFrame();
 
-        NotesView view = new NotesView();
+        SwingNotesView view = new SwingNotesView();
         Component component = view.getUiComponent();
         frame.add(component);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

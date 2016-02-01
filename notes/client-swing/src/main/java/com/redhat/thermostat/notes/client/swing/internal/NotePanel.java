@@ -55,7 +55,7 @@ import javax.swing.event.DocumentListener;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.notes.client.swing.internal.NotesView.Action;
+import com.redhat.thermostat.notes.client.swing.internal.NotesView.NoteAction;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -65,9 +65,9 @@ public class NotePanel extends JPanel {
 
     private ThermostatTextArea text;
     private JLabel timeStampLabel;
-    private ActionNotifier<Action> actionNotifier;
+    private ActionNotifier<NoteAction> actionNotifier;
 
-    public NotePanel(final Note note, final ActionNotifier<Action> actionNotifier) {
+    public NotePanel(final Note note, final ActionNotifier<NoteAction> actionNotifier) {
         Utils.assertInEdt();
         this.actionNotifier = actionNotifier;
 
@@ -80,15 +80,15 @@ public class NotePanel extends JPanel {
         text.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void removeUpdate(DocumentEvent event) {
-                fireAction(Action.LOCAL_SAVE, note.getId());
+                fireAction(NoteAction.LOCAL_SAVE, note.getId());
             }
             @Override
             public void insertUpdate(DocumentEvent event) {
-                fireAction(Action.LOCAL_SAVE, note.getId());
+                fireAction(NoteAction.LOCAL_SAVE, note.getId());
             }
             @Override
             public void changedUpdate(DocumentEvent event) {
-                fireAction(Action.LOCAL_SAVE, note.getId());
+                fireAction(NoteAction.LOCAL_SAVE, note.getId());
             }
         });
         Icon deleteIcon = new FontAwesomeIcon('\uf014', Constants.TEXT_SIZE);
@@ -97,7 +97,7 @@ public class NotePanel extends JPanel {
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                fireAction(Action.LOCAL_DELETE, note.getId());
+                fireAction(NoteAction.LOCAL_DELETE, note.getId());
             }
         });
 
@@ -122,7 +122,7 @@ public class NotePanel extends JPanel {
         this.add(deleteButton, constraints);
     }
 
-    private void fireAction(final Action action, final Object payload) {
+    private void fireAction(final NoteAction action, final Object payload) {
         SwingWorker<Void, Void> asyncActionWorker = new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {

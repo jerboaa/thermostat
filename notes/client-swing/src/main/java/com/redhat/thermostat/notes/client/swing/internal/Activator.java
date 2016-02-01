@@ -77,7 +77,7 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 HostNoteDAO hostNoteDao = (HostNoteDAO) services.get(HostNoteDAO.class.getName());
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                HostNotesProvider hostNotesService = new HostNotesProvider(new SystemClock(), appSvc, hostNoteDao);
+                SwingHostNotesProvider hostNotesService = new SwingHostNotesProvider(new SystemClock(), appSvc, hostNoteDao);
                 Hashtable<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, hostNotesService.getClass().getName());
@@ -96,7 +96,7 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 VmNoteDAO vmNoteDao = (VmNoteDAO) services.get(VmNoteDAO.class.getName());
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                VmNotesProvider notesService = new VmNotesProvider(new SystemClock(), appSvc, vmNoteDao);
+                SwingVmNotesProvider notesService = new SwingVmNotesProvider(new SystemClock(), appSvc, vmNoteDao);
                 Hashtable<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, notesService.getClass().getName());

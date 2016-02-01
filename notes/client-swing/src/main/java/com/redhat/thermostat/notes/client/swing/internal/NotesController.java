@@ -73,9 +73,9 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
         models = new ArrayList<>();
 
-        this.view.getNotifier().addActionListener(new ActionListener<NotesView.Action>() {
+        this.view.addNoteActionListener(new ActionListener<NotesView.NoteAction>() {
             @Override
-            public void actionPerformed(ActionEvent<NotesView.Action> actionEvent) {
+            public void actionPerformed(ActionEvent<NotesView.NoteAction> actionEvent) {
                 switch (actionEvent.getActionId()) {
                     /* remote-storage operations */
                     case REMOTE_REFRESH: {
@@ -103,7 +103,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
             }
         });
 
-        view.getVisibilityNotifier().addActionListener(new ActionListener<BasicView.Action>() {
+        view.addActionListener(new ActionListener<BasicView.Action>() {
             @Override
             public void actionPerformed(ActionEvent<BasicView.Action> actionEvent) {
                 switch (actionEvent.getActionId()) {

@@ -45,13 +45,13 @@ import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.VmRef;
 
-public class VmNotesProvider implements InformationService<VmRef>{
+public class SwingVmNotesProvider implements InformationService<VmRef>{
 
     private Clock clock;
     private ApplicationService appSvc;
     private VmNoteDAO vmNoteDao;
 
-    public VmNotesProvider(Clock clock, ApplicationService appSvc, VmNoteDAO vmNoteDao) {
+    public SwingVmNotesProvider(Clock clock, ApplicationService appSvc, VmNoteDAO vmNoteDao) {
         this.clock = clock;
         this.appSvc = appSvc;
         this.vmNoteDao = vmNoteDao;
@@ -69,8 +69,7 @@ public class VmNotesProvider implements InformationService<VmRef>{
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef vm) {
-        NotesView view = new NotesView();
-        return new VmNotesController(clock, appSvc, vm, vmNoteDao, view);
+        return new VmNotesController(clock, appSvc, vm, vmNoteDao, new SwingNotesView());
     }
 
 }

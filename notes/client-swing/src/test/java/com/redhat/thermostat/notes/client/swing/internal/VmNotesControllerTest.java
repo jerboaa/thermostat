@@ -54,7 +54,7 @@ public class VmNotesControllerTest {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                NotesView notesView = new NotesView();
+                SwingNotesView notesView = new SwingNotesView();
                 ApplicationService appSvc = mock(ApplicationService.class);
                 VmNoteDAO dao = mock(VmNoteDAO.class);
                 HostRef host = mock(HostRef.class);

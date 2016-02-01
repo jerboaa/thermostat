@@ -67,10 +67,10 @@ public class ActivatorTest {
 
         Hashtable<String,String> props = new Hashtable<>();
         props.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), VmNotesProvider.class, props));
+        assertTrue(context.isServiceRegistered(InformationService.class.getName(), SwingVmNotesProvider.class, props));
 
         activator.stop(context);
 
-        assertFalse(context.isServiceRegistered(InformationService.class.getName(), VmNotesProvider.class));
+        assertFalse(context.isServiceRegistered(InformationService.class.getName(), SwingVmNotesProvider.class));
     }
 }
