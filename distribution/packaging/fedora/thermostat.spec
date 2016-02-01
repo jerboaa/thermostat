@@ -1055,6 +1055,7 @@ fi
 %{_datadir}/%{pkg_name}/etc
 %{_datadir}/%{pkg_name}/bin
 %{_datadir}/%{pkg_name}/libs
+%{_datadir}/%{pkg_name}/plugins/local
 %{_datadir}/%{pkg_name}/plugins/host-cpu
 %{_datadir}/%{pkg_name}/plugins/host-memory
 %{_datadir}/%{pkg_name}/plugins/host-overview
