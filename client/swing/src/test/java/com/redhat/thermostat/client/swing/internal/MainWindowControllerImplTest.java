@@ -107,8 +107,6 @@ public class MainWindowControllerImplTest {
 
     private MainView view;
 
-    private Timer mainWindowTimer;
-
     private UriOpener uriOpener;
 
     private HostInfoDAO mockHostsDAO;
@@ -137,12 +135,6 @@ public class MainWindowControllerImplTest {
     private VmRef vm2;
     private List<VmRef> vms;
 
-    @BeforeClass
-    public static void setUpOnce() {
-        // TODO remove when controller uses mocked objects rather than real swing objects
-        FailOnThreadViolationRepaintManager.install();
-    }
-
     @SuppressWarnings({ "unchecked", "rawtypes" }) // ActionListener fluff
     @Before
     public void setUp() throws Exception {
@@ -151,10 +143,7 @@ public class MainWindowControllerImplTest {
         uriOpener = mock(UriOpener.class);
                 
         // Setup timers
-        mainWindowTimer = mock(Timer.class);
-        Timer otherTimer = mock(Timer.class); // FIXME needed for SummaryView; remove later
         TimerFactory timerFactory = mock(TimerFactory.class);
-        when(timerFactory.createTimer()).thenReturn(mainWindowTimer).thenReturn(otherTimer);
         ApplicationService appSvc = mock(ApplicationService.class);
         when (appSvc.getTimerFactory()).thenReturn(timerFactory);
 
@@ -176,8 +165,8 @@ public class MainWindowControllerImplTest {
         
         VersionAndInfoViewProvider summaryViewProvider = mock(VersionAndInfoViewProvider.class);
         context.registerService(VersionAndInfoViewProvider.class, summaryViewProvider, null);
-        VersionAndInfoView summaryView = mock(VersionAndInfoView.class);
-        when(summaryViewProvider.createView()).thenReturn(summaryView);
+        VersionAndInfoView versionAndInfoView = mock(VersionAndInfoView.class);
+        when(summaryViewProvider.createView()).thenReturn(versionAndInfoView);
         
         HostInformationViewProvider hostInfoViewProvider = mock(HostInformationViewProvider.class);
         context.registerService(HostInformationViewProvider.class, hostInfoViewProvider, null);
