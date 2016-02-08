@@ -58,7 +58,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.redhat.thermostat.client.swing.internal.LocaleResources;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 
 /**
  * A component that host a panel with a nicely rendered header.
@@ -68,6 +70,8 @@ public class HeaderPanel extends JPanel {
         
     public static final String SHOW_TEXT = "SHOW_TEXT";
     
+    private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
+
     private boolean showText;
     
     private LocalizedString header;
@@ -187,10 +191,9 @@ public class HeaderPanel extends JPanel {
     class PreferencesPopup extends ThermostatPopupMenu {
         JMenuItem preferencesMenu;
         public PreferencesPopup() {
-            // TODO: localize
-            String text = "Show button text";
+            String text = translate.localize(LocaleResources.SHOW_BUTTON_TEXT).getContents();
             if (showText) {
-                text = "Hide button text";
+                text = translate.localize(LocaleResources.HIDE_BUTTON_TEXT).getContents();
             }
             preferencesMenu = new JMenuItem(text);
             preferencesMenu.addActionListener(new ActionListener() {

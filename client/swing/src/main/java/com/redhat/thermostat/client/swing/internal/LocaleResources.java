@@ -54,6 +54,10 @@ public enum LocaleResources {
     CUT,
     COPY,
     PASTE,
+
+    SHOW_BUTTON_TEXT,
+    HIDE_BUTTON_TEXT,
+
     ;
 
     static final String RESOURCE_BUNDLE =
