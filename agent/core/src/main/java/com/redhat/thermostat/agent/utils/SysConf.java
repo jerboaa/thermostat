@@ -61,27 +61,17 @@ public class SysConf {
     }
 
     private static String sysConf(String arg) {
-        BufferedReader reader = null;
         try {
             Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
             int result = process.waitFor();
             if (result != 0) {
                 return null;
             }
-            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            return reader.readLine();
-        } catch (IOException e) {
-            return null;
-        } catch (InterruptedException e) {
-            return null;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // TODO
-                }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                return reader.readLine();
             }
+        } catch (IOException | InterruptedException e) {
+            return null;
         }
     }
 }
