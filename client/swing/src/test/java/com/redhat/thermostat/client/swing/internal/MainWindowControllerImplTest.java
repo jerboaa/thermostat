@@ -116,7 +116,6 @@ public class MainWindowControllerImplTest {
 
     private ReferenceFilterRegistry hostFilterRegistry;
 
-    private VMInformationRegistry vmInfoRegistry;
     private MenuRegistry menus;
 
     private StubBundleContext context;
@@ -232,7 +231,6 @@ public class MainWindowControllerImplTest {
         RegistryFactory registryFactory = mock(RegistryFactory.class);
         hostFilterRegistry = mock(ReferenceFilterRegistry.class);
 
-        vmInfoRegistry = mock(VMInformationRegistry.class);
         menus = mock(MenuRegistry.class);
         shutdown = mock(CountDownLatch.class);
 
@@ -240,14 +238,10 @@ public class MainWindowControllerImplTest {
         
         when(registryFactory.createMenuRegistry()).thenReturn(menus);
         when(registryFactory.createFilterRegistry()).thenReturn(hostFilterRegistry);
-        when(registryFactory.createVMInformationRegistry()).thenReturn(vmInfoRegistry);
         when(registryFactory.createDecoratorController()).thenReturn(decoratorController);
         
         ArgumentCaptor<ActionListener> grabHostFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(hostFilterRegistry).addActionListener(grabHostFiltersListener.capture());
-
-        ArgumentCaptor<ActionListener> grabInfoRegistry = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(vmInfoRegistry).addActionListener(grabInfoRegistry.capture());
 
         controller = new MainWindowControllerImpl(context, appSvc, view, registryFactory, shutdown, uriOpener);
         

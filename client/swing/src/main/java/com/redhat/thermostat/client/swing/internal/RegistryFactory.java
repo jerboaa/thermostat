@@ -57,10 +57,6 @@ class RegistryFactory {
     MenuRegistry createMenuRegistry() throws InvalidSyntaxException {
         return new MenuRegistry(context);
     }
-    
-    VMInformationRegistry createVMInformationRegistry() throws InvalidSyntaxException {
-        return new VMInformationRegistry(context);
-    }
 
     DecoratorRegistryController createDecoratorController() {
         DecoratorRegistryFactory decoratorRegistryFactory =
