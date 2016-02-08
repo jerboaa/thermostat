@@ -38,10 +38,10 @@ package com.redhat.thermostat.vm.gc.client.core;
 
 import java.util.List;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.IntervalTimeData;

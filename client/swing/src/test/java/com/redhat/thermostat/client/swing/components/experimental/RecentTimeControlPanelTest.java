@@ -47,7 +47,8 @@ import javax.swing.JFrame;
 import javax.swing.JComboBox;
 
 import com.redhat.thermostat.annotations.internal.CacioTest;
-import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.common.Duration;
+
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -137,7 +138,8 @@ public class RecentTimeControlPanelTest {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
               Duration d = (Duration) evt.getNewValue();
-              if (d.unit.equals(TimeUnit.MINUTES) && d.value == 5) {
+              Duration expected = new Duration(5, TimeUnit.MINUTES);
+              if (expected.equals(d)) {
                   b[0] = true;
               }
             }
@@ -160,7 +162,8 @@ public class RecentTimeControlPanelTest {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
               Duration d = (Duration) evt.getNewValue();
-              if (d.unit.equals(TimeUnit.HOURS) && d.value == 10) {
+              Duration expected = new Duration(10, TimeUnit.HOURS);
+              if (d.equals(expected)) {
                   b[0] = true;
               }
             }

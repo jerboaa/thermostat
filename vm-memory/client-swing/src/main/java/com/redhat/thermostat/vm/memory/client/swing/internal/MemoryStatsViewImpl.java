@@ -67,6 +67,7 @@ import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
 import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
@@ -241,13 +242,13 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
         final JComboBox<TimeUnit> unitSelector = new JComboBox<>();
         unitSelector.setModel(new DefaultComboBoxModel<>(DEFAULT_TIMEUNITS));
 
-        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(duration.value, duration.unit);
+        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(duration.getValue(), duration.getUnit());
 
         durationSelector.getDocument().addDocumentListener(timeUnitChangeListener);
         unitSelector.addActionListener(timeUnitChangeListener);
 
-        durationSelector.setText(String.valueOf(duration.value));
-        unitSelector.setSelectedItem(duration.unit);
+        durationSelector.setText(String.valueOf(duration.getValue()));
+        unitSelector.setSelectedItem(duration.getUnit());
 
         container.add(new JLabel(t.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL).getContents()));
         container.add(durationSelector);

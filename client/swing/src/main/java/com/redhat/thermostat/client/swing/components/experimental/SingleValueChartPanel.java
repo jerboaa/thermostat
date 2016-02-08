@@ -51,6 +51,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import com.redhat.thermostat.client.ui.SampledDataset;
+import com.redhat.thermostat.common.Duration;
+
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
@@ -60,7 +62,6 @@ import org.jfree.chart.panel.CrosshairOverlay;
 import org.jfree.chart.plot.Crosshair;
 import org.jfree.chart.plot.XYPlot;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import org.jfree.ui.RectangleEdge;
 
@@ -125,7 +126,7 @@ public class SingleValueChartPanel extends JPanel {
         chart.getXYPlot().getRangeAxis().setAutoRange(true);
 
         chart.getXYPlot().getDomainAxis().setAutoRange(true);
-        chart.getXYPlot().getDomainAxis().setFixedAutoRange(initialDuration.unit.toMillis(initialDuration.value));
+        chart.getXYPlot().getDomainAxis().setFixedAutoRange(initialDuration.asMilliseconds());
 
         chart.getPlot().setBackgroundPaint(WHITE);
         chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);

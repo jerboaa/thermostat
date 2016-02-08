@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.core.experimental;
 
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.model.Range;
 
 import java.util.List;
@@ -55,7 +56,7 @@ public class TimeRangeController <T, R> {
 
     public void update(Duration userDesiredDuration, Range<Long> newAvailableRange, StatsSupplier<T, R> dao, R ref, SingleArgRunnable<T> updater) {
         long now = System.currentTimeMillis();
-        long userVisibleTimeDelta = (userDesiredDuration.unit.toMillis(userDesiredDuration.value));
+        long userVisibleTimeDelta = userDesiredDuration.asMilliseconds();
         Range<Long> desiredRange = new Range<>(now - userVisibleTimeDelta, now);
 
         if (availableRange.equals(newAvailableRange)) {

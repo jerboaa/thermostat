@@ -46,26 +46,6 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public abstract class MemoryStatsView extends BasicView implements UIComponent {
 
-    //FIXME: Duplicate class : See VmCpuView
-    public static class Duration {
-        public final int value;
-        public final TimeUnit unit;
-
-        public Duration(int value, TimeUnit unit) {
-            this.value = value;
-            this.unit = unit;
-        }
-
-        public long getMilliseconds() {
-            return this.unit.toMillis(this.value);
-        }
-
-        @Override
-        public String toString() {
-            return value + " " + unit;
-        }
-    }
-
     //FIXME: Duplicate enum : See VmCpuView
     public enum UserAction {
         USER_CHANGED_TIME_RANGE,

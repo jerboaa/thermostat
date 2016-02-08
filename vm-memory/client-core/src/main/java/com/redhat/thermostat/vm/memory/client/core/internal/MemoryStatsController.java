@@ -42,13 +42,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
@@ -78,7 +78,7 @@ import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
 public class MemoryStatsController implements InformationServiceController<VmRef> {
 
     private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
-    private static final MemoryStatsView.Duration defaultDuration = new MemoryStatsView.Duration(10, TimeUnit.MINUTES);
+    private static final Duration defaultDuration = new Duration(10, TimeUnit.MINUTES);
 
     private final MemoryStatsView view;
     private final VmMemoryStatDAO vmDao;
@@ -90,13 +90,13 @@ public class MemoryStatsController implements InformationServiceController<VmRef
     
     private VMCollector collector;
 
-    private Duration userDesiredDuration = new Duration(defaultDuration.value, defaultDuration.unit);
+    private Duration userDesiredDuration = defaultDuration;
 
     private TimeRangeController<VmMemoryStat, VmRef> timeRangeController;
     
     class VMCollector implements Runnable {
 
-        private long desiredUpdateTimeStamp = System.currentTimeMillis() - defaultDuration.getMilliseconds();
+        private long desiredUpdateTimeStamp = System.currentTimeMillis() - defaultDuration.asMilliseconds();
 
         @Override
         public void run() {
@@ -182,7 +182,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
         private void updatePayloadModel(Payload payload, long timeStamp, long used) {
             StatsModel model = payload.getModel();
             if (model == null) {
-                model = new StatsModel(defaultDuration.getMilliseconds());
+                model = new StatsModel(defaultDuration.asMilliseconds());
                 model.setName(payload.getName());
             }
             // normalize this always in the same unit
@@ -270,12 +270,12 @@ public class MemoryStatsController implements InformationServiceController<VmRef
             public void actionPerformed(ActionEvent<MemoryStatsView.UserAction> e) {
                 switch (e.getActionId()) {
                     case USER_CHANGED_TIME_RANGE:
-                        MemoryStatsView.Duration duration = (MemoryStatsView.Duration) e.getPayload();
+                        Duration duration = (Duration) e.getPayload();
                         for (Map.Entry<String, Payload> entry : regions.entrySet()) {
                             Payload p = entry.getValue();
                             StatsModel model = p.getModel();
                             if (model != null) {
-                                model.setTimeRangeToShow(duration.value, duration.unit);
+                                model.setTimeRangeToShow(duration.getValue(), duration.getUnit());
                             }
                         }
                         break;

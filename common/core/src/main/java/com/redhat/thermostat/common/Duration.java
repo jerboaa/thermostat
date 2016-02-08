@@ -34,17 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.experimental;
+package com.redhat.thermostat.common;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class Duration {
-    public final int value;
-    public final TimeUnit unit;
+
+    private final int value;
+    private final TimeUnit unit;
 
     public Duration(int value, TimeUnit unit) {
         this.value = value;
         this.unit = unit;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    public TimeUnit getUnit() {
+        return unit;
+    }
+
+    public long asMilliseconds() {
+        return unit.toMillis(value);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+
+        Duration other = (Duration) obj;
+        return Objects.equals(value, other.value) && Objects.equals(unit, other.unit);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value, unit);
     }
 
     @Override

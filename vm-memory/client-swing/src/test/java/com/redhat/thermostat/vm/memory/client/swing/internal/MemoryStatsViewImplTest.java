@@ -55,6 +55,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.annotations.internal.CacioTest;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
@@ -77,7 +78,7 @@ public class MemoryStatsViewImplTest {
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
-                view = new MemoryStatsViewImpl(new MemoryStatsView.Duration(10, TimeUnit.MINUTES));
+                view = new MemoryStatsViewImpl(new Duration(10, TimeUnit.MINUTES));
                 frame = new JFrame();
                 frame.add(view.getUiComponent());
 

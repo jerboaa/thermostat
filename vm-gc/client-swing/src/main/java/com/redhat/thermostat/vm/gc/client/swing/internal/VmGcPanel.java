@@ -86,7 +86,6 @@ import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
@@ -101,6 +100,7 @@ import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
 import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
@@ -318,7 +318,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
                 VmGcPanel.this.userActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE);
                 Duration duration = (Duration) evt.getNewValue();
                 subPanelDurations.put(tag, duration);
-                chartController.setTime(duration.value, duration.unit);
+                chartController.setTime(duration.getValue(), duration.getUnit());
             }
         });
 
@@ -460,7 +460,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
         Duration maxDuration = new Duration(10, TimeUnit.MINUTES); //Default of 10 minutes if there are no controllers
 
         for (Duration duration: subPanelDurations.values()) {
-            long time = duration.unit.toMillis(duration.value);
+            long time = duration.asMilliseconds();
             if (time > timestamp) {
                 timestamp = time;
                 maxDuration = duration;

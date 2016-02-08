@@ -40,12 +40,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -98,8 +98,8 @@ public class VmNumaController implements InformationServiceController<VmRef> {
                     switch (actionEvent.getActionId()) {
                         case USER_CHANGED_TIME_RANGE:
                             Duration duration = view.getUserDesiredDuration();
-                            lastSeenTimestamp = System.currentTimeMillis() - duration.unit.toMillis(duration.value);
-                            view.setVisibleDataRange(duration.value, duration.unit);
+                            lastSeenTimestamp = System.currentTimeMillis() - duration.asMilliseconds();
+                            view.setVisibleDataRange(duration.getValue(), duration.getUnit());
                             break;
                         default:
                             throw new AssertionError("Unhandled action type: " + actionEvent.getActionId());

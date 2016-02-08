@@ -43,12 +43,12 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.numa.client.core.NumaView;
 import com.redhat.thermostat.numa.client.core.NumaViewProvider;
@@ -95,7 +95,7 @@ public class NumaController implements InformationServiceController<HostRef> {
         }
 
         Duration userDuration = view.getUserDesiredDuration(); //Has default of 10 minutes
-        lastSeenTimestamp = System.currentTimeMillis() - userDuration.unit.toMillis(userDuration.value);
+        lastSeenTimestamp = System.currentTimeMillis() - userDuration.asMilliseconds();
 
         timer.setAction(new Runnable() {
             @Override
@@ -132,8 +132,8 @@ public class NumaController implements InformationServiceController<HostRef> {
                 switch (actionEvent.getActionId()) {
                     case USER_CHANGED_TIME_RANGE:
                         Duration duration = view.getUserDesiredDuration();
-                        lastSeenTimestamp = System.currentTimeMillis() - duration.unit.toMillis(duration.value);
-                        view.setVisibleDataRange(duration.value, duration.unit);
+                        lastSeenTimestamp = System.currentTimeMillis() - duration.asMilliseconds();
+                        view.setVisibleDataRange(duration.getValue(), duration.getUnit());
                         break;
                     default:
                         throw new AssertionError("Unhandled action type");

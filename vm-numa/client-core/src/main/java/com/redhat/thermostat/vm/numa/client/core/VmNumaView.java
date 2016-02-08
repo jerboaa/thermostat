@@ -38,10 +38,10 @@ package com.redhat.thermostat.vm.numa.client.core;
 
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class VmNumaView extends BasicView implements UIComponent {

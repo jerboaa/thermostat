@@ -44,11 +44,11 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
 import org.jfree.chart.ChartPanel;
 
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
+import com.redhat.thermostat.common.Duration;
 
 public class RecentTimeSeriesChartPanel extends JPanel {
 
@@ -85,7 +85,7 @@ public class RecentTimeSeriesChartPanel extends JPanel {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 Duration d = (Duration) evt.getNewValue();
-                controller.setTime(d.value, d.unit);
+                controller.setTime(d.getValue(), d.getUnit());
             }
         });
         add(recentTimeControlPanel, BorderLayout.SOUTH);

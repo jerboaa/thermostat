@@ -43,9 +43,9 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Duration;
 
 public class TimeUnitChangeListener implements DocumentListener, java.awt.event.ActionListener {
 

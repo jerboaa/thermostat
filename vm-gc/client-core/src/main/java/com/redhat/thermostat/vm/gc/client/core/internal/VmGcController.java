@@ -47,12 +47,12 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
@@ -133,7 +133,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
                 switch (actionEvent.getActionId()) {
                     case USER_CHANGED_TIME_RANGE:
                         Duration userDuration = view.getUserDesiredDuration();
-                        lastSeenTimeStamp = System.currentTimeMillis() - userDuration.unit.toMillis(userDuration.value);
+                        lastSeenTimeStamp = System.currentTimeMillis() - userDuration.asMilliseconds();
                         doUpdateCollectorData();
                         break;
                     default:
@@ -163,7 +163,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
         });
 
         Duration userDuration = view.getUserDesiredDuration(); //Has default of 10 minutes
-        lastSeenTimeStamp = System.currentTimeMillis() - userDuration.unit.toMillis(userDuration.value);
+        lastSeenTimeStamp = System.currentTimeMillis() - userDuration.asMilliseconds();
 
         timer.setAction(new Runnable() {
             @Override

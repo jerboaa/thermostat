@@ -49,9 +49,9 @@ import javax.swing.JLabel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.text.JTextComponent;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class RecentTimeControlPanel extends JPanel {
@@ -92,13 +92,13 @@ public class RecentTimeControlPanel extends JPanel {
                 Duration d = (Duration) actionEvent.getPayload();
                 RecentTimeControlPanel.this.firePropertyChange(PROPERTY_VISIBLE_TIME_RANGE, null, d);
             }
-        }, duration.value, duration.unit);
+        }, duration.getValue(), duration.getUnit());
 
         durationSelector.getDocument().addDocumentListener(timeUnitChangeListener);
         unitSelector.addActionListener(timeUnitChangeListener);
 
-        durationSelector.setText(String.valueOf(duration.value));
-        unitSelector.setSelectedItem(duration.unit);
+        durationSelector.setText(String.valueOf(duration.getValue()));
+        unitSelector.setSelectedItem(duration.getUnit());
 
         durationSelector.setName("durationSelector");
         unitSelector.setName("unitSelector");
