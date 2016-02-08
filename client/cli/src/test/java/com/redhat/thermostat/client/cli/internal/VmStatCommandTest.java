@@ -211,6 +211,7 @@ public class VmStatCommandTest {
         doReturn(Arrays.asList(data[0])).when(delegates[0]).getStatRow(eq(stat));
         doReturn(Arrays.asList(data[1])).when(delegates[1]).getStatRow(eq(stat));
 
+        final Throwable[] exception = new Throwable[1];
         Thread t = new Thread() {
             public void run() {
                 SimpleArguments args = setupArguments();
@@ -218,8 +219,7 @@ public class VmStatCommandTest {
                 try {
                     cmd.run(cmdCtxFactory.createContext(args));
                 } catch (CommandException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    exception[0] = e;
                 }
             }
         };
@@ -255,6 +255,7 @@ public class VmStatCommandTest {
             return;
         }
         assertFalse(timerFactory.isActive());
+        assertEquals(null, exception[0]); // no exception
     }
 
     @Test
