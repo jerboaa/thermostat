@@ -302,11 +302,11 @@ public class StubBundleContext implements BundleContext {
 
     @Override
     public Filter createFilter(String filter) throws InvalidSyntaxException {
-        // FIXME this will break service trackers if FrameworkUtil is mocked.
-        // The following call will return null if FrameworkUtil is mocked.
-        // that's a problem because this is meant to be used (mostly) in test
-        // environments and that's where FrameworkUtil is likely to be mocked.
-        return FrameworkUtil.createFilter(filter);
+        Filter result = FrameworkUtil.createFilter(filter);
+        if (result == null) {
+            throw new AssertionError("FrameworkUtil created a null filter. Is it mocked incompletely?");
+        }
+        return result;
     }
 
     @Override
