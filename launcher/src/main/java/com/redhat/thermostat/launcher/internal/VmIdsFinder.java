@@ -61,19 +61,26 @@ public class VmIdsFinder implements IdFinder {
 
     @Override
     public List<CompletionInfo> findIds() {
-        List<CompletionInfo> vmIds = new ArrayList<>();
-
         ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
         VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
 
         ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
         AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
 
-        Set<AgentId> agentIds = agentInfoDAO.getAgentIds();
+        List<CompletionInfo> vmIds = new ArrayList<>();
+        try {
+            Set<AgentId> agentIds = agentInfoDAO.getAgentIds();
+            vmIds = findVmIds(vmsDAO, agentInfoDAO, agentIds);
+        } finally {
+            context.ungetService(agentInfoDAORef);
+            context.ungetService(vmsDAORef);
+        }
 
-        // FIXME we are still using the service after this line of code....
-        context.ungetService(agentInfoDAORef);
+        return vmIds;
+    }
 
+    private List<CompletionInfo> findVmIds(VmInfoDAO vmsDAO, AgentInfoDAO agentInfoDAO, Set<AgentId> agentIds) {
+        List<CompletionInfo> vmIds = new ArrayList<>();
         for (AgentId agentId : agentIds) {
             AgentInformation agentInfo = agentInfoDAO.getAgentInformation(agentId);
             if (agentInfo != null) {
@@ -84,8 +91,6 @@ public class VmIdsFinder implements IdFinder {
                 }
             }
         }
-
-        context.ungetService(vmsDAORef);
         return vmIds;
     }
 
