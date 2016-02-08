@@ -113,13 +113,11 @@ public class ActionButtonTest {
 
                     @Override
                     public int getIconWidth() {
-                        // TODO Auto-generated method stub
                         return 16;
                     }
 
                     @Override
                     public int getIconHeight() {
-                        // TODO Auto-generated method stub
                         return 16;
                     }
                 };
