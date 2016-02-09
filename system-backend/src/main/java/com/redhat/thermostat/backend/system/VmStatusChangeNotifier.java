@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -63,7 +64,7 @@ public class VmStatusChangeNotifier {
 
     private final Object listenerLock = new Object();
     private final Map<Integer, String> activePids;
-    private final Map<VmStatusListener, Set<Integer>> listeners = new HashMap<>();
+    private final Map<VmStatusListener, Set<Integer>> listeners = new ConcurrentHashMap<>();
 
     private final ServiceTracker tracker;
 
