@@ -192,7 +192,6 @@ public class VmGcController implements InformationServiceController<VmRef> {
          timer.stop();
     }
 
-    // FIXME
     private LocalizedString chartName(String collectorName, String generationName) {
         return translator.localize(LocaleResources.VM_GC_COLLECTOR_OVER_GENERATION,
                 collectorName, generationName);
