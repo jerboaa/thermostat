@@ -154,7 +154,7 @@ public class VmCompilerStatController implements InformationServiceController<Vm
             data.totalCompiles = String.valueOf(stat.getTotalCompiles());
             data.totalBailouts = String.valueOf(stat.getTotalBailouts());
             data.totalInvalidates = String.valueOf(stat.getTotalInvalidates());
-            data.compilationTime = stat.getCompilationTime();
+            data.compilationTime = String.format("%d %s", stat.getCompilationTime().asMilliseconds(), "ms");
             data.lastSize = stat.getLastSize().toString();
             data.lastType = translateCompileDescription(stat.getLastType());
             data.lastMethod = stat.getLastMethod();

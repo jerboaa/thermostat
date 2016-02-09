@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.compiler.common;
 
+import java.util.concurrent.TimeUnit;
+
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.Size;
 
 public class ParsedVmCompilerStat {
@@ -65,9 +68,8 @@ public class ParsedVmCompilerStat {
         return original.getTotalBailouts();
     }
 
-    // FIXME should be `Time getCompilationTime()`
-    public String getCompilationTime() {
-        return String.format("%d %s", original.getCompilationTime(), "ms");
+    public Duration getCompilationTime() {
+        return new Duration(original.getCompilationTime(), TimeUnit.MILLISECONDS);
     }
 
     public CompileType getLastType() {
