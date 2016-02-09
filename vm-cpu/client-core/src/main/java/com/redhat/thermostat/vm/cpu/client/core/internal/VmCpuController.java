@@ -41,9 +41,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -57,8 +57,8 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView.UserAction;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 import com.redhat.thermostat.vm.cpu.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
@@ -119,7 +119,7 @@ public class VmCpuController implements InformationServiceController<VmRef> {
                 case USER_CHANGED_TIME_RANGE:
                     Duration duration = view.getUserDesiredDuration();
                     userDesiredDuration = duration;
-                    view.setVisibleDataRange(duration.getValue(), duration.getUnit());
+                    view.setVisibleDataRange(duration);
                     break;
                 default:
                     throw new AssertionError("Unhandled action type");

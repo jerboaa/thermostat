@@ -93,7 +93,7 @@ public class RecentTimeControlPanel extends JPanel {
                 Duration d = (Duration) actionEvent.getPayload();
                 RecentTimeControlPanel.this.firePropertyChange(PROPERTY_VISIBLE_TIME_RANGE, null, d);
             }
-        }, duration.getValue(), duration.getUnit());
+        }, duration);
 
         durationSelector.getDocument().addDocumentListener(timeUnitChangeListener);
         unitSelector.addActionListener(timeUnitChangeListener);

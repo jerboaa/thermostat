@@ -40,7 +40,6 @@ import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.plaf.ColorUIResource;
 
@@ -54,6 +53,8 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.ui.RectangleInsets;
+
+import com.redhat.thermostat.common.Duration;
 
 public class StatsModel implements Cloneable {
 
@@ -101,9 +102,9 @@ public class StatsModel implements Cloneable {
         }
     }
 
-    public void setTimeRangeToShow(int timeValue, TimeUnit timeUnit) {
+    public void setTimeRangeToShow(Duration duration) {
         synchronized (lock) {
-            range = timeUnit.toMillis(timeValue);
+            range = duration.asMilliseconds();
         }
     }
 

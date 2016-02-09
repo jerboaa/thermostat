@@ -99,7 +99,7 @@ public class VmNumaController implements InformationServiceController<VmRef> {
                         case USER_CHANGED_TIME_RANGE:
                             Duration duration = view.getUserDesiredDuration();
                             lastSeenTimestamp = System.currentTimeMillis() - duration.asMilliseconds();
-                            view.setVisibleDataRange(duration.getValue(), duration.getUnit());
+                            view.setVisibleDataRange(duration);
                             break;
                         default:
                             throw new AssertionError("Unhandled action type: " + actionEvent.getActionId());

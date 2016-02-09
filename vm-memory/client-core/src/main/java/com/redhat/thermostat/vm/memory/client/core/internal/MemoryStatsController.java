@@ -275,7 +275,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                             Payload p = entry.getValue();
                             StatsModel model = p.getModel();
                             if (model != null) {
-                                model.setTimeRangeToShow(duration.getValue(), duration.getUnit());
+                                model.setTimeRangeToShow(duration);
                             }
                         }
                         break;

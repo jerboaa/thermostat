@@ -56,7 +56,7 @@ public abstract class VmNumaView extends BasicView implements UIComponent {
 
     public abstract Duration getUserDesiredDuration();
 
-    public abstract void setVisibleDataRange(int time, TimeUnit unit);
+    public abstract void setVisibleDataRange(Duration duration);
 
     public abstract void addData(String seriesName, int nodeNumber, DiscreteTimeData<Double> data);
 

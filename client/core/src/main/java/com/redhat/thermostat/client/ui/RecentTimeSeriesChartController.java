@@ -42,6 +42,8 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
 
+import com.redhat.thermostat.common.Duration;
+
 public class RecentTimeSeriesChartController {
 
     private static final int DEFAULT_VALUE = 10;
@@ -84,9 +86,9 @@ public class RecentTimeSeriesChartController {
         return timeUnit;
     }
 
-    public void setTime(int value, TimeUnit unit) {
-        this.timeValue = value;
-        this.timeUnit = unit;
+    public void setTime(Duration duration) {
+        this.timeValue = duration.getValue();
+        this.timeUnit = duration.getUnit();
 
         updateChart();
     }

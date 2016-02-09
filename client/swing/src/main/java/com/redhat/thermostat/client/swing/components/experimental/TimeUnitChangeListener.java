@@ -36,12 +36,13 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.swing.JComboBox;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
-import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -59,10 +60,10 @@ public class TimeUnitChangeListener implements DocumentListener, java.awt.event.
     private int value;
     private TimeUnit unit;
 
-    public TimeUnitChangeListener(ActionListener<TimeChangeEvent> listener, int defaultValue, TimeUnit defaultUnit) {
+    public TimeUnitChangeListener(ActionListener<TimeChangeEvent> listener, Duration defaultDuration) {
         this.listener = listener;
-        this.value = defaultValue;
-        this.unit = defaultUnit;
+        this.value = defaultDuration.getValue();
+        this.unit = defaultDuration.getUnit();
     }
 
     @Override

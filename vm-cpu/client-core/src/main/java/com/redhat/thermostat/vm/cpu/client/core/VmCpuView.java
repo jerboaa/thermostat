@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.cpu.client.core;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
@@ -58,7 +57,7 @@ public abstract class VmCpuView extends BasicView implements UIComponent {
 
     public abstract Duration getUserDesiredDuration();
 
-    public abstract void setVisibleDataRange(int time, TimeUnit unit);
+    public abstract void setVisibleDataRange(Duration duration);
 
     public abstract void setAvailableDataRange(Range<Long> availableInterval);
 

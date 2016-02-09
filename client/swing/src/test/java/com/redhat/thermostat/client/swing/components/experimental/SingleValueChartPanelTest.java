@@ -42,13 +42,9 @@ import static junit.framework.Assert.assertTrue;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.concurrent.TimeUnit;
+
 import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.annotations.internal.CacioTest;
-import com.redhat.thermostat.common.Duration;
-
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
@@ -63,6 +59,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+
+import com.redhat.thermostat.annotations.internal.CacioTest;
+import com.redhat.thermostat.common.Duration;
+
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -161,9 +162,9 @@ public class SingleValueChartPanelTest {
     @GUITest
     @Test
     public void testTimeRangeToShow() {
-        long time = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
-        singleValueChartPanel.setTimeRangeToShow(20, TimeUnit.MINUTES);
-        assertEquals(time, (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
+        Duration time = new Duration(20, TimeUnit.MINUTES);
+        singleValueChartPanel.setTimeRangeToShow(time);
+        assertEquals(time.asMilliseconds(), (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
     }
 
     @GUITest
@@ -189,19 +190,19 @@ public class SingleValueChartPanelTest {
             }
         });
 
-        long time = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
-        singleValueChartPanel.setTimeRangeToShow(20, TimeUnit.MINUTES);
+        Duration time = new Duration(20, TimeUnit.MINUTES);
+        singleValueChartPanel.setTimeRangeToShow(time);
 
-        assertEquals(time, (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
-        assertEquals(time, (long) chart2.getXYPlot().getDomainAxis().getRange().getLength());
-        assertEquals(time, (long) chart3.getXYPlot().getDomainAxis().getRange().getLength());
+        assertEquals(time.asMilliseconds(), (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
+        assertEquals(time.asMilliseconds(), (long) chart2.getXYPlot().getDomainAxis().getRange().getLength());
+        assertEquals(time.asMilliseconds(), (long) chart3.getXYPlot().getDomainAxis().getRange().getLength());
     }
 
     @GUITest
     @Test
     public void testInitialTimeValue() {
-        long time = TimeUnit.MILLISECONDS.convert(10, TimeUnit.MINUTES);
-        assertEquals(time, (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
+        Duration time = new Duration(10, TimeUnit.MINUTES);
+        assertEquals(time.asMilliseconds(), (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
     }
 
     @GUITest

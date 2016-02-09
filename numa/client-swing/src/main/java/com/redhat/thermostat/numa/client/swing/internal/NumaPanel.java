@@ -187,8 +187,8 @@ public class NumaPanel extends NumaView implements SwingComponent {
     }
 
     @Override
-    public void setVisibleDataRange(int time, TimeUnit unit) {
-        chartPanel.setTimeRangeToShow(time, unit);
+    public void setVisibleDataRange(Duration duration) {
+        chartPanel.setTimeRangeToShow(duration);
     }
 
     public void addData(final String tag, final List<DiscreteTimeData<Double>[]> data) {

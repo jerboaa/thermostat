@@ -318,7 +318,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
                 VmGcPanel.this.userActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE);
                 Duration duration = (Duration) evt.getNewValue();
                 subPanelDurations.put(tag, duration);
-                chartController.setTime(duration.getValue(), duration.getUnit());
+                chartController.setTime(duration);
             }
         });
 

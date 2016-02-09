@@ -145,8 +145,8 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
     }
 
     @Override
-    public void setVisibleDataRange(int time, TimeUnit unit) {
-        chartPanel.setTimeRangeToShow(time, unit);
+    public void setVisibleDataRange(Duration duration) {
+        chartPanel.setTimeRangeToShow(duration);
     }
 
     @Override

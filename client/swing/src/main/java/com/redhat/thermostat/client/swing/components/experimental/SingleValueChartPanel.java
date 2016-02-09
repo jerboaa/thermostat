@@ -43,15 +43,11 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
-
-import com.redhat.thermostat.client.ui.SampledDataset;
-import com.redhat.thermostat.common.Duration;
 
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
@@ -61,9 +57,11 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.panel.CrosshairOverlay;
 import org.jfree.chart.plot.Crosshair;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.ui.RectangleEdge;
 
 import com.redhat.thermostat.client.swing.components.ValueField;
-import org.jfree.ui.RectangleEdge;
+import com.redhat.thermostat.client.ui.SampledDataset;
+import com.redhat.thermostat.common.Duration;
 
 
 public class SingleValueChartPanel extends JPanel {
@@ -156,13 +154,13 @@ public class SingleValueChartPanel extends JPanel {
 
     }
 
-    public void setTimeRangeToShow(int timeValue, TimeUnit timeUnit) {
+    public void setTimeRangeToShow(Duration duration) {
         for (ChartPanel cp : charts) {
             XYPlot plot = cp.getChart().getXYPlot();
 
             // Don't drop old data; just dont' show it.
             plot.getDomainAxis().setAutoRange(true);
-            plot.getDomainAxis().setFixedAutoRange(timeUnit.toMillis(timeValue));
+            plot.getDomainAxis().setFixedAutoRange(duration.asMilliseconds());
         }
     }
 
