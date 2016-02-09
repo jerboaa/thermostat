@@ -41,15 +41,15 @@ import java.util.concurrent.TimeUnit;
 
 public class Duration {
 
-    private final int value;
+    private final long value;
     private final TimeUnit unit;
 
-    public Duration(int value, TimeUnit unit) {
+    public Duration(long value, TimeUnit unit) {
         this.value = value;
         this.unit = unit;
     }
 
-    public int getValue() {
+    public long getValue() {
         return value;
     }
 

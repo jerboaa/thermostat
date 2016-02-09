@@ -51,7 +51,7 @@ public class RecentTimeSeriesChartController {
 
     private JFreeChart chart;
     private ChartPanel panel;
-    private int timeValue = DEFAULT_VALUE;
+    private long timeValue = DEFAULT_VALUE;
     private TimeUnit timeUnit = DEFAULT_UNIT;
 
     public RecentTimeSeriesChartController(JFreeChart chart) {
@@ -78,7 +78,7 @@ public class RecentTimeSeriesChartController {
         return new TimeUnit[] { TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES };
     }
 
-    public int getTimeValue() {
+    public long getTimeValue() {
         return timeValue;
     }
 

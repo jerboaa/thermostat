@@ -57,7 +57,7 @@ public class TimeUnitChangeListener implements DocumentListener, java.awt.event.
 
 
     private final ActionListener<TimeChangeEvent> listener;
-    private int value;
+    private long value;
     private TimeUnit unit;
 
     public TimeUnitChangeListener(ActionListener<TimeChangeEvent> listener, Duration defaultDuration) {
