@@ -39,31 +39,22 @@ package com.redhat.thermostat.vm.memory.client.swing.internal;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.beans.Transient;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -81,9 +72,6 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    //FIXME: Duplicate default timeunits : See VmCpuChartPanel.java
-    private static final TimeUnit[] DEFAULT_TIMEUNITS = new TimeUnit[] { TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES };
-
     private static final long REPAINT_DELAY = 500;
 
     private long lastRepaint;
@@ -91,8 +79,6 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     private HeaderPanel visiblePanel;
     private JPanel graphPanel;
     private JPanel contentPanel;
-
-    private JPanel labelContainer;
     
     private final Map<String, MemoryGraphPanel> regions;
     
@@ -121,7 +107,16 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
         contentPanel.setLayout(new BorderLayout());
 
         contentPanel.add(graphPanel, BorderLayout.CENTER);
-        contentPanel.add(getControlsAndAdditionalDisplay(duration), BorderLayout.SOUTH);
+
+        RecentTimeControlPanel recentTimeControlPanel = new RecentTimeControlPanel(duration);
+        recentTimeControlPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                Duration d = (Duration) evt.getNewValue();
+                MemoryStatsViewImpl.this.userActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE, d);
+            }
+        });
+        contentPanel.add(recentTimeControlPanel, BorderLayout.SOUTH);
 
         visiblePanel.setContent(contentPanel);
         
@@ -216,109 +211,6 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     
     public BasicView getView() {
         return this;
-    }
-
-    //FIXME : Duplicate method : see RecentTimeSeriesChartPanel.java or VmCpuChartPanel.java
-    public Component getControlsAndAdditionalDisplay(Duration duration) {
-        JPanel container = new JPanel();
-        container.setOpaque(false);
-
-        container.setLayout(new BorderLayout());
-
-        container.add(getChartControls(duration), BorderLayout.LINE_START);
-        container.add(getAdditionalDataDisplay(), BorderLayout.LINE_END);
-
-        container.setName("since-panel");
-
-        return container;
-    }
-
-    //FIXME : Duplicate method : see RecentTimeSeriesChartPanel.java or VmCpuChartPanel.java
-    private Component getChartControls(Duration duration) {
-        JPanel container = new JPanel();
-        container.setOpaque(false);
-
-        final JTextField durationSelector = new JTextField(5);
-        final JComboBox<TimeUnit> unitSelector = new JComboBox<>();
-        unitSelector.setModel(new DefaultComboBoxModel<>(DEFAULT_TIMEUNITS));
-
-        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(duration.getValue(), duration.getUnit());
-
-        durationSelector.getDocument().addDocumentListener(timeUnitChangeListener);
-        unitSelector.addActionListener(timeUnitChangeListener);
-
-        durationSelector.setText(String.valueOf(duration.getValue()));
-        unitSelector.setSelectedItem(duration.getUnit());
-
-        container.add(new JLabel(t.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL).getContents()));
-        container.add(durationSelector);
-        container.add(unitSelector);
-
-        return container;
-    }
-
-    //FIXME : Duplicate method : see RecentTimeSeriesChartPanel.java or VmCpuChartPanel.java
-    private Component getAdditionalDataDisplay() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setOpaque(false);
-        labelContainer = new JPanel();
-        labelContainer.setOpaque(false);
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.BOTH;
-        constraints.anchor = GridBagConstraints.CENTER;
-        panel.add(labelContainer, constraints);
-        return panel;
-    }
-
-    //FIXME : Duplicate class : see RecentTimeSeriesChartPanel.java or VmCpuChartPanel.java
-    private class TimeUnitChangeListener implements DocumentListener, java.awt.event.ActionListener {
-
-        private int value;
-        private TimeUnit unit;
-
-        public TimeUnitChangeListener(int defaultValue, TimeUnit defaultUnit) {
-            this.value = defaultValue;
-            this.unit = defaultUnit;
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent event) {
-            changed(event.getDocument());
-        }
-
-        @Override
-        public void insertUpdate(DocumentEvent event) {
-            changed(event.getDocument());
-        }
-
-        @Override
-        public void changedUpdate(DocumentEvent event) {
-            changed(event.getDocument());
-        }
-
-        private void changed(Document doc) {
-            try {
-                this.value = Integer.valueOf(doc.getText(0, doc.getLength()));
-            } catch (NumberFormatException nfe) {
-                // ignore
-            } catch (BadLocationException ble) {
-                // ignore
-            }
-            chartChanged();
-        }
-
-        private void chartChanged() {
-            MemoryStatsViewImpl.this.userActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE, new Duration(value, unit));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            @SuppressWarnings("unchecked") // We are a TimeUnitChangeListener, specifically.
-                    JComboBox<TimeUnit> comboBox = (JComboBox<TimeUnit>) e.getSource();
-            TimeUnit time = (TimeUnit) comboBox.getSelectedItem();
-            this.unit = time;
-            chartChanged();
-        }
     }
 
 }

@@ -50,6 +50,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.text.JTextComponent;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.swing.components.experimental.TimeUnitChangeListener.TimeChangeEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -86,9 +87,9 @@ public class RecentTimeControlPanel extends JPanel {
         final JComboBox<TimeUnit> unitSelector = new JComboBox<>();
         unitSelector.setModel(new DefaultComboBoxModel<>(DEFAULT_TIMEUNITS));
 
-        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(new ActionListener() {
+        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(new ActionListener<TimeChangeEvent>() {
             @Override
-            public void actionPerformed(final com.redhat.thermostat.common.ActionEvent actionEvent) {
+            public void actionPerformed(final com.redhat.thermostat.common.ActionEvent<TimeChangeEvent> actionEvent) {
                 Duration d = (Duration) actionEvent.getPayload();
                 RecentTimeControlPanel.this.firePropertyChange(PROPERTY_VISIBLE_TIME_RANGE, null, d);
             }

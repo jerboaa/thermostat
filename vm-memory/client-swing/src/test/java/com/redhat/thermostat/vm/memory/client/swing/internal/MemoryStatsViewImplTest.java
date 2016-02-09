@@ -47,6 +47,7 @@ import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JButtonFixture;
 import org.fest.swing.fixture.JPanelFixture;
+import org.fest.swing.fixture.JTextComponentFixture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -111,7 +112,7 @@ public class MemoryStatsViewImplTest {
     public void testSincePanelIsVisible() {
         frameFixture.show();
 
-        JPanelFixture sincePanel = frameFixture.panel("since-panel");
+        JTextComponentFixture sincePanel = frameFixture.textBox("durationSelector");
         sincePanel.requireVisible();
     }
 }

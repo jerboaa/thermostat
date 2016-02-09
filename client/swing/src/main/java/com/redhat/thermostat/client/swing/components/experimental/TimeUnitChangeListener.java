@@ -50,15 +50,16 @@ import com.redhat.thermostat.common.Duration;
 public class TimeUnitChangeListener implements DocumentListener, java.awt.event.ActionListener {
 
     public enum TimeChangeEvent {
+        /** Payload is the duration */
         TIME_CHANGE_EVENT;
     }
 
 
-    private final ActionListener listener;
+    private final ActionListener<TimeChangeEvent> listener;
     private int value;
     private TimeUnit unit;
 
-    public TimeUnitChangeListener(ActionListener listener, int defaultValue, TimeUnit defaultUnit) {
+    public TimeUnitChangeListener(ActionListener<TimeChangeEvent> listener, int defaultValue, TimeUnit defaultUnit) {
         this.listener = listener;
         this.value = defaultValue;
         this.unit = defaultUnit;
@@ -91,7 +92,7 @@ public class TimeUnitChangeListener implements DocumentListener, java.awt.event.
     }
 
     private void fireTimeChanged() {
-        ActionEvent e = new ActionEvent(this, TimeChangeEvent.TIME_CHANGE_EVENT);
+        ActionEvent<TimeChangeEvent> e = new ActionEvent<>(this, TimeChangeEvent.TIME_CHANGE_EVENT);
         e.setPayload(new Duration(this.value, this.unit));
         listener.actionPerformed(e);
     }
