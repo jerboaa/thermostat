@@ -121,6 +121,33 @@
           </execution>
         </executions>
       </plugin>
+      <!-- Extract the byteman jar to directory
+           image/libs/byteman/byteman-install/lib by using maven-dependency-plugin.
+           The byteman plugin uses $THERMOSTAT_HOME/byteman/byteman-install as
+           $BYTEMAN_HOME.
+         -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-byteman-jar-to-byteman-install</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.jboss.byteman</groupId>
+                  <artifactId>byteman</artifactId>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/image/libs/byteman/byteman-install/lib</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -290,6 +317,19 @@
                 <chmod file="${project.build.directory}/image/etc/thermostat-users.properties" perm="600" />
                 <chmod file="${project.build.directory}/image/etc/web.auth" perm="600" />
                 <chmod file="${project.build.directory}/image/etc/agent.auth" perm="600" />
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>symlink-byteman.jar</id>
+            <phase>package</phase>
+            <configuration>
+              <target>
+                <symlink link="${project.build.directory}/image/libs/byteman/byteman-install/lib/byteman.jar"
+                         resource="${project.build.directory}/image/libs/byteman/byteman-install/lib/byteman-${byteman.version}.jar"/>
               </target>
             </configuration>
             <goals>
@@ -543,6 +583,12 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-byteman-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-numa-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
@@ -667,6 +713,17 @@
       <artifactId>thermostat-schema-info-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
+    </dependency>
+
+    <!-- Third party libs -->
+
+    <!--
+        Dependency merely for byteman.jar copying to the right place
+    -->
+    <dependency>
+      <groupId>org.jboss.byteman</groupId>
+      <artifactId>byteman</artifactId>
+      <version>${byteman.version}</version>
     </dependency>
   </dependencies>
 

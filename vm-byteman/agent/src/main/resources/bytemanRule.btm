@@ -1,0 +1,19 @@
+RULE count sleep method invocations
+CLASS com.redhat.thermostat.byteman.test.InfiniteLoop
+METHOD sleep
+AT ENTRY
+IF true
+DO
+incrementCounter("sleep-counter")
+ENDRULE
+
+RULE send sleep method invocations to thermostat
+CLASS com.redhat.thermostat.byteman.test.InfiniteLoop
+METHOD sleep
+HELPER org.jboss.byteman.thermostat.helper.ThermostatHelper
+AT ENTRY
+BIND counterValue: int = readCounter("sleep-counter")
+IF counterValue % 10 == 0
+DO
+send("com.redhat.thermostat.byteman.test.InfiniteLoop",  "method sleep() count", counterValue);
+ENDRULE

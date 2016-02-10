@@ -41,21 +41,73 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-vm-byteman</artifactId>
     <version>1.99.8-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-vm-byteman</artifactId>
+  <artifactId>thermostat-vm-byteman-distribution</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat VM Byteman plugin</name>
+  <name>Thermostat VM Byteman plugin distribution</name>
 
-  <modules>
-    <module>byteman-helper</module>
-    <module>byteman-helper-distro</module>
-    <module>agent</module>
-    <module>common</module>
-    <module>distribution</module>
-  </modules>
+  <properties>
+    <thermostat.plugin>vm-byteman</thermostat.plugin>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-assembly</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>plugin-assembly</descriptorRef>
+          </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+        </configuration>
+        <executions>
+          <execution>
+            <id>assemble-plugin</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- Explicitly list all plug-in artifacts, transitive dependencies
+       are not included in assembly. -->
+  <dependencies>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-byteman-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-byteman-agent</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.byteman</groupId>
+      <artifactId>byteman-submit</artifactId>
+      <version>${byteman.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.byteman</groupId>
+      <artifactId>byteman-install</artifactId>
+      <version>${byteman.version}</version>
+    </dependency>
+  </dependencies>
 
 </project>
+
