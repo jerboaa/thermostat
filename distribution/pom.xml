@@ -96,6 +96,31 @@
           </execution>
         </executions>
       </plugin>
+      <!-- Extract the byteman helper distro (including transitive deps) into directory
+           image/libs/byteman/thermostat-helper by using maven-dependency-plugin. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-byteman-helper-to-libs</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-vm-byteman-helper-distro</artifactId>
+                  <type>zip</type>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/image/libs/byteman/thermostat-helper</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -504,6 +529,15 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-numa-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <!-- thermostat-vm-byteman-distribution does not depend on
+         thermostat-vm-byteman-helper. List it explicitly so
+         that copy deps works. -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-byteman-helper-distro</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>

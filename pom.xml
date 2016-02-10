@@ -212,6 +212,8 @@
     <jline.version>2.13</jline.version>
     <lucene.version>5.1.0_1</lucene.version>
     <lucene.osgi-version>5.1.0.1</lucene.osgi-version>
+    <byteman.version>3.0.4</byteman.version>
+    <byteman.osgi-version>3.0.4</byteman.osgi-version>
     <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>
     <lucene-core.bundle.symbolic-name>org.apache.servicemix.bundles.lucene</lucene-core.bundle.symbolic-name>
     <!--
@@ -277,6 +279,7 @@
     <module>host-cpu</module>
     <module>host-memory</module>
     <module>vm-overview</module>
+    <module>vm-byteman</module>
     <module>vm-cpu</module>
     <module>vm-find</module>
     <module>vm-gc</module>
