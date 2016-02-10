@@ -57,6 +57,16 @@
       <artifactId>thermostat-main</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- Make ide launcher work after the new IPC unix socket
+         work. Add the jffi maven dep so that it's on the classpath. 
+         This is needed for the jni so needed to be available when
+         Thermostat is launched with the IdeLauncher class. Note: The
+         boot script has that added to the boot classpath.
+    -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>jffi</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
