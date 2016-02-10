@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.backend.system;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -64,9 +66,32 @@ public class NetworkInfoBuilderTest {
                 // ipv4 address matches the form XX.XX.XX.XX
                 assertTrue(iface.getIp4Addr().matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"));
             }
-            // TODO check for sane ipv6 address
+            if (iface.getIp6Addr() != null) {
+                validateIpv6Address(iface.getIp6Addr());
+            }
         }
 
+    }
+
+    private void validateIpv6Address(String address) {
+        // ipv6 addresses may contain a scope id
+        if (address.contains("%")) {
+            int index = address.indexOf("%");
+            assertTrue(index >= 0);
+            String scopeId = address.substring(index);
+            assertFalse(scopeId.isEmpty());
+            address = address.substring(0, index);
+        }
+
+        String[] parts = address.split(":");
+        assertEquals(8, parts.length);
+
+        for (String part : parts) {
+            assertNotNull(part);
+            if (!part.isEmpty()) {
+                assertTrue(part.matches("[0-9a-f]*"));
+            }
+        }
     }
 
 }
