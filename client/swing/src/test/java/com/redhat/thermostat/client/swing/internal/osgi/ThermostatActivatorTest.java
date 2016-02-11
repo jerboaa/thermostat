@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.internal.osgi;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
@@ -46,12 +47,17 @@ import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
+import com.redhat.thermostat.client.swing.internal.GUIClientCommand;
 import com.redhat.thermostat.client.swing.internal.views.SwingAgentInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingClientConfigurationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingHostInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewProvider;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatActivatorTest {
 
@@ -71,7 +77,28 @@ public class ThermostatActivatorTest {
         
         assertEquals(5, ctx.getAllServices().size());
 
-        // FIXME add more tests for the service tracker used by ThermostatActivator
+        activator.stop(ctx);
+    }
+
+    @Test
+    public void verifyGuiCommandIsRegisteredWhenDependenciesAreAvailable() throws Exception {
+        Keyring keyring = mock(Keyring.class);
+        CommonPaths paths = mock(CommonPaths.class);
+        ApplicationService appService = mock(ApplicationService.class);
+
+        StubBundleContext ctx = new StubBundleContext();
+
+        ThermostatActivator activator = new ThermostatActivator();
+
+        activator.start(ctx);
+
+        ctx.registerService(Keyring.class, keyring, null);
+        ctx.registerService(CommonPaths.class, paths, null);
+        ctx.registerService(ApplicationService.class, appService, null);
+
+        assertTrue(ctx.isServiceRegistered(Command.class.getName(), GUIClientCommand.class));
+
+        activator.stop(ctx);
     }
 }
 

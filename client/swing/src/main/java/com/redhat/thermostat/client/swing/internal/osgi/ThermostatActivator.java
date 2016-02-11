@@ -124,7 +124,9 @@ public class ThermostatActivator implements BundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         dependencyTracker.close();
-        cmdReg.unregisterCommands();
+        if (cmdReg != null) {
+            cmdReg.unregisterCommands();
+        }
     }
 }
 
