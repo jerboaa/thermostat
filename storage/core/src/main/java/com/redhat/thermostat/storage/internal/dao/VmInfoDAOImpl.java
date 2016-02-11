@@ -51,13 +51,11 @@ import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
-import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -147,7 +145,7 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
 
     @Override
     public VmInfo getVmInfo(final VmRef ref) {
-        VmInfo vmInfo = executeQuery(
+        return executeQuery(
                 new AbstractDaoQuery<VmInfo>(storage, vmInfoCategory, QUERY_VM_INFO) {
                     @Override
                     public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
@@ -156,12 +154,6 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
                         return preparedStatement;
                     }
                 }).head();
-        if (vmInfo != null) {
-            return vmInfo;
-        } else {
-            // FIXME this is inconsistent with null returned elsewhere
-            throw new DAOException("Unknown VM: host:" + ref.getHostRef().getAgentId() + ";vm:" + ref.getVmId());
-        }
     }
 
     @Override

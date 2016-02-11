@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.internal.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -249,12 +250,9 @@ public class VmInfoDAOTest {
         when(vmRef.getHostRef()).thenReturn(hostRef);
 
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
-        try {
-            dao.getVmInfo(vmRef);
-            fail();
-        } catch (DAOException ex) {
-            assertEquals("Unknown VM: host:system;vm:noVm", ex.getMessage());
-        }
+        VmInfo result = dao.getVmInfo(vmRef);
+
+        assertNull(result);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, "system");

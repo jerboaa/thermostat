@@ -78,8 +78,10 @@ public interface VmInfoDAO extends Countable {
             startTimeKey, stopTimeKey,
             uidKey, usernameKey);
 
+    /** @return {@code null} if no information can be found */
     VmInfo getVmInfo(VmId id);
 
+    /** @return {@code null} if no information can be found */
     VmInfo getVmInfo(VmRef ref);
 
     /**
