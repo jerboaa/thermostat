@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import junit.framework.Assert;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -98,6 +96,8 @@ import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
 import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
+
+import junit.framework.Assert;
 
 public class VmProfileControllerTest {
 
@@ -229,7 +229,7 @@ public class VmProfileControllerTest {
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(timer).setAction(runnableCaptor.capture());
 
-        ProfileInfo profile = new ProfileInfo(AGENT_ID, VM_ID, PROFILE_TIMESTAMP, PROFILE_ID);
+        ProfileInfo profile = new ProfileInfo(AGENT_ID, VM_ID, PROFILE_TIMESTAMP, PROFILE_TIMESTAMP, PROFILE_ID);
 
         when(profileDao.getAllProfileInfo(vm,
                 new Range<>(SOME_TIMESTAMP - TimeUnit.DAYS.toMillis(1), SOME_TIMESTAMP)))
@@ -245,7 +245,7 @@ public class VmProfileControllerTest {
         verify(view).setAvailableProfilingRuns(listCaptor.capture());
         List<Profile> resultList = listCaptor.getValue();
         assertEquals(1, resultList.size());
-        assertEquals(PROFILE_TIMESTAMP, resultList.get(0).timeStamp);
+        assertEquals(PROFILE_TIMESTAMP, resultList.get(0).startTimeStamp);
 
         verify(view, atLeastOnce()).setViewControlsEnabled(true);
     }
@@ -350,7 +350,7 @@ public class VmProfileControllerTest {
         controller = createController();
 
         final String PROFILE_DATA = "1 foo";
-        Profile PROFILE = new Profile(PROFILE_ID, 10);
+        Profile PROFILE = new Profile(PROFILE_ID, 10, 10);
 
         when(view.getSelectedProfile()).thenReturn(PROFILE);
         when(profileDao.loadProfileDataById(vm, PROFILE_ID)).thenReturn(

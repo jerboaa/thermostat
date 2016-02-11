@@ -360,7 +360,8 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         List<ProfileInfo> profileInfos = profileDao.getAllProfileInfo(vm, new Range<>(start, end));
         List<Profile> profiles = new ArrayList<>();
         for (ProfileInfo profileInfo : profileInfos) {
-            Profile profile = new Profile(profileInfo.getProfileId(), profileInfo.getTimeStamp());
+            Profile profile = new Profile(profileInfo.getProfileId(),
+                    profileInfo.getStartTimeStamp(), profileInfo.getStopTimeStamp());
             profiles.add(profile);
         }
 
@@ -401,7 +402,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     static class ByTimeStamp implements Comparator<Profile> {
         @Override
         public int compare(Profile o1, Profile o2) {
-            return Long.compare(o1.timeStamp, o2.timeStamp);
+            return Long.compare(o1.startTimeStamp, o2.startTimeStamp);
         }
     }
 

@@ -51,10 +51,12 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
 
     static class Profile {
         public final String name;
-        public final long timeStamp;
-        public Profile(String name, long timeStamp) {
+        public final long startTimeStamp;
+        public final long stopTimeStamp;
+        public Profile(String name, long startTimeStamp, long stopTimeStamp) {
             this.name = name;
-            this.timeStamp = timeStamp;
+            this.startTimeStamp = startTimeStamp;
+            this.stopTimeStamp = stopTimeStamp;
         }
 
         @Override
@@ -67,12 +69,13 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
             }
             Profile other = (Profile) obj;
             return Objects.equals(this.name, other.name)
-                    && Objects.equals(this.timeStamp, other.timeStamp);
+                    && Objects.equals(this.startTimeStamp, other.startTimeStamp)
+                    && Objects.equals(this.stopTimeStamp, other.stopTimeStamp);
         }
 
         @Override
         public String toString() {
-            return "Profile (" + this.name + ", " + this.timeStamp + ")";
+            return "Profile (" + this.name + ", [" + this.startTimeStamp + "," + this.stopTimeStamp + "] )";
         }
 
     }

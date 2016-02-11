@@ -246,7 +246,7 @@ public class SwingVmProfileViewTest {
 
         final JListFixture profileJList = frame.list("PROFILE_LIST");
         final List<VmProfileView.Profile> availableRuns = new ArrayList<>();
-        availableRuns.add(new VmProfileView.Profile("profile1", 1000));
+        availableRuns.add(new VmProfileView.Profile("profile1", 1000, 1000));
         view.setAvailableProfilingRuns(availableRuns);
 
         profileJList.clickItem(0);
@@ -379,7 +379,7 @@ public class SwingVmProfileViewTest {
     public void testProfileItemRendererWithProfileValue() {
         SwingVmProfileView.ProfileItemRenderer renderer = new SwingVmProfileView.ProfileItemRenderer();
 
-        VmProfileView.Profile value = new VmProfileView.Profile("profile", 1000);
+        VmProfileView.Profile value = new VmProfileView.Profile("profile", 1000, 100);
         Component result = renderer.getListCellRendererComponent(
                 mock(JList.class), value, 0, true, true);
 
@@ -387,7 +387,7 @@ public class SwingVmProfileViewTest {
                 (SwingVmProfileView.ProfileItemRenderer) result;
 
         String expectedValue = translator.localize(LocaleResources.PROFILER_LIST_ITEM,
-                value.name, new Date(value.timeStamp).toString()).getContents();
+                value.name, new Date(value.startTimeStamp).toString(), new Date(value.stopTimeStamp).toString()).getContents();
         assertEquals(expectedValue, resultRenderer.getText());
     }
 

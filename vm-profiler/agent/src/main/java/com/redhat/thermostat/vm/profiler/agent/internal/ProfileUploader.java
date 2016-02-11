@@ -62,12 +62,12 @@ public class ProfileUploader {
         this.vmId = vmId;
     }
 
-    public void upload(long timeStamp, final File data, final Runnable cleanupData) throws IOException {
+    public void upload(long startTimeStamp, long stopTimeStamp, final File data, final Runnable cleanupData) throws IOException {
         InputStream stream = new FileInputStream(data);
-        upload(timeStamp, stream, cleanupData);
+        upload(startTimeStamp, stopTimeStamp, stream, cleanupData);
     }
 
-    public void upload(final long timeStamp, final InputStream data, final Runnable cleanup) throws IOException {
+    public void upload(final long startTimeStamp, final long stopTimeStamp, final InputStream data, final Runnable cleanup) throws IOException {
         Runnable wrappedCleanup = new Runnable() {
             @Override
             public void run() {
@@ -81,7 +81,7 @@ public class ProfileUploader {
         };
 
         String id = UUID.randomUUID().toString();
-        ProfileInfo info = new ProfileInfo(agentId, vmId, timeStamp, id);
+        ProfileInfo info = new ProfileInfo(agentId, vmId, startTimeStamp, stopTimeStamp, id);
         dao.saveProfileData(info, data, wrappedCleanup);
     }
 }

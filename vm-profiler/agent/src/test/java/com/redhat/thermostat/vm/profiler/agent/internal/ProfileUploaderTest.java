@@ -95,14 +95,15 @@ public class ProfileUploaderTest {
         ArgumentCaptor<ProfileInfo> profileInfoCaptor = ArgumentCaptor.forClass(ProfileInfo.class);
         ArgumentCaptor<Runnable> cleanupActions = ArgumentCaptor.forClass(Runnable.class);
 
-        uploader.upload(TIME, input, afterUpload);
+        uploader.upload(TIME, TIME, input, afterUpload);
 
         verify(dao).saveProfileData(profileInfoCaptor.capture(), eq(input), cleanupActions.capture());
 
         ProfileInfo profileInfo = profileInfoCaptor.getValue();
         assertEquals(AGENT_ID, profileInfo.getAgentId());
         assertEquals(VM_ID, profileInfo.getVmId());
-        assertEquals(TIME, profileInfo.getTimeStamp());
+        assertEquals(TIME, profileInfo.getStartTimeStamp());
+        assertEquals(TIME, profileInfo.getStopTimeStamp());
         assertNotNull(profileInfo.getProfileId());
 
         okayToCloseStream = true;

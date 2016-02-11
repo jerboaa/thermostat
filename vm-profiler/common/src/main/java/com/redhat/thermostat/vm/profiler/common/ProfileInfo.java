@@ -39,22 +39,22 @@ package com.redhat.thermostat.vm.profiler.common;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 @Entity
-public class ProfileInfo extends BasePojo implements TimeStampedPojo {
+public class ProfileInfo extends BasePojo {
 
     private String vmId;
 
-    // FIXME should be two fields for start time and stop time
-    private long timeStamp;
+    private long startTimeStamp;
+    private long stopTimeStamp;
 
     private String profileId;
 
-    public ProfileInfo(String agentId, String vmId, long timeStamp, String profileId) {
+    public ProfileInfo(String agentId, String vmId, long startTimeStamp, long stopTimeStamp, String profileId) {
         super(agentId);
         this.vmId = vmId;
-        this.timeStamp = timeStamp;
+        this.startTimeStamp = startTimeStamp;
+        this.stopTimeStamp = stopTimeStamp;
         this.profileId = profileId;
     }
 
@@ -74,14 +74,23 @@ public class ProfileInfo extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
+    public void setStartTimeStamp(long startTimeStamp) {
+        this.startTimeStamp = startTimeStamp;
     }
 
     @Persist
-    @Override
-    public long getTimeStamp() {
-        return this.timeStamp;
+    public long getStartTimeStamp() {
+        return this.startTimeStamp;
+    }
+
+    @Persist
+    public void setStopTimeStamp(long stopTimeStamp) {
+        this.stopTimeStamp = stopTimeStamp;
+    }
+
+    @Persist
+    public long getStopTimeStamp() {
+        return this.stopTimeStamp;
     }
 
     @Persist

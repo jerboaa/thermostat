@@ -43,7 +43,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -74,6 +76,7 @@ public class VmProfiler {
 
     private final List<Integer> vmsWithAgentLoaded = new ArrayList<>();
     private final List<Integer> currentlyProfiledVmPids = new ArrayList<>();
+    private final Map<Integer, Long> vmStartTimeStamps = new HashMap<>();
 
     private final VmIdToPidMapper vmIdToPid = new VmIdToPidMapper();
 
@@ -148,8 +151,10 @@ public class VmProfiler {
 
         remote.startProfiling(pid);
 
+        long startTime = clock.getRealTimeMillis();
         currentlyProfiledVmPids.add(pid);
-        dao.addStatus(new ProfileStatusChange(agentId, vmId, clock.getRealTimeMillis(), true));
+        vmStartTimeStamps.put(pid, startTime);
+        dao.addStatus(new ProfileStatusChange(agentId, vmId, startTime, true));
     }
 
     public synchronized void stopProfiling(String vmId) throws ProfilerException {
@@ -173,21 +178,26 @@ public class VmProfiler {
             findAndUploadProfilingResultsStoredOnDisk(pid, uploader);
         }
         dao.addStatus(new ProfileStatusChange(agentId, vmId, clock.getRealTimeMillis(), false));
+        vmStartTimeStamps.remove((Integer) pid);
         currentlyProfiledVmPids.remove((Integer) pid);
     }
 
     private void stopRemoteProfilerAndUploadResults(int pid, ProfileUploader uploader) throws ProfilerException {
         remote.stopProfiling(pid);
+        long startTimeStamp = vmStartTimeStamps.get(pid);
+        long stopTimeStamp = clock.getRealTimeMillis();
 
         String profilingDataFile = remote.getProfilingDataFile(pid);
-        uploadAndDelete(uploader, clock.getRealTimeMillis(), new File(profilingDataFile));
+
+        uploadAndDelete(uploader, startTimeStamp, stopTimeStamp, new File(profilingDataFile));
     }
 
     private void findAndUploadProfilingResultsStoredOnDisk(final int pid, ProfileUploader uploader) throws ProfilerException {
-        long timeStamp = clock.getRealTimeMillis();
+        long startTimeStamp = vmStartTimeStamps.get(pid);
+        long stopTimeStamp = clock.getRealTimeMillis();
         // look for latest profiling data that it might have emitted on shutdown
         File file = findProfilingResultFile(pid);
-        uploadAndDelete(uploader, timeStamp, file);
+        uploadAndDelete(uploader, startTimeStamp, stopTimeStamp, file);
     }
 
     private File findProfilingResultFile(final int pid) {
@@ -206,9 +216,9 @@ public class VmProfiler {
         return filesSortedByTimeStamp.get(0);
     }
 
-    private void uploadAndDelete(ProfileUploader uploader, long timeStamp, final File file) throws ProfilerException {
+    private void uploadAndDelete(ProfileUploader uploader, final long startTimeStamp, final long stopTimeStamp, final File file) throws ProfilerException {
         try {
-            uploader.upload(clock.getRealTimeMillis(), file, new Runnable() {
+            uploader.upload(startTimeStamp, stopTimeStamp, file, new Runnable() {
                 @Override
                 public void run() {
                     file.delete();

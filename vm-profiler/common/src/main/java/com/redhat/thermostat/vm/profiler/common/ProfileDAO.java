@@ -50,16 +50,13 @@ public interface ProfileDAO {
 
     void saveProfileData(ProfileInfo info, InputStream data, Runnable whenDone);
 
+    /** @deprecated use {@link #getAllProfileInfo(AgentId, VmId, Range)} instead */
+    @Deprecated
     List<ProfileInfo> getAllProfileInfo(VmRef vm, Range<Long> timeRange);
 
-    InputStream loadProfileDataById(VmRef vm, String profileId);
+    List<ProfileInfo> getAllProfileInfo(AgentId agentId, VmId vmId, Range<Long> timeRange);
 
-    /** @return {@code null} if no data is available
-     *
-     * @deprecated use {@link #loadLatestProfileData(AgentId, VmId)} instead.
-     */
-    @Deprecated
-    InputStream loadLatestProfileData(VmRef vm);
+    InputStream loadProfileDataById(VmRef vm, String profileId);
 
     /** @return {@code null} if no data is available */
     InputStream loadLatestProfileData(AgentId agentId, VmId vmId);

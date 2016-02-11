@@ -139,7 +139,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             if (value instanceof Profile) {
                 Profile profile = (Profile) value;
                 value = translator.localize(LocaleResources.PROFILER_LIST_ITEM,
-                        profile.name, new Date(profile.timeStamp).toString()).getContents();
+                        profile.name, new Date(profile.startTimeStamp).toString(), new Date(profile.stopTimeStamp).toString()).getContents();
             }
             return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         }

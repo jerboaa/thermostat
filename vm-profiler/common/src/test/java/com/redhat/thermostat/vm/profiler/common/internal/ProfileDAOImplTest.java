@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.profiler.common.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.same;
@@ -48,7 +47,6 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import com.redhat.thermostat.storage.dao.DaoOperation;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -92,7 +90,7 @@ public class ProfileDAOImplTest {
         profileDAO = new ProfileDAOImpl(storage);
         when(storage.prepareStatement(isA(StatementDescriptor.class))).thenReturn(statement);
 
-        profileInfo = new ProfileInfo(AGENT_ID, VM_ID, TIMESTAMP, PROFILE_ID);
+        profileInfo = new ProfileInfo(AGENT_ID, VM_ID, TIMESTAMP, TIMESTAMP, PROFILE_ID);
         profileStatusChange = new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, STARTED);
     }
 

@@ -196,7 +196,7 @@ public class VmProfilerTest {
         verify(dao).addStatus(new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, false));
 
         verify(remote).stopProfiling(PID);
-        verify(uploader).upload(eq(TIMESTAMP), eq(new File(FILE)), isA(Runnable.class));
+        verify(uploader).upload(eq(TIMESTAMP), eq(TIMESTAMP), eq(new File(FILE)), isA(Runnable.class));
         verifyNoMoreInteractions(uploader);
     }
 
@@ -214,7 +214,7 @@ public class VmProfilerTest {
 
         verify(remote, never()).stopProfiling(PID);
         ArgumentCaptor<Runnable> cleanupCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(uploader).upload(eq(TIMESTAMP), eq(profilingResults), cleanupCaptor.capture());
+        verify(uploader).upload(eq(TIMESTAMP), eq(TIMESTAMP), eq(profilingResults), cleanupCaptor.capture());
         verify(dao).addStatus(new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, false));
 
         cleanupCaptor.getValue().run();

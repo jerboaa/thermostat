@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.profiler.common.internal;
 
 import java.io.InputStream;
-import java.util.Currency;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,17 +45,13 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.SaveFileListener;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
@@ -69,35 +64,43 @@ public class ProfileDAOImpl extends AbstractDao implements ProfileDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(ProfileDAOImpl.class);
 
+    private static final Key<Long> KEY_START_TIME_STAMP = new Key<>("startTimeStamp");
+    private static final Key<Long> KEY_STOP_TIME_STAMP = new Key<>("stopTimeStamp");
+
     private static final Key<String> KEY_PROFILE_ID = new Key<>("profileId");
 
     static final Category<ProfileInfo> PROFILE_INFO_CATEGORY = new Category<>(
             "profile-info",
             ProfileInfo.class,
-            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, KEY_PROFILE_ID);
+            Key.AGENT_ID, Key.VM_ID, KEY_START_TIME_STAMP, KEY_STOP_TIME_STAMP, KEY_PROFILE_ID);
 
     static final String PROFILE_INFO_DESC_ADD = ""
             + "ADD " + PROFILE_INFO_CATEGORY.getName() + " SET "
             + " '" + Key.AGENT_ID.getName() + "' = ?s ,"
             + " '" + Key.VM_ID.getName() + "' = ?s ,"
-            + " '" + Key.TIMESTAMP.getName() + "' = ?l ,"
+            + " '" + KEY_START_TIME_STAMP.getName() + "' = ?l ,"
+            + " '" + KEY_STOP_TIME_STAMP.getName() + "' = ?l ,"
             + " '" + KEY_PROFILE_ID.getName() + "' = ?s";
 
     static final String PROFILE_INFO_DESC_QUERY_LATEST = "QUERY "
             + PROFILE_INFO_CATEGORY.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
             + Key.VM_ID.getName() + "' = ?s SORT '"
-            + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
+            + KEY_STOP_TIME_STAMP.getName() + "' DSC LIMIT 1";
 
     static final String PROFILE_INFO_DESC_QUERY_BY_ID = "QUERY "
             + PROFILE_INFO_CATEGORY.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
             + Key.VM_ID.getName() + "' = ?s AND '"
-            + Key.TIMESTAMP.getName() + "' = ?s LIMIT 1";
+            + KEY_STOP_TIME_STAMP.getName() + "' = ?s LIMIT 1";
 
-    // internal information of VmTimeIntervalPojoListGetter being leaked :(
-    static final String PROFILE_INFO_DESC_INTERVAL_QUERY = String.format(
-            VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT, ProfileDAOImpl.PROFILE_INFO_CATEGORY.getName());
+    static final String PROFILE_INFO_DESC_INTERVAL_QUERY = "QUERY "
+            + PROFILE_INFO_CATEGORY.getName() + " WHERE '"
+            + Key.AGENT_ID.getName() + "' = ?s AND '"
+            + Key.VM_ID.getName() + "' = ?s AND '"
+            + KEY_STOP_TIME_STAMP.getName() + "' >= ?l AND '"
+            + KEY_STOP_TIME_STAMP.getName() + "' < ?l SORT '"
+            + KEY_STOP_TIME_STAMP.getName() + "' DSC";
 
     private static final Key<Boolean> KEY_PROFILE_STARTED = new Key<>("started");
 
@@ -120,14 +123,11 @@ public class ProfileDAOImpl extends AbstractDao implements ProfileDAO {
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
 
     private final Storage storage;
-    private final VmTimeIntervalPojoListGetter<ProfileInfo> getter;
 
     public ProfileDAOImpl(Storage storage) {
         this.storage = storage;
         this.storage.registerCategory(PROFILE_INFO_CATEGORY);
         this.storage.registerCategory(PROFILE_STATUS_CATEGORY);
-
-        this.getter = new VmTimeIntervalPojoListGetter<>(storage, PROFILE_INFO_CATEGORY);
     }
 
     @Override
@@ -160,8 +160,9 @@ public class ProfileDAOImpl extends AbstractDao implements ProfileDAO {
             public PreparedStatement<ProfileInfo> customize(PreparedStatement<ProfileInfo> preparedStatement) {
                 preparedStatement.setString(0, info.getAgentId());
                 preparedStatement.setString(1, info.getVmId());
-                preparedStatement.setLong(2, info.getTimeStamp());
-                preparedStatement.setString(3, info.getProfileId());
+                preparedStatement.setLong(2, info.getStartTimeStamp());
+                preparedStatement.setLong(3, info.getStopTimeStamp());
+                preparedStatement.setString(4, info.getProfileId());
                 return preparedStatement;
             }
         });
@@ -169,17 +170,26 @@ public class ProfileDAOImpl extends AbstractDao implements ProfileDAO {
 
     @Override
     public List<ProfileInfo> getAllProfileInfo(VmRef vm, Range<Long> timeRange) {
-        return getter.getLatest(vm, timeRange.getMin(), timeRange.getMax());
+        return getAllProfileInfo(new AgentId(vm.getHostRef().getAgentId()), new VmId(vm.getVmId()), timeRange);
+    }
+
+    @Override
+    public List<ProfileInfo> getAllProfileInfo(final AgentId agentId, final VmId vmId, final Range<Long> timeRange) {
+        return executeQuery(new AbstractDaoQuery<ProfileInfo>(storage, PROFILE_INFO_CATEGORY, PROFILE_INFO_DESC_INTERVAL_QUERY) {
+            @Override
+            public PreparedStatement<ProfileInfo> customize(PreparedStatement<ProfileInfo> preparedStatement) {
+                preparedStatement.setString(0, agentId.get());
+                preparedStatement.setString(1, vmId.get());
+                preparedStatement.setLong(2, timeRange.getMin());
+                preparedStatement.setLong(3, timeRange.getMax());
+                return preparedStatement;
+            }
+        }).asList();
     }
 
     @Override
     public InputStream loadProfileDataById(VmRef vm, String profileId) {
         return getProfileData(profileId);
-    }
-
-    @Override
-    public InputStream loadLatestProfileData(VmRef vm) {
-        return loadLatestProfileData(new AgentId(vm.getHostRef().getAgentId()), new VmId(vm.getVmId()));
     }
 
     @Override
