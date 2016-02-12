@@ -91,7 +91,6 @@ public class AgentApplicationTest {
 
     private static final String COMMAND_CHANNLE_BIND_HOST = "test";
     private static final int COMMAND_CHANNEL_BIND_PORT = 10101;
-    // TODO: Test i18nized versions when they come.
 
     private StubBundleContext context;
 
