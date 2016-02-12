@@ -116,6 +116,25 @@ public class StorageConnectionTest extends IntegrationTest {
         assertNoExceptions(shell.getCurrentStandardOutContents(), shell.getCurrentStandardErrContents());
     }
 
-    // TODO add a test to make sure connect/disconnect is not visible outside the shell
+    @Test
+    public void testConnectOutsideShell() throws IOException, TimeoutException, ExpectJException {
+        Spawn shell = spawnThermostat(true, "connect");
+        shell.expect("The connect command is not supported from outside the thermostat shell.");
+
+        shell.expectClose();
+
+        assertNoExceptions(shell.getCurrentStandardOutContents(), shell.getCurrentStandardErrContents());
+    }
+
+    @Test
+    public void testDisConnectOutsideShell() throws IOException, TimeoutException, ExpectJException {
+        Spawn shell = spawnThermostat(true, "disconnect");
+        shell.expect("The disconnect command is not supported from outside the thermostat shell.");
+
+        shell.expectClose();
+
+        assertNoExceptions(shell.getCurrentStandardOutContents(), shell.getCurrentStandardErrContents());
+    }
+
 }
 
