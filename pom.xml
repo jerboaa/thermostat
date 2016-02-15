@@ -289,6 +289,7 @@
     <!-- development related modules -->
     <module>integration-tests</module>
     <module>dev</module>
+    <module>dependency-tool</module>
   </modules>
 
   <build>

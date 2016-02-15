@@ -76,6 +76,7 @@
         <include>com.redhat.thermostat:thermostat-vm-numa-distribution</include>
         <include>com.redhat.thermostat:thermostat-platform-distribution</include>
         <include>com.redhat.thermostat:thermostat-platform-swing-distribution</include>
+        <include>com.redhat.thermostat:thermostat-dependency-tool-distribution</include>
       </includes>
     </dependencySet>  
   </dependencySets>

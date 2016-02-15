@@ -601,6 +601,12 @@
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-dependency-tool-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
     <!-- list-categories command -->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
