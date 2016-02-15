@@ -1080,6 +1080,7 @@ fi
 %{_datadir}/%{pkg_name}/plugins/vm-overview
 %{_datadir}/%{pkg_name}/plugins/vm-profiler
 %{_datadir}/%{pkg_name}/plugins/vm-find
+%{_datadir}/%{pkg_name}/plugins/dependency-analyzer
 %{_datadir}/%{pkg_name}/cache
 %{_datadir}/%{pkg_name}/data
 %{_datadir}/%{pkg_name}/logs
