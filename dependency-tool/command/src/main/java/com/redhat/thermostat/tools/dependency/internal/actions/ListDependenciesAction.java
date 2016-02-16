@@ -62,7 +62,7 @@ public class ListDependenciesAction {
     public static void execute(PathProcessorHandler handler, String library, CommandContext ctx, boolean linksTo) {
         Path path = Paths.get(library);
         if (!path.toFile().exists()) {
-            Utils.getInstance().cannotAcessPathError(ctx, path);
+            Utils.getInstance().cannotAccessPathError(ctx, path);
             return;
         }
 

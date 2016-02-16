@@ -51,7 +51,7 @@ public class PrintOSGIHeaderAction {
     public static void execute(String library, CommandContext ctx, BundleProperties property) {
         Path path = Paths.get(library);
         if (!path.toFile().exists()) {
-            Utils.getInstance().cannotAcessPathError(ctx, path);
+            Utils.getInstance().cannotAccessPathError(ctx, path);
             return;
         }
 

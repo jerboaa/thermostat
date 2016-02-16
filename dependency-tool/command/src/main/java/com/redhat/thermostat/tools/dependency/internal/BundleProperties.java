@@ -43,6 +43,8 @@ public enum BundleProperties {
     PATH("Jar-File"),
     EXPORT("Export-Package"),
     IMPORT("Import-Package"),
+    SYMBOLIC_NAME("Bundle-SymbolicName"),
+    VERSION("Bundle-Version"),
     ;
 
     String id;

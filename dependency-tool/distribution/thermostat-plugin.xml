@@ -77,6 +77,13 @@
                     <description>List every library that has a dependency on this one</description>
                 </option>
 
+                <option>
+                    <long>whatprovides</long>
+                    <argument>package</argument>
+                    <required>false</required>
+                    <description>Prints the jar file that exports the given package</description>
+                </option>
+
             </options>
             <environments>
                 <environment>cli</environment>

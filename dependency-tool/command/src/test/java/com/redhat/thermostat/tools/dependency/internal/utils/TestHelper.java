@@ -34,43 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.dependency.internal;
+package com.redhat.thermostat.tools.dependency.internal.utils;
 
-import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.tools.dependency.internal.BundleProperties;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.jar.Attributes;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 
 /**
  */
-public class Utils {
-    private static Utils theInstance = new Utils();
+public class TestHelper {
 
-    /**
-     * Use for testing to bypass the real singleton of this class.
-     */
-    public static void initSingletonForTest(Utils utils) {
-        theInstance = utils;
+    public static File createTestDirectory() {
+        File underneathTheBrdige = null;
+        try {
+            underneathTheBrdige = Files.createTempDirectory("underneathTheBridge").toFile();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        underneathTheBrdige.deleteOnExit();
+        return underneathTheBrdige;
     }
 
-    public static Utils getInstance() {
-        return theInstance;
-    }
+    public static Path createJar(String exportsDirective, String importDirective, Path base) throws Exception {
+        Manifest manifest = new Manifest();
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.EXPORT.id()), exportsDirective + ";");
+        if (importDirective != null) {
+            manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.IMPORT.id()), importDirective + ";");
+        }
 
-    public void printHeader(CommandContext ctx, String name) {
-        ctx.getConsole().getOutput().println();
-        ctx.getConsole().getOutput().println("> " + name + ":");
-        ctx.getConsole().getOutput().println();
-    }
+        Path path = Paths.get(base.toFile().getAbsoluteFile() + "/" + exportsDirective + ".jar");
+        FileOutputStream stream = new FileOutputStream(path.toFile());
+        JarOutputStream target = new JarOutputStream(stream, manifest);
+        target.close();
 
-    public void print(CommandContext ctx, Object x) {
-        ctx.getConsole().getOutput().println(x);
-    }
-
-    public void cannotAccessPathError(CommandContext ctx, Path path) {
-        ctx.getConsole().getOutput().println("cannot open file: " + path);
-    }
-
-    public void cannotFindAttributeError(CommandContext ctx, BundleProperties property, Path path) {
-        ctx.getConsole().getOutput().println("no " + property.id() + " attribute found in file: " + path);
+        return path;
     }
 }

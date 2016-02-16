@@ -34,43 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.dependency.internal;
+package com.redhat.thermostat.tools.dependency.internal.actions;
 
 import com.redhat.thermostat.common.cli.CommandContext;
-
-import java.nio.file.Path;
+import com.redhat.thermostat.tools.dependency.internal.OSGiSearchProcessor;
+import com.redhat.thermostat.tools.dependency.internal.PathProcessorHandler;
+import com.redhat.thermostat.tools.dependency.internal.Utils;
 
 /**
  */
-public class Utils {
-    private static Utils theInstance = new Utils();
+public class SearchPackageAction {
+    public static void execute(PathProcessorHandler handler, String target, CommandContext ctx) {
+        OSGiSearchProcessor search = new OSGiSearchProcessor(target);
+        handler.process(search);
 
-    /**
-     * Use for testing to bypass the real singleton of this class.
-     */
-    public static void initSingletonForTest(Utils utils) {
-        theInstance = utils;
-    }
-
-    public static Utils getInstance() {
-        return theInstance;
-    }
-
-    public void printHeader(CommandContext ctx, String name) {
-        ctx.getConsole().getOutput().println();
-        ctx.getConsole().getOutput().println("> " + name + ":");
-        ctx.getConsole().getOutput().println();
-    }
-
-    public void print(CommandContext ctx, Object x) {
-        ctx.getConsole().getOutput().println(x);
-    }
-
-    public void cannotAccessPathError(CommandContext ctx, Path path) {
-        ctx.getConsole().getOutput().println("cannot open file: " + path);
-    }
-
-    public void cannotFindAttributeError(CommandContext ctx, BundleProperties property, Path path) {
-        ctx.getConsole().getOutput().println("no " + property.id() + " attribute found in file: " + path);
+        OSGiSearchProcessor.BundleInfo result = search.getBundleInfo();
+        if (result == null) {
+            Utils.getInstance().print(ctx, "no library provides package \"" + target + "\"");
+        } else {
+            Utils.getInstance().printHeader(ctx, "package \"" + target + "\"");
+            Utils.getInstance().print(ctx, "provided by: " + result.library);
+            Utils.getInstance().print(ctx, "bundle symbolic name: " + result.symbolicName);
+            Utils.getInstance().print(ctx, "bundle version: " + result.version);
+        }
     }
 }

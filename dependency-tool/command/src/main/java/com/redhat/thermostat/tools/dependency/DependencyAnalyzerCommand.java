@@ -41,11 +41,12 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.tools.dependency.internal.BundleProperties;
-import com.redhat.thermostat.tools.dependency.internal.PathProcessorHandler;
 import com.redhat.thermostat.tools.dependency.internal.JarLocations;
+import com.redhat.thermostat.tools.dependency.internal.PathProcessorHandler;
 import com.redhat.thermostat.tools.dependency.internal.actions.ListAllAction;
-import com.redhat.thermostat.tools.dependency.internal.actions.PrintOSGIHeaderAction;
 import com.redhat.thermostat.tools.dependency.internal.actions.ListDependenciesAction;
+import com.redhat.thermostat.tools.dependency.internal.actions.PrintOSGIHeaderAction;
+import com.redhat.thermostat.tools.dependency.internal.actions.SearchPackageAction;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -67,6 +68,7 @@ public class DependencyAnalyzerCommand implements Command {
         public static final String IMPORTS = "imports";
         public static final String INBOUND = "inbound";
         public static final String OUTBOUND = "outbound";
+        public static final String PROVIDES = "whatprovides";
     }
 
     public static final String NAME = "dependency-analyzer";
@@ -125,6 +127,11 @@ public class DependencyAnalyzerCommand implements Command {
         if (ctx.getArguments().hasArgument(Args.INBOUND)) {
             String library = ctx.getArguments().getArgument(Args.INBOUND);
             ListDependenciesAction.execute(handler, library, ctx, true);
+        }
+
+        if (ctx.getArguments().hasArgument(Args.PROVIDES)) {
+            String target = ctx.getArguments().getArgument(Args.PROVIDES);
+            SearchPackageAction.execute(handler, target, ctx);
         }
     }
 

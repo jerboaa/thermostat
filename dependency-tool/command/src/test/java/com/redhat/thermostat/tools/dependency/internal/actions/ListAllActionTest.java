@@ -40,6 +40,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.tools.dependency.internal.JarLocations;
 import com.redhat.thermostat.tools.dependency.internal.PathProcessorHandler;
 import com.redhat.thermostat.tools.dependency.internal.Utils;
+import com.redhat.thermostat.tools.dependency.internal.utils.TestHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -49,7 +50,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Created by neugens on 2/11/16.
  */
 public class ListAllActionTest {
 
@@ -73,8 +73,7 @@ public class ListAllActionTest {
 
         locations = new JarLocations();
 
-        underneathTheBridge = Files.createTempDirectory("underneathTheBridge").toFile();
-        underneathTheBridge.deleteOnExit();
+        underneathTheBridge = TestHelper.createTestDirectory();
 
         something = Files.createTempFile(underneathTheBridge.toPath(), "something", ".jar");
         something.toFile().deleteOnExit();

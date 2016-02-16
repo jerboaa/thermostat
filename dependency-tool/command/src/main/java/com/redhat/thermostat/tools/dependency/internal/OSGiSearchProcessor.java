@@ -36,41 +36,63 @@
 
 package com.redhat.thermostat.tools.dependency.internal;
 
-import com.redhat.thermostat.common.cli.CommandContext;
-
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 /**
  */
-public class Utils {
-    private static Utils theInstance = new Utils();
+public class OSGiSearchProcessor extends PathProcessor {
 
-    /**
-     * Use for testing to bypass the real singleton of this class.
-     */
-    public static void initSingletonForTest(Utils utils) {
-        theInstance = utils;
+    public static class BundleInfo {
+        public Path library;
+        public String symbolicName;
+        public String version;
     }
 
-    public static Utils getInstance() {
-        return theInstance;
+    private String target;
+    private BundleProperties what;
+    private BundleInfo info;
+
+    public OSGiSearchProcessor(String target) {
+        this(target, BundleProperties.EXPORT);
     }
 
-    public void printHeader(CommandContext ctx, String name) {
-        ctx.getConsole().getOutput().println();
-        ctx.getConsole().getOutput().println("> " + name + ":");
-        ctx.getConsole().getOutput().println();
+    public OSGiSearchProcessor(String target, BundleProperties what) {
+        this.target = target;
+        this.what = what;
     }
 
-    public void print(CommandContext ctx, Object x) {
-        ctx.getConsole().getOutput().println(x);
+    @Override
+    protected void process(Path jar) {
+
+        if (info != null) {
+            return;
+        }
+
+        try {
+            Manifest manifest = new JarFile(jar.toFile()).getManifest();
+            Attributes attributes = manifest.getMainAttributes();
+            String bundleAttribute = attributes.getValue(what.id());
+            if (bundleAttribute != null) {
+                List<String> dependencies = OSGIManifestScanner.parseHeader(bundleAttribute);
+                if (dependencies.contains(target)) {
+                    info = new BundleInfo();
+                    info.library = jar;
+                    info.symbolicName = attributes.getValue(BundleProperties.SYMBOLIC_NAME.id());
+                    info.version = attributes.getValue(BundleProperties.VERSION.id());
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void cannotAccessPathError(CommandContext ctx, Path path) {
-        ctx.getConsole().getOutput().println("cannot open file: " + path);
-    }
-
-    public void cannotFindAttributeError(CommandContext ctx, BundleProperties property, Path path) {
-        ctx.getConsole().getOutput().println("no " + property.id() + " attribute found in file: " + path);
+    public BundleInfo getBundleInfo() {
+        return info;
     }
 }
