@@ -196,6 +196,7 @@
                   <includes>
                     <include>shell-command/shell-prompt.conf</include>
                     <include>platform/*.json</include>
+                    <include>thermostat-gui/*.json</include>
                   </includes>
                 </resource>
                 <resource>
@@ -284,6 +285,8 @@
                 <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils.so"
                       todir="${project.build.directory}/image/libs/native" />
                 <copy file="${main.basedir}/platform/swing/core/target/generated-sources/annotations/template.json"
+                      todir="${project.build.directory}/image/etc/plugins.d/platform" />
+                <copy file="${main.basedir}/thermostat-gui/core/target/generated-sources/annotations/gui.json"
                       todir="${project.build.directory}/image/etc/plugins.d/platform" />
               </target>
             </configuration>
@@ -598,6 +601,12 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-platform-swing-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-gui-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>

@@ -110,7 +110,6 @@ public class MVCLifeCycleManager implements MDIService {
         registry.stop();
 
         for (LifeCycleStateHandler handler : handlers) {
-            System.err.println("destroying handler");
             handler.destroy();
         }
 
@@ -120,7 +119,9 @@ public class MVCLifeCycleManager implements MDIService {
     private void doShutdown() {
 
         if (handlers.isEmpty()) {
-            workbench.destroy();
+            if (workbench != null) {
+                workbench.destroy();
+            }
         }
     }
 

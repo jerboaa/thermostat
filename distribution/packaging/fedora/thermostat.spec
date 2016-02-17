@@ -1068,6 +1068,7 @@ fi
 %{_datadir}/%{pkg_name}/plugins/setup
 %{_datadir}/%{pkg_name}/plugins/platform
 %{_datadir}/%{pkg_name}/plugins/platform-swing
+%{_datadir}/%{pkg_name}/plugins/thermostat-gui
 %{_datadir}/%{pkg_name}/plugins/vm-classstat
 %{_datadir}/%{pkg_name}/plugins/vm-compiler
 %{_datadir}/%{pkg_name}/plugins/vm-cpu
