@@ -71,6 +71,8 @@ import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
+import com.redhat.thermostat.client.core.views.IssueView;
+import com.redhat.thermostat.client.core.views.IssueViewProvider;
 import com.redhat.thermostat.client.core.views.VersionAndInfoView;
 import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationView;
@@ -167,6 +169,11 @@ public class MainWindowControllerImplTest {
         context.registerService(VersionAndInfoViewProvider.class, summaryViewProvider, null);
         VersionAndInfoView versionAndInfoView = mock(VersionAndInfoView.class);
         when(summaryViewProvider.createView()).thenReturn(versionAndInfoView);
+
+        IssueViewProvider issueViewProvider = mock(IssueViewProvider.class);
+        context.registerService(IssueViewProvider.class, issueViewProvider, null);
+        IssueView issueView = mock(IssueView.class);
+        when(issueViewProvider.createView()).thenReturn(issueView);
         
         HostInformationViewProvider hostInfoViewProvider = mock(HostInformationViewProvider.class);
         context.registerService(HostInformationViewProvider.class, hostInfoViewProvider, null);

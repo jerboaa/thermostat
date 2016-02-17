@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Key;
@@ -100,6 +101,11 @@ public class VmGcStatDAOImpl extends AbstractDao implements VmGcStatDAO {
     @Override
     public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since) {
         return getter.getLatest(ref, since);
+    }
+
+    @Override
+    public List<VmGcStat> getLatestVmGcStats(AgentId agentId, VmId vmId, long since) {
+        return getter.getLatest(agentId, vmId, since);
     }
 
     @Override

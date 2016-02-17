@@ -41,19 +41,22 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Objects;
 
-import com.redhat.thermostat.gc.remote.common.GCRequest;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.IssueDiagnoser;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.SystemClock;
+import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
@@ -64,9 +67,12 @@ public class Activator implements BundleActivator {
     private MultipleServiceTracker tracker;
     private ServiceRegistration reg;
 
+    private MultipleServiceTracker issueServiceTracker;
+    private ServiceRegistration issueServiceReg;
+
     @Override
     public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] {
+        Class<?>[] viewDeps = new Class<?>[] {
             VmMemoryStatDAO.class,
             VmGcStatDAO.class,
             VmInfoDAO.class,
@@ -76,7 +82,7 @@ public class Activator implements BundleActivator {
             VmGcViewProvider.class
         };
 
-        tracker = new MultipleServiceTracker(context, deps, new Action() {
+        tracker = new MultipleServiceTracker(context, viewDeps, new Action() {
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
@@ -109,11 +115,37 @@ public class Activator implements BundleActivator {
 
         });
         tracker.open();
+
+        Class<?>[] issueDeps = new Class<?>[] {
+            VmGcStatDAO.class,
+        };
+
+        issueServiceTracker = new MultipleServiceTracker(context, issueDeps, new Action() {
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                Clock clock = new SystemClock();
+                VmGcStatDAO vmGcStatDAO =
+                        (VmGcStatDAO) Objects.requireNonNull(services.get(VmGcStatDAO.class.getName()));
+
+                VmGcIssueDiagnoser service = new VmGcIssueDiagnoser(clock, vmGcStatDAO);
+                issueServiceReg = context.registerService(IssueDiagnoser.class.getName(), service, null);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                issueServiceReg.unregister();
+            }
+
+        });
+        issueServiceTracker.open();
+
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         tracker.close();
+        issueServiceTracker.close();
     }
 
 }

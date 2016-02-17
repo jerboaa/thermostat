@@ -73,6 +73,7 @@ public enum LocaleResources {
 
     NUMBER_AND_UNIT,
 
+    SHOW_ISSUES,
     SEARCH_HINT,
 
     CHART_DURATION_SELECTOR_LABEL,
@@ -123,6 +124,7 @@ public enum LocaleResources {
     CLIENT_PREFS_STORAGE_PASSWORD,
     CLIENT_PREFS_STORAGE_URL,
     CLIENT_PREFS_STORAGE_SAVE_ENTITLEMENTS,
+
     ;
 
     static final String RESOURCE_BUNDLE =

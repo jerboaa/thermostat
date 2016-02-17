@@ -66,6 +66,8 @@ public enum LocaleResources {
     VM_GC_ERROR_CANNOT_PARSE_JAVA_VERSION,
 
     ERROR_PERFORMING_GC,
+
+    ISSUE_GC_TOOK_TOO_LONG,
     ;
 
     static final String RESOURCE_BUNDLE =

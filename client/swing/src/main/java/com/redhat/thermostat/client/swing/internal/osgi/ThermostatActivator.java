@@ -44,6 +44,7 @@ import org.osgi.framework.BundleContext;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
+import com.redhat.thermostat.client.core.views.IssueViewProvider;
 import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 
@@ -52,6 +53,7 @@ import com.redhat.thermostat.client.swing.internal.Main;
 import com.redhat.thermostat.client.swing.internal.views.SwingAgentInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingClientConfigurationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingHostInformationViewProvider;
+import com.redhat.thermostat.client.swing.internal.views.SwingIssueViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewProvider;
 
@@ -83,6 +85,10 @@ public class ThermostatActivator implements BundleActivator {
         // Summary view
         VersionAndInfoViewProvider summaryViewProvider = new SwingSummaryViewProvider();
         context.registerService(VersionAndInfoViewProvider.class.getName(), summaryViewProvider, null);
+
+        // Issues view
+        IssueViewProvider issuesViewProvider = new SwingIssueViewProvider();
+        context.registerService(IssueViewProvider.class.getName(), issuesViewProvider, null);
 
         // AgentInformation and ClientConfiguraiton view
         AgentInformationViewProvider agentViewProvider = new SwingAgentInformationViewProvider();

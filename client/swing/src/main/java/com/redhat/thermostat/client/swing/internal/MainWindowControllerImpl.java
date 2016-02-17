@@ -58,6 +58,8 @@ import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
+import com.redhat.thermostat.client.core.views.IssueView;
+import com.redhat.thermostat.client.core.views.IssueViewProvider;
 import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
@@ -106,6 +108,19 @@ public class MainWindowControllerImpl implements MainWindowController {
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
+
+    // Special marker to indicate the user selected "issues", not a host or a vm
+    private static final Ref ISSUES_REF = new Ref() {
+        @Override
+        public String getStringID() {
+            return "Issues";
+        }
+
+        @Override
+        public String getName() {
+            return "Issues";
+        }
+    };
 
     private final ApplicationInfo appInfo = new ApplicationInfo();
 
@@ -171,13 +186,17 @@ public class MainWindowControllerImpl implements MainWindowController {
     private FilterManager filterManager;
 
     private DecoratorRegistryController decoratorController;
+
+    private IssueViewController issuesController;
+
+    private MultipleServiceTracker issuesDepTracker;
     
     public MainWindowControllerImpl(BundleContext context, ApplicationService appSvc,
             CountDownLatch shutdown) {
         this(context, appSvc, new MainWindow(), new RegistryFactory(context), shutdown, new UriOpener());
     }
 
-    MainWindowControllerImpl(final BundleContext context, ApplicationService appSvc,
+    MainWindowControllerImpl(final BundleContext context, final ApplicationService appSvc,
             final MainView view,
             RegistryFactory registryFactory,
             final CountDownLatch shutdown,
@@ -206,6 +225,24 @@ public class MainWindowControllerImpl implements MainWindowController {
         this.shutdown = shutdown;
 
         this.uriOpener = uriOpener;
+
+        Class<?>[] issuesDeps = new Class<?>[] {
+                IssueViewProvider.class,
+        };
+        issuesDepTracker = new MultipleServiceTracker(context, issuesDeps, new MultipleServiceTracker.Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                IssueViewProvider provider = (IssueViewProvider) services.get(IssueViewProvider.class.getName());
+                IssueView issuesView = provider.createView();
+                issuesController = new IssueViewController(context, appSvc, issuesView);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                // TODO Auto-generated method stub
+            }
+        });
+        issuesDepTracker.open();
 
         Class<?>[] deps = new Class<?>[] {
                 Keyring.class,
@@ -333,6 +370,9 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case VISIBLE:
                     break;
                     
+                case SHOW_ISSUES:
+                    updateView(ISSUES_REF);
+                    break;
                 case SHOW_AGENT_CONFIG:
                     showAgentConfiguration();
                     break;
@@ -371,6 +411,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         view.hideMainWindow();
         appSvc.getTimerFactory().shutdown();
         
+        issuesDepTracker.close();
         depTracker.close();
         infoServiceTracker.close();
         contextActionTracker.close();
@@ -390,6 +431,8 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         decoratorController.init(hostTreeController);
         decoratorController.start();
+
+        issuesController.start();
     }
 
     private void setUpActionControllers() {
@@ -412,6 +455,8 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         filterManager.stop();
         decoratorController.stop();
+
+        issuesController.stop();
     }
 
     @Override
@@ -461,6 +506,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         if (ref == null) {
             VersionAndInfoController controller = createSummaryController();
             view.setSubView(controller.getView());
+        } else if (ref == ISSUES_REF) {
+            view.setSubView(issuesController.getView());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;
             HostInformationController hostController = createHostInformationController(hostRef);

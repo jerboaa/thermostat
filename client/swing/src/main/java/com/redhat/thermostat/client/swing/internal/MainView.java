@@ -54,6 +54,7 @@ public interface MainView {
     enum Action {
         VISIBLE,
         HIDDEN,
+        SHOW_ISSUES,
         SHOW_AGENT_CONFIG,
         SHOW_CLIENT_CONFIG,
         SHOW_USER_GUIDE,

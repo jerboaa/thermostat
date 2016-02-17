@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmId;
@@ -59,7 +60,10 @@ public interface VmGcStatDAO {
             Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey, runCountKey, wallTimeKey),
             Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
+    @Deprecated
     public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since);
+
+    public List<VmGcStat> getLatestVmGcStats(AgentId agentId, VmId vmId, long since);
     
     /**
      * Find the set of distinct collector names for this JVM. For each JVM there

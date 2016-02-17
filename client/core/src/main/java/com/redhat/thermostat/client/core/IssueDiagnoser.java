@@ -34,46 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal;
+package com.redhat.thermostat.client.core;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.Collection;
 
-public enum LocaleResources {
+import com.redhat.thermostat.annotations.ExtensionPoint;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 
-    ISSUES_HEADER,
-    ISSUES_CHECK,
-    ISSUES_COLUMN_SEVERITY,
-    ISSUES_COLUMN_MESSAGE,
-    ISSUES_COLUMN_AGENT,
-    ISSUES_COLUMN_VM,
-    ISSUES_AGENT_FORMAT,
-    ISSUES_VM_FORMAT,
+@ExtensionPoint
+public interface IssueDiagnoser {
 
-    HOST_PRIMARY_STATUS,
-    VM_PRIMARY_STATUS,
+    /** Diagnose all issues in the agent */
+    public Collection<AgentIssue> diagnoseIssue(AgentId id);
 
-    ZOOM_IN,
-    ZOOM_OUT,
-    RESET_ZOOM,
+    /** Diagnose all issues in the JVM */
+    public Collection<VmIssue> diagnoseIssue(AgentId agendId, VmId vmId);
 
-    TREEMAP_ZOOM_IN,
-    TREEMAP_ZOOM_OUT,
-    TREEMAP_ZOOM_FULL,
-
-    CUT,
-    COPY,
-    PASTE,
-
-    SHOW_BUTTON_TEXT,
-    HIDE_BUTTON_TEXT,
-
-    ;
-
-    static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.swing.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
-    }
 }
-

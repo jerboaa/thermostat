@@ -54,6 +54,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -84,6 +85,7 @@ public class VmGcStatDAOTest {
         }
     }
 
+    private static final String AGENT_ID = "some-agent";
     private static final String VM_ID = "VM321";
     private static final Long TIMESTAMP = 456L;
     private static final String COLLECTOR = "collector1";
@@ -150,6 +152,43 @@ public class VmGcStatDAOTest {
         assertEquals(1, vmGcStats.size());
         VmGcStat stat = vmGcStats.get(0);
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
+        assertEquals(VM_ID, stat.getVmId());
+        assertEquals(COLLECTOR, stat.getCollectorName());
+        assertEquals(RUN_COUNT, (Long) stat.getRunCount());
+        assertEquals(WALL_TIME, (Long) stat.getWallTime());
+    }
+
+    @Test
+    public void testGetLatestVmGcStatsFromAgentIdAndVmId() throws DescriptorParsingException, StatementExecutionException {
+        AgentId agentId = new AgentId(AGENT_ID);
+        VmId vmId = new VmId(VM_ID);
+        VmGcStat vmGcStat = new VmGcStat(AGENT_ID, VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
+
+        @SuppressWarnings("unchecked")
+        Cursor<VmGcStat> cursor = (Cursor<VmGcStat>) mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(vmGcStat);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmGcStat> stmt = (PreparedStatement<VmGcStat>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
+
+        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
+        List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(agentId, vmId, Long.MIN_VALUE);
+
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, AGENT_ID);
+        verify(stmt).setString(1, VM_ID);
+        verify(stmt).setLong(2, Long.MIN_VALUE);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
+
+        assertEquals(1, vmGcStats.size());
+        VmGcStat stat = vmGcStats.get(0);
+        assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
+        assertEquals(AGENT_ID, stat.getAgentId());
         assertEquals(VM_ID, stat.getVmId());
         assertEquals(COLLECTOR, stat.getCollectorName());
         assertEquals(RUN_COUNT, (Long) stat.getRunCount());

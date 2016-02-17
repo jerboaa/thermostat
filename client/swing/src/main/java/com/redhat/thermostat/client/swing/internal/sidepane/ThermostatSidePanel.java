@@ -56,12 +56,26 @@ public class ThermostatSidePanel extends JPanel {
     
     public static final String COLLAPSED = "ThermostatSidePanel_collapsed";
     
+    private TopSidePane global;
     private TopSidePane top;
-    private JPanel bottom;
+    private JPanel center;
     
     public ThermostatSidePanel() {
         setLayout(new BorderLayout());
+
+        global = new TopSidePane();
+        global.addPropertyChangeListener(TopSidePane.COLLAPSED_PROPERTY, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                firePropertyChange(COLLAPSED, evt.getOldValue(), evt.getNewValue());
+            }
+        });
+        add(global, BorderLayout.NORTH);
         
+        JPanel browser = new JPanel();
+        browser.setLayout(new BorderLayout());
+        add(browser, BorderLayout.CENTER);
+
         top = new TopSidePane();
         top.addPropertyChangeListener(TopSidePane.COLLAPSED_PROPERTY,
                                       new PropertyChangeListener()
@@ -72,11 +86,11 @@ public class ThermostatSidePanel extends JPanel {
                                               evt.getNewValue());
             }
         });
-        add(top, BorderLayout.NORTH);
+        browser.add(top, BorderLayout.NORTH);
         
-        bottom = new JPanel();        
-        bottom.setLayout(new BorderLayout());
-        add(bottom, BorderLayout.CENTER);
+        center = new JPanel();
+        center.setLayout(new BorderLayout());
+        browser.add(center, BorderLayout.CENTER);
     }
     
     public void addContent(JComponent comp) {
@@ -84,17 +98,22 @@ public class ThermostatSidePanel extends JPanel {
     }
     
     public void removeComponent(JComponent comp) {
-        bottom.remove(comp);
+        center.remove(comp);
         repaint();
     }
     
     public void addContent(JComponent comp, Object contraints) {
-        bottom.add(comp, contraints);
+        center.add(comp, contraints);
         repaint();
     }
     
+    public JPanel getGlobalPane() {
+        return global;
+    }
+
     public JPanel getTopPane() {
         return top;
     }
+
 }
 

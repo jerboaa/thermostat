@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -356,9 +357,22 @@ public class MainWindow extends JFrame implements MainView {
             }
         });
 
+        installGlobalNavigation();
         installSearchFiled();
     }
     
+    private void installGlobalNavigation() {
+        // FIXME clean up UI
+        JButton action = new JButton(translator.localize(LocaleResources.SHOW_ISSUES).getContents());
+        action.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fireViewAction(Action.SHOW_ISSUES);
+            }
+        });
+        navigationPanel.getGlobalPane().add(action);
+    }
+
     private void installSearchFiled() {
         // install the search field in the sidepane for now
         SearchField searchField = new SearchField();
