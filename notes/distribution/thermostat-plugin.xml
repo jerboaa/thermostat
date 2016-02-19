@@ -39,6 +39,268 @@
 <plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd">
+  <commands>
+    <command>
+      <name>list-notes</name>
+      <summary>list notes for the specified Host or VM</summary>
+      <description>List notes for the specified Host or VM.</description>
+      <options>
+        <option>
+          <long>show-note-id</long>
+          <required>false</required>
+          <description>show note IDs</description>
+        </option>
+        <option>
+          <long>quiet</long>
+          <required>false</required>
+          <description>only show Note IDs</description>
+        </option>
+        <option>
+          <long>vmId</long>
+          <short>v</short>
+          <argument>vm</argument>
+          <required>false</required>
+          <description>the VM whose notes to display</description>
+        </option>
+        <option>
+          <long>agentId</long>
+          <short>a</short>
+          <argument>agent</argument>
+          <required>false</required>
+          <description>the agent (host) whose notes to display</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.notes.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.notes.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+      </bundles>
+    </command>
+
+    <command>
+      <name>add-note</name>
+      <summary>add a note to a host or VM</summary>
+      <description>Add a note to the specified Host or VM.</description>
+      <options>
+        <option>
+          <long>vmId</long>
+          <short>v</short>
+          <argument>vm</argument>
+          <required>false</required>
+          <description>the VM to add a note to</description>
+        </option>
+        <option>
+          <long>agentId</long>
+          <short>a</short>
+          <argument>agent</argument>
+          <required>false</required>
+          <description>the agent (host) to add a note to</description>
+        </option>
+        <option>
+          <long>content</long>
+          <short>c</short>
+          <argument>string</argument>
+          <required>false</required>
+          <description>the note content string. If not provided then the non-option arguments are assumed to be the
+              note content</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.notes.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.notes.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+      </bundles>
+    </command>
+
+    <command>
+      <name>delete-note</name>
+      <summary>delete a note from a host or VM</summary>
+      <description>Delete a Host or VM Note.</description>
+      <options>
+        <option>
+          <long>vmId</long>
+          <short>v</short>
+          <argument>vm</argument>
+          <required>false</required>
+          <description>the VM to add a note to</description>
+        </option>
+        <option>
+          <long>agentId</long>
+          <short>a</short>
+          <argument>agent</argument>
+          <required>false</required>
+          <description>the agent (host) to add a note to</description>
+        </option>
+        <option>
+          <long>noteId</long>
+          <short>n</short>
+          <argument>id</argument>
+          <required>true</required>
+          <description>the note ID</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.notes.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.notes.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+      </bundles>
+    </command>
+
+    <command>
+      <name>update-note</name>
+      <summary>update a note on a host or VM</summary>
+      <description>Update a Host or VM Note.</description>
+      <options>
+        <option>
+          <long>vmId</long>
+          <short>v</short>
+          <argument>vm</argument>
+          <required>false</required>
+          <description>the ID of the VM of the note to be updated</description>
+        </option>
+        <option>
+          <long>agentId</long>
+          <short>a</short>
+          <argument>agent</argument>
+          <required>false</required>
+          <description>the ID of the agent (host) of the note to be updated</description>
+        </option>
+        <option>
+          <long>noteId</long>
+          <short>n</short>
+          <argument>id</argument>
+          <required>true</required>
+          <description>the note ID</description>
+        </option>
+        <option>
+          <long>content</long>
+          <short>c</short>
+          <argument>string</argument>
+          <required>false</required>
+          <description>the note content string. If not provided then the non-option arguments are assumed to be the
+              note content</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.notes.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.notes.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+      </bundles>
+    </command>
+
+  </commands>
   <extensions>
     <extension>
       <name>gui</name>
