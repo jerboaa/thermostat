@@ -163,7 +163,7 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
             public Boolean call() {
                 pack();
                 setVisible(true);
-                return new Boolean(true);
+                return Boolean.TRUE;
             }
         };
         try {
@@ -182,7 +182,7 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
             public Boolean call() {
                 setVisible(false);
                 dispose();
-                return new Boolean(true);
+                return Boolean.FALSE;
             }
         };
         try {
