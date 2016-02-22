@@ -79,7 +79,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>jnr.posix</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${jnr-posix.bundle.symbolic.name}</Bundle-SymbolicName>
             <Bundle-Version>${jnr-posix.version}</Bundle-Version>
             <Export-Package>jnr.posix*</Export-Package>
             <Import-Package>!sun.misc,*</Import-Package>

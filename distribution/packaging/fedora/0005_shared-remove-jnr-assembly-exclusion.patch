@@ -1,0 +1,26 @@
+diff --git a/distribution/assembly/core-assembly.xml b/distribution/assembly/core-assembly.xml
+--- a/distribution/assembly/core-assembly.xml
++++ b/distribution/assembly/core-assembly.xml
+@@ -77,22 +77,10 @@
+       </includes>
+       <excludes>
+         <exclude>org.osgi:org.osgi.core</exclude>
+-        <!-- Exclude upstream jnr jars in favour of our wrapped bundles -->
+-        <exclude>com.github.jnr:*</exclude>
+       </excludes>
+       <useTransitiveDependencies>true</useTransitiveDependencies>
+       <useTransitiveFiltering>true</useTransitiveFiltering>
+     </dependencySet>
+-    <!-- Using another dependency set due to upstream jnr exclusion -->
+-    <dependencySet>
+-      <useProjectArtifact>false</useProjectArtifact>
+-      <unpack>false</unpack>
+-      <includes>
+-        <!-- Include upstream jffi-native, since we don't wrap it -->
+-        <include>com.github.jnr:jffi:jar:native</include>
+-      </includes>
+-      <useTransitiveDependencies>true</useTransitiveDependencies>
+-    </dependencySet>
+   </dependencySets>
+ </assembly>
+ 

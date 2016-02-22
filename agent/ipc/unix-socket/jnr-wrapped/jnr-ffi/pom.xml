@@ -104,7 +104,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>jnr.ffi</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${jnr-ffi.bundle.symbolic.name}</Bundle-SymbolicName>
             <Bundle-Version>${jnr-ffi.version}</Bundle-Version>
             <Export-Package>
               jnr.ffi*

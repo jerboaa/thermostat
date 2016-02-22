@@ -202,7 +202,9 @@
     <jnr-unixsocket.version>0.8</jnr-unixsocket.version>
     <jnr-enxio.version>0.9</jnr-enxio.version>
     <jnr-constants.version>0.8.7</jnr-constants.version>
+    <jnr-posix.bundle.symbolic.name>jnr.posix</jnr-posix.bundle.symbolic.name>
     <jnr-posix.version>3.0.12</jnr-posix.version>
+    <jnr-ffi.bundle.symbolic.name>jnr.ffi</jnr-ffi.bundle.symbolic.name>
     <jnr-ffi.version>2.0.3</jnr-ffi.version>
     <jnr-x86asm.version>1.0.2</jnr-x86asm.version>
     <jffi.version>1.2.9</jffi.version>

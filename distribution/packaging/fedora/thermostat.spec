@@ -2,7 +2,7 @@
 %global __jar_repack 0
 
 # Allow for setting the RELEASE. Will be removed at SRPM build time.
-__DEFAULT_RELEASE__ 6
+__DEFAULT_RELEASE__ 7
 
 # Upstream Thermostat version triplet
 %global major        __MAJOR__
@@ -54,8 +54,8 @@ __DEFAULT_RELEASE__ 6
   %global hc_core_bundle_version     4.4.4
   %global hc_client_bundle_version   4.5.1
   %global gson_bundle_version        2.3.1
-  # Real OSGi Bundle-Version is 2.13.2.RELEASE
-  %global mongo_bundle_version       2.13.2
+  # Real OSGi Bundle-Version is 3.2.1.RELEASE
+  %global mongo_bundle_version       3.2.1
   # Jansi is used as bootstrap bundle and the
   # bootstrap bundle properties file refers to the jar
   # with version suffix. See 0001_shared_fix_bundle_loading.patch
@@ -65,6 +65,19 @@ __DEFAULT_RELEASE__ 6
   # endpoint plugin: a.k.a web-storage-service
   %global javax_servlet_bundle_version 3.1.0
   %global javax_servlet_bsn            javax.servlet-api
+  # jnr-unixsocket and deps
+  %global jnr_unixsocket_version     0.10.0
+  %global jnr_enxio_version          0.10.0
+  %global jnr_constants_version      0.9.0
+  %global jnr_x86asm_version         1.0.2
+  %global jffi_version               1.2.10
+  # OSGi metadata added to upstream jnr-posix in version 3.0.17 and
+  # upstream jnr-ffi in version 2.0.4, which use different 
+  # Bundle-SymbolicNames than previous RPMs.
+  %global jnr_posix_version          3.0.27
+  %global jnr_posix_symbolic_name    com.github.jnr.posix
+  %global jnr_ffi_version            2.0.6
+  %global jnr_ffi_symbolic_name      com.github.jnr.ffi
 
 %else
 
@@ -97,6 +110,19 @@ __DEFAULT_RELEASE__ 6
   # package.
   %global javax_servlet_bundle_version 3.0.0
   %global javax_servlet_bsn            javax.servlet
+  # jnr-unixsocket and deps
+  %global jnr_unixsocket_version     0.8.0
+  %global jnr_enxio_version          0.9.0
+  %global jnr_constants_version      0.8.8
+  %global jnr_x86asm_version         1.0.2
+  %global jffi_version               1.2.9
+  # OSGi metadata added to upstream jnr-posix in version 3.0.17 and
+  # upstream jnr-ffi in version 2.0.4, which use different 
+  # Bundle-SymbolicNames than previous RPMs.
+  %global jnr_posix_version          3.0.14
+  %global jnr_posix_symbolic_name    jnr.posix
+  %global jnr_ffi_version            2.0.3
+  %global jnr_ffi_symbolic_name      jnr.ffi
 
 %endif
 
@@ -167,7 +193,6 @@ __DEFAULT_RELEASE__ 6
 # netty coordinates are org.jboss.netty:netty in SCL
 %global netty_maven_coords org.jboss.netty:netty
 }
-
 
 # THERMOSTAT_HOME and USER_THERMOSTAT_HOME variables. Note that
 # we use USER_THERMOSTAT_HOME only for systemd related setup.
@@ -258,6 +283,9 @@ Patch3:     0003_rhel_lucene_4.patch
 # http://icedtea.classpath.org/hg/thermostat/rev/ab54f7b97515
 # which introduces code unavailable in older (2.11) release.
 Patch4:     0004_rhel_mongo-java-driver-2.11.patch
+# This patch can be pushed upstream when upstream JNR adds OSGi metadata to their
+# manifests. (e.g. https://github.com/jnr/jnr-unixsocket/pull/15 for jnr-unixsocket)
+Patch5:     0005_shared-remove-jnr-assembly-exclusion.patch
 
 %if 0%{?non_bootstrap_build}
 # Work-around xmvn-subst limitation
@@ -378,6 +406,14 @@ BuildRequires: %{?scl_prefix}osgi(com.mxgraph) = %{jgraphx_bundle_version}
 # The web endpoint plugin gets this bundle baked into the bundles list.
 BuildRequires: %{?scl_prefix_java_common}osgi(%{javax_servlet_bsn}) = %{javax_servlet_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}mvn(%{object_web_asm_maven_coords}) >= 5
+# jnr-unixsocket and deps
+BuildRequires: %{?scl_prefix}osgi(jnr.unixsocket) = %{jnr_unixsocket_version}
+BuildRequires: %{?scl_prefix}osgi(jnr.enxio) = %{jnr_enxio_version}
+BuildRequires: %{?scl_prefix}osgi(jnr.constants) = %{jnr_constants_version}
+BuildRequires: %{?scl_prefix}osgi(jnr.x86asm) = %{jnr_x86asm_version}
+BuildRequires: %{?scl_prefix}osgi(%{jnr_posix_symbolic_name}) = %{jnr_posix_version}
+BuildRequires: %{?scl_prefix}osgi(%{jnr_ffi_symbolic_name}) = %{jnr_ffi_version}
+BuildRequires: %{?scl_prefix}osgi(com.kenai.jffi) = %{jffi_version}
 
 %{?!scl:
 Requires: javapackages-tools
@@ -491,6 +527,7 @@ security.
 %patch3 -p1
 %patch4 -p1
 }
+%patch5 -p1
 
 # Replace thermostatrc with Fedora's version
 cp %{SOURCE4} distribution/config/thermostatrc
@@ -534,6 +571,14 @@ cp %{SOURCE4} distribution/config/thermostatrc
 %pom_add_dep io.netty:netty:%{netty_bundle_version} client/command
 %pom_add_dep io.netty:netty:%{netty_bundle_version} agent/command
 %pom_add_dep io.netty:netty:%{netty_bundle_version} agent/command-server
+# Don't use bundle-wrapped jnr-unixsocket and deps
+%pom_disable_module jnr-wrapped agent/ipc/unix-socket
+%pom_remove_dep com.redhat.thermostat:jnr-unixsocket agent/ipc/unix-socket/server
+%pom_remove_dep com.redhat.thermostat:jnr-unixsocket agent/ipc/unix-socket/client
+%pom_remove_dep com.redhat.thermostat:jnr-unixsocket agent/ipc/unix-socket/common
+%pom_add_dep com.github.jnr:jnr-unixsocket agent/ipc/unix-socket/server
+%pom_add_dep com.github.jnr:jnr-unixsocket agent/ipc/unix-socket/client
+%pom_add_dep com.github.jnr:jnr-unixsocket agent/ipc/unix-socket/common
 
 # Don't use maven-exec-plugin. We do things manually in order to avoid this
 # additional dep. It's used in agent/core/pom.xml et.al.
@@ -565,6 +610,7 @@ cp %{SOURCE4} distribution/config/thermostatrc
 %pom_disable_module ide-launcher dev
 %pom_disable_module schema-info-command dev
 %pom_disable_module perflog-analyzer dev
+%pom_disable_module ipc-test dev
 # SCL would need maven archetype packaging plugin for this to work. For now package in
 # Fedora only.
 %{?scl:
@@ -699,7 +745,16 @@ popd
                  -Djetty.javax.servlet.osgi.version=%{javax_servlet_bundle_version} \
                  -Djavax.servlet.bsn=%{javax_servlet_bsn} \
                  -Dkxml2.version=%{kxml2_version} \
-                 -Dosgi.compendium.version=%{osgi_compendium_maven_version}
+                 -Dosgi.compendium.version=%{osgi_compendium_maven_version} \
+                 -Djnr-unixsocket.version=%{jnr_unixsocket_version} \
+                 -Djnr-enxio.version=%{jnr_enxio_version} \
+                 -Djnr-constants.version=%{jnr_constants_version} \
+                 -Djnr-x86asm.version=%{jnr_x86asm_version} \
+                 -Djnr-posix.bundle.symbolic.name=%{jnr_posix_symbolic_name} \
+                 -Djnr-posix.version=%{jnr_posix_version} \
+                 -Djnr-ffi.bundle.symbolic.name=%{jnr_ffi_symbolic_name} \
+                 -Djnr-ffi.version=%{jnr_ffi_version} \
+                 -Djffi.version=%{jffi_version}
 
 %{?scl:EOF}
 
@@ -1152,7 +1207,11 @@ fi
 %{_datadir}/%{pkg_name}/plugins/embedded-web-endpoint
 
 %changelog
-* Tue Sep 29 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.PATCHLEVEL__-__RELEASE__
+* Fri Feb 19 2016 Elliott Baron <ebaron@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-__RELEASE__
+- Add jnr-unixsocket dependencies for IPC service.
+- Update mongo-java-driver version.
+
+* Tue Sep 29 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.PATCHLEVEL__-6
 - Use libsecret for keyring JNI on Fedora.
 
 * Wed Sep 16 2015 Jie Kang <jkang@redhat.com> - __MAJOR__.__MINOR__.PATCHLEVEL__-5
