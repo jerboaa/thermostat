@@ -63,6 +63,7 @@
     <module>core</module>
     <module>command</module>
     <module>command-server</module>
+    <module>ipc</module>
     <module>proxy</module>
   </modules>
 

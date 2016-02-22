@@ -303,6 +303,12 @@ public class CommonPathsImpl implements CommonPaths {
         File history = new File(getUserPersistentDataDirectory(), "cli-history");
         return history;
     }
+    
+    @Override
+    public File getUserIPCConfigurationFile() throws InvalidConfigurationException {
+        File ipcConfig = new File(getUserConfigurationDirectory(), "ipc.properties");
+        return ipcConfig;
+    }
 
     @Override
     public File getUserSetupCompleteStampFile()

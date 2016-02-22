@@ -49,6 +49,7 @@
 # This is the minimal boot classpath thermostat needs. Other dependencies
 # will get started by the OSGi framework once that's up.
 BOOT_CLASSPATH="${THERMOSTAT_LIBS}/org.apache.felix.framework-@felix.framework.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/jffi-@jffi.version@-native.jar"
 BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-launcher-@project.version@.jar"
 BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-main-@project.version@.jar"
 BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"

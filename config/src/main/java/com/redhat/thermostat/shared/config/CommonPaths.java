@@ -117,6 +117,8 @@ public interface CommonPaths {
     public File getUserSharedPreferencesFile() throws InvalidConfigurationException;
 
     public File getUserHistoryFile() throws InvalidConfigurationException;
+    
+    public File getUserIPCConfigurationFile() throws InvalidConfigurationException;
 
 }
 

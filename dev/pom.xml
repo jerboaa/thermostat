@@ -57,6 +57,7 @@
     <module>schema-info-command</module>
     <module>perflog-analyzer</module>
     <module>data-populator</module>
+    <module>ipc-test</module>
   </modules>
 
 </project>

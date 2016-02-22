@@ -197,6 +197,15 @@
     <!-- the OSGi Bundle-Version; should match the manifest in the jar -->
     <commons-codec.osgi-version>1.7.0</commons-codec.osgi-version>
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
+    
+    <!-- jnr-unixsocket and dependencies -->
+    <jnr-unixsocket.version>0.8</jnr-unixsocket.version>
+    <jnr-enxio.version>0.9</jnr-enxio.version>
+    <jnr-constants.version>0.8.7</jnr-constants.version>
+    <jnr-posix.version>3.0.12</jnr-posix.version>
+    <jnr-ffi.version>2.0.3</jnr-ffi.version>
+    <jnr-x86asm.version>1.0.2</jnr-x86asm.version>
+    <jffi.version>1.2.9</jffi.version>
 
     <jline.version>2.13</jline.version>
     <lucene.version>5.1.0_1</lucene.version>
@@ -619,6 +628,43 @@
         <version>${felix.scr.annotations.version}</version>
       </dependency>
     
+      <!-- jnr-unixsocket and dependencies -->
+      <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>jnr-unixsocket</artifactId>
+        <version>${jnr-unixsocket.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>jnr-enxio</artifactId>
+        <version>${jnr-enxio.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>jnr-constants</artifactId>
+        <version>${jnr-constants.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>jnr-posix</artifactId>
+        <version>${jnr-posix.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>jnr-ffi</artifactId>
+        <version>${jnr-ffi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>jnr-x86asm</artifactId>
+        <version>${jnr-x86asm.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>jffi</artifactId>
+        <version>${jffi.version}</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 

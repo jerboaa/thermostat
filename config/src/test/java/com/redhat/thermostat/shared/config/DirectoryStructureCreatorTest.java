@@ -251,6 +251,11 @@ public class DirectoryStructureCreatorTest {
             return null; // Only directories need to be created
         }
         
+        @Override
+        public File getUserIPCConfigurationFile() throws InvalidConfigurationException {
+            return null; // Only directories need to be created
+        }
+        
     }
 
     @Test

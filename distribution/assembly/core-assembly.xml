@@ -61,6 +61,8 @@
         <include>com.redhat.thermostat:thermostat-agent-command</include>
         <include>com.redhat.thermostat:thermostat-agent-command-server</include>
         <include>com.redhat.thermostat:thermostat-agent-proxy-server</include>
+        <include>com.redhat.thermostat:thermostat-agent-ipc-unixsocket-server</include>
+        <include>com.redhat.thermostat:thermostat-agent-ipc-unixsocket-client</include>
         <include>com.redhat.thermostat:thermostat-common-core</include>
         <include>com.redhat.thermostat:thermostat-common-command</include>
         <include>com.redhat.thermostat:thermostat-osgi-process-handler</include>
@@ -75,9 +77,21 @@
       </includes>
       <excludes>
         <exclude>org.osgi:org.osgi.core</exclude>
+        <!-- Exclude upstream jnr jars in favour of our wrapped bundles -->
+        <exclude>com.github.jnr:*</exclude>
       </excludes>
       <useTransitiveDependencies>true</useTransitiveDependencies>
       <useTransitiveFiltering>true</useTransitiveFiltering>
+    </dependencySet>
+    <!-- Using another dependency set due to upstream jnr exclusion -->
+    <dependencySet>
+      <useProjectArtifact>false</useProjectArtifact>
+      <unpack>false</unpack>
+      <includes>
+        <!-- Include upstream jffi-native, since we don't wrap it -->
+        <include>com.github.jnr:jffi:jar:native</include>
+      </includes>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
     </dependencySet>
   </dependencySets>
 </assembly>

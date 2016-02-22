@@ -259,6 +259,7 @@
               <target>
                 <chmod file="${project.build.directory}/image/bin/*" perm="755" />
                 <chmod file="${project.build.directory}/image/bin/thermostat-common" perm="644" />
+                <chmod file="${project.build.directory}/image/bin/thermostat-ipc-client-common" perm="644" />
                 <chmod file="${project.build.directory}/tools/*" perm="755" />
                 <chmod file="${project.build.directory}/image/etc/thermostat-roles.properties" perm="600" />
                 <chmod file="${project.build.directory}/image/etc/thermostat-users.properties" perm="600" />
@@ -382,6 +383,16 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-proxy-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-ipc-unixsocket-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-ipc-unixsocket-client</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
