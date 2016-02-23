@@ -42,7 +42,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -140,17 +139,29 @@ public class NotePanel extends JPanel {
         return note;
     }
 
+    public void setNote(Note note) {
+        Utils.assertInEdt();
+        this.note = note;
+        setContent(note.getContent());
+        setTimeStamp(note.getTimeStamp());
+    }
+
     public String getContent() {
         Utils.assertInEdt();
         return text.getText();
     }
 
-    public void setContent(String content) {
+    public long getTimestamp() {
+        Utils.assertInEdt();
+        return note.getTimeStamp();
+    }
+
+    private void setContent(String content) {
         Utils.assertInEdt();
         text.setText(content);
     }
 
-    public void setTimeStamp(long timeStamp) {
+    private void setTimeStamp(long timeStamp) {
         Utils.assertInEdt();
         timeStampLabel.setText(getPrettyTimeStamp(timeStamp));
     }

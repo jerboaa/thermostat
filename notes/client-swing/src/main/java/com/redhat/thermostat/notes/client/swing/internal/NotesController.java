@@ -269,14 +269,16 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
             if (noteId.equals(note.getId())) {
                 String oldContent = note.getContent();
                 String newContent = view.getContent(noteId);
-                if (oldContent.equals(newContent)) {
+                long oldTimestamp = note.getTimeStamp();
+                long newTimestamp = view.getTimeStamp(noteId);
+                if (oldContent.equals(newContent)
+                        && oldTimestamp == newTimestamp) {
                     continue;
                 }
 
-                view.setTimeStamp(noteId, timeStamp);
-
                 note.setTimeStamp(timeStamp);
                 note.setContent(newContent);
+                view.update(note);
             }
         }
     }

@@ -219,8 +219,7 @@ public class SwingNotesView extends NotesView implements SwingComponent {
             @Override
             public void run() {
                 NotePanel panel = tagToPanel.get(note.getId());
-                panel.setContent(note.getContent());
-                panel.setTimeStamp(note.getTimeStamp());
+                panel.setNote(note);
                 notesAndToolsContainer.revalidate();
                 notesAndToolsContainer.repaint();
 
@@ -262,13 +261,17 @@ public class SwingNotesView extends NotesView implements SwingComponent {
     }
 
     @Override
-    public void setTimeStamp(final String tag, final long timeStamp) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                tagToPanel.get(tag).setTimeStamp(timeStamp);
-            }
-        });
+    public long getTimeStamp(final String tag) {
+        try {
+            return new EdtHelper().callAndWait(new Callable<Long>() {
+                @Override
+                public Long call() throws Exception {
+                    return tagToPanel.get(tag).getTimestamp();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            throw new AssertionError(e);
+        }
     }
 
     static class FocusRequester<T extends JComponent> {

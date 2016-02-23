@@ -77,6 +77,6 @@ public abstract class NotesView extends BasicView implements UIComponent {
 
     public abstract String getContent(final String tag);
 
-    public abstract void setTimeStamp(final String tag, final long timeStamp);
+    public abstract long getTimeStamp(final String tag);
 
 }
