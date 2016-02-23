@@ -64,7 +64,6 @@ import javax.swing.JLayer;
 import javax.swing.JPanel;
 import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.plaf.LayerUI;
 
@@ -132,7 +131,7 @@ public class SwingNotesView extends NotesView implements SwingComponent {
         addNewNoteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                handleActionAsync(NoteAction.LOCAL_ADD);
+                actionNotifier.fireAction(NoteAction.LOCAL_ADD);
             }
         });
         JPanel buttonContainer = new JPanel(new FlowLayout(FlowLayout.LEADING));
@@ -152,7 +151,7 @@ public class SwingNotesView extends NotesView implements SwingComponent {
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                handleActionAsync(action);
+                actionNotifier.fireAction(action);
             }
         });
         return button;
@@ -226,17 +225,6 @@ public class SwingNotesView extends NotesView implements SwingComponent {
                 tagToPanel.get(tag).setTimeStamp(timeStamp);
             }
         });
-    }
-
-    private void handleActionAsync(final NoteAction action) {
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                actionNotifier.fireAction(action);
-                return null;
-            }
-        };
-        worker.execute();
     }
 
     /**

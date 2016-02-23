@@ -75,28 +75,48 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
         this.view.addNoteActionListener(new ActionListener<NotesView.NoteAction>() {
             @Override
-            public void actionPerformed(ActionEvent<NotesView.NoteAction> actionEvent) {
+            public void actionPerformed(final ActionEvent<NotesView.NoteAction> actionEvent) {
                 switch (actionEvent.getActionId()) {
                     /* remote-storage operations */
                     case REMOTE_REFRESH: {
-                        remoteGetNotesFromStorage();
+                        appSvc.getApplicationExecutor().submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                remoteGetNotesFromStorage();
+                            }
+                        });
                         break;
                     }
                     /* local operations */
                     case LOCAL_ADD: {
-                        remoteSaveNotes();
-                        localAddNewNote();
+                        appSvc.getApplicationExecutor().submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                remoteSaveNotes();
+                                localAddNewNote();
+                            }
+                        });
                         break;
                     }
                     case LOCAL_SAVE: {
-                        String noteId = /* tag = */ (String) actionEvent.getPayload();
-                        localSaveNote(noteId);
+                        appSvc.getApplicationExecutor().submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                String noteId = /* tag = */ (String) actionEvent.getPayload();
+                                localSaveNote(noteId);
+                            }
+                        });
                         break;
                     }
                     case LOCAL_DELETE: {
-                        String noteId = /* tag = */ (String) actionEvent.getPayload();
-                        localDeleteNote(noteId);
-                        remoteSaveNotes();
+                        appSvc.getApplicationExecutor().submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                String noteId = /* tag = */ (String) actionEvent.getPayload();
+                                localDeleteNote(noteId);
+                                remoteSaveNotes();
+                            }
+                        });
                         break;
                     }
                 }
@@ -108,7 +128,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
             public void actionPerformed(ActionEvent<BasicView.Action> actionEvent) {
                 switch (actionEvent.getActionId()) {
                     case HIDDEN:
-                        appSvc.getApplicationExecutor().execute(new Runnable() {
+                        appSvc.getApplicationExecutor().submit(new Runnable() {
                             @Override
                             public void run() {
                                 remoteSaveNotes();
@@ -116,7 +136,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                         });
                         break;
                     case VISIBLE:
-                        appSvc.getApplicationExecutor().execute(new Runnable() {
+                        appSvc.getApplicationExecutor().submit(new Runnable() {
                             @Override
                             public void run() {
                                 remoteGetNotesFromStorage();

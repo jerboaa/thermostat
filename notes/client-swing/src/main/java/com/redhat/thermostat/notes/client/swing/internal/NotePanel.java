@@ -48,7 +48,6 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -80,15 +79,15 @@ public class NotePanel extends JPanel {
         text.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void removeUpdate(DocumentEvent event) {
-                fireAction(NoteAction.LOCAL_SAVE, note.getId());
+                NotePanel.this.actionNotifier.fireAction(NoteAction.LOCAL_SAVE, note.getId());
             }
             @Override
             public void insertUpdate(DocumentEvent event) {
-                fireAction(NoteAction.LOCAL_SAVE, note.getId());
+                NotePanel.this.actionNotifier.fireAction(NoteAction.LOCAL_SAVE, note.getId());
             }
             @Override
             public void changedUpdate(DocumentEvent event) {
-                fireAction(NoteAction.LOCAL_SAVE, note.getId());
+                NotePanel.this.actionNotifier.fireAction(NoteAction.LOCAL_SAVE, note.getId());
             }
         });
         Icon deleteIcon = new FontAwesomeIcon('\uf014', Constants.TEXT_SIZE);
@@ -97,7 +96,7 @@ public class NotePanel extends JPanel {
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                fireAction(NoteAction.LOCAL_DELETE, note.getId());
+                NotePanel.this.actionNotifier.fireAction(NoteAction.LOCAL_DELETE, note.getId());
             }
         });
 
@@ -120,17 +119,6 @@ public class NotePanel extends JPanel {
         constraints.weightx = 0;
         constraints.fill = GridBagConstraints.NONE;
         this.add(deleteButton, constraints);
-    }
-
-    private void fireAction(final NoteAction action, final Object payload) {
-        SwingWorker<Void, Void> asyncActionWorker = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                actionNotifier.fireAction(action, payload);
-                return null;
-            }
-        };
-        asyncActionWorker.execute();
     }
 
     public String getContent() {
