@@ -39,6 +39,7 @@ package com.redhat.thermostat.notes.client.swing.internal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
@@ -66,6 +67,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     protected NotesView view;
 
     private List<N> models;
+    private Set<N> removedSet;
     private Timer autoRefreshTimer;
 
     public NotesController(Clock clock, final ApplicationService appSvc, R ref, D dao, NotesView view) {
@@ -76,6 +78,8 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         this.view = view;
 
         models = new ArrayList<>();
+        removedSet = new HashSet<>();
+
         autoRefreshTimer = appSvc.getTimerFactory().createTimer();
         autoRefreshTimer.setAction(new AutoRefreshTask());
         autoRefreshTimer.setInitialDelay(0l);
@@ -191,10 +195,12 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         for (N remoteModel : remoteModels) {
             N localModel = findById(models, remoteModel.getId());
             if (localModel == null) {
-                // deleted
-                dao.remove(remoteModel);
+                if (removedSet.contains(remoteModel)) {
+                    dao.remove(remoteModel);
+                }
             } else {
-                if (localModel.getTimeStamp() != remoteModel.getTimeStamp()) {
+                if (localModel.getTimeStamp() != remoteModel.getTimeStamp()
+                        || !localModel.getContent().equals(remoteModel.getContent())) {
                     // notes differ
                     dao.update(localModel);
                 }
@@ -257,6 +263,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
             throw new AssertionError("Unable to find note to delete");
         }
 
+        removedSet.add(note);
         boolean removed = models.remove(note);
         if (!removed) {
             throw new AssertionError("Deleting a note failed");
