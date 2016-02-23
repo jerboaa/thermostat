@@ -38,9 +38,12 @@ package com.redhat.thermostat.notes.client.swing.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
@@ -67,8 +70,8 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     protected D dao;
     protected NotesView view;
 
-    private Set<N> models;
-    private Set<N> modelSnapshot;
+    private SortedSet<N> models;
+    private SortedSet<N> modelSnapshot;
     private Set<N> removedSet;
     private Timer autoRefreshTimer;
 
@@ -79,8 +82,9 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         this.dao = dao;
         this.view = view;
 
-        models = new HashSet<>();
-        modelSnapshot = new HashSet<>();
+        NoteIdComparator<N> noteIdComparator = new NoteIdComparator<>();
+        models = new TreeSet<>(noteIdComparator);
+        modelSnapshot = new TreeSet<>(noteIdComparator);
         removedSet = new HashSet<>();
 
         autoRefreshTimer = appSvc.getTimerFactory().createTimer();
@@ -338,6 +342,13 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         @Override
         public void run() {
             view.actionNotifier.fireAction(NotesView.NoteAction.REMOTE_REFRESH);
+        }
+    }
+
+    private class NoteIdComparator<T extends N> implements Comparator<T> {
+        @Override
+        public int compare(T t, T t1) {
+            return Long.compare(t.getTimeStamp(), t1.getTimeStamp());
         }
     }
 
