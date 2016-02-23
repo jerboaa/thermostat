@@ -219,9 +219,13 @@ public class SwingNotesView extends NotesView implements SwingComponent {
             @Override
             public void run() {
                 NotePanel panel = tagToPanel.get(note.getId());
-                panel.setNote(note);
-                notesAndToolsContainer.revalidate();
-                notesAndToolsContainer.repaint();
+                Note oldNote = panel.getNote();
+                if (!oldNote.getContent().equals(note.getContent())
+                        || (oldNote.getTimeStamp() != note.getTimeStamp())) {
+                    panel.setNote(note);
+                    notesAndToolsContainer.revalidate();
+                    notesAndToolsContainer.repaint();
+                }
 
                 focusRequester.requestFocus();
             }
