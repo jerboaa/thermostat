@@ -43,8 +43,6 @@ import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.shared.locale.Translate;
 
-import java.util.Set;
-
 public abstract class NotesView extends BasicView implements UIComponent {
 
     protected static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
@@ -72,8 +70,6 @@ public abstract class NotesView extends BasicView implements UIComponent {
     public abstract void clearAll();
 
     public abstract void add(final Note note);
-
-    public abstract void update(final Set<Note> notes);
 
     public abstract void update(Note note);
 

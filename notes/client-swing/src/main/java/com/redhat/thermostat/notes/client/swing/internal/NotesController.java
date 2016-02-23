@@ -37,6 +37,7 @@
 package com.redhat.thermostat.notes.client.swing.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,7 +67,8 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     protected D dao;
     protected NotesView view;
 
-    private List<N> models;
+    private Set<N> models;
+    private Set<N> modelSnapshot;
     private Set<N> removedSet;
     private Timer autoRefreshTimer;
 
@@ -77,7 +79,8 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         this.dao = dao;
         this.view = view;
 
-        models = new ArrayList<>();
+        models = new HashSet<>();
+        modelSnapshot = new HashSet<>();
         removedSet = new HashSet<>();
 
         autoRefreshTimer = appSvc.getTimerFactory().createTimer();
@@ -180,7 +183,8 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
         view.setBusy(true);
 
-        models = dao.getFor(ref);
+        models.clear();
+        models.addAll(dao.getFor(ref));
         localUpdateNotesInView();
 
         view.setBusy(false);
@@ -233,7 +237,28 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
     /** Update the view to match what's in the local cache */
     protected void localUpdateNotesInView() {
-        view.update(new HashSet<Note>(models));
+        Set<N> unseen = removeById(models, modelSnapshot);
+        Set<N> retained = retainById(models, modelSnapshot);
+        Set<N> removed = removeById(modelSnapshot, retained);
+
+        assertDistinct(unseen, retained);
+        assertDistinct(unseen, removed);
+        assertDistinct(retained, removed);
+
+        for (Note note : removed) {
+            view.remove(note);
+        }
+
+        for (Note note : retained) {
+            view.update(note);
+        }
+
+        for (Note note : unseen) {
+            view.add(note);
+        }
+
+        modelSnapshot.clear();
+        modelSnapshot.addAll(models);
     }
 
     /** Update the local cache of notes to match what's in the view */
@@ -272,7 +297,35 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         localUpdateNotesInView();
     }
 
-    private static<N extends Note> N findById(List<N> notes, String id) {
+    private Set<N> retainById(Set<N> source, Set<N> retained) {
+        Set<N> result = new HashSet<>();
+        for (N note : source) {
+            if (findById(retained, note.getId()) != null) {
+                result.add(note);
+            }
+        }
+        return result;
+    }
+
+    private Set<N> removeById(Set<N> source, Set<N> removed) {
+        Set<N> result = new HashSet<>(source);
+        for (N note : source) {
+            if (findById(removed, note.getId()) != null) {
+                result.remove(note);
+            }
+        }
+        return result;
+    }
+
+    private static <T> void assertDistinct(Collection<T> a, Collection<T> b) {
+        Collection<T> overlap = new HashSet<>(a);
+        overlap.retainAll(b);
+        if (!overlap.isEmpty()) {
+            throw new AssertionError("Collections were not distinct");
+        }
+    }
+
+    private N findById(Iterable<N> notes, String id) {
         for (N note : notes) {
             if (note.getId().equals(id)) {
                 return note;

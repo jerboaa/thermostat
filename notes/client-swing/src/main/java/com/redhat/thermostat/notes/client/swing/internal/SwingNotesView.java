@@ -52,11 +52,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.beans.PropertyChangeEvent;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.BoxLayout;
@@ -211,78 +208,6 @@ public class SwingNotesView extends NotesView implements SwingComponent {
                 notesAndToolsContainer.repaint();
             }
         });
-    }
-
-    @Override
-    public void update(final Set<Note> update) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                Set<Note> existing = new HashSet<>();
-                for (NotePanel panel : tagToPanel.values()) {
-                    existing.add(panel.getNote());
-                }
-
-                Set<Note> unseen = removeById(update, existing);
-                Set<Note> retained = retainById(update, existing);
-                Set<Note> removed = removeById(existing, retained);
-
-                assertDistinct(unseen, retained);
-                assertDistinct(unseen, removed);
-                assertDistinct(retained, removed);
-
-                for (Note note : removed) {
-                    remove(note);
-                }
-
-                for (Note note : retained) {
-                    update(note);
-                }
-
-                for (Note note : unseen) {
-                    add(note);
-                }
-
-                focusRequester.requestFocus();
-            }
-        });
-    }
-
-    private static Set<Note> retainById(Set<Note> source, Set<Note> retained) {
-        Set<Note> result = new HashSet<>();
-        for (Note note : source) {
-            if (findById(retained, note.getId()) != null) {
-                result.add(note);
-            }
-        }
-        return result;
-    }
-
-    private static Set<Note> removeById(Set<Note> source, Set<Note> removed) {
-        Set<Note> result = new HashSet<>(source);
-        for (Note note : source) {
-            if (findById(removed, note.getId()) != null) {
-                result.remove(note);
-            }
-        }
-        return result;
-    }
-
-    private static<N extends Note> N findById(Iterable<N> notes, String id) {
-        for (N note : notes) {
-            if (note.getId().equals(id)) {
-                return note;
-            }
-        }
-        return null;
-    }
-
-    private static <T> void assertDistinct(Collection<T> a, Collection<T> b) {
-        Collection<T> overlap = new HashSet<>(a);
-        overlap.retainAll(b);
-        if (!overlap.isEmpty()) {
-            throw new AssertionError("Collections were not distinct");
-        }
     }
 
     @Override
