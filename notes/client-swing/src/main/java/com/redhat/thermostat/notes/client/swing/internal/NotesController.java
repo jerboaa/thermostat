@@ -38,6 +38,7 @@ package com.redhat.thermostat.notes.client.swing.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView;
@@ -46,6 +47,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.notes.common.NoteDAO;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -63,6 +65,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     protected NotesView view;
 
     private List<N> models;
+    private Timer autoRefreshTimer;
 
     public NotesController(Clock clock, final ApplicationService appSvc, R ref, D dao, NotesView view) {
         this.clock = clock;
@@ -72,6 +75,12 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         this.view = view;
 
         models = new ArrayList<>();
+        autoRefreshTimer = appSvc.getTimerFactory().createTimer();
+        autoRefreshTimer.setAction(new AutoRefreshTask());
+        autoRefreshTimer.setInitialDelay(0l);
+        autoRefreshTimer.setDelay(30);
+        autoRefreshTimer.setTimeUnit(TimeUnit.SECONDS);
+        autoRefreshTimer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);
 
         this.view.addNoteActionListener(new ActionListener<NotesView.NoteAction>() {
             @Override
@@ -82,6 +91,11 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                         appSvc.getApplicationExecutor().submit(new Runnable() {
                             @Override
                             public void run() {
+                                remoteSaveNotes();
+                                try {
+                                    Thread.sleep(50l);
+                                } catch (InterruptedException ignored) {
+                                }
                                 remoteGetNotesFromStorage();
                             }
                         });
@@ -128,6 +142,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
             public void actionPerformed(ActionEvent<BasicView.Action> actionEvent) {
                 switch (actionEvent.getActionId()) {
                     case HIDDEN:
+                        autoRefreshTimer.stop();
                         appSvc.getApplicationExecutor().submit(new Runnable() {
                             @Override
                             public void run() {
@@ -136,12 +151,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                         });
                         break;
                     case VISIBLE:
-                        appSvc.getApplicationExecutor().submit(new Runnable() {
-                            @Override
-                            public void run() {
-                                remoteGetNotesFromStorage();
-                            }
-                        });
+                        autoRefreshTimer.start();
                         break;
                     default:
                         throw new AssertionError("Unknown action event: " + actionEvent);
@@ -269,4 +279,12 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         }
         return null;
     }
+
+    private class AutoRefreshTask implements Runnable {
+        @Override
+        public void run() {
+            view.actionNotifier.fireAction(NotesView.NoteAction.REMOTE_REFRESH);
+        }
+    }
+
 }
