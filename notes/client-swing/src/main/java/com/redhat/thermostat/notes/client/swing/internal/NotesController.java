@@ -265,21 +265,19 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     protected void localSaveNote(String noteId) {
         long timeStamp = clock.getRealTimeMillis();
 
-        for (N note : models) {
-            if (noteId.equals(note.getId())) {
-                String oldContent = note.getContent();
-                String newContent = view.getContent(noteId);
-                long oldTimestamp = note.getTimeStamp();
-                long newTimestamp = view.getTimeStamp(noteId);
-                if (oldContent.equals(newContent)
-                        && oldTimestamp == newTimestamp) {
-                    continue;
-                }
-
-                note.setTimeStamp(timeStamp);
-                note.setContent(newContent);
-                view.update(note);
-            }
+        N note = findById(models, noteId);
+        if (note == null) {
+            throw new AssertionError("Unable to find local note model to save");
+        }
+        String oldContent = note.getContent();
+        String newContent = view.getContent(noteId);
+        long oldTimestamp = note.getTimeStamp();
+        long newTimestamp = view.getTimeStamp(noteId);
+        if (!oldContent.equals(newContent)
+                || oldTimestamp != newTimestamp) {
+            note.setTimeStamp(timeStamp);
+            note.setContent(newContent);
+            view.update(note);
         }
     }
 
