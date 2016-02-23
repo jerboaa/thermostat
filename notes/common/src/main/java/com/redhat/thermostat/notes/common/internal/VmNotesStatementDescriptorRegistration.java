@@ -50,6 +50,7 @@ public class VmNotesStatementDescriptorRegistration implements StatementDescript
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>();
         descs.add(VmNoteDAOImpl.ADD_VM_NOTE);
+        descs.add(VmNoteDAOImpl.QUERY_COUNT_VM_NOTES_BY_VM_ID);
         descs.add(VmNoteDAOImpl.QUERY_VM_NOTE_BY_ID);
         descs.add(VmNoteDAOImpl.QUERY_VM_NOTES_BY_VM_ID);
         descs.add(VmNoteDAOImpl.UPDATE_VM_NOTE);

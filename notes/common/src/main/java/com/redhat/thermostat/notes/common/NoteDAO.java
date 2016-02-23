@@ -47,6 +47,8 @@ public interface NoteDAO<T extends Ref, U extends Note> {
     /** Returns a {@link List} of {@link HostNote} objects. May return an empty list */
     public List<U> getFor(T ref);
 
+    public long getCount(T ref);
+
     public U getById(T ref, String id);
 
     public void update(U note);

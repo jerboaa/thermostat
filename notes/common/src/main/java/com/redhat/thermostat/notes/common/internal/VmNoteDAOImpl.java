@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.notes.common.VmNote;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Storage;
@@ -51,6 +52,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.model.AggregateCount;
 
 class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
 
@@ -60,6 +62,8 @@ class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
     static Category<VmNote> vmNotesCategory = new Category<>("vm-notes", VmNote.class,
             Key.AGENT_ID, Key.VM_ID, KEY_ID, Key.TIMESTAMP, KEY_CONTENT);
 
+    private final Category<AggregateCount> aggregateCountCategory;
+
     static final String ADD_VM_NOTE = ""
             + "ADD " + vmNotesCategory.getName() + " "
             + "SET 'agentId' = ?s ,"
@@ -67,6 +71,10 @@ class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
             + "    'id' = ?s ,"
             + "    'timeStamp' = ?l ,"
             + "    'content' = ?s";
+
+    static final String QUERY_COUNT_VM_NOTES_BY_VM_ID = ""
+            + "QUERY-COUNT " + vmNotesCategory.getName() + " "
+            + "WHERE 'vmId' = ?s";
 
     static final String QUERY_VM_NOTES_BY_VM_ID = ""
             + "QUERY " + vmNotesCategory.getName() + " "
@@ -100,6 +108,9 @@ class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
     public VmNoteDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmNotesCategory);
+        CategoryAdapter<VmNote, AggregateCount> adapter = new CategoryAdapter<>(vmNotesCategory);
+        aggregateCountCategory = adapter.getAdapted(AggregateCount.class);
+        storage.registerCategory(aggregateCountCategory);
     }
 
     @Override
@@ -115,6 +126,17 @@ class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
                 return preparedStatement;
             }
         });
+    }
+
+    @Override
+    public long getCount(final VmRef ref) {
+        return executeQuery(new AbstractDaoQuery<AggregateCount>(storage, aggregateCountCategory, QUERY_COUNT_VM_NOTES_BY_VM_ID) {
+            @Override
+            public PreparedStatement<AggregateCount> customize(PreparedStatement<AggregateCount> preparedStatement) {
+                preparedStatement.setString(0, ref.getVmId());
+                return preparedStatement;
+            }
+        }).head().getCount();
     }
 
     @Override

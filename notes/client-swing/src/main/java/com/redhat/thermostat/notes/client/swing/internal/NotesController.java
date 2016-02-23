@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -72,10 +71,13 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
     private SortedSet<N> models;
     private SortedSet<N> modelSnapshot;
+    private Set<N> addedSet;
+    private Set<N> updatedSet;
     private Set<N> removedSet;
+    private Timer syncTimer;
     private Timer autoRefreshTimer;
 
-    public NotesController(Clock clock, final ApplicationService appSvc, R ref, D dao, NotesView view) {
+    public NotesController(Clock clock, final ApplicationService appSvc, final R ref, final D dao, NotesView view) {
         this.clock = clock;
         this.appSvc = appSvc;
         this.ref = ref;
@@ -85,7 +87,15 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         NoteIdComparator<N> noteIdComparator = new NoteIdComparator<>();
         models = new TreeSet<>(noteIdComparator);
         modelSnapshot = new TreeSet<>(noteIdComparator);
+        addedSet = new HashSet<>();
+        updatedSet = new HashSet<>();
         removedSet = new HashSet<>();
+
+        syncTimer = appSvc.getTimerFactory().createTimer();
+        syncTimer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);
+        syncTimer.setTimeUnit(TimeUnit.MILLISECONDS);
+        syncTimer.setInitialDelay(0l);
+        syncTimer.setDelay(250l);
 
         autoRefreshTimer = appSvc.getTimerFactory().createTimer();
         autoRefreshTimer.setAction(new AutoRefreshTask());
@@ -103,12 +113,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                         appSvc.getApplicationExecutor().submit(new Runnable() {
                             @Override
                             public void run() {
-                                remoteSaveNotes();
-                                try {
-                                    Thread.sleep(50l);
-                                } catch (InterruptedException ignored) {
-                                }
-                                remoteGetNotesFromStorage();
+                                sync();
                             }
                         });
                         break;
@@ -118,8 +123,12 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                         appSvc.getApplicationExecutor().submit(new Runnable() {
                             @Override
                             public void run() {
-                                remoteSaveNotes();
-                                localAddNewNote();
+                                sync(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        localAddNewNote();
+                                    }
+                                });
                             }
                         });
                         break;
@@ -140,7 +149,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                             public void run() {
                                 String noteId = /* tag = */ (String) actionEvent.getPayload();
                                 localDeleteNote(noteId);
-                                remoteSaveNotes();
+                                sync();
                             }
                         });
                         break;
@@ -158,7 +167,11 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                         appSvc.getApplicationExecutor().submit(new Runnable() {
                             @Override
                             public void run() {
-                                remoteSaveNotes();
+                                sendLocalChangesToStorage();
+                                addedSet.clear();
+                                updatedSet.clear();
+                                removedSet.clear();
+                                models.clear();
                             }
                         });
                         break;
@@ -182,11 +195,24 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         return translator.localize(LocaleResources.TAB_NAME);
     }
 
-    protected void remoteGetNotesFromStorage() {
+    protected void sync(Runnable onComplete) {
+        syncTimer.stop();
+        syncTimer.setAction(new SyncTask(onComplete));
+        syncTimer.start();
+    }
+
+    protected void sync() {
+        sync(new EmptyRunnable());
+    }
+
+    protected void retrieveNotesFromStorage() {
         Utils.assertNotInEdt();
 
         view.setBusy(true);
 
+        addedSet.clear();
+        updatedSet.clear();
+        removedSet.clear();
         models.clear();
         models.addAll(dao.getFor(ref));
         localUpdateNotesInView();
@@ -194,33 +220,63 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         view.setBusy(false);
     }
 
-    protected void remoteSaveNotes() {
+    protected void sendLocalChangesToStorage() {
         view.setBusy(true);
 
         List<N> remoteModels = dao.getFor(ref);
 
-        List<String> seen = new ArrayList<>();
-        for (N remoteModel : remoteModels) {
-            N localModel = findById(models, remoteModel.getId());
-            if (localModel == null) {
-                if (removedSet.contains(remoteModel)) {
-                    dao.remove(remoteModel);
+        updatedSet.removeAll(removedSet);
+        addedSet.removeAll(removedSet);
+        addedSet.removeAll(updatedSet);
+
+        assertDistinct(addedSet, updatedSet);
+        assertDistinct(updatedSet, removedSet);
+        assertDistinct(removedSet, addedSet);
+
+        Set<N> justSent = new HashSet<>();
+
+        for (N note : addedSet) {
+            N remote = findById(remoteModels, note.getId());
+            if (remote == null) {
+                if (!justSent.contains(note)) {
+                    dao.add(note);
+                    addedSet.add(note);
+                    justSent.add(note);
                 }
             } else {
-                if (localModel.getTimeStamp() != remoteModel.getTimeStamp()
-                        || !localModel.getContent().equals(remoteModel.getContent())) {
-                    // notes differ
-                    dao.update(localModel);
+                if (remote.getTimeStamp() > note.getTimeStamp()) {
+                    // if remote already contains a note with the same ID and a newer timestamp, what should we do?
+                    // maybe create a new note, copy the timestamp and content, and add that to remote?
+                } else {
+                    // should we overwrite with an update, or also create a copy here? If this is a new note
+                    // addition locally then if remote already has a note with this ID, it seems like it's an
+                    // unintentionally ID collision.
+                    if (!justSent.contains(note)) {
+                        dao.update(note);
+                        justSent.add(note);
+                    }
                 }
-                seen.add(localModel.getId());
             }
         }
 
-        for (N note : models) {
-            if (seen.contains(note.getId())) {
-                continue;
+        for (N note : updatedSet) {
+            N remote = findById(remoteModels, note.getId());
+            if (remote == null) {
+                if (!justSent.contains(note)) {
+                    dao.add(note);
+                    addedSet.add(note);
+                    justSent.add(note);
+                }
+            } else if (note.getTimeStamp() > remote.getTimeStamp()) {
+                if (!justSent.contains(note)) {
+                    dao.update(note);
+                    justSent.add(note);
+                }
             }
-            dao.add(note);
+        }
+
+        for (N note : removedSet) {
+            dao.remove(note);
         }
 
         view.setBusy(false);
@@ -233,6 +289,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
         N note = createNewNote(timeStamp, content);
         models.add(note);
+        addedSet.add(note);
 
         localUpdateNotesInView();
     }
@@ -273,6 +330,11 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         if (note == null) {
             throw new AssertionError("Unable to find local note model to save");
         }
+        N added = findById(addedSet, noteId);
+        if (added != null) {
+            addedSet.remove(added);
+        }
+        updatedSet.add(note);
         String oldContent = note.getContent();
         String newContent = view.getContent(noteId);
         long oldTimestamp = note.getTimeStamp();
@@ -336,6 +398,49 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
             }
         }
         return null;
+    }
+
+    private class SyncTask implements Runnable {
+
+        private boolean firstRun = true;
+        private long startTime;
+        private long initialCount;
+        private long expectedDelta;
+        private Runnable onComplete;
+
+        public SyncTask(Runnable onComplete) {
+            initialCount = dao.getCount(ref);
+            expectedDelta = addedSet.size() - removedSet.size();
+            this.onComplete = onComplete;
+        }
+
+        @Override
+        public void run() {
+            if (firstRun) {
+                sendLocalChangesToStorage();
+                view.setBusy(true);
+                startTime = System.currentTimeMillis();
+                firstRun = false;
+                return;
+            }
+            long currentTime = System.currentTimeMillis();
+            boolean timeoutElapsed = startTime + TimeUnit.SECONDS.toMillis(5l) < currentTime;
+            if (expectedDelta == 0
+                    || timeoutElapsed
+                    || dao.getCount(ref) == (initialCount + expectedDelta)) {
+                syncTimer.stop();
+                view.setBusy(false);
+                retrieveNotesFromStorage();
+                onComplete.run();
+            }
+        }
+    }
+
+    private class EmptyRunnable implements Runnable {
+        @Override
+        public void run() {
+            // intentionally empty
+        }
     }
 
     private class AutoRefreshTask implements Runnable {

@@ -68,7 +68,7 @@ public class VmNotesControllerTest {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        notesController.remoteGetNotesFromStorage();
+                        notesController.retrieveNotesFromStorage();
                     }
                 }).start();
 

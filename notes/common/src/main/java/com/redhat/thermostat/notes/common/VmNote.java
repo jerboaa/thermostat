@@ -104,14 +104,11 @@ public class VmNote extends BasePojo implements TimeStampedPojo, Note {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getAgentId(), vmId, id, timeStamp);
+        return Objects.hash(getAgentId(), vmId, id);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
         if (!(obj instanceof VmNote)) {
             return false;
         }

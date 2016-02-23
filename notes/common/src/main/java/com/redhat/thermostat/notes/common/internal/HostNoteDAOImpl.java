@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.notes.common.HostNote;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
@@ -51,6 +52,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.model.AggregateCount;
 
 public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
 
@@ -60,12 +62,18 @@ public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
     static Category<HostNote> hostNotesCategory = new Category<>("host-notes", HostNote.class,
             Key.AGENT_ID, KEY_ID, Key.TIMESTAMP, KEY_CONTENT);
 
+    private final Category<AggregateCount> aggregateCountCategory;
+
     static final String ADD_HOST_NOTE = ""
             + "ADD " + hostNotesCategory.getName() + " "
             + "SET 'agentId' = ?s ,"
             + "    'id' = ?s ,"
             + "    'timeStamp' = ?l ,"
             + "    'content' = ?s";
+
+    static final String QUERY_COUNT_HOST_NOTES_BY_AGENT_ID = ""
+            + "QUERY-COUNT " + hostNotesCategory.getName() + " "
+            + "WHERE 'agentId' = ?s";
 
     static final String QUERY_HOST_NOTES_BY_VM_ID = ""
             + "QUERY " + hostNotesCategory.getName() + " "
@@ -95,6 +103,9 @@ public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
     public HostNoteDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(hostNotesCategory);
+        CategoryAdapter<HostNote, AggregateCount> adapter = new CategoryAdapter<>(hostNotesCategory);
+        aggregateCountCategory = adapter.getAdapted(AggregateCount.class);
+        storage.registerCategory(aggregateCountCategory);
     }
 
     @Override
@@ -109,6 +120,17 @@ public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
                 return preparedStatement;
             }
         });
+    }
+
+    @Override
+    public long getCount(final HostRef ref) {
+        return executeQuery(new AbstractDaoQuery<AggregateCount>(storage, aggregateCountCategory, QUERY_COUNT_HOST_NOTES_BY_AGENT_ID) {
+            @Override
+            public PreparedStatement<AggregateCount> customize(PreparedStatement<AggregateCount> preparedStatement) {
+                preparedStatement.setString(0, ref.getAgentId());
+                return preparedStatement;
+            }
+        }).head().getCount();
     }
 
     @Override

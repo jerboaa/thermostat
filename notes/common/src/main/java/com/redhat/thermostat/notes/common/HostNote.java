@@ -93,7 +93,7 @@ public class HostNote extends BasePojo implements TimeStampedPojo, Note {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), id, timeStamp, content);
+        return Objects.hash(getAgentId(), id, content);
     }
 
     @Override
