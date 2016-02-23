@@ -40,6 +40,9 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -62,12 +65,14 @@ public class NotePanel extends JPanel {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
+    private Note note;
     private ThermostatTextArea text;
     private JLabel timeStampLabel;
     private ActionNotifier<NoteAction> actionNotifier;
 
-    public NotePanel(final Note note, final ActionNotifier<NoteAction> actionNotifier) {
+    public NotePanel(final Note note, final ActionNotifier<NoteAction> actionNotifier, final SwingNotesView.FocusRequester<ThermostatTextArea> focusRequester) {
         Utils.assertInEdt();
+        this.note = note;
         this.actionNotifier = actionNotifier;
 
         // wrap in html tags to enable line wrapping
@@ -81,15 +86,24 @@ public class NotePanel extends JPanel {
             public void removeUpdate(DocumentEvent event) {
                 NotePanel.this.actionNotifier.fireAction(NoteAction.LOCAL_SAVE, note.getId());
             }
+
             @Override
             public void insertUpdate(DocumentEvent event) {
                 NotePanel.this.actionNotifier.fireAction(NoteAction.LOCAL_SAVE, note.getId());
             }
+
             @Override
             public void changedUpdate(DocumentEvent event) {
                 NotePanel.this.actionNotifier.fireAction(NoteAction.LOCAL_SAVE, note.getId());
             }
         });
+        text.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                focusRequester.setComponent(text);
+            }
+        });
+        focusRequester.setComponent(text);
         Icon deleteIcon = new FontAwesomeIcon('\uf014', Constants.TEXT_SIZE);
         JButton deleteButton = new JButton(deleteIcon);
         deleteButton.setToolTipText(translator.localize(LocaleResources.NOTES_DELETE).getContents());
@@ -119,6 +133,11 @@ public class NotePanel extends JPanel {
         constraints.weightx = 0;
         constraints.fill = GridBagConstraints.NONE;
         this.add(deleteButton, constraints);
+    }
+
+    public Note getNote() {
+        Utils.assertInEdt();
+        return note;
     }
 
     public String getContent() {

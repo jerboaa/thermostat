@@ -52,8 +52,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.beans.PropertyChangeEvent;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.BoxLayout;
@@ -73,6 +76,7 @@ import com.redhat.thermostat.client.swing.components.ActionButton;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -94,11 +98,13 @@ public class SwingNotesView extends NotesView implements SwingComponent {
     private ActionButton refreshButton;
 
     private Map<String, NotePanel> tagToPanel;
+    private FocusRequester<ThermostatTextArea> focusRequester;
 
     public SwingNotesView() {
         Utils.assertInEdt();
 
         tagToPanel = new HashMap<>();
+        focusRequester = new FocusRequester<>();
 
         container = new HeaderPanel(translator.localize(LocaleResources.TAB_NAME));
         new ComponentVisibilityNotifier().initialize(container, notifier);
@@ -170,6 +176,7 @@ public class SwingNotesView extends NotesView implements SwingComponent {
                 busyLayer.setBusy(busy);
                 containerCover.repaint();
                 refreshButton.setEnabled(!busy);
+                focusRequester.requestFocus();
             }
         });
     }
@@ -185,6 +192,8 @@ public class SwingNotesView extends NotesView implements SwingComponent {
                 tagToPanel.clear();
                 notesAndToolsContainer.revalidate();
                 notesAndToolsContainer.repaint();
+
+                focusRequester.clear();
             }
         });
     }
@@ -194,11 +203,121 @@ public class SwingNotesView extends NotesView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                NotePanel widget = new NotePanel(note, actionNotifier);
+                NotePanel widget = new NotePanel(note, actionNotifier, focusRequester);
                 tagToPanel.put(note.getId(), widget);
                 notesContainer.add(widget);
+                focusRequester.requestFocus();
                 notesAndToolsContainer.revalidate();
                 notesAndToolsContainer.repaint();
+            }
+        });
+    }
+
+    @Override
+    public void update(final Set<Note> update) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                Set<Note> existing = new HashSet<>();
+                for (NotePanel panel : tagToPanel.values()) {
+                    existing.add(panel.getNote());
+                }
+
+                Set<Note> unseen = removeById(update, existing);
+                Set<Note> retained = retainById(update, existing);
+                Set<Note> removed = removeById(existing, retained);
+
+                assertDistinct(unseen, retained);
+                assertDistinct(unseen, removed);
+                assertDistinct(retained, removed);
+
+                for (Note note : removed) {
+                    remove(note);
+                }
+
+                for (Note note : retained) {
+                    update(note);
+                }
+
+                for (Note note : unseen) {
+                    add(note);
+                }
+
+                focusRequester.requestFocus();
+            }
+        });
+    }
+
+    private static Set<Note> retainById(Set<Note> source, Set<Note> retained) {
+        Set<Note> result = new HashSet<>();
+        for (Note note : source) {
+            if (findById(retained, note.getId()) != null) {
+                result.add(note);
+            }
+        }
+        return result;
+    }
+
+    private static Set<Note> removeById(Set<Note> source, Set<Note> removed) {
+        Set<Note> result = new HashSet<>(source);
+        for (Note note : source) {
+            if (findById(removed, note.getId()) != null) {
+                result.remove(note);
+            }
+        }
+        return result;
+    }
+
+    private static<N extends Note> N findById(Iterable<N> notes, String id) {
+        for (N note : notes) {
+            if (note.getId().equals(id)) {
+                return note;
+            }
+        }
+        return null;
+    }
+
+    private static <T> void assertDistinct(Collection<T> a, Collection<T> b) {
+        Collection<T> overlap = new HashSet<>(a);
+        overlap.retainAll(b);
+        if (!overlap.isEmpty()) {
+            throw new AssertionError("Collections were not distinct");
+        }
+    }
+
+    @Override
+    public void update(final Note note) {
+        if (!tagToPanel.containsKey(note.getId())) {
+            throw new AssertionError("Cannot update Note which was not previously added. ID: " + note.getId());
+        }
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                NotePanel panel = tagToPanel.get(note.getId());
+                panel.setContent(note.getContent());
+                panel.setTimeStamp(note.getTimeStamp());
+                notesAndToolsContainer.revalidate();
+                notesAndToolsContainer.repaint();
+
+                focusRequester.requestFocus();
+            }
+        });
+    }
+
+    @Override
+    public void remove(final Note note) {
+        if (!tagToPanel.containsKey(note.getId())) {
+            throw new AssertionError("Cannot remove Note which was not previously added. ID: " + note.getId());
+        }
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                notesContainer.remove(tagToPanel.get(note.getId()));
+                tagToPanel.remove(note.getId());
+                notesAndToolsContainer.revalidate();
+                notesAndToolsContainer.repaint();
+
+                focusRequester.clear();
             }
         });
     }
@@ -225,6 +344,26 @@ public class SwingNotesView extends NotesView implements SwingComponent {
                 tagToPanel.get(tag).setTimeStamp(timeStamp);
             }
         });
+    }
+
+    static class FocusRequester<T extends JComponent> {
+
+        private T component;
+
+        public void setComponent(T component) {
+            this.component = component;
+        }
+
+        public void clear() {
+            setComponent(null);
+        }
+
+        public void requestFocus() {
+            if (component != null) {
+                component.requestFocusInWindow();
+            }
+        }
+
     }
 
     /**

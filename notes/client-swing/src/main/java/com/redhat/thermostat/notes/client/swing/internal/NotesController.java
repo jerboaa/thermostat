@@ -37,6 +37,7 @@
 package com.redhat.thermostat.notes.client.swing.internal;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -226,14 +227,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
     /** Update the view to match what's in the local cache */
     protected void localUpdateNotesInView() {
-        List<N> vmNotes = models;
-
-        // TODO only apply diff of notes to reduce UI glitches/changes
-        view.clearAll();
-
-        for (N vmNote : vmNotes) {
-            view.add(vmNote);
-        }
+        view.update(new HashSet<Note>(models));
     }
 
     /** Update the local cache of notes to match what's in the view */
