@@ -41,6 +41,9 @@ import com.redhat.thermostat.shared.locale.Translate;
 public enum LocaleResources {
 
     ISSUES_HEADER,
+    ISSUES_NOT_STARTED,
+    ISSUES_NONE_FOUND,
+    ISSUES_FOUND,
     ISSUES_CHECK,
     ISSUES_COLUMN_SEVERITY,
     ISSUES_COLUMN_MESSAGE,

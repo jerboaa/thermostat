@@ -36,26 +36,20 @@
 
 package com.redhat.thermostat.client.swing.internal.views;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.Severity;
 import com.redhat.thermostat.client.core.views.IssueView;
-import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionButton;
@@ -80,8 +74,6 @@ public class SwingIssueView extends IssueView implements SwingComponent {
 
     private NonEditableTableModel tableModel;
 
-    private JPanel contentPane;
-
     private SearchActionListener searchListener;
 
     static {
@@ -97,9 +89,8 @@ public class SwingIssueView extends IssueView implements SwingComponent {
     public SwingIssueView() {
         panel = new HeaderPanel(translator.localize(LocaleResources.ISSUES_HEADER));
 
-        contentPane = new JPanel();
-        contentPane.setLayout(new BorderLayout());
-        panel.setContent(contentPane);
+        JComponent tablePanel = createIssuesTable();
+        panel.setContent(tablePanel);
 
         searchListener = new SearchActionListener();
 
@@ -115,43 +106,27 @@ public class SwingIssueView extends IssueView implements SwingComponent {
         return panel;
     }
 
-    public void showInitialView() {
+    @Override
+    public void setIssuesState(final IssueState state) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                contentPane.removeAll();
-                JButton initialSearchButton = new JButton(translator.localize(LocaleResources.ISSUES_CHECK).getContents());
-                initialSearchButton.addActionListener(searchListener);
-                contentPane.add(initialSearchButton, BorderLayout.CENTER);
-                contentPane.revalidate();
-            }
-        });
-    }
-
-    public void showIssues() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                contentPane.removeAll();
-                JComponent tablePanel = createIssuesTable();
-                contentPane.add(tablePanel, BorderLayout.CENTER);
-                contentPane.revalidate();
-            }
-        });
-    }
-
-    public boolean isInitialView() {
-        try {
-            return new EdtHelper().callAndWait(new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    return tableModel == null;
+                switch (state) {
+                    case NOT_STARTED:
+                        panel.setHeader(translator.localize(LocaleResources.ISSUES_NOT_STARTED));
+                        break;
+                    case NONE_FOUND:
+                        panel.setHeader(translator.localize(LocaleResources.ISSUES_NONE_FOUND));
+                        break;
+                    case ISSUES_FOUND:
+                        panel.setHeader(translator.localize(LocaleResources.ISSUES_FOUND));
+                        break;
+                    default:
+                        logger.log(Level.WARNING, "Unknown IssueState: " + state);
+                        break;
                 }
-            });
-        } catch (InvocationTargetException | InterruptedException e) {
-            logger.log(Level.WARNING, "Error in isInitialView()", e);
-            return false;
-        }
+            }
+        });
     }
 
     private JComponent createIssuesTable() {
@@ -170,7 +145,7 @@ public class SwingIssueView extends IssueView implements SwingComponent {
                     return getValueAt(0, columnIndex).getClass();
                 }
                 return super.getColumnClass(columnIndex);
-            };
+            }
         };
 
         ThermostatTable table = new ThermostatTable(tableModel);
@@ -179,6 +154,7 @@ public class SwingIssueView extends IssueView implements SwingComponent {
         return table.wrap();
     }
 
+    @Override
     public void addIssue(final IssueDescription issue) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -194,6 +170,7 @@ public class SwingIssueView extends IssueView implements SwingComponent {
         });
     }
 
+    @Override
     public void clearIssues() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -205,6 +182,7 @@ public class SwingIssueView extends IssueView implements SwingComponent {
         });
     }
 
+    @Override
     public void addIssueActionListener(ActionListener<IssueView.IssueAction> listener) {
         notifier.addActionListener(listener);
     }

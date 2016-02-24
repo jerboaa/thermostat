@@ -147,8 +147,6 @@ public class IssueViewController {
         this.executor = appService.getApplicationExecutor();
         this.view = view;
 
-        view.showInitialView();
-
         issueTracker = new IssueDiagnoserTracker(context);
 
         agentInfoDaoTracker = new DaoTracker<>(context, AgentInfoDAO.class);
@@ -158,10 +156,6 @@ public class IssueViewController {
         actionListener = new ActionListener<IssueAction>() {
             @Override
             public void actionPerformed(com.redhat.thermostat.common.ActionEvent<IssueAction> actionEvent) {
-                if (view.isInitialView()) {
-                    view.showIssues();
-                }
-
                 Runnable task = new Runnable() {
                     @Override
                     public void run() {
@@ -172,11 +166,15 @@ public class IssueViewController {
                         for (IssueDescription description: descriptions) {
                             view.addIssue(description);
                         }
+                        IssueView.IssueState issueState = issues.isEmpty() ? IssueView.IssueState.NONE_FOUND : IssueView.IssueState.ISSUES_FOUND;
+                        view.setIssuesState(issueState);
                     }
                 };
                 executor.submit(task);
             }
         };
+
+        view.setIssuesState(IssueView.IssueState.NOT_STARTED);
     }
 
     private Collection<Issue> findIssues() {
@@ -248,7 +246,6 @@ public class IssueViewController {
         issueTracker.open();
 
         view.addIssueActionListener(actionListener);
-
     }
 
     public void stop() {

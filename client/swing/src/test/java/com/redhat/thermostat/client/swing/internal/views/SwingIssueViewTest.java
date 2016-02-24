@@ -54,7 +54,6 @@ public class SwingIssueViewTest {
             @Override
             public void run() {
                 final SwingIssueView view = new SwingIssueView();
-                view.showInitialView();
 
                 JFrame mainWindow = new JFrame();
                 mainWindow.add(view.getUiComponent());
@@ -62,7 +61,7 @@ public class SwingIssueViewTest {
                 view.addIssueActionListener(new ActionListener<IssueView.IssueAction>() {
                     @Override
                     public void actionPerformed(ActionEvent<IssueAction> actionEvent) {
-                        view.showIssues();
+                        view.setIssuesState(IssueView.IssueState.NOT_STARTED);
                         view.clearIssues();
                         view.addIssue(new IssueDescription(Severity.CRITICAL, "agent-id", "vm-id", "CRITICAL!"));
                         view.addIssue(new IssueDescription(Severity.WARNING, "agent-id", "vm-id", "WARNING!"));

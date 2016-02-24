@@ -48,8 +48,8 @@ public abstract class IssueView extends BasicView implements UIComponent {
         public final String vm;
         public final String description;
 
-        public IssueDescription(Severity sevrity, String agent, String vm, String description) {
-            this.severity = sevrity;
+        public IssueDescription(Severity severity, String agent, String vm, String description) {
+            this.severity = severity;
             this.description = description;
             this.agent = agent;
             this.vm = vm;
@@ -58,15 +58,17 @@ public abstract class IssueView extends BasicView implements UIComponent {
 
     public enum IssueAction {
         SEARCH,
-    };
+    }
+
+    public enum IssueState {
+        NOT_STARTED,
+        NONE_FOUND,
+        ISSUES_FOUND,
+    }
 
     protected final ActionNotifier<IssueView.IssueAction> notifier = new ActionNotifier<>(IssueView.this);
 
-    public abstract void showInitialView();
-
-    public abstract void showIssues();
-
-    public abstract boolean isInitialView();
+    public abstract void setIssuesState(IssueState state);
 
     public abstract void addIssue(final IssueDescription issue);
 

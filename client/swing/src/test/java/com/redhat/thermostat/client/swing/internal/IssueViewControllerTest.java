@@ -105,7 +105,7 @@ public class IssueViewControllerTest {
 
     @Test
     public void verifyDoesNothingWithoutStart() throws Exception {
-        verify(view).showInitialView();
+        verify(view).setIssuesState(IssueView.IssueState.NOT_STARTED);
         verify(view, never()).addIssueActionListener(isA(ActionListener.class));
         verify(view, never()).clearIssues();
         verify(view, never()).addIssue(isA(IssueDescription.class));
@@ -162,6 +162,7 @@ public class IssueViewControllerTest {
 
         ArgumentCaptor<ActionListener> captor = ArgumentCaptor.forClass(ActionListener.class);
         verify(view).addIssueActionListener(captor.capture());
+        verify(view).setIssuesState(IssueView.IssueState.NOT_STARTED);
 
         ActionListener<IssueAction> listener = captor.getValue();
 
@@ -174,6 +175,7 @@ public class IssueViewControllerTest {
         ArgumentCaptor<IssueDescription> issueCaptor = ArgumentCaptor.forClass(IssueDescription.class);
         verify(view).clearIssues();
         verify(view).addIssue(issueCaptor.capture());
+        verify(view).setIssuesState(IssueView.IssueState.ISSUES_FOUND);
 
         IssueDescription issueDescription = issueCaptor.getValue();
         assertEquals(String.format("%s (%s)", hostInfo.getHostname(), agentId.get()), issueDescription.agent);
