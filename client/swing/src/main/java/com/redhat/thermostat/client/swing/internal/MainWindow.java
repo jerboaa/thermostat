@@ -362,7 +362,6 @@ public class MainWindow extends JFrame implements MainView {
     }
     
     private void installGlobalNavigation() {
-        // FIXME clean up UI
         JButton action = new JButton(translator.localize(LocaleResources.SHOW_ISSUES).getContents());
         action.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -370,7 +369,7 @@ public class MainWindow extends JFrame implements MainView {
                 fireViewAction(Action.SHOW_ISSUES);
             }
         });
-        navigationPanel.getGlobalPane().add(action);
+        navigationPanel.addContent(action, BorderLayout.SOUTH);
     }
 
     private void installSearchFiled() {

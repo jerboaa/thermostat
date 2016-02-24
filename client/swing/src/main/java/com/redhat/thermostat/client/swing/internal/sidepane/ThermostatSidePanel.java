@@ -62,15 +62,6 @@ public class ThermostatSidePanel extends JPanel {
     
     public ThermostatSidePanel() {
         setLayout(new BorderLayout());
-
-        global = new TopSidePane();
-        global.addPropertyChangeListener(TopSidePane.COLLAPSED_PROPERTY, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                firePropertyChange(COLLAPSED, evt.getOldValue(), evt.getNewValue());
-            }
-        });
-        add(global, BorderLayout.NORTH);
         
         JPanel browser = new JPanel();
         browser.setLayout(new BorderLayout());
@@ -107,10 +98,6 @@ public class ThermostatSidePanel extends JPanel {
         repaint();
     }
     
-    public JPanel getGlobalPane() {
-        return global;
-    }
-
     public JPanel getTopPane() {
         return top;
     }
