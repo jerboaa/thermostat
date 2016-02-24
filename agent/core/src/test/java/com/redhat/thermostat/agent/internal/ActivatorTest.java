@@ -38,14 +38,12 @@ package com.redhat.thermostat.agent.internal;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
@@ -67,13 +65,10 @@ public class ActivatorTest {
         StubBundleContext context = new StubBundleContext();
         context.registerService(CommonPaths.class.getName(), paths, null);
 
-        //RMIRegistry registry = mock(RMIRegistry.class);
-        //MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(registry);
         Activator activator = new Activator();
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(RMIRegistry.class.getName(), RMIRegistryImpl.class));
         assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
         assertTrue(context.isServiceRegistered(UserNameUtil.class.getName(), UserNameUtilImpl.class));
         assertTrue(context.isServiceRegistered(VmBlacklist.class.getName(), VmBlacklistImpl.class));
