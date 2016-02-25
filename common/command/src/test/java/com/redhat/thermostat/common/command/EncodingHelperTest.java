@@ -40,10 +40,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.nio.ByteBuffer;
 
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.command.EncodingHelper;
+
+import io.netty.buffer.ByteBuf;
 
 public class EncodingHelperTest {
 
@@ -51,7 +52,7 @@ public class EncodingHelperTest {
     public void testEncode() {
         String input = "a test string";
         byte[] inputBytes = input.getBytes();
-        ChannelBuffer buf = EncodingHelper.encode(input);
+        ByteBuf buf = EncodingHelper.encode(input);
         int encodedMessageLength = buf.readInt();
         assertEquals(inputBytes.length, encodedMessageLength);
         ByteBuffer bbuf = ByteBuffer.allocate(buf.readableBytes());

@@ -36,18 +36,22 @@
 
 package com.redhat.thermostat.client.command.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 
-import com.redhat.thermostat.common.command.InvalidMessageException;
-import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.Messages;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
 
 public class ResponseDecoderTest {
 
@@ -60,25 +64,24 @@ public class ResponseDecoderTest {
     };
     
     @Test
-    public void testDecode() throws InvalidMessageException {
-        ChannelBuffer buffer = ChannelBuffers.copiedBuffer(ENCODED_OK_RESP);
+    public void testDecode() throws Exception {
+        ByteBuf buffer = Unpooled.copiedBuffer(ENCODED_OK_RESP);
         Response expected = new Response(ResponseType.OK);
         ResponseDecoder decoder = new ResponseDecoder();
-        Message actual = decoder.decode(null, buffer);
-        assertTrue(actual instanceof Response);
+        List<Object> out = new ArrayList<>();
+        decoder.decode(mock(ChannelHandlerContext.class), buffer, out);
+        assertEquals(1, out.size());
+        Response actual = (Response)out.get(0);
         assertTrue(Messages.equal(expected, (Response)actual));
     }
     
     @Test
-    public void verifyInvalidEncodingThrowsException() {
+    public void verifyInvalidEncodingDoesNotAddToResultList() throws Exception {
         ResponseDecoder decoder = new ResponseDecoder();
-        ChannelBuffer garbage = ChannelBuffers.copiedBuffer(GARBAGE_AS_RESPONSE);
-        try {
-            decoder.decode(null, garbage);
-            fail("Should have thrown decoding exception!");
-        } catch (InvalidMessageException e) {
-            // pass
-        }
+        ByteBuf garbage = Unpooled.copiedBuffer(GARBAGE_AS_RESPONSE);
+        List<Object> out = new ArrayList<>();
+        decoder.decode(mock(ChannelHandlerContext.class), garbage, out);
+        assertEquals(0, out.size());
     }
 }
 

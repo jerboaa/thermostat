@@ -44,17 +44,17 @@ import static org.mockito.Mockito.verify;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
 
 public class ResponseHandlerTest {
 
@@ -66,17 +66,12 @@ public class ResponseHandlerTest {
         listeners.add(fixture);
         when(req.getListeners()).thenReturn(listeners);
         ResponseHandler handler = new ResponseHandler(req);
-        ChannelHandlerContext ctxt = mock(ChannelHandlerContext.class);
-        ChannelPipeline pipeline = mock(ChannelPipeline.class);
-        when(ctxt.getPipeline()).thenReturn(pipeline);
-        Channel channel = mock(Channel.class);
-        MessageEvent e = mock(MessageEvent.class);
-        when(e.getChannel()).thenReturn(channel);
         Response response = mock(Response.class);
         when(response.getType()).thenReturn(ResponseType.OK);
-        when(e.getMessage()).thenReturn(response);
         
-        handler.messageReceived(ctxt, e);
+        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        when(ctx.pipeline()).thenReturn(mock(ChannelPipeline.class));
+        handler.channelRead0(ctx, response);
         assertTrue(fixture.isCalled());
     }
     
@@ -88,10 +83,12 @@ public class ResponseHandlerTest {
         listeners.add(fixture);
         when(req.getListeners()).thenReturn(listeners);
         ResponseHandler handler = new ResponseHandler(req);
-        ExceptionEvent e = mock(ExceptionEvent.class);
         Channel chan = mock(Channel.class);
-        when(e.getChannel()).thenReturn(chan);
-        handler.exceptionCaught(mock(ChannelHandlerContext.class), e);
+        when(chan.close()).thenReturn(mock(ChannelFuture.class));
+        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        when(ctx.channel()).thenReturn(chan);
+        when(ctx.pipeline()).thenReturn(mock(ChannelPipeline.class));
+        handler.exceptionCaught(ctx, new Exception("Test me!"));
         assertTrue(fixture.isCalled());
         verify(chan).close();
     }

@@ -42,11 +42,10 @@ import java.net.InetSocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.ChannelException;
-
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+
+import io.netty.bootstrap.ServerBootstrap;
 
 class CommandChannelServerImpl implements ConfigurationServer {
 
@@ -70,24 +69,22 @@ class CommandChannelServerImpl implements ConfigurationServer {
         InetSocketAddress addr = new InetSocketAddress(hostname, port);
         
         logger.log(Level.FINE, "Starting command channel server on " + addr.toString());
+        // Bind and start to accept incoming connections.
         try {
-            // Bind and start to accept incoming connections.
-            bootstrap.bind(addr);
-            
-            // Output server started token to agent
-            printer.println(CommandChannelConstants.SERVER_STARTED_TOKEN);
-        } catch (ChannelException e) {
-            throw new IOException("Failed to bind command channel server (" + e.getMessage() + ")", e);
+            bootstrap.bind(addr).sync();
+        } catch (InterruptedException e) {
+            logger.log(Level.WARNING, "Cmd channel server bind was interrupted!");
         }
+        
+        // Output server started token to agent
+        printer.println(CommandChannelConstants.SERVER_STARTED_TOKEN);
         logger.log(Level.FINEST, "Bound command channel server to " + addr.toString());
     }
 
     @Override
     public void stopListening() {
         logger.log(Level.FINE, "Stopping command channel server");
-        ctx.getChannelGroup().close().awaitUninterruptibly();
-        ctx.getChannelGroup().clear();
-        ctx.getBootstrap().releaseExternalResources();
+        ctx.getBootstrap().group().shutdownGracefully();
     }
 }
 

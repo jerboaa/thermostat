@@ -40,13 +40,15 @@ import static org.junit.Assert.assertEquals;
 
 import java.nio.charset.Charset;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.command.server.internal.ResponseEncoder;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 
 public class ResponseEncoderTest {
 
@@ -56,23 +58,23 @@ public class ResponseEncoderTest {
     public void testEncode() throws Exception {
         ResponseEncoder encoder = new ResponseEncoder();
         String responseExp = "OK";
-        ChannelBuffer stringBuf = ChannelBuffers.copiedBuffer(responseExp, Charset.defaultCharset());
-        ChannelBuffer buf = ChannelBuffers.buffer(4);
+        ByteBuf stringBuf = Unpooled.copiedBuffer(responseExp, Charset.defaultCharset());
+        ByteBuf buf = Unpooled.buffer(4);
         buf.writeInt(responseExp.getBytes().length);
-        ChannelBuffer expected = ChannelBuffers.wrappedBuffer(buf, stringBuf);
+        ByteBuf expected = Unpooled.wrappedBuffer(buf, stringBuf);
         Response ok = new Response(ResponseType.OK);
-        ChannelBuffer actual = (ChannelBuffer)encoder.encode(ok);
+        ByteBuf actual = (ByteBuf)encoder.encode(ok);
         if (DEBUG) {
             printBuffers(actual, expected);
         }
-        assertEquals(0, ChannelBuffers.compare(expected, actual));
+        assertEquals(0, ByteBufUtil.compare(expected, actual));
     }
     
-    private void printBuffers(ChannelBuffer actual, ChannelBuffer expected) {
+    private void printBuffers(ByteBuf actual, ByteBuf expected) {
         System.out.println("hexdump expected\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(expected));
+        System.out.println(ByteBufUtil.hexDump(expected));
         System.out.println("\nhexdump actual\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(actual) + "\n\n");
+        System.out.println(ByteBufUtil.hexDump(actual) + "\n\n");
     }
 }
 

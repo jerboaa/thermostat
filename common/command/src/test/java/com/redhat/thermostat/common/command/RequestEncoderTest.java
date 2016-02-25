@@ -34,42 +34,69 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.command.internal;
+package com.redhat.thermostat.common.command;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestEncoder;
 import com.redhat.thermostat.common.command.Request.RequestType;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 
 public class RequestEncoderTest {
 
     private static final boolean DEBUG = false;
+    /**
+     * Represents low-level bytes for:
+     * <pre>
+     * Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(20))
+     * request.setParameter("receiver", "com.redhat.foo.bar.Receiver");
+     * </pre>
+     */
+    private static final byte[] REQUEST_BYTES = new byte[] { 0, 0, 0, 17, 82,
+            69, 83, 80, 79, 78, 83, 69, 95, 69, 88, 80, 69, 67, 84, 69, 68, 0,
+            0, 0, 1, 0, 0, 0, 8, 0, 0, 0, 27, 114, 101, 99, 101, 105, 118, 101,
+            114, 99, 111, 109, 46, 114, 101, 100, 104, 97, 116, 46, 102, 111,
+            111, 46, 98, 97, 114, 46, 82, 101, 99, 101, 105, 118, 101, 114 };
+
+    @Test
+    public void testEncodingRequestToArray() {
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(20));
+        request.setParameter("receiver", "com.redhat.foo.bar.Receiver");
+        RequestEncoder encoder = new RequestEncoder();
+        ByteBuf buf = encoder.encode(request);
+        byte[] array = Unpooled.copiedBuffer(buf).array();
+        assertTrue(Arrays.equals(REQUEST_BYTES, array));
+    }
     
     @Test
     public void canEncodeSimpleRequestWithNoParams() throws Exception {
         RequestEncoder encoder = new RequestEncoder();
         String responseExp = "RESPONSE_EXPECTED";
-        ChannelBuffer stringBuf = ChannelBuffers.copiedBuffer(responseExp, Charset.defaultCharset());
-        ChannelBuffer buf = ChannelBuffers.buffer(4);
+        ByteBuf stringBuf = Unpooled.copiedBuffer(responseExp, Charset.defaultCharset());
+        ByteBuf buf = Unpooled.buffer(4);
         buf.writeInt(responseExp.getBytes().length);
-        ChannelBuffer buf2 = ChannelBuffers.wrappedBuffer(buf, stringBuf);
-        buf = ChannelBuffers.buffer(4);
+        ByteBuf buf2 = Unpooled.wrappedBuffer(buf, stringBuf);
+        buf = Unpooled.buffer(4);
         buf.writeInt(0);
-        ChannelBuffer expected = ChannelBuffers.wrappedBuffer(buf2, buf);
+        ByteBuf expected = Unpooled.wrappedBuffer(buf2, buf);
         InetSocketAddress addr = new InetSocketAddress("testhost", 12);
         Request item = new Request(RequestType.RESPONSE_EXPECTED, addr);
-        ChannelBuffer actual = encoder.encode(item);
+        ByteBuf actual = encoder.encode(item);
         if (DEBUG) {
             printBuffers(actual, expected);
         }
-        assertEquals(0, ChannelBuffers.compare(expected, actual));
+        assertEquals(0, ByteBufUtil.compare(expected, actual));
     }
     
     @Test
@@ -88,47 +115,47 @@ public class RequestEncoderTest {
         
         // build expected
         String responseExp = "RESPONSE_EXPECTED";
-        ChannelBuffer stringBuf = ChannelBuffers.copiedBuffer(responseExp, Charset.defaultCharset());
-        ChannelBuffer buf = ChannelBuffers.buffer(4);
+        ByteBuf stringBuf = Unpooled.copiedBuffer(responseExp, Charset.defaultCharset());
+        ByteBuf buf = Unpooled.buffer(4);
         buf.writeInt(responseExp.getBytes().length);
-        ChannelBuffer buf2 = ChannelBuffers.wrappedBuffer(buf, stringBuf);
-        buf = ChannelBuffers.buffer(4);
+        ByteBuf buf2 = Unpooled.wrappedBuffer(buf, stringBuf);
+        buf = Unpooled.buffer(4);
         buf.writeInt(2);
-        ChannelBuffer request = ChannelBuffers.wrappedBuffer(buf2, buf);
-        ChannelBuffer nameLen = ChannelBuffers.buffer(4);
+        ByteBuf request = Unpooled.wrappedBuffer(buf2, buf);
+        ByteBuf nameLen = Unpooled.buffer(4);
         nameLen.writeInt(param1Name.getBytes().length);
-        ChannelBuffer valueLen = ChannelBuffers.buffer(4);
+        ByteBuf valueLen = Unpooled.buffer(4);
         valueLen.writeInt(param1Value.getBytes().length);
-        ChannelBuffer lens = ChannelBuffers.wrappedBuffer(nameLen, valueLen);
-        ChannelBuffer nameBuf = ChannelBuffers.copiedBuffer(param1Name, Charset.defaultCharset());
-        ChannelBuffer valueBuf = ChannelBuffers.copiedBuffer(param1Value, Charset.defaultCharset());
-        ChannelBuffer payload = ChannelBuffers.wrappedBuffer(nameBuf, valueBuf);
-        ChannelBuffer param1Buf = ChannelBuffers.wrappedBuffer(lens, payload);
-        nameLen = ChannelBuffers.buffer(4);
+        ByteBuf lens = Unpooled.wrappedBuffer(nameLen, valueLen);
+        ByteBuf nameBuf = Unpooled.copiedBuffer(param1Name, Charset.defaultCharset());
+        ByteBuf valueBuf = Unpooled.copiedBuffer(param1Value, Charset.defaultCharset());
+        ByteBuf payload = Unpooled.wrappedBuffer(nameBuf, valueBuf);
+        ByteBuf param1Buf = Unpooled.wrappedBuffer(lens, payload);
+        nameLen = Unpooled.buffer(4);
         nameLen.writeInt(param2Name.getBytes().length);
-        valueLen = ChannelBuffers.buffer(4);
+        valueLen = Unpooled.buffer(4);
         valueLen.writeInt(param2Value.getBytes().length);
-        lens = ChannelBuffers.wrappedBuffer(nameLen, valueLen);
-        nameBuf = ChannelBuffers.copiedBuffer(param2Name, Charset.defaultCharset());
-        valueBuf = ChannelBuffers.copiedBuffer(param2Value, Charset.defaultCharset());
-        payload = ChannelBuffers.wrappedBuffer(nameBuf, valueBuf);
-        ChannelBuffer param2Buf = ChannelBuffers.wrappedBuffer(lens, payload);
-        ChannelBuffer params = ChannelBuffers.wrappedBuffer(param1Buf, param2Buf);
-        ChannelBuffer expected = ChannelBuffers.wrappedBuffer(request, params);
+        lens = Unpooled.wrappedBuffer(nameLen, valueLen);
+        nameBuf = Unpooled.copiedBuffer(param2Name, Charset.defaultCharset());
+        valueBuf = Unpooled.copiedBuffer(param2Value, Charset.defaultCharset());
+        payload = Unpooled.wrappedBuffer(nameBuf, valueBuf);
+        ByteBuf param2Buf = Unpooled.wrappedBuffer(lens, payload);
+        ByteBuf params = Unpooled.wrappedBuffer(param1Buf, param2Buf);
+        ByteBuf expected = Unpooled.wrappedBuffer(request, params);
         
         // Encode item for actual
-        ChannelBuffer actual = encoder.encode(item);
+        ByteBuf actual = encoder.encode(item);
         if (DEBUG) {
             printBuffers(actual, expected);
         }
-        assertEquals(0, ChannelBuffers.compare(expected, actual));
+        assertEquals(0, ByteBufUtil.compare(expected, actual));
     }
 
-    private void printBuffers(ChannelBuffer actual, ChannelBuffer expected) {
+    private void printBuffers(ByteBuf actual, ByteBuf expected) {
         System.out.println("hexdump expected\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(expected));
+        System.out.println(ByteBufUtil.hexDump(expected));
         System.out.println("\nhexdump actual\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(actual) + "\n\n");
+        System.out.println(ByteBufUtil.hexDump(actual) + "\n\n");
     }
 }
 

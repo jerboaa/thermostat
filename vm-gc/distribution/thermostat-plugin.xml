@@ -78,7 +78,11 @@
         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
-        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.common</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.buffer</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.codec</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.transport</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.handler</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
     </command>
     <command>
@@ -136,7 +140,11 @@
         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
-        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.common</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.buffer</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.codec</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.transport</symbolic-name><version>${netty.version}</version></bundle>
+        <bundle><symbolic-name>io.netty.handler</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
     </command>
   </commands>

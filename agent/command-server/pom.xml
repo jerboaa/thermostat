@@ -72,8 +72,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jboss.netty</groupId>
-      <artifactId>netty</artifactId>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>

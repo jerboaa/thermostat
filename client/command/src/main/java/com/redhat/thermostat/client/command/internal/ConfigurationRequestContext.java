@@ -36,37 +36,42 @@
 
 package com.redhat.thermostat.client.command.internal;
 
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
-import org.jboss.netty.bootstrap.Bootstrap;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.handler.ssl.SslHandler;
-
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
+import com.redhat.thermostat.common.command.RequestEncoder;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.ssl.SslHandler;
 
 public class ConfigurationRequestContext implements ConfigurationCommandContext {
     
     private static final Logger logger = LoggingUtils.getLogger(ConfigurationRequestContext.class);
 
-    private final ClientBootstrap bootstrap;
-
+    private final Bootstrap bootstrap;
     private final SSLConfiguration sslConf;
 
     ConfigurationRequestContext(SSLConfiguration sslConf) {
+        this(sslConf, new ClientPipelineInitializerCreator());
+    }
+    
+    ConfigurationRequestContext(SSLConfiguration sslConf, ClientPipelineInitializerCreator creator) {
         this.sslConf = sslConf;
-        this.bootstrap = createBootstrap();
+        this.bootstrap = createBootstrap(creator);
     }
 
     @Override
@@ -79,29 +84,30 @@ public class ConfigurationRequestContext implements ConfigurationCommandContext 
         return sslConf;
     }
 
-    private ClientBootstrap createBootstrap() {
+    private Bootstrap createBootstrap(ClientPipelineInitializerCreator initCreator) {
         // Configure the client.
-        ClientBootstrap bootstrap = new ClientBootstrap(
-                new NioClientSocketChannelFactory(
-                        Executors.newCachedThreadPool(),
-                        Executors.newCachedThreadPool()));
-
-        // Set up the pipeline factory.
-        bootstrap.setPipelineFactory(new ClientPipelineFactory());
-
-        bootstrap.setOption("tcpNoDelay", true);
-        bootstrap.setOption("keepAlive", true);
-        bootstrap.setOption("reuseAddress", true);
-        bootstrap.setOption("connectTimeoutMillis", 100);
-        bootstrap.setOption("readWriteFair", true);
+        Bootstrap bootstrap = new Bootstrap();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        bootstrap.channel(NioSocketChannel.class)
+            .group(workerGroup)
+            .option(ChannelOption.SO_KEEPALIVE, true)
+            .option(ChannelOption.SO_REUSEADDR, true)
+            .option(ChannelOption.TCP_NODELAY, true)
+            .handler(initCreator.createInitializer(sslConf));
         return bootstrap;
     }
 
-    private class ClientPipelineFactory implements ChannelPipelineFactory {
+    static class ClientPipelineInitializer extends ChannelInitializer<SocketChannel> {
 
+        private final SSLConfiguration sslConf;
+        
+        ClientPipelineInitializer(SSLConfiguration sslConf) {
+            this.sslConf = sslConf;
+        }
+        
         @Override
-        public ChannelPipeline getPipeline() throws Exception {
-            ChannelPipeline pipeline = Channels.pipeline();
+        protected void initChannel(SocketChannel ch) throws Exception {
+            ChannelPipeline pipeline = ch.pipeline();
             if (sslConf.enableForCmdChannel()) {
                 SSLContext ctxt = SSLContextFactory.getClientContext(sslConf);
                 SSLEngine engine = ctxt.createSSLEngine();
@@ -115,9 +121,16 @@ public class ConfigurationRequestContext implements ConfigurationCommandContext 
             }
             pipeline.addLast("decoder", new ResponseDecoder());
             pipeline.addLast("encoder", new RequestEncoder());
-            return pipeline;
         }
         
+    }
+    
+    // Testing hook
+    static class ClientPipelineInitializerCreator {
+        
+        ClientPipelineInitializer createInitializer(SSLConfiguration sslConf) {
+            return new ClientPipelineInitializer(sslConf);
+        }
     }
 }
 

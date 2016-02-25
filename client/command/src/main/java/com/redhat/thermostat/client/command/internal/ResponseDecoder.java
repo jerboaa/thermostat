@@ -36,30 +36,51 @@
 
 package com.redhat.thermostat.client.command.internal;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.command.DecodingHelper;
 import com.redhat.thermostat.common.command.InvalidMessageException;
-import com.redhat.thermostat.common.command.Message;
-import com.redhat.thermostat.common.command.MessageDecoder;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.command.StringDecodingContext;
+import com.redhat.thermostat.common.command.StringDecodingState;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-class ResponseDecoder extends MessageDecoder {
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
+
+class ResponseDecoder extends ByteToMessageDecoder {
+    
+    private static final Logger logger = LoggingUtils.getLogger(ResponseDecoder.class);
 
     /*
      * See javadoc of Response for a description of the encoding.
      */
     @Override
-    protected Message decode(Channel channel, ChannelBuffer originalMessage) throws InvalidMessageException {
-        String typeAsString = DecodingHelper.decodeString(originalMessage);
-        if (typeAsString == null) {
-            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(originalMessage));
-        }
-        return new Response(ResponseType.valueOf(typeAsString));
+    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
+       logger.fine("decoding response");
+       StringDecodingContext stringDecCtx = DecodingHelper.decodeString(buf);
+       if (stringDecCtx.getState() != StringDecodingState.VALUE_READ) {
+           // insufficient data
+           return;
+       }
+       buf.readerIndex(buf.readerIndex() + stringDecCtx.getBytesRead());
+       buf.discardReadBytes(); // clean up resources
+       String typeAsString = stringDecCtx.getValue();
+       if (typeAsString == null) {
+           throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buf));
+       }
+       out.add(new Response(ResponseType.valueOf(typeAsString)));
     }
 
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.log(Level.WARNING, "Exception caught", cause);
+        ctx.close();
+    }
 }
 

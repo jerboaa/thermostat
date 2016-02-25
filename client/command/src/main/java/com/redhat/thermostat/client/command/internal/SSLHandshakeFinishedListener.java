@@ -45,14 +45,16 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 
 import org.apache.http.conn.ssl.BrowserCompatHostnameVerifier;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.handler.ssl.SslHandler;
 
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+
+import io.netty.channel.Channel;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 /**
  * Listener registered for SSL handshakes.
@@ -60,7 +62,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
  * @see RequestQueueImpl
  *
  */
-final class SSLHandshakeFinishedListener implements ChannelFutureListener {
+final class SSLHandshakeFinishedListener implements GenericFutureListener<Future<Channel>> {
     
     private final Request request;
     private final boolean performHostNameChecking;
@@ -77,20 +79,18 @@ final class SSLHandshakeFinishedListener implements ChannelFutureListener {
     }
     
     @Override
-    public void operationComplete(ChannelFuture future) throws Exception {
+    public void operationComplete(Future<Channel> future) throws Exception {
         if (!future.isSuccess()) {
             logger.log(Level.WARNING,
                     "SSL handshake failed check agent logs for details!",
-                    future.getCause());
+                    future.cause());
             queueRunner.fireComplete(request, new Response(ResponseType.ERROR));
         } else {
             if (performHostNameChecking) {
                 try {
                     doHostnameVerification();
                 } catch (Exception e) {
-                    future.setFailure(e);
                     future.removeListener(this);
-                    future.getChannel().close();
                     logger.log(Level.SEVERE, "Hostname verification failed!", e);
                     queueRunner.fireComplete(request, new Response(ResponseType.ERROR));
                 }
@@ -99,7 +99,7 @@ final class SSLHandshakeFinishedListener implements ChannelFutureListener {
     }
     
     private void doHostnameVerification() throws SSLException {
-        SSLSession session = handler.getEngine().getSession();
+        SSLSession session = handler.engine().getSession();
         // First certificate is the peer. We only need this one for host name
         // verification.
         X509Certificate cert = (X509Certificate)session.getPeerCertificates()[0];
@@ -112,5 +112,6 @@ final class SSLHandshakeFinishedListener implements ChannelFutureListener {
         // verify() throws SSLException if we fail to verify
         hostnameVerifier.verify(addr.getHostString(), cert);
     }
+
 }
 

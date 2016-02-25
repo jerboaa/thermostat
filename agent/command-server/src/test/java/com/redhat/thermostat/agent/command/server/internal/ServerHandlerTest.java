@@ -50,77 +50,78 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.ssl.SslHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.agent.command.server.internal.RequestEncoder;
 import com.redhat.thermostat.agent.command.server.internal.ResponseParser;
 import com.redhat.thermostat.agent.command.server.internal.ServerHandler;
 import com.redhat.thermostat.agent.command.server.internal.ServerHandler.SSLHandshakeDoneListener;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.RequestEncoder;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.Future;
+
 public class ServerHandlerTest {
 
-    private Channel channel;
+    private ChannelPipeline pipeline;
     private ChannelHandlerContext ctx;
 
     @Before
     public void setup() {
-        channel = mock(Channel.class);
-        when(channel.isConnected()).thenReturn(true);
+        Channel channel = mock(Channel.class);
+        pipeline = mock(ChannelPipeline.class);
         ChannelFuture channelFuture = mock(ChannelFuture.class);
-        when(channel.write(isA(Response.class))).thenReturn(channelFuture);
+        when(pipeline.write(isA(Response.class))).thenReturn(channelFuture);
 
+        when(channel.pipeline()).thenReturn(pipeline);
         ctx = mock(ChannelHandlerContext.class);
-        when(ctx.getChannel()).thenReturn(channel);
+        when(ctx.channel()).thenReturn(channel);
     }
 
     @Test
-    public void channelConnectedAddsSSLListener() throws Exception {
+    public void channelActiveAddsSSLListener() throws Exception {
         SSLConfiguration mockSSLConf = mock(SSLConfiguration.class);
         when(mockSSLConf.enableForCmdChannel()).thenReturn(true);
         ServerHandler handler = new ServerHandler(mockSSLConf);
         
         ChannelPipeline pipeline = mock(ChannelPipeline.class);
-        when(ctx.getPipeline()).thenReturn(pipeline);
+        when(ctx.pipeline()).thenReturn(pipeline);
         SslHandler sslHandler = mock(SslHandler.class);
         when(pipeline.get(SslHandler.class)).thenReturn(sslHandler);
-        ChannelFuture handshakeFuture = mock(ChannelFuture.class);
-        when(sslHandler.handshake()).thenReturn(handshakeFuture);
+        @SuppressWarnings("unchecked")
+        Future<Channel> handshakeFuture = mock(Future.class);
+        when(sslHandler.handshakeFuture()).thenReturn(handshakeFuture);
         
-        handler.channelConnected(ctx, null);
+        handler.channelActive(ctx);
         verify(handshakeFuture).addListener(any(SSLHandshakeDoneListener.class));
     }
 
     @Test
-    public void invalidRequestReturnsAnErrorResponse() {
+    public void invalidRequestReturnsAnErrorResponse() throws Exception {
         // target and receiver are null
         Request request = mock(Request.class);
-        MessageEvent event = mock(MessageEvent.class);
-        when(event.getMessage()).thenReturn(request);
-
         ServerHandler handler = new ServerHandler(null);
-        handler.messageReceived(ctx, event);
+        handler.channelRead0(ctx, request);
 
         ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
-        verify(channel).write(responseCaptor.capture());
+        verify(pipeline).writeAndFlush(responseCaptor.capture());
         assertEquals(ResponseType.ERROR, responseCaptor.getValue().getType());
     }
     
     @Test
-    public void testRequestReceived() throws IOException {
+    public void testRequestReceived() throws Exception {
         Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress("127.0.0.1", 123));
         request.setReceiver("com.example.MyReceiver");
         request.setParameter("hello", "world");
@@ -132,14 +133,11 @@ public class ServerHandlerTest {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ServerHandler handler = new ServerHandler(null, responseParser, stdout);
 
-        MessageEvent event = mock(MessageEvent.class);
-        when(event.getMessage()).thenReturn(request);
-
-        handler.messageReceived(ctx, event);
+        handler.channelRead0(ctx, request);
         
         assertArrayEquals(expectedRequest, stdout.toByteArray());
 
-        verify(channel).write(response);
+        verify(pipeline).writeAndFlush(response);
     }
     
     private byte[] constructRequestAsBytes(Request request) throws IOException {
@@ -149,8 +147,9 @@ public class ServerHandlerTest {
         dos.writeUTF("127.0.0.1");
         dos.writeInt(123);
         RequestEncoder encoder = new RequestEncoder();
-        ChannelBuffer buf = encoder.encode(request);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(request);
+        // Composite buffer does not support translation to array, copy it first
+        byte[] reqBytes = Unpooled.copiedBuffer(buf).array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);

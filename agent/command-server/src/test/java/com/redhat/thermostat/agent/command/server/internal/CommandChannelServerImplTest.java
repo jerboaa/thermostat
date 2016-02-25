@@ -48,30 +48,31 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.ChannelException;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.group.ChannelGroupFuture;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import io.netty.bootstrap.AbstractBootstrap;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.EventLoopGroup;
+
 public class CommandChannelServerImplTest {
 
     private CommandChannelServerContext ctx;
-    private ChannelGroup cg;
     private ServerBootstrap bootstrap;
     private PrintStream printer;
+    private EventLoopGroup group;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
-        cg = mock(ChannelGroup.class);
-        ChannelGroupFuture future = mock(ChannelGroupFuture.class);
-        when(cg.close()).thenReturn(future);
         bootstrap = mock(ServerBootstrap.class);
+        when(bootstrap.bind(any(InetSocketAddress.class))).thenReturn(mock(ChannelFuture.class));
+        group = mock(EventLoopGroup.class);
+        when(bootstrap.group()).thenReturn(group);
         ctx = mock(CommandChannelServerContext.class);
-        when(ctx.getBootstrap()).thenReturn(bootstrap);
-        when(ctx.getChannelGroup()).thenReturn(cg);
+        when(ctx.getBootstrap()).thenReturn((AbstractBootstrap) bootstrap);
         printer = mock(PrintStream.class);
     }
 
@@ -93,7 +94,7 @@ public class CommandChannelServerImplTest {
     public void startListeningFailureThrowsException() {
         CommandChannelServerImpl server = new CommandChannelServerImpl(ctx, printer);
 
-        when(bootstrap.bind(any(InetSocketAddress.class))).thenThrow(ChannelException.class);
+        when(bootstrap.bind(any(InetSocketAddress.class))).thenThrow(IOException.class);
         
         try {
             server.startListening("does-not-resolve.example.com", 123);
@@ -110,7 +111,7 @@ public class CommandChannelServerImplTest {
         CommandChannelServerImpl server = new CommandChannelServerImpl(ctx);
         server.stopListening();
 
-        verify(cg).close();
+        verify(group).shutdownGracefully();
     }
     
 }

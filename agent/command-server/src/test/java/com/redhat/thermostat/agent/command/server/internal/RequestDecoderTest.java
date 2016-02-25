@@ -39,22 +39,25 @@ package com.redhat.thermostat.agent.command.server.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.command.server.internal.CommandChannelRequestDecoder;
-import com.redhat.thermostat.common.command.InvalidMessageException;
 import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.Messages;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 
 public class RequestDecoderTest {
     
@@ -98,31 +101,35 @@ public class RequestDecoderTest {
     
     private static final byte[] TYPE = RequestType.RESPONSE_EXPECTED.toString().getBytes();
 
-    private Channel channel;
+    private ChannelHandlerContext ctx;
     private CommandChannelRequestDecoder decoder;
 
     @Before
     public void setUp() {
-        channel = mock(Channel.class);
+        ctx = mock(ChannelHandlerContext.class);
+        when(ctx.channel()).thenReturn(mock(Channel.class));
         decoder = new CommandChannelRequestDecoder();
     }
 
     @Test
-    public void testDecode() throws InvalidMessageException {
-        ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
+    public void testDecode() throws Exception {
+        ByteBuf buffer = Unpooled.buffer();
         buffer.writeInt(TYPE.length);
         buffer.writeBytes(TYPE);
+        buffer.writeInt(0);
 
-        Request request = (Request) decoder.decode(channel, buffer);
-
+        List<Object> resultList = new ArrayList<>();
+        decoder.decode(ctx, buffer, resultList);
+        assertEquals(1, resultList.size());
+        Request request = (Request)resultList.get(0);
         assertTrue(RequestType.RESPONSE_EXPECTED == (RequestType) request.getType());
     }
 
     @Test
-    public void testDecodeWithParameters() throws InvalidMessageException {
+    public void testDecodeWithParameters() throws Exception {
         String parmName = "parameter";
         String parmValue = "hello";
-        ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
+        ByteBuf buffer = Unpooled.buffer();
         buffer.writeInt(TYPE.length);
         buffer.writeBytes(TYPE);
         buffer.writeInt(1);
@@ -131,7 +138,10 @@ public class RequestDecoderTest {
         buffer.writeBytes(parmName.getBytes());
         buffer.writeBytes(parmValue.getBytes());
         
-        Request request = (Request) decoder.decode(channel, buffer);
+        List<Object> resultList = new ArrayList<>();
+        decoder.decode(ctx, buffer, resultList);
+        assertEquals(1, resultList.size());
+        Request request = (Request) resultList.get(0);
         Collection<String> parmNames = request.getParameterNames();
 
         assertEquals(1, parmNames.size());
@@ -141,39 +151,39 @@ public class RequestDecoderTest {
     }
     
     @Test
-    public void testDecodeWithParametersFromBytesArray() throws InvalidMessageException {
-        ChannelBuffer buffer = ChannelBuffers.copiedBuffer(ENCODED_REQEUEST_WITH_PARAMS);
+    public void testDecodeWithParametersFromBytesArray() throws Exception {
+        ByteBuf buffer = Unpooled.copiedBuffer(ENCODED_REQEUEST_WITH_PARAMS);
         Request expected = new Request(RequestType.RESPONSE_EXPECTED, null);
         expected.setParameter("param1", "value1");
         expected.setParameter("param2", "value2");
-        Message actual = new CommandChannelRequestDecoder().decode(channel, buffer);
+        List<Object> resultList = new ArrayList<>();
+        new CommandChannelRequestDecoder().decode(ctx, buffer, resultList);
+        assertEquals(1, resultList.size());
+        Message actual = (Message)resultList.get(0);
         assertTrue(actual instanceof Request);
         assertTrue(Messages.equal(expected, (Request)actual));
         InetSocketAddress addr = new InetSocketAddress(1234);
-        buffer = ChannelBuffers.copiedBuffer(ENCODED_REQUEST_WITH_NO_PARAMS);
+        buffer = Unpooled.copiedBuffer(ENCODED_REQUEST_WITH_NO_PARAMS);
         expected = new Request(RequestType.RESPONSE_EXPECTED, addr);
-        actual = new CommandChannelRequestDecoder().decode(channel, buffer);
+        resultList = new ArrayList<>();
+        new CommandChannelRequestDecoder().decode(ctx, buffer, resultList);
+        assertEquals(1, resultList.size());
+        actual = (Message)resultList.get(0);
         assertTrue(actual instanceof Request);
         assertTrue(Messages.equal(expected, (Request)actual));
     }
     
     @Test
-    public void decodingOfGarbageThrowsException()
-            throws InvalidMessageException {
-        int expectedFailures = GARBAGE_AS_REQUEST.length;
-        int actualFailures = 0;
+    public void decodingOfGarbageDoesNotAddToResultList()
+            throws Exception {
         for (int i = 0; i < GARBAGE_AS_REQUEST.length; i++) {
-            ChannelBuffer buffer = ChannelBuffers
+            ByteBuf buffer = Unpooled
                     .copiedBuffer(GARBAGE_AS_REQUEST[0]);
             CommandChannelRequestDecoder decoder = new CommandChannelRequestDecoder();
-            try {
-                decoder.decode(channel, buffer);
-            } catch (InvalidMessageException e) {
-                // pass
-                actualFailures++;
-            }
+            List<Object> outList = new ArrayList<>();
+            decoder.decode(ctx, buffer, outList);
+            assertEquals(0, outList.size());
         }
-        assertEquals(expectedFailures, actualFailures);
     }
 }
 

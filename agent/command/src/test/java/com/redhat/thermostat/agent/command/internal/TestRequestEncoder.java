@@ -36,14 +36,9 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
-import static org.jboss.netty.buffer.ChannelBuffers.dynamicBuffer;
-import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
-
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.jboss.netty.buffer.ChannelBuffer;
 
 import com.redhat.thermostat.common.command.EncodingHelper;
 import com.redhat.thermostat.common.command.Message;
@@ -51,6 +46,9 @@ import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * <p>
@@ -91,7 +89,7 @@ class TestRequestEncoder extends MessageEncoder {
      * See the javadoc of Request for a description of the encoding.
      */
     @Override
-    protected ChannelBuffer encode(Message msg) {
+    protected ByteBuf encode(Message msg) {
         RequestType type = (RequestType) ((Request) msg).getType();
         return encode(msg, type.name(), null);
     }
@@ -101,7 +99,7 @@ class TestRequestEncoder extends MessageEncoder {
      * @param reqType substitute this for msg's RequestType
      * @param badParam write this parameter incorrectly
      */
-    protected ChannelBuffer encode(Message msg, String reqType, String badParam) {
+    protected ByteBuf encode(Message msg, String reqType, String badParam) {
         return encode(msg, reqType, badParam, -1);
     }
     
@@ -111,7 +109,7 @@ class TestRequestEncoder extends MessageEncoder {
      * @param badParam write this parameter incorrectly
      * @param numParams value > 0 will replace automatically calculated number of parameters
      */
-    protected ChannelBuffer encode(Message msg, String reqType, String badParam, int numParams) {
+    protected ByteBuf encode(Message msg, String reqType, String badParam, int numParams) {
         // At this point we are only getting Messages. Since our only
         // registered MessageEncoder is the one for Requests a cast
         // to Request should be safe.
@@ -119,18 +117,16 @@ class TestRequestEncoder extends MessageEncoder {
         logger.log(Level.FINEST, "encoding Request object " + request.toString());
 
         // Request Type
-        ChannelBuffer typeBuffer = null;
+        ByteBuf typeBuffer = null;
         if (reqType != null) {
             String requestType = EncodingHelper.trimType(reqType);
             typeBuffer = EncodingHelper.encode(requestType);
         }
 
         // Parameters
-        // TODO: if in practice parms take up more than 256 bytes, use
-        // appropriate dynamicBuffer() variant to specify initial/estimated capacity.
-        ChannelBuffer parmsBuffer = null;
+        ByteBuf parmsBuffer = null;
         Collection<String> parmNames = request.getParameterNames();
-        parmsBuffer = dynamicBuffer();
+        parmsBuffer = Unpooled.buffer(0);
         if (numParams < 0) {
             numParams = parmNames.size();
         }
@@ -145,9 +141,9 @@ class TestRequestEncoder extends MessageEncoder {
         }
         
         // Compose the full message.
-        ChannelBuffer buf;
+        ByteBuf buf;
         if (typeBuffer != null) {
-            buf = wrappedBuffer(typeBuffer, parmsBuffer);
+            buf = Unpooled.copiedBuffer(typeBuffer, parmsBuffer);
         } else {
             buf = parmsBuffer;
         }

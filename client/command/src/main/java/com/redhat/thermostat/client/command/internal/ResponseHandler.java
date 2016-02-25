@@ -39,18 +39,18 @@ package com.redhat.thermostat.client.command.internal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class ResponseHandler extends SimpleChannelUpstreamHandler {
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
+
+public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     private static final Logger logger = LoggingUtils
             .getLogger(ResponseHandler.class);
@@ -62,28 +62,37 @@ public class ResponseHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        ctx.getPipeline().remove(this);
-        Response response = (Response) e.getMessage();
-        logger.info((response).getType().toString());
-        e.getChannel().close();
-        notifyListeners(response);
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         // TODO when response has support for parameters, provide the exception as well.
-        logger.log(Level.WARNING, "exception caught: ", e.getCause());
+        logger.log(Level.WARNING, "exception caught: ", cause);
         Response response = new Response(ResponseType.ERROR);
         notifyListeners(response);
         // Close broken channel. This is important, please keep!
-        e.getChannel().close();
+        Future<Void> future = ctx.channel().close();
+        future.addListener(new GenericFutureListener<Future<? super Void>>() {
+
+            @Override
+            public void operationComplete(Future<? super Void> future)
+                    throws Exception {
+                logger.log(Level.FINEST, "channel closed");
+            }
+        });
+        ctx.close();
     }
 
     private void notifyListeners(Response response) {
         for (RequestResponseListener listener : request.getListeners()) {
             listener.fireComplete(request, response);
         }
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, Response response)
+            throws Exception {
+        ctx.pipeline().remove(this);
+        logger.info((response).getType().toString());
+        notifyListeners(response);
+        ctx.close();
     }
 }
 

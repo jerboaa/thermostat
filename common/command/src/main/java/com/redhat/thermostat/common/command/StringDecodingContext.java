@@ -36,33 +36,58 @@
 
 package com.redhat.thermostat.common.command;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-public class EncodingHelper {
-
-    public static void encode(String name, String value, ByteBuf dynamicBuffer) {
-        byte[] nameBytes = name.getBytes();
-        byte[] valueBytes = value.getBytes();
-        dynamicBuffer.writeInt(nameBytes.length);
-        dynamicBuffer.writeInt(valueBytes.length);
-        dynamicBuffer.writeBytes(nameBytes);
-        dynamicBuffer.writeBytes(valueBytes);
+/**
+ * Context for decoding Strings.
+ * 
+ * @see DecodingHelper
+ * @see StringDecodingState
+ */
+public class StringDecodingContext {
+    
+    StringDecodingContext() {
+        // package-private constructor. Only this package creates instances.
     }
     
-    public static ByteBuf encode(String value) {
-        byte[] valBytes = value.getBytes();
-        int length = 4 + valBytes.length;
-        ByteBuf buf = Unpooled.buffer(length, length);
-        buf.writeInt(valBytes.length);
-        buf.writeBytes(valBytes);
-        return buf;
-    }
-
-    public static String trimType(String full) {
-        int typePointer = full.lastIndexOf('.');
-        return full.substring(typePointer + 1);
+    private StringDecodingState state;
+    private String val;
+    private int bytesRead;
+    
+    /**
+     * 
+     * @return The decoded String value.
+     */
+    public String getValue() {
+        if (state != StringDecodingState.VALUE_READ) {
+            throw new IllegalStateException("Data not yet defragmented");
+        }
+        return val;
     }
     
+    /**
+     * 
+     * @return The current decoding state.
+     */
+    public StringDecodingState getState() {
+        return state;
+    }
+    
+    /**
+     * 
+     * @return The bytes read from a buffer.
+     */
+    public int getBytesRead() {
+        return bytesRead;
+    }
+    
+    void setState(StringDecodingState newState) {
+        state = newState;
+    }
+    
+    void setValue(String value) {
+        val = value;
+    }
+    
+    void addToBytesRead(int value) {
+        bytesRead += value;
+    }
 }
-

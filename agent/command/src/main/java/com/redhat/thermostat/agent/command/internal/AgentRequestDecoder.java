@@ -37,17 +37,23 @@
 package com.redhat.thermostat.agent.command.internal;
 
 import java.net.InetSocketAddress;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-
 import com.redhat.thermostat.common.command.DecodingHelper;
 import com.redhat.thermostat.common.command.InvalidMessageException;
+import com.redhat.thermostat.common.command.ParameterDecodingContext;
+import com.redhat.thermostat.common.command.ParameterDecodingState;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.StringDecodingContext;
+import com.redhat.thermostat.common.command.StringDecodingState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 
 /**
  * <p>
@@ -87,24 +93,35 @@ class AgentRequestDecoder {
     protected Request decode(InetSocketAddress addr, byte[] buf) throws InvalidMessageException {
         logger.log(Level.FINEST, "Agent: decoding request received from command channel");
         
-        ChannelBuffer buffer = ChannelBuffers.copiedBuffer(buf);
-        buffer.markReaderIndex();
-        String typeAsString = DecodingHelper.decodeString(buffer);
+        ByteBuf buffer = Unpooled.wrappedBuffer(buf);
+        StringDecodingContext stringCtx = DecodingHelper.decodeString(buffer);
+        if (stringCtx.getState() != StringDecodingState.VALUE_READ) {
+            // We received this from the forked process so we should never have
+            // fragmented data.
+            throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buffer));
+        }
+        // Adjust reader index, since decoding the string value didn't change it
+        buffer.readerIndex(buffer.readerIndex() + stringCtx.getBytesRead());
+        buffer.discardReadBytes();
+        String typeAsString = stringCtx.getValue();
         if (typeAsString == null) {
-            buffer.resetReaderIndex();
-            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
+            throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buffer));
         }
         Request request;
         try {
             RequestType type = RequestType.valueOf(typeAsString);
             request = new Request(type, addr);
         } catch (IllegalArgumentException e) {
-            buffer.resetReaderIndex();
-            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
+            throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buffer));
         }
-        if (!DecodingHelper.decodeParameters(buffer, request)) {
-            buffer.resetReaderIndex();
-            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
+        ParameterDecodingContext paramCtx = DecodingHelper.decodeParameters(buffer);
+        if (paramCtx.getState() != ParameterDecodingState.ALL_PARAMETERS_READ) {
+            // We received this from the forked process so we should never have
+            // fragmented data.
+            throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buffer));
+        }
+        for (Entry<String, String> kv: paramCtx.getValues().entrySet()) {
+            request.setParameter(kv.getKey(), kv.getValue());
         }
         return request;
     }

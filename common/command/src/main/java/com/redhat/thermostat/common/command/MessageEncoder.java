@@ -36,40 +36,27 @@
 
 package com.redhat.thermostat.common.command;
 
-import static org.jboss.netty.channel.Channels.write;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelDownstreamHandler;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public abstract class MessageEncoder extends SimpleChannelDownstreamHandler {
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToByteEncoder;
 
+public abstract class MessageEncoder extends MessageToByteEncoder<Message> {
+
+    private static final Logger logger = LoggingUtils.getLogger(MessageEncoder.class);
+    
     protected MessageEncoder() {
         super();
     }
-
+    
     @Override
-    public void handleDownstream(
-            ChannelHandlerContext ctx, ChannelEvent evt) throws Exception {
-        if (!(evt instanceof MessageEvent)) {
-            ctx.sendDownstream(evt);
-            return;
-        }
-
-        MessageEvent e = (MessageEvent) evt;
-        Object originalMessage = e.getMessage();
-        // We only know how to encode Messages. Non-message types
-        // get sent downstream verbatim.
-        if (!(originalMessage instanceof Message)) {
-            ctx.sendDownstream(evt);
-        }
-        ChannelBuffer encodedMessage = encode((Message)originalMessage);
-        if (encodedMessage != null) {
-            write(ctx, e.getFuture(), encodedMessage, e.getRemoteAddress());
-        }
+    public void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) {
+        ByteBuf encodedMessage = encode(msg);
+        out.writeBytes(encodedMessage);
     }
 
     /**
@@ -79,6 +66,12 @@ public abstract class MessageEncoder extends SimpleChannelDownstreamHandler {
      * {@link MessageDecoder#decode(org.jboss.netty.buffer.ChannelBuffer)}; you
      * must return something, at least {@link ChannelBuffers#EMPTY_BUFFER}.
      */
-    protected abstract ChannelBuffer encode(Message originalMessage);
+    protected abstract ByteBuf encode(Message originalMessage);
+    
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.log(Level.WARNING, "Exception caught", cause);
+        ctx.close();
+    }
 }
 

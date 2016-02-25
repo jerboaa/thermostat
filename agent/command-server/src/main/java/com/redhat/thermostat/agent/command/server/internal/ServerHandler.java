@@ -40,30 +40,27 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.ssl.SslHandler;
-
 import com.redhat.thermostat.common.command.Message.MessageType;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestEncoder;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-class ServerHandler extends SimpleChannelUpstreamHandler {
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
+
+class ServerHandler extends SimpleChannelInboundHandler<Request> {
 
     private static final Object STDIO_LOCK = new Object();
     private static final Logger logger = LoggingUtils.getLogger(ServerHandler.class);
@@ -81,28 +78,19 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
         this.responseParser = responseParser;
         this.outStream = outStream;
     }
-
-    @Override
-    public void handleUpstream(
-            ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
-        if (e instanceof ChannelStateEvent) {
-            logger.log(Level.FINEST, e.toString());
-        }
-        super.handleUpstream(ctx, e);
-    }
     
     @Override
-    public void channelConnected(
-            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        logger.log(Level.FINEST, "Channel active!");
         if (sslConf.enableForCmdChannel()) {
             // Get the SslHandler in the current pipeline.
             // We added it in ConfigurationServerContext$ServerPipelineFactory.
-            final SslHandler sslHandler = ctx.getPipeline().get(
+            final SslHandler sslHandler = ctx.pipeline().get(
                     SslHandler.class);
 
             // Get notified when SSL handshake is done.
-            ChannelFuture handshakeFuture = sslHandler.handshake();
-            handshakeFuture.addListener(new SSLHandshakeDoneListener());
+            Future<Channel> handshakeFuture = sslHandler.handshakeFuture();
+            handshakeFuture.addListener(new SSLHandshakeDoneListener(ctx));
         }
     }
     
@@ -114,9 +102,9 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
      * 5. Write response to command channel
      */
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
+    protected void channelRead0(ChannelHandlerContext ctx, Request request)
+            throws Exception {
         Response response;
-        Request request = (Request) e.getMessage();
         String receiverName = request.getReceiver();
         MessageType requestType = request.getType();
         if (requestType == null || receiverName == null) {
@@ -142,14 +130,10 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
             }
         }
         
-        Channel channel = ctx.getChannel();
-        if (channel.isConnected()) {
-            logger.info("Sending response: " + response.getType().toString());
-            ChannelFuture f = channel.write(response);
-            f.addListener(ChannelFutureListener.CLOSE);
-        } else {
-            logger.warning("Channel not connected.");
-        }
+        Channel channel = ctx.channel();
+        logger.info("Sending response: " + response.getType().toString());
+        channel.pipeline().writeAndFlush(response);
+        ctx.close();
     }
 
     /**
@@ -166,37 +150,45 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
     private void writeRequest(Request request) throws IOException {
         DataOutputStream dos = new DataOutputStream(outStream);
         RequestEncoder encoder = new RequestEncoder();
-        ChannelBuffer buf = encoder.encode(request);
-        ByteBuffer encodedRequest = buf.toByteBuffer();
+        ByteBuf buf = encoder.encode(request);
 
         dos.writeUTF(CommandChannelConstants.BEGIN_REQUEST_TOKEN);
         InetSocketAddress addr = request.getTarget();
         dos.writeUTF(addr.getHostString());
         dos.writeInt(addr.getPort());
-        byte[] requestBytes = encodedRequest.array();
+        // The buf returned by encoder.encode() might be a composite
+        // buffer and thus, make an explicit copy before calling array()
+        // This avoids an UnsupportedOperationException on compositeBuf.array()
+        byte[] requestBytes = Unpooled.copiedBuffer(buf).array();
         dos.writeInt(requestBytes.length);
         dos.write(requestBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.log(Level.WARNING, "Unexpected exception from downstream.", e.getCause());
-        e.getChannel().close();
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        logger.log(Level.WARNING, "Unexpected exception from downstream.", cause);
+        ctx.close();
     }
     
     /*
      * Only registered if SSL is enabled
      */
-    static final class SSLHandshakeDoneListener implements ChannelFutureListener {
+    static final class SSLHandshakeDoneListener implements GenericFutureListener<Future<Channel>> {
 
+        private final ChannelHandlerContext ctx;
+        
+        SSLHandshakeDoneListener(ChannelHandlerContext ctx) {
+            this.ctx = ctx;
+        }
+        
         @Override
-        public void operationComplete(ChannelFuture future) throws Exception {
+        public void operationComplete(Future<Channel> future) throws Exception {
             if (future.isSuccess()) {
                 logger.log(Level.FINE, "Finished SSL handshake.");
             } else {
                 logger.log(Level.WARNING, "SSL handshake failed!");
-                future.getChannel().close();
+                ctx.close();
             }
         }
     }

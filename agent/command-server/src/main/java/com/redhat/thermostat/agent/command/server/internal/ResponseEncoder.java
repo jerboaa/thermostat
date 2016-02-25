@@ -36,18 +36,16 @@
 
 package com.redhat.thermostat.agent.command.server.internal;
 
-import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.jboss.netty.buffer.ChannelBuffer;
 
 import com.redhat.thermostat.common.command.EncodingHelper;
 import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+
+import io.netty.buffer.ByteBuf;
 
 
 class ResponseEncoder extends MessageEncoder {
@@ -58,7 +56,7 @@ class ResponseEncoder extends MessageEncoder {
      * See javadoc of Response for a description of the encoding.
      */
     @Override
-    protected ChannelBuffer encode(Message msg) {
+    protected ByteBuf encode(Message msg) {
         // At this point we are only getting Messages. Since our only
         // registered MessageEncoder is the one for Responses a cast
         // to Response should be safe.
@@ -67,11 +65,9 @@ class ResponseEncoder extends MessageEncoder {
 
         // Response Type
         String responseType = EncodingHelper.trimType(response.getType().toString());
-        ChannelBuffer typeBuffer = EncodingHelper.encode(responseType);
+        ByteBuf typeBuffer = EncodingHelper.encode(responseType);
 
-        // Compose the full message.
-        ChannelBuffer buf = wrappedBuffer(typeBuffer);
-        return buf;
+        return typeBuffer;
     }
 
 }

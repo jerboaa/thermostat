@@ -36,33 +36,16 @@
 
 package com.redhat.thermostat.common.command;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-public class EncodingHelper {
-
-    public static void encode(String name, String value, ByteBuf dynamicBuffer) {
-        byte[] nameBytes = name.getBytes();
-        byte[] valueBytes = value.getBytes();
-        dynamicBuffer.writeInt(nameBytes.length);
-        dynamicBuffer.writeInt(valueBytes.length);
-        dynamicBuffer.writeBytes(nameBytes);
-        dynamicBuffer.writeBytes(valueBytes);
-    }
-    
-    public static ByteBuf encode(String value) {
-        byte[] valBytes = value.getBytes();
-        int length = 4 + valBytes.length;
-        ByteBuf buf = Unpooled.buffer(length, length);
-        buf.writeInt(valBytes.length);
-        buf.writeBytes(valBytes);
-        return buf;
-    }
-
-    public static String trimType(String full) {
-        int typePointer = full.lastIndexOf('.');
-        return full.substring(typePointer + 1);
-    }
-    
+public enum StringDecodingState {
+    /** Not enough data to decode any String */
+    INCOMPLETE_LENGTH_VAL,
+    /**
+     * Enough data to decode the length of the String, but not the String
+     * value just yet.
+     */
+    LENGTH_READ,
+    /** Incomplete data for string value decoding. */
+    INCOMPLETE_STR_VAL,
+    /** String length and value read **/
+    VALUE_READ
 }
-

@@ -36,22 +36,11 @@
 
 package com.redhat.thermostat.agent.command.server.internal;
 
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
-
-import org.jboss.netty.bootstrap.Bootstrap;
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.group.DefaultChannelGroup;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.jboss.netty.handler.ssl.SslHandler;
 
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
@@ -60,22 +49,35 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
+import io.netty.bootstrap.AbstractBootstrap;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.ssl.SslHandler;
+
 class CommandChannelServerContext implements ConfigurationCommandContext {
 
     private static final Logger logger = LoggingUtils.getLogger(CommandChannelServerContext.class);
     
     private final ServerBootstrap bootstrap;
-    private final ChannelGroup channels;
     private final SSLConfiguration sslConf;
 
     CommandChannelServerContext(SSLConfiguration sslConf) {
-        bootstrap = createBootstrap();
-        channels = createChannelGroup();
+        this(sslConf, new ServerChannelPipelineInitializerCreator());
+    }
+    
+    CommandChannelServerContext(SSLConfiguration sslConf, ServerChannelPipelineInitializerCreator initCreator) {
         this.sslConf = sslConf;
+        bootstrap = createBootstrap(sslConf, initCreator);
     }
 
     @Override
-    public Bootstrap getBootstrap() {
+    public AbstractBootstrap<?, ?> getBootstrap() {
         return bootstrap;
     }
 
@@ -84,33 +86,31 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
         return sslConf;
     }
 
-    private ChannelGroup createChannelGroup() {
-        return new DefaultChannelGroup(CommandChannelServerImpl.class.getName());
-    }
-
-    private ServerBootstrap createBootstrap() {
-        ServerBootstrap bootstrap = new ServerBootstrap(
-                new NioServerSocketChannelFactory(
-                        Executors.newCachedThreadPool(),
-                        Executors.newCachedThreadPool()));
-
-        // Set up the pipeline factory.
-        bootstrap.setPipelineFactory(new ServerPipelineFactory());
-
-        bootstrap.setOption("child.tcpNoDelay", true);
-        bootstrap.setOption("child.keepAlive", true);
-        bootstrap.setOption("child.reuseAddress", true);
-        bootstrap.setOption("child.connectTimeoutMillis", 100);
-        bootstrap.setOption("child.readWriteFair", true);
+    private ServerBootstrap createBootstrap(SSLConfiguration conf, ServerChannelPipelineInitializerCreator initCreator) {
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        bootstrap.group(bossGroup, workerGroup)
+            .channel(NioServerSocketChannel.class)
+            .childHandler(initCreator.createInitializer(conf))
+            .childOption(ChannelOption.TCP_NODELAY, true)
+            .childOption(ChannelOption.SO_KEEPALIVE, true)
+            .childOption(ChannelOption.SO_REUSEADDR, true);
         
         return bootstrap;
     }
 
-    private class ServerPipelineFactory implements ChannelPipelineFactory {
+    static class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
+        private final SSLConfiguration sslConf;
+        
+        ServerChannelInitializer(SSLConfiguration sslConf) {
+            this.sslConf = sslConf;
+        }
+        
         @Override
-        public ChannelPipeline getPipeline() throws Exception {
-            ChannelPipeline pipeline = Channels.pipeline();
+        public void initChannel(SocketChannel ch) throws Exception {
+            ChannelPipeline pipeline = ch.pipeline();
             if (sslConf.enableForCmdChannel()) {
                 SSLEngine engine = null;
                 try {
@@ -127,13 +127,16 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
             pipeline.addLast("decoder", new CommandChannelRequestDecoder());
             pipeline.addLast("encoder", new ResponseEncoder());
             pipeline.addLast("handler", new ServerHandler(sslConf));
-            return pipeline;
         }
         
     }
-
-    ChannelGroup getChannelGroup() {
-        return channels;
+    
+    // Testing hook
+    static class ServerChannelPipelineInitializerCreator {
+        
+        ServerChannelInitializer createInitializer(SSLConfiguration sslConf) {
+            return new ServerChannelInitializer(sslConf);
+        }
     }
 
 }

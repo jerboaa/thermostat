@@ -120,7 +120,7 @@ public class Activator implements BundleActivator {
             queueRegistration.unregister();
             queueRegistration = null;
         }
-        configContext.getBootstrap().releaseExternalResources();
+        configContext.getBootstrap().group().shutdownGracefully();
     }
 }
 

@@ -55,7 +55,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -63,6 +62,8 @@ import com.redhat.thermostat.agent.command.internal.ProcessOutputStreamReader.Pr
 import com.redhat.thermostat.agent.command.internal.ProcessStreamReader.ExceptionListener;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
+
+import io.netty.buffer.ByteBuf;
 
 public class ProcessOutputStreamReaderTest {
     
@@ -89,8 +90,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(req.getTarget().getPort());
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
@@ -153,8 +154,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(req.getTarget().getPort());
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
@@ -216,8 +217,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeUTF("hello");
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
@@ -242,8 +243,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(200000);
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
@@ -268,8 +269,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(12222);
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req);
+        byte[] reqBytes = buf.array();
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
         dos.close();
@@ -293,8 +294,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(req.getTarget().getPort());
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req, null, null);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req, null, null);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
@@ -320,8 +321,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(req.getTarget().getPort());
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req, "RESPONSE_EXPECTED", "bad");
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req, "RESPONSE_EXPECTED", "bad");
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
@@ -346,8 +347,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(req.getTarget().getPort());
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req, "BadType", null);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req, "BadType", null);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
@@ -394,8 +395,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(req.getTarget().getPort());
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.close();
@@ -419,8 +420,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(req.getTarget().getPort());
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF("<END REQ>");
@@ -472,8 +473,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeInt(req1.getTarget().getPort());
         TestRequestEncoder encoder = new TestRequestEncoder();
         // Replace the number of parameters with 0
-        ChannelBuffer buf = encoder.encode(req1, "RESPONSE_EXPECTED", null, 0);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req1, "RESPONSE_EXPECTED", null, 0);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length - subLength);
         dos.write(reqBytes);
         
@@ -483,7 +484,7 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req2.getTarget().getHostString());
         dos.writeInt(req2.getTarget().getPort());
         buf = encoder.encode(req2);
-        reqBytes = buf.toByteBuffer().array();
+        reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
@@ -521,8 +522,8 @@ public class ProcessOutputStreamReaderTest {
         dos.writeUTF(req.getTarget().getHostString());
         dos.writeInt(req.getTarget().getPort());
         TestRequestEncoder encoder = new TestRequestEncoder();
-        ChannelBuffer buf = encoder.encode(req);
-        byte[] reqBytes = buf.toByteBuffer().array();
+        ByteBuf buf = encoder.encode(req);
+        byte[] reqBytes = buf.array();
         dos.writeInt(reqBytes.length);
         dos.write(reqBytes);
         dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);

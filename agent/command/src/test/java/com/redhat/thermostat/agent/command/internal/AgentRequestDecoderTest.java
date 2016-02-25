@@ -34,35 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.agent.command.internal;
+
+import static org.junit.Assert.assertEquals;
+
+import java.net.InetSocketAddress;
+import java.util.Arrays;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.common.command.InvalidMessageException;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.RequestEncoder;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class EncodingHelper {
+public class AgentRequestDecoderTest {
 
-    public static void encode(String name, String value, ByteBuf dynamicBuffer) {
-        byte[] nameBytes = name.getBytes();
-        byte[] valueBytes = value.getBytes();
-        dynamicBuffer.writeInt(nameBytes.length);
-        dynamicBuffer.writeInt(valueBytes.length);
-        dynamicBuffer.writeBytes(nameBytes);
-        dynamicBuffer.writeBytes(valueBytes);
+    @Test
+    public void testDecodeSuccess() throws InvalidMessageException {
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(3));
+        request.setParameter("receiver", "com.redhat.foo.bar.Receiver");
+        ByteBuf buf = new RequestEncoder().encode(request);
+        byte[] bytes = Unpooled.copiedBuffer(buf).array();
+        AgentRequestDecoder decoder = new AgentRequestDecoder();
+        Request actual = decoder.decode(new InetSocketAddress(3), bytes);
+        assertEquals(request.getParameter("receiver"), actual.getParameter("receiver"));
     }
     
-    public static ByteBuf encode(String value) {
-        byte[] valBytes = value.getBytes();
-        int length = 4 + valBytes.length;
-        ByteBuf buf = Unpooled.buffer(length, length);
-        buf.writeInt(valBytes.length);
-        buf.writeBytes(valBytes);
-        return buf;
+    @Test(expected = InvalidMessageException.class)
+    public void testDecodeFailNotAllData() throws InvalidMessageException {
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(3));
+        request.setParameter("receiver", "com.redhat.foo.bar.Receiver");
+        ByteBuf buf = new RequestEncoder().encode(request);
+        byte[] bytes = Unpooled.copiedBuffer(buf).array();
+        byte[] tooShort = Arrays.copyOfRange(bytes, 0, bytes.length - 2);
+        AgentRequestDecoder decoder = new AgentRequestDecoder();
+        decoder.decode(new InetSocketAddress(3), tooShort);
     }
-
-    public static String trimType(String full) {
-        int typePointer = full.lastIndexOf('.');
-        return full.substring(typePointer + 1);
-    }
-    
 }
-

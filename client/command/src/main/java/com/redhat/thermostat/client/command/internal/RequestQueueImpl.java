@@ -42,11 +42,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.handler.ssl.SslHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -61,6 +56,12 @@ import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.Future;
 
 class RequestQueueImpl implements RequestQueue {
 
@@ -160,16 +161,15 @@ class RequestQueueImpl implements RequestQueue {
                 if (request == null) {
                     break;
                 }
-                ChannelFuture f = ((ClientBootstrap) ctx.getBootstrap()).connect(request.getTarget());
-                f.awaitUninterruptibly();
+                ChannelFuture f = ctx.getBootstrap().connect(request.getTarget()).syncUninterruptibly();
                 if (f.isSuccess()) {
-                	Channel c = f.getChannel();
-                	ChannelPipeline pipeline = c.getPipeline();
+                	Channel c = f.channel();
+                	ChannelPipeline pipeline = c.pipeline();
                 	if (ctx.getSSLConfiguration().enableForCmdChannel()) {
                 	    doSSLHandShake(pipeline, request);
                 	}
                 	pipeline.addLast("responseHandler", new ResponseHandler(request));
-                	c.write(request);
+                	pipeline.writeAndFlush(request);
                 } else {
                 	Response response  = new Response(ResponseType.ERROR);
                 	fireComplete(request, response);
@@ -193,12 +193,12 @@ class RequestQueueImpl implements RequestQueue {
         
         logger.log(Level.FINE, "Starting SSL handshake");
         // Begin handshake.
-        ChannelFuture future = sslHandler.handshake();
+        Future<Channel> handshakeDoneFuture = sslHandler.handshakeFuture();
         
         // Register a future listener, since it gives us a way to
         // report an error on client side and to perform (optional) host name verification.
         boolean performHostnameCheck = !ctx.getSSLConfiguration().disableHostnameVerification();
-        future.addListener(new SSLHandshakeFinishedListener(request, performHostnameCheck, sslHandler, this));
+        handshakeDoneFuture.addListener(new SSLHandshakeFinishedListener(request, performHostnameCheck, sslHandler, this));
     }
     
     /*

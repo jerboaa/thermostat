@@ -267,6 +267,11 @@ class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStream
     static class ProcessCreator {
         Process startProcess(String[] args) throws IOException {
             ProcessBuilder builder = new ProcessBuilder(args);
+            // This has the problem of some messages/Exceptions not
+            // showing up in the parent's stderr stream if used together
+            // with JUL-logging. One such example is CNFE in
+            // the child process. In that case your best bet is
+            // Redirect.to(File).
             builder.redirectError(Redirect.INHERIT);
             return builder.start();
         }

@@ -36,33 +36,19 @@
 
 package com.redhat.thermostat.common.command;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-public class EncodingHelper {
-
-    public static void encode(String name, String value, ByteBuf dynamicBuffer) {
-        byte[] nameBytes = name.getBytes();
-        byte[] valueBytes = value.getBytes();
-        dynamicBuffer.writeInt(nameBytes.length);
-        dynamicBuffer.writeInt(valueBytes.length);
-        dynamicBuffer.writeBytes(nameBytes);
-        dynamicBuffer.writeBytes(valueBytes);
-    }
-    
-    public static ByteBuf encode(String value) {
-        byte[] valBytes = value.getBytes();
-        int length = 4 + valBytes.length;
-        ByteBuf buf = Unpooled.buffer(length, length);
-        buf.writeInt(valBytes.length);
-        buf.writeBytes(valBytes);
-        return buf;
-    }
-
-    public static String trimType(String full) {
-        int typePointer = full.lastIndexOf('.');
-        return full.substring(typePointer + 1);
-    }
-    
+public enum ParameterDecodingState {
+    /** Insufficient data for decoding parameters */
+    INCOMPLETE_PARAMS_LENGTH,
+    /** Number of parameters has been read */
+    PARAMS_LENGTH_READ,
+    /** Insufficient data for decoding a parameter pair */
+    INCOMPLETE_PARAM_KV_LENGTH,
+    /** Length of param's key/value has been read */
+    PARAM_KV_LENGTH_READ,
+    /** Insufficient data for decoding values of a parameter pair */
+    INCOMPLETE_PARAM_KV_DATA,
+    /** One (of potentially many) KV data pair decoded */
+    PARAM_KV_DATA_PLUS_ONE_READ,
+    /** All parameters have been read from fragmented data */
+    ALL_PARAMETERS_READ
 }
-

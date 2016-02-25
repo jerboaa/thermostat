@@ -36,33 +36,64 @@
 
 package com.redhat.thermostat.common.command;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-public class EncodingHelper {
+/**
+ * Parameter decoding context.
+ * 
+ * @see DecodingHelper
+ * @see ParameterDecodingState
+ */
+public class ParameterDecodingContext {
+    
+    ParameterDecodingContext() {
+        // package-private constructor. Only this package creates instances.
+    }
 
-    public static void encode(String name, String value, ByteBuf dynamicBuffer) {
-        byte[] nameBytes = name.getBytes();
-        byte[] valueBytes = value.getBytes();
-        dynamicBuffer.writeInt(nameBytes.length);
-        dynamicBuffer.writeInt(valueBytes.length);
-        dynamicBuffer.writeBytes(nameBytes);
-        dynamicBuffer.writeBytes(valueBytes);
+    private final Map<String, String> values = new HashMap<>();
+    private ParameterDecodingState state;
+    private int bytesRead;
+    
+    /**
+     * 
+     * @return A map of parameter {@code key=value} pairs.
+     * 
+     * @throws IllegalStateException if not all parameters have yet been decoded.
+     */
+    public Map<String, String> getValues() {
+        if (state != ParameterDecodingState.ALL_PARAMETERS_READ) {
+            throw new IllegalStateException("Not all parameters have yet been decoded");
+        }
+        return Collections.unmodifiableMap(values);
     }
     
-    public static ByteBuf encode(String value) {
-        byte[] valBytes = value.getBytes();
-        int length = 4 + valBytes.length;
-        ByteBuf buf = Unpooled.buffer(length, length);
-        buf.writeInt(valBytes.length);
-        buf.writeBytes(valBytes);
-        return buf;
-    }
-
-    public static String trimType(String full) {
-        int typePointer = full.lastIndexOf('.');
-        return full.substring(typePointer + 1);
+    /**
+     * 
+     * @return The current decoding state.
+     */
+    public ParameterDecodingState getState() {
+        return state;
     }
     
+    /**
+     * 
+     * @return The number of bytes consumed so far.
+     */
+    public int getBytesRead() {
+        return bytesRead;
+    }
+    
+    void setState(ParameterDecodingState newState) {
+        state = newState;
+    }
+    
+    void addParameter(String key, String value) {
+        values.put(key, value);
+    }
+    
+    void addToBytesRead(int numBytes) {
+        bytesRead += numBytes;
+    }
 }
-

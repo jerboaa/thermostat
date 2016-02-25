@@ -36,13 +36,13 @@
 
 package com.redhat.thermostat.common.command;
 
-import org.jboss.netty.bootstrap.Bootstrap;
-
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+
+import io.netty.bootstrap.AbstractBootstrap;
 
 public interface ConfigurationCommandContext {
 
-    public Bootstrap getBootstrap();
+    public AbstractBootstrap<?, ?> getBootstrap();
 
     public SSLConfiguration getSSLConfiguration();
 

@@ -34,22 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.command.internal;
-
-import static org.jboss.netty.buffer.ChannelBuffers.dynamicBuffer;
-import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
+package com.redhat.thermostat.common.command;
 
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
-import com.redhat.thermostat.common.command.EncodingHelper;
-import com.redhat.thermostat.common.command.Message;
-import com.redhat.thermostat.common.command.MessageEncoder;
-import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 
 /**
  * <p>
@@ -82,7 +77,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
  * </pre>
  * </p>
  */
-class RequestEncoder extends MessageEncoder {
+public class RequestEncoder extends MessageEncoder {
 
     private static final Logger logger = LoggingUtils.getLogger(RequestEncoder.class);
 
@@ -90,7 +85,7 @@ class RequestEncoder extends MessageEncoder {
      * See the javadoc of RequestEncoder for a description of the encoding.
      */
     @Override
-    protected ChannelBuffer encode(Message msg) {
+    public ByteBuf encode(Message msg) {
         // At this point we are only getting Messages. Since our only
         // registered MessageEncoder is the one for Requests a cast
         // to Request should be safe.
@@ -100,12 +95,10 @@ class RequestEncoder extends MessageEncoder {
         // Request Type
         String requestType = EncodingHelper.trimType(request.getType()
                 .toString());
-        ChannelBuffer typeBuffer = EncodingHelper.encode(requestType);
+        ByteBuf typeBuffer = EncodingHelper.encode(requestType);
 
         // Parameters
-        // TODO: if in practice parms take up more than 256 bytes, use
-        // appropriate dynamicBuffer() variant to specify initial/estimated capacity.
-        ChannelBuffer parmsBuffer = dynamicBuffer();
+        ByteBuf parmsBuffer = Unpooled.buffer();
         Collection<String> parmNames = request.getParameterNames();
         parmsBuffer.writeInt(parmNames.size());
         for (String parmName : parmNames) {
@@ -113,8 +106,8 @@ class RequestEncoder extends MessageEncoder {
                     parmsBuffer);
         }
         // Compose the full message.
-        ChannelBuffer buf = wrappedBuffer(typeBuffer, parmsBuffer);
-        // Just return the channel buffer which is our encoded message
+        ByteBuf buf = Unpooled.wrappedBuffer(typeBuffer, parmsBuffer);
+        logger.log(Level.FINEST, "encoded reqest as: " + ByteBufUtil.hexDump(buf));
         return buf;
     }
 }

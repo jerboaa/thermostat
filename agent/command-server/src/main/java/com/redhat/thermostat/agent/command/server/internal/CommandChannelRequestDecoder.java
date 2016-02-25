@@ -37,52 +37,77 @@
 package com.redhat.thermostat.agent.command.server.internal;
 
 import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-
 import com.redhat.thermostat.common.command.DecodingHelper;
 import com.redhat.thermostat.common.command.InvalidMessageException;
-import com.redhat.thermostat.common.command.Message;
-import com.redhat.thermostat.common.command.MessageDecoder;
 import com.redhat.thermostat.common.command.MessageEncoder;
+import com.redhat.thermostat.common.command.ParameterDecodingContext;
+import com.redhat.thermostat.common.command.ParameterDecodingState;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.StringDecodingContext;
+import com.redhat.thermostat.common.command.StringDecodingState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
 
 /**
  * 
  * See implementation of {@link MessageEncoder} for documentation of the
  * {@link Request} encoding format.
  */
-class CommandChannelRequestDecoder extends MessageDecoder {
+class CommandChannelRequestDecoder extends ByteToMessageDecoder {
     
     private static final Logger logger = LoggingUtils.getLogger(CommandChannelRequestDecoder.class);
 
-    /*
-     * See the javadoc of Request for a description of the encoding.
-     */
     @Override
-    protected Message decode(Channel channel, ChannelBuffer msg) throws InvalidMessageException {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
         logger.log(Level.FINEST, "Command channel server: decoding Request object");
-        ChannelBuffer buffer = (ChannelBuffer) msg;
-        buffer.markReaderIndex();
-        String typeAsString = DecodingHelper.decodeString(buffer);
+        StringDecodingContext stringDecCtx = DecodingHelper.decodeString(buf);
+        if (stringDecCtx.getState() != StringDecodingState.VALUE_READ) {
+            // insufficient data, return
+            return;
+        }
+        String typeAsString = stringDecCtx.getValue();
         if (typeAsString == null) {
-            buffer.resetReaderIndex();
-            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
+            throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buf));
         }
+        // clean up resources
+        buf.readerIndex(buf.readerIndex() + stringDecCtx.getBytesRead());
+        buf.discardReadBytes();
         // Netty javadoc tells us it's safe to downcast to more concrete type.
-        InetSocketAddress addr = (InetSocketAddress)channel.getRemoteAddress();
+        InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
         Request request = new Request(RequestType.valueOf(typeAsString), addr);
-        if (!DecodingHelper.decodeParameters(buffer, request)) {
-            buffer.resetReaderIndex();
-            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
+        ParameterDecodingContext paramCtx = DecodingHelper.decodeParameters(buf);
+        if (paramCtx.getState() != ParameterDecodingState.ALL_PARAMETERS_READ) {
+            // insufficient data
+            return;
         }
-        return request;
+        // clean up resources
+        buf.readerIndex(buf.readerIndex() + paramCtx.getBytesRead());
+        buf.discardReadBytes();
+        for (Entry<String, String> kv: paramCtx.getValues().entrySet()) {
+            request.setParameter(kv.getKey(), kv.getValue());
+        }
+        out.add(request);
+    }
+    
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        logger.log(Level.FINEST, "Channel active!");
+    }
+    
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.log(Level.WARNING, "Exception caught", cause);
+        ctx.close();
     }
 
 }

@@ -54,7 +54,11 @@ BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@p
 BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
 BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
 BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-@netty.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-buffer-@netty.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-common-@netty.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-transport-@netty.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-codec-@netty.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-handler-@netty.version@.jar"
 BOOT_CLASSPATH="${TOOLS_JAR}:${BOOT_CLASSPATH}"
 
 # Append extra class path entries coming from the profiles

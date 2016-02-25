@@ -71,7 +71,11 @@
             </environments>
             <bundles>
                 <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
-                <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.common</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.buffer</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.codec</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.transport</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.handler</symbolic-name><version>${netty.version}</version></bundle>
                 <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
                 <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
                 <bundle><symbolic-name>com.redhat.thermostat.vm.profiler.common</symbolic-name><version>${project.version}</version></bundle>
