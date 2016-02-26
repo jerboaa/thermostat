@@ -356,6 +356,9 @@ BuildRequires: %{?scl_prefix_mongodb}mvn(org.mongodb:mongo-java-driver)
 # resolved.
 # The version number in mvn() means it's a compat package.
 BuildRequires: %{?scl_prefix}mvn(%{netty_maven_coords})
+BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman)
+BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman-install)
+BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman-submit)
 
 # BRs for webapp sub-package
 %if 0%{?is_rhel_6}
@@ -865,6 +868,14 @@ for plugin_name in $(ls); do
   popd
 done
 popd
+# Byteman agent plugin needs byteman and the helper. Replace
+# deps with symlinks
+pushd %{buildroot}%{thermostat_home}/libs/byteman/byteman-install/lib
+  xmvn-subst .
+popd
+pushd %{buildroot}%{thermostat_home}/libs/byteman/thermostat-helper
+  xmvn-subst .
+popd
 
 # For some reason the osgi-compendium symlink gets created with a
 # SYSTEM version, but we expect the real version in bootstrap bundles
@@ -1136,6 +1147,7 @@ fi
 %{_datadir}/%{pkg_name}/plugins/vm-overview
 %{_datadir}/%{pkg_name}/plugins/vm-profiler
 %{_datadir}/%{pkg_name}/plugins/vm-find
+%{_datadir}/%{pkg_name}/plugins/vm-byteman
 %{_datadir}/%{pkg_name}/plugins/dependency-analyzer
 %{_datadir}/%{pkg_name}/cache
 %{_datadir}/%{pkg_name}/data
