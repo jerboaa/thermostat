@@ -59,9 +59,13 @@ public class DeleteNoteCommand extends AbstractNotesCommand {
 
         if (args.hasArgument(VmArgument.ARGUMENT_NAME)) {
             VmId vmId = VmArgument.required(args).getVmId();
+            checkVmExists(vmId);
+            AgentId agentId = new AgentId(vmInfoDAO.getVmInfo(vmId).getAgentId());
+            checkAgentExists(agentId);
             vmNoteDAO.removeById(getVmRefFromVmId(vmId), noteId);
         } else {
             AgentId agentId = AgentArgument.required(args).getAgentId();
+            checkAgentExists(agentId);
             hostNoteDAO.removeById(getHostRefFromAgentId(agentId), noteId);
         }
     }

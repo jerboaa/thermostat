@@ -53,7 +53,10 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
+
+import java.util.Objects;
 
 public abstract class AbstractNotesCommand extends AbstractCommand implements NotesCommand {
 
@@ -92,6 +95,18 @@ public abstract class AbstractNotesCommand extends AbstractCommand implements No
         } else if (!(hasVmArg || hasAgentArg)) {
             throw new CommandException(translator.localize(LocaleResources.NO_ARGS_PROVIDED));
         }
+    }
+
+    protected void checkVmExists(VmId vmId) throws CommandException {
+        Objects.requireNonNull(vmId);
+        VmInfo info = vmInfoDAO.getVmInfo(vmId);
+        requireNonNull(info, translator.localize(LocaleResources.INVALID_VMID, vmId.get()));
+    }
+
+    protected void checkAgentExists(AgentId agentId) throws CommandException {
+        Objects.requireNonNull(agentId);
+        AgentInformation info = agentInfoDAO.getAgentInformation(agentId);
+        requireNonNull(info, translator.localize(LocaleResources.INVALID_AGENTID, agentId.get()));
     }
 
     protected VmRef getVmRefFromVmId(VmId vmId) {

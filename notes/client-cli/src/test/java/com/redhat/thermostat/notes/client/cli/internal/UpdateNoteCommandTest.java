@@ -47,6 +47,7 @@ import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
 import org.hamcrest.BaseMatcher;
@@ -92,6 +93,52 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
     }
 
     @Test
+    public void testRunWithInvalidAgentId() throws CommandException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(null);
+
+        doInvalidAgentIdTest(args);
+    }
+
+    @Test
+    public void testRunWithInvalidVmId() throws CommandException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(null);
+
+        doInvalidVmIdTest(args);
+    }
+
+    @Test
+    public void testRunWithValidVmIdYieldingInvalidAgentId() throws CommandException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
+
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setAgentId("foo-agentid");
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(null);
+
+        doInvalidAgentIdTest(args);
+    }
+
+    @Test
     public void testRunWithHostNote() throws CommandException {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
@@ -110,6 +157,7 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
         hostInfo.setHostname("foo-hostname");
         hostInfo.setAgentId("foo-agentid");
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
         CommandContext ctx = contextFactory.createContext(args);
         ArgumentCaptor<HostNote> noteCaptor = ArgumentCaptor.forClass(HostNote.class);
         command.run(ctx);
@@ -144,6 +192,7 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
         VmInfo vmInfo = new VmInfo();
         vmInfo.setAgentId("foo-agentid");
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
         CommandContext ctx = contextFactory.createContext(args);
         ArgumentCaptor<VmNote> noteCaptor = ArgumentCaptor.forClass(VmNote.class);
         command.run(ctx);

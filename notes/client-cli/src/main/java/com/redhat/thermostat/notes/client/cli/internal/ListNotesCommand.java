@@ -89,9 +89,13 @@ public class ListNotesCommand extends AbstractNotesCommand {
         List<? extends Note> notes;
         if (args.hasArgument(VmArgument.ARGUMENT_NAME)) {
             VmId vmId = VmArgument.required(args).getVmId();
+            checkVmExists(vmId);
+            AgentId agentId = new AgentId(vmInfoDAO.getVmInfo(vmId).getAgentId());
+            checkAgentExists(agentId);
             notes = getVmNotes(getVmRefFromVmId(vmId));
         } else {
             AgentId agentId = AgentArgument.required(args).getAgentId();
+            checkAgentExists(agentId);
             notes = getHostNotes(getHostRefFromAgentId(agentId));
         }
 

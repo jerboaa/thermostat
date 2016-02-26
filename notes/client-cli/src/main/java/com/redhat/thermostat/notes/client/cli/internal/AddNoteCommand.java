@@ -63,8 +63,10 @@ public class AddNoteCommand extends AbstractNotesCommand {
 
         if (args.hasArgument(VmArgument.ARGUMENT_NAME)) {
             VmId vmId = VmArgument.required(args).getVmId();
-            VmNote note = new VmNote();
+            checkVmExists(vmId);
             String agentId = vmInfoDAO.getVmInfo(vmId).getAgentId();
+            checkAgentExists(new AgentId(agentId));
+            VmNote note = new VmNote();
             note.setId(UUID.randomUUID().toString());
             note.setVmId(vmId.get());
             note.setAgentId(agentId);
@@ -74,6 +76,7 @@ public class AddNoteCommand extends AbstractNotesCommand {
             vmNoteDAO.add(note);
         } else {
             AgentId agentId = AgentArgument.required(args).getAgentId();
+            checkAgentExists(agentId);
             HostNote note = new HostNote();
             note.setId(UUID.randomUUID().toString());
             note.setAgentId(agentId.get());

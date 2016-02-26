@@ -48,6 +48,7 @@ import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
 import org.junit.Test;
@@ -94,6 +95,41 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         command.run(ctx);
     }
 
+
+    @Test
+    public void testRunWithInvalidAgentId() throws CommandException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(null);
+
+        doInvalidAgentIdTest(args);
+    }
+
+    @Test
+    public void testRunWithInvalidVmId() throws CommandException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(null);
+
+        doInvalidVmIdTest(args);
+    }
+
+    @Test
+    public void testRunWithValidVmIdYieldingInvalidAgentId() throws CommandException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
+
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setAgentId("foo-agentid");
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(null);
+
+        doInvalidAgentIdTest(args);
+    }
+
     @Test
     public void testRunWithHostAndNoNotes() throws CommandException {
         Arguments args = mock(Arguments.class);
@@ -102,6 +138,7 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         HostInfo hostInfo = new HostInfo();
         hostInfo.setHostname("foo-hostname");
         hostInfo.setAgentId("foo-agentid");
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
         CommandContext ctx = contextFactory.createContext(args);
         command.run(ctx);
@@ -130,6 +167,7 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         when(note2.getTimeStamp()).thenReturn(100l);
         when(note2.getId()).thenReturn(UUID.randomUUID().toString());
         when(hostNoteDAO.getFor(any(HostRef.class))).thenReturn(Arrays.asList(note1, note2));
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
         CommandContext ctx = contextFactory.createContext(args);
         command.run(ctx);
         verifyZeroInteractions(vmNoteDAO);
@@ -164,6 +202,7 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         when(note2.getTimeStamp()).thenReturn(100l);
         when(note2.getId()).thenReturn(UUID.randomUUID().toString());
         when(hostNoteDAO.getFor(any(HostRef.class))).thenReturn(Arrays.asList(note1, note2));
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
         CommandContext ctx = contextFactory.createContext(args);
         command.run(ctx);
         verifyZeroInteractions(vmNoteDAO);
@@ -198,6 +237,7 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         when(note2.getTimeStamp()).thenReturn(100l);
         when(note2.getId()).thenReturn(UUID.randomUUID().toString());
         when(hostNoteDAO.getFor(any(HostRef.class))).thenReturn(Arrays.asList(note1, note2));
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
         CommandContext ctx = contextFactory.createContext(args);
         command.run(ctx);
         verifyZeroInteractions(vmNoteDAO);
@@ -226,6 +266,7 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         vmInfo.setAgentId("foo-agentid");
         vmInfo.setVmPid(100);
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
         CommandContext ctx = contextFactory.createContext(args);
         command.run(ctx);
         verifyZeroInteractions(hostNoteDAO);
@@ -258,6 +299,7 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         vmInfo.setAgentId("foo-agentid");
         vmInfo.setVmPid(100);
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
         CommandContext ctx = contextFactory.createContext(args);
         command.run(ctx);
         verifyZeroInteractions(hostNoteDAO);

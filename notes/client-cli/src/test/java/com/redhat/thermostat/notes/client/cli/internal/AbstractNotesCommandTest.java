@@ -39,9 +39,12 @@ package com.redhat.thermostat.notes.client.cli.internal;
 import com.redhat.thermostat.client.cli.AgentArgument;
 import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.notes.client.cli.locale.LocaleResources;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmId;
@@ -49,6 +52,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -58,14 +62,22 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
+
+    protected static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    protected static final String INVALID_AGENTID_MSG = translator.localize(LocaleResources.INVALID_AGENTID).getContents().replaceAll("\\{0\\}", "");
+    protected static final String INVALID_VMID_MSG = translator.localize(LocaleResources.INVALID_VMID).getContents().replaceAll("\\{0\\}", "");
 
     protected VmInfoDAO vmInfoDAO;
     protected HostInfoDAO hostInfoDAO;
@@ -192,6 +204,59 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
     }
 
     @Test
+    public void testAssertVmExistsWithValidVmId() {
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setAgentId("foo-agentid");
+        vmInfo.setVmId("foo-vmid");
+        vmInfo.setVmPid(100);
+        vmInfo.setVmName("foo-vmname");
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
+        try {
+            command.checkVmExists(new VmId("foo-vmid"));
+        } catch (CommandException unexpected) {
+            fail("Did not expect exception: " + unexpected.toString());
+        }
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testAssertVmExistsWithNullVmId() throws CommandException {
+        command.checkVmExists(null);
+    }
+
+    @Test(expected = CommandException.class)
+    public void testAssertVmExistsWithInvalidVmId() throws CommandException {
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(null);
+        command.checkVmExists(new VmId("foo-vmid"));
+    }
+
+    @Test
+    public void testAssertAgentExistsWithValidAgentId() {
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setAgentId("foo-agentid");
+        agentInfo.setAlive(true);
+        agentInfo.setConfigListenAddress("127.0.0.1");
+        agentInfo.setStartTime(100L);
+        agentInfo.setStopTime(0L);
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(agentInfo);
+        try {
+            command.checkAgentExists(new AgentId("foo-agentid"));
+        } catch (CommandException unexpected) {
+            fail("Did not expect exception: " + unexpected.toString());
+        }
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testAssertAgentExistsWithNullAgentId() throws CommandException {
+        command.checkAgentExists(null);
+    }
+
+    @Test(expected = CommandException.class)
+    public void testAssertAgentExistsWithInvalidAgentId() throws CommandException {
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(null);
+        command.checkAgentExists(new AgentId("foo-agentid"));
+    }
+
+    @Test
     public void testGetVmRefFromVmId() {
         VmInfo vmInfo = new VmInfo();
         vmInfo.setAgentId("foo-agentid");
@@ -284,6 +349,26 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
         when(args.getNonOptionArguments()).thenReturn(Arrays.asList("here", "is", "another", "--noteContent", "strange", "--noteContent", "--input"));
         String result = AbstractNotesCommand.getNoteContent(args);
         assertThat(result, is("this is a note"));
+    }
+
+    public void doInvalidAgentIdTest(Arguments args) {
+        doInvalidIdTest(args, INVALID_AGENTID_MSG);
+    }
+
+    public void doInvalidVmIdTest(Arguments args) {
+        doInvalidIdTest(args, INVALID_VMID_MSG);
+    }
+
+    private void doInvalidIdTest(Arguments args, String msg) {
+        CommandContext ctx = contextFactory.createContext(args);
+        Exception ex = null;
+        try {
+            command.run(ctx);
+        } catch (Exception e) {
+            ex = e;
+        }
+        assertThat(ex, is(not(equalTo(null))));
+        assertThat(ex.getMessage(), containsString(msg));
     }
 
     public abstract T createCommand();
