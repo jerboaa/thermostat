@@ -45,7 +45,6 @@ import com.redhat.thermostat.notes.common.VmNote;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -55,12 +54,6 @@ import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.model.AggregateCount;
 
 class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
-
-    static final Key<String> KEY_CONTENT = new Key<>("content");
-    static final Key<String> KEY_ID = new Key<>("id");
-
-    static Category<VmNote> vmNotesCategory = new Category<>("vm-notes", VmNote.class,
-            Key.AGENT_ID, Key.VM_ID, KEY_ID, Key.TIMESTAMP, KEY_CONTENT);
 
     private final Category<AggregateCount> aggregateCountCategory;
 

@@ -46,7 +46,6 @@ import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AbstractDao;
@@ -55,12 +54,6 @@ import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.model.AggregateCount;
 
 public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
-
-    static final Key<String> KEY_CONTENT = new Key<>("content");
-    static final Key<String> KEY_ID = new Key<>("id");
-
-    static Category<HostNote> hostNotesCategory = new Category<>("host-notes", HostNote.class,
-            Key.AGENT_ID, KEY_ID, Key.TIMESTAMP, KEY_CONTENT);
 
     private final Category<AggregateCount> aggregateCountCategory;
 

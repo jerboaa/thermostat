@@ -39,6 +39,7 @@ package com.redhat.thermostat.notes.common.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 
 /**
@@ -49,7 +50,7 @@ public class HostNotesCategoryRegistration implements CategoryRegistration {
     @Override
     public Set<String> getCategoryNames() {
         Set<String> categories = new HashSet<>(1);
-        categories.add(HostNoteDAOImpl.hostNotesCategory.getName());
+        categories.add(HostNoteDAO.hostNotesCategory.getName());
         return categories;
     }
 

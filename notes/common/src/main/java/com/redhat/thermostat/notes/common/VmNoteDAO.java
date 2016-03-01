@@ -37,9 +37,15 @@
 package com.redhat.thermostat.notes.common;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmRef;
 
 @Service
 public interface VmNoteDAO extends NoteDAO<VmRef, VmNote> {
+    Key<String> KEY_CONTENT = new Key<>("content");
+    Key<String> KEY_ID = new Key<>("id");
+    Category<VmNote> vmNotesCategory = new Category<>("vm-notes", VmNote.class,
+        Key.AGENT_ID, Key.VM_ID, KEY_ID, Key.TIMESTAMP, KEY_CONTENT);
     // see NoteDAO
 }

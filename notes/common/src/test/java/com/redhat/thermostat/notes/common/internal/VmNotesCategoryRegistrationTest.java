@@ -40,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
+import com.redhat.thermostat.notes.common.VmNoteDAO;
 import org.junit.Test;
 
 public class VmNotesCategoryRegistrationTest {
@@ -48,6 +49,6 @@ public class VmNotesCategoryRegistrationTest {
     public void verifyThatVmNotesCategoryIsExported() {
         VmNotesCategoryRegistration registration = new VmNotesCategoryRegistration();
         Set<String> names = registration.getCategoryNames();
-        assertTrue(names.contains(VmNoteDAOImpl.vmNotesCategory.getName()));
+        assertTrue(names.contains(VmNoteDAO.vmNotesCategory.getName()));
     }
 }
