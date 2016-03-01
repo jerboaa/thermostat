@@ -52,6 +52,7 @@
 
   <modules>
     <module>common</module>
+    <module>client-core</module>
     <module>client-swing</module>
     <module>client-cli</module>
     <module>distribution</module>

@@ -36,21 +36,24 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
+import java.awt.Component;
+
+import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-public class Utils {
+public class SwingNotesViewTest {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame frame = new JFrame();
 
-    public static void assertInEdt() {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            throw new AssertionError("Called from outside the EDT");
-        }
+                SwingNotesView view = new SwingNotesView();
+                Component component = view.getUiComponent();
+                frame.add(component);
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setVisible(true);
+            }
+        });
     }
-
-    public static void assertNotInEdt() {
-        if (SwingUtilities.isEventDispatchThread()) {
-            throw new AssertionError("Called from outside the EDT");
-        }
-    }
-
 }
-

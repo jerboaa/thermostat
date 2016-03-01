@@ -34,31 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import java.util.UUID;
-
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.AllPassFilter;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.notes.common.VmNote;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.storage.core.Ref;
 
-public class VmNotesController extends NotesController<VmRef, VmNote, VmNoteDAO> {
+public abstract class NotesControllerProvider<T extends Ref, D> implements InformationService<T> {
 
-    public VmNotesController(Clock clock, ApplicationService appSvc, final VmRef vm, VmNoteDAO vmNoteDao, NotesView notesView) {
-        super(clock, appSvc, vm, vmNoteDao, notesView);
+    protected final Clock clock;
+    protected final ApplicationService appSvc;
+    protected final D dao;
+    protected final NotesViewProvider viewProvider;
+
+    public NotesControllerProvider(Clock clock, ApplicationService appSvc, D dao, NotesViewProvider viewProvider) {
+        this.clock = clock;
+        this.appSvc = appSvc;
+        this.dao = dao;
+        this.viewProvider = viewProvider;
     }
 
     @Override
-    protected VmNote createNewNote(long timeStamp, String text) {
-        VmNote vmNote = new VmNote();
-        vmNote.setAgentId(ref.getHostRef().getAgentId());
-        vmNote.setVmId(ref.getVmId());
-        vmNote.setId(UUID.randomUUID().toString());
-        vmNote.setTimeStamp(timeStamp);
-        vmNote.setContent(text);
-        return vmNote;
+    public Filter<T> getFilter() {
+        return new AllPassFilter<>();
     }
 
+    @Override
+    public abstract InformationServiceController<T> getInformationServiceController(T ref);
+
+    @Override
+    public int getOrderValue() {
+        return Constants.ORDER_VALUE;
+    }
 }

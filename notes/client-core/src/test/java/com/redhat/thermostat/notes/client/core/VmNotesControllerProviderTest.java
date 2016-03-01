@@ -34,49 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
+package com.redhat.thermostat.notes.client.core;
 
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.SystemClock;
-import com.redhat.thermostat.notes.client.core.NotesViewProvider;
-import com.redhat.thermostat.notes.client.core.VmNotesController;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.notes.common.VmNote;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * Should be in client-core, but needs a concrete NotesViewProvider implementation as written so it remains in client-swing
- */
-public class VmNotesControllerTest {
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                NotesViewProvider viewProvider = new SwingNotesViewProvider();
-                ApplicationService appSvc = mock(ApplicationService.class);
-                VmNoteDAO dao = mock(VmNoteDAO.class);
-                HostRef host = mock(HostRef.class);
-                when(host.getAgentId()).thenReturn("t800");
-                VmRef vm = mock(VmRef.class);
-                when(vm.getVmId()).thenReturn("vm1000");
-                when(vm.getHostRef()).thenReturn(host);
+public class VmNotesControllerProviderTest {
 
-                final VmNotesController notesController = new VmNotesController(
-                        new SystemClock(), appSvc, dao, vm, viewProvider);
+    private Clock clock;
+    private ApplicationService appSvc;
+    private VmNoteDAO dao;
+    private NotesViewProvider viewProvider;
 
-                JFrame mainWindow = new JFrame();
-                mainWindow.add(((SwingNotesView) notesController.getView()).getUiComponent());
-                mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                mainWindow.setVisible(true);
-            }
-        });
+    @Before
+    public void setup() {
+        clock = mock(Clock.class);
+        appSvc = mock(ApplicationService.class);
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
+        Timer timer = mock(Timer.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
+        dao = mock(VmNoteDAO.class);
+        viewProvider = mock(NotesViewProvider.class);
+
+        when(viewProvider.createView()).thenReturn(mock(NotesView.class));
+    }
+
+    @Test
+    public void testReturnedControllerNotesHaveMatchingVmId() {
+        VmRef ref = mock(VmRef.class);
+        when(ref.getVmId()).thenReturn("foo-vmid");
+        when(ref.getHostRef()).thenReturn(mock(HostRef.class));
+        VmNotesControllerProvider provider = new VmNotesControllerProvider(clock, appSvc, dao, viewProvider);
+        VmNotesController controller = provider.getInformationServiceController(ref);
+        VmNote note = controller.createNewNote(100l, "content");
+        assertThat(note.getVmId(), is(ref.getVmId()));
     }
 
 }

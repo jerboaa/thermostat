@@ -126,5 +126,10 @@
       <artifactId>thermostat-notes-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-notes-client-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>

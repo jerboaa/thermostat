@@ -34,26 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core.internal;
 
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.notes.client.core.NotesViewProvider;
+import com.redhat.thermostat.notes.client.core.VmNotesControllerProvider;
+import com.redhat.thermostat.notes.common.VmNoteDAO;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import org.junit.Test;
 
+import java.util.Hashtable;
+
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class ActivatorTest {
 
     @Test
-    public void verifyThatViewProviderIsRegistered() {
+    public void testServiceRegistration() {
         StubBundleContext context = new StubBundleContext();
+
+        VmNoteDAO dao = mock(VmNoteDAO.class);
+        context.registerService(VmNoteDAO.class, dao, null);
+
+        ApplicationService appSvc = mock(ApplicationService.class);
+        context.registerService(ApplicationService.class, appSvc, null);
+
+        NotesViewProvider viewProvider = mock(NotesViewProvider.class);
+        context.registerService(NotesViewProvider.class, viewProvider, null);
 
         Activator activator = new Activator();
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(NotesViewProvider.class.getName(), SwingNotesViewProvider.class));
+        Hashtable<String, String> props = new Hashtable<>();
+        props.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+        assertTrue(context.isServiceRegistered(InformationService.class.getName(), VmNotesControllerProvider.class, props));
 
         activator.stop(context);
+
+        assertFalse(context.isServiceRegistered(InformationService.class.getName(), VmNotesControllerProvider.class));
     }
 
 }

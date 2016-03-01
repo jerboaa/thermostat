@@ -34,26 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import com.redhat.thermostat.notes.client.core.NotesViewProvider;
-import com.redhat.thermostat.testutils.StubBundleContext;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import javax.swing.SwingUtilities;
+import java.lang.reflect.InvocationTargetException;
 
-public class ActivatorTest {
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
+public class UtilsTest {
+
+    @Test(expected = AssertionError.class)
+    public void testAssertInEdt() {
+        Utils.assertInEdt();
+    }
 
     @Test
-    public void verifyThatViewProviderIsRegistered() {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(NotesViewProvider.class.getName(), SwingNotesViewProvider.class));
-
-        activator.stop(context);
+    public void testAssertNotInEdt() {
+        final AssertionError[] as = new AssertionError[1];
+        try {
+            SwingUtilities.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Utils.assertNotInEdt();
+                    } catch (AssertionError a) {
+                        as[0] = a;
+                    }
+                }
+            });
+        } catch (InterruptedException | InvocationTargetException e) {
+            fail("invokeAndWait threw an unexpected exception");
+        }
+        assertThat(as[0], is(notNullValue()));
     }
 
 }

@@ -34,26 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import com.redhat.thermostat.notes.client.core.NotesViewProvider;
-import com.redhat.thermostat.testutils.StubBundleContext;
-import org.junit.Test;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.notes.common.Note;
 
-import static org.junit.Assert.assertTrue;
+public abstract class NotesView extends BasicView implements UIComponent {
 
-public class ActivatorTest {
+    public enum NoteAction {
+        REMOTE_REFRESH,
 
-    @Test
-    public void verifyThatViewProviderIsRegistered() {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(NotesViewProvider.class.getName(), SwingNotesViewProvider.class));
-
-        activator.stop(context);
+        LOCAL_ADD,
+        LOCAL_DELETE,
+        LOCAL_SAVE,
     }
+
+    protected ActionNotifier<NoteAction> actionNotifier = new ActionNotifier<>(this);
+
+    public void addNoteActionListener(ActionListener<NoteAction> listener) {
+        actionNotifier.addActionListener(listener);
+    }
+
+    public void removeNoteActionListener(ActionListener<NoteAction> listener) {
+        actionNotifier.removeActionListener(listener);
+    }
+
+    public abstract void setBusy(final boolean busy);
+
+    public abstract void clearAll();
+
+    public abstract void add(final Note note);
+
+    public abstract void update(Note note);
+
+    public abstract void remove(Note note);
+
+    public abstract String getContent(final String tag);
+
+    public abstract long getTimeStamp(final String tag);
 
 }

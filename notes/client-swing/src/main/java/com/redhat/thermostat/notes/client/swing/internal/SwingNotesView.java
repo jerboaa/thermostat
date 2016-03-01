@@ -75,13 +75,20 @@ import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
+import com.redhat.thermostat.notes.client.core.NotesView;
+import com.redhat.thermostat.notes.client.core.Utils;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 
 /**
  * SwingComponent serves as a tag for SwingClient to use this view
  */
 public class SwingNotesView extends NotesView implements SwingComponent {
+
+    private static final Translate<com.redhat.thermostat.notes.client.core.LocaleResources> coreTranslator =
+            com.redhat.thermostat.notes.client.core.LocaleResources.createLocalizer();
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private HeaderPanel container;
 
@@ -103,7 +110,7 @@ public class SwingNotesView extends NotesView implements SwingComponent {
         tagToPanel = new HashMap<>();
         focusRequester = new FocusRequester<>();
 
-        container = new HeaderPanel(translator.localize(LocaleResources.TAB_NAME));
+        container = new HeaderPanel(coreTranslator.localize(com.redhat.thermostat.notes.client.core.LocaleResources.VIEW_NAME));
         new ComponentVisibilityNotifier().initialize(container, notifier);
 
         refreshButton = createToolbarButton(
@@ -148,7 +155,7 @@ public class SwingNotesView extends NotesView implements SwingComponent {
     }
 
     private ActionButton createToolbarButton(LocalizedString description, char iconId, final NoteAction action) {
-        Icon icon = new FontAwesomeIcon(iconId, Constants.TEXT_SIZE);
+        Icon icon = new FontAwesomeIcon(iconId, NotePanel.TEXT_SIZE);
         ActionButton button = new ActionButton(icon);
         button.setToolTipText(description.getContents());
         button.addActionListener(new ActionListener() {

@@ -34,49 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.notes.common.Note;
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.UUID;
 
-public abstract class NotesView extends BasicView implements UIComponent {
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.notes.common.VmNote;
+import com.redhat.thermostat.notes.common.VmNoteDAO;
+import com.redhat.thermostat.storage.core.VmRef;
 
-    protected static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+public class VmNotesController extends NotesController<VmRef, VmNote, VmNoteDAO> {
 
-    public enum NoteAction {
-        REMOTE_REFRESH,
-
-        LOCAL_ADD,
-        LOCAL_DELETE,
-        LOCAL_SAVE,
+    public VmNotesController(Clock clock, ApplicationService appSvc, VmNoteDAO vmNoteDao, final VmRef vm, NotesViewProvider notesViewProvider) {
+        super(clock, appSvc, vm, vmNoteDao, notesViewProvider);
     }
 
-    protected ActionNotifier<NoteAction> actionNotifier = new ActionNotifier<>(this);
-
-    public void addNoteActionListener(ActionListener<NoteAction> listener) {
-        actionNotifier.addActionListener(listener);
+    @Override
+    protected VmNote createNewNote(long timeStamp, String text) {
+        VmNote vmNote = new VmNote();
+        vmNote.setAgentId(ref.getHostRef().getAgentId());
+        vmNote.setVmId(ref.getVmId());
+        vmNote.setId(UUID.randomUUID().toString());
+        vmNote.setTimeStamp(timeStamp);
+        vmNote.setContent(text);
+        return vmNote;
     }
-
-    public void removeNoteActionListener(ActionListener<NoteAction> listener) {
-        actionNotifier.removeActionListener(listener);
-    }
-
-    public abstract void setBusy(final boolean busy);
-
-    public abstract void clearAll();
-
-    public abstract void add(final Note note);
-
-    public abstract void update(Note note);
-
-    public abstract void remove(Note note);
-
-    public abstract String getContent(final String tag);
-
-    public abstract long getTimeStamp(final String tag);
 
 }

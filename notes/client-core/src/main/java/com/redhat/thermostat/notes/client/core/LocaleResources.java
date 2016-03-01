@@ -34,26 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import com.redhat.thermostat.notes.client.core.NotesViewProvider;
-import com.redhat.thermostat.testutils.StubBundleContext;
-import org.junit.Test;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import static org.junit.Assert.assertTrue;
+public enum LocaleResources {
 
-public class ActivatorTest {
+    VIEW_NAME,
+    ;
 
-    @Test
-    public void verifyThatViewProviderIsRegistered() {
-        StubBundleContext context = new StubBundleContext();
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.notes.client.core.strings";
 
-        Activator activator = new Activator();
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(NotesViewProvider.class.getName(), SwingNotesViewProvider.class));
-
-        activator.stop(context);
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
 }

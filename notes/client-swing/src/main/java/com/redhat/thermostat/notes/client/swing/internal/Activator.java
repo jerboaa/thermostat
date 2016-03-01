@@ -36,86 +36,21 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.notes.client.core.NotesViewProvider;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.SystemClock;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.notes.common.HostNoteDAO;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
-
 public class Activator implements BundleActivator {
-
-    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
-
-    @SuppressWarnings("rawtypes")
-    private ServiceRegistration<InformationService> vmNotesRegistration;
-    @SuppressWarnings("rawtypes")
-    private ServiceRegistration<InformationService> hostNotesRegistration;
-
-    private MultipleServiceTracker hostNotesDaoTracker;
-    private MultipleServiceTracker vmNotesDaoTracker;
 
     @Override
     public void start(final BundleContext context) {
-        logger.config("notes-client-swing started");
-
-        hostNotesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { HostNoteDAO.class, ApplicationService.class }, new Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                HostNoteDAO hostNoteDao = (HostNoteDAO) services.get(HostNoteDAO.class.getName());
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                SwingHostNotesProvider hostNotesService = new SwingHostNotesProvider(new SystemClock(), appSvc, hostNoteDao);
-                Hashtable<String, String> properties = new Hashtable<>();
-                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
-                properties.put(InformationService.KEY_SERVICE_ID, hostNotesService.getClass().getName());
-                hostNotesRegistration = context.registerService(InformationService.class, hostNotesService, properties);
-            }
-            @Override
-            public void dependenciesUnavailable() {
-                hostNotesRegistration.unregister();
-                hostNotesRegistration = null;
-            }
-        });
-        hostNotesDaoTracker.open();
-
-        vmNotesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { VmNoteDAO.class, ApplicationService.class }, new Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmNoteDAO vmNoteDao = (VmNoteDAO) services.get(VmNoteDAO.class.getName());
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                SwingVmNotesProvider notesService = new SwingVmNotesProvider(new SystemClock(), appSvc, vmNoteDao);
-                Hashtable<String, String> properties = new Hashtable<>();
-                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
-                properties.put(InformationService.KEY_SERVICE_ID, notesService.getClass().getName());
-                vmNotesRegistration = context.registerService(InformationService.class, notesService, properties);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                vmNotesRegistration.unregister();
-                vmNotesRegistration = null;
-            }
-        });
-        vmNotesDaoTracker.open();
+        NotesViewProvider viewProvider = new SwingNotesViewProvider();
+        context.registerService(NotesViewProvider.class.getName(), viewProvider, null);
     }
 
     @Override
     public void stop(BundleContext context) {
-        hostNotesDaoTracker.close();
-        vmNotesDaoTracker.close();
     }
 
 }

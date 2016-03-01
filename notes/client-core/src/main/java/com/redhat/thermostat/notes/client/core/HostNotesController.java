@@ -34,20 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import java.awt.Component;
+import java.util.UUID;
 
-import javax.swing.JFrame;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.notes.common.HostNote;
+import com.redhat.thermostat.notes.common.HostNoteDAO;
+import com.redhat.thermostat.storage.core.HostRef;
 
-public class NotesViewTest {
-    public static void main(String[] args) {
-        JFrame frame = new JFrame();
+public class HostNotesController extends NotesController<HostRef, HostNote, HostNoteDAO> {
 
-        SwingNotesView view = new SwingNotesView();
-        Component component = view.getUiComponent();
-        frame.add(component);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
+    public HostNotesController(Clock clock, ApplicationService appSvc, HostNoteDAO dao, HostRef host, NotesViewProvider notesViewProvider) {
+        super(clock, appSvc, host, dao, notesViewProvider);
+    }
+
+    @Override
+    protected HostNote createNewNote(long timeStamp, String text) {
+        HostNote hostNote = new HostNote();
+        hostNote.setAgentId(ref.getAgentId());
+        hostNote.setId(UUID.randomUUID().toString());
+        hostNote.setTimeStamp(timeStamp);
+        hostNote.setContent(text);
+        return hostNote;
     }
 }

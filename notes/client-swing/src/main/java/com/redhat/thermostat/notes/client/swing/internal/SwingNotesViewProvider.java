@@ -36,24 +36,14 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
+import com.redhat.thermostat.notes.client.core.NotesView;
 import com.redhat.thermostat.notes.client.core.NotesViewProvider;
-import com.redhat.thermostat.testutils.StubBundleContext;
-import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+public class SwingNotesViewProvider implements NotesViewProvider {
 
-public class ActivatorTest {
-
-    @Test
-    public void verifyThatViewProviderIsRegistered() {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(NotesViewProvider.class.getName(), SwingNotesViewProvider.class));
-
-        activator.stop(context);
+    @Override
+    public NotesView createView() {
+        return new SwingNotesView();
     }
 
 }

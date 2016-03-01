@@ -40,8 +40,6 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
 
-    TAB_NAME,
-
     NOTES_NEW,
     NOTES_REFRESH,
     NOTES_DELETE,

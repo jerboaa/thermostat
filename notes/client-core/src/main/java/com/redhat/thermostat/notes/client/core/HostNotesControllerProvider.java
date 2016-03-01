@@ -34,42 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.AllPassFilter;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.notes.common.HostNoteDAO;
+import com.redhat.thermostat.storage.core.HostRef;
 
-public class SwingVmNotesProvider implements InformationService<VmRef>{
+public class HostNotesControllerProvider extends NotesControllerProvider<HostRef, HostNoteDAO> {
 
-    private Clock clock;
-    private ApplicationService appSvc;
-    private VmNoteDAO vmNoteDao;
-
-    public SwingVmNotesProvider(Clock clock, ApplicationService appSvc, VmNoteDAO vmNoteDao) {
-        this.clock = clock;
-        this.appSvc = appSvc;
-        this.vmNoteDao = vmNoteDao;
+    public HostNotesControllerProvider(Clock clock, ApplicationService appSvc, HostNoteDAO hostNoteDao, NotesViewProvider viewProvider) {
+        super(clock, appSvc, hostNoteDao, viewProvider);
     }
 
     @Override
-    public int getOrderValue() {
-        return Constants.ORDER_VALUE;
-    }
-
-    @Override
-    public Filter<VmRef> getFilter() {
-        return new AllPassFilter<>();
-    }
-
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef vm) {
-        return new VmNotesController(clock, appSvc, vm, vmNoteDao, new SwingNotesView());
+    public HostNotesController getInformationServiceController(HostRef host) {
+        return new HostNotesController(clock, appSvc, dao, host, viewProvider);
     }
 
 }

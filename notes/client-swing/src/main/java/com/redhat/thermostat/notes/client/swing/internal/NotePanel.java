@@ -56,13 +56,17 @@ import javax.swing.event.DocumentListener;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.notes.client.swing.internal.NotesView.NoteAction;
+import com.redhat.thermostat.notes.client.core.NotesView.NoteAction;
+import com.redhat.thermostat.notes.client.core.Utils;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class NotePanel extends JPanel {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    public static final int TEXT_SIZE = 12;
+    public static final int PADDING = 5;
 
     private Note note;
     private ThermostatTextArea text;
@@ -103,7 +107,7 @@ public class NotePanel extends JPanel {
             }
         });
         focusRequester.setComponent(text);
-        Icon deleteIcon = new FontAwesomeIcon('\uf014', Constants.TEXT_SIZE);
+        Icon deleteIcon = new FontAwesomeIcon('\uf014', TEXT_SIZE);
         JButton deleteButton = new JButton(deleteIcon);
         deleteButton.setToolTipText(translator.localize(LocaleResources.NOTES_DELETE).getContents());
         deleteButton.addActionListener(new ActionListener() {
@@ -114,13 +118,12 @@ public class NotePanel extends JPanel {
         });
 
         this.setLayout(new GridBagLayout());
-        int padding = Constants.PADDING;
-        this.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
+        this.setBorder(BorderFactory.createEmptyBorder(PADDING, PADDING, PADDING, PADDING));
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.anchor = GridBagConstraints.PAGE_START;
         constraints.ipadx = 0;
-        constraints.ipady = padding;
+        constraints.ipady = PADDING;
 
         constraints.weightx = 0;
         this.add(timeStampLabel, constraints);

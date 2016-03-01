@@ -34,26 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import com.redhat.thermostat.notes.client.core.NotesViewProvider;
-import com.redhat.thermostat.testutils.StubBundleContext;
-import org.junit.Test;
+import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
 
-import static org.junit.Assert.assertTrue;
+public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
 
-public class ActivatorTest {
+    @Override
+    protected Class<LocaleResources> getEnumClass() {
+        return LocaleResources.class;
+    }
 
-    @Test
-    public void verifyThatViewProviderIsRegistered() {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(NotesViewProvider.class.getName(), SwingNotesViewProvider.class));
-
-        activator.stop(context);
+    @Override
+    protected String getResourceBundle() {
+        return LocaleResources.RESOURCE_BUNDLE;
     }
 
 }
+

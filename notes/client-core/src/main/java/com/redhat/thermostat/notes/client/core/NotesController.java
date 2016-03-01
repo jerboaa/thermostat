@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -77,12 +77,12 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     private Timer syncTimer;
     private Timer autoRefreshTimer;
 
-    public NotesController(Clock clock, final ApplicationService appSvc, final R ref, final D dao, NotesView view) {
+    public NotesController(Clock clock, final ApplicationService appSvc, final R ref, final D dao, NotesViewProvider viewProvider) {
         this.clock = clock;
         this.appSvc = appSvc;
         this.ref = ref;
         this.dao = dao;
-        this.view = view;
+        this.view = viewProvider.createView();
 
         NoteIdComparator<N> noteIdComparator = new NoteIdComparator<>();
         models = new TreeSet<>(noteIdComparator);
@@ -154,6 +154,8 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                         });
                         break;
                     }
+                    default:
+                        throw new AssertionError("Unknown acton event: " + actionEvent);
                 }
             }
         });
@@ -192,7 +194,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
     @Override
     public LocalizedString getLocalizedName() {
-        return translator.localize(LocaleResources.TAB_NAME);
+        return translator.localize(LocaleResources.VIEW_NAME);
     }
 
     protected void sync(Runnable onComplete) {

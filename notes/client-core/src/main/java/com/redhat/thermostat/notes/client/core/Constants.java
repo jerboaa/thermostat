@@ -34,26 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import com.redhat.thermostat.notes.client.core.NotesViewProvider;
-import com.redhat.thermostat.testutils.StubBundleContext;
-import org.junit.Test;
+import com.redhat.thermostat.client.core.InformationService;
 
-import static org.junit.Assert.assertTrue;
+public final class Constants {
 
-public class ActivatorTest {
-
-    @Test
-    public void verifyThatViewProviderIsRegistered() {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(NotesViewProvider.class.getName(), SwingNotesViewProvider.class));
-
-        activator.stop(context);
+    private Constants() {
+        // don't instantiate
     }
+
+    static final int ORDER_VALUE = InformationService.ORDER_USER_GROUP + 256;
 
 }

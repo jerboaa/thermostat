@@ -34,19 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.annotations.ExtensionPoint;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-public final class Constants {
+@ExtensionPoint
+public interface NotesViewProvider extends ViewProvider {
 
-    private Constants() {
-        // don't instantiate
-    }
-
-    static final int ORDER_VALUE = InformationService.ORDER_USER_GROUP + 256;
-
-    static final int TEXT_SIZE = 12;
-    static final int PADDING = 5;
+    @Override
+    NotesView createView();
 
 }

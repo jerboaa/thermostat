@@ -306,6 +306,7 @@
       <name>gui</name>
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.notes.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.notes.client.core</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.notes.client.swing</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>

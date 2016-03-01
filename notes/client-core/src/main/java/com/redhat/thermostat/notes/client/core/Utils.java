@@ -34,29 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.client.core;
 
-import java.util.UUID;
+import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.notes.common.HostNote;
-import com.redhat.thermostat.notes.common.HostNoteDAO;
-import com.redhat.thermostat.storage.core.HostRef;
+public class Utils {
 
-public class HostNotesController extends NotesController<HostRef, HostNote, HostNoteDAO> {
-
-    public HostNotesController(Clock clock, ApplicationService appSvc, HostNoteDAO dao, HostRef host, NotesView view) {
-        super(clock, appSvc, host, dao, view);
+    public static void assertInEdt() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new AssertionError("Called from outside the EDT");
+        }
     }
 
-    @Override
-    protected HostNote createNewNote(long timeStamp, String text) {
-        HostNote hostNote = new HostNote();
-        hostNote.setAgentId(ref.getAgentId());
-        hostNote.setId(UUID.randomUUID().toString());
-        hostNote.setTimeStamp(timeStamp);
-        hostNote.setContent(text);
-        return hostNote;
+    public static void assertNotInEdt() {
+        if (SwingUtilities.isEventDispatchThread()) {
+            throw new AssertionError("Called from outside the EDT");
+        }
     }
+
 }
+
