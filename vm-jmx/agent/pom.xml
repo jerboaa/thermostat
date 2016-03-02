@@ -41,7 +41,7 @@
   <parent>
     <artifactId>thermostat-vm-jmx</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>1.99.8-SNAPSHOT</version>
+    <version>1.99.9-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-vm-jmx-agent</artifactId>
   <packaging>bundle</packaging>

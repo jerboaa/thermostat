@@ -41,7 +41,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <requiredProperties>
     <requiredProperty key="thermostat-core-version">
-      <defaultValue>1.99.8-SNAPSHOT</defaultValue>
+      <defaultValue>1.99.9-SNAPSHOT</defaultValue>
     </requiredProperty>
     <requiredProperty key="pluginDescription">
       <defaultValue>Thermostat example plugin</defaultValue>
