@@ -310,6 +310,40 @@ public class SwingVmProfileViewTest {
         });
     }
 
+
+    @GUITest
+    @Test
+    public void testMethodsWithLargestExecutionTimeAppearFirst() throws InvocationTargetException, InterruptedException {
+
+        frame.show();
+
+        final JScrollPaneFixture scrollPane = frame.scrollPane("METHOD_TABLE");
+
+        List<ProfilingResult.MethodInfo> data = new ArrayList<>();
+        data.add(new ProfilingResult.MethodInfo(new MethodDescriptorConverter.MethodDeclaration(
+                "foo", Arrays.asList("int"), "int"), 10000, 70));
+        data.add(new ProfilingResult.MethodInfo(new MethodDescriptorConverter.MethodDeclaration(
+                "bar", Arrays.asList("int"), "double"), 1000, 30));
+        data.add(new ProfilingResult.MethodInfo(new MethodDescriptorConverter.MethodDeclaration(
+                "baz", Arrays.asList("double"), "double"), 100, 30));
+        final ProfilingResult result = new ProfilingResult(data);
+
+        view.setProfilingDetailData(result);
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                TableModel model =
+                        ((ThermostatTable) scrollPane.component().getViewport().getView()).getModel();
+                assertEquals(3, model.getRowCount());
+
+                assertEquals("int foo(int)", model.getValueAt(0, 0).toString());
+                assertEquals("double bar(int)", model.getValueAt(1, 0).toString());
+                assertEquals("double baz(double)", model.getValueAt(2, 0).toString());
+            }
+        });
+    }
+
     @GUITest
     @Test
     public void testTabAddingAndSwitching() throws InvocationTargetException, InterruptedException {

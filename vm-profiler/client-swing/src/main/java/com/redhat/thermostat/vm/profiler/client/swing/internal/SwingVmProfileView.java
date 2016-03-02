@@ -66,7 +66,9 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowSorter;
 import javax.swing.SingleSelectionModel;
+import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
@@ -296,6 +298,9 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 return super.getCellRenderer(row, column);
             }
         };
+        List <RowSorter.SortKey> sortKeys = new ArrayList<>();
+        sortKeys.add(new RowSorter.SortKey(COLUMN_METHOD_TIME, SortOrder.DESCENDING));
+        profileTable.getRowSorter().setSortKeys(sortKeys);
 
         JScrollPane scrollPaneProfileTable = profileTable.wrap();
         scrollPaneProfileTable.setName("METHOD_TABLE");
