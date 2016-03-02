@@ -46,7 +46,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import org.jfree.chart.ChartFactory;
@@ -108,10 +107,10 @@ public class MultiChartPanel extends JPanel {
         JPanel chartPanel = new RecentTimeSeriesChartPanel(chartController);
         chartPanel.setOpaque(false);
 
-        JScrollPane checkBoxContainer = new JScrollPane(checkBoxPanel);
+        ThermostatScrollPane checkBoxContainer = new ThermostatScrollPane(checkBoxPanel);
 
         checkBoxPanel.setOpaque(false);
-        checkBoxPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        checkBoxPanel.setBorder(new EmptyBorder(5, 5, 15, 5));
         checkBoxContainer.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         BorderLayout mainPanelBorderLayout = new BorderLayout();
