@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -56,21 +54,23 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
-import javax.swing.table.TableModel;
+import javax.swing.WindowConstants;
 
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
+import org.fest.swing.exception.ComponentLookupException;
 import org.fest.swing.fixture.Containers;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JLabelFixture;
 import org.fest.swing.fixture.JListFixture;
-import org.fest.swing.fixture.JScrollPaneFixture;
 import org.fest.swing.fixture.JTabbedPaneFixture;
+import org.fest.swing.fixture.JTableFixture;
 import org.fest.swing.fixture.JToggleButtonFixture;
 import org.junit.After;
 import org.junit.Before;
@@ -82,18 +82,22 @@ import org.junit.runner.RunWith;
 import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.utils.MethodDescriptorConverter;
+import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class SwingVmProfileViewTest {
+
+    private static final int METHOD_NAME_INDEX = 0;
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -133,8 +137,8 @@ public class SwingVmProfileViewTest {
     public void testSetProfilingState() throws InvocationTargetException, InterruptedException {
         frame.show();
 
-        JLabelFixture currentStatusLabelFixture = frame.label("CURRENT_STATUS_LABEL");
-        JToggleButtonFixture toggleButtonFixture = frame.toggleButton("TOGGLE_PROFILING_BUTTON");
+        JLabelFixture currentStatusLabelFixture = frame.label(SwingVmProfileView.CURRENT_STATUS_LABEL_NAME);
+        JToggleButtonFixture toggleButtonFixture = frame.toggleButton(SwingVmProfileView.TOGGLE_BUTTON_NAME);
         final ActionToggleButton toggleButton = (ActionToggleButton) toggleButtonFixture.component();
 
         GuiActionRunner.execute(new GuiTask() {
@@ -226,7 +230,7 @@ public class SwingVmProfileViewTest {
 
         frame.show();
 
-        JListFixture profileJList = frame.list("PROFILE_LIST");
+        JListFixture profileJList = frame.list(SwingVmProfileView.PROFILES_LIST_NAME);
         profileJList.clearSelection();
 
         ByteArrayOutputStream divertedErr = new ByteArrayOutputStream();
@@ -244,7 +248,7 @@ public class SwingVmProfileViewTest {
 
         frame.show();
 
-        final JListFixture profileJList = frame.list("PROFILE_LIST");
+        final JListFixture profileJList = frame.list(SwingVmProfileView.PROFILES_LIST_NAME);
         final List<VmProfileView.Profile> availableRuns = new ArrayList<>();
         availableRuns.add(new VmProfileView.Profile("profile1", 1000, 1000));
         view.setAvailableProfilingRuns(availableRuns);
@@ -260,20 +264,15 @@ public class SwingVmProfileViewTest {
 
         frame.show();
 
-        final JScrollPaneFixture scrollPane = frame.scrollPane("METHOD_TABLE");
-
         view.setProfilingDetailData(new ProfilingResult(new ArrayList<MethodInfo>()));
 
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                TableModel model =
-                        ((ThermostatTable) scrollPane.component().getViewport().getView()).getModel();
-                assertEquals(1, model.getRowCount());
-                assertEquals(translator.localize(LocaleResources.PROFILER_NO_RESULTS).getContents(),
-                        model.getValueAt(0, 0));
-            }
-        });
+        final JTableFixture table = frame.table(SwingVmProfileView.PROFILE_TABLE_NAME);
+        String[][] contents = table.contents();
+
+        assertEquals(1, contents.length);
+        String[] firstRow = contents[0];
+        assertEquals(3, firstRow.length);
+        assertEquals(translator.localize(LocaleResources.PROFILER_NO_RESULTS).getContents(), firstRow[METHOD_NAME_INDEX]);
     }
 
     @GUITest
@@ -282,8 +281,6 @@ public class SwingVmProfileViewTest {
             InterruptedException {
 
         frame.show();
-
-        final JScrollPaneFixture scrollPane = frame.scrollPane("METHOD_TABLE");
 
         List<ProfilingResult.MethodInfo> data = new ArrayList<>();
         data.add(new ProfilingResult.MethodInfo(new MethodDescriptorConverter.MethodDeclaration(
@@ -294,20 +291,16 @@ public class SwingVmProfileViewTest {
 
         view.setProfilingDetailData(result);
 
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                TableModel model =
-                        ((ThermostatTable) scrollPane.component().getViewport().getView()).getModel();
-                assertEquals(2, model.getRowCount());
+        final JTableFixture table = frame.table(SwingVmProfileView.PROFILE_TABLE_NAME);
 
-                ArrayList<String> methodNames = new ArrayList<>();
-                methodNames.add(model.getValueAt(0, 0).toString());
-                methodNames.add(model.getValueAt(1, 0).toString());
-                assertTrue(methodNames.contains("int foo(int)"));
-                assertTrue(methodNames.contains("double bar(double)"));
-            }
-        });
+        String[][] contents = table.contents();
+        assertEquals(2, contents.length);
+
+        ArrayList<String> methodNames = new ArrayList<>();
+        methodNames.add(stripHtml(contents[0][METHOD_NAME_INDEX].toString()));
+        methodNames.add(stripHtml(contents[1][METHOD_NAME_INDEX].toString()));
+        assertTrue(methodNames.contains("int foo(int)"));
+        assertTrue(methodNames.contains("double bar(double)"));
     }
 
 
@@ -316,8 +309,6 @@ public class SwingVmProfileViewTest {
     public void testMethodsWithLargestExecutionTimeAppearFirst() throws InvocationTargetException, InterruptedException {
 
         frame.show();
-
-        final JScrollPaneFixture scrollPane = frame.scrollPane("METHOD_TABLE");
 
         List<ProfilingResult.MethodInfo> data = new ArrayList<>();
         data.add(new ProfilingResult.MethodInfo(new MethodDescriptorConverter.MethodDeclaration(
@@ -330,18 +321,14 @@ public class SwingVmProfileViewTest {
 
         view.setProfilingDetailData(result);
 
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                TableModel model =
-                        ((ThermostatTable) scrollPane.component().getViewport().getView()).getModel();
-                assertEquals(3, model.getRowCount());
+        final JTableFixture table = frame.table(SwingVmProfileView.PROFILE_TABLE_NAME);
 
-                assertEquals("int foo(int)", model.getValueAt(0, 0).toString());
-                assertEquals("double bar(int)", model.getValueAt(1, 0).toString());
-                assertEquals("double baz(double)", model.getValueAt(2, 0).toString());
-            }
-        });
+        String[][] contents = table.contents();
+        assertEquals(3, contents.length);
+
+        assertEquals("int foo(int)", stripHtml(contents[0][METHOD_NAME_INDEX].toString()));
+        assertEquals("double bar(int)", stripHtml(contents[1][METHOD_NAME_INDEX].toString()));
+        assertEquals("double baz(double)", stripHtml(contents[2][METHOD_NAME_INDEX].toString()));
     }
 
     @GUITest
@@ -362,18 +349,17 @@ public class SwingVmProfileViewTest {
                 translator.localize(LocaleResources.PROFILER_RESULTS_TABLE);
         tabPaneFixture.requireTabTitles(tableTabName.getContents(), testTabName.getContents());
 
-        final Component selected1 = tabPaneFixture.selectedComponent();
-
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                assertNotNull(selected1);
-                assertEquals("METHOD_TABLE", selected1.getName());
-            }
-        });
+        // visible by default:
+        frame.table(SwingVmProfileView.PROFILE_TABLE_NAME).requireVisible();
 
         tabPaneFixture.selectTab(testTabName.getContents());
         final Component selected2 = tabPaneFixture.selectedComponent();
+        try {
+            frame.table(SwingVmProfileView.PROFILE_TABLE_NAME);
+            fail();
+        } catch (ComponentLookupException e) {
+            // pass: not visible
+        }
 
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override
@@ -384,15 +370,8 @@ public class SwingVmProfileViewTest {
         });
 
         tabPaneFixture.selectTab(tableTabName.getContents());
-        final Component selected3 = tabPaneFixture.selectedComponent();
+        frame.table(SwingVmProfileView.PROFILE_TABLE_NAME).requireVisible();
 
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                assertNotNull(selected3);
-                assertEquals("METHOD_TABLE", selected3.getName());
-            }
-        });
     }
 
     @Test
@@ -510,4 +489,34 @@ public class SwingVmProfileViewTest {
         assertEquals(expectedResult, resultRenderer.getText());
     }
 
+
+    private String stripHtml(String string) {
+        return string.replaceAll("<[^>]+>", "");
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame window = new JFrame();
+                SwingVmProfileView view = new SwingVmProfileView();
+                window.add(view.getUiComponent());
+                window.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                window.pack();
+                window.setVisible(true);
+
+                List<MethodInfo> data = new ArrayList<>();
+                data.add(new MethodInfo(new MethodDeclaration(
+                        "foo", list("int"), "int"), 1000, 1.0));
+                data.add(new MethodInfo(new MethodDeclaration(
+                        "bar", list("foo.bar.Baz", "int"), "Bar"), 100000, 100));
+                ProfilingResult results = new ProfilingResult(data);
+                view.setProfilingDetailData(results);
+            }
+
+            private List<String> list(String... args) {
+                return Arrays.asList(args);
+            }
+        });
+    }
 }

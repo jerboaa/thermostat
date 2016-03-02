@@ -46,7 +46,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -56,7 +55,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -71,7 +69,6 @@ import javax.swing.SingleSelectionModel;
 import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
-import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -102,6 +99,12 @@ import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
 public class SwingVmProfileView extends VmProfileView implements SwingComponent {
+
+    /** these components names are for testing only */
+    static final String CURRENT_STATUS_LABEL_NAME = "CURRENT_STATUS_LABEL";
+    static final String PROFILES_LIST_NAME = "PROFILES_LIST";
+    static final String PROFILE_TABLE_NAME = "METHOD_TABLE";
+    static final String TOGGLE_BUTTON_NAME = "TOGGLE_PROFILING_BUTTON";
 
     private static final Icon START_ICON = IconResource.SAMPLE.getIcon();
     private static final Icon STOP_ICON = new FontAwesomeIcon('\uf04d', START_ICON.getIconHeight());
@@ -178,7 +181,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
         toggleButton = new ActionToggleButton(START_ICON, STOP_ICON, translator.localize(
                 LocaleResources.START_PROFILING));
-        toggleButton.setName("TOGGLE_PROFILING_BUTTON");
+        toggleButton.setName(TOGGLE_BUTTON_NAME);
         toggleButton.toggleText(false);
         toggleButton.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -227,14 +230,14 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         constraints.gridx = 0;
         constraints.gridwidth = 1;
         currentStatusLabel = new JLabel("Current Status: {0}");
-        currentStatusLabel.setName("CURRENT_STATUS_LABEL");
+        currentStatusLabel.setName(CURRENT_STATUS_LABEL_NAME);
         statusPanel.add(currentStatusLabel, constraints);
         return statusPanel;
     }
 
     private JComponent createInformationPanel() {
         profileList = new JList<>(listModel);
-        profileList.setName("PROFILE_LIST");
+        profileList.setName(PROFILES_LIST_NAME);
         profileList.setCellRenderer(new ProfileItemRenderer());
         profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         profileList.addListSelectionListener(new ListSelectionListener() {
@@ -257,7 +260,6 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             }
         });
         ThermostatScrollPane profileListPane = new ThermostatScrollPane(profileList);
-        profileListPane.setName("PROFILE_LIST_PANE");
 
         Vector<String> columnNames = new Vector<>();
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_METHOD).getContents());
@@ -302,8 +304,9 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         sortKeys.add(new RowSorter.SortKey(COLUMN_METHOD_TIME, SortOrder.DESCENDING));
         profileTable.getRowSorter().setSortKeys(sortKeys);
 
+        profileTable.setName(PROFILE_TABLE_NAME);
+
         JScrollPane scrollPaneProfileTable = profileTable.wrap();
-        scrollPaneProfileTable.setName("METHOD_TABLE");
         tabPane.addTab(translator.localize(LocaleResources.PROFILER_RESULTS_TABLE).getContents(),
                 scrollPaneProfileTable);
 
@@ -554,32 +557,6 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             return "<font color='" + hexColorString + "'>"
                     + StringUtils.htmlEscape(unescapedText) + "</font>";
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                JFrame window = new JFrame();
-                SwingVmProfileView view = new SwingVmProfileView();
-                window.add(view.getUiComponent());
-                window.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                window.pack();
-                window.setVisible(true);
-
-                List<MethodInfo> data = new ArrayList<>();
-                data.add(new MethodInfo(new MethodDeclaration(
-                        "foo", list("int"), "int"), 1000, 1.0));
-                data.add(new MethodInfo(new MethodDeclaration(
-                        "bar", list("foo.bar.Baz", "int"), "Bar"), 100000, 100));
-                ProfilingResult results = new ProfilingResult(data);
-                view.setProfilingDetailData(results);
-            }
-
-            private List<String> list(String... args) {
-                return Arrays.asList(args);
-            }
-        });
     }
 
 }
