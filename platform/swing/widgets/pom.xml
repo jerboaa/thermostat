@@ -44,7 +44,7 @@
     <parent>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-platform-swing</artifactId>
-        <version>1.99.9-SNAPSHOT</version>
+        <version>1.99.10-SNAPSHOT</version>
     </parent>
 
     <artifactId>thermostat-platform-swing-widgets</artifactId>
