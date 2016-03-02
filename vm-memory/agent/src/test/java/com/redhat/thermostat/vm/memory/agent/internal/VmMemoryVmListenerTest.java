@@ -53,9 +53,11 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.backend.VmUpdate;
 import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
+import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 
 public class VmMemoryVmListenerTest {
     private static final String[] GEN_NAMES = new String[] { "Gen1", "Gen2" };
@@ -88,12 +90,14 @@ public class VmMemoryVmListenerTest {
     private VmMemoryVmListener vmListener;
     private VmMemoryDataExtractor extractor;
     private VmMemoryStatDAO vmMemoryStatDAO;
+    private VmTlabStatDAO vmTlabStatDAO;
     
     @Before
     public void setup() throws VmUpdateException {
         final int numGens = 2;
         vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
-        vmListener = new VmMemoryVmListener("foo-agent", vmMemoryStatDAO, "vmId");
+        vmTlabStatDAO = mock(VmTlabStatDAO.class);
+        vmListener = new VmMemoryVmListener("foo-agent", vmMemoryStatDAO, vmTlabStatDAO, "vmId");
         extractor = mock(VmMemoryDataExtractor.class);
 
         mockTotalGenerations(numGens);
@@ -114,6 +118,7 @@ public class VmMemoryVmListenerTest {
         }
 
         mockMetaspace();
+        mockTlab();
     }
 
     private void mockTotalGenerations(long gens) throws VmUpdateException {
@@ -163,12 +168,17 @@ public class VmMemoryVmListenerTest {
         when(extractor.getMetaspaceUsed(anyLong())).thenReturn(METASPACE_USED);
     }
 
+    private void mockTlab() {
+//        when(extractor.getTlabAllocThreads(TLAB_ALLOC_THREADS));
+    }
+
     @Test
     public void testMonitorsUpdated() throws VmUpdateException {
         VmUpdate update = mock(VmUpdate.class);
         vmListener.countersUpdated(update);
 
         verify(vmMemoryStatDAO).putVmMemoryStat(isA(VmMemoryStat.class));
+        verify(vmTlabStatDAO).putStat(isA(VmTlabStat.class));
     }
 
     @Test
@@ -196,6 +206,7 @@ public class VmMemoryVmListenerTest {
                 assertEquals(SPACE_USED[i][j], (Long) space.getUsed());
             }
         }
+
         assertEquals(METASPACE_MAX_CAPACITY, memoryStat.getMetaspaceMaxCapacity());
         assertEquals(METASPACE_MIN_CAPACITY, memoryStat.getMetaspaceMinCapacity());
         assertEquals(METASPACE_CAPACITY, memoryStat.getMetaspaceCapacity());
@@ -482,5 +493,41 @@ public class VmMemoryVmListenerTest {
             }
         }
     }
+
+    @Test
+    public void testRecordTlabStatWhenDataIsMissing() {
+        when(extractor.getTlabTotalAllocatingThreads(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabTotalAllocations(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabTotalRefills(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabMaxRefills(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabTotalSlowAllocs(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabMaxSlowAllocs(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabTotalGcWaste(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabMaxGcWaste(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabTotalSlowWaste(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabMaxSlowWaste(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabTotalFastWaste(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+        when(extractor.getTlabMaxFastWaste(VmTlabStat.UNKNOWN)).thenReturn(VmTlabStat.UNKNOWN);
+
+        vmListener.recordTlabStat(extractor);
+
+        ArgumentCaptor<VmTlabStat> captor = ArgumentCaptor.forClass(VmTlabStat.class);
+        verify(vmTlabStatDAO).putStat(captor.capture());
+        VmTlabStat tlabStat = captor.getValue();
+
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getTotalAllocatingThreads());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getTotalAllocations());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getTotalRefills());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getMaxRefills());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getTotalSlowAllocations());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getMaxSlowAllocations());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getTotalGcWaste());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getMaxGcWaste());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getTotalSlowWaste());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getMaxSlowWaste());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getTotalFastWaste());
+        assertEquals(VmTlabStat.UNKNOWN, tlabStat.getMaxFastWaste());
+    }
+
 }
 

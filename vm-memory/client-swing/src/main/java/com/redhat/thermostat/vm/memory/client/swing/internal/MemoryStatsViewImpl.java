@@ -43,17 +43,21 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.Transient;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.MultiChartPanel;
+import com.redhat.thermostat.client.swing.components.MultiChartPanel.DataGroup;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
@@ -64,6 +68,7 @@ import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
 import com.redhat.thermostat.vm.memory.client.core.Payload;
 import com.redhat.thermostat.vm.memory.client.locale.LocaleResources;
@@ -77,8 +82,10 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     private long lastRepaint;
     
     private HeaderPanel visiblePanel;
+    private JTabbedPane rootPanel;
     private JPanel graphPanel;
     private JPanel contentPanel;
+    private JPanel tlabPanel;
     
     private final Map<String, MemoryGraphPanel> regions;
     
@@ -88,6 +95,10 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     private Dimension preferredSize;
 
     private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<>(this);
+
+    private MultiChartPanel multiChart;
+    private DataGroup numberGroup;
+    private DataGroup bytesGroup;
 
     public MemoryStatsViewImpl(Duration duration) {
         super();
@@ -118,7 +129,13 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
         });
         contentPanel.add(recentTimeControlPanel, BorderLayout.SOUTH);
 
-        visiblePanel.setContent(contentPanel);
+        createTlabPanel();
+
+        rootPanel = new JTabbedPane();
+        rootPanel.addTab(t.localize(LocaleResources.TAB_MEMORY).getContents(), null, contentPanel, t.localize(LocaleResources.TAB_MEMORY_TOOLTIP).getContents());
+        rootPanel.addTab(t.localize(LocaleResources.TAB_TLAB).getContents(), null, tlabPanel, t.localize(LocaleResources.TAB_TLAB_TOOLTIP).getContents());
+
+        visiblePanel.setContent(rootPanel);
         
         toolbarButtonAction = new RequestGCAction();
         toolbarButton = new ToolbarGCButton(toolbarButtonAction);
@@ -126,7 +143,33 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
         visiblePanel.addToolBarButton(toolbarButton);
 
     }
-    
+
+    private void createTlabPanel() {
+        tlabPanel = new JPanel();
+        tlabPanel.setLayout(new BorderLayout());
+
+        multiChart = new MultiChartPanel();
+        numberGroup = multiChart.createGroup();
+        bytesGroup = multiChart.createGroup();
+        addChartTypes();
+
+        tlabPanel.add(multiChart, BorderLayout.CENTER);
+    }
+
+    private void addChartTypes() {
+        for (Type type : Type.values()) {
+            DataGroup group = getGroup(type);
+            String tag = getTag(type);
+            multiChart.addChart(group, tag, type.getLabel());
+            multiChart.showChart(group, tag);
+        }
+
+        multiChart.getRangeAxis(numberGroup).setLabel(
+                t.localize(LocaleResources.TLAB_CHART_NUMBER_AXIS).getContents());
+        multiChart.getRangeAxis(bytesGroup).setLabel(
+                t.localize(LocaleResources.TLAB_CHART_BYTE_AXIS).getContents());
+    }
+
     @Transient
     public Dimension getPreferredSize() {
         return new Dimension(preferredSize);
@@ -208,7 +251,46 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
             lastRepaint = System.currentTimeMillis();
         }
     }
-    
+
+    @Override
+    public void addTlabData(final Type type, final List<DiscreteTimeData<? extends Number>> data) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                String tag = getTag(type);
+                multiChart.addData(tag, data);
+            }
+        });
+    }
+
+    @Override
+    public void clearTlabData(final Type type) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                String tag = getTag(type);
+                multiChart.clearData(tag);
+            }
+        });
+    }
+
+    private DataGroup getGroup(final Type type) {
+        final DataGroup group;
+        // FIXME this is view knowing about the data internals. not desirable.
+        if (type == Type.TOTAL_ALLOCATING_THREADS || type == Type.TOTAL_ALLOCATIONS
+                || type == Type.TOTAL_REFILLS || type == Type.MAX_REFILLS
+                || type == Type.TOTAL_SLOW_ALLOCATIONS || type == Type.MAX_SLOW_ALLOCATIONS) {
+            group = numberGroup;
+        } else {
+            group = bytesGroup;
+        }
+        return group;
+    }
+
+    private String getTag(final Type type) {
+        return type.name();
+    }
+
     public BasicView getView() {
         return this;
     }

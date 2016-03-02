@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.vm.memory.client.core.internal;
 
-import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -47,6 +47,7 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsService;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
 public class MemoryStatsServiceImpl implements MemoryStatsService {
     
@@ -56,14 +57,18 @@ public class MemoryStatsServiceImpl implements MemoryStatsService {
     private ApplicationService appSvc;
     private VmInfoDAO vmInfoDao;
     private VmMemoryStatDAO vmMemoryStatDao;
+    private VmTlabStatDAO vmTlabStatDao;
     private AgentInfoDAO agentDAO;
     private GCRequest gcRequest;
     private MemoryStatsViewProvider viewProvider;
     
-    public MemoryStatsServiceImpl(ApplicationService appSvc, VmInfoDAO vmInfoDao, VmMemoryStatDAO vmMemoryStatDao, AgentInfoDAO agentDAO, GCRequest gcRequest, MemoryStatsViewProvider viewProvider) {
+    public MemoryStatsServiceImpl(ApplicationService appSvc,
+            VmInfoDAO vmInfoDao, VmMemoryStatDAO vmMemoryStatDao, VmTlabStatDAO vmTlabStatDao, AgentInfoDAO agentDAO,
+            GCRequest gcRequest, MemoryStatsViewProvider viewProvider) {
         this.appSvc = appSvc;
         this.vmInfoDao = vmInfoDao;
         this.vmMemoryStatDao = vmMemoryStatDao;
+        this.vmTlabStatDao = vmTlabStatDao;
         this.gcRequest = gcRequest;
         this.agentDAO = agentDAO;
         this.viewProvider = viewProvider;
@@ -71,7 +76,7 @@ public class MemoryStatsServiceImpl implements MemoryStatsService {
     
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new MemoryStatsController(appSvc, vmInfoDao, vmMemoryStatDao, ref, viewProvider, agentDAO, gcRequest);
+        return new MemoryStatsController(appSvc, vmInfoDao, vmMemoryStatDao, vmTlabStatDao, ref, viewProvider, agentDAO, gcRequest);
     }
 
     @Override

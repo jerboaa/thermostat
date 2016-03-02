@@ -36,54 +36,19 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
-public class Activator implements BundleActivator {
-    
-    private ServiceTracker tracker;
-    private List<ServiceRegistration> registrations = new ArrayList<>();
+public class VmTlabStatCategoryRegistration implements CategoryRegistration {
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                Storage storage = (Storage) context.getService(reference);
-
-                VmMemoryStatDAO vmMemoryStatDao = new VmMemoryStatDAOImpl(storage);
-                registrations.add(context.registerService(VmMemoryStatDAO.class.getName(), vmMemoryStatDao, null));
-
-                VmTlabStatDAO vmTlabStatDao = new VmTlabStatDAOImpl(storage);
-                registrations.add(context.registerService(VmTlabStatDAO.class.getName(), vmTlabStatDao, null));
-
-                return super.addingService(reference);
-            }
-
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                for (ServiceRegistration reg : registrations) {
-                    reg.unregister();
-                }
-                super.removedService(reference, service);
-            }
-        };
-        tracker.open();
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
+    public Set<String> getCategoryNames() {
+        Set<String> categories = new HashSet<>(1);
+        categories.add(VmTlabStatDAO.vmTlabStatsCategory.getName());
+        return categories;
     }
 
 }

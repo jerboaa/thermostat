@@ -47,6 +47,7 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
 public class VmMemoryBackendTest {
     
@@ -55,13 +56,14 @@ public class VmMemoryBackendTest {
     @Before
     public void setup() {
         VmMemoryStatDAO vmMemoryStatDao = mock(VmMemoryStatDAO.class);
+        VmTlabStatDAO vmTlabStatDao = mock(VmTlabStatDAO.class);
         
         Version version = mock(Version.class);
         when(version.getVersionNumber()).thenReturn("0.0.0");
 
         VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
         
-        backend = new VmMemoryBackend(vmMemoryStatDao, version, registrar, null);
+        backend = new VmMemoryBackend(vmMemoryStatDao, vmTlabStatDao, version, registrar, null);
     }
 
     @Test

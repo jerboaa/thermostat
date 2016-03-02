@@ -44,11 +44,15 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.backend.VmUpdate;
 import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.backend.VmUpdateListener;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
+import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 
 public class VmMemoryVmListener implements VmUpdateListener {
     
@@ -56,12 +60,20 @@ public class VmMemoryVmListener implements VmUpdateListener {
 
     private final String vmId;
     private final VmMemoryStatDAO memDAO;
+    private final VmTlabStatDAO tlabDAO;
     private final String writerId;
+    private final Clock clock;
     
     private boolean error;
 
-    public VmMemoryVmListener(String writerId, VmMemoryStatDAO vmMemoryStatDao, String vmId) {
-        memDAO = vmMemoryStatDao;
+    public VmMemoryVmListener(String writerId, VmMemoryStatDAO vmMemoryStatDao, VmTlabStatDAO vmTlabStatDao, String vmId) {
+        this(writerId, vmMemoryStatDao, vmTlabStatDao, new SystemClock(), vmId);
+    }
+
+    public VmMemoryVmListener(String writerId, VmMemoryStatDAO vmMemoryStatDao, VmTlabStatDAO vmTlabStatDao, Clock clock, String vmId) {
+        this.memDAO = vmMemoryStatDao;
+        this.tlabDAO = vmTlabStatDao;
+        this.clock = clock;
         this.vmId = vmId;
         this.writerId = writerId;
     }
@@ -70,11 +82,12 @@ public class VmMemoryVmListener implements VmUpdateListener {
     public void countersUpdated(VmUpdate update) {
         VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(update);
         recordMemoryStat(extractor);
+        recordTlabStat(extractor);
     }
 
     void recordMemoryStat(VmMemoryDataExtractor extractor) {
         try {
-            long timestamp = System.currentTimeMillis();
+            long timestamp = clock.getRealTimeMillis();
 
             long metaspaceMaxCapacity = extractor.getMetaspaceMaxCapacity(VmMemoryStat.UNKNOWN);
             long metaspaceMinCapacity = extractor.getMetaspaceMinCapacity(VmMemoryStat.UNKNOWN);
@@ -189,7 +202,34 @@ public class VmMemoryVmListener implements VmUpdateListener {
         s.setUsed(used);
         return s;
     }
-    
+
+    void recordTlabStat(VmMemoryDataExtractor extractor) {
+        long timestamp = clock.getRealTimeMillis();
+
+        long allocatingThreads = extractor.getTlabTotalAllocatingThreads(VmTlabStat.UNKNOWN);
+        long totalAllocations = extractor.getTlabTotalAllocations(VmTlabStat.UNKNOWN);
+        long refills = extractor.getTlabTotalRefills(VmTlabStat.UNKNOWN);
+        long maxRefills = extractor.getTlabMaxRefills(VmTlabStat.UNKNOWN);
+        long slowAllocs = extractor.getTlabTotalSlowAllocs(VmTlabStat.UNKNOWN);
+        long maxSlowAllocs = extractor.getTlabMaxSlowAllocs(VmTlabStat.UNKNOWN);
+        long gcWaste = extractor.getTlabTotalGcWaste(VmTlabStat.UNKNOWN);
+        long maxGcWaste = extractor.getTlabMaxGcWaste(VmTlabStat.UNKNOWN);
+        long slowWaste = extractor.getTlabTotalSlowWaste(VmTlabStat.UNKNOWN);
+        long maxSlowWaste = extractor.getTlabMaxSlowWaste(VmTlabStat.UNKNOWN);
+        long fastWaste = extractor.getTlabTotalFastWaste(VmTlabStat.UNKNOWN);
+        long maxFastWaste = extractor.getTlabMaxFastWaste(VmTlabStat.UNKNOWN);
+
+        VmTlabStat stat = new VmTlabStat(timestamp, writerId, vmId,
+                allocatingThreads, totalAllocations,
+                refills, maxRefills,
+                slowAllocs, maxSlowAllocs,
+                gcWaste, maxGcWaste,
+                slowWaste, maxSlowWaste,
+                fastWaste, maxFastWaste);
+
+        tlabDAO.putStat(stat);
+    }
+
     private void logWarningOnce(String message) {
         if (!error) {
             logger.log(Level.WARNING, message);

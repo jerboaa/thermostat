@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.memory.client.core.internal;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +54,7 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
@@ -65,15 +67,19 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
+import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView.Type;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 import com.redhat.thermostat.vm.memory.client.core.Payload;
 import com.redhat.thermostat.vm.memory.client.core.StatsModel;
 import com.redhat.thermostat.vm.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
+import com.redhat.thermostat.vm.memory.common.model.VmTlabStat;
 
 public class MemoryStatsController implements InformationServiceController<VmRef> {
 
@@ -82,19 +88,23 @@ public class MemoryStatsController implements InformationServiceController<VmRef
 
     private final MemoryStatsView view;
     private final VmMemoryStatDAO vmDao;
-   
+    private final VmTlabStatDAO tlabStatDao;
+
     private final VmRef ref;
-    private final Timer timer;
+    private final Timer memoryStatsTimer;
+    private final Timer tlabStatsTimer;
 
     private final Map<String, Payload> regions;
     
-    private VMCollector collector;
+    private VmMemoryStatCollector statCollector;
+    private VmTlabStatCollector tlabCollector;
 
     private Duration userDesiredDuration = defaultDuration;
 
-    private TimeRangeController<VmMemoryStat, VmRef> timeRangeController;
-    
-    class VMCollector implements Runnable {
+    private TimeRangeController<VmMemoryStat, VmRef> memoryTimeRangeController;
+    private TimeRangeController<VmTlabStat, VmRef> tlabTimeRangeController;
+
+    class VmMemoryStatCollector implements Runnable {
 
         private long desiredUpdateTimeStamp = System.currentTimeMillis() - defaultDuration.asMilliseconds();
 
@@ -123,7 +133,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                 }
             };
 
-            timeRangeController.update(userDesiredDuration, newAvailableRange, statsSupplier, ref, runnable);
+            memoryTimeRangeController.update(userDesiredDuration, newAvailableRange, statsSupplier, ref, runnable);
         }
 
         private void update(VmMemoryStat memoryStats) {
@@ -225,26 +235,92 @@ public class MemoryStatsController implements InformationServiceController<VmRef
             payload.setTooltip(tooltip);
         }
     }
-    
+
+    class VmTlabStatCollector implements Runnable {
+
+        @Override
+        public void run() {
+            VmTlabStat oldest = tlabStatDao.getOldestStat(ref);
+            VmTlabStat newest = tlabStatDao.getNewestStat(ref);
+            // Do nothing if there is no data
+            if (oldest == null || newest == null) {
+                return;
+            }
+
+            final List<DiscreteTimeData<? extends Number>> allocatingThreads = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> totalAllocations = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> totalRefills = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> maxRefills = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> totalSlowAllocations = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> maxSlowAllocations = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> totalGcWaste = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> maxGcWaste = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> totalSlowWaste = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> maxSlowWaste = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> totalFastWaste = new LinkedList<>();
+            final List<DiscreteTimeData<? extends Number>> maxFastWaste= new LinkedList<>();
+
+            Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
+
+            TimeRangeController.StatsSupplier<VmTlabStat, VmRef> statsSupplier = new TimeRangeController.StatsSupplier<VmTlabStat, VmRef>() {
+                @Override
+                public List<VmTlabStat> getStats(VmRef ref, long since, long to) {
+                    return tlabStatDao.getStats(ref, since, to);
+                }
+            };
+
+            TimeRangeController.SingleArgRunnable<VmTlabStat> runnable = new TimeRangeController.SingleArgRunnable<VmTlabStat>() {
+                @Override
+                public void run(VmTlabStat arg) {
+                    long timeStamp = arg.getTimeStamp();
+                    allocatingThreads.add(new DiscreteTimeData<>(timeStamp, arg.getTotalAllocatingThreads()));
+                    totalAllocations.add(new DiscreteTimeData<>(timeStamp, arg.getTotalAllocations()));
+                    totalRefills.add(new DiscreteTimeData<>(timeStamp, arg.getTotalRefills()));
+                    maxRefills.add(new DiscreteTimeData<>(timeStamp, arg.getMaxRefills()));
+                    totalSlowAllocations.add(new DiscreteTimeData<>(timeStamp, arg.getTotalSlowAllocations()));
+                    maxSlowAllocations.add(new DiscreteTimeData<>(timeStamp, arg.getMaxSlowAllocations()));
+                    totalGcWaste.add(new DiscreteTimeData<>(timeStamp, arg.getTotalGcWaste()));
+                    maxGcWaste.add(new DiscreteTimeData<>(timeStamp, arg.getMaxGcWaste()));
+                    totalSlowWaste.add(new DiscreteTimeData<>(timeStamp, arg.getTotalSlowWaste()));
+                    maxSlowWaste.add(new DiscreteTimeData<>(timeStamp, arg.getMaxSlowWaste()));
+                    totalFastWaste.add(new DiscreteTimeData<>(timeStamp, arg.getTotalFastWaste()));
+                    maxFastWaste.add(new DiscreteTimeData<>(timeStamp, arg.getMaxFastWaste()));
+                }
+            };
+
+            tlabTimeRangeController.update(userDesiredDuration, newAvailableRange, statsSupplier, ref, runnable);
+
+            view.addTlabData(Type.TOTAL_ALLOCATING_THREADS, allocatingThreads);
+            view.addTlabData(Type.TOTAL_ALLOCATIONS, totalAllocations);
+            view.addTlabData(Type.TOTAL_REFILLS, totalRefills);
+            view.addTlabData(Type.MAX_REFILLS, maxRefills);
+            view.addTlabData(Type.TOTAL_SLOW_ALLOCATIONS, totalSlowAllocations);
+            view.addTlabData(Type.MAX_SLOW_ALLOCATIONS, maxSlowAllocations);
+            view.addTlabData(Type.TOTAL_GC_WASTE, totalGcWaste);
+            view.addTlabData(Type.MAX_GC_WASTE, maxGcWaste);
+            view.addTlabData(Type.TOTAL_SLOW_WASTE, totalSlowWaste);
+            view.addTlabData(Type.MAX_SLOW_WASTE, maxSlowWaste);
+            view.addTlabData(Type.TOTAL_FAST_WASTE, totalFastWaste);
+            view.addTlabData(Type.MAX_FAST_WASTE, maxFastWaste);
+        }
+    }
+
     public MemoryStatsController(ApplicationService appSvc, final VmInfoDAO vmInfoDao,
-                                 final VmMemoryStatDAO vmMemoryStatDao,
+                                 final VmMemoryStatDAO vmMemoryStatDao, final VmTlabStatDAO vmTlabStatDao,
                                  final VmRef ref, MemoryStatsViewProvider viewProvider,
                                  final AgentInfoDAO agentDAO, final GCRequest gcRequest) {
         
         regions = new HashMap<>();
         this.ref = ref;
         vmDao = vmMemoryStatDao;
+        tlabStatDao = vmTlabStatDao;
         view = viewProvider.createView();
 
-        timer = appSvc.getTimerFactory().createTimer();
-        
-        collector = new VMCollector();
-        timer.setAction(collector);
-        
-        timer.setInitialDelay(0);
-        timer.setDelay(1000);
-        timer.setTimeUnit(TimeUnit.MILLISECONDS);
-        timer.setSchedulingType(SchedulingType.FIXED_RATE);
+        statCollector = new VmMemoryStatCollector();
+        tlabCollector = new VmTlabStatCollector();
+
+        memoryStatsTimer = createTimer(appSvc.getTimerFactory(), statCollector);
+        tlabStatsTimer = createTimer(appSvc.getTimerFactory(), tlabCollector);
 
         view.addActionListener(new ActionListener<Action>() {
             @Override
@@ -307,14 +383,32 @@ public class MemoryStatsController implements InformationServiceController<VmRef
 
         view.setEnableGCAction(vmInfoDao.getVmInfo(ref).isAlive());
 
-        timeRangeController = new TimeRangeController<>();
+        memoryTimeRangeController = new TimeRangeController<>();
+        tlabTimeRangeController = new TimeRangeController<>();
     }
-    
+
+    private Timer createTimer(TimerFactory timerFactory, Runnable collector) {
+        final Timer timer = timerFactory.createTimer();
+
+        timer.setAction(collector);
+
+        timer.setInitialDelay(0);
+        timer.setDelay(1000);
+        timer.setTimeUnit(TimeUnit.MILLISECONDS);
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
+
+        return timer;
+    }
+
     // for testing
-    VMCollector getCollector() {
-        return collector;
-    };
-    
+    VmMemoryStatCollector getMemoryStatCollector() {
+        return statCollector;
+    }
+
+    VmTlabStatCollector getMemoryTlabCollector() {
+        return tlabCollector;
+    }
+
     Map<String, Payload> getRegions() {
         return regions;
     }
@@ -343,11 +437,13 @@ public class MemoryStatsController implements InformationServiceController<VmRef
     }
     
     private void start() {
-        timer.start();
+        memoryStatsTimer.start();
+        tlabStatsTimer.start();
     }
 
     private void stop() {
-        timer.stop();
+        memoryStatsTimer.stop();
+        tlabStatsTimer.stop();
     }
 
     @Override

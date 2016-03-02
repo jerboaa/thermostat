@@ -128,7 +128,58 @@ public class VmMemoryDataExtractor {
         return getLongValueOrDefault("sun.gc.metaspace.used", defaultValue);
     }
 
-    private long getLongValueOrDefault(String name, long defaultValue) {
+    // See https://blogs.oracle.com/jonthecollector/entry/the_real_thing
+
+    public long getTlabTotalAllocatingThreads(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.allocThreads", defaultValue);
+    }
+
+    public long getTlabTotalAllocations(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.alloc", defaultValue);
+    }
+
+    public long getTlabTotalRefills(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.fills", defaultValue);
+    }
+
+    public long getTlabMaxRefills(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.maxFills", defaultValue);
+    }
+
+    public long getTlabTotalSlowAllocs(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.slowAlloc", defaultValue);
+    }
+
+    public long getTlabMaxSlowAllocs(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.maxSlowAlloc", defaultValue);
+    }
+
+    public long getTlabTotalGcWaste(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.gcWaste", defaultValue);
+    }
+
+    public long getTlabMaxGcWaste(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.maxGcWaste", defaultValue);
+    }
+
+    public long getTlabTotalSlowWaste(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.slowWaste", defaultValue);
+    }
+
+    public long getTlabMaxSlowWaste(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.maxSlowWaste", defaultValue);
+    }
+
+    public long getTlabTotalFastWaste(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.fastWaste", defaultValue);
+    }
+
+    public long getTlabMaxFastWaste(long defaultValue) {
+        return getLongValueOrDefault("sun.gc.tlab.maxFastWaste", defaultValue);
+    }
+
+    /** package private for testing */
+    long getLongValueOrDefault(String name, long defaultValue) {
         try {
             Long value = update.getPerformanceCounterLong(name);
             if (value == null) {
@@ -139,5 +190,6 @@ public class VmMemoryDataExtractor {
             return defaultValue;
         }
     }
+
 }
 

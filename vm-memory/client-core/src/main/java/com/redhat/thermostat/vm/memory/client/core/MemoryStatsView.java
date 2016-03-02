@@ -36,19 +36,51 @@
 
 package com.redhat.thermostat.vm.memory.client.core;
 
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.vm.memory.client.locale.LocaleResources;
 
 public abstract class MemoryStatsView extends BasicView implements UIComponent {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     //FIXME: Duplicate enum : See VmCpuView
     public enum UserAction {
         USER_CHANGED_TIME_RANGE,
+    }
+
+    public enum Type {
+        TOTAL_ALLOCATING_THREADS(LocaleResources.TLAB_TOTAL_ALLOCATING_THREADS),
+        TOTAL_ALLOCATIONS(LocaleResources.TLAB_TOTAL_ALLOCATIONS),
+        TOTAL_REFILLS(LocaleResources.TLAB_TOTAL_REFILLS),
+        MAX_REFILLS(LocaleResources.TLAB_MAX_REFILLS),
+        TOTAL_SLOW_ALLOCATIONS(LocaleResources.TLAB_TOTAL_SLOW_ALLOCATIONS),
+        MAX_SLOW_ALLOCATIONS(LocaleResources.TLAB_MAX_SLOW_ALLOCATIONS),
+        TOTAL_GC_WASTE(LocaleResources.TLAB_TOTAL_GC_WASTE),
+        MAX_GC_WASTE(LocaleResources.TLAB_MAX_GC_WASTE),
+        TOTAL_SLOW_WASTE(LocaleResources.TLAB_TOTAL_SLOW_WASTE),
+        MAX_SLOW_WASTE(LocaleResources.TLAB_MAX_SLOW_WASTE),
+        TOTAL_FAST_WASTE(LocaleResources.TLAB_TOTAL_FAST_WASTE),
+        MAX_FAST_WASTE(LocaleResources.TLAB_MAX_FAST_WASTE),
+
+        ;
+
+        private final LocalizedString label;
+
+        Type(LocaleResources resource) {
+            this.label = t.localize(resource);
+        }
+
+        public LocalizedString getLabel() {
+            return this.label;
+        }
     }
     
     public abstract void addRegion(Payload region);
@@ -62,6 +94,9 @@ public abstract class MemoryStatsView extends BasicView implements UIComponent {
     public abstract void requestRepaint();
 
     public abstract void displayWarning(LocalizedString string);
+
+    public abstract void addTlabData(Type type, List<DiscreteTimeData<? extends Number>> data);
+    public abstract void clearTlabData(Type type);
 
 }
 

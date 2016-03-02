@@ -51,7 +51,7 @@ import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 public class VmMemoryStatCategoryRegistrationTest extends ServiceLoaderTest<CategoryRegistration> {
 
     public VmMemoryStatCategoryRegistrationTest() {
-        super(CategoryRegistration.class, STORAGE_SERVICES, VmMemoryStatCategoryRegistration.class);
+        super(CategoryRegistration.class, STORAGE_SERVICES + 1 /* tlab */, VmMemoryStatCategoryRegistration.class);
     }
 
     @Test

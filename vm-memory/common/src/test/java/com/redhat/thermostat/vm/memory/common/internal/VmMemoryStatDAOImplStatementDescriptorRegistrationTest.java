@@ -49,7 +49,7 @@ import com.redhat.thermostat.testutils.ServiceLoaderTest;
 public class VmMemoryStatDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
 
     public VmMemoryStatDAOImplStatementDescriptorRegistrationTest() {
-        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, VmMemoryStatDAOImplStatementDescriptorRegistration.class);
+        super(StatementDescriptorRegistration.class, STORAGE_SERVICES + 1 /* tlab */, VmMemoryStatDAOImplStatementDescriptorRegistration.class);
     }
 
     @Test

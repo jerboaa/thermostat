@@ -57,6 +57,7 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsService;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
 public class Activator implements BundleActivator {
 
@@ -69,6 +70,7 @@ public class Activator implements BundleActivator {
             ApplicationService.class,
             VmInfoDAO.class,
             VmMemoryStatDAO.class,
+            VmTlabStatDAO.class,
             GCRequest.class,
             AgentInfoDAO.class,
             MemoryStatsViewProvider.class
@@ -88,6 +90,8 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(vmInfoDao);
                 VmMemoryStatDAO memoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
                 Objects.requireNonNull(memoryStatDao);
+                VmTlabStatDAO tlabStatDao = (VmTlabStatDAO) services.get(VmTlabStatDAO.class.getName());
+                Objects.requireNonNull(tlabStatDao);
                 AgentInfoDAO agentDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 Objects.requireNonNull(agentDAO);
                 GCRequest gcRequest = (GCRequest) services.get(GCRequest.class.getName());
@@ -97,7 +101,7 @@ public class Activator implements BundleActivator {
                 MemoryStatsViewProvider viewProvider = (MemoryStatsViewProvider) services.get(MemoryStatsViewProvider.class.getName());
                 Objects.requireNonNull(viewProvider);
 
-                MemoryStatsService impl = new MemoryStatsServiceImpl(appSvc, vmInfoDao, memoryStatDao, agentDAO, gcRequest, viewProvider);
+                MemoryStatsService impl = new MemoryStatsServiceImpl(appSvc, vmInfoDao, memoryStatDao, tlabStatDao, agentDAO, gcRequest, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, MemoryStatsService.SERVICE_ID);

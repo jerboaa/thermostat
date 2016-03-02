@@ -51,6 +51,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
 public class Activator implements BundleActivator {
     
@@ -66,6 +67,7 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
                 BackendService.class,
                 VmMemoryStatDAO.class,
+                VmTlabStatDAO.class,
                 WriterID.class, // vm memory backend uses it
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -73,9 +75,10 @@ public class Activator implements BundleActivator {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 VmMemoryStatDAO vmMemoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
+                VmTlabStatDAO vmTlabStatDao = (VmTlabStatDAO) services.get(VmTlabStatDAO.class.getName());
                 Version version = new Version(context.getBundle());
                 WriterID writerId = (WriterID) services.get(WriterID.class.getName());
-                backend = new VmMemoryBackend(vmMemoryStatDao, version, registrar, writerId);
+                backend = new VmMemoryBackend(vmMemoryStatDao, vmTlabStatDao, version, registrar, writerId);
                 reg = context.registerService(Backend.class, backend, null);
             }
 

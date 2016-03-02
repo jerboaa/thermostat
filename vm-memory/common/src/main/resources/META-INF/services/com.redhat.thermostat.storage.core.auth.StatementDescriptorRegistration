@@ -1,1 +1,2 @@
 com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImplStatementDescriptorRegistration
+com.redhat.thermostat.vm.memory.common.internal.VmTlabStatDAOImplStatementDescriptorRegistration

@@ -36,54 +36,38 @@
 
 package com.redhat.thermostat.vm.memory.common.internal;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
+import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
-public class Activator implements BundleActivator {
-    
-    private ServiceTracker tracker;
-    private List<ServiceRegistration> registrations = new ArrayList<>();
+public class VmTlabStatDAOImplStatementDescriptorRegistration implements
+        StatementDescriptorRegistration {
+
+    static final String latestDescriptor = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT,
+            VmTlabStatDAO.vmTlabStatsCategory.getName());
+    static final String rangeDescriptor = String.format(VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
+            VmTlabStatDAO.vmTlabStatsCategory.getName());
+    static final String latestStatDescriptor = String.format(VmBoundaryPojoGetter.DESC_NEWEST_VM_STAT,
+            VmTlabStatDAO.vmTlabStatsCategory.getName());
+    static final String oldestStatDescriptor = String.format(VmBoundaryPojoGetter.DESC_OLDEST_VM_STAT,
+            VmTlabStatDAO.vmTlabStatsCategory.getName());
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                Storage storage = (Storage) context.getService(reference);
+    public Set<String> getStatementDescriptors() {
+        Set<String> descs = new HashSet<>(5);
+        descs.add(latestStatDescriptor);
+        descs.add(oldestStatDescriptor);
+        descs.add(VmTlabStatDAOImpl.DESC_ADD_VM_TLAB_STAT);
 
-                VmMemoryStatDAO vmMemoryStatDao = new VmMemoryStatDAOImpl(storage);
-                registrations.add(context.registerService(VmMemoryStatDAO.class.getName(), vmMemoryStatDao, null));
+        descs.add(latestDescriptor);
+        descs.add(rangeDescriptor);
 
-                VmTlabStatDAO vmTlabStatDao = new VmTlabStatDAOImpl(storage);
-                registrations.add(context.registerService(VmTlabStatDAO.class.getName(), vmTlabStatDao, null));
-
-                return super.addingService(reference);
-            }
-
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                for (ServiceRegistration reg : registrations) {
-                    reg.unregister();
-                }
-                super.removedService(reference, service);
-            }
-        };
-        tracker.open();
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
+        return descs;
     }
 
 }
