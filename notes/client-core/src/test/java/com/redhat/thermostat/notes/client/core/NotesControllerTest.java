@@ -88,8 +88,8 @@ public class NotesControllerTest {
         ref = mock(VmRef.class);
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
-        Timer timer = mock(Timer.class);
-        when(timerFactory.createTimer()).thenReturn(timer);
+        // Implementation detail: NotesController creates two timers; the first for sync() and the second for autorefresh
+        when(timerFactory.createTimer()).thenReturn(new SyncTimer()).thenReturn(new AutoRefreshTimer());
         dao = mock(VmNoteDAO.class);
         viewProvider = mock(NotesViewProvider.class);
         view = mock(NotesView.class);
@@ -125,7 +125,7 @@ public class NotesControllerTest {
         assertThat((NotesView) controller.getView(), is(view));
     }
 
-//    @Test
+    @Test
     public void verifyRemoteRefreshNoteActionCausesDaoRead() {
         noteActionActionListener.actionPerformed(new ActionEvent<>(this, NotesView.NoteAction.REMOTE_REFRESH));
         InOrder inOrder = inOrder(view, dao, view);
@@ -135,7 +135,7 @@ public class NotesControllerTest {
         inOrder.verify(view).setBusy(false);
     }
 
-//    @Test
+    @Test
     public void verifyLocalAddSavesNotesThenAddsNewLocal() {
         noteActionActionListener.actionPerformed(new ActionEvent<>(this, NotesView.NoteAction.LOCAL_ADD));
         InOrder inOrder = inOrder(view, dao, view, clock, view);
@@ -145,9 +145,10 @@ public class NotesControllerTest {
         // TODO: add mock note data to DAO and controller, verify correct sync
         inOrder.verify(dao).getFor(ref);
         inOrder.verify(view).setBusy(false);
+        inOrder.verify(view).setBusy(true);
 
         // local add new
-        inOrder.verify(clock).getRealTimeMillis();
+        inOrder.verify(clock, times(3)).getRealTimeMillis();
         inOrder.verify(view).add(controller.mockNote);
     }
 
@@ -165,7 +166,7 @@ public class NotesControllerTest {
         verify(controller.mockNote).setTimeStamp(clock.getRealTimeMillis());
     }
 
-//    @Test
+    @Test
     public void verifyLocalDeleteRemovesLocalModelThenSyncsDao() {
         when(controller.mockNote.getId()).thenReturn("1");
         ActionEvent<NotesView.NoteAction> actionEvent = new ActionEvent<>(this, NotesView.NoteAction.LOCAL_DELETE);
@@ -192,7 +193,7 @@ public class NotesControllerTest {
         inOrder.verify(view).setBusy(false);
     }
 
-//    @Test
+    @Test
     public void verifyVisibilityVisibleTriggersRemoteRefresh() {
         visibilityActionListener.actionPerformed(new ActionEvent<>(this, BasicView.Action.VISIBLE));
         InOrder inOrder = inOrder(view, dao, view);
@@ -245,6 +246,56 @@ public class NotesControllerTest {
         @Override
         public void execute(Runnable runnable) {
             runnable.run();
+        }
+    }
+
+    private static abstract class AbstractTimer implements Timer {
+
+        protected Runnable action;
+
+        @Override
+        public void stop() {
+        }
+
+        @Override
+        public void setAction(Runnable action) {
+            this.action = action;
+        }
+
+        @Override
+        public void setInitialDelay(long initialDelay) {
+        }
+
+        @Override
+        public void setDelay(long period) {
+        }
+
+        @Override
+        public void setSchedulingType(SchedulingType schedulingType) {
+        }
+
+        @Override
+        public void setTimeUnit(TimeUnit timeUnit) {
+        }
+    }
+
+    private static class SyncTimer extends AbstractTimer {
+        @Override
+        public void start() {
+            // Implementation detail: run twice because the NotesController SyncTask expects to run at least twice
+            if (action != null) {
+                action.run();
+                action.run();
+            }
+        }
+    }
+
+    private static class AutoRefreshTimer extends AbstractTimer {
+        @Override
+        public void start() {
+            if (action != null) {
+                action.run();
+            }
         }
     }
 

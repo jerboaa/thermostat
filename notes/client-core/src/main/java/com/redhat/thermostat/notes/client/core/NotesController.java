@@ -421,11 +421,11 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
             if (firstRun) {
                 sendLocalChangesToStorage();
                 view.setBusy(true);
-                startTime = System.currentTimeMillis();
+                startTime = clock.getRealTimeMillis();
                 firstRun = false;
                 return;
             }
-            long currentTime = System.currentTimeMillis();
+            long currentTime = clock.getRealTimeMillis();
             boolean timeoutElapsed = startTime + TimeUnit.SECONDS.toMillis(5l) < currentTime;
             if (expectedDelta == 0
                     || timeoutElapsed
@@ -448,7 +448,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     private class AutoRefreshTask implements Runnable {
         @Override
         public void run() {
-            view.actionNotifier.fireAction(NotesView.NoteAction.REMOTE_REFRESH);
+            sync();
         }
     }
 
