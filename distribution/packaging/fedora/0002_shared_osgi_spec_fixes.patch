@@ -602,6 +602,44 @@ diff --git a/main/pom.xml b/main/pom.xml
        <groupId>net.sf.kxml</groupId>
        <artifactId>kxml2</artifactId>
      </dependency>
+diff --git a/notes/client-cli/pom.xml b/notes/client-cli/pom.xml
+--- a/notes/client-cli/pom.xml
++++ b/notes/client-cli/pom.xml
+@@ -93,13 +93,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+       <scope>provided</scope>
+     </dependency>
+ 
+diff --git a/notes/client-core/pom.xml b/notes/client-core/pom.xml
+--- a/notes/client-core/pom.xml
++++ b/notes/client-core/pom.xml
+@@ -88,13 +88,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+       <scope>provided</scope>
+     </dependency>
+     <dependency>
 diff --git a/notes/client-swing/pom.xml b/notes/client-swing/pom.xml
 --- a/notes/client-swing/pom.xml
 +++ b/notes/client-swing/pom.xml
