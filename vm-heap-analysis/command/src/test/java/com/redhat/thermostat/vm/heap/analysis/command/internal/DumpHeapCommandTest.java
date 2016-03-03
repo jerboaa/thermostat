@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -47,6 +50,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
@@ -65,6 +70,10 @@ import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
 public class DumpHeapCommandTest {
 
     private static final Translate<LocaleResources> TRANSLATOR = LocaleResources
@@ -80,10 +89,15 @@ public class DumpHeapCommandTest {
     public void verifyActuallyCallsWorker() throws CommandException {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        HeapDAO heapDao = mock(HeapDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
         VmInfo vmInfo = new VmInfo("myAgent", "foo", 123, 0, 0, null, null, null, null, null, null, null, null, null,
                 null, null,0, "myUsername");
         when(vmInfoDao.getVmInfo(new VmId("foo"))).thenReturn(vmInfo);
+
+        HeapInfo heapInfo = new HeapInfo();
+        heapInfo.setHeapDumpId("0001");
+        when(heapDao.getAllHeapInfo(new AgentId("myAgent"), new VmId(vmInfo.getVmId()))).thenReturn(Collections.singleton(heapInfo));
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
         final ArgumentCaptor<Runnable> successHandler = ArgumentCaptor
@@ -102,6 +116,7 @@ public class DumpHeapCommandTest {
 
         command.setVmInfoDAO(vmInfoDao);
         command.setAgentInfoDAO(agentInfoDao);
+        command.setHeapDAO(heapDao);
         command.setRequestQueue(queue);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
@@ -113,13 +128,14 @@ public class DumpHeapCommandTest {
 
         verify(impl).execute(eq(vmInfoDao), eq(agentInfoDao), isA(AgentId.class), isA(VmId.class), eq(queue),
                 any(Runnable.class), any(Runnable.class));
-        assertEquals("Done\n", factory.getOutput());
+        assertThat(factory.getOutput(), is(equalTo("Heap dump ID: " + heapInfo.getHeapId() + "\n")));
     }
 
     @Test
     public void verifyNeedsVmId() throws CommandException {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        HeapDAO heapDao = mock(HeapDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
@@ -127,6 +143,7 @@ public class DumpHeapCommandTest {
 
         command.setVmInfoDAO(vmInfoDao);
         command.setAgentInfoDAO(agentInfoDao);
+        command.setHeapDAO(heapDao);
         command.setRequestQueue(queue);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
@@ -144,12 +161,14 @@ public class DumpHeapCommandTest {
     @Test
     public void verifyFailsIfAgentDaoIsNotAvailable() {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
+        HeapDAO heapDao = mock(HeapDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
         DumpHeapCommand command = new DumpHeapCommand(impl);
 
         command.setVmInfoDAO(vmInfoDao);
+        command.setHeapDAO(heapDao);
         command.setRequestQueue(queue);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
@@ -169,11 +188,13 @@ public class DumpHeapCommandTest {
     public void verifyFailsIfRequestQueueIsNotAvailable() {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        HeapDAO heapDao = mock(HeapDAO.class);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
         DumpHeapCommand command = new DumpHeapCommand(impl);
 
         command.setVmInfoDAO(vmInfoDao);
+        command.setHeapDAO(heapDao);
         command.setAgentInfoDAO(agentInfoDao);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
@@ -193,12 +214,14 @@ public class DumpHeapCommandTest {
     @Test
     public void verifyFailsIfVmDaoIsNotAvailable() {
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        HeapDAO heapDao = mock(HeapDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
         DumpHeapCommand command = new DumpHeapCommand(impl);
 
         command.setAgentInfoDAO(agentInfoDao);
+        command.setHeapDAO(heapDao);
         command.setRequestQueue(queue);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
@@ -215,11 +238,38 @@ public class DumpHeapCommandTest {
     }
 
     @Test
+    public void verifyFailsIfHeapDaoIsNotAvailable() {
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        RequestQueue queue = mock(RequestQueue.class);
+
+        DumpHeapHelper impl = mock(DumpHeapHelper.class);
+        DumpHeapCommand command = new DumpHeapCommand(impl);
+
+        command.setVmInfoDAO(vmInfoDao);
+        command.setAgentInfoDAO(agentInfoDao);
+        command.setRequestQueue(queue);
+
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument(VmArgument.ARGUMENT_NAME, "bar");
+
+        try {
+            command.run(factory.createContext(args));
+            fail();
+        } catch (CommandException ce) {
+            assertEquals(TRANSLATOR.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE).getContents(), ce.getMessage());
+        }
+    }
+
+    @Test
     public void verifyErrorMessage() {
         final String AGENT_ID = "myAgent";
         final String VM_ID = "myVm";
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        HeapDAO heapDao = mock(HeapDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
         VmInfo vmInfo = new VmInfo(AGENT_ID, VM_ID, 123, 0, 0, null, null, null, null, null, null, null, null,
                 null, null, null, 0, null);
@@ -249,6 +299,7 @@ public class DumpHeapCommandTest {
 
         command.setVmInfoDAO(vmInfoDao);
         command.setAgentInfoDAO(agentInfoDao);
+        command.setHeapDAO(heapDao);
         command.setRequestQueue(queue);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
@@ -263,6 +314,29 @@ public class DumpHeapCommandTest {
             assertEquals(TRANSLATOR.localize(LocaleResources.HEAP_DUMP_ERROR,
                     AGENT_ID, VM_ID).getContents(), e.getMessage());
         }
+    }
+
+    @Test
+    public void testGetLatestHeapId() {
+        HeapInfo heapInfo1 = new HeapInfo();
+        heapInfo1.setHeapId("heap1");
+        heapInfo1.setTimeStamp(300L);
+        HeapInfo heapInfo2 = new HeapInfo();
+        heapInfo2.setHeapId("heap2");
+        heapInfo2.setTimeStamp(200L);
+        HeapInfo heapInfo3 = new HeapInfo();
+        heapInfo3.setHeapId("heap3");
+        heapInfo3.setTimeStamp(100L);
+        Collection<HeapInfo> heapInfos = Arrays.asList(heapInfo2, heapInfo1, heapInfo3);
+
+        HeapDAO heapDao = mock(HeapDAO.class);
+        when(heapDao.getAllHeapInfo(any(AgentId.class), any(VmId.class))).thenReturn(heapInfos);
+
+        AgentId agent = new AgentId("agent");
+        VmId vm = new VmId("vm");
+
+        String result = DumpHeapCommand.getLatestHeapId(heapDao, agent, vm);
+        assertThat(result, is(heapInfo1.getHeapId()));
     }
 
 }

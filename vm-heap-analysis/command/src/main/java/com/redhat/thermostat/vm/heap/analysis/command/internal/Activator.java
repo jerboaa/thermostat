@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import java.util.Map;
 
+import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -70,6 +71,7 @@ public class Activator implements BundleActivator {
         Class<?>[] serviceDeps = new Class<?>[] {
                 AgentInfoDAO.class,
                 VmInfoDAO.class,
+                HeapDAO.class,
                 RequestQueue.class,
         };
 
@@ -78,10 +80,12 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                HeapDAO heapDao = (HeapDAO) services.get(HeapDAO.class.getName());
                 RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
 
                 dumpHeapCommand.setAgentInfoDAO(agentDao);
                 dumpHeapCommand.setVmInfoDAO(vmDao);
+                dumpHeapCommand.setHeapDAO(heapDao);
                 dumpHeapCommand.setRequestQueue(queue);
             }
 
@@ -89,6 +93,7 @@ public class Activator implements BundleActivator {
             public void dependenciesUnavailable() {
                 dumpHeapCommand.setAgentInfoDAO(null);
                 dumpHeapCommand.setVmInfoDAO(null);
+                dumpHeapCommand.setHeapDAO(null);
                 dumpHeapCommand.setRequestQueue(null);
             }
         });

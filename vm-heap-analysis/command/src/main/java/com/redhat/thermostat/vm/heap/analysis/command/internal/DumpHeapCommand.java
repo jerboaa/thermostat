@@ -36,6 +36,11 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import com.redhat.thermostat.client.cli.VmArgument;
@@ -50,6 +55,8 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
+import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 
 public class DumpHeapCommand extends AbstractCommand {
@@ -60,6 +67,7 @@ public class DumpHeapCommand extends AbstractCommand {
 
     private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDAO;
+    private HeapDAO heapDAO;
     private RequestQueue queue;
 
     public DumpHeapCommand() {
@@ -74,10 +82,11 @@ public class DumpHeapCommand extends AbstractCommand {
     public void run(final CommandContext ctx) throws CommandException {
         requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
+        requireNonNull(heapDAO, translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         requireNonNull(queue, translator.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE));
 
         VmArgument vmArgument = VmArgument.required(ctx.getArguments());
-        VmId vmId = vmArgument.getVmId();
+        final VmId vmId = vmArgument.getVmId();
         final VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
         final AgentId agentId = new AgentId(vmInfo.getAgentId());
 
@@ -87,7 +96,9 @@ public class DumpHeapCommand extends AbstractCommand {
         Runnable successHandler = new Runnable() {
             @Override
             public void run() {
-                ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE).getContents());
+                String latestHeapId = getLatestHeapId(heapDAO, agentId, vmId);
+                ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE,
+                        latestHeapId).getContents());
                 s.release();
             }
         };
@@ -113,6 +124,19 @@ public class DumpHeapCommand extends AbstractCommand {
         }
     }
 
+    static String getLatestHeapId(HeapDAO heapDao, AgentId agentId, VmId vmId) {
+        Collection<HeapInfo> heapInfos = heapDao.getAllHeapInfo(agentId, vmId);
+        List<HeapInfo> sortedByLatest = new ArrayList<>(heapInfos);
+        Collections.sort(sortedByLatest, new Comparator<HeapInfo>() {
+            @Override
+            public int compare(HeapInfo a, HeapInfo b) {
+                return Long.compare(b.getTimeStamp(), a.getTimeStamp());
+            }
+        });
+        HeapInfo latest = sortedByLatest.get(0);
+        return latest.getHeapId();
+    }
+
     public void setVmInfoDAO(VmInfoDAO vmInfoDAO) {
         this.vmInfoDAO = vmInfoDAO;
     }
@@ -125,5 +149,8 @@ public class DumpHeapCommand extends AbstractCommand {
         this.queue = queue;
     }
 
+    public void setHeapDAO(HeapDAO heapDAO) {
+        this.heapDAO = heapDAO;
+    }
 }
 
