@@ -54,7 +54,7 @@ import com.redhat.thermostat.client.ui.Palette;
 class ToolbarButtonBorder extends DebugBorder implements UIResource, Serializable {
 
     public ToolbarButtonBorder(ToolbarButton button) {
-        // TODO Auto-generated constructor stub
+        // This class should only be used with a ToolbarButton
     }
     
     @Override
