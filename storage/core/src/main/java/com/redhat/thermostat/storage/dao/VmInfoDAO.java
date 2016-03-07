@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.dao;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import com.redhat.thermostat.annotations.Service;
@@ -77,6 +78,9 @@ public interface VmInfoDAO extends Countable {
             propertiesKey, environmentKey, librariesKey,
             startTimeKey, stopTimeKey,
             uidKey, usernameKey);
+
+    /** @return information on all known VMs */
+    List<VmInfo> getAllVmInfos();
 
     /** @return {@code null} if no information can be found */
     VmInfo getVmInfo(VmId id);

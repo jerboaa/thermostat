@@ -136,14 +136,15 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
     @Override
     public Collection<HostRef> getHosts() {
         List<HostRef> result = new ArrayList<>();
-        for (HostInfo hostInfo : getHostInfos()) {
+        for (HostInfo hostInfo : getAllHostInfos()) {
             result.add(toHostRef(hostInfo));
         }
 
         return result;
     }
 
-    private Collection<HostInfo> getHostInfos() {
+    @Override
+    public List<HostInfo> getAllHostInfos() {
         return executeQuery(new SimpleDaoQuery<>(storage, hostInfoCategory, QUERY_ALL_HOSTS)).asList();
     }
 

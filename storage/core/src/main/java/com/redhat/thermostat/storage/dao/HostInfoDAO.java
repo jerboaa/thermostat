@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.dao;
 
 import java.util.Collection;
+import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.AgentId;
@@ -59,6 +60,9 @@ public interface HostInfoDAO extends Countable {
     static final Category<HostInfo> hostInfoCategory = new Category<>("host-info", HostInfo.class,
             Key.AGENT_ID, hostNameKey, osNameKey, osKernelKey,
             cpuCountKey, cpuModelKey, hostMemoryTotalKey);
+
+    /** @return information on all known hosts */
+    List<HostInfo> getAllHostInfos();
 
     /**
      * 

@@ -56,6 +56,7 @@ import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -63,7 +64,7 @@ import com.redhat.thermostat.storage.model.VmInfo;
 public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
     
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
-    static final String QUERY_VM_INFO = "QUERY " 
+    static final String QUERY_VM_INFO = "QUERY "
             + vmInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s AND '"
             + Key.VM_ID.getName() + "' = ?s LIMIT 1";
@@ -129,6 +130,11 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
         this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
         storage.registerCategory(vmInfoCategory);
         storage.registerCategory(aggregateCategory);
+    }
+
+    @Override
+    public List<VmInfo> getAllVmInfos() {
+        return executeQuery(new SimpleDaoQuery<>(storage, vmInfoCategory, QUERY_ALL_VMS)).asList();
     }
 
     @Override

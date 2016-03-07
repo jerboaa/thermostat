@@ -83,6 +83,15 @@ public class MatchContext {
         return Objects.hash(hostInfo, agentInfo, vmInfo);
     }
 
+    @Override
+    public String toString() {
+        return "MatchContext{" +
+                "hostInfo=" + hostInfo +
+                ", agentInfo=" + agentInfo +
+                ", vmInfo=" + vmInfo +
+                '}';
+    }
+
     public static Builder builder() {
         return new Builder();
     }

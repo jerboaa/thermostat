@@ -67,18 +67,21 @@ public class FindVmCommand extends AbstractCommand {
     static final String ALIVE_AGENTS_ONLY_ARGUMENT = "alive-agents-only";
 
     private DependencyServices services = new DependencyServices();
-    
+    private AgentInfoDAO agentInfoDAO;
+    private HostInfoDAO hostInfoDAO;
+    private VmInfoDAO vmInfoDAO;
+
+    private final Map<VmId, VmInfo> vmInfoMap = new HashMap<>();
+    private final Map<AgentId, List<VmInfo>> agentVmMap = new HashMap<>();
+    private final Map<AgentId, HostInfo> hostInfoMap = new HashMap<>();
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        AgentInfoDAO agentInfoDAO = services.getService(AgentInfoDAO.class);
-        requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
-        HostInfoDAO hostInfoDAO = services.getService(HostInfoDAO.class);
-        requireNonNull(hostInfoDAO, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
-        VmInfoDAO vmInfoDAO = services.getService(VmInfoDAO.class);
-        requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+        setServices();
+        initDaoData();
 
         Arguments arguments = ctx.getArguments();
-        List<AgentInformation> agentsToSearch = getAgentsToSearch(arguments, agentInfoDAO);
+        List<AgentInformation> agentsToSearch = getAgentsToSearch(arguments);
 
         Map<String, String> hostCriteria = getHostCriteria(arguments);
         Map<String, String> vmCriteria = getVmCriteria(arguments);
@@ -87,14 +90,44 @@ public class FindVmCommand extends AbstractCommand {
         HostMatcher hostMatcher = new HostMatcher(hostCriteria);
         VmMatcher vmMatcher = new VmMatcher(vmCriteria);
 
-        List<MatchContext> results = performSearch(hostInfoDAO, vmInfoDAO,
-                agentsToSearch, hostMatcher, vmMatcher);
+        List<MatchContext> results = performSearch(agentsToSearch, hostMatcher, vmMatcher);
 
         ResultsRenderer resultsRenderer = new ResultsRenderer(arguments);
         resultsRenderer.print(ctx.getConsole().getOutput(), results);
     }
 
-    static List<AgentInformation> getAgentsToSearch(Arguments arguments, AgentInfoDAO agentInfoDAO) throws CommandException {
+    void setServices() throws CommandException {
+        agentInfoDAO = services.getService(AgentInfoDAO.class);
+        requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
+        hostInfoDAO = services.getService(HostInfoDAO.class);
+        requireNonNull(hostInfoDAO, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
+        vmInfoDAO = services.getService(VmInfoDAO.class);
+        requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+    }
+
+    void initDaoData() {
+        vmInfoMap.clear();
+        agentVmMap.clear();
+        hostInfoMap.clear();
+
+        List<VmInfo> allVms = vmInfoDAO.getAllVmInfos();
+        List<HostInfo> allHosts = hostInfoDAO.getAllHostInfos();
+
+        for (VmInfo vm : allVms) {
+            vmInfoMap.put(new VmId(vm.getVmId()), vm);
+            AgentId agentId = new AgentId(vm.getAgentId());
+            if (!agentVmMap.containsKey(agentId)) {
+                agentVmMap.put(agentId, new ArrayList<VmInfo>());
+            }
+            agentVmMap.get(agentId).add(vm);
+        }
+
+        for (HostInfo host : allHosts) {
+            hostInfoMap.put(new AgentId(host.getAgentId()), host);
+        }
+    }
+
+    List<AgentInformation> getAgentsToSearch(Arguments arguments) throws CommandException {
         validateAgentStatusArguments(arguments);
         List<AgentInformation> aliveAgents;
         AgentArgument agentArgument = AgentArgument.optional(arguments);
@@ -144,12 +177,11 @@ public class FindVmCommand extends AbstractCommand {
         }
     }
 
-    static List<MatchContext> performSearch(HostInfoDAO hostInfoDAO, VmInfoDAO vmInfoDAO,
-            Iterable<AgentInformation> agents, HostMatcher hostMatcher, VmMatcher vmMatcher) throws UnrecognizedArgumentException {
+    List<MatchContext> performSearch(Iterable<AgentInformation> agents, HostMatcher hostMatcher, VmMatcher vmMatcher) throws UnrecognizedArgumentException {
         List<MatchContext> matchContexts = new ArrayList<>();
-        for (AgentInformation agentInformation : filterAgents(hostInfoDAO, agents, hostMatcher)) {
-            HostInfo hostInfo = getHostInfo(hostInfoDAO, agentInformation);
-            List<VmInfo> matchingVms = getMatchingVms(vmInfoDAO, agentInformation, hostInfo, vmMatcher);
+        for (AgentInformation agentInformation : filterAgents(agents, hostMatcher)) {
+            HostInfo hostInfo = getHostInfo(agentInformation.getAgentId());
+            List<VmInfo> matchingVms = getMatchingVms(agentInformation, hostInfo, vmMatcher);
             for (VmInfo vm : matchingVms) {
                 MatchContext context = MatchContext.builder()
                         .agentInfo(agentInformation)
@@ -162,10 +194,10 @@ public class FindVmCommand extends AbstractCommand {
         return matchContexts;
     }
 
-    static List<AgentInformation> filterAgents(HostInfoDAO hostInfoDAO, Iterable<AgentInformation> agents, HostMatcher hostMatcher) throws UnrecognizedArgumentException {
+    List<AgentInformation> filterAgents(Iterable<AgentInformation> agents, HostMatcher hostMatcher) throws UnrecognizedArgumentException {
         List<AgentInformation> list = new ArrayList<>();
         for (AgentInformation agent : agents) {
-            HostInfo hostInfo = hostInfoDAO.getHostInfo(new AgentId(agent.getAgentId()));
+            HostInfo hostInfo = getHostInfo(agent.getAgentId());
             MatchContext context = MatchContext.builder()
                     .agentInfo(agent)
                     .hostInfo(hostInfo)
@@ -177,14 +209,17 @@ public class FindVmCommand extends AbstractCommand {
         return list;
     }
 
-    static HostInfo getHostInfo(HostInfoDAO hostInfoDAO, AgentInformation agentInformation) {
-        return hostInfoDAO.getHostInfo(new AgentId(agentInformation.getAgentId()));
+    HostInfo getHostInfo(String agentId) {
+        return getHostInfo(new AgentId(agentId));
     }
 
-    static List<VmInfo> getMatchingVms(VmInfoDAO vmInfoDAO, AgentInformation agent, HostInfo hostInfo, VmMatcher vmMatcher) throws UnrecognizedArgumentException {
+    HostInfo getHostInfo(AgentId agentId) {
+        return hostInfoMap.get(agentId);
+    }
+
+    List<VmInfo> getMatchingVms(AgentInformation agent, HostInfo hostInfo, VmMatcher vmMatcher) throws UnrecognizedArgumentException {
         List<VmInfo> list = new ArrayList<>();
-        for (VmId vmId : vmInfoDAO.getVmIds(new AgentId(agent.getAgentId()))) {
-            VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
+        for (VmInfo vmInfo : getVmInfos(agent.getAgentId())) {
             MatchContext context = MatchContext.builder()
                     .agentInfo(agent)
                     .hostInfo(hostInfo)
@@ -195,6 +230,14 @@ public class FindVmCommand extends AbstractCommand {
             }
         }
         return list;
+    }
+
+    List<VmInfo> getVmInfos(String agentId) {
+        return getVmInfos(new AgentId(agentId));
+    }
+
+    List<VmInfo> getVmInfos(AgentId agentId) {
+        return agentVmMap.get(agentId);
     }
 
     public void setAgentInfoDAO(AgentInfoDAO agentInfoDAO) {
