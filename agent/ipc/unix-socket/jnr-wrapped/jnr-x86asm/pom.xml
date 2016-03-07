@@ -68,7 +68,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>jnr.x86asm</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${jnr-x86asm.bundle.symbolic.name}</Bundle-SymbolicName>
             <Bundle-Version>${jnr-x86asm.version}</Bundle-Version>
             <Export-Package>
               com.kenai.jnr.x86asm*,

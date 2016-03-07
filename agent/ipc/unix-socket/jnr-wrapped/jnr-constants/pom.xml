@@ -68,7 +68,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>jnr.constants</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${jnr-constants.bundle.symbolic.name}</Bundle-SymbolicName>
             <Bundle-Version>${jnr-constants.version}</Bundle-Version>
             <Export-Package>
               com.kenai.constantine*,

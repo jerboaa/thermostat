@@ -36,57 +36,79 @@
 
 package com.redhat.thermostat.utils.management.internal;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.common.ExitStatus;
-
-class AgentProxyClient {
+// Container class used for pool map entries
+class MXBeanConnectionPoolEntry {
     
-    private static final String SERVER_NAME = "thermostat-agent-proxy";
+    // Timeout when waiting for JMX url from agent proxy
+    private static final long TIMEOUT_MS = 10000L;
     
     private final int pid;
-    private final ProcessCreator procCreator;
-    private final File binPath;
-    private final String username;
-    private final File ipcConfigFile;
+    private int usageCount;
+    private String jmxUrl;
+    private MXBeanConnectionImpl connection;
+    private CountDownLatch urlLatch;
+    private Exception ex;
     
-    AgentProxyClient(int pid, String user, File binPath, File ipcConfigFile) {
-        this(pid, user, binPath, ipcConfigFile, new ProcessCreator());
+    MXBeanConnectionPoolEntry(int pid) {
+        this(pid, new CountDownLatch(1));
     }
     
-    AgentProxyClient(int pid, String user, File binPath, File ipcConfigFile, ProcessCreator procCreator) {
+    MXBeanConnectionPoolEntry(int pid, CountDownLatch urlLatch) {
         this.pid = pid;
-        this.binPath = binPath;
-        this.procCreator = procCreator;
-        this.username = user;
-        this.ipcConfigFile = ipcConfigFile;
-    }
-
-    void runProcess() throws IOException, InterruptedException {
-        // Start the agent proxy
-        String serverPath = binPath + File.separator + SERVER_NAME;
-        String[] args = new String[] { serverPath, String.valueOf(pid), username, ipcConfigFile.getAbsolutePath() };
-        ProcessBuilder builder = new ProcessBuilder(args);
-        builder.inheritIO();
-        Process proxy = procCreator.startProcess(builder);
-        
-        try {
-            // Wait for process to terminate
-            proxy.waitFor();
-            if (proxy.exitValue() != ExitStatus.EXIT_SUCCESS) {
-                throw new IOException("Agent proxy for " + pid + " exited with non-zero exit code");
-            }
-        } finally {
-            proxy.destroy();
-        }
+        this.usageCount = 1;
+        this.jmxUrl = null;
+        this.connection = null;
+        this.urlLatch = urlLatch;
     }
     
-    static class ProcessCreator {
-        Process startProcess(ProcessBuilder builder) throws IOException {
-            return builder.start();
-        }
+    MXBeanConnectionImpl getConnection() {
+        return connection;
     }
-
+    
+    String getJmxUrlOrBlock() throws IOException, InterruptedException {
+        boolean finished = urlLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        if (!finished) {
+            throw new IOException("Timed out while waiting for JMX service URL");
+        }
+        if (ex != null) {
+            throw new IOException("Failed to get JMX service URL", ex);
+        }
+        return jmxUrl;
+    }
+    
+    int getPid() {
+        return pid;
+    }
+    
+    int getUsageCount() {
+        return usageCount;
+    }
+    
+    void incrementUsageCount() {
+        this.usageCount++;
+    }
+    
+    void decrementUsageCount() {
+        this.usageCount--;
+    }
+    
+    void setJmxUrl(String jmxUrl) {
+        this.jmxUrl = jmxUrl;
+        urlLatch.countDown();
+    }
+    
+    void setConnection(MXBeanConnectionImpl connection) {
+        this.connection = connection;
+    }
+    
+    void setException(Exception ex) {
+        this.ex = ex;
+        // No JMX URL coming, stop waiting and throw exception
+        urlLatch.countDown();
+    }
+    
 }
-

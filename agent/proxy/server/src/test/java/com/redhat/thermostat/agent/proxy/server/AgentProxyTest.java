@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.agent.proxy.server;
 
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -43,12 +47,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.io.PrintStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
 import com.redhat.thermostat.agent.proxy.server.AgentProxy.ControlCreator;
 
 public class AgentProxyTest {
@@ -56,48 +65,74 @@ public class AgentProxyTest {
     private static final String JMX_URL = "service:jmx:rmi://myHost:1099/blah";
     
     private AgentProxyControlImpl control;
-    private PrintStream outStream;
+    private ClientIPCService ipcService;
+    private ByteChannel channel;
 
     @Before
     public void setup() throws Exception {
+        System.setProperty(AgentProxy.CONFIG_FILE_PROP, "/path/to/config/file");
         ControlCreator creator = mock(ControlCreator.class);
         control = mock(AgentProxyControlImpl.class);
         when(control.getConnectorAddress()).thenReturn(JMX_URL);
-        outStream = mock(PrintStream.class);
-        when(creator.create(0)).thenReturn(control);
+        when(control.isAttached()).thenReturn(true);
+        when(creator.create(anyInt())).thenReturn(control);
         AgentProxy.setControlCreator(creator);
-        AgentProxy.setOutStream(outStream);
+        
+        ipcService = mock(ClientIPCService.class);
+        channel = mock(ByteChannel.class);
+        when(ipcService.connectToServer(AgentProxy.IPC_SERVER_NAME)).thenReturn(channel);
+        AgentProxy.setIPCService(ipcService);
     }
     
     @After
     public void teardown() throws Exception {
+        System.clearProperty(AgentProxy.CONFIG_FILE_PROP);
         AgentProxy.setControlCreator(new ControlCreator());
-        AgentProxy.setOutStream(System.out);
+        AgentProxy.setIPCService(null);
     }
     
     @Test
     public void testMainSuccess() throws Exception {
-        // Invoke main with PID of 0
-        AgentProxy.main(new String[] { "0" });
+        // Invoke main with PID of 8000
+        AgentProxy.main(new String[] { "8000" });
         
         verify(control).attach();
         verify(control).getConnectorAddress();
+        
+        // Create a buffer with the expected data
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        JsonObject data = new JsonObject();
+        data.addProperty(AgentProxy.JSON_PID, 8000);
+        data.addProperty(AgentProxy.JSON_JMX_URL, JMX_URL);
+        String jsonData = gson.toJson(data);
+        ByteBuffer jsonBuf = ByteBuffer.wrap(jsonData.getBytes("UTF-8"));
+        
+        verify(channel).write(eq(jsonBuf));
+        verify(channel).close();
         verify(control).detach();
-        verify(outStream).println(JMX_URL);
     }
     
     @Test
     public void testMainAttachFails() throws Exception {
         // Simulate failure binding the login object
         doThrow(new IOException()).when(control).attach();
+        when(control.isAttached()).thenReturn(false);
         
-        // Invoke main with PID of 0
-        AgentProxy.main(new String[] { "0" });
-        
-        verify(control).attach();
-        verify(control, never()).getConnectorAddress();
-        verify(control, never()).detach();
-        verify(outStream, never()).println(JMX_URL);
+        try {
+            // Invoke main with PID of 0
+            AgentProxy.main(new String[] { "0" });
+            fail("Expected IOException");
+        } catch (IOException e) {
+            // Should only call attach and close channel
+            verify(control).attach();
+            verify(control, never()).getConnectorAddress();
+            
+            verify(channel, never()).write(any(ByteBuffer.class));
+            verify(channel).close();
+            
+            verify(control, never()).detach();
+        }
     }
     
     @Test
@@ -105,15 +140,41 @@ public class AgentProxyTest {
         // Simulate failure binding the login object
         doThrow(new IOException()).when(control).getConnectorAddress();
         
-        // Invoke main with PID of 0
-        AgentProxy.main(new String[] { "0" });
+        try {
+            // Invoke main with PID of 0
+            AgentProxy.main(new String[] { "0" });
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(control).attach();
+            verify(control).getConnectorAddress();
+
+            // Should detach and close channel, but not send URL
+            verify(channel, never()).write(any(ByteBuffer.class));
+            verify(channel).close();
+            
+            verify(control).detach();
+        }
+    }
+    
+    @Test
+    public void testMainSendAddressFails() throws Exception {
+        // Simulate failure binding the login object
+        doThrow(new IOException()).when(channel).write(any(ByteBuffer.class));
         
-        verify(control).attach();
-        verify(control).getConnectorAddress();
-        
-        // Should detach, but not print URL
-        verify(control).detach();
-        verify(outStream, never()).println(JMX_URL);
+        try {
+            // Invoke main with PID of 0
+            AgentProxy.main(new String[] { "0" });
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(control).attach();
+            verify(control).getConnectorAddress();
+            
+            // Should still detach and close channel
+            verify(channel).write(any(ByteBuffer.class));
+            verify(channel).close();
+            
+            verify(control).detach();
+        }
     }
     
     @Test
@@ -124,11 +185,32 @@ public class AgentProxyTest {
         // Invoke main with PID of 0
         AgentProxy.main(new String[] { "0" });
         
-        // All should be called
+        // All should be called, should not be fatal
         verify(control).attach();
         verify(control).getConnectorAddress();
+
+        verify(channel).write(any(ByteBuffer.class));
+        verify(channel).close();
+
         verify(control).detach();
-        verify(outStream).println(JMX_URL);
+    }
+    
+    @Test
+    public void testMainCloseFails() throws Exception {
+        // Simulate failure binding the login object
+        doThrow(new IOException()).when(channel).close();
+        
+        // Invoke main with PID of 0
+        AgentProxy.main(new String[] { "0" });
+        
+        // All should be called, should not be fatal
+        verify(control).attach();
+        verify(control).getConnectorAddress();
+
+        verify(channel).write(any(ByteBuffer.class));
+        verify(channel).close();
+
+        verify(control).detach();
     }
 
 }

@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.utils.management.internal;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.management.MBeanServerConnection;
@@ -49,13 +48,13 @@ class MXBeanConnector {
     private final JMXConnectionCreator jmxCreator;
     private final String serviceURL;
     
-    public MXBeanConnector(int pid, String user, File binPath) throws IOException {
-        this(new AgentProxyClient(pid, user, binPath), new JMXConnectionCreator());
+    public MXBeanConnector(String serviceURL) throws IOException {
+        this(serviceURL, new JMXConnectionCreator());
     }
     
-    MXBeanConnector(AgentProxyClient client, JMXConnectionCreator jmxCreator) throws IOException {
+    MXBeanConnector(String serviceURL, JMXConnectionCreator jmxCreator) throws IOException {
+        this.serviceURL = serviceURL;
         this.jmxCreator = jmxCreator;
-        this.serviceURL = client.getJMXServiceURL();
     }
     
     public synchronized MXBeanConnectionImpl connect() throws IOException {
@@ -64,7 +63,6 @@ class MXBeanConnector {
         MBeanServerConnection mbsc = null;
         try {
             mbsc = connection.getMBeanServerConnection();
-            
         } catch (IOException e) {
             connection.close();
             throw e;

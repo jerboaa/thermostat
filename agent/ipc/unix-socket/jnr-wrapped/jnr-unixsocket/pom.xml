@@ -91,7 +91,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>jnr.unixsocket</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${jnr-unixsocket.bundle.symbolic.name}</Bundle-SymbolicName>
             <Bundle-Version>${jnr-unixsocket.version}</Bundle-Version>
             <Import-Package>
               *,jnr.ffi.mapper,jnr.ffi.provider.converters, 

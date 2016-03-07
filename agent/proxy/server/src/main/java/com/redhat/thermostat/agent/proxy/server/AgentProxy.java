@@ -36,28 +36,48 @@
 
 package com.redhat.thermostat.agent.proxy.server;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
+import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.sun.tools.attach.AttachNotSupportedException;
 
 public class AgentProxy {
     
     private static final Logger logger = LoggingUtils.getLogger(AgentProxy.class);
+    static final String IPC_SERVER_NAME = "agent-proxy";
+    static final String CONFIG_FILE_PROP = "ipcConfigFile";
+    static final String JSON_PID = "pid";
+    static final String JSON_JMX_URL = "jmxUrl";
     
-    private static int pid = -1;
-    private static AgentProxyControlImpl agent = null;
     private static ControlCreator creator = new ControlCreator();
-    private static PrintStream outStream = System.out;
+    private static ClientIPCService ipcService = null;
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             usage();
         }
         
+        // Get IPC configuration file location from system property
+        String configFileStr = System.getProperty(CONFIG_FILE_PROP);
+        if (configFileStr == null) {
+            throw new IOException("Unknown IPC configuration file location");
+        }
+        File configFile = new File(configFileStr);
+        if (ipcService == null) { // Only non-null for testing
+            ipcService = ClientIPCServiceFactory.getIPCService(configFile);
+        }
+        
+        int pid = -1;
         try {
             // First argument is pid of target VM
             pid = Integer.parseInt(args[0]);
@@ -65,27 +85,67 @@ public class AgentProxy {
             usage();
         }
         
-        // Start proxy agent
-        agent = creator.create(pid);
+        // Connect to IPC server
+        ByteChannel channel = ipcService.connectToServer(IPC_SERVER_NAME);
         
+        // Start proxy agent
+        AgentProxyControlImpl agent = creator.create(pid);
+        
+        try {
+            attachToTarget(pid, agent);
+            String connectorAddress = getJMXServiceURL(agent);
+            sendConnectionInfo(channel, pid, connectorAddress);
+        } finally {
+            cleanup(agent, channel, pid);
+        }
+    }
+
+    private static void attachToTarget(int pid, AgentProxyControlImpl agent) throws IOException {
         try {
             agent.attach();
         } catch (AttachNotSupportedException | IOException e) {
-            logger.log(Level.SEVERE, "Failed to attach to VM (pid: " + pid + ")", e);
-            return;
+            throw new IOException("Failed to attach to VM (pid: " + pid + ")", e);
         }
-        
+    }
+    
+    private static String getJMXServiceURL(AgentProxyControlImpl agent) throws IOException {
         try {
-            String connectorAddress = agent.getConnectorAddress();
-            outStream.println(connectorAddress);
+            return agent.getConnectorAddress();
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to retrieve JMX connection URL", e);
+            throw new IOException("Failed to retrieve JMX connection URL", e);
         }
-        
+    }
+
+    private static void sendConnectionInfo(ByteChannel channel, int pid, String connectorAddress) throws IOException {
         try {
-            agent.detach();
+            // As JSON, write pid first, followed by JMX service URL
+            GsonBuilder builder = new GsonBuilder();
+            Gson gson = builder.create();
+            JsonObject data = new JsonObject();
+            data.addProperty(JSON_PID, pid);
+            data.addProperty(JSON_JMX_URL, connectorAddress);
+            
+            String jsonData = gson.toJson(data);
+            ByteBuffer buf = ByteBuffer.wrap(jsonData.getBytes("UTF-8"));
+            channel.write(buf);
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to detach from VM (pid: " + pid + ")", e); 
+            throw new IOException("Failed to send JMX connection information to agent", e);
+        }
+    }
+
+    private static void cleanup(AgentProxyControlImpl agent, ByteChannel channel, int pid) {
+        try {
+            channel.close();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Failed to close channel with agent for VM (pid: " + pid + ")", e);
+        }
+
+        if (agent.isAttached()) {
+            try {
+                agent.detach();
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Failed to detach from VM (pid: " + pid + ")", e);
+            }
         }
     }
 
@@ -109,8 +169,8 @@ public class AgentProxy {
     /*
      * For testing purposes only.
      */
-    static void setOutStream(PrintStream stream) {
-        AgentProxy.outStream = stream;
+    static void setIPCService(ClientIPCService ipcService) {
+        AgentProxy.ipcService = ipcService;
     }
     
 }

@@ -36,57 +36,62 @@
 
 package com.redhat.thermostat.utils.management.internal;
 
-import java.io.File;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.common.ExitStatus;
+import org.junit.Before;
+import org.junit.Test;
 
-class AgentProxyClient {
+public class MXBeanConnectionPoolEntryTest {
     
-    private static final String SERVER_NAME = "thermostat-agent-proxy";
-    
-    private final int pid;
-    private final ProcessCreator procCreator;
-    private final File binPath;
-    private final String username;
-    private final File ipcConfigFile;
-    
-    AgentProxyClient(int pid, String user, File binPath, File ipcConfigFile) {
-        this(pid, user, binPath, ipcConfigFile, new ProcessCreator());
-    }
-    
-    AgentProxyClient(int pid, String user, File binPath, File ipcConfigFile, ProcessCreator procCreator) {
-        this.pid = pid;
-        this.binPath = binPath;
-        this.procCreator = procCreator;
-        this.username = user;
-        this.ipcConfigFile = ipcConfigFile;
+    private MXBeanConnectionPoolEntry entry;
+    private CountDownLatch urlLatch;
+
+    @Before
+    public void setUp() throws Exception {
+        urlLatch = mock(CountDownLatch.class);
+        when(urlLatch.await(anyLong(), any(TimeUnit.class))).thenReturn(true);
+        entry = new MXBeanConnectionPoolEntry(8000, urlLatch);
     }
 
-    void runProcess() throws IOException, InterruptedException {
-        // Start the agent proxy
-        String serverPath = binPath + File.separator + SERVER_NAME;
-        String[] args = new String[] { serverPath, String.valueOf(pid), username, ipcConfigFile.getAbsolutePath() };
-        ProcessBuilder builder = new ProcessBuilder(args);
-        builder.inheritIO();
-        Process proxy = procCreator.startProcess(builder);
+    @Test
+    public void testSetJmxUrl() throws Exception {
+        entry.setJmxUrl("jmxUrl");
+        verify(urlLatch).countDown();
+        
+        String result = entry.getJmxUrlOrBlock();
+        assertEquals("jmxUrl", result);
+        verify(urlLatch).await(anyLong(), any(TimeUnit.class));
+    }
+
+    @Test
+    public void testSetException() throws Exception {
+        Exception ex = new Exception("TEST");
+        entry.setException(ex);
+        verify(urlLatch).countDown();
         
         try {
-            // Wait for process to terminate
-            proxy.waitFor();
-            if (proxy.exitValue() != ExitStatus.EXIT_SUCCESS) {
-                throw new IOException("Agent proxy for " + pid + " exited with non-zero exit code");
-            }
-        } finally {
-            proxy.destroy();
+            entry.getJmxUrlOrBlock();
+            fail("Expected IOException");
+        } catch (IOException e) {
+            assertEquals(ex, e.getCause());
+            verify(urlLatch).await(anyLong(), any(TimeUnit.class));
         }
     }
     
-    static class ProcessCreator {
-        Process startProcess(ProcessBuilder builder) throws IOException {
-            return builder.start();
-        }
+    @Test(expected=IOException.class)
+    public void testGetJmxUrlTimeout() throws Exception {
+        when(urlLatch.await(anyLong(), any(TimeUnit.class))).thenReturn(false);
+        entry.getJmxUrlOrBlock();
     }
 
 }
-

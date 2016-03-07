@@ -79,7 +79,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>jnr.enxio</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${jnr-enxio.bundle.symbolic.name}</Bundle-SymbolicName>
             <Bundle-Version>${jnr-enxio.version}</Bundle-Version>
             <Export-Package>jnr.enxio.*</Export-Package>
             <Import-Package>*,jnr.ffi.mapper,jnr.ffi.provider.converters,com.kenai.jffi</Import-Package>

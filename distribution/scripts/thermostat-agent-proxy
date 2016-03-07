@@ -36,22 +36,26 @@
 #
 #####################################################################
 #
-if [ "$#" -lt 2 ]; then
-  echo "usage: $0 <pidOfTargetJvm> <userNameOfJvmOwner>" >&2
+if [ "$#" -lt 3 ]; then
+  echo "usage: $0 <pidOfTargetJvm> <userNameOfJvmOwner> <ipcConfigFile>" >&2
   exit 1
 fi
+TARGET_PID="$1"
+TARGET_USER="$2"
+CONFIG_FILE="$3"
 
-# Source thermostat-common from same directory as this script
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
+# Source thermostat-ipc-client-common from same directory as this script
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-ipc-client-common
 
 # Need tools from the JVM
 TOOLS_JAR="${JAVA_HOME}/lib/tools.jar"
 
-# JARs necessary for the server
-SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-proxy-server-@project.version@.jar"
-SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}"
+# Additional JARs necessary for the agent proxy
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-proxy-server-@project.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/gson-@gson.version@.jar"
+CLASSPATH="${TOOLS_JAR}:${CLASSPATH}"
 
 AGENT_PROXY_CLASS="com.redhat.thermostat.agent.proxy.server.AgentProxy"
 
@@ -61,9 +65,10 @@ if [ x"$THERMOSTAT_DEBUG" != x ] ; then
 fi
 
 # Start server
+CONFIG_FILE_ARG="-DipcConfigFile=${CONFIG_FILE}"
 # Drop permissions, if root
 if [ "$(id -u)" -eq 0 ]; then
-  /bin/su -s /bin/bash -c "${JAVA} -cp ${SERVICE_CLASSPATH} ${LOGGING_ARG} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} $1" "$2" 
+  /bin/su -s /bin/bash -c "${JAVA} -cp ${CLASSPATH} ${CONFIG_FILE_ARG} ${LOGGING_ARG} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} ${TARGET_PID}" "${TARGET_USER}"
 else
-  ${JAVA} -cp ${SERVICE_CLASSPATH} ${DEBUG_OPTS} ${LOGGING_ARG} ${AGENT_PROXY_CLASS} $1
+  ${JAVA} -cp ${CLASSPATH} "${CONFIG_FILE_ARG}" ${DEBUG_OPTS} ${LOGGING_ARG} ${AGENT_PROXY_CLASS} "${TARGET_PID}"
 fi

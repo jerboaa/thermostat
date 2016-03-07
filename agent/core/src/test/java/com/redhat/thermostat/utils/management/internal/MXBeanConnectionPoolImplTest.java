@@ -38,8 +38,8 @@ package com.redhat.thermostat.utils.management.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -47,115 +47,248 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.nio.charset.Charset;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.ConnectorCreator;
 import com.redhat.thermostat.utils.management.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 
 public class MXBeanConnectionPoolImplTest {
 
-    private File binDir = mock(File.class);
+    private File binDir;
+    private AgentIPCService ipcService;
+    private AgentProxyClient proxy;
+    private MXBeanConnectionPoolImpl pool;
+    private MXBeanConnectionImpl connection;
+    private ConnectorCreator creator;
+    private MXBeanConnector connector;
+    private File ipcConfigFile;
+    
+    @Before
+    public void setup() throws Exception {
+        binDir = mock(File.class);
+        ipcService = mock(AgentIPCService.class);
+        connection = mock(MXBeanConnectionImpl.class);
+        connector = mock(MXBeanConnector.class);
+        creator = mock(ConnectorCreator.class);
+        ipcConfigFile = mock(File.class);
+
+        proxy = mock(AgentProxyClient.class);
+        when(creator.createConnector(any(String.class))).thenReturn(connector);
+        when(connector.connect()).thenReturn(connection);
+
+        ProcessUserInfoBuilder builder = mock(ProcessUserInfoBuilder.class);
+        ProcessUserInfo info = new ProcessUserInfo(8000, "Test");
+        when(builder.build(8000)).thenReturn(info);
+
+        pool = new MXBeanConnectionPoolImpl(creator, binDir, builder, ipcService, ipcConfigFile);
+    }
 
     @Test
     public void testAcquire() throws Exception {
-        MXBeanConnectionImpl toReturn = mock(MXBeanConnectionImpl.class);
-        MXBeanConnector connector = mock(MXBeanConnector.class);
-        ConnectorCreator creator = mock(ConnectorCreator.class);
+        final byte[] data = getJsonString(8000, "jmxUrl://hello");
+        invokeCallbacksOnProxyCreation(data);
 
-        when(creator.create(anyInt(), any(String.class), any(File.class))).thenReturn(connector);
-        when(connector.connect()).thenReturn(toReturn);
+        MXBeanConnection result = pool.acquire(8000);
+        
+        verify(creator).createConnector("jmxUrl://hello");
 
-        ProcessUserInfoBuilder builder = mock(ProcessUserInfoBuilder.class);
-        ProcessUserInfo info = new ProcessUserInfo(0, "Test");
-        when(builder.build(0)).thenReturn(info);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, binDir, builder);
-
-        MXBeanConnection connection = pool.acquire(0);
-
-        assertNotNull(connection);
-        assertEquals(connection, toReturn);
+        assertNotNull(result);
+        assertEquals(result, connection);
 
         verify(connector).connect();
     }
 
+    private void invokeCallbacksOnProxyCreation(final byte[] data) {
+        when(creator.createAgentProxy(8000, "Test", binDir, ipcConfigFile)).thenAnswer(new Answer<AgentProxyClient>() {
+            @Override
+            public AgentProxyClient answer(InvocationOnMock invocation) throws Throwable {
+                // Invoke callback
+                pool.dataReceived(data);
+                return proxy;
+            }
+        });
+    }
+    
+    @Test
+    public void testAcquireNoPid() throws Exception {
+        final byte[] data = getJsonString(null, "jmxUrl://hello");
+        invokeCallbacksOnProxyCreation(data);
+        try {
+            pool.acquire(8000);
+            fail("Expected MXBeanConnectionException");
+        } catch (MXBeanConnectionException e) {
+            verify(creator, never()).createConnector("jmxUrl://hello");
+            verify(connector, never()).connect();
+        }
+    }
+    
+    @Test
+    public void testAcquireBadPid() throws Exception {
+        final byte[] data = getJsonString(9000, "jmxUrl://hello");
+        invokeCallbacksOnProxyCreation(data);
+        try {
+            pool.acquire(8000);
+            fail("Expected MXBeanConnectionException");
+        } catch (MXBeanConnectionException e) {
+            verify(creator, never()).createConnector("jmxUrl://hello");
+            verify(connector, never()).connect();
+        }
+    }
+    
+    @Test
+    public void testAcquireNullPid() throws Exception {
+        final byte[] data = getJsonString(null, "jmxUrl://hello", true);
+        invokeCallbacksOnProxyCreation(data);
+        try {
+            pool.acquire(8000);
+            fail("Expected MXBeanConnectionException");
+        } catch (MXBeanConnectionException e) {
+            verify(creator, never()).createConnector("jmxUrl://hello");
+            verify(connector, never()).connect();
+        }
+    }
+    
+    @Test
+    public void testAcquireNoJmxUrl() throws Exception {
+        final byte[] data = getJsonString(8000, null);
+        invokeCallbacksOnProxyCreation(data);
+        try {
+            pool.acquire(8000);
+            fail("Expected MXBeanConnectionException");
+        } catch (MXBeanConnectionException e) {
+            verify(creator, never()).createConnector("jmxUrl://hello");
+            verify(connector, never()).connect();
+        }
+    }
+    
+    @Test
+    public void testAcquireNullJmxUrl() throws Exception {
+        final byte[] data = getJsonString(8000, null, true);
+        invokeCallbacksOnProxyCreation(data);
+        try {
+            pool.acquire(8000);
+            fail("Expected MXBeanConnectionException");
+        } catch (MXBeanConnectionException e) {
+            verify(creator, never()).createConnector("jmxUrl://hello");
+            verify(connector, never()).connect();
+        }
+    }
+    
+    @Test
+    public void testAcquireBadCast() throws Exception {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        Gson gson = gsonBuilder.create();
+        JsonObject jsonData = new JsonObject();
+        jsonData.addProperty(MXBeanConnectionPoolImpl.JSON_PID, "this is not an integer");
+        jsonData.addProperty(MXBeanConnectionPoolImpl.JSON_JMX_URL, "jmxUrl://hello");
+        
+        String jsonString = gson.toJson(jsonData);
+        final byte[] data = jsonString.getBytes(Charset.forName("UTF-8"));
+        
+        invokeCallbacksOnProxyCreation(data);
+        try {
+            pool.acquire(8000);
+            fail("Expected MXBeanConnectionException");
+        } catch (MXBeanConnectionException e) {
+            verify(creator, never()).createConnector("jmxUrl://hello");
+            verify(connector, never()).connect();
+        }
+    }
+    
+    @Test
+    public void testAcquireBadJson() throws Exception {
+        String jsonString = "not a json string";
+        final byte[] data = jsonString.getBytes(Charset.forName("UTF-8"));
+        
+        invokeCallbacksOnProxyCreation(data);
+        try {
+            pool.acquire(8000);
+            fail("Expected MXBeanConnectionException");
+        } catch (MXBeanConnectionException e) {
+            verify(creator, never()).createConnector("jmxUrl://hello");
+            verify(connector, never()).connect();
+        }
+    }
+
     @Test
     public void testAcquireTwice() throws Exception {
-        MXBeanConnectionImpl toReturn = mock(MXBeanConnectionImpl.class);
-        MXBeanConnector connector = mock(MXBeanConnector.class);
-        ConnectorCreator creator = mock(ConnectorCreator.class);
-
-        when(creator.create(anyInt(), any(String.class), any(File.class))).thenReturn(connector);
-        when(connector.connect()).thenReturn(toReturn);
-
-        ProcessUserInfoBuilder builder = mock(ProcessUserInfoBuilder.class);
-        ProcessUserInfo info = new ProcessUserInfo(0, "Test");
-        when(builder.build(0)).thenReturn(info);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, binDir, builder);
-
-        MXBeanConnection connection1 = pool.acquire(0);
-
+        byte[] data = getJsonString(8000, "jmxUrl://hello");
+        invokeCallbacksOnProxyCreation(data);
+    
+        MXBeanConnection connection1 = pool.acquire(8000);
+    
         verify(connector).connect();
-
-        MXBeanConnection connection2 = pool.acquire(0);
-
-        assertEquals(connection1, toReturn);
-        assertEquals(connection2, toReturn);
-
+    
+        MXBeanConnection connection2 = pool.acquire(8000);
+    
+        assertEquals(connection1, connection);
+        assertEquals(connection2, connection);
+    
         verifyNoMoreInteractions(connector);
     }
 
     @Test
     public void testRelease() throws Exception {
-        MXBeanConnectionImpl actualConnection = mock(MXBeanConnectionImpl.class);
-        MXBeanConnector connector = mock(MXBeanConnector.class);
-        ConnectorCreator creator = mock(ConnectorCreator.class);
-
-        when(creator.create(anyInt(), any(String.class), any(File.class))).thenReturn(connector);
-        when(connector.connect()).thenReturn(actualConnection);
-
-        ProcessUserInfoBuilder builder = mock(ProcessUserInfoBuilder.class);
-        ProcessUserInfo info = new ProcessUserInfo(0, "Test");
-        when(builder.build(0)).thenReturn(info);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, binDir, builder);
-
-        MXBeanConnection connection = pool.acquire(0);
-
-        verify(actualConnection, never()).close();
-
-        pool.release(0, connection);
-
-        verify(actualConnection).close();
+        byte[] data = getJsonString(8000, "jmxUrl://hello");
+        invokeCallbacksOnProxyCreation(data);
+    
+        MXBeanConnection result = pool.acquire(8000);
+    
+        verify(connection, never()).close();
+    
+        pool.release(8000, result);
+    
+        verify(connection).close();
     }
 
     @Test
     public void testReleaseTwice() throws Exception {
-        MXBeanConnectionImpl actualConnection = mock(MXBeanConnectionImpl.class);
-        MXBeanConnector connector = mock(MXBeanConnector.class);
-        ConnectorCreator creator = mock(ConnectorCreator.class);
-
-        when(creator.create(anyInt(), any(String.class), any(File.class))).thenReturn(connector);
-        when(connector.connect()).thenReturn(actualConnection);
-
-        ProcessUserInfoBuilder builder = mock(ProcessUserInfoBuilder.class);
-        ProcessUserInfo info = new ProcessUserInfo(0, "Test");
-        when(builder.build(0)).thenReturn(info);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, binDir, builder);
-
+        byte[] data = getJsonString(8000, "jmxUrl://hello");
+        invokeCallbacksOnProxyCreation(data);
+    
         // connection1 == connection1 == actualConnection
-        MXBeanConnection connection1 = pool.acquire(0);
-        MXBeanConnection connection2 = pool.acquire(0);
+        MXBeanConnection connection1 = pool.acquire(8000);
+        MXBeanConnection connection2 = pool.acquire(8000);
+    
+        pool.release(8000, connection1);
+    
+        verify(connection, never()).close();
+    
+        pool.release(8000, connection2);
+    
+        verify(connection).close();
+    
+    }
 
-        pool.release(0, connection1);
-
-        verify(actualConnection, never()).close();
-
-        pool.release(0, connection2);
-
-        verify(actualConnection).close();
-
+    private byte[] getJsonString(Integer pid, String jmxUrl) {
+        return getJsonString(pid, jmxUrl, false);
     }
     
+    private byte[] getJsonString(Integer pid, String jmxUrl, boolean serializeNulls) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        if (serializeNulls) {
+            gsonBuilder.serializeNulls();
+        }
+        Gson gson = gsonBuilder.create();
+        JsonObject jsonData = new JsonObject();
+
+        jsonData.addProperty(MXBeanConnectionPoolImpl.JSON_PID, pid);
+        jsonData.addProperty(MXBeanConnectionPoolImpl.JSON_JMX_URL, jmxUrl);
+
+        String jsonString = gson.toJson(jsonData);
+        return jsonString.getBytes(Charset.forName("UTF-8"));
+    }
+
 }
 

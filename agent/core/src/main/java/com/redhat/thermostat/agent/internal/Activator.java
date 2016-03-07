@@ -36,15 +36,24 @@
 
 package com.redhat.thermostat.agent.internal;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.config.FileStorageCredentials;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
@@ -53,29 +62,53 @@ import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
 public class Activator implements BundleActivator {
     
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
+    
     private MXBeanConnectionPoolImpl pool;
+    private MultipleServiceTracker tracker;
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        ServiceReference<CommonPaths> pathsRef = context.getServiceReference(CommonPaths.class);
-        CommonPaths paths = context.getService(pathsRef);
-        UserNameUtilImpl usernameUtil = new UserNameUtilImpl();
-        context.registerService(UserNameUtil.class, usernameUtil, null);
-        pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), usernameUtil);
-        context.registerService(MXBeanConnectionPool.class, pool, null);
-        StorageCredentials creds = new FileStorageCredentials(paths.getUserAgentAuthConfigFile());
-        context.registerService(StorageCredentials.class, creds, null);
-        AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
-        paths = null;
-        context.ungetService(pathsRef);
-        VmBlacklistImpl blacklist = new VmBlacklistImpl();
-        blacklist.addVmFilter(new AgentProxyFilter());
-        context.registerService(VmBlacklist.class, blacklist, null);
+    public void start(final BundleContext context) throws Exception {
+        Class<?>[] deps = new Class<?>[] { CommonPaths.class, AgentIPCService.class };
+        tracker = new MultipleServiceTracker(context, deps, new Action() {
+            
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                try {
+                    CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+                    UserNameUtilImpl usernameUtil = new UserNameUtilImpl();
+                    context.registerService(UserNameUtil.class, usernameUtil, null);
+                    AgentIPCService ipcService = (AgentIPCService) services.get(AgentIPCService.class.getName());
+                    pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), usernameUtil, 
+                            ipcService, paths.getUserIPCConfigurationFile());
+                    context.registerService(MXBeanConnectionPool.class, pool, null);
+            
+                    StorageCredentials creds = new FileStorageCredentials(paths.getUserAgentAuthConfigFile());
+                    context.registerService(StorageCredentials.class, creds, null);
+                    AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
+                    VmBlacklistImpl blacklist = new VmBlacklistImpl();
+                    blacklist.addVmFilter(new AgentProxyFilter());
+                    context.registerService(VmBlacklist.class, blacklist, null);
+                } catch (InvalidConfigurationException | IOException e) {
+                    logger.log(Level.SEVERE, "Failed to start agent services", e);
+                }
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                try {
+                    pool.shutdown();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Failed to clean up IPC server", e);
+                }
+            }
+        });
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // Services automatically unregistered by framework
+        tracker.close();
         pool = null;
     }
 

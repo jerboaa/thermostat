@@ -38,114 +38,90 @@ package com.redhat.thermostat.utils.management.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.utils.management.internal.AgentProxyClient.ProcessCreator;
 
 public class AgentProxyClientTest {
     
     private AgentProxyClient client;
-    private ProcessCreator procCreator;
     private String user;
     private File binPath;
+    private File ipcConfigFile;
+    private Process proxy;
+    private ProcessCreator procCreator;
     
     @Before
     public void setup() throws Exception {
-        procCreator = mock(ProcessCreator.class);
         binPath = new File("/path/to/thermostat/bin");
         user = "Hello";
-        client = new AgentProxyClient(9000, user, binPath, procCreator);
+        ipcConfigFile = new File("/path/to/ipc/config");
+        procCreator = mock(ProcessCreator.class);
+        proxy = mock(Process.class);
+        when(procCreator.startProcess(any(ProcessBuilder.class))).thenReturn(proxy);
+        client = new AgentProxyClient(9000, user, binPath, ipcConfigFile, procCreator);
     }
     
     @Test
-    public void testCreateProxy() throws Exception {
-        Process proxy = mock(Process.class);
-        final String jmxUrl = "myJmxUrl";
-        when(proxy.getInputStream()).thenReturn(new ByteArrayInputStream(jmxUrl.getBytes()));
-        when(proxy.getErrorStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-        when(procCreator.createAndRunProcess(any(String[].class))).thenReturn(proxy);
+    public void testStart() throws Exception {
+        when(proxy.exitValue()).thenReturn(0);
+        client.runProcess();
         
-        // Check returned URL
-        String result = client.getJMXServiceURL();
-        assertEquals(jmxUrl, result);
+        ArgumentCaptor<ProcessBuilder> builderCaptor = ArgumentCaptor.forClass(ProcessBuilder.class);
+        verify(procCreator).startProcess(builderCaptor.capture());
+        ProcessBuilder builder = builderCaptor.getValue();
+        
+        // Check I/O redirection
+        assertEquals(Redirect.INHERIT, builder.redirectInput());
+        assertEquals(Redirect.INHERIT, builder.redirectOutput());
+        assertEquals(Redirect.INHERIT, builder.redirectError());
         
         // Check process arguments
-        ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
-        verify(procCreator).createAndRunProcess(argsCaptor.capture());
-        String[] args = argsCaptor.getValue();
-        assertEquals(3, args.length);
-        assertEquals("/path/to/thermostat/bin/thermostat-agent-proxy", args[0]);
-        assertEquals("9000", args[1]);
-        assertEquals("Hello", args[2]);
+        List<String> args = builder.command();
+        assertEquals(4, args.size());
+        assertEquals("/path/to/thermostat/bin/thermostat-agent-proxy", args.get(0));
+        assertEquals("9000", args.get(1));
+        assertEquals("Hello", args.get(2));
+        assertEquals("/path/to/ipc/config", args.get(3));
         
         // Check cleanup
         verify(proxy).waitFor();
+        verify(proxy).destroy();
     }
     
     @Test
-    public void testErrorHandler() throws Exception {
-        Process proxy = mock(Process.class);
-        final String errors = "This is an error\nThis is also an error\nOh no!\n";
-        when(proxy.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-        when(proxy.getErrorStream()).thenReturn(new ByteArrayInputStream(errors.getBytes()));
-        when(procCreator.createAndRunProcess(any(String[].class))).thenReturn(proxy);
-        
-        List<LogRecord> logMessages = new ArrayList<>();
-        TestLogHandler logHandler = new TestLogHandler(logMessages);
-        LoggingUtils.getLogger(AgentProxyClient.class).addHandler(logHandler);
+    public void testStartBadExit() throws Exception {
+        when(proxy.exitValue()).thenReturn(-1);
         
         try {
-            try {
-                client.getJMXServiceURL();
-                fail("Expected exception");
-            } catch (IOException e) {
-                // Expected
-            }
-            assertEquals(3, logMessages.size());
-            assertEquals("This is an error", logMessages.get(0).getMessage());
-            assertEquals("This is also an error", logMessages.get(1).getMessage());
-            assertEquals("Oh no!", logMessages.get(2).getMessage());
-        } finally {
-            LoggingUtils.getLogger(AgentProxyClient.class).removeHandler(logHandler);
+            client.runProcess();
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(proxy).destroy();
         }
     }
     
-    private static class TestLogHandler extends Handler {
+    @Test
+    public void testStartInterrupted() throws Exception {
+        when(proxy.waitFor()).thenThrow(new InterruptedException());
         
-        private List<LogRecord> logMessages;
-        public TestLogHandler(List<LogRecord> logMessages) {
-            this.logMessages = logMessages;
-        }
-        
-        @Override
-        public void publish(LogRecord record) {
-            logMessages.add(record);
-        }
-        
-        @Override
-        public void flush() {
-            // Do nothing
-        }
-        
-        @Override
-        public void close() throws SecurityException {
-            // Do nothing
+        try {
+            client.runProcess();
+            fail("Expected InterruptedException");
+        } catch (InterruptedException e) {
+            verify(proxy).destroy();
         }
     }
 

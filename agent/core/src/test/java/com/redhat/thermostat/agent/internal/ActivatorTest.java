@@ -39,12 +39,16 @@ package com.redhat.thermostat.agent.internal;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 import java.io.File;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.VmBlacklist;
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -54,36 +58,45 @@ import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
 public class ActivatorTest {
-    @Test
-    public void verifyServiceIsRegistered() throws Exception {
+    
+    private StubBundleContext context;
+    private ServiceRegistration ipcReg;
 
-    	CommonPaths paths = mock(CommonPaths.class);
+    @Before
+    public void setup() {
+        CommonPaths paths = mock(CommonPaths.class);
     	when(paths.getSystemNativeLibsRoot()).thenReturn(new File("target"));
         when(paths.getUserAgentAuthConfigFile()).thenReturn(new File("not.exist.does.not.matter"));
     	NativeLibraryResolver.setCommonPaths(paths);
-
-        StubBundleContext context = new StubBundleContext();
+    
+        context = new StubBundleContext();
         context.registerService(CommonPaths.class.getName(), paths, null);
+        AgentIPCService ipcService = mock(AgentIPCService.class);
+        ipcReg = context.registerService(AgentIPCService.class.getName(), ipcService, null);
+    }
 
+    @Test
+    public void verifyServiceIsRegistered() throws Exception {
         Activator activator = new Activator();
-
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
         assertTrue(context.isServiceRegistered(UserNameUtil.class.getName(), UserNameUtilImpl.class));
         assertTrue(context.isServiceRegistered(VmBlacklist.class.getName(), VmBlacklistImpl.class));
     }
-    
+
     @Test
     public void verifyPoolShutdown() throws Exception {
-
-        StubBundleContext context = new StubBundleContext();
-
-        MXBeanConnectionPoolImpl pool = mock(MXBeanConnectionPoolImpl.class);
         Activator activator = new Activator();
+        activator.start(context);
+        
+        MXBeanConnectionPoolImpl pool = mock(MXBeanConnectionPoolImpl.class);
         activator.setPool(pool);
 
-        activator.stop(context);
+        // Remove tracked service
+        ipcReg.unregister();
+        
+        verify(pool).shutdown();
     }
 }
 
