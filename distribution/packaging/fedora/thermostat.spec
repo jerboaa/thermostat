@@ -516,7 +516,7 @@ contains the server-side parts for deploying thermostat with improved
 security.
 
 %prep
-%{?scl:scl enable %{scl} %{scl_maven} %{scl_java_common} %{scl_mongodb} - << "EOF"}
+%{?scl:scl enable %{scl_maven} %{scl_java_common} %{scl_mongodb} %{scl} - << "EOF"}
 # When Source0 is released version. 
 %setup -q -n %{pkg_name}-%{version}
 # When Source0 is a snapshot from HEAD.
@@ -661,7 +661,7 @@ cp %{SOURCE4} distribution/config/thermostatrc
 %{?scl:EOF}
 
 %build
-%{?scl:scl enable %{scl} %{scl_maven} %{scl_java_common} %{scl_mongodb} - << "EOF"}
+%{?scl:scl enable %{scl_maven} %{scl_java_common} %{scl_mongodb} %{scl} - << "EOF"}
 export CFLAGS="$RPM_OPT_FLAGS" LDFLAGS="$RPM_LD_FLAGS"
 # Set JAVA_HOME. make uses this
 . /usr/share/java-utils/java-functions
@@ -763,7 +763,7 @@ popd
 
 
 %install
-%{?scl:scl enable %{scl} %{scl_maven} %{scl_java_common} %{scl_mongodb} - << "EOF"}
+%{?scl:scl enable %{scl_maven} %{scl_java_common} %{scl_mongodb} %{scl} - << "EOF"}
 #######################################################
 # Thermostat core
 #######################################################
