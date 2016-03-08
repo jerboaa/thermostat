@@ -131,7 +131,7 @@ public class LocalSocketTransportTest {
     
     private static class SynchronizableLocalSocketTransport extends LocalSocketTransport {
 
-        private int callCount = 0;
+        private volatile int callCount = 0;
         private final CountDownLatch sentLatch;
         SynchronizableLocalSocketTransport(int sendThreshold,
                                           int loseThreshold,
@@ -151,8 +151,8 @@ public class LocalSocketTransportTest {
             try {
                 super.transferToPeer(records);
             } finally {
-                sentLatch.countDown();
                 callCount++;
+                sentLatch.countDown();
             }
         }
         
