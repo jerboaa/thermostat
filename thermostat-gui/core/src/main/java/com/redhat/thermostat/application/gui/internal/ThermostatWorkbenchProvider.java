@@ -34,27 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.application.gui;
+package com.redhat.thermostat.application.gui.internal;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.internal.utils.laf.ThemeManager;
-import com.redhat.thermostat.platform.application.swing.core.SwingApplication;
+import com.redhat.thermostat.application.gui.ThermostatGUI;
+import com.redhat.thermostat.platform.mvc.Controller;
+import com.redhat.thermostat.platform.mvc.MVCProvider;
+import com.redhat.thermostat.platform.mvc.Model;
+import com.redhat.thermostat.platform.mvc.View;
 import com.redhat.thermostat.platform.swing.SwingWorkbench;
+import com.redhat.thermostat.platform.swing.WorkbenchView;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
-import javax.swing.SwingUtilities;
-
 /**
  */
 @Component
-@Service(ThermostatGUIApplication.class)
-public class ThermostatGUIApplication extends SwingApplication {
+@Service({ ThermostatWorkbenchProvider.class, MVCProvider.class })
+public class ThermostatWorkbenchProvider implements MVCProvider {
+
+    @Reference(bind = "bindCommonPaths", unbind = "unbindCommonPaths")
+    private CommonPaths paths;
 
     @Reference(bind = "bindWorkbench", unbind = "unbindWorkbench")
     private SwingWorkbench workbench;
+
+    @Reference(bind = "bindThermostatGUI", unbind = "unbindThermostatGUI")
+    private ThermostatGUI thermostatGUI;
+
+    protected void bindCommonPaths(CommonPaths paths) {
+        this.paths = paths;
+    }
+
+    protected void unbindCommonPaths(CommonPaths paths) {
+        this.paths = null;
+    }
 
     protected void bindWorkbench(SwingWorkbench workbench) {
         this.workbench = workbench;
@@ -64,26 +80,40 @@ public class ThermostatGUIApplication extends SwingApplication {
         this.workbench = null;
     }
 
-    @Reference(bind = "bindApplicationService", unbind = "unbindApplicationService")
-    private ApplicationService applicationService;
-
-    protected void bindApplicationService(ApplicationService applicationService) {
-        this.applicationService = applicationService;
+    protected void bindThermostatGUI(ThermostatGUI thermostatGUI) {
+        this.thermostatGUI = thermostatGUI;
     }
 
-    protected void unbindApplicationService(ApplicationService applicationService) {
-        this.applicationService = null;
+    protected void unbindThermostatGUI(ThermostatGUI thermostatGUI) {
+        this.thermostatGUI = null;
+    }
+
+    private Model model;
+    private ThermostatWorkbenchView view;
+    private ThermostatWorkbenchController controller;
+
+    @Override
+    public Controller getController() {
+        return controller;
+    }
+
+    @Override
+    public View getView() {
+        return view;
+    }
+
+    @Override
+    public Model getModel() {
+        return model;
     }
 
     @Activate
-    private void activate() {
-        init(applicationService);
+    public void activate() {
+        model = new Model();
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                ThemeManager.getInstance().setLAF();
-            }
-        });
+        controller = new ThermostatWorkbenchController();
+        controller.setCommonPaths(paths);
+
+        view = new ThermostatWorkbenchView((WorkbenchView) workbench.getView());
     }
 }

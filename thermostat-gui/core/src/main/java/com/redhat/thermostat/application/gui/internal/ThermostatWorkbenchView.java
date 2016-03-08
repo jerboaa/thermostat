@@ -34,56 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.application.gui;
+package com.redhat.thermostat.application.gui.internal;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.internal.utils.laf.ThemeManager;
-import com.redhat.thermostat.platform.application.swing.core.SwingApplication;
-import com.redhat.thermostat.platform.swing.SwingWorkbench;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-
-import javax.swing.SwingUtilities;
+import com.redhat.thermostat.platform.Platform;
+import com.redhat.thermostat.platform.mvc.View;
+import com.redhat.thermostat.platform.swing.ContentProvider;
+import com.redhat.thermostat.platform.swing.ViewContainer;
+import com.redhat.thermostat.platform.swing.WorkbenchView;
+import com.redhat.thermostat.platform.swing.components.ContentPane;
+import com.redhat.thermostat.platform.swing.components.ThermostatComponent;
 
 /**
  */
-@Component
-@Service(ThermostatGUIApplication.class)
-public class ThermostatGUIApplication extends SwingApplication {
+public class ThermostatWorkbenchView extends ViewContainer implements ContentProvider {
 
-    @Reference(bind = "bindWorkbench", unbind = "unbindWorkbench")
-    private SwingWorkbench workbench;
+    private MenuHandler handler;
+    private WorkbenchView parent;
 
-    protected void bindWorkbench(SwingWorkbench workbench) {
-        this.workbench = workbench;
+    public ThermostatWorkbenchView(WorkbenchView parent) {
+        this.parent = parent;
     }
 
-    protected void unbindWorkbench(SwingWorkbench workbench) {
-        this.workbench = null;
+    @Override
+    protected void postCreate(ContentPane contentPane) {
+        super.postCreate(contentPane);
     }
 
-    @Reference(bind = "bindApplicationService", unbind = "unbindApplicationService")
-    private ApplicationService applicationService;
-
-    protected void bindApplicationService(ApplicationService applicationService) {
-        this.applicationService = applicationService;
+    @Override
+    public void init(Platform platform) {
+        super.init(platform);
+        parent.add(this);
     }
 
-    protected void unbindApplicationService(ApplicationService applicationService) {
-        this.applicationService = null;
+    public void setMenuHandler(MenuHandler handler) {
+        this.handler = handler;
+        parent.getFrame().setJMenuBar(handler.getMenuBar());
     }
 
-    @Activate
-    private void activate() {
-        init(applicationService);
+    void setApplicationTitle(String title) {
+        parent.getFrame().setTitle(title);
+    }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                ThemeManager.getInstance().setLAF();
-            }
-        });
+    @Override
+    public ThermostatComponent getContent() {
+        return contentPane;
+    }
+
+    @Override
+    public View getView() {
+        return this;
     }
 }

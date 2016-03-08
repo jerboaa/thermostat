@@ -45,7 +45,7 @@ public class WorkbenchController extends Controller {
 
     private PlatformShutdown platformShutdown;
 
-    void setPlatformShutdown(PlatformShutdown platformShutdown) {
+    protected void setPlatformShutdown(PlatformShutdown platformShutdown) {
         this.platformShutdown = platformShutdown;
     }
 

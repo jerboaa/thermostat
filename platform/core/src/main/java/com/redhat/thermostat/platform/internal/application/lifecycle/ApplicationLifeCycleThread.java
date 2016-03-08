@@ -42,13 +42,10 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.platform.Application;
 import com.redhat.thermostat.platform.ApplicationProvider;
-import com.redhat.thermostat.platform.MDIService;
 import com.redhat.thermostat.platform.PlatformShutdown;
 import com.redhat.thermostat.platform.internal.application.ApplicationState;
 import com.redhat.thermostat.platform.internal.application.lifecycle.ApplicationHandler.StateChangeEvent;
 import com.redhat.thermostat.platform.internal.mvc.lifecycle.MVCLifeCycleManager;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -183,18 +180,6 @@ public class ApplicationLifeCycleThread implements Runnable, PlatformShutdown {
         handler.addStateChangeListener(stateChangeListener);
         
         queueState(ApplicationState.CREATE);
-    }
-
-    public void registerShutdownService() {
-        BundleContext context =
-                FrameworkUtil.getBundle(PlatformShutdown.class).getBundleContext();
-        context.registerService(PlatformShutdown.class, this, null);
-    }
-
-    public void registerMDIService() {
-        BundleContext context =
-                FrameworkUtil.getBundle(MDIService.class).getBundleContext();
-        context.registerService(MDIService.class, mvcLifeCycleManager, null);
     }
 
     // Testing hook

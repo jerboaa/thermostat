@@ -118,8 +118,17 @@
             <artifactId>thermostat-platform-swing-core</artifactId>
             <version>${parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-laf-utils</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-client-swing</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
     </dependencies>
-
     <build>
         <resources>
             <resource>
@@ -143,6 +152,7 @@
                             com.redhat.thermostat.application.gui,
                         </Export-Package>
                         <Private-Package>
+                            com.redhat.thermostat.application.gui.internal,
                         </Private-Package>
                         <!-- Do not autogenerate uses clauses in Manifests -->
                         <_nouses>true</_nouses>

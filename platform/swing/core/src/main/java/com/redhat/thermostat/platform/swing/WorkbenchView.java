@@ -57,7 +57,7 @@ public class WorkbenchView extends ViewContainer {
 
     @Override
     protected void postCreate(ContentPane contentPane) {
-        frame = new JFrame();
+        frame = createFrame();
         adapter = new WindowAdapter() {
 
             @Override
@@ -70,7 +70,32 @@ public class WorkbenchView extends ViewContainer {
                 showingProperty().setValue(true);
             }
         };
+
         contentPane.setName("Thermostat Platform Swing Workbench");
+    }
+
+    public JFrame getFrame() {
+        return frame;
+    }
+
+    /**
+     * Returns the frame used as main frame for the whole application.
+     */
+    protected JFrame createFrame() {
+        return new JFrame();
+    }
+
+    /**
+     * Called before window listeners and content pane are attached to
+     * this frame. The frame passed to this method is the same instance
+     * returned by {@link #createFrame}.
+     *
+     * <br /><br />
+     *
+     * The default implementation sets a minimum size of the frame.
+     */
+    protected void preInitFrame(JFrame frame) {
+        frame.setMinimumSize(new Dimension(800, 800));
     }
 
     @Override
@@ -86,7 +111,8 @@ public class WorkbenchView extends ViewContainer {
     @Override
     protected void init() {
 
-        frame.setMinimumSize(new Dimension(800, 800));
+        preInitFrame(frame);
+
         frame.addWindowListener(adapter);
         frame.setContentPane(contentPane);
 

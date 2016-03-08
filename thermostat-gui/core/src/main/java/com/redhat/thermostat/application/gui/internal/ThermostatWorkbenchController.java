@@ -34,56 +34,57 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.application.gui;
+package com.redhat.thermostat.application.gui.internal;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.internal.utils.laf.ThemeManager;
-import com.redhat.thermostat.platform.application.swing.core.SwingApplication;
-import com.redhat.thermostat.platform.swing.SwingWorkbench;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-
-import javax.swing.SwingUtilities;
+import com.redhat.thermostat.common.ApplicationInfo;
+import com.redhat.thermostat.platform.Platform;
+import com.redhat.thermostat.platform.mvc.Controller;
+import com.redhat.thermostat.platform.mvc.Model;
+import com.redhat.thermostat.platform.mvc.View;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
 /**
  */
-@Component
-@Service(ThermostatGUIApplication.class)
-public class ThermostatGUIApplication extends SwingApplication {
+public class ThermostatWorkbenchController extends Controller {
 
-    @Reference(bind = "bindWorkbench", unbind = "unbindWorkbench")
-    private SwingWorkbench workbench;
+    private final ApplicationInfo appInfo = new ApplicationInfo();
+    private CommonPaths commonPaths;
 
-    protected void bindWorkbench(SwingWorkbench workbench) {
-        this.workbench = workbench;
-    }
+    private ThermostatWorkbenchView workbenchView;
+    private MenuHandler handler;
 
-    protected void unbindWorkbench(SwingWorkbench workbench) {
-        this.workbench = null;
-    }
+    @Override
+    public void init(final Platform platform, Model model, View view) {
+        super.init(platform, model, view);
 
-    @Reference(bind = "bindApplicationService", unbind = "unbindApplicationService")
-    private ApplicationService applicationService;
+        workbenchView = (ThermostatWorkbenchView) view;
+        handler = createMenuHandler();
 
-    protected void bindApplicationService(ApplicationService applicationService) {
-        this.applicationService = applicationService;
-    }
-
-    protected void unbindApplicationService(ApplicationService applicationService) {
-        this.applicationService = null;
-    }
-
-    @Activate
-    private void activate() {
-        init(applicationService);
-
-        SwingUtilities.invokeLater(new Runnable() {
+        platform.queueOnViewThread(new Runnable() {
             @Override
             public void run() {
-                ThemeManager.getInstance().setLAF();
+                handler.initComponents(commonPaths);
+
+                workbenchView.setApplicationTitle(appInfo.getName());
+                workbenchView.setMenuHandler(handler);
+
+                // we want to start this service after it's main component
+                // has been created
+                platform.queueOnApplicationThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        handler.startService();
+                    }
+                });
             }
         });
+    }
+
+    MenuHandler createMenuHandler() {
+        return new MenuHandler();
+    }
+
+    public void setCommonPaths(CommonPaths commonPaths) {
+        this.commonPaths = commonPaths;
     }
 }
