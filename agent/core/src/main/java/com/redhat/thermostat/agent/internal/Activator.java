@@ -97,7 +97,9 @@ public class Activator implements BundleActivator {
             @Override
             public void dependenciesUnavailable() {
                 try {
-                    pool.shutdown();
+                    if (pool != null) {
+                        pool.shutdown();
+                    }
                 } catch (IOException e) {
                     logger.log(Level.WARNING, "Failed to clean up IPC server", e);
                 }
