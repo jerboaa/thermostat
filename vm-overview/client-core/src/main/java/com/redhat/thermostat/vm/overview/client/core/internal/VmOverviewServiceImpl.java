@@ -63,7 +63,7 @@ public class VmOverviewServiceImpl implements VmOverviewService {
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(
             VmRef ref) {
-        return new VmOverviewController(appSvc, vmInfoDAO, ref, viewProvider);
+        return new VmOverviewController(vmInfoDAO, ref, viewProvider);
     }
 
     @Override

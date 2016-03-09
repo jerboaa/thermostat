@@ -56,11 +56,15 @@ public abstract class VmOverviewView extends BasicView implements UIComponent {
 
     public abstract void setJavaVersion(String javaVersion);
 
-    public abstract void setVmNameAndVersion(String vmNameAndVersion);
+    public abstract void setVmName(String vmName);
+
+    public abstract void setVmVersion(String vmVersion);
 
     public abstract void setVmArguments(String vmArguments);
-    
-    public abstract void setUserID(String userID);
+
+    public abstract void setUsername(String username);
+
+    public abstract void setUserId(long userId);
 
 }
 

@@ -60,6 +60,7 @@ public enum LocaleResources {
     VM_INFO_LIBRARIES,
     VM_INFO_USER,
     VM_INFO_USER_UNKNOWN,
+    VM_INFO_USERNAME_UID,
     ;
 
     static final String RESOURCE_BUNDLE =

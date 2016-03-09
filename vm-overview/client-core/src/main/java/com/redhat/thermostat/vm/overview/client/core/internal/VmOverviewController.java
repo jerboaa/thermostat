@@ -38,18 +38,10 @@ package com.redhat.thermostat.vm.overview.client.core.internal;
 
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.NotImplementedException;
-import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -62,107 +54,50 @@ import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
 public class VmOverviewController implements InformationServiceController<VmRef> {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    static final DateFormat VM_RUNNING_TIME_FORMAT = Clock.DEFAULT_DATE_FORMAT;
 
     private final VmRef ref;
     private final VmInfoDAO dao;
-    private final DateFormat vmRunningTimeFormat;
-
-    private final Timer timer;
-
     private final VmOverviewView view;
 
-    public VmOverviewController(ApplicationService appSvc, VmInfoDAO vmDao, VmRef vmRef, VmOverviewViewProvider provider) {
+    public VmOverviewController(VmInfoDAO vmDao, VmRef vmRef, VmOverviewViewProvider provider) {
         this.ref = vmRef;
         this.view = provider.createView();
+        this.dao = vmDao;
 
-        dao = vmDao;
-        timer = appSvc.getTimerFactory().createTimer();
-
-        vmRunningTimeFormat = Clock.DEFAULT_DATE_FORMAT;
-
-        view.addActionListener(new ActionListener<Action>() {
-            @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
-                switch(actionEvent.getActionId()) {
-                    case HIDDEN:
-                        stop();
-                        break;
-                    case VISIBLE:
-                        start();
-                        break;
-                    default:
-                        throw new NotImplementedException("unknown event: " + actionEvent.getActionId());
-                }
-            }
-        });
-
-        timer.setAction(new Runnable() {
-
-            @Override
-            public void run() {
-                VmInfo info = dao.getVmInfo(ref);
-                view.setVmPid(((Integer) info.getVmPid()).toString());
-                long actualStartTime = info.getStartTimeStamp();
-                view.setVmStartTimeStamp(vmRunningTimeFormat.format(new Date(actualStartTime)));
-                long actualStopTime = info.getStopTimeStamp();
-                if (actualStopTime >= actualStartTime) {
-                    // Only show a stop time if we have actually stopped.
-                    view.setVmStopTimeStamp(vmRunningTimeFormat.format(new Date(actualStopTime)));
-                } else {
-                    view.setVmStopTimeStamp(translator.localize(LocaleResources.VM_INFO_RUNNING).getContents());
-                }
-                view.setJavaVersion(info.getJavaVersion());
-                view.setJavaHome(info.getJavaHome());
-                view.setMainClass(info.getMainClass());
-                view.setJavaCommandLine(info.getJavaCommandLine());
-                String actualVmName = info.getVmName();
-                String actualVmVersion = info.getVmVersion();
-                String actualVmInfo = info.getVmInfo();
-                view.setVmNameAndVersion(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
-                        actualVmName, actualVmVersion, actualVmInfo).getContents());
-                view.setVmArguments(info.getVmArguments());
-                long uid = info.getUid();
-                if (uid >= 0) {
-                    String user = String.valueOf(uid);
-                    String username = info.getUsername();
-                    if (username != null) {
-                        user += "(" + username + ")";
-                    }
-                    view.setUserID(user);
-                }
-                else {
-                    view.setUserID(translator.localize(LocaleResources.VM_INFO_USER_UNKNOWN).getContents());
-                }
-            }
-        });
-        timer.setInitialDelay(0);
-        timer.setDelay(5);
-        timer.setTimeUnit(TimeUnit.SECONDS);
-        timer.setSchedulingType(SchedulingType.FIXED_RATE);
+        updateView();
     }
 
-    private void start() {
-        timer.start();
-    }
-
-    private void stop() {
-        timer.stop();
+    void updateView() {
+        VmInfo info = dao.getVmInfo(ref);
+        view.setVmPid(((Integer) info.getVmPid()).toString());
+        long actualStartTime = info.getStartTimeStamp();
+        view.setVmStartTimeStamp(VM_RUNNING_TIME_FORMAT.format(new Date(actualStartTime)));
+        long actualStopTime = info.getStopTimeStamp();
+        if (actualStopTime >= actualStartTime) {
+            view.setVmStopTimeStamp(VM_RUNNING_TIME_FORMAT.format(new Date(actualStopTime)));
+        } else {
+            view.setVmStopTimeStamp(translator.localize(LocaleResources.VM_INFO_RUNNING).getContents());
+        }
+        view.setJavaVersion(info.getJavaVersion());
+        view.setJavaHome(info.getJavaHome());
+        view.setMainClass(info.getMainClass());
+        view.setJavaCommandLine(info.getJavaCommandLine());
+        view.setVmName(info.getVmName());
+        view.setVmVersion(info.getVmVersion());
+        view.setVmArguments(info.getVmArguments());
+        view.setUsername(info.getUsername());
+        view.setUserId(info.getUid());
     }
 
     public UIComponent getView() {
-        return (UIComponent) view;
+        return view;
     }
 
     @Override
     public LocalizedString getLocalizedName() {
         return translator.localize(LocaleResources.VM_INFO_TAB_OVERVIEW);
     }
-    
-    /*
-     * For testing purposes only.
-     */
-    DateFormat getDateFormat() {
-        return vmRunningTimeFormat;
-    }
+
 }
 

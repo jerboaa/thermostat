@@ -75,6 +75,9 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     private final ValueField vmArguments = new ValueField("");
     private final ValueField user = new ValueField("");
 
+    private final VmNameVersionHolder vmNameVersionHolder = new VmNameVersionHolder();
+    private final UserNameIdHolder userNameIdHolder = new UserNameIdHolder();
+
     public VmOverviewPanel() {
         super();
         initializePanel();
@@ -154,11 +157,22 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     }
 
     @Override
-    public void setVmNameAndVersion(final String newVmNameAndVersion) {
+    public void setVmName(final String vmName) {
+        vmNameVersionHolder.setVmName(vmName);
+        updateVmNameAndVersion();
+    }
+
+    @Override
+    public void setVmVersion(String vmVersion) {
+        vmNameVersionHolder.setVmVersion(vmVersion);
+        updateVmNameAndVersion();
+    }
+
+    private void updateVmNameAndVersion() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                vmNameAndVersion.setText(newVmNameAndVersion);
+                vmNameAndVersion.setText(vmNameVersionHolder.toString());
             }
         });
     }
@@ -174,11 +188,22 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     }
 
     @Override
-    public void setUserID(final String userID) {
+    public void setUsername(final String username) {
+        userNameIdHolder.setUsername(username);
+        updateUserNameAndId();
+    }
+
+    @Override
+    public void setUserId(long userId) {
+        userNameIdHolder.setUserId(userId);
+        updateUserNameAndId();
+    }
+
+    private void updateUserNameAndId() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                user.setText(userID);
+                user.setText(userNameIdHolder.toString());
             }
         });
     }
@@ -288,5 +313,50 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
 
         visiblePanel.setContent(container);
     }
+
+    private static class UserNameIdHolder {
+
+        private String username;
+        private long userId;
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public void setUserId(long userId) {
+            this.userId = userId;
+        }
+
+        @Override
+        public String toString() {
+            if (username == null || userId < 0) {
+                return translator.localize(LocaleResources.VM_INFO_USER_UNKNOWN).getContents();
+            } else {
+                return translator.localize(LocaleResources.VM_INFO_USERNAME_UID, username, Long.toString(userId)).getContents();
+            }
+        }
+    }
+
+    private static class VmNameVersionHolder {
+
+        private String vmName;
+        private String vmVersion;
+
+        public void setVmName(String vmName) {
+            this.vmName = vmName;
+        }
+
+        public void setVmVersion(String vmVersion) {
+            this.vmVersion = vmVersion;
+        }
+
+        @Override
+        public String toString() {
+            return translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
+                    vmName, vmVersion).getContents();
+        }
+
+    }
+
 }
 

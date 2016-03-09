@@ -36,9 +36,7 @@
 
 package com.redhat.thermostat.vm.overview.client.core.internal;
 
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -48,29 +46,21 @@ import java.text.DateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.core.views.BasicView.Action;
-import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewView;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewViewProvider;
-import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
 
 public class VmOverviewControllerTest {
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    
+
+    private static final DateFormat TIMESTAMP_FORMAT = VmOverviewController.VM_RUNNING_TIME_FORMAT;
+
     private static final String VM_ID = "vmId";
     private static final int VM_PID = 1337;
     private static final long START_TIME = 10000;
@@ -89,25 +79,11 @@ public class VmOverviewControllerTest {
     private static final long UID = 2000;
     private static final String USERNAME = "myUser";
 
-    private Timer timer;
-    private Runnable timerAction;
     private VmOverviewView view;
-    private ActionListener<VmOverviewView.Action> listener;
     private VmOverviewController controller;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void createController(VmInfo info) {
-        // Setup timer
-        timer = mock(Timer.class);
-        ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor
-                .forClass(Runnable.class);
-        doNothing().when(timer).setAction(timerActionCaptor.capture());
-
-        TimerFactory timerFactory = mock(TimerFactory.class);
-        when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationService appSvc = mock(ApplicationService.class);
-        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
-
         // Setup DAOs
         VmRef ref = mock(VmRef.class);
 
@@ -122,114 +98,80 @@ public class VmOverviewControllerTest {
         VmOverviewViewProvider viewProvider = mock(VmOverviewViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
 
-        controller = new VmOverviewController(appSvc, vmInfoDao, ref, viewProvider);
-
-        listener = listenerCaptor.getValue();
-        timerAction = timerActionCaptor.getValue();
+        controller = new VmOverviewController(vmInfoDao, ref, viewProvider);
     }
 
     private VmInfo createVmInfo() {
-        VmInfo vmInfo = new VmInfo("foo-agent", VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+        return new VmInfo("foo-agent", VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
                 JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
                 VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, UID, USERNAME);
-        return vmInfo;
     }
 
     @Test
     public void verifyViewIsUpdatedWithData() {
         createController(createVmInfo());
-        timerAction.run();
 
-        DateFormat timestampFormat = controller.getDateFormat();
         verify(view).setVmPid(eq(String.valueOf(VM_PID)));
-        verify(view).setVmStartTimeStamp(eq(timestampFormat.format(new Date(START_TIME))));
-        verify(view).setVmStopTimeStamp(eq(timestampFormat.format(new Date(STOP_TIME))));
+        verify(view).setVmStartTimeStamp(eq(TIMESTAMP_FORMAT.format(new Date(START_TIME))));
+        verify(view).setVmStopTimeStamp(eq(TIMESTAMP_FORMAT.format(new Date(STOP_TIME))));
         verify(view).setJavaVersion(eq(JAVA_VERSION));
         verify(view).setJavaHome(eq(JAVA_HOME));
         verify(view).setMainClass(eq(MAIN_CLASS));
         verify(view).setJavaCommandLine(eq(COMMAND_LINE));
-        
-        verify(view).setVmNameAndVersion(eq(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
-                        VM_NAME, VM_VERSION, VM_INFO).getContents()));
+
+        verify(view).setVmName(eq(VM_NAME));
+        verify(view).setVmVersion(eq(VM_VERSION));
         verify(view).setVmArguments(eq(VM_ARGS));
-        String userID = String.valueOf(UID) + "(" + USERNAME + ")";
-        verify(view).setUserID(eq(userID));
+        verify(view).setUsername(eq(USERNAME));
+        verify(view).setUserId(eq(UID));
     }
-    
+
     @Test
     public void verifyViewIsUpdatedWithDataNoUid() {
         VmInfo vmInfo = new VmInfo("foo-agent", VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
                 JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
                 VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, -1, null);
         createController(vmInfo);
-        
-        timerAction.run();
 
-        DateFormat timestampFormat = controller.getDateFormat();
         verify(view).setVmPid(eq(String.valueOf(VM_PID)));
-        verify(view).setVmStartTimeStamp(eq(timestampFormat.format(new Date(START_TIME))));
-        verify(view).setVmStopTimeStamp(eq(timestampFormat.format(new Date(STOP_TIME))));
+        verify(view).setVmStartTimeStamp(eq(TIMESTAMP_FORMAT.format(new Date(START_TIME))));
+        verify(view).setVmStopTimeStamp(eq(TIMESTAMP_FORMAT.format(new Date(STOP_TIME))));
         verify(view).setJavaVersion(eq(JAVA_VERSION));
         verify(view).setJavaHome(eq(JAVA_HOME));
         verify(view).setMainClass(eq(MAIN_CLASS));
         verify(view).setJavaCommandLine(eq(COMMAND_LINE));
-        
-        verify(view).setVmNameAndVersion(eq(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
-                        VM_NAME, VM_VERSION, VM_INFO).getContents()));
+
+        verify(view).setVmName(eq(VM_NAME));
+        verify(view).setVmVersion(eq(VM_VERSION));
         verify(view).setVmArguments(eq(VM_ARGS));
-        
+
         // Ensure user is unknown
-        verify(view).setUserID(eq(translator.localize(LocaleResources.VM_INFO_USER_UNKNOWN).getContents()));
+        verify(view).setUsername(eq((String) null));
+        verify(view).setUserId(eq(-1L));
     }
-    
+
     @Test
     public void verifyViewIsUpdatedWithDataNoUsername() {
         VmInfo vmInfo = new VmInfo("foo-agent", VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
                 JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
                 VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, UID, null);
         createController(vmInfo);
-        
-        timerAction.run();
 
-        DateFormat timestampFormat = controller.getDateFormat();
         verify(view).setVmPid(eq(String.valueOf(VM_PID)));
-        verify(view).setVmStartTimeStamp(eq(timestampFormat.format(new Date(START_TIME))));
-        verify(view).setVmStopTimeStamp(eq(timestampFormat.format(new Date(STOP_TIME))));
+        verify(view).setVmStartTimeStamp(eq(TIMESTAMP_FORMAT.format(new Date(START_TIME))));
+        verify(view).setVmStopTimeStamp(eq(TIMESTAMP_FORMAT.format(new Date(STOP_TIME))));
         verify(view).setJavaVersion(eq(JAVA_VERSION));
         verify(view).setJavaHome(eq(JAVA_HOME));
         verify(view).setMainClass(eq(MAIN_CLASS));
         verify(view).setJavaCommandLine(eq(COMMAND_LINE));
-        
-        verify(view).setVmNameAndVersion(eq(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
-                        VM_NAME, VM_VERSION, VM_INFO).getContents()));
+
+        verify(view).setVmName(eq(VM_NAME));
+        verify(view).setVmVersion(eq(VM_VERSION));
         verify(view).setVmArguments(eq(VM_ARGS));
-        
+
         // Ensure only user ID is shown
-        verify(view).setUserID(eq(String.valueOf(UID)));
-    }
-
-    @Test
-    public void verifyTimerIsSetUpCorrectly() {
-        createController(createVmInfo());
-        assertNotNull(timer);
-
-        verify(timer).setAction(isNotNull(Runnable.class));
-        verify(timer).setDelay(5);
-        verify(timer).setTimeUnit(TimeUnit.SECONDS);
-        verify(timer).setInitialDelay(0);
-        verify(timer).setSchedulingType(SchedulingType.FIXED_RATE);
-    }
-
-    @Test
-    public void verifyTimerRunsWhenNeeded() {
-        createController(createVmInfo());
-        listener.actionPerformed(new ActionEvent<>(view, Action.VISIBLE));
-
-        verify(timer).start();
-
-        listener.actionPerformed(new ActionEvent<>(view, Action.HIDDEN));
-
-        verify(timer).stop();
+        verify(view).setUsername(eq((String) null));
+        verify(view).setUserId(eq(UID));
     }
 
 }
