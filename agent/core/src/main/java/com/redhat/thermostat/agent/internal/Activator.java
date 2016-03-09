@@ -43,6 +43,9 @@ import java.util.logging.Logger;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
@@ -64,32 +67,63 @@ public class Activator implements BundleActivator {
     
     private static final Logger logger = LoggingUtils.getLogger(Activator.class);
     
+    private ServiceTracker<CommonPaths, CommonPaths> commonPathsTracker;
+    private MultipleServiceTracker agentIPCTracker;
     private MXBeanConnectionPoolImpl pool;
-    private MultipleServiceTracker tracker;
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] { CommonPaths.class, AgentIPCService.class };
-        tracker = new MultipleServiceTracker(context, deps, new Action() {
-            
+        
+        // No deps, register immediately
+        UserNameUtilImpl usernameUtil = new UserNameUtilImpl();
+        context.registerService(UserNameUtil.class, usernameUtil, null);
+        
+        // Track common paths separately and register storage credentials quickly
+        // We need to do this since otherwise no storage credentials will be
+        // available by the time they're used in DbService
+        commonPathsTracker = new ServiceTracker<>(context, CommonPaths.class, new ServiceTrackerCustomizer<CommonPaths, CommonPaths>() {
+
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
+            public CommonPaths addingService(ServiceReference<CommonPaths> ref) {
+                CommonPaths paths = context.getService(ref);
                 try {
-                    CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
-                    UserNameUtilImpl usernameUtil = new UserNameUtilImpl();
-                    context.registerService(UserNameUtil.class, usernameUtil, null);
-                    AgentIPCService ipcService = (AgentIPCService) services.get(AgentIPCService.class.getName());
-                    pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), usernameUtil, 
-                            ipcService, paths.getUserIPCConfigurationFile());
-                    context.registerService(MXBeanConnectionPool.class, pool, null);
-            
                     StorageCredentials creds = new FileStorageCredentials(paths.getUserAgentAuthConfigFile());
                     context.registerService(StorageCredentials.class, creds, null);
                     AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
                     VmBlacklistImpl blacklist = new VmBlacklistImpl();
                     blacklist.addVmFilter(new AgentProxyFilter());
                     context.registerService(VmBlacklist.class, blacklist, null);
-                } catch (InvalidConfigurationException | IOException e) {
+                } catch (InvalidConfigurationException e) {
+                    logger.log(Level.SEVERE, "Failed to start agent services", e);
+                }
+                return paths;
+            }
+
+            @Override
+            public void modifiedService(ServiceReference<CommonPaths> arg0, CommonPaths arg1) {
+                // nothing
+            }
+
+            @Override
+            public void removedService(ServiceReference<CommonPaths> ref, CommonPaths service) {
+                context.ungetService(ref);
+            }
+        });
+        
+        // Track IPC related deps separately from CommonPaths/StorageCredentials
+        Class<?>[] deps = new Class<?>[] { CommonPaths.class, AgentIPCService.class, UserNameUtil.class };
+        agentIPCTracker = new MultipleServiceTracker(context, deps, new Action() {
+            
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                AgentIPCService ipcService = (AgentIPCService) services.get(AgentIPCService.class.getName());
+                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+                UserNameUtil util = (UserNameUtil) services.get(UserNameUtil.class.getName());
+                try {
+                    pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), util, 
+                        ipcService, paths.getUserIPCConfigurationFile());
+                    context.registerService(MXBeanConnectionPool.class, pool, null);
+                } catch (IOException e) {
                     logger.log(Level.SEVERE, "Failed to start agent services", e);
                 }
             }
@@ -105,12 +139,14 @@ public class Activator implements BundleActivator {
                 }
             }
         });
-        tracker.open();
+        commonPathsTracker.open();
+        agentIPCTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        tracker.close();
+        commonPathsTracker.close();
+        agentIPCTracker.close();
     }
 
     // Testing hook.
