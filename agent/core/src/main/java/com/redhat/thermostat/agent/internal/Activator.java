@@ -111,7 +111,6 @@ public class Activator implements BundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         tracker.close();
-        pool = null;
     }
 
     // Testing hook.
