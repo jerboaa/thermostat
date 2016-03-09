@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -58,6 +57,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Stack;
 
@@ -78,8 +78,8 @@ import javax.swing.border.LineBorder;
 import com.redhat.thermostat.client.swing.ThermostatSwingCursors;
 
 /**
- * This class allows to represent a hierarchical data structure as a TreeMap.
- * It extends {@link JComponent} so it can be used like usual Swing objects.
+ * This class directs the representation of a tree model as a graphical TreeMap. It extends
+ * {@link JComponent} and as such can be used like a typical Swing object.
  *
  */
 public class TreeMapComponent extends JComponent {
@@ -87,9 +87,10 @@ public class TreeMapComponent extends JComponent {
     private static final long serialVersionUID = 1L;
 
     /**
-     * TreeMap's graphic root.
+     * The tile representing the root of the tree model.  Graphically, tiles representing the
+     * root's children appear layered atop (but within) the root tile.
      */
-    Comp mainComp;
+    private Tile rootTile;
 
     /**
      * Label Object to clone for faster initialization.
@@ -102,10 +103,10 @@ public class TreeMapComponent extends JComponent {
     private TreeMapNode tree;
 
     /**
-     * Horizontal and vertical padding for nested component.
+     * Horizontal and vertical padding for nested tiles.
      */
-    private final int X_PADDING = TreeProcessor.X_PADDING;
-    private final int Y_PADDING = TreeProcessor.Y_PADDING;
+    private static final int X_PADDING = 15;
+    private static final int Y_PADDING = 20;
 
     /**
      * Min size for rectangles' sides. rectangles having one or both sides less
@@ -157,10 +158,9 @@ public class TreeMapComponent extends JComponent {
     private Stack<TreeMapNode> zoomStack;
 
     /**
-     * This object stores the last clicked rectangle in the TreeMap, in order to 
-     * repaint it when another rectangle will be selected.
+     * The tile that was most recently clicked.
      */
-    private Comp lastClicked;
+    private Tile lastClicked;
     
     /**
      * List of objects observing this.
@@ -168,6 +168,19 @@ public class TreeMapComponent extends JComponent {
     private List<TreeMapObserver> observers;
 
     private ToolTipRenderer tooltipRenderer = new SimpleRenderer();
+
+    static final Color[] colors = {
+            Color.decode("#FACED2"), // red
+            Color.decode("#B9D6FF"), // blue
+            Color.decode("#E5E5E5"), // grey
+            Color.decode("#FFE7C7"), // orange
+            Color.decode("#ABEBEE"), // aqua
+            Color.decode("#E4D1FC"), // purple
+            Color.decode("#FFFFFF"), // white
+            Color.decode("#CDF9D4")  // green
+    };
+
+    public static final Color START_COLOR = colors[0];
 
     public TreeMapComponent() {
         this(null);
@@ -185,11 +198,15 @@ public class TreeMapComponent extends JComponent {
 
         if (tree != null) {
             this.zoomStack.push(this.tree);
-            processAndDrawTreeMap(this.tree);
+            generateTreeMap(this.tree);
         }
 
         addResizeListener(this);
         addKeyBindings(this);
+    }
+
+    Tile getRootTile() {
+        return rootTile;
     }
 
     /**
@@ -204,7 +221,7 @@ public class TreeMapComponent extends JComponent {
         this.tree = Objects.requireNonNull(tree);
         this.zoomStack.clear();
         this.zoomStack.push(this.tree);
-        processAndDrawTreeMap(this.tree);
+        generateTreeMap(this.tree);
     }
 
     public void setToolTipRenderer(ToolTipRenderer renderer) {
@@ -212,74 +229,168 @@ public class TreeMapComponent extends JComponent {
     }
 
     /**
-     * This method is responsible for the TreeMap drawing process.
-     * @param tree the tree to represent as TreeMap.
+     * This method generates a hierarchy of tiles that represent the tree model rooted at
+     * {@param root}.
+     *
+     * Package-private for testing.
      */
-    private void drawTreeMap(TreeMapNode tree) {
-        // draw root
-        drawMainComp(tree);
-        setBorderStyle(borderStyle);
-        
-        // draw subtrees nested in children 
-        for (TreeMapNode child : tree.getChildren()) {
-            drawSubTree(child, mainComp);
+    void generateTreeMap(TreeMapNode root) {
+        tree = Objects.requireNonNull(root);
+
+        if (getSize().width == 0 || getSize().height == 0) {
+            return;
         }
-        // setup this component
+
+        removeAll();
+
+        Rectangle2D.Double region = new Rectangle2D.Double(0, 0, getSize().width, getSize().height);
+        createRootTile(region);
+        setBorderStyle(borderStyle);
+
+        processSubtree(tree, region, rootTile);
         prepareGUI();
     }
 
-    /**
-     * This method prepares the layout for this component. 
-     */
-    private void prepareGUI() {
-        setLayout(new BorderLayout());
-        setBounds(mainComp.getBounds());
-        setBorder(null);
-        add(mainComp, BorderLayout.CENTER);
-        revalidate();
-        repaint();
+    private void createRootTile(Rectangle2D.Double rectangle) {
+        rootTile = new Tile();
+        rootTile.setLayout(null);
+        rootTile.setBounds(rectangle.getBounds());
+        rootTile.setNode(tree);
+        rootTile.setColor(colors[tree.getDepth() % colors.length]);
+        rootTile.setToolTipText(
+                Objects.requireNonNull(this.tooltipRenderer).render(tree));
+        cachedLabel = new Label(TITLE + tree.getLabel());
+        addLabelIfPossible(TITLE + tree.getLabel(), rootTile);
     }
 
     /**
-     * This method prepares the main component which is the parent object where 
-     * sub components will be placed. 
-     * @param tree the tree's root used to prepare the main component.
+     * This method, with the aid of {@link #processNode(TreeMapNode, Rectangle2D.Double, Color,
+     * Tile)}, generates (if appropriate) the tile representing each node in the subtree rooted at
+     * {@param root}.
+     *
+     * @param root root of the subtree to be processed.
+     * @param rectangle the squarified rectangle corresponding to {@param root}.
+     * @param rootTile the tile that represents {@param root}.
      */
-    private void drawMainComp(TreeMapNode tree) {
-        mainComp = new Comp();
-        mainComp.setLayout(null);
-        mainComp.setBounds(tree.getRectangle().getBounds());        
-        mainComp.setNode(tree);
-        cachedLabel = new Label(TITLE + tree.getLabel());        
-        addLabelIfPossible(TITLE + tree.getLabel(), mainComp);
-    }
+    private void processSubtree(TreeMapNode root, Rectangle2D.Double rectangle, Tile rootTile) {
 
-    /**
-     * Create a TreeMapComp from the given node. The component is not 
-     * instantiated as a new component but is cloned from an existing one, in 
-     * order to improve performance.
-     * 
-     * @param node the node to represent as a component.
-     * @return the component representing the given node.
-     */
-    private Comp renderizeNode(TreeMapNode node) {
-        // if the rectangle's node is too small to be viewed, don't draw it.
-        if (node.getRectangle().getWidth() <= MIN_SIDE || 
-                node.getRectangle().getHeight() <= MIN_SIDE) {
-            return null;
+        // generate squarified rectangles corresponding to the children of the root node
+        LinkedList<TreeMapNode> elements = new LinkedList<>();
+        elements.addAll(Objects.requireNonNull(root.getChildren()));
+        Map<TreeMapNode, Rectangle2D.Double> squarifiedMap =
+                getSquarifiedRectangles(elements, rectangle);
+
+        // any children will all have the same color
+        Color nextColor = getNextColor(rootTile.getColor());
+
+        for (int i = 0; i < elements.size(); i++) {
+            TreeMapNode child = elements.get(i);
+
+            if (rectangleHasDrawableSides(squarifiedMap.get(child))) {
+                // attempt to add a tile for this node
+                processNode(child, squarifiedMap.get(child), nextColor, rootTile);
+            }
         }
+    }
 
-        Comp comp = new Comp(mainComp);
-        comp.setBounds(node.getRectangle().getBounds());
+    /**
+     * This method attempts to create a tile to represent the supplied {@param node}.  If
+     * successful, it calls the {@link #processSubtree(TreeMapNode, Rectangle2D.Double, Tile)}
+     * method to continue generating the TreeMap for the subtree rooted at {@param node}.
+     *
+     * @param node to be represented with a tile, if appropriate.
+     * @param rectangle the squarified rectangle corresponding to {@param node}.
+     * @param color the color of the tile.
+     * @param parentTile the parent to which a tile, if created, is added.
+     */
+    private void processNode(TreeMapNode node, Rectangle2D.Double rectangle, Color color,
+                             Tile parentTile) {
 
-        return comp;
+        Tile tile = addTileIfPossible(rectangle, node.getLabel(), parentTile);
+
+        if (tile != null) {
+            tile.setNode(node);
+            tile.setColor(color);
+            tile.setToolTipText(
+                    Objects.requireNonNull(this.tooltipRenderer).render(node));
+            processSubtree(node, rectangle, tile);
+        }
+    }
+
+    private Map<TreeMapNode, Rectangle2D.Double> getSquarifiedRectangles(
+            LinkedList<TreeMapNode> elements, Rectangle2D.Double region) {
+
+        TreeMapNode.sort(elements);
+        SquarifiedTreeMap algorithm = new SquarifiedTreeMap(getAvailableRegion(region), elements);
+        return algorithm.squarify();
+    }
+
+    /**
+     * Package-private for testing.
+     */
+    static Color getNextColor(Color currentColor) {
+        if (currentColor != null) {
+            for (int i = 0; i < colors.length; i++) {
+                if (currentColor.equals(colors[i])) {
+                    return colors[(i + 1) % colors.length];
+                }
+            }
+        }
+        return START_COLOR;
+    }
+
+    /**
+     * Package-private for testing.
+     */
+    static Rectangle2D.Double getAvailableRegion(Rectangle2D.Double parentRegion) {
+        Rectangle2D.Double subRegion = new Rectangle2D.Double();
+        subRegion.setRect(parentRegion);
+
+        subRegion.width = Math.max(0, (subRegion.width - 2 * X_PADDING));
+        subRegion.height = Math.max(0, (subRegion.height - 1.5 * Y_PADDING));
+        return subRegion;
+    }
+
+    private boolean rectangleHasDrawableSides(Rectangle2D.Double rectangle) {
+        if (rectangle.getWidth() <= MIN_SIDE || rectangle.getHeight() <= MIN_SIDE) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * This method adds a tile to the specified parent if there is enough space, and attempts
+     * to label it.
+     *
+     * @param rectangle the squarified rectangle used to set the bounds of a new tile.
+     * @param label the String with which to label the created tile.
+     * @param parentTile the parent tile to which the new tile will be added.
+     * @return the new tile if it was created, else null.
+     */
+    private Tile addTileIfPossible(Rectangle2D.Double rectangle, String label, Container parentTile) {
+        if (parentTile.getWidth() > rectangle.getWidth() + X_PADDING &&
+                parentTile.getHeight() > rectangle.getHeight() + Y_PADDING) {
+
+            Tile tile = new Tile(rootTile);
+            tile.setBounds(rectangle.getBounds());
+            addLabelIfPossible(TITLE + label, tile);
+
+            Point loc = tile.getLocation();
+            loc.x += X_PADDING;
+            loc.y += Y_PADDING;
+            tile.setLocation(loc);
+
+            parentTile.add(tile);
+            return tile;
+        }
+        return null;
     }
 
     /**
      * This method checks if the given container has enough space to instantiate
-     * a Label in it. If yes, a Label is cloned from an existing one, in order 
+     * a Label in it. If yes, a Label is cloned from an existing one, in order
      * to improve performance. If not, it exits.
-     * 
+     *
      * @param s the label text.
      * @param cont the parent container which will contain the new label.
      * @return the cloned label.
@@ -291,7 +402,7 @@ public class TreeMapComponent extends JComponent {
         int componentW = cont.getSize().width;
         int componentH = cont.getSize().height;
         // get the rectangle associated to the area needed for the label's text
-        Rectangle fontArea = FONT.getStringBounds(s, 
+        Rectangle fontArea = FONT.getStringBounds(s,
                 new FontRenderContext(FONT.getTransform(),
                         false, false)).getBounds();
 
@@ -307,24 +418,19 @@ public class TreeMapComponent extends JComponent {
     }
 
     /**
-     * Draw the whole {@param tree}'s subtree inside the given component.
-     * @param tree the tree to draw
-     * @param parent the component in which build the tree.
+     * This method prepares the layout for this component.
      */
-    private void drawSubTree(TreeMapNode tree, JComponent parent) {
-        Comp comp = addCompIfPossible(tree, parent);
-
-        // if space was enough to draw a component, try to draw its children
-        if (comp != null) {
-            comp.setNode(tree);
-            for (TreeMapNode child : tree.getChildren()) {
-                drawSubTree(child, comp);
-            }
-        }
+    private void prepareGUI() {
+        setLayout(new BorderLayout());
+        setBounds(rootTile.getBounds());
+        setBorder(null);
+        add(rootTile, BorderLayout.CENTER);
+        revalidate();
+        repaint();
     }
 
     /**
-     * Create and add to the {@link Container} given in input a 
+     * Create and add to the {@link Container} given in input a
      * {@link java.awt.event.ComponentListener} listener.
      * @param container the container in to assign the listener.
      */
@@ -336,10 +442,10 @@ public class TreeMapComponent extends JComponent {
                     Dimension newDim = container.getSize();
 
                     if (isChangedSize(newDim)) {
-                        processAndDrawTreeMap(Objects.requireNonNull(tree));
+                        generateTreeMap(Objects.requireNonNull(tree));
                     }
-                } 
-            }            
+                }
+            }
         };
         container.addComponentListener(adapter);
     }
@@ -381,61 +487,6 @@ public class TreeMapComponent extends JComponent {
         });
     }
 
-    /**
-     * This method checks if the given container has enough space to instantiate
-     * a TreeMapComp object in it. If yes, a Label is cloned from an existing 
-     * one, in order to improve performance. If not, it exits.
-     * 
-     * @param node the node to draw and add to the given container.
-     * @param cont the parent container which will contain the new component.
-     * @return true if the component was created and added, else false.
-     */
-    private Comp addCompIfPossible(TreeMapNode node, Container cont) {
-        Rectangle2D rect = node.getRectangle();
-        // if the ndoe's rectangle is smaller than the container, it is added
-        if (cont.getWidth() > rect.getWidth() + X_PADDING && 
-                cont.getHeight() > rect.getHeight() + Y_PADDING) {
-
-            Comp toReturn = renderizeNode(node);
-            if (toReturn == null) {
-                return null;
-            }
-            addLabelIfPossible(TITLE + node.getLabel(), toReturn);
-
-            // leaves some space from the parent's origin location
-            Point loc = toReturn.getLocation();
-            loc.x += X_PADDING;
-            loc.y += Y_PADDING;
-            toReturn.setLocation(loc);
-
-            cont.add(toReturn);
-            return toReturn;
-        }
-        return null;
-    }
-
-    /**
-     * Package-private for testing only.
-     */
-    void processAndDrawTreeMap(TreeMapNode root) {
-        tree = Objects.requireNonNull(root);
-
-        if (getSize().width == 0 || getSize().height == 0) {
-            return;
-        }
-
-        Rectangle2D.Double region = tree.getRectangle();
-        // give to the root node the size of this object so it can be recalculated
-        region.width = getSize().width;
-        region.height = getSize().height;
-
-        // recalculate the tree
-        TreeProcessor.processTreeMap(tree, region);
-
-        removeAll();
-        drawTreeMap(tree);
-    }
-
     boolean isZoomInEnabled(TreeMapNode node) {
         return !(node == null
                 || node.equals(Objects.requireNonNull(this.tree))
@@ -445,7 +496,7 @@ public class TreeMapComponent extends JComponent {
     public void zoomIn(TreeMapNode node) {
         if (isZoomInEnabled(node)) {
             fillZoomStack(node.getAncestors());
-            processAndDrawTreeMap(node);
+            generateTreeMap(node);
             notifyZoomInToObservers(zoomStack.peek());
         } 
     }
@@ -461,7 +512,7 @@ public class TreeMapComponent extends JComponent {
         // if the actual root element is not the tree's original root
         if (zoomStack.size() > 1) {
             zoomStack.pop();
-            processAndDrawTreeMap(zoomStack.peek());
+            generateTreeMap(zoomStack.peek());
             notifyZoomOutToObservers();
         }
     }
@@ -472,7 +523,7 @@ public class TreeMapComponent extends JComponent {
     public void zoomFull() {
         if (zoomStack.size() > 1) {
             clearZoomCallsStack();
-            processAndDrawTreeMap(zoomStack.peek());
+            generateTreeMap(zoomStack.peek());
             notifyZoomFullToObservers();
         }
     }
@@ -610,29 +661,10 @@ public class TreeMapComponent extends JComponent {
             }
         }
         this.borderStyle = newBorderStyle;
-        applyBorderToSubtree(mainComp, border);
+        rootTile.setBorder(border);
     }
     
-    /**
-     * Traverse recursively the tree from the given component applying to it 
-     * the default border.
-     * @param comp the subtree's root from which apply the border style.
-     */
-    private void applyBorderToSubtree(Comp comp, Border border) {
-        comp.setBorder(border);
-        Component[] children = comp.getComponents();
-        for (int i = 0; i < children.length; i++) {
-            if (children[i] instanceof Comp) {
-                applyBorderToSubtree((Comp) children[i], border);
-            }
-        }
-    }
-
-    /**
-     * Return the last clicked component inside the TreeMap.
-     * @return the last clicked {@Comp} object.
-     */
-    public Comp getClickedComponent() {
+    public Tile getClickedTile() {
         return lastClicked;
     }
 
@@ -656,10 +688,10 @@ public class TreeMapComponent extends JComponent {
     }    
 
     /**
-     * This class provides some action listeners that allow to select it, performing
-     * zoom operations for the treemap.
+     * This class describes a graphical representation for a {@link TreeMapNode} and enables
+     * zooming in the TreeMap.
      */
-    class Comp extends JComponent {
+    class Tile extends JComponent {
 
         private static final long serialVersionUID = 1L;
 
@@ -676,16 +708,16 @@ public class TreeMapComponent extends JComponent {
         /**
          * Reference to this.
          */
-        private Comp thisComponent;
+        private Tile thisComponent;
 
-        public Comp() {
+        public Tile() {
             super();
             thisComponent = this;
             addClickListener(this);
             addMouseListener(this);
         }
 
-        public Comp(Comp other) {
+        public Tile(Tile other) {
             this();
             this.setBounds(other.getBounds());
             this.setBorder(other.getBorder());
@@ -695,8 +727,6 @@ public class TreeMapComponent extends JComponent {
 
         public void setNode(TreeMapNode node) {
             this.node = node;
-            this.color = node.getColor();
-            this.setToolTipText(Objects.requireNonNull(TreeMapComponent.this.tooltipRenderer).render(node));
         }
         
         public TreeMapNode getNode() {
@@ -732,7 +762,7 @@ public class TreeMapComponent extends JComponent {
                     TreeMapComponent.this.requestFocusInWindow();
                     // one left click select the rectangle
                     if (SwingUtilities.isLeftMouseButton(e)) {
-                        selectComp();
+                        selectTile();
                     }
                     // double left click to zoom in (on non-leaf nodes only)
                     if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
@@ -752,9 +782,10 @@ public class TreeMapComponent extends JComponent {
         }
 
         /**
-         * Add a mouse motion listener to this component. This allows for the mouse cursor to be changed into a
-         * magnifying glass icon when the cursor enters a zoomable component, and back to a default cursor when it
-         * exits a zoomable component.
+         * Add a mouse motion listener to this component. This allows for the mouse cursor to be
+         * changed into a magnifying glass icon when the cursor enters a zoomable component, and
+         * back to a default cursor when it exits a zoomable component.
+         *
          * @param component the component which will have the mouse motion listener.
          */
         private void addMouseListener(final JComponent component) {
@@ -789,10 +820,10 @@ public class TreeMapComponent extends JComponent {
         }
 
         /**
-         * This method gives a darker color to this component and restore the
-         * original color to the last selected component.
+         * This method darkens the color of this component and restores the previously selected
+         * component to its nominal shade.
          */
-        private void selectComp() {
+        private void selectTile() {
             if (lastClicked != null) {
                 if (!lastClicked.getNode().isLeaf()) {
                     lastClicked.setColor(lastClicked.getColor().brighter());

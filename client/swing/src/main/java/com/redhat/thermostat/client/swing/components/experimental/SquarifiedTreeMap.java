@@ -39,8 +39,10 @@ package com.redhat.thermostat.client.swing.components.experimental;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -101,14 +103,10 @@ public class SquarifiedTreeMap {
     private double initialArea;
 
     /**
-     * List of the calculated rectangles.
+     * Maps nodes to their representative rectangles, for all nodes in rows that have been
+     * finalized.
      */
-    private List<TreeMapNode> squarifiedNodes;
-
-    /**
-     * List of the current rectangles under processing.
-     */
-    private List<TreeMapNode> currentRow;
+    private Map<TreeMapNode, Rectangle2D.Double> squarifiedMap;
 
     /**
      * Coordinates on which to draw.
@@ -116,24 +114,31 @@ public class SquarifiedTreeMap {
     private double lastX = 0;
     private double lastY = 0;
 
-    public SquarifiedTreeMap(Rectangle2D.Double bounds, List<TreeMapNode> list) {
+    /**
+     * Performs setup to facilitate the generation of squarified rectangles to represent the
+     * nodes in {@param elements}.
+     *
+     * @param region the region that is available for placing rectangles.
+     * @param elements the list of nodes to represent, which must be sorted in descending order
+     *                 by weight
+     */
+    public SquarifiedTreeMap(Rectangle2D.Double region, LinkedList<TreeMapNode> elements) {
         this.elements = new LinkedList<>();
-        this.elements.addAll(Objects.requireNonNull(list));
+        this.elements.addAll(Objects.requireNonNull(elements));
         this.totalRealWeight = getRealSum(elements);
-        this.container = Objects.requireNonNull(bounds);
-        this.squarifiedNodes = new ArrayList<>();
-        this.currentRow = new ArrayList<>();
+        this.container = Objects.requireNonNull(region);
+        this.squarifiedMap = new HashMap<>();
     }
 
     /**
      * This method prepares for and initiates the process of determining rectangles to represent
      * nodes.
      *
-     * @return a list of nodes, each containing their respective rectangle.
+     * @return a map that associates each node with the rectangle that represents it.
      */
-    public List<TreeMapNode> squarify() {
+    public Map<TreeMapNode, Rectangle2D.Double> squarify() {
         if (elements.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
         initialArea = container.getWidth() * container.getHeight();
@@ -143,11 +148,9 @@ public class SquarifiedTreeMap {
         lastY = 0;
         updateDirection();
 
-        TreeMapNode.sort(elements);
-
         List<TreeMapNode> row = new ArrayList<>();
         squarifyHelper(elements, row, 0, getPrincipalSide());
-        return getSquarifiedNodes();
+        return squarifiedMap;
     }
 
     /**
@@ -204,12 +207,8 @@ public class SquarifiedTreeMap {
         }
     }
 
-    /**
-     * Return the rectangles list.
-     * @return a list of rectangles.
-     */
-    public List<TreeMapNode> getSquarifiedNodes() {
-        return squarifiedNodes;
+    public Map<TreeMapNode, Rectangle2D.Double> getSquarifiedMap() {
+        return squarifiedMap;
     }
 
     /**
@@ -249,20 +248,20 @@ public class SquarifiedTreeMap {
             invertDirection();
         }
 
+        Rectangle2D.Double reference = null;
         for (TreeMapNode node: row) {
             Rectangle2D.Double r = createRectangle(rowArea, node.getRealWeight() / getRealSum(row));
-            node.setRectangle(r);
-            
+
             // recalculate coordinates to draw next rectangle
             updateXY(r);
 
-            // add the node to the current list of rectangles in processing
-            currentRow.add(node);
+            squarifiedMap.put(node, r);
+
+            if (reference == null) {
+               reference = r;
+            }
         }
-        // recalculate the area in which new rectangles will be drawn and
-        // reinitialize the current list of node to represent.
-        reduceAvailableArea();
-        newRow();
+        reduceAvailableArea(reference);
     }
     
     /**
@@ -360,31 +359,22 @@ public class SquarifiedTreeMap {
     }
 
     /**
-     * Reduce the size of the available rectangle. Use it after the current 
-     * row's closure.
+     * Determine the region that will be available upon finalization of this row.
      */
-    private void reduceAvailableArea() {
+    private void reduceAvailableArea(Rectangle2D.Double reference) {
         if (drawingDir == DIRECTION.LEFT_RIGHT) {
             // all rectangles inside the row have the same height
-            availableRegion.height -= currentRow.get(0).getRectangle().height;
-            availableRegion.y = lastY + currentRow.get(0).getRectangle().height;
-            availableRegion.x = currentRow.get(0).getRectangle().x;
+            availableRegion.height -= reference.height;
+            availableRegion.y = lastY + reference.height;
+            availableRegion.x = reference.x;
         } else {
             // all rectangles inside the row have the same width
-            availableRegion.width -= currentRow.get(0).getRectangle().width;
-            availableRegion.x = lastX + currentRow.get(0).getRectangle().width;
-            availableRegion.y = currentRow.get(0).getRectangle().y;
+            availableRegion.width -= reference.width;
+            availableRegion.x = lastX + reference.width;
+            availableRegion.y = reference.y;
         }
         updateDirection();
         initializeXY(availableRegion);
-    }
-    
-    /**
-     * Close the current row and initialize a new one.
-     */
-    private void newRow() {
-        squarifiedNodes.addAll(currentRow);
-        currentRow = new ArrayList<>();
     }
 
     /**

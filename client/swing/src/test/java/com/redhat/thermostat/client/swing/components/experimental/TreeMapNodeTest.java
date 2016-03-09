@@ -39,11 +39,8 @@ package com.redhat.thermostat.client.swing.components.experimental;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.awt.Color;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -125,51 +122,11 @@ public class TreeMapNodeTest {
     }
 
     @Test
-    public final void testGetSetRectangle() {        
-        Rectangle2D.Double r = new Rectangle2D.Double(5, 5, 5, 5);
-        node.setRectangle(r);
-        assertEquals(r, node.getRectangle());
-
-        node.setRectangle(null);
-        boolean catched = false;
-        try {
-            node.getRectangle();
-        } catch(RuntimeException e) {
-            catched = true;
-        }
-        assertTrue(catched);
-    }
-
-
-    @Test
     public final void testGetSetRealWeight() {
         node = new TreeMapNode(null, 5);
         assertEquals(5.0, node.getRealWeight(), DELTA);
         node.setRealWeight(8);
         assertEquals(8.0, node.getRealWeight(), DELTA);
-    }
-
-    @Test
-    public final void testIsDrawable() {
-        Rectangle2D.Double r = new Rectangle2D.Double(5, 5, 5, 5);
-        node.setRectangle(r);
-        assertTrue(node.isDrawable());
-
-        r.setRect(0,  0,  0.5f, 0.5f);
-        assertFalse(node.isDrawable());
-
-        r.setRect(0,  0,  5f, 0.5f);
-        assertFalse(node.isDrawable());
-
-        r.setRect(0,  0,  0.5f, 5f);
-        assertFalse(node.isDrawable());
-    }
-
-    @Test
-    public final void testGetSetColor() {
-        assertNull(node.getColor());
-        node.setColor(Color.black);
-        assertEquals(Color.black, node.getColor());
     }
 
     @Test
@@ -230,22 +187,6 @@ public class TreeMapNodeTest {
     public final void testToString() {
         assertNotNull(node.toString());
     }
-    
-    
-    @Test
-    public final void testGetNextColor() {
-        assertNull(node.getColor());
-        assertTrue(node.getNextColor().equals(node.START_COLOR));
-        
-        Color start = node.START_COLOR;
-        node.setColor(start);
-
-        for (int i = 0; i < TreeMapNode.colors.length; i++) {
-            assertEquals(TreeMapNode.colors[i], node.getColor());
-            node.setColor(node.getNextColor());
-        }
-    }
-    
     
     @Test
     public final void testGetAncestors() {

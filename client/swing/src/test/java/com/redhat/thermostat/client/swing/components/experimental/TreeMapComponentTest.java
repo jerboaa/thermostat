@@ -41,17 +41,26 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Rectangle2D;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import javax.swing.JButton;
@@ -68,6 +77,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TreeMapComponentTest {
+
+    private static final double BASE = 2.0;
+    private static final double DELTA = 0.01;
+    private static final double SOME_WEIGHT = 1.0;
+    private static final int DEFAULT_DIMENSION = 1024;
+    private static final int SMALLER_DIMENSION = 512;
 
     private TreeMapComponent treeMap;
     private static TreeMapNode tree;
@@ -156,28 +171,319 @@ public class TreeMapComponentTest {
     }
 
     @Test
-    public final void testProcessAndDrawTreeMap() throws InvocationTargetException,
-            InterruptedException {
+    public final void testGenerateTreeMapFailsWithNullRoot()
+            throws InvocationTargetException, InterruptedException {
+
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
-                try {
-                    treeMap = new TreeMapComponent();
-                    treeMap.processAndDrawTreeMap(node1);
-                } catch (NullPointerException e) {
-                    Assert.fail("Didn't expect exception.");
-                }
-
                 boolean caught = false;
                 try {
                     treeMap = new TreeMapComponent();
-                    treeMap.processAndDrawTreeMap(null);
+                    treeMap.generateTreeMap(null);
                 } catch (NullPointerException e) {
                     caught = true;
                 }
                 assertTrue(caught);
             }
         });
+    }
+
+    @Test
+    public final void testGenerateTreeMapRepresentsTreeModelAccurately()
+            throws InvocationTargetException, InterruptedException{
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                treeMap = new TreeMapComponent();
+                TreeMapNode root = generateSimpleTree();
+                treeMap.setSize(DEFAULT_DIMENSION, DEFAULT_DIMENSION);
+
+                // generateTreeMap is called when the model is set
+                treeMap.setModel(root);
+
+                TreeMapComponent.Tile rootTile = Objects.requireNonNull(treeMap.getRootTile());
+
+                // verify that the TreeMap represents the tree model accurately
+                TreeMapNode tileRoot = Objects.requireNonNull(rootTile.getNode());
+                assertEquals(root, tileRoot);
+                verifyTileHierarchy(root, rootTile);
+
+                // check that the generated tiles are reasonably sized
+                checkTileAreas(rootTile);
+            }
+        });
+    }
+
+    private void verifyTileHierarchy(TreeMapNode subRoot, TreeMapComponent.Tile tile) {
+        int childCount = 0;
+        for (Component component : Arrays.asList(tile.getComponents())) {
+            if (component instanceof TreeMapComponent.Tile) {
+                childCount++;
+            }
+        }
+        assertEquals(subRoot.getChildren().size(), childCount);
+
+        for (TreeMapNode childNode : subRoot.getChildren()) {
+            boolean found = false;
+            for (Component component : Arrays.asList(tile.getComponents())) {
+                if (component instanceof TreeMapComponent.Tile) {
+                    TreeMapNode compNode = ((TreeMapComponent.Tile) component).getNode();
+                    if (compNode == childNode) {
+                        found = true;
+                        verifyTileHierarchy(childNode, (TreeMapComponent.Tile) component);
+                    }
+                }
+            }
+            assertTrue(found);
+        }
+    }
+
+    private void checkTileAreas(TreeMapComponent.Tile tile) {
+        double areaSum = 0;
+        double weightSum = 0;
+        boolean foundTile = false;
+        for (Component component : Arrays.asList(tile.getComponents())) {
+            if (component instanceof TreeMapComponent.Tile) {
+                foundTile = true;
+                TreeMapComponent.Tile childTile = ((TreeMapComponent.Tile) component);
+                areaSum += childTile.getWidth() * childTile.getHeight();
+                TreeMapNode childNode = childTile.getNode();
+                weightSum += childNode.getRealWeight();
+            }
+        }
+
+        if (!foundTile) {
+            return;
+        }
+
+        for (Component component : Arrays.asList(tile.getComponents())) {
+            if (component instanceof TreeMapComponent.Tile) {
+                TreeMapComponent.Tile childTile = ((TreeMapComponent.Tile) component);
+                double childArea = childTile.getWidth() * childTile.getHeight();
+                TreeMapNode childNode = childTile.getNode();
+                double childWeight = childNode.getRealWeight();
+
+                assertEquals(childWeight / weightSum, childArea / areaSum, DELTA);
+
+                checkTileAreas(childTile);
+            }
+        }
+
+
+        Rectangle2D.Double parentRegion = new Rectangle2D.Double(0, 0, tile.getWidth(), tile.getHeight());
+        Rectangle2D.Double availableRegion = TreeMapComponent.getAvailableRegion(parentRegion);
+        double availableArea = availableRegion.getWidth() * availableRegion.getHeight();
+
+        // this fraction must be close to 1 but may not be exactly
+        assertEquals(1, availableArea / areaSum, DELTA);
+    }
+
+    @Test
+    public final void testTreeMapTileColoring()
+            throws InvocationTargetException, InterruptedException {
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                treeMap = new TreeMapComponent();
+                List<TreeMapNode> path = generateDeepTree(TreeMapComponent.colors.length + 1);
+                TreeMapNode root = path.get(0);
+                treeMap.setSize(DEFAULT_DIMENSION, DEFAULT_DIMENSION);
+
+                // generateTreeMap is called when the model is set
+                treeMap.setModel(root);
+
+                TreeMapComponent.Tile rootTile = Objects.requireNonNull(treeMap.getRootTile());
+                Color rootColor = Objects.requireNonNull(rootTile.getColor());
+                assertEquals(TreeMapComponent.START_COLOR, rootColor);
+
+                checkTileColorSetup(rootTile, rootColor);
+                checkTileColorConsistency(path, rootTile);
+            }
+        });
+    }
+
+    private void checkTileColorSetup(TreeMapComponent.Tile tile, Color parentColor) {
+        Color expectedColor = TreeMapComponent.getNextColor(parentColor);
+        for (Component component : Arrays.asList(tile.getComponents())) {
+            if (component instanceof TreeMapComponent.Tile) {
+                TreeMapComponent.Tile childTile = ((TreeMapComponent.Tile) component);
+                assertEquals(expectedColor, childTile.getColor());
+                checkTileColorSetup(childTile, expectedColor);
+            }
+        }
+    }
+
+    private void checkTileColorConsistency(List<TreeMapNode> path, TreeMapComponent.Tile rootTile) {
+        if (path.isEmpty()) {
+            throw new AssertionError("Path is empty.");
+        }
+
+        // don't need the root
+        path.remove(0);
+        assertEquals(TreeMapComponent.colors[0], rootTile.getColor());
+        for (Component component : Arrays.asList(rootTile.getComponents())) {
+            if (component instanceof TreeMapComponent.Tile) {
+                TreeMapComponent.Tile childTile = (TreeMapComponent.Tile) component;
+
+                if (childTile.getNode() == path.get(0)) {
+                    // found the deep branch
+                    checkTileColorConsistencyHelper(path, childTile);
+                }
+            }
+        }
+    }
+
+    private void checkTileColorConsistencyHelper(List<TreeMapNode> path, TreeMapComponent.Tile tile) {
+        if (path.isEmpty()) {
+            return;
+        }
+
+        treeMap.generateTreeMap(path.get(0));
+        assertNotSame(tile, treeMap.getRootTile());
+        assertEquals(tile.getColor(), treeMap.getRootTile().getColor());
+        for (Component component : Arrays.asList(tile.getComponents())) {
+            if (component instanceof TreeMapComponent.Tile) {
+                TreeMapComponent.Tile childTile = (TreeMapComponent.Tile) component;
+                path.remove(0);
+                checkTileColorConsistencyHelper(path, childTile);
+            }
+        }
+    }
+
+    private List<TreeMapNode> generateDeepTree(int depth) {
+        /*
+         * This tree is used as a test case.  The long branch down the right has a variable depth
+         * to accommodate potential changes in the number of colors available.  Weights in
+         * parentheses.
+         *
+         *                         ______________(16)______________
+         *                        /                |               \
+         *               _______(12)_______       (3)              (1)
+         *              /                  \                         \
+         *       _____(6)______            (6)                       (1)
+         *      /      |       \                                       .
+         *    (2)     (1)      (3)                                      .
+         *                                                               .
+         */
+        TreeMapNode root = generateSimpleTree();
+        root.setRealWeight(root.getRealWeight() + 1);
+
+        List<TreeMapNode> path = new ArrayList<>();
+        path.add(root);
+
+        TreeMapNode parent = root;
+        for (int i = 0; i < (depth - 1); i++) {
+            TreeMapNode child = new TreeMapNode(1);
+            parent.addChild(child);
+            path.add(child);
+            parent = child;
+        }
+
+        return path;
+    }
+
+    private TreeMapNode generateSimpleTree() {
+        /*
+         * This tree is used as a test case.  Weights in parentheses.
+         *
+         *                         __________(15)_________
+         *                        /                       \
+         *               _______(12)_______               (3)
+         *              /                  \
+         *       _____(6)______            (6)
+         *      /      |       \
+         *    (2)     (1)      (3)
+         *
+         */
+
+        TreeMapNode root = new TreeMapNode(15);
+        root.addChild(new TreeMapNode(3));
+
+        TreeMapNode child = new TreeMapNode(12);
+        root.addChild(child);
+        child.addChild(new TreeMapNode(6));
+
+        TreeMapNode grandchild = new TreeMapNode(6);
+        child.addChild(grandchild);
+
+        grandchild.addChild(new TreeMapNode(2));
+        grandchild.addChild(new TreeMapNode(1));
+        grandchild.addChild(new TreeMapNode(3));
+
+        return root;
+    }
+
+    @Test
+    public final void testTileAreasWhenResizing() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                final int numSiblings = 5;
+
+                TreeMapNode root = new TreeMapNode(SOME_WEIGHT);
+                generateSiblingTree(root, numSiblings);
+
+                treeMap.setSize(DEFAULT_DIMENSION, DEFAULT_DIMENSION);
+                // generateTreeMap is called when the model is set
+                treeMap.setModel(root);
+                checkSiblingAreaRatios(treeMap.getRootTile(), numSiblings);
+
+                // now resize smaller
+                treeMap.setSize(SMALLER_DIMENSION, SMALLER_DIMENSION);
+                treeMap.generateTreeMap(root);
+                checkSiblingAreaRatios(treeMap.getRootTile(), numSiblings);
+
+                // now resize back to original size
+                treeMap.setSize(DEFAULT_DIMENSION, DEFAULT_DIMENSION);
+                treeMap.generateTreeMap(root);
+                // check that resizing did not result in a significant loss of precision
+                checkSiblingAreaRatios(treeMap.getRootTile(), numSiblings);
+            }
+        });
+    }
+
+    private void generateSiblingTree(TreeMapNode root, int numSiblings) {
+        assertTrue(numSiblings > 1);
+        root.addChild(new TreeMapNode(1.0)); //this is not a random weight
+        for (int i = 0; i < (numSiblings - 1); i++) {
+            root.addChild(new TreeMapNode(Math.pow(BASE, i)));
+        }
+    }
+
+    private void checkSiblingAreaRatios(TreeMapComponent.Tile rootTile, int numSiblings) {
+        List<TreeMapComponent.Tile> children = new ArrayList<>();
+        for (Component component : Arrays.asList(rootTile.getComponents())) {
+            if (component instanceof TreeMapComponent.Tile) {
+                children.add((TreeMapComponent.Tile) component);
+            }
+        }
+
+        assertEquals(numSiblings, children.size());
+        sortDescending(children);
+
+        Rectangle refBounds = children.get(0).getBounds();
+        double refArea = refBounds.getHeight() * refBounds.getWidth();
+
+        for (int i = 1; i < numSiblings - 1; i++) {
+            Rectangle currBounds = children.get(i).getBounds();
+            double currArea = currBounds.getHeight() * currBounds.getWidth();
+            // check that the ratio between areas is approximately 2 (which is the BASE)
+            assertEquals(BASE, refArea / currArea, DELTA);
+            refArea = currArea;
+        }
+    }
+
+    private void sortDescending(List<TreeMapComponent.Tile> tiles) {
+        Comparator<TreeMapComponent.Tile> c = new Comparator<TreeMapComponent.Tile>() {
+            @Override
+            public int compare(TreeMapComponent.Tile o1, TreeMapComponent.Tile o2) {
+                return -(Double.compare(o1.getNode().getRealWeight(), o2.getNode().getRealWeight()));
+            }
+        };
+        Collections.sort(tiles, c);
     }
 
     @Test
@@ -368,8 +674,8 @@ public class TreeMapComponentTest {
     @Test
     public final void testSetNode() {
         try {
-            TreeMapComponent.Comp comp = treeMap.new Comp();
-            comp.setNode(node1);
+            TreeMapComponent.Tile tile = treeMap.new Tile();
+            tile.setNode(node1);
         } catch (NullPointerException e) {
             Assert.fail("Didn't expect exception.");
         }
@@ -442,7 +748,7 @@ public class TreeMapComponentTest {
                 assertThat(results.zoomedIn, is(false));
                 assertThat(results.zoomedOut, is(true));
                 assertThat(results.zoomedFull, is(false));
-                assertThat(treeMap.getClickedComponent(), is(equalTo(null)));
+                assertThat(treeMap.getClickedTile(), is(equalTo(null)));
             }
         });
     }
@@ -457,7 +763,7 @@ public class TreeMapComponentTest {
                 assertThat(results.zoomedIn, is(false));
                 assertThat(results.zoomedOut, is(true));
                 assertThat(results.zoomedFull, is(false));
-                assertThat(treeMap.getClickedComponent(), is(equalTo(null)));
+                assertThat(treeMap.getClickedTile(), is(equalTo(null)));
             }
         });
     }
@@ -472,7 +778,7 @@ public class TreeMapComponentTest {
                 assertThat(results.zoomedIn, is(false));
                 assertThat(results.zoomedOut, is(false));
                 assertThat(results.zoomedFull, is(true));
-                assertThat(treeMap.getClickedComponent(), is(equalTo(null)));
+                assertThat(treeMap.getClickedTile(), is(equalTo(null)));
             }
         });
     }
@@ -496,7 +802,7 @@ public class TreeMapComponentTest {
                     assertThat(results.zoomedIn, is(false));
                     assertThat(results.zoomedOut, is(false));
                     assertThat(results.zoomedFull, is(false));
-                    assertThat(treeMap.getClickedComponent(), is(equalTo(null)));
+                    assertThat(treeMap.getClickedTile(), is(equalTo(null)));
                 }
             }
         );

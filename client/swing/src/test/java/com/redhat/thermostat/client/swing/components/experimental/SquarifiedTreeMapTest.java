@@ -37,82 +37,89 @@
 package com.redhat.thermostat.client.swing.components.experimental;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Using eclEmma tool has been proved that this test covers 100% 
- * of {@link SquarifiedTreeMap} code and also 90% of {@link TreeMapBuilder} code.
- */
 public class SquarifiedTreeMapTest {
-    
+
+    private static final double REGION_WIDTH = 10.0;
+    private static final double REGION_HEIGHT = 5.0;
+    private static final double BASE = 2.0;
+    private static final double DELTA = 0.01;
+
     private SquarifiedTreeMap algorithm;
-    Rectangle2D.Double bounds;
-    List<TreeMapNode> list;
+    Rectangle2D.Double region;
+    LinkedList<TreeMapNode> elements;
 
     @Before
     public void setUp() throws Exception {
-        bounds = new Rectangle2D.Double(0, 0, 10, 5);
-        list = new ArrayList<>();
+        region = new Rectangle2D.Double(0, 0, REGION_WIDTH, REGION_HEIGHT);
+        elements = new LinkedList<>();
     }
 
     @Test
-    public final void testSquarifiedTreeMap() {
+    public final void testSquarifiedTreeMapWithInvalidParameters() {
         //check every parameters combinations
-        boolean catched = false;
+        boolean caught = false;
         try {
             algorithm = new SquarifiedTreeMap(null, null);
         } catch(NullPointerException e) {
-            catched = true;
+            caught = true;
         }
-        assertTrue(catched);
-        catched = false;
+        assertTrue(caught);
+        caught = false;
         
         try {
-            algorithm = new SquarifiedTreeMap(bounds, null);
+            algorithm = new SquarifiedTreeMap(region, null);
         } catch(NullPointerException e) {
-            catched = true;
+            caught = true;
         }
-        assertTrue(catched);
-        catched = false;
+        assertTrue(caught);
+        caught = false;
         
         try {
-            algorithm = new SquarifiedTreeMap(null, list);
+            algorithm = new SquarifiedTreeMap(null, elements);
         } catch(NullPointerException e) {
-            catched = true;
+            caught = true;
         }
-        assertTrue(catched);
+        assertTrue(caught);
     }
-    
+
     @Test
-    public final void testSquarify() {
-        // test using an empty node list
-        algorithm = new SquarifiedTreeMap(bounds, new ArrayList<TreeMapNode>());
-        assertEquals(0, algorithm.squarify().size());
-        
-        // test using a correct list
-        int n = 10;
-        for (int i = 0; i < n; i++) {
-            list.add(new TreeMapNode(i+1));
+    public final void testSquarifyWithoutData() {
+        algorithm = new SquarifiedTreeMap(region, new LinkedList<TreeMapNode>());
+        assertTrue(algorithm.squarify().isEmpty());
+    }
+
+    @Test
+    public final void testSquarifyWithData() {
+        int numSiblings = 5;
+        for (int i = (numSiblings - 1); i >= 0; i--) {
+            elements.add(new TreeMapNode(Math.pow(BASE, i)));
         }
-        // process the list
-        algorithm = new SquarifiedTreeMap(bounds, list);
-        list = algorithm.squarify();
-        
-        assertEquals(n, list.size());
-        
-        for (int i = 0; i < n; i++) {
-            // node has been processed
-            assertNotNull(list.get(i).getRectangle());
+
+        algorithm = new SquarifiedTreeMap(region, elements);
+        Map<TreeMapNode, Rectangle2D.Double> squarifiedMap = algorithm.squarify();
+        assertEquals(numSiblings, squarifiedMap.size());
+
+        double refArea = squarifiedMap.get(elements.get(0)).getHeight() *
+                squarifiedMap.get(elements.get(0)).getWidth();
+        double totArea = refArea;
+        for (int i = 1; i < numSiblings; i++) {
+            double currArea = squarifiedMap.get(elements.get(i)).getHeight() *
+                    squarifiedMap.get(elements.get(i)).getWidth();
+            totArea += currArea;
+            // check that the ratio between areas is 2 (which is the BASE)
+            assertEquals(BASE, refArea / currArea, DELTA);
+            refArea = currArea;
         }
         
-        assertEquals(list, algorithm.getSquarifiedNodes());
+        assertEquals(region.getWidth() * region.getHeight(), totArea, DELTA);
     }
 }

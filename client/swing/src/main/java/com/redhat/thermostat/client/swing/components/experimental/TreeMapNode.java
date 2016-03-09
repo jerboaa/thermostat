@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
-import java.awt.Color;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,22 +45,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class provide a tree recursive implementation used in
- * {@link SquarifiedTreeMap}. It contains a reference to the parent node and to
- * a node list, which represent the node's children. It is also 
- * possible to store generic information inside the node using a {@link Map} 
- * object. Furthermore, the main property of this class is the chance to have a
- * weight for the node and associate to it a {@link Rectangle2D.Double} object.
- * 
- * <p>When an instance of this class is created, it will automatically be 
+ * This class represents a single tree node, and serves as the fundamental unit of a TreeMap
+ * model.  Each node is labelled by an arbitrary String and has an associated weight.
+ *
+ * <p>When an instance of this class is created, it will automatically be
  * assigned a unique id.
  * 
- * <p>By default, this class' comparator is based on the nodes' weight.
- * 
- * <p>A static Quick Sort algorithm implementation is also provided by this 
- * class.
- * 
- * @see Rectangle2D.Double
+ * <p>A static Quick Sort algorithm implementation is also provided by this class.
  */
 public class TreeMapNode {
         
@@ -70,11 +59,6 @@ public class TreeMapNode {
      * Counter for assign unique id to nodes.
      */
     private static int idCounter = 0;
-
-    /**
-     * The rectangle which will graphically represent this node.
-     */
-    private Rectangle2D.Double rectangle;
 
     /**
      * This node's id.
@@ -105,27 +89,6 @@ public class TreeMapNode {
      * The node's weight.
      */
     private double realWeight;
-    
-    /**
-     * The color of this node.
-     */
-    private Color color;
-    
-    /**
-     * Colors available on which iterate
-     */
-    static final Color[] colors = {
-            Color.decode("#FACED2"), // red
-            Color.decode("#B9D6FF"), // blue
-            Color.decode("#E5E5E5"), // grey
-            Color.decode("#FFE7C7"), // orange
-            Color.decode("#ABEBEE"), // aqua
-            Color.decode("#E4D1FC"), // purple
-            Color.decode("#FFFFFF"), // white
-            Color.decode("#CDF9D4")  // green
-    };
-    
-    public final Color START_COLOR = colors[0];
     
     /**
      * 
@@ -159,7 +122,6 @@ public class TreeMapNode {
         this.label = label;
         this.parent = null;
         this.children = new ArrayList<TreeMapNode>();
-        this.rectangle = new Rectangle2D.Double();
         this.info = new HashMap<String, String>();
         this.realWeight = realWeight;
     }
@@ -269,13 +231,9 @@ public class TreeMapNode {
     }
 
     @Override
-    /**
-     * Return a {@link String}  representing this object.
-     */
     public String toString() {
         return  getClass().getSimpleName() + " [" + "label = " + getLabel() + 
-                "; weight =" + getRealWeight() + 
-                "; rectangle=" + rectangle.getBounds() + "]";
+                "; weight =" + getRealWeight() + "]";
     }
 
     /**
@@ -286,70 +244,12 @@ public class TreeMapNode {
         return this.realWeight;
     }
     
-    
     /**
      * Use this method to set the real weight of this node.
      */
     public void setRealWeight(double w) {
         this.realWeight = w;
     }
-
-    /**
-     * Return the rectangle representing this object.
-     * @return a {@link Rectangle2D.Double} object.
-     */
-    public Rectangle2D.Double getRectangle() {
-        if (this.rectangle == null) {
-            throw new RuntimeException();
-        }
-        return this.rectangle;
-    }
-
-    /**
-     * Set a new rectangle for this object.
-     * @param rectangle the new rectangle that represent this node.
-     */
-    public void setRectangle(Rectangle2D.Double rectangle) {
-        this.rectangle = rectangle;
-    }    
-
-    /**
-     * This method assess if the rectangle associated to this node is drawable,
-     * which means that its sides are greater than 1.
-     * @return true if the rectangle associated to this node  is drawable, 
-     * else false.
-     */
-    public boolean isDrawable() {
-        if (rectangle.width >= 1 && rectangle.height >= 1) {
-            return true;
-        }
-        return false;
-    }
-    
-    public Color getColor() {
-        return color;
-    }
-
-    public void setColor(Color color) {
-        this.color = color;
-    }
-    
-    /**
-     * Returns this node's next color.
-     * @return the color which came after this node's color in the color list.
-     * If this node has no color assigned then the START_COLOR is returned.
-     */
-    public Color getNextColor() {
-        if (this.color != null) {
-            for (int i = 0; i < colors.length; i++) {
-                if (this.color.equals(colors[i])) {
-                    return colors[(i + 1) % colors.length];
-                }
-            }
-        }
-        return START_COLOR;
-    }
-
 
     public int getDepth() {
         if (this.parent == null) {
