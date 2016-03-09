@@ -59,6 +59,7 @@ import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnvironmentChangeListener;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.utils.keyring.Keyring;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -85,6 +86,7 @@ public class Activator implements BundleActivator {
             CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
             Keyring keyring = (Keyring) services.get(Keyring.class.getName());
             ClientPreferences prefs = new ClientPreferences(paths);
+            SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class.getName());
 
             String commandsDir = new File(paths.getSystemConfigurationDirectory(), "commands").toString();
             CommandInfoSource builtInCommandSource =
@@ -111,7 +113,7 @@ public class Activator implements BundleActivator {
 
             // Register Launcher service since FrameworkProvider is waiting for it blockingly.
             LauncherImpl launcher = new LauncherImpl(context, new CommandContextFactory(context),
-                    bundleService, commands, env, prefs, keyring, paths);
+                    bundleService, commands, env, prefs, keyring, paths, sslConf);
             launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
             bundleManReg = context.registerService(BundleManager.class, bundleService, null);
             ExitStatus exitStatus = new ExitStatusImpl(ExitStatus.EXIT_SUCCESS);
@@ -148,6 +150,7 @@ public class Activator implements BundleActivator {
         Class[] launcherDeps = new Class[]{
             Keyring.class,
             CommonPaths.class,
+            SSLConfiguration.class,
         };
         registry = new CommandRegistryImpl(context);
         RegisterLauncherAction registerLauncherAction = new RegisterLauncherAction(context, environment);

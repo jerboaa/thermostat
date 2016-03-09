@@ -58,6 +58,7 @@ import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewP
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -88,6 +89,7 @@ public class ThermostatActivatorTest {
         Keyring keyring = mock(Keyring.class);
         CommonPaths paths = mock(CommonPaths.class);
         ApplicationService appService = mock(ApplicationService.class);
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
 
         StubBundleContext ctx = new StubBundleContext();
 
@@ -98,6 +100,7 @@ public class ThermostatActivatorTest {
         ctx.registerService(Keyring.class, keyring, null);
         ctx.registerService(CommonPaths.class, paths, null);
         ctx.registerService(ApplicationService.class, appService, null);
+        ctx.registerService(SSLConfiguration.class, sslConf, null);
 
         assertTrue(ctx.isServiceRegistered(Command.class.getName(), GUIClientCommand.class));
 

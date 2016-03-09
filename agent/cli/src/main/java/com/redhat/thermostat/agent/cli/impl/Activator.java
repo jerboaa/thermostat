@@ -40,12 +40,17 @@ import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.WriterID;
 
 public class Activator implements BundleActivator {
@@ -53,6 +58,7 @@ public class Activator implements BundleActivator {
     private CommandRegistry reg;
     private AgentApplication agentApplication;
     private MultipleServiceTracker tracker;
+    private ServiceTracker<StorageCredentials, StorageCredentials> credsTracker;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -60,7 +66,8 @@ public class Activator implements BundleActivator {
         
         Class<?>[] deps = new Class<?>[] {
                 ExitStatus.class,
-                WriterID.class // agent app uses it
+                WriterID.class,
+                SSLConfiguration.class
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
@@ -68,7 +75,8 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 ExitStatus exitStatus = (ExitStatus) services.get(ExitStatus.class.getName());
                 WriterID writerID = (WriterID) services.get(WriterID.class.getName());
-                agentApplication = new AgentApplication(context, exitStatus, writerID);
+                SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class.getName());
+                agentApplication = new AgentApplication(context, exitStatus, writerID, sslConf);
                 reg.registerCommand("service", new ServiceCommand(context));
                 reg.registerCommand("agent", agentApplication);
             }
@@ -79,7 +87,34 @@ public class Activator implements BundleActivator {
                 reg.unregisterCommands();
             }
         });
+        credsTracker = new ServiceTracker<StorageCredentials, StorageCredentials>(
+                context, StorageCredentials.class, new ServiceTrackerCustomizer<StorageCredentials, StorageCredentials>() {
+
+            @Override
+            public StorageCredentials addingService(ServiceReference<StorageCredentials> ref) {
+                StorageCredentials creds = context.getService(ref);
+                agentApplication.setStorageCredentials(creds);
+                return creds;
+            }
+
+            @Override
+            public void modifiedService(ServiceReference<StorageCredentials> ref,
+                    StorageCredentials creds) {
+                // nothing
+            }
+
+            @Override
+            public void removedService(ServiceReference<StorageCredentials> ref,
+                    StorageCredentials arg1) {
+                if (agentApplication != null) {
+                    agentApplication.setStorageCredentials(null); // remove creds
+                }
+                context.ungetService(ref);
+            }
+            
+        });
         tracker.open();
+        credsTracker.open();
     }
 
     @Override
@@ -90,6 +125,7 @@ public class Activator implements BundleActivator {
             agentApplication.shutdown(ExitStatus.EXIT_SUCCESS);
         }
         reg.unregisterCommands();
+        credsTracker.close();
         tracker.close();
     }
 }

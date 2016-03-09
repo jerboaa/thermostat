@@ -74,13 +74,16 @@ import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -124,7 +127,7 @@ public class AgentApplicationTest {
         dbServiceFactory = mock(DbServiceFactory.class);
         dbService = mock(DbService.class);
         writerId = mock(WriterID.class);
-        when(dbServiceFactory.createDbService(anyString())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(anyString(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
 
         exitStatus = mock(ExitStatus.class);
     }
@@ -141,7 +144,8 @@ public class AgentApplicationTest {
 
     @Test
     public void testAgentStartup() throws CommandException, InterruptedException {
-        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, configCreator, dbServiceFactory);
+        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, mock(SSLConfiguration.class), new DependencyServices(), configCreator, dbServiceFactory);
+        agent.setStorageCredentials(mock(StorageCredentials.class));
         final CountDownLatch latch = new CountDownLatch(1);
         final CommandException[] ce = new CommandException[1];
         final long timeoutMillis = 5000L;
@@ -160,7 +164,8 @@ public class AgentApplicationTest {
     
     @Test
     public void testAgentStartupConnectFailure() throws CommandException, InterruptedException {
-        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, configCreator, dbServiceFactory);
+        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, mock(SSLConfiguration.class), new DependencyServices(), configCreator, dbServiceFactory);
+        agent.setStorageCredentials(mock(StorageCredentials.class));
         
         Arguments args = mock(Arguments.class);
         final CommandContext commandContext = mock(CommandContext.class);
@@ -195,7 +200,8 @@ public class AgentApplicationTest {
                 .withArguments(any(BundleContext.class))
                 .thenThrow(InvalidSyntaxException.class);
         final AgentApplication agent = new AgentApplication(context,
-                exitStatus, writerId, configCreator, dbServiceFactory);
+                exitStatus, writerId,  mock(SSLConfiguration.class),
+                mock(DependencyServices.class), configCreator, dbServiceFactory);
         try {
             agent.startAgent(null, null, null);
         } catch (RuntimeException e) {
@@ -219,7 +225,8 @@ public class AgentApplicationTest {
                 any(AgentInfoDAO.class), any(BackendInfoDAO.class), any(WriterID.class)).thenReturn(mockAgent);
         doThrow(LaunchException.class).when(mockAgent).start();
         final AgentApplication agent = new AgentApplication(context,
-                exitStatus, writerId, configCreator, dbServiceFactory);
+                exitStatus, writerId,  mock(SSLConfiguration.class),
+                mock(DependencyServices.class), configCreator, dbServiceFactory);
         try {
             agent.startAgent(null, null, null);
         } catch (RuntimeException e) {

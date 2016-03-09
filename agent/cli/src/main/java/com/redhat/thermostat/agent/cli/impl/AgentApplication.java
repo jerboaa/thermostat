@@ -50,6 +50,7 @@ import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
 import com.redhat.thermostat.agent.Agent;
+import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentOptionParser;
@@ -64,15 +65,19 @@ import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -94,6 +99,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private static final String SIGTERM_NAME = "TERM";
 
     private static final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     private final BundleContext bundleContext;
     private final ConfigurationCreator configurationCreator;
@@ -106,20 +112,24 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private MultipleServiceTracker daoTracker;
     private final ExitStatus exitStatus;
     private final WriterID writerId;
+    private final SSLConfiguration sslConf;
+    private final DependencyServices depServices;
     private CountDownLatch shutdownLatch;
 
     private CustomSignalHandler handler;
 
-    public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId) {
-        this(bundleContext, exitStatus, writerId, new ConfigurationCreator(), new DbServiceFactory());
+    public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId, SSLConfiguration sslConf) {
+        this(bundleContext, exitStatus, writerId, sslConf, new DependencyServices(), new ConfigurationCreator(), new DbServiceFactory());
     }
 
-    AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId, ConfigurationCreator configurationCreator, DbServiceFactory dbServiceFactory) {
+    AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId, SSLConfiguration sslConf, DependencyServices depServices, ConfigurationCreator configurationCreator, DbServiceFactory dbServiceFactory) {
         this.bundleContext = bundleContext;
         this.configurationCreator = configurationCreator;
         this.dbServiceFactory = dbServiceFactory;
         this.exitStatus = exitStatus;
         this.writerId = writerId;
+        this.sslConf = sslConf;
+        this.depServices = depServices;
     }
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
@@ -128,13 +138,13 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void runAgent(CommandContext ctx) {
+    private void runAgent(CommandContext ctx) throws CommandException {
         long startTime = System.currentTimeMillis();
         configuration.setStartTime(startTime);
         
-
+        StorageCredentials creds = getServiceOrExit(StorageCredentials.class);
         final DbService dbService = dbServiceFactory.createDbService(
-                configuration.getDBConnectionString());
+                configuration.getDBConnectionString(), creds, sslConf);
         
         shutdownLatch = new CountDownLatch(1);
         
@@ -211,6 +221,22 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             // Ensure proper shutdown if interrupted
             handler.handle(new Signal(SIGINT_NAME));
             return;
+        }
+    }
+
+    private StorageCredentials getServiceOrExit(Class<StorageCredentials> clazz) throws CommandException {
+        StorageCredentials creds = depServices.getService(clazz);
+        if (creds == null) {
+            throw new CommandException(t.localize(LocaleResources.STORAGE_CREDS_UNAVAILABLE));
+        }
+        return creds;
+    }
+    
+    void setStorageCredentials(StorageCredentials creds) {
+        if (creds == null) {
+            depServices.removeService(StorageCredentials.class);
+        } else {
+            depServices.addService(StorageCredentials.class, creds);
         }
     }
 

@@ -52,7 +52,6 @@ import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -74,6 +73,7 @@ import com.redhat.thermostat.launcher.InteractiveStorageCredentials;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.ConnectionException;
@@ -114,17 +114,19 @@ public class LauncherImpl implements Launcher {
 
     private final ClientPreferences prefs;
     private final Keyring keyring;
+    private final SSLConfiguration sslConf;
 
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
-            CommandInfoSource infoSource, CurrentEnvironment env, ClientPreferences prefs, Keyring keyring, CommonPaths paths) {
+            CommandInfoSource infoSource, CurrentEnvironment env, ClientPreferences prefs, Keyring keyring,
+            CommonPaths paths, SSLConfiguration sslConf) {
         this(context, cmdCtxFactory, registry, infoSource, new CommandSource(context), env,
-                new DbServiceFactory(), new Version(), prefs, keyring, paths);
+                new DbServiceFactory(), new Version(), prefs, keyring, paths, sslConf);
     }
 
     LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
             CommandInfoSource commandInfoSource, CommandSource commandSource,
             CurrentEnvironment currentEnvironment, DbServiceFactory dbServiceFactory, Version version,
-            ClientPreferences prefs, Keyring keyring, CommonPaths paths) {
+            ClientPreferences prefs, Keyring keyring, CommonPaths paths, SSLConfiguration sslConf) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
@@ -136,6 +138,7 @@ public class LauncherImpl implements Launcher {
         this.prefs = prefs;
         this.keyring = keyring;
         this.paths = Objects.requireNonNull(paths);
+        this.sslConf = sslConf;
 
         // We log this in the constructor so as to not log it multiple times when a command invokes
         // run() multiple times. This works since it is a singleton service.
@@ -405,10 +408,9 @@ public class LauncherImpl implements Launcher {
                     dbUrl = prefs.getConnectionUrl();
                 }
                 StorageCredentials creds = new InteractiveStorageCredentials(prefs, keyring, dbUrl, ctx.getConsole());
-                ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
                 try {
                     // this may throw storage exception
-                    DbService service = dbServiceFactory.createDbService(dbUrl);
+                    DbService service = dbServiceFactory.createDbService(dbUrl, creds, sslConf);
                     // This registers the DbService if all goes well
                     service.connect();
                 } catch (StorageException ex) {
@@ -418,8 +420,6 @@ public class LauncherImpl implements Launcher {
                     String message = ( error == null ? "" : " Error: " + error );
                     logger.log(Level.SEVERE, "Could not connect to: " + dbUrl + message, ex);
                     throw new CommandException(t.localize(LocaleResources.LAUNCHER_CONNECTION_ERROR, dbUrl), ex);
-                } finally {
-                    credsReg.unregister();
                 }
             }
         }

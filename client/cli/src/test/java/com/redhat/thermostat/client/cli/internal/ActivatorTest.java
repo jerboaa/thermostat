@@ -57,6 +57,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -85,6 +86,7 @@ public class ActivatorTest {
         ctx.registerService(CommonPaths.class, paths, null);
         ConfigurationInfoSource configurationInfoSource = mock(ConfigurationInfoSource.class);
         ctx.registerService(ConfigurationInfoSource.class, configurationInfoSource, null);
+        ctx.registerService(SSLConfiguration.class, mock(SSLConfiguration.class), null);
         
         Activator activator = new Activator();
         
@@ -100,7 +102,7 @@ public class ActivatorTest {
 
         activator.stop(ctx);
 
-        assertEquals(3, ctx.getAllServices().size());
+        assertEquals(4, ctx.getAllServices().size());
     }
 
     @Test
@@ -128,6 +130,7 @@ public class ActivatorTest {
         when(userConfig.isFile()).thenReturn(false);
         when(paths.getUserClientConfigurationFile()).thenReturn(userConfig);
         ctx.registerService(CommonPaths.class, paths, null);
+        ctx.registerService(SSLConfiguration.class, mock(SSLConfiguration.class), null);
 
         assertCommandIsRegistered(ctx, "connect", ConnectCommand.class);
 

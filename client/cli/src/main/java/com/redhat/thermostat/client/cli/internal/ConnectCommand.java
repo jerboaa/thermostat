@@ -39,15 +39,14 @@ package com.redhat.thermostat.client.cli.internal;
 import java.util.Objects;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.launcher.InteractiveStorageCredentials;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
@@ -70,27 +69,29 @@ public class ConnectCommand extends AbstractCommand {
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private ClientPreferences prefs;
-    private Keyring keyring;
+    private final ClientPreferences prefs;
+    private final Keyring keyring;
+    private final SSLConfiguration sslConf;
     private BundleContext context;
     private DbServiceFactory dbServiceFactory;
 
-    public ConnectCommand(ClientPreferences prefs, Keyring keyring) {
-        this(FrameworkUtil.getBundle(ConnectCommand.class).getBundleContext(), new DbServiceFactory(), prefs, keyring);
+    public ConnectCommand(BundleContext context, ClientPreferences prefs, Keyring keyring, SSLConfiguration sslConf) {
+        this(context, new DbServiceFactory(), prefs, keyring, sslConf);
     }
     
-    ConnectCommand(BundleContext context, DbServiceFactory dbServiceFactory, ClientPreferences prefs, Keyring keyring) {
+    ConnectCommand(BundleContext context, DbServiceFactory dbServiceFactory, ClientPreferences prefs, Keyring keyring, SSLConfiguration sslConf) {
         this.context = context;
         this.dbServiceFactory = dbServiceFactory;
         this.prefs = prefs;
         this.keyring = keyring;
+        this.sslConf = sslConf;
     }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        ServiceReference dbServiceRef = context.getServiceReference(DbService.class);
+        ServiceReference<DbService> dbServiceRef = context.getServiceReference(DbService.class);
         if (dbServiceRef != null) {
-            DbService service = (DbService) context.getService(dbServiceRef);
+            DbService service = context.getService(dbServiceRef);
             String connectionUrl = service.getConnectionUrl();
             context.ungetService(dbServiceRef);
             // Already connected, bail out
@@ -100,11 +101,10 @@ public class ConnectCommand extends AbstractCommand {
         // This argument is considered "required" so option parsing should mean this is impossible.
         Objects.requireNonNull(dbUrl);
         StorageCredentials creds = new InteractiveStorageCredentials(prefs, keyring, dbUrl, ctx.getConsole());
-        ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
 
         try {
             // may throw StorageException if storage url is not supported
-            DbService service = dbServiceFactory.createDbService(dbUrl);
+            DbService service = dbServiceFactory.createDbService(dbUrl, creds, sslConf);
             service.connect();
         } catch (StorageException ex) {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_INVALID_STORAGE, dbUrl));
@@ -112,8 +112,6 @@ public class ConnectCommand extends AbstractCommand {
             String error = ex.getMessage();
             String message = ( error == null ? "" : " " + translator.localize(LocaleResources.COMMAND_CONNECT_ERROR, error).getContents() );
             throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_FAILED_TO_CONNECT, dbUrl + message), ex);
-        } finally {
-            credsReg.unregister();
         }
     }
 

@@ -41,6 +41,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -86,9 +87,11 @@ import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -148,6 +151,7 @@ public class LauncherImplTest {
 
     private CurrentEnvironment environment;
     private CommonPaths paths;
+    private SSLConfiguration sslConf;
 
     @SuppressWarnings("unchecked")
     @Before
@@ -280,8 +284,9 @@ public class LauncherImplTest {
 
         when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
         when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
+        sslConf = mock(SSLConfiguration.class);
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths);
+                environment, dbServiceFactory, version, prefs, keyring, paths, sslConf);
     }
 
     private void setupCommandContextFactory() {
@@ -494,11 +499,11 @@ public class LauncherImplTest {
         when(prefs.getUserName()).thenReturn("user");
 
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths);
+                environment, dbServiceFactory, version, prefs, keyring, paths, sslConf);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
-        when(dbServiceFactory.createDbService(dbUrlCaptor.capture())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(dbUrlCaptor.capture(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
         wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();
         verify(prefs).getConnectionUrl();
@@ -512,11 +517,11 @@ public class LauncherImplTest {
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths);
+                environment, dbServiceFactory, version, prefs, keyring, paths, sslConf);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
-        when(dbServiceFactory.createDbService(dbUrlCaptor.capture())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(dbUrlCaptor.capture(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
         ctxFactory.setInput("user\rpass\r");
         wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();
@@ -535,7 +540,7 @@ public class LauncherImplTest {
         Keyring keyring = mock(Keyring.class);
         when(keyring.getPassword(dbUrl, user)).thenReturn(password);
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths);
+                environment, dbServiceFactory, version, prefs, keyring, paths, sslConf);
 
         Command mockCmd = mock(Command.class);
         when(mockCmd.isStorageRequired()).thenReturn(true);
@@ -549,7 +554,7 @@ public class LauncherImplTest {
         when(infos.getCommandInfo("dummy")).thenReturn(cmdInfo);
 
         DbService dbService = mock(DbService.class);
-        when(dbServiceFactory.createDbService(anyString())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(anyString(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
 
         wrappedRun(launcher, new String[] { "dummy" }, false);
         verify(dbService).connect();
@@ -593,7 +598,7 @@ public class LauncherImplTest {
             new LauncherImpl(bundleContext, ctxFactory, registry,
                     infos, new CommandSource(bundleContext),
                     environment, dbServiceFactory,
-                    version, prefs, keyring, logPaths);
+                    version, prefs, keyring, logPaths, sslConf);
             assertTrue(handler.loggedThermostatHome);
             assertTrue(handler.loggedUserHome);
             verify(logPaths).getUserThermostatHome();
@@ -743,7 +748,7 @@ public class LauncherImplTest {
                                     new CommandSource(bundleContext), environment,
                                     dbServiceFactory, version,
                                     mock(ClientPreferences.class),
-                                    mock(Keyring.class), setupPaths) {
+                                    mock(Keyring.class), setupPaths, sslConf) {
             @Override
             void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
                 Pair<String[], Boolean> pair = new Pair<>(args, inShell);

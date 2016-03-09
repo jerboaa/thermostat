@@ -42,11 +42,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.contains;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,9 +58,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -80,9 +76,11 @@ import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -171,6 +169,7 @@ public class ActivatorTest {
         Class<?>[] launcherDeps = new Class[] {
                 Keyring.class,
                 CommonPaths.class,
+                SSLConfiguration.class,
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(launcherDeps), actionCaptor.capture()).thenReturn(launcherDepsTracker);
@@ -237,6 +236,7 @@ public class ActivatorTest {
         Class<?>[] launcherDeps = new Class[] {
                 Keyring.class,
                 CommonPaths.class,
+                SSLConfiguration.class,
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(launcherDeps), actionCaptor.capture()).thenReturn(unusedTracker);

@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -53,9 +54,11 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -79,7 +82,7 @@ public class ConnectCommandTest {
         ClientPreferences prefs = mock(ClientPreferences.class);
         Keyring keyring = mock(Keyring.class);
         when(prefs.getConnectionUrl()).thenReturn("http://localhost");
-        cmd = new ConnectCommand(context, dbServiceFactory, prefs, keyring);
+        cmd = new ConnectCommand(context, dbServiceFactory, prefs, keyring, mock(SSLConfiguration.class));
     }
 
     private void setupCommandContextFactory() {
@@ -118,7 +121,7 @@ public class ConnectCommandTest {
         String username = "testuser";
         String password = "testpassword";
         String dbUrl = "mongodb://10.23.122.1:12578";
-        when(dbServiceFactory.createDbService(eq(dbUrl))).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(eq(dbUrl), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("dbUrl", dbUrl);
         CommandContext ctx = cmdCtxFactory.createContext(args);

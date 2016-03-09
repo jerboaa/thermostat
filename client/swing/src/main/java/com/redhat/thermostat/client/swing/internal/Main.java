@@ -48,7 +48,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
@@ -64,6 +63,7 @@ import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
@@ -86,12 +86,13 @@ public class Main implements ClientConfigReconnector, ConnectionListener {
     private CountDownLatch shutdown;
     private ClientPreferencesCreator prefsCreator;
     private GUIInteractions interactions;
+    private SSLConfiguration sslConf;
 
     private MainWindowControllerImpl mainController;
 
     private boolean retryConnecting = true;
 
-    public Main(BundleContext context, Keyring keyring, CommonPaths paths, ApplicationService appSvc) {
+    public Main(BundleContext context, Keyring keyring, CommonPaths paths, ApplicationService appSvc, SSLConfiguration sslConf) {
 
         DbServiceFactory dbServiceFactory = new DbServiceFactory();
         CountDownLatch shutdown = new CountDownLatch(1);
@@ -99,18 +100,19 @@ public class Main implements ClientConfigReconnector, ConnectionListener {
         ClientPreferencesCreator prefsCreator = new ClientPreferencesCreator(paths);
         GUIInteractions interactions = new GUIInteractions(context, keyring, prefsCreator, this, mainWindowRunnable);
 
-        init(context, appSvc, dbServiceFactory, keyring, shutdown, prefsCreator, interactions);
+        init(context, appSvc, dbServiceFactory, keyring, shutdown, prefsCreator, interactions, sslConf);
     }
 
     Main(BundleContext context, ApplicationService appSvc,
             DbServiceFactory dbServiceFactory, Keyring keyring,
             CountDownLatch shutdown, ClientPreferencesCreator prefsCreator, GUIInteractions interactions) {
-        init(context, appSvc, dbServiceFactory, keyring, shutdown, prefsCreator, interactions);
+        init(context, appSvc, dbServiceFactory, keyring, shutdown, prefsCreator, interactions, sslConf);
     }
 
     private void init(BundleContext context, ApplicationService appSvc,
             DbServiceFactory dbServiceFactory, Keyring keyring,
-            CountDownLatch shutdown, ClientPreferencesCreator prefsCreator, GUIInteractions interactions) {
+            CountDownLatch shutdown, ClientPreferencesCreator prefsCreator,
+            GUIInteractions interactions, SSLConfiguration sslConf) {
         this.context = context;
         this.appSvc = appSvc;
         this.dbServiceFactory = dbServiceFactory;
@@ -118,6 +120,7 @@ public class Main implements ClientConfigReconnector, ConnectionListener {
         this.shutdown = shutdown;
         this.prefsCreator = prefsCreator;
         this.interactions = interactions;
+        this.sslConf = sslConf;
     }
     
     public void run() {
@@ -150,19 +153,9 @@ public class Main implements ClientConfigReconnector, ConnectionListener {
     }
 
     private void connect(ClientPreferences prefs, StorageCredentials creds, ExecutorService service) {
-        // FIXME: DbServiceFactory.createDbService needs to access a StorageCredentials
-        // instance obtained via the OSGi registry. This implicit dependency between
-        // credsReg and dbService should be made explicit.
         try {
-            // Note that this method may be called a second time possibly
-            // (via reconnect()). Registered storage creds get unregistered in
-            // the finally block in the Runnable establishing the connection.
-            // This ensures that we don't register two distinct instances for
-            // the StorageCredentials service.
-            @SuppressWarnings("rawtypes")
-            final ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
             // create DbService with potentially modified parameters
-            final DbService dbService = dbServiceFactory.createDbService(prefs.getConnectionUrl());
+            final DbService dbService = dbServiceFactory.createDbService(prefs.getConnectionUrl(), creds, sslConf);
             dbService.addConnectionListener(this);
             service.execute(new Runnable() {
                 @Override
@@ -173,8 +166,6 @@ public class Main implements ClientConfigReconnector, ConnectionListener {
                         // Note: DbService fires a ConnectionListener event when it
                         // fails to connect. No need to notify our handler manually.
                         logger.log(Level.FINE, "connection attempt failed: ", t);
-                    } finally {
-                        credsReg.unregister();
                     }
                 }
             });

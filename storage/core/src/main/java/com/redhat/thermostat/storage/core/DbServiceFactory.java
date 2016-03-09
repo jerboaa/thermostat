@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.internal.DbServiceImpl;
 
 /*
@@ -65,14 +66,18 @@ public class DbServiceFactory {
      *            The URL to the storage endpoint. For example
      *            {@code mongodb://127.0.0.1:27518} or
      *            {@code https://storage.example.com/storage}.
+     * @param creds
+     *            The credentials to use for the connection.
+     * @param sslConf
+     *            The TLS configuration to use for the connection.
      * @return A new {@link DbService} instance which can be used for
      *         establishing new storage connections.
      * @throws StorageException
      *             If no matching {@link StorageProvider} could be found for the
      *             given dbUrl.
      */
-    public DbService createDbService(String dbUrl) throws StorageException {
-        return DbServiceImpl.create(dbUrl);
+    public DbService createDbService(String dbUrl, StorageCredentials creds, SSLConfiguration sslConf) throws StorageException {
+        return DbServiceImpl.create(dbUrl, creds, sslConf);
     }
 }
 

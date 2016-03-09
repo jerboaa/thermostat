@@ -64,6 +64,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatActivator implements BundleActivator {
@@ -100,6 +101,7 @@ public class ThermostatActivator implements BundleActivator {
                 Keyring.class,
                 CommonPaths.class,
                 ApplicationService.class,
+                SSLConfiguration.class,
         };
         dependencyTracker = new MultipleServiceTracker(context, deps, new Action() {
             
@@ -110,8 +112,9 @@ public class ThermostatActivator implements BundleActivator {
                 Keyring keyring = (Keyring) services.get(Keyring.class.getName());
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class.getName());
                 cmdReg = new CommandRegistryImpl(context);
-                main = new Main(context, keyring, paths, appSvc);
+                main = new Main(context, keyring, paths, appSvc, sslConf);
                 
                 GUIClientCommand cmd = new GUIClientCommand(main);
                 cmdReg.registerCommand("gui", cmd);

@@ -63,6 +63,7 @@ import com.redhat.thermostat.client.swing.internal.Main.GUIInteractions;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.DbService;
@@ -113,7 +114,7 @@ public class MainTest {
         
         dbServiceFactory = mock(DbServiceFactory.class);
         dbService = mock(DbService.class);
-        when(dbServiceFactory.createDbService(anyString())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(anyString(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenReturn(dbService);
         
         connectionListenerCaptor = ArgumentCaptor.forClass(ConnectionListener.class);
         doNothing().when(dbService).addConnectionListener(connectionListenerCaptor.capture());
@@ -158,7 +159,7 @@ public class MainTest {
     @Test
     public void verifyUnknownStorageProtocolIsHandledCorrectly() {
         StorageException unknownProtocolException = new StorageException("Unknown protocol");
-        when(dbServiceFactory.createDbService(anyString())).thenThrow(unknownProtocolException);
+        when(dbServiceFactory.createDbService(anyString(), any(StorageCredentials.class), any(SSLConfiguration.class))).thenThrow(unknownProtocolException);
 
         Main main = createMain(context);
 

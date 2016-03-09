@@ -47,6 +47,7 @@ import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -79,6 +80,7 @@ public class Activator implements BundleActivator {
         Class<?>[] classes = new Class[] {
             Keyring.class,
             CommonPaths.class,
+            SSLConfiguration.class,
         };
         connectTracker = new MultipleServiceTracker(context, classes, new Action() {
 
@@ -87,7 +89,8 @@ public class Activator implements BundleActivator {
                 Keyring keyring = (Keyring) services.get(Keyring.class.getName());
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 ClientPreferences prefs = new ClientPreferences(paths);
-                reg.registerCommand("connect", new ConnectCommand(prefs, keyring));
+                SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class);
+                reg.registerCommand("connect", new ConnectCommand(context, prefs, keyring, sslConf));
             }
 
             @Override

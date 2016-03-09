@@ -71,12 +71,13 @@ public class DbServiceImplTest {
     private StorageProvider storageProvider;
     private Storage storage;
     private StubBundleContext context;
+    private StorageCredentials creds;
+    private SSLConfiguration sslConf;
     
     @Before
     public void setup() {
         context = new StubBundleContext();
-        SSLConfiguration sslConf = mock(SSLConfiguration.class);
-        context.registerService(SSLConfiguration.class.getName(), sslConf, null);
+        sslConf = mock(SSLConfiguration.class);
 
         storage = mock(Storage.class);
         when(storage.getConnection()).thenReturn(connection);
@@ -86,8 +87,7 @@ public class DbServiceImplTest {
         when(storageProvider.createStorage()).thenReturn(storage);
         context.registerService(StorageProvider.class, storageProvider, null);
 
-        StorageCredentials creds = mock(StorageCredentials.class);
-        context.registerService(StorageCredentials.class, creds, null);
+        creds = mock(StorageCredentials.class);
     }
 
     @Test
@@ -95,7 +95,7 @@ public class DbServiceImplTest {
         context = new StubBundleContext();
 
         try {
-            new DbServiceImpl(context, "http://ignored.example.com");
+            new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
             fail("exception expected");
         } catch (StorageException se) {
             assertEquals("No storage provider available", se.getMessage());
@@ -107,7 +107,7 @@ public class DbServiceImplTest {
         when(storageProvider.canHandleProtocol()).thenReturn(false);
 
         try {
-            new DbServiceImpl(context, "http://ignored.example.com");
+            new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
             fail("exception expected");
         } catch (StorageException se) {
             assertEquals("No storage found for URL http://ignored.example.com", se.getMessage());
@@ -116,7 +116,7 @@ public class DbServiceImplTest {
 
     @Test
     public void testConnect() {
-        DbService dbService = new DbServiceImpl(context, storage);
+        DbService dbService = new DbServiceImpl(context, storage, creds, sslConf);
         try {
             dbService.connect();
             // pass
@@ -131,7 +131,7 @@ public class DbServiceImplTest {
         Storage mockStorage = mock(Storage.class);
         DelayedConnection connection = new DelayedConnection();
         when(mockStorage.getConnection()).thenReturn(connection);
-        DbService dbService = new DbServiceImpl(context, mockStorage);
+        DbService dbService = new DbServiceImpl(context, mockStorage, creds, sslConf);
         
         try {
             dbService.connect();
@@ -156,7 +156,7 @@ public class DbServiceImplTest {
             }
         };
         when(mockStorage.getConnection()).thenReturn(connection);
-        DbService dbService = new DbServiceImpl(context, mockStorage);
+        DbService dbService = new DbServiceImpl(context, mockStorage, creds, sslConf);
         
         try {
             dbService.connect();
@@ -185,7 +185,7 @@ public class DbServiceImplTest {
 
     @Test
     public void testConnectRegistersDbService() {
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
 
         try {
             dbService.connect();
@@ -204,7 +204,7 @@ public class DbServiceImplTest {
     
     @Test
     public void testConnectRegistersStorage() {
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
 
         try {
             dbService.connect();
@@ -224,7 +224,7 @@ public class DbServiceImplTest {
     @SuppressWarnings("rawtypes")
     @Test
     public void testConnectEnforcesPreCond() {
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
 
         ServiceRegistration reg = context.registerService(DbService.class, dbService, null);
         try {
@@ -247,7 +247,7 @@ public class DbServiceImplTest {
     @SuppressWarnings("rawtypes")
     @Test
     public void testDisConnectEnforcesPreCond() {
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
 
         ServiceRegistration reg = context.registerService(DbService.class, dbService, null);
         try {
@@ -271,7 +271,7 @@ public class DbServiceImplTest {
 
     @Test
     public void testDisconnect() {
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
 
         try {
             dbService.connect();
@@ -289,7 +289,7 @@ public class DbServiceImplTest {
 
     @Test
     public void testDisconnectUnregistersDbService() {
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
 
         try {
             dbService.connect();
@@ -309,7 +309,7 @@ public class DbServiceImplTest {
     
     @Test
     public void testDisconnectUnregistersStorage() {
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
 
         try {
             dbService.connect();
@@ -332,7 +332,7 @@ public class DbServiceImplTest {
     public void canGetStorageUrl() {
         String connectionURL = "http://test.example.com:8082";
 
-        DbService dbService = new DbServiceImpl(context, connectionURL);
+        DbService dbService = new DbServiceImpl(context, connectionURL, creds, sslConf);
         assertEquals(connectionURL, dbService.getConnectionUrl());
     }
 
@@ -340,20 +340,20 @@ public class DbServiceImplTest {
     public void canGetUsername() {
         String connectionURL = "http://test.example.com:8082";
 
-        DbService dbService = new DbServiceImpl(context, connectionURL);
+        DbService dbService = new DbServiceImpl(context, connectionURL, creds, sslConf);
         dbService.connect();
 
-        assertEquals("username", dbService.getUserName());
+        assertEquals(ImmediateConnection.USERNAME, dbService.getUserName());
     }
 
     @Test
     public void testDisconnectUnsetsUsername() {
         String connectionURL = "http://test.example.com:8082";
 
-        DbService dbService = new DbServiceImpl(context, connectionURL);
+        DbService dbService = new DbServiceImpl(context, connectionURL, creds, sslConf);
         dbService.connect();
 
-        assertEquals("username", dbService.getUserName());
+        assertEquals(ImmediateConnection.USERNAME, dbService.getUserName());
 
         dbService.disconnect();
 
@@ -365,7 +365,7 @@ public class DbServiceImplTest {
         ConnectionListener listener = mock(ConnectionListener.class);
         Connection connection = mock(Connection.class);
         when(storage.getConnection()).thenReturn(connection);
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
 
         dbService.addConnectionListener(listener);
         verify(connection).addListener(listener);
@@ -374,7 +374,7 @@ public class DbServiceImplTest {
     @Test
     public void testListenerGetsEvent() {
         ConnectingConnectionListener listener = new ConnectingConnectionListener();
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
 
         ConnectingConnection connection = new ConnectingConnection();
         when(storage.getConnection()).thenReturn(connection);
@@ -404,7 +404,7 @@ public class DbServiceImplTest {
         ConnectionListener listener = mock(ConnectionListener.class);
         Connection connection = mock(Connection.class);
         when(storage.getConnection()).thenReturn(connection);
-        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "http://ignored.example.com", creds, sslConf);
         dbService.removeConnectionListener(listener);
         verify(connection).removeListener(listener);
     }
@@ -461,6 +461,8 @@ public class DbServiceImplTest {
     }
     
     static class ImmediateConnection extends Connection {
+        
+        private static final String USERNAME = "username";
 
         boolean connectCalled = false;
         boolean disconnectCalled = false;
@@ -468,7 +470,7 @@ public class DbServiceImplTest {
         @Override
         public void connect() {
             connectCalled = true;
-            setUsername("username");
+            setUsername(USERNAME);
             fireChanged(ConnectionStatus.CONNECTED);
         }
 

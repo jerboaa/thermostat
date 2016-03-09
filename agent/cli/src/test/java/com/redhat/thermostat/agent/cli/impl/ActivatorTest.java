@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
@@ -56,6 +57,7 @@ public class ActivatorTest {
         WriterID writerID = mock(WriterID.class);
         bundleContext.registerService(WriterID.class, writerID, null);
         bundleContext.registerService(ExitStatus.class, exitStatus, null);
+        bundleContext.registerService(SSLConfiguration.class, mock(SSLConfiguration.class), null);
         
         Activator activator = new Activator();
 
@@ -63,7 +65,7 @@ public class ActivatorTest {
         
         activator.start(bundleContext);
         
-        assertEquals(2, bundleContext.getServiceListeners().size());
+        assertEquals(4, bundleContext.getServiceListeners().size());
         
         assertCommandIsRegistered(bundleContext, "agent", AgentApplication.class);
         assertCommandIsRegistered(bundleContext, "service", ServiceCommand.class);
@@ -71,7 +73,7 @@ public class ActivatorTest {
         activator.stop(bundleContext);
 
         assertEquals(0, bundleContext.getServiceListeners().size());
-        assertEquals(2, bundleContext.getAllServices().size());
+        assertEquals(3, bundleContext.getAllServices().size());
     }
 }
 

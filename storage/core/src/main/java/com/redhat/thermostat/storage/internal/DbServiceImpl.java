@@ -70,28 +70,25 @@ public class DbServiceImpl implements DbService {
     private BundleContext context;
     private String dbUrl;
     private String userName;
-    @SuppressWarnings("rawtypes")
-    private static ServiceReference sslConfRef, storageCredsRef;
     
-    DbServiceImpl(String dbUrl) throws StorageException {
+    DbServiceImpl(String dbUrl, StorageCredentials creds, SSLConfiguration sslConf) throws StorageException {
         BundleContext context = FrameworkUtil.getBundle(DbService.class).getBundleContext();
-        init(context, dbUrl);
+        init(context, dbUrl, creds, sslConf);
     }
 
     // for testing
-    DbServiceImpl(BundleContext context, String dbUrl) {
-        init(context, dbUrl);
+    DbServiceImpl(BundleContext context, String dbUrl, StorageCredentials creds, SSLConfiguration sslConf) {
+        init(context, dbUrl, creds, sslConf);
     }
     
     // For testing. Injects custom storage.
-    DbServiceImpl(BundleContext context, Storage storage) {
+    DbServiceImpl(BundleContext context, Storage storage, StorageCredentials creds, SSLConfiguration sslConf) {
         this.context = context;
         this.storage = storage;
     }
     
-    private void init(BundleContext context, String dbUrl) {
-        Storage storage = createStorage(context, dbUrl);
-
+    private void init(BundleContext context, String dbUrl, StorageCredentials creds, SSLConfiguration sslConf) {
+        Storage storage = createStorage(context, dbUrl, creds, sslConf);
         this.storage = storage;
         this.context = context;
         this.dbUrl = dbUrl;
@@ -108,15 +105,6 @@ public class DbServiceImpl implements DbService {
             doSynchronousConnect();
         } catch (Exception cause) {
             throw new ConnectionException(cause);
-        } finally {
-            if (sslConfRef != null) {
-                context.ungetService(sslConfRef);
-                sslConfRef = null;
-            }
-            if (storageCredsRef != null) {
-                context.ungetService(storageCredsRef);
-                storageCredsRef = null;
-            }
         }
         // Connection didn't throw an exception. Now it is safe to register
         // services for general consumption.
@@ -193,14 +181,14 @@ public class DbServiceImpl implements DbService {
     /**
      * Factory method for creating a DbService instance.
      *
-     * @param username
-     * @param password
-     * @param dbUrl
+     * @param dbUrl The storage url to use
+     * @param creds The storage credentials to use
+     * @param sslConf The SSL configuration to use
      * @return a DbService instance
      * @throws StorageException if no storage provider exists for the given {@code dbUrl}.
      */
-    public static DbService create(String dbUrl) throws StorageException {
-        return new DbServiceImpl(dbUrl);
+    public static DbService create(String dbUrl, StorageCredentials creds, SSLConfiguration sslConf) throws StorageException {
+        return new DbServiceImpl(dbUrl, creds, sslConf);
     }
 
     @SuppressWarnings("rawtypes")
@@ -229,8 +217,8 @@ public class DbServiceImpl implements DbService {
         }
     }
 
-    private static Storage createStorage(BundleContext context, String dbUrl) throws StorageException {
-        StorageProvider prov = getStorageProvider(context, dbUrl);
+    private static Storage createStorage(BundleContext context, String dbUrl, StorageCredentials creds, SSLConfiguration sslConf) throws StorageException {
+        StorageProvider prov = getStorageProvider(context, dbUrl, creds, sslConf);
         if (prov == null) {
             // no suitable provider found
             throw new StorageException("No storage found for URL " + dbUrl);
@@ -239,22 +227,12 @@ public class DbServiceImpl implements DbService {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static StorageProvider getStorageProvider(BundleContext context, String url) {
+    private static StorageProvider getStorageProvider(BundleContext context, String url, StorageCredentials creds, SSLConfiguration sslConf) {
         try {
             ServiceReference[] refs = context.getServiceReferences(StorageProvider.class.getName(), null);
             if (refs == null) {
                 throw new StorageException("No storage provider available");
             }
-            storageCredsRef = context.getServiceReference(StorageCredentials.class.getName());
-            if (storageCredsRef == null) {
-                throw new StorageException("No StorageCredentials available");
-            }
-            StorageCredentials creds = (StorageCredentials) context.getService(storageCredsRef);
-            sslConfRef = context.getServiceReference(SSLConfiguration.class.getName());
-            if (sslConfRef == null) {
-                throw new StorageException("No SSL configuration available");
-            }
-            SSLConfiguration sslConf = (SSLConfiguration) context.getService(sslConfRef);
             for (int i = 0; i < refs.length; i++) {
                 StorageProvider prov = (StorageProvider) context.getService(refs[i]);
                 prov.setConfig(url, creds, sslConf);
