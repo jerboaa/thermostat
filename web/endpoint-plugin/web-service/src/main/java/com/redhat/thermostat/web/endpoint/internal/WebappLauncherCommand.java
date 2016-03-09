@@ -234,7 +234,7 @@ class WebappLauncherCommand extends AbstractStateNotifyingCommand {
                 agent.getNotifier().removeActionListener(this);
 
                 ApplicationState state = actionEvent.getActionId();
-                // propagate the Agent ActionEvent if START or FAIL
+                // propagate the Agent ActionEvent
                 switch(state) {
                     case START:
                         agentStarted = true;
@@ -244,6 +244,9 @@ class WebappLauncherCommand extends AbstractStateNotifyingCommand {
                     case FAIL:
                         console.getError().println(translator.localize(LocaleResources.STARTING_AGENT_FAILED).getContents());
                         getNotifier().fireAction(ApplicationState.FAIL, actionEvent.getPayload());
+                        break;
+                    case STOP:
+                        getNotifier().fireAction(ApplicationState.STOP);
                         break;
                     default:
                         throw new AssertionError("Unexpected state " + state);
