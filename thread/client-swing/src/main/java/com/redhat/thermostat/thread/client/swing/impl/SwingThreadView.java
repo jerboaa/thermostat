@@ -94,7 +94,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         
         this.uiDefaults = uiDefaults;
 
-        panel = new ThreadMainPanel();
+        panel = new ThreadMainPanel(uiDefaults);
         // TODO use ComponentVisiblityNotifier instead
         // sadly, the BasicView.notifier field can not be accessed here
         panel.addHierarchyListener(new ComponentVisibleListener() {

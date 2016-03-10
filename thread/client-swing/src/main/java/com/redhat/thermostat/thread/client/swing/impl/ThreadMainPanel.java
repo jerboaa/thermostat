@@ -36,13 +36,8 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
-import javax.swing.BoxLayout;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-
 import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
@@ -50,18 +45,24 @@ import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 
+import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+
 @SuppressWarnings("serial")
 class ThreadMainPanel extends JPanel {
 
     private static final Icon START_ICON = IconResource.SAMPLE.getIcon();
-    private static final Icon STOP_ICON = new FontAwesomeIcon('\uf04d', START_ICON.getIconHeight());
+    private final Icon stopIcon;
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private JSplitPane splitPane;
     
     private ActionToggleButton toggleButton;
     
-    public ThreadMainPanel() {
+    public ThreadMainPanel(UIDefaults uiDefaults) {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         
         HeaderPanel headerPanel = new HeaderPanel();
@@ -69,8 +70,10 @@ class ThreadMainPanel extends JPanel {
         
         JPanel content = new JPanel();
         headerPanel.setContent(content);
-        
-        toggleButton = new ActionToggleButton(START_ICON, STOP_ICON, t.localize(LocaleResources.THREAD_MONITOR_SWITCH));
+
+        stopIcon = new FontAwesomeIcon('\uf28e', START_ICON.getIconHeight(), uiDefaults.getIconColor());
+
+        toggleButton = new ActionToggleButton(START_ICON, stopIcon, t.localize(LocaleResources.THREAD_MONITOR_SWITCH));
         toggleButton.setName("recordButton");
         headerPanel.addToolBarButton(toggleButton);
         
