@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -45,6 +46,7 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.FileVisitResult;
@@ -287,6 +289,22 @@ public class BundleManagerImplTest {
         Class<?> clazz = registry.getClass();
         Method m = clazz.getMethod("setPrintOSGiInfo", Boolean.TYPE);
         m.invoke(registry, true); // If this fails, then API has changed in ways that break FrameworkProvider.
+    }
+    
+    @Test
+    public void verifyDontScanDirIsNotVisited() throws FileNotFoundException, IOException {
+        BundleManagerImpl manager = new BundleManagerImpl(paths);
+        Path skipMe = Paths.get("plugin-libs");
+        FileVisitResult result = manager.previsitDir(skipMe);
+        assertEquals(FileVisitResult.SKIP_SUBTREE, result);
+    }
+    
+    @Test
+    public void verifyRegularDirIsVisited() throws FileNotFoundException, IOException {
+        BundleManagerImpl manager = new BundleManagerImpl(paths);
+        Path pathNotToSkip = Paths.get("/path/to/plugins/vm-byteman");
+        FileVisitResult result = manager.previsitDir(pathNotToSkip);
+        assertEquals(FileVisitResult.CONTINUE, result);
     }
 
 }

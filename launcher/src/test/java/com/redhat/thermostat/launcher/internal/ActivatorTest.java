@@ -221,7 +221,9 @@ public class ActivatorTest {
         CommonPaths paths = mock(CommonPaths.class);
         when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
         when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
-        when(paths.getSystemLibRoot()).thenReturn(new File(""));
+        File systemLibRoot = mock(File.class);
+        when(systemLibRoot.listFiles()).thenReturn(new File[] {});
+        when(paths.getSystemLibRoot()).thenReturn(systemLibRoot);
         when(paths.getSystemPluginRoot()).thenReturn(new File(""));
         when(paths.getUserPluginRoot()).thenReturn(new File(""));
         when(paths.getUserClientConfigurationFile()).thenReturn(new File(""));

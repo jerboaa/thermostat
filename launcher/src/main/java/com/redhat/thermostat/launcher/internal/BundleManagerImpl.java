@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -71,6 +72,8 @@ public class BundleManagerImpl extends BundleManager {
 
     private static final Logger logger = LoggingUtils.getLogger(BundleManagerImpl.class);
 
+    private static final Path DONT_SCAN_DIR = Paths.get("plugin-libs");
+
     // Bundle Name and version -> path (with symlinks resolved)
     // Match FrameworkProvider which uses canonical/symlink-resolved paths. If
     // there is a mismatch, there are going to be clashes with trying to load
@@ -95,40 +98,28 @@ public class BundleManagerImpl extends BundleManager {
     private void scanForBundles() {
         long t1 = System.nanoTime();
 
+        final FileInspector inspector = new FileInspector(known);
         try {
-            for (File root : new File[] { paths.getSystemLibRoot(), paths.getSystemPluginRoot() }) {
-                Files.walkFileTree(root.toPath(), new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        if (file.toFile().getName().endsWith(".jar")) {
-                            try (JarFile jf = new JarFile(file.toFile())) {
-                                Manifest mf = jf.getManifest();
-                                String name = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
-                                String version = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-                                if (name == null || version == null) {
-                                    logger.finer("file " + file.toString() + " is missing osgi metadata; wont be usable for dependencies");
-                                } else {
-                                    BundleInformation info = new BundleInformation(name, version);
-                                    Path old = known.get(info);
-                                    // Path is completely resolved. First one wins.
-                                    if (old == null) {
-                                        known.put(info, file.toRealPath());
-                                    } else {
-                                        if (!old.equals(file.toRealPath())) {
-                                            logger.warning("bundles " + old + " and " + file + " both provide " + info);
-                                        }
-                                        // leave old
-                                    }
-                                }
-                            } catch (IOException e) {
-                                logger.severe("Error in reading " + file);
-                                // continue with other files, even if one file is broken
-                            }
-                        }
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
+            // Don't scan libs folder recursively. We only do that for the
+            // plugins folder
+            for (File file: paths.getSystemLibRoot().listFiles()) {
+                inspector.inspectFile(file);
             }
+            Files.walkFileTree(paths.getSystemPluginRoot().toPath(), new SimpleFileVisitor<Path>() {
+                
+                @Override
+                public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
+                    // Don't visit directories with name "plugin-libs"
+                    return previsitDir(file);
+                }
+                
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    inspector.inspectFile(file.toFile());
+                    return FileVisitResult.CONTINUE;
+                }
+
+            });
         } catch (IOException e) {
             logger.log(Level.WARNING, "Error scanning bundles for metadata", e);
         }
@@ -150,6 +141,15 @@ public class BundleManagerImpl extends BundleManager {
         for (Entry<BundleInformation, Path> entry : knownData.entrySet()) {
             known.put(entry.getKey(), entry.getValue());
         }
+    }
+    
+    // package-private for testing
+    FileVisitResult previsitDir(Path file) {
+        Path fileName = file.getFileName();
+        if (fileName != null && fileName.equals(DONT_SCAN_DIR)) {
+            return FileVisitResult.SKIP_SUBTREE;
+        }
+        return FileVisitResult.CONTINUE;
     }
 
     /* Used via reflection from launcher */
@@ -245,6 +245,48 @@ public class BundleManagerImpl extends BundleManager {
     @Override
     public CommonPaths getCommonPaths() {
         return paths;
+    }
+    
+    static class FileInspector {
+        
+        private Map<BundleInformation, Path> knownFiles;
+        
+        FileInspector(Map<BundleInformation, Path> known) {
+            knownFiles = known;
+        }
+        
+        /**
+         * Inspects a file if it is a suitable bundle and adds it to the
+         * known files map if so.
+         * 
+         * @param file The file to inspect
+         */
+        void inspectFile(File file) {
+            if (file.getName().endsWith(".jar")) {
+                try (JarFile jf = new JarFile(file)) {
+                    Manifest mf = jf.getManifest();
+                    String name = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+                    String version = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+                    if (name == null || version == null) {
+                        logger.finer("file " + file.toString() + " is missing osgi metadata; wont be usable for dependencies");
+                    } else {
+                        BundleInformation info = new BundleInformation(name, version);
+                        Path old = knownFiles.get(info);
+                        // Path is completely resolved. First one wins.
+                        if (old == null) {
+                            knownFiles.put(info, file.getCanonicalFile().toPath());
+                        } else {
+                            if (!old.equals(file.getCanonicalFile().toPath())) {
+                                logger.warning("bundles " + old + " and " + file + " both provide " + info);
+                            }
+                            // leave old
+                        }
+                    }
+                } catch (IOException e) {
+                    logger.severe("Error in reading " + file);
+                }
+            }
+        }
     }
 }
 
