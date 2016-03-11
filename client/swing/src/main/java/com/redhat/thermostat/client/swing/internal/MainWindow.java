@@ -358,7 +358,7 @@ public class MainWindow extends JFrame implements MainView {
         });
 
         installGlobalNavigation();
-        installSearchFiled();
+        installSearchField();
     }
     
     private void installGlobalNavigation() {
@@ -372,7 +372,7 @@ public class MainWindow extends JFrame implements MainView {
         navigationPanel.addContent(action, BorderLayout.SOUTH);
     }
 
-    private void installSearchFiled() {
+    private void installSearchField() {
         // install the search field in the sidepane for now
         SearchField searchField = new SearchField(20);
         navigationPanel.getTopPane().add(searchField);
