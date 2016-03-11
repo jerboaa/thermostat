@@ -185,13 +185,17 @@ __DEFAULT_RELEASE__ 7
 # Some Maven coordinates mismatch due to compat versioning.
 %{!?scl:
 %global object_web_asm_maven_coords org.ow2.asm:asm-all
-%global netty_maven_coords io.netty:netty:%{netty_bundle_version}
+%global netty_maven_coords          io.netty:netty:%{netty_bundle_version}
+%global osgi_compendium_coords      org.osgi:org.osgi.compendium
+%global kxml2_coords                net.sf.kxml:kxml2
 }
 %{?scl:
 # objectweb-asm is objectweb-asm5 in SCL
 %global object_web_asm_maven_coords org.ow2.asm:asm-all:5
 # netty coordinates are org.jboss.netty:netty in SCL
 %global netty_maven_coords org.jboss.netty:netty
+%global osgi_compendium_coords      org.osgi:org.osgi.compendium:1
+%global kxml2_coords                net.sf.kxml:kxml2:2
 }
 
 # THERMOSTAT_HOME and USER_THERMOSTAT_HOME variables. Note that
@@ -335,8 +339,13 @@ BuildRequires: %{?scl_prefix}mvn(org.apache.felix:maven-scr-plugin)
 BuildRequires: %{?scl_prefix}mvn(org.apache.felix:org.apache.felix.scr.annotations)
 # felix-scr is the DS runtime we use
 BuildRequires: %{?scl_prefix}mvn(org.apache.felix:org.apache.felix.scr)
-BuildRequires: %{?scl_prefix}mvn(org.osgi:org.osgi.compendium)
-BuildRequires: %{?scl_prefix}mvn(net.sf.kxml:kxml2)
+
+# Use our compat package for scl (felix-compendium and kxml) so as to avoid name
+# clash with the one from the maven collection. This would otherwise break xmvn-subst
+# with duplicate metadata warnings.
+BuildRequires: %{?scl_prefix}mvn(%{osgi_compendium_coords})
+BuildRequires: %{?scl_prefix}mvn(%{kxml2_coords})
+
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.felix:org.apache.felix.framework)
 BuildRequires: %{?scl_prefix_maven}mvn(org.fusesource:fusesource-pom:pom:)
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.commons:commons-cli)
