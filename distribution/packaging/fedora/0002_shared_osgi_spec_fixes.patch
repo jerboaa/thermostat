@@ -29,7 +29,7 @@ diff --git a/agent/command/pom.xml b/agent/command/pom.xml
 diff --git a/agent/core/pom.xml b/agent/core/pom.xml
 --- a/agent/core/pom.xml
 +++ b/agent/core/pom.xml
-@@ -88,8 +88,8 @@
+@@ -93,8 +93,8 @@
        <version>${project.version}</version>
      </dependency>
      <dependency>
@@ -38,8 +38,22 @@ diff --git a/agent/core/pom.xml b/agent/core/pom.xml
 +      <groupId>org.apache.felix</groupId>
 +      <artifactId>org.apache.felix.framework</artifactId>
      </dependency>
-   </dependencies>
- 
+     <dependency>
+       <groupId>com.google.code.gson</groupId>
+diff --git a/agent/ipc/server/pom.xml b/agent/ipc/server/pom.xml
+--- a/agent/ipc/server/pom.xml
++++ b/agent/ipc/server/pom.xml
+@@ -62,8 +62,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
 diff --git a/client/cli/pom.xml b/client/cli/pom.xml
 --- a/client/cli/pom.xml
 +++ b/client/cli/pom.xml
@@ -833,7 +847,7 @@ diff --git a/platform/swing/widgets/pom.xml b/platform/swing/widgets/pom.xml
 diff --git a/pom.xml b/pom.xml
 --- a/pom.xml
 +++ b/pom.xml
-@@ -204,14 +204,26 @@
+@@ -222,14 +222,26 @@
      <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>
      <lucene-core.bundle.symbolic-name>org.apache.servicemix.bundles.lucene</lucene-core.bundle.symbolic-name>
      <!--
@@ -864,7 +878,7 @@ diff --git a/pom.xml b/pom.xml
  
      <felix.scr.version>1.8.2</felix.scr.version>
      <felix.scr.annotations.version>1.9.12</felix.scr.annotations.version>
-@@ -585,16 +597,6 @@
+@@ -607,16 +619,6 @@
        </dependency>
  
        <dependency>
