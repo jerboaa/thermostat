@@ -85,7 +85,7 @@ import com.redhat.thermostat.client.swing.internal.progress.ProgressNotification
 import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier;
 import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier.PropertyChange;
 import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
-import com.redhat.thermostat.client.swing.internal.search.SearchField;
+import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.swing.internal.sidepane.ExpanderComponent;
 import com.redhat.thermostat.client.swing.internal.sidepane.ThermostatSidePanel;
 import com.redhat.thermostat.client.swing.internal.splitpane.ThermostatSplitPane;
@@ -374,7 +374,7 @@ public class MainWindow extends JFrame implements MainView {
 
     private void installSearchFiled() {
         // install the search field in the sidepane for now
-        SearchField searchField = new SearchField();
+        SearchField searchField = new SearchField(20);
         navigationPanel.getTopPane().add(searchField);
         
         filter = new ReferenceFieldSearchFilter(searchField, hostTreeController);
