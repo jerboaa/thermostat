@@ -73,6 +73,22 @@ public class TabCompletion {
                 String commandName = info.getName();
                 TreeCompleter.Node command = createStringNode(commandName);
 
+                /* FIXME: the Ping command should be provided by a plugin and have a thermostat-plugin.xml of its own,
+                * and in thermostat-plugin.xmls we should also somehow be able to define custom tab completions, including
+                * for the no-opt arg case (such as this). When this is possible then this hard-coded completion installation
+                * should be replaced with the proper custom ping-plugin custom completion setup.
+                * http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2876
+                * http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2877
+                */
+                if (commandName.equals("ping")) {
+                    TreeCompleter.Node agentIds =
+                            new TreeCompleter.Node(new IdCompleter(new AgentIdsFinder(context), storageState));
+                    agentIds.setRestartNode(command);
+                    command.addBranch(agentIds);
+                    treeCompleter.addBranch(command);
+                    continue;
+                }
+
                 for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
                     if (option.getLongOpt().equals("logLevel")) {
                         setupCompletion(command, option, new StringsCompleter(logLevels));
