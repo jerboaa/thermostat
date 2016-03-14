@@ -16,7 +16,7 @@ diff --git a/agent/command/pom.xml b/agent/command/pom.xml
 --- a/agent/command/pom.xml
 +++ b/agent/command/pom.xml
 @@ -76,8 +76,8 @@
-       <artifactId>netty</artifactId>
+       <artifactId>netty-buffer</artifactId>
      </dependency>
      <dependency>
 -      <groupId>org.osgi</groupId>
@@ -92,7 +92,7 @@ diff --git a/client/command/pom.xml b/client/command/pom.xml
 --- a/client/command/pom.xml
 +++ b/client/command/pom.xml
 @@ -76,9 +76,8 @@
-       <artifactId>netty</artifactId>
+       <artifactId>netty-handler</artifactId>
      </dependency>
      <dependency>
 -      <groupId>org.osgi</groupId>
@@ -228,7 +228,7 @@ diff --git a/config/pom.xml b/config/pom.xml
 diff --git a/dependency-tool/command/pom.xml b/dependency-tool/command/pom.xml
 --- a/dependency-tool/command/pom.xml
 +++ b/dependency-tool/command/pom.xml
-@@ -74,9 +74,8 @@
+@@ -72,9 +72,8 @@
      </dependency>
  
      <dependency>
@@ -525,7 +525,7 @@ diff --git a/host-overview/client-swing/pom.xml b/host-overview/client-swing/pom
 diff --git a/keyring/pom.xml b/keyring/pom.xml
 --- a/keyring/pom.xml
 +++ b/keyring/pom.xml
-@@ -170,14 +170,8 @@
+@@ -168,14 +168,8 @@
      </dependency>
      
      <dependency>
@@ -614,7 +614,7 @@ diff --git a/killvm/common/pom.xml b/killvm/common/pom.xml
 diff --git a/laf-utils/pom.xml b/laf-utils/pom.xml
 --- a/laf-utils/pom.xml
 +++ b/laf-utils/pom.xml
-@@ -137,14 +137,8 @@
+@@ -135,14 +135,8 @@
      </dependency>
      
      <dependency>
@@ -893,7 +893,7 @@ diff --git a/pom.xml b/pom.xml
  
      <felix.scr.version>1.8.2</felix.scr.version>
      <felix.scr.annotations.version>1.9.12</felix.scr.annotations.version>
-@@ -607,16 +619,6 @@
+@@ -642,16 +654,6 @@
        </dependency>
  
        <dependency>
@@ -1082,7 +1082,7 @@ diff --git a/unix-process-handler/pom.xml b/unix-process-handler/pom.xml
 diff --git a/vm-byteman/agent/pom.xml b/vm-byteman/agent/pom.xml
 --- a/vm-byteman/agent/pom.xml
 +++ b/vm-byteman/agent/pom.xml
-@@ -93,9 +93,8 @@
+@@ -92,9 +92,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
@@ -1097,7 +1097,7 @@ diff --git a/vm-byteman/agent/pom.xml b/vm-byteman/agent/pom.xml
 diff --git a/vm-byteman/common/pom.xml b/vm-byteman/common/pom.xml
 --- a/vm-byteman/common/pom.xml
 +++ b/vm-byteman/common/pom.xml
-@@ -94,9 +94,8 @@
+@@ -93,9 +93,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>

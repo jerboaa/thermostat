@@ -41,8 +41,6 @@ __DEFAULT_RELEASE__ 7
   # Fedora 23 and up
   #########################################
 
-  # Real OSGi Bundle-Version is 3.9.3.Final
-  %global netty_bundle_version       3.9.3
   %global jcommon_bundle_version     1.0.23
   %global jfreechart_bundle_version  1.0.19
   # apache-commons-beanutils
@@ -84,8 +82,6 @@ __DEFAULT_RELEASE__ 7
   #########################################
   # EL 6 + 7
   #########################################
-  # Real OSGi Bundle-Version is 3.6.3.Final
-  %global netty_bundle_version       3.6.3
   %global jcommon_bundle_version     1.0.18
   %global jfreechart_bundle_version  1.0.14
   # apache-commons-beanutils
@@ -126,6 +122,8 @@ __DEFAULT_RELEASE__ 7
 
 %endif
 
+# Real OSGi Bundle-Version is 4.0.28.Final
+%global netty_bundle_version          4.0.28
 %global kxml2_version                 2.3.0
 %global osgi_compendium_maven_version 1.4.0
 
@@ -185,15 +183,12 @@ __DEFAULT_RELEASE__ 7
 # Some Maven coordinates mismatch due to compat versioning.
 %{!?scl:
 %global object_web_asm_maven_coords org.ow2.asm:asm-all
-%global netty_maven_coords          io.netty:netty:%{netty_bundle_version}
 %global osgi_compendium_coords      org.osgi:org.osgi.compendium
 %global kxml2_coords                net.sf.kxml:kxml2
 }
 %{?scl:
 # objectweb-asm is objectweb-asm5 in SCL
 %global object_web_asm_maven_coords org.ow2.asm:asm-all:5
-# netty coordinates are org.jboss.netty:netty in SCL
-%global netty_maven_coords org.jboss.netty:netty
 %global osgi_compendium_coords      org.osgi:org.osgi.compendium:1
 %global kxml2_coords                net.sf.kxml:kxml2:2
 }
@@ -361,10 +356,7 @@ BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.commons:commons-beanutil
 # FIXME: switch back to mongodb prefix once 2.13.2 is available in
 # the mongodb collection.
 BuildRequires: %{?scl_prefix_mongodb}mvn(org.mongodb:mongo-java-driver)
-# Change to netty 4 once RHBZ#1053619 is
-# resolved.
-# The version number in mvn() means it's a compat package.
-BuildRequires: %{?scl_prefix}mvn(%{netty_maven_coords})
+BuildRequires: %{?scl_prefix}mvn(io.netty:netty-handler) >= %{netty_bundle_version}
 BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman)
 BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman-install)
 BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman-submit)
@@ -405,10 +397,10 @@ BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.commons.codec) = %{code
 # FIXME: switch back to mongodb prefix once 2.13.2 is available in
 # the mongodb collection.
 BuildRequires: %{?scl_prefix_mongodb}osgi(org.mongodb.mongo-java-driver) = %{mongo_bundle_version}
-# Netty osgi provides are not there in SCL
-%{!?scl:
-BuildRequires: %{?scl_prefix}osgi(org.jboss.netty) = %{netty_bundle_version}
-}
+BuildRequires: %{?scl_prefix}osgi(io.netty.buffer) >= %{netty_bundle_version}
+BuildRequires: %{?scl_prefix}osgi(io.netty.transport) >= %{netty_bundle_version}
+BuildRequires: %{?scl_prefix}osgi(io.netty.handler) >= %{netty_bundle_version}
+BuildRequires: %{?scl_prefix}osgi(io.netty.codec) >= %{netty_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}osgi(com.google.gson) = %{gson_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpcore) = %{hc_core_bundle_version}
 # httpmime comes from httpcomponents-client just like httpclient itself
@@ -469,10 +461,11 @@ Requires: %{?scl_prefix_java_common}osgi(org.apache.commons.codec) >= %{codec_bu
 # FIXME: switch back to mongodb prefix once 2.13.2 is available in
 # the mongodb collection.
 Requires: %{?scl_prefix_mongodb}osgi(org.mongodb.mongo-java-driver) >= %{mongo_bundle_version}
-# Netty osgi provides is not there in SCL
-%{!?scl:
-Requires: %{?scl_prefix}osgi(org.jboss.netty) = %{netty_bundle_version}
-}
+
+Requires: %{?scl_prefix}osgi(io.netty.buffer)
+Requires: %{?scl_prefix}osgi(io.netty.transport)
+Requires: %{?scl_prefix}osgi(io.netty.handler)
+Requires: %{?scl_prefix}osgi(io.netty.codec)
 Requires: %{?scl_prefix_java_common}osgi(com.google.gson) >= %{gson_bundle_version}
 Requires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpcore) >= %{hc_core_bundle_version}
 # httpmime comes from httpcomponents-client just like httpclient itself
@@ -573,16 +566,6 @@ cp %{SOURCE4} distribution/config/thermostatrc
 # need jline 2.10 (otherwise this resolves to jline 1)
 %pom_xpath_remove "pom:properties/pom:jline.version"
 %pom_xpath_inject "pom:properties" "<jline.version>2.10</jline.version>"
-#  netty
-#%%pom_remove_dep org.jboss.netty:netty 
-%pom_remove_dep org.jboss.netty:netty common/command
-%pom_remove_dep org.jboss.netty:netty client/command
-%pom_remove_dep org.jboss.netty:netty agent/command
-%pom_remove_dep org.jboss.netty:netty agent/command-server
-%pom_add_dep io.netty:netty:%{netty_bundle_version} common/command
-%pom_add_dep io.netty:netty:%{netty_bundle_version} client/command
-%pom_add_dep io.netty:netty:%{netty_bundle_version} agent/command
-%pom_add_dep io.netty:netty:%{netty_bundle_version} agent/command-server
 # Don't use bundle-wrapped jnr-unixsocket and deps
 %pom_disable_module jnr-wrapped agent/ipc/unix-socket
 %pom_remove_dep com.redhat.thermostat:jnr-unixsocket agent/ipc/unix-socket/server
@@ -894,11 +877,6 @@ pushd %{buildroot}%{thermostat_home}/libs
     ln -s org.osgi.compendium*.jar org.osgi.compendium-%{osgi_compendium_maven_version}.jar
   fi
 popd
-
-
-# Add unversioned symlink to netty for command channel script
-ln -s ./netty-%{netty_bundle_version}.jar \
-    %{buildroot}%{thermostat_home}/libs/netty.jar
 
 # Remove duplicate tools*.jar files which makes the resulting
 # RPM insanely large (21 * 20 MB) ~= 410 MB => ~90 to 100 MB compressed
