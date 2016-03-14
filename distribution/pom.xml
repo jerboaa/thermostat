@@ -69,13 +69,13 @@
           <skip>true</skip>
         </configuration>
       </plugin>
-      <!-- Copy the extracted thermostat web archive to directory image/webapp
-           using maven-dependency-plugin. The thermostat-web-war artifact
-           will be extracted as the only artifact. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
+          <!-- Copy the extracted thermostat web archive to directory image/webapp
+               using maven-dependency-plugin. The thermostat-web-war artifact
+               will be extracted as the only artifact. -->
           <execution>
             <id>copy-exploded-web-archive-to-image-dir</id>
             <phase>package</phase>
@@ -94,14 +94,8 @@
               <excludeTransitive>true</excludeTransitive>
             </configuration>
           </execution>
-        </executions>
-      </plugin>
-      <!-- Extract the byteman helper distro (including transitive deps) into directory
-           image/libs/byteman/thermostat-helper by using maven-dependency-plugin. -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
+          <!-- Extract the byteman helper distro (including transitive deps) into directory
+               image/libs/byteman/thermostat-helper by using maven-dependency-plugin. -->
           <execution>
             <id>copy-byteman-helper-to-libs</id>
             <phase>package</phase>
@@ -119,17 +113,11 @@
               <outputDirectory>${project.build.directory}/image/libs/byteman/thermostat-helper</outputDirectory>
             </configuration>
           </execution>
-        </executions>
-      </plugin>
-      <!-- Extract the byteman jar to directory
-           image/libs/byteman/byteman-install/lib by using maven-dependency-plugin.
-           The byteman plugin uses $THERMOSTAT_HOME/byteman/byteman-install as
-           $BYTEMAN_HOME.
-         -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
+          <!-- Extract the byteman jar to directory
+               image/libs/byteman/byteman-install/lib by using maven-dependency-plugin.
+               The byteman plugin uses $THERMOSTAT_HOME/byteman/byteman-install as
+               $BYTEMAN_HOME.
+             -->
           <execution>
             <id>copy-byteman-jar-to-byteman-install</id>
             <phase>prepare-package</phase>
