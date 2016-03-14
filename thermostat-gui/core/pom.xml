@@ -90,7 +90,6 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
             <scope>provided</scope>
-            <version>${felix.scr.annotations.version}</version>
         </dependency>
 
         <!-- thermostat specific dependencies -->
@@ -98,7 +97,7 @@
         <dependency>
             <groupId>com.redhat.thermostat</groupId>
             <artifactId>thermostat-common-core</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- plugin specific dependencies -->
@@ -106,27 +105,27 @@
         <dependency>
             <groupId>com.redhat.thermostat</groupId>
             <artifactId>thermostat-platform-core</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.redhat.thermostat</groupId>
             <artifactId>thermostat-platform-swing-widgets</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.redhat.thermostat</groupId>
             <artifactId>thermostat-platform-swing-core</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.redhat.thermostat</groupId>
             <artifactId>thermostat-laf-utils</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.redhat.thermostat</groupId>
             <artifactId>thermostat-client-swing</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
     <build>
@@ -163,7 +162,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
-                <version>1.20.0</version>
                 <executions>
                     <execution>
                         <id>generate-scr-scrdescriptor</id>

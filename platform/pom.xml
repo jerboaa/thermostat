@@ -63,7 +63,7 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-annotations</artifactId>
       <scope>test</scope>
-      <version>${parent.version}</version>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 
