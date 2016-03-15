@@ -117,8 +117,6 @@ public class ShellCommand extends AbstractCommand {
         this.prefs = prefs;
         this.shellPrompt = new ShellPrompt();
 
-        disableJlineLogging();
-
         try {
             Map<String, String> promptConfig = config.getConfiguration("shell-command", "shell-prompt.conf");
             this.shellPrompt.overridePromptConfig(promptConfig);
@@ -127,32 +125,6 @@ public class ShellCommand extends AbstractCommand {
         }
     }
 
-    private void disableJlineLogging() {
-        /*
-         * newer versions of jline will always log event expansion errors with
-         * stack trace to stderr. Disable that.
-         */
-        OutputStream nullOutputStream = new OutputStream() {
-
-            @Override
-            public void write(int b) throws IOException {
-                // do not write anything
-            }
-
-            @Override
-            public void write(byte[] b) throws IOException {
-                // do not write anything
-            }
-
-            @Override
-            public void write(byte[] b, int off, int len) throws IOException {
-                // do not write anything
-            }
-        };
-
-        jline.internal.Log.setOutput(new PrintStream(nullOutputStream));
-    }
-    
     @Override
     public void run(CommandContext ctx) throws CommandException {
         Terminal term = TerminalFactory.create();

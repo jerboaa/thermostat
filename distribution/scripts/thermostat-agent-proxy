@@ -68,7 +68,7 @@ fi
 CONFIG_FILE_ARG="-DipcConfigFile=${CONFIG_FILE}"
 # Drop permissions, if root
 if [ "$(id -u)" -eq 0 ]; then
-  /bin/su -s /bin/bash -c "${JAVA} -cp ${CLASSPATH} ${CONFIG_FILE_ARG} ${LOGGING_ARG} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} ${TARGET_PID}" "${TARGET_USER}"
+  /bin/su -s /bin/bash -c "${JAVA} -cp ${CLASSPATH} ${CONFIG_FILE_ARG} ${LOGGING_ARGS} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} ${TARGET_PID}" "${TARGET_USER}"
 else
-  ${JAVA} -cp ${CLASSPATH} "${CONFIG_FILE_ARG}" ${DEBUG_OPTS} ${LOGGING_ARG} ${AGENT_PROXY_CLASS} "${TARGET_PID}"
+  ${JAVA} -cp ${CLASSPATH} "${CONFIG_FILE_ARG}" ${DEBUG_OPTS} ${LOGGING_ARGS} ${AGENT_PROXY_CLASS} "${TARGET_PID}"
 fi
