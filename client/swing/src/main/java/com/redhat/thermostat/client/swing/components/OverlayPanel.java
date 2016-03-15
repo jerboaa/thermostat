@@ -36,6 +36,18 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import com.redhat.thermostat.client.swing.GraphicsUtils;
+import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -57,19 +69,6 @@ import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 import java.util.EventListener;
 import java.util.EventObject;
-
-import javax.swing.AbstractAction;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-
-import com.redhat.thermostat.client.swing.GraphicsUtils;
-import com.redhat.thermostat.client.ui.Palette;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * A panel meant to be stacked on top of existing components to display

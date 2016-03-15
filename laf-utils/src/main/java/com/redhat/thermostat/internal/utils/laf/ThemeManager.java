@@ -36,19 +36,19 @@
 
 package com.redhat.thermostat.internal.utils.laf;
 
-import java.awt.Color;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.internal.utils.laf.gtk.GTKThemeUtils;
 
 import javax.swing.JPopupMenu;
+import javax.swing.RepaintManager;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
-
-import com.redhat.thermostat.client.ui.Palette;
-import com.redhat.thermostat.internal.utils.laf.gtk.GTKThemeUtils;
+import java.awt.Color;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ThemeManager {
 
@@ -162,6 +162,8 @@ public class ThemeManager {
             color = UIManager.getDefaults().getColor("control");
             UIManager.put("thermostat-bg-color", color);
         }
+
+        RepaintManager.setCurrentManager(new ThermostatRepaintManager());
     }
 }
 
