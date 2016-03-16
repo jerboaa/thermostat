@@ -353,13 +353,15 @@ BuildRequires: %{?scl_prefix_java_common}mvn(com.google.code.gson:gson)
 BuildRequires: %{?scl_prefix}mvn(org.jfree:jfreechart)
 BuildRequires: %{?scl_prefix}mvn(org.jfree:jcommon)
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.commons:commons-beanutils)
-# FIXME: switch back to mongodb prefix once 2.13.2 is available in
-# the mongodb collection.
 BuildRequires: %{?scl_prefix_mongodb}mvn(org.mongodb:mongo-java-driver)
 BuildRequires: %{?scl_prefix}mvn(io.netty:netty-handler) >= %{netty_bundle_version}
 BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman)
 BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman-install)
 BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman-submit)
+# org.jboss.byteman:byteman requires java_cup in order to make maven happy at compile time
+# the byteman package does not itself require java_cup because it's not needed at runtime.
+# BR java_cup since we need byteman as a compile (maven) dep for our byteman-helper.
+BuildRequires: %{?scl_prefix_java_common}java_cup
 
 # BRs for webapp sub-package
 %if 0%{?is_rhel_6}
