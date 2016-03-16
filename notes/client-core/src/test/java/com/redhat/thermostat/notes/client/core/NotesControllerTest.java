@@ -51,6 +51,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -68,10 +69,8 @@ import static org.mockito.Mockito.when;
 public class NotesControllerTest {
 
     private Clock clock;
-    private ApplicationService appSvc;
     private VmRef ref;
     private VmNoteDAO dao;
-    private NotesViewProvider viewProvider;
     private NotesView view;
 
     private StubNotesController controller;
@@ -83,7 +82,7 @@ public class NotesControllerTest {
     @SuppressWarnings("unchecked")
     public void setup() {
         clock = mock(Clock.class);
-        appSvc = mock(ApplicationService.class);
+        ApplicationService appSvc = mock(ApplicationService.class);
         when(appSvc.getApplicationExecutor()).thenReturn(new StubExecutor());
         ref = mock(VmRef.class);
         TimerFactory timerFactory = mock(TimerFactory.class);
@@ -91,7 +90,7 @@ public class NotesControllerTest {
         // Implementation detail: NotesController creates two timers; the first for sync() and the second for autorefresh
         when(timerFactory.createTimer()).thenReturn(new SyncTimer()).thenReturn(new AutoRefreshTimer());
         dao = mock(VmNoteDAO.class);
-        viewProvider = mock(NotesViewProvider.class);
+        NotesViewProvider viewProvider = mock(NotesViewProvider.class);
         view = mock(NotesView.class);
 
         when(viewProvider.createView()).thenReturn(view);
@@ -154,10 +153,10 @@ public class NotesControllerTest {
 
     @Test
     public void verifyLocalSaveUpdatesLocalModel() {
-        when(controller.mockNote.getTimeStamp()).thenReturn(100l);
+        when(controller.mockNote.getTimeStamp()).thenReturn(100L);
         when(controller.mockNote.getId()).thenReturn("foo-noteid");
         when(controller.mockNote.getContent()).thenReturn("content");
-        when(clock.getRealTimeMillis()).thenReturn(150l);
+        when(clock.getRealTimeMillis()).thenReturn(150L);
         controller.localAddNewNote();
         ActionEvent<NotesView.NoteAction> actionEvent = new ActionEvent<>(this, NotesView.NoteAction.LOCAL_SAVE);
         actionEvent.setPayload(controller.mockNote.getId());
@@ -203,18 +202,64 @@ public class NotesControllerTest {
         inOrder.verify(view).setBusy(false);
     }
 
+    @Test
+    public void testCreatesCopyIfStorageAlreadyHasNewNote() {
+        when(dao.getFor(ref)).thenReturn(Collections.singletonList(controller.mockNote));
+        controller.localAddNewNote();
+        assertThat(controller.createCount, is(1));
+        assertThat(controller.copyCount, is(0));
+        controller.sendLocalChangesToStorage();
+        assertThat(controller.createCount, is(1));
+        assertThat(controller.copyCount, is(1));
+    }
+
+    @Test
+    public void testCreatesCopyIfInFlightUpdateOccurrs() {
+        when(dao.getFor(ref)).thenReturn(Collections.singletonList(controller.mockNote));
+
+        controller.localAddNewNote();
+        controller.localSaveNote(controller.mockNote.getId());
+        assertThat(controller.createCount, is(1));
+        assertThat(controller.copyCount, is(0));
+
+        controller.sendLocalChangesToStorage();
+
+        assertThat(controller.createCount, is(1));
+        assertThat(controller.copyCount, is(1));
+
+    }
+
     private static class StubNotesController extends NotesController<VmRef, VmNote, VmNoteDAO> {
 
+        int createCount = 0;
         VmNote mockNote;
+        int copyCount = 0;
+        VmNote copyNote;
 
         public StubNotesController(Clock clock, ApplicationService appSvc, VmRef ref, VmNoteDAO dao, NotesViewProvider viewProvider) {
             super(clock, appSvc, ref, dao, viewProvider);
             mockNote = mock(VmNote.class);
+            when(mockNote.getId()).thenReturn("mock");
+            when(mockNote.getContent()).thenReturn("mock");
+            when(mockNote.getTimeStamp()).thenReturn(100L);
+            when(mockNote.getVmId()).thenReturn("mockvm");
+            copyNote = mock(VmNote.class);
+            when(copyNote.getId()).thenReturn("copy");
+            when(copyNote.getContent()).thenReturn("copy");
+            when(copyNote.getTimeStamp()).thenReturn(200L);
+            when(copyNote.getVmId()).thenReturn("copyvm");
         }
 
         @Override
         protected VmNote createNewNote(long timeStamp, String content) {
+            createCount++;
             return mockNote;
+        }
+
+        @Override
+        protected VmNote copyNote(VmNote note) {
+            copyCount++;
+            return copyNote;
         }
     }
 
@@ -225,7 +270,7 @@ public class NotesControllerTest {
 
         @Override
         public List<Runnable> shutdownNow() {
-            return null;
+            return Collections.emptyList();
         }
 
         @Override

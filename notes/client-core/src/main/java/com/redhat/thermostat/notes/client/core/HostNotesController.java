@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.notes.client.core;
 
-import java.util.UUID;
-
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.notes.common.HostNote;
@@ -54,9 +52,20 @@ public class HostNotesController extends NotesController<HostRef, HostNote, Host
     protected HostNote createNewNote(long timeStamp, String text) {
         HostNote hostNote = new HostNote();
         hostNote.setAgentId(ref.getAgentId());
-        hostNote.setId(UUID.randomUUID().toString());
+        hostNote.setId(createNoteId());
         hostNote.setTimeStamp(timeStamp);
         hostNote.setContent(text);
         return hostNote;
     }
+
+    @Override
+    protected HostNote copyNote(HostNote note) {
+        HostNote copy = new HostNote();
+        copy.setAgentId(note.getAgentId());
+        copy.setTimeStamp(note.getTimeStamp());
+        copy.setContent(note.getContent());
+        copy.setId(createNoteId());
+        return copy;
+    }
+
 }

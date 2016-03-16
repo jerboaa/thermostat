@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
@@ -94,12 +95,12 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         syncTimer = appSvc.getTimerFactory().createTimer();
         syncTimer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);
         syncTimer.setTimeUnit(TimeUnit.MILLISECONDS);
-        syncTimer.setInitialDelay(0l);
-        syncTimer.setDelay(250l);
+        syncTimer.setInitialDelay(0L);
+        syncTimer.setDelay(250L);
 
         autoRefreshTimer = appSvc.getTimerFactory().createTimer();
         autoRefreshTimer.setAction(new AutoRefreshTask());
-        autoRefreshTimer.setInitialDelay(0l);
+        autoRefreshTimer.setInitialDelay(0L);
         autoRefreshTimer.setDelay(30);
         autoRefreshTimer.setTimeUnit(TimeUnit.SECONDS);
         autoRefreshTimer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);
@@ -197,6 +198,10 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         return translator.localize(LocaleResources.VIEW_NAME);
     }
 
+    protected String createNoteId() {
+        return UUID.randomUUID().toString();
+    }
+
     protected void sync(Runnable onComplete) {
         syncTimer.stop();
         syncTimer.setAction(new SyncTask(onComplete));
@@ -237,48 +242,48 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
 
         Set<N> justSent = new HashSet<>();
 
+        for (N note : updatedSet) {
+            N remote = findById(remoteModels, note.getId());
+            if (remote == null) {
+                if (!justSent.contains(note)) {
+                    addedSet.add(note);
+                }
+            } else {
+                if (note.getTimeStamp() > remote.getTimeStamp()) {
+                    if (!justSent.contains(note)) {
+                        dao.update(note);
+                        justSent.add(note);
+                    }
+                } else {
+                    N copy = copyNote(note);
+                    addedSet.add(copy);
+                }
+            }
+        }
+
         for (N note : addedSet) {
             N remote = findById(remoteModels, note.getId());
             if (remote == null) {
                 if (!justSent.contains(note)) {
                     dao.add(note);
-                    addedSet.add(note);
                     justSent.add(note);
                 }
             } else {
-                if (remote.getTimeStamp() > note.getTimeStamp()) {
-                    // if remote already contains a note with the same ID and a newer timestamp, what should we do?
-                    // maybe create a new note, copy the timestamp and content, and add that to remote?
-                } else {
-                    // should we overwrite with an update, or also create a copy here? If this is a new note
-                    // addition locally then if remote already has a note with this ID, it seems like it's an
-                    // unintentionally ID collision.
-                    if (!justSent.contains(note)) {
-                        dao.update(note);
-                        justSent.add(note);
-                    }
-                }
-            }
-        }
-
-        for (N note : updatedSet) {
-            N remote = findById(remoteModels, note.getId());
-            if (remote == null) {
-                if (!justSent.contains(note)) {
-                    dao.add(note);
-                    addedSet.add(note);
-                    justSent.add(note);
-                }
-            } else if (note.getTimeStamp() > remote.getTimeStamp()) {
-                if (!justSent.contains(note)) {
-                    dao.update(note);
-                    justSent.add(note);
-                }
+                // We're supposed to be adding a brand new note, but somehow remote storage already has "this"
+                // note. Must be an ID collision or some such. Copy the note timestamp and contents into a new
+                // note and send that. Assumption: the second attempt will go through as expected. It may actually
+                // result in another ID collision, but this should be very unlikely if IDs are random UUIDs.
+                N copy = copyNote(note);
+                dao.add(copy);
+                justSent.add(copy);
             }
         }
 
         for (N note : removedSet) {
-            dao.remove(note);
+            N remote = findById(remoteModels, note.getId());
+            if (remote != null) {
+                dao.remove(note);
+            }
         }
 
         view.setBusy(false);
@@ -297,6 +302,12 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     }
 
     protected abstract N createNewNote(long timeStamp, String content);
+
+    /**
+     * Copy timestamp, content, and possible other values from the provided Note into a new Note with a new unique
+     * ID, with the same AgentId, VmId, etc.
+     */
+    protected abstract N copyNote(N note);
 
     /** Update the view to match what's in the local cache */
     protected void localUpdateNotesInView() {
@@ -426,7 +437,7 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
                 return;
             }
             long currentTime = clock.getRealTimeMillis();
-            boolean timeoutElapsed = startTime + TimeUnit.SECONDS.toMillis(5l) < currentTime;
+            boolean timeoutElapsed = startTime + TimeUnit.SECONDS.toMillis(5L) < currentTime;
             if (expectedDelta == 0
                     || timeoutElapsed
                     || dao.getCount(ref) == (initialCount + expectedDelta)) {

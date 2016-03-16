@@ -39,12 +39,11 @@ package com.redhat.thermostat.notes.client.swing.internal;
 import com.redhat.thermostat.notes.client.core.NotesViewProvider;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator {
 
     @Override
-    public void start(final BundleContext context) {
+    public void start(BundleContext context) {
         NotesViewProvider viewProvider = new SwingNotesViewProvider();
         context.registerService(NotesViewProvider.class.getName(), viewProvider, null);
     }

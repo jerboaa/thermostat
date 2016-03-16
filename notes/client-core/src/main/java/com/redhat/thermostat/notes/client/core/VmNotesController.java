@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.notes.client.core;
 
-import java.util.UUID;
-
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.notes.common.VmNote;
@@ -46,7 +44,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmNotesController extends NotesController<VmRef, VmNote, VmNoteDAO> {
 
-    public VmNotesController(Clock clock, ApplicationService appSvc, VmNoteDAO vmNoteDao, final VmRef vm, NotesViewProvider notesViewProvider) {
+    public VmNotesController(Clock clock, ApplicationService appSvc, VmNoteDAO vmNoteDao, VmRef vm, NotesViewProvider notesViewProvider) {
         super(clock, appSvc, vm, vmNoteDao, notesViewProvider);
     }
 
@@ -55,10 +53,21 @@ public class VmNotesController extends NotesController<VmRef, VmNote, VmNoteDAO>
         VmNote vmNote = new VmNote();
         vmNote.setAgentId(ref.getHostRef().getAgentId());
         vmNote.setVmId(ref.getVmId());
-        vmNote.setId(UUID.randomUUID().toString());
+        vmNote.setId(createNoteId());
         vmNote.setTimeStamp(timeStamp);
         vmNote.setContent(text);
         return vmNote;
+    }
+
+    @Override
+    protected VmNote copyNote(VmNote note) {
+        VmNote copy = new VmNote();
+        copy.setAgentId(note.getAgentId());
+        copy.setVmId(note.getVmId());
+        copy.setTimeStamp(note.getTimeStamp());
+        copy.setContent(note.getContent());
+        copy.setId(createNoteId());
+        return copy;
     }
 
 }

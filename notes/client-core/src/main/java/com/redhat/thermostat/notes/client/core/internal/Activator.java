@@ -41,7 +41,6 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.SystemClock;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.notes.client.core.HostNotesControllerProvider;
 import com.redhat.thermostat.notes.client.core.NotesViewProvider;
 import com.redhat.thermostat.notes.client.core.VmNotesControllerProvider;
@@ -56,7 +55,6 @@ import org.osgi.framework.ServiceRegistration;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 public class Activator implements BundleActivator {
 
