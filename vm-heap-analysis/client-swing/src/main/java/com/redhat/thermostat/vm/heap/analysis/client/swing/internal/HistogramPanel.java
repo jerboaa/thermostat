@@ -42,20 +42,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
+import com.redhat.thermostat.client.ui.SearchProvider.SearchAction;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.utils.DescriptorConverter;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HistogramRecord;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
+
 
 @SuppressWarnings("serial")
 public class HistogramPanel extends HeapHistogramView implements SwingComponent {
@@ -64,21 +75,80 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
 
     private final JPanel panel;
 
-    private HeaderPanel headerPanel;
+    private ThermostatTable table;
+
+    private final ActionNotifier<HistogramAction> notifier = new ActionNotifier<>(this);
+
 
     public HistogramPanel() {
         panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-        headerPanel = new HeaderPanel(translator.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE));
+        HeaderPanel headerPanel = createHeader();
         panel.add(headerPanel);
     }
 
-    @Override
-    public void display(ObjectHistogram histogram) {
-        ThermostatTable table = new ThermostatTable(new HistogramTableModel(histogram));
+    public HeaderPanel createHeader() {
+        table = new ThermostatTable();
         table.setDefaultRenderer(Long.class, new NiceNumberFormatter());
-        headerPanel.setContent(table.wrap());
+        JScrollPane scrollPane = table.wrap();
+
+        final SearchField searchField = new SearchField();
+        searchField.setTooltip(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_PATTERN_HELP));
+        searchField.setLabel(translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_BROWSE_SEARCH_HINT));
+        searchField.addSearchListener(new ActionListener<SearchAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<SearchAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case PERFORM_SEARCH:
+                        notifier.fireAction(HistogramAction.SEARCH, searchField.getSearchText());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        JPanel displayContents = new JPanel();
+
+        GroupLayout layout = new GroupLayout(displayContents);
+        displayContents.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(layout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(searchField)
+                        .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 376, Short.MAX_VALUE))
+                    .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(searchField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 287, Short.MAX_VALUE))
+        );
+
+        HeaderPanel headerPanel = new HeaderPanel(translator.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE));
+        headerPanel.setContent(displayContents);
+        return headerPanel;
+    }
+
+    @Override
+    public void addHistogramActionListener(ActionListener<HistogramAction> listener) {
+        notifier.addActionListener(listener);
+    }
+
+    @Override
+    public void setHistogram(final ObjectHistogram histogram) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                table.setModel(new HistogramTableModel(histogram));
+            }
+        });
     }
 
     private final class NiceNumberFormatter extends ThermostatTableRenderer {

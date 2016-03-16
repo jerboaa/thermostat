@@ -84,6 +84,8 @@ public class HeapDump {
 
     private static final Logger log = LoggingUtils.getLogger(HeapDump.class);
 
+    private static final int MAX_SEARCH_RESULTS = 1000;
+
     private final HeapInfo heapInfo;
 
     private final HeapDAO heapDAO;
@@ -222,6 +224,16 @@ public class HeapDump {
             log.log(Level.SEVERE, "Unexpected IO Exception while searching heap dump index", e);
         }
         return results;
+    }
+
+    public Collection<String> wildcardSearch(String searchText) {
+        int limit = Math.min(MAX_SEARCH_RESULTS, searchText.length() * 100);
+
+        String wildCardClassNamePattern = searchText;
+        if (!searchText.contains("*") && !searchText.contains("?")) {
+            wildCardClassNamePattern = "*" + searchText + "*";
+        }
+        return searchObjects(wildCardClassNamePattern, limit);
     }
 
     public JavaHeapObject findObject(String id) {

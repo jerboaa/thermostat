@@ -156,25 +156,17 @@ public class ObjectDetailsController {
     }
 
     private void searchForObject() {
-        String searchText = view.getSearchText();
+        final String searchText = view.getSearchText();
         if (searchText == null || searchText.trim().isEmpty()) {
             view.setMatchingObjects(Collections.<HeapObjectUI>emptySet());
             return;
         }
 
-        final int maxResults = computeResultLimit(searchText);
-
-        if (!searchText.contains("*") && !searchText.contains("?")) {
-            searchText = "*" + searchText + "*";
-        }
-
-        final String wildcardQuery = searchText;
-
         appService.getApplicationExecutor().execute(new Runnable() {
 
             @Override
             public void run() {
-                Collection<String> objectIds = heapDump.searchObjects(wildcardQuery, maxResults);
+                Collection<String> objectIds = heapDump.wildcardSearch(searchText);
 
                 List<HeapObjectUI> toDisplay = new ArrayList<>();
                 for (String id: objectIds) {
@@ -185,10 +177,6 @@ public class ObjectDetailsController {
             }
         });
 
-    }
-
-    private int computeResultLimit(String searchText) {
-        return Math.min(1000, searchText.length() * 100);
     }
 
     private void showObjectInfo() {

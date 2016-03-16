@@ -42,7 +42,6 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,8 +56,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InOrder;
-import org.mockito.stubbing.OngoingStubbing;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -122,7 +119,7 @@ public class ObjectDetailsControllerTest {
         when(heapObject.getClazz()).thenReturn(heapObjectClass);
 
         HeapDump dump = mock(HeapDump.class);
-        when(dump.searchObjects(contains(SEARCH_TEXT), anyInt())).thenReturn(Arrays.asList(OBJECT_ID));
+        when(dump.wildcardSearch(contains(SEARCH_TEXT))).thenReturn(Arrays.asList(OBJECT_ID));
         when(dump.findObject(eq(OBJECT_ID))).thenReturn(heapObject);
 
         ArgumentCaptor<ActionListener> viewArgumentCaptor1 = ArgumentCaptor.forClass(ActionListener.class);
@@ -143,92 +140,6 @@ public class ObjectDetailsControllerTest {
         List<HeapObjectUI> matchingObjects = new ArrayList<HeapObjectUI>(matchingObjectsCaptor.getValue());
         assertEquals(1, matchingObjects.size());
         assertEquals(OBJECT_ID, matchingObjects.get(0).objectId);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Test
-    public void verifyInputConvertedIntoWildcardsIfNeeded() {
-        HeapDump heap = mock(HeapDump.class);
-        when(view.getSearchText()).thenReturn("a");
-
-        ArgumentCaptor<ActionListener> objectActionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addObjectActionListener(objectActionListenerCaptor.capture());
-
-        @SuppressWarnings("unused")
-        ObjectDetailsController controller = new ObjectDetailsController(appService, heap, this.objectDetailsProvider, this.objectRootsProvider);
-
-        ActionListener<ObjectAction> actionListener = objectActionListenerCaptor.getValue();
-        assertNotNull(actionListener);
-        actionListener.actionPerformed(new ActionEvent<ObjectAction>(view, ObjectAction.SEARCH));
-
-        runnableCaptor.getValue().run();
-
-        verify(heap).searchObjects("*a*", 100);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Test
-    public void verifyWildcardInputNotConvertedIntoWildcards() {
-        HeapDump heap = mock(HeapDump.class);
-        when(view.getSearchText()).thenReturn("*a?");
-
-        ArgumentCaptor<ActionListener> objectActionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addObjectActionListener(objectActionListenerCaptor.capture());
-
-        @SuppressWarnings("unused")
-        ObjectDetailsController controller = new ObjectDetailsController(appService, heap, this.objectDetailsProvider, this.objectRootsProvider);
-
-        ActionListener<ObjectAction> actionListener = objectActionListenerCaptor.getValue();
-        assertNotNull(actionListener);
-        actionListener.actionPerformed(new ActionEvent<ObjectAction>(view, ObjectAction.SEARCH));
-
-        runnableCaptor.getValue().run();
-
-        verify(heap).searchObjects("*a?", 300);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Test
-    public void verifySearchLimits() {
-
-        Object[][] limits = new Object[][] {
-            { "a",       100 },
-            { "ab",      200 },
-            { "abc",     300 },
-            { "abcd",    400 },
-            { "abcde",   500 },
-            { "abcdef",  600},
-            { "abcdefg", 700},
-            { "java.lang.Class", 1000 },
-        };
-
-        HeapDump heap = mock(HeapDump.class);
-
-        OngoingStubbing<String> ongoing = when(view.getSearchText());
-        for (int i = 0; i < limits.length; i++) {
-            ongoing = ongoing.thenReturn((String)limits[i][0]);
-        }
-
-        ArgumentCaptor<ActionListener> objectActionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addObjectActionListener(objectActionListenerCaptor.capture());
-
-        @SuppressWarnings("unused")
-        ObjectDetailsController controller = new ObjectDetailsController(appService, heap, this.objectDetailsProvider, this.objectRootsProvider);
-
-        ActionListener<ObjectAction> actionListener = objectActionListenerCaptor.getValue();
-        assertNotNull(actionListener);
-
-        for (int i = 0; i < limits.length; i++) {
-            actionListener.actionPerformed(new ActionEvent<ObjectAction>(view, ObjectAction.SEARCH));
-            runnableCaptor.getValue().run();
-        }
-
-        InOrder inOrder = inOrder(heap);
-        for (int i = 0; i < limits.length; i++) {
-            String text = (String) limits[i][0];
-            int times = (Integer) limits[i][1];
-            inOrder.verify(heap).searchObjects("*" + text + "*", times);
-        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

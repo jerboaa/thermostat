@@ -37,16 +37,21 @@
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView.HistogramAction;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvider;
@@ -55,6 +60,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvi
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 public class HeapDumpDetailsController {
 
@@ -63,6 +69,8 @@ public class HeapDumpDetailsController {
     private final ApplicationService appService;
 
     private HeapDumpDetailsView view;
+    private HeapHistogramView heapHistogramView;
+    private HeapDump heapDump;
     private HeapTreeMapView heapTreeMapView;
     private HeapHistogramViewProvider histogramViewProvider;
     private ObjectDetailsViewProvider objectDetailsViewProvider;
@@ -78,6 +86,7 @@ public class HeapDumpDetailsController {
     }
 
     public void setDump(HeapDump dump) {
+        this.heapDump = dump;
         ObjectHistogram histogram = null;
 
         try {
@@ -88,8 +97,20 @@ public class HeapDumpDetailsController {
 
         Objects.requireNonNull(histogram);
 
-        HeapHistogramView heapHistogramView = histogramViewProvider.createView();
-        heapHistogramView.display(histogram);
+        heapHistogramView = histogramViewProvider.createView();
+        heapHistogramView.setHistogram(histogram);
+        heapHistogramView.addHistogramActionListener(new ActionListener<HistogramAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<HistogramAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case SEARCH:
+                        searchForObject((String) actionEvent.getPayload());
+                        break;
+                    default:
+                        throw new NotImplementedException("unknown action fired by " + actionEvent.getSource());
+                }
+            }
+        });
 
         heapTreeMapView.display(histogram);
 
@@ -101,6 +122,23 @@ public class HeapDumpDetailsController {
 
         // do a dummy search right now to prep the index
         dump.searchObjects("A_RANDOM_PATTERN", 1);
+    }
+
+    private void searchForObject(final String searchText) {
+        
+        appService.getApplicationExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                Collection<String> objectIds = heapDump.wildcardSearch(searchText);
+
+                ObjectHistogram toDisplay = new ObjectHistogram();
+                for (String id : objectIds) {
+                    JavaHeapObject heapObject = heapDump.findObject(id);
+                    toDisplay.addThing(heapObject);
+                }
+                heapHistogramView.setHistogram(toDisplay);
+            }
+        });
     }
 
     public BasicView getView() {

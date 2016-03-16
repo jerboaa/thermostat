@@ -41,6 +41,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -85,15 +86,17 @@ public class HeapDumpTest {
     private static final String HEAP_ID = "TEST_HEAP_ID";
 
     private HeapDump heapDump;
+    private HeapInfo heapInfo;
+    private HeapDAO heapDAO;
 
     @Before
     public void setUp() throws IOException {
         InputStream in = getClass().getResourceAsStream("/heapdump.hprof.gz");
         GZIPInputStream gzipIn = new GZIPInputStream(in);
 
-        HeapInfo heapInfo = mock(HeapInfo.class);
+        heapInfo = mock(HeapInfo.class);
         when(heapInfo.getHeapId()).thenReturn(HEAP_ID);
-        HeapDAO heapDAO = mock(HeapDAO.class);
+        heapDAO = mock(HeapDAO.class);
         when(heapDAO.getHeapDumpData(heapInfo)).thenReturn(gzipIn);
         heapDump = new HeapDump(heapInfo, heapDAO);
     }
@@ -171,6 +174,60 @@ public class HeapDumpTest {
         JavaHeapObject obj = heapDump.findObject("0x7d704eb20");
         assertEquals("0x7d704eb20", obj.getIdString());
         assertEquals("java.util.ArrayDeque", obj.getClazz().getName());
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void verifyWildcardSearchInputConvertedIntoWildcardsIfNeeded() {
+        String input = "a";
+        String wildCardInput = "*" + input + "*";
+        verifyWildcardSearchObjectInput(input, wildCardInput, 100);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void verifyWildcardSearchInputNotConvertedIntoWildcards() {
+        String input1 = "a?";
+        String input2 = "a*";
+        String input3 = "*a?";
+
+        verifyWildcardSearchObjectInput(input1, input1, 200);
+        verifyWildcardSearchObjectInput(input2, input2, 200);
+        verifyWildcardSearchObjectInput(input3, input3, 300);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void verifyWildcardSearchLimits() {
+        Object[][] limits = new Object[][] {
+            { "a",       100 },
+            { "ab",      200 },
+            { "abc",     300 },
+            { "abcd",    400 },
+            { "abcde",   500 },
+            { "abcdef",  600 },
+            { "abcdefg", 700 },
+            { "java.lang.Class", 1000 },
+        };
+
+        for (Object[] limit : limits) {
+            String text = (String) limit[0];
+            int times = (Integer) limit[1];
+            verifyWildcardSearchObjectInput(text, "*" + text + "*", times);
+        }
+    }
+
+    public void verifyWildcardSearchObjectInput(String inputPattern, final String expectedPattern, final int expectedLimit) {
+        new HeapDump(heapInfo, heapDAO) {
+            @Override
+            public Collection<String> searchObjects(String pattern, int limit) {
+                assertEquals(pattern, expectedPattern);
+                assertEquals(limit, expectedLimit);
+
+                // doesn't matter
+                return null;
+            }
+        }.wildcardSearch(inputPattern);
     }
 }
 

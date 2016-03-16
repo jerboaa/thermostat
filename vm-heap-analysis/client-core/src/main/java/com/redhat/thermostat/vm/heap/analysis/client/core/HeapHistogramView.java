@@ -38,11 +38,18 @@ package com.redhat.thermostat.vm.heap.analysis.client.core;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 
 public abstract class HeapHistogramView extends BasicView implements UIComponent {
 
-    public abstract void display(ObjectHistogram histogram);
+    public enum HistogramAction {
+        SEARCH,
+    }
+
+    public abstract void setHistogram(ObjectHistogram histogram);
+
+    public abstract void addHistogramActionListener(ActionListener<HistogramAction> listener);
 
 }
 
