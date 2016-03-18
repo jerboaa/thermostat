@@ -103,19 +103,18 @@ public class SearchField extends BaseSearchProvider {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                Document doc = e.getDocument();
                 if (!labelDisplayed.get()) {
-                    String filter = null;
                     try {
-                        filter = doc.getText(0, doc.getLength());
-                        if (!(filter.equals(previousText))) {
+                        Document doc = e.getDocument();
+                        String filter = doc.getText(0, doc.getLength());
+                        if (!filter.equals(previousText)) {
                             previousText = filter;
-                            fireViewAction(SearchAction.PERFORM_SEARCH, searchText.get());
+                            searchText.set(filter);
+                            fireViewAction(SearchAction.PERFORM_SEARCH, filter);
                         }
                     } catch (BadLocationException ble) {
                         // ignore
                     }
-                    searchText.set(filter);
                 }
             }
 

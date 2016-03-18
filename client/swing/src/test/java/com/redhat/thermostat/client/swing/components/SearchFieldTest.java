@@ -36,7 +36,9 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -206,13 +208,38 @@ public class SearchFieldTest {
         textBox.enterText(SEARCH_TEXT);
 
         verify(listener, times(SEARCH_TEXT.length())).actionPerformed(
-                new ActionEvent<SearchField.SearchAction>(searchField, SearchField.SearchAction.PERFORM_SEARCH));
+                new ActionEvent<>(searchField, SearchField.SearchAction.PERFORM_SEARCH));
 
         textBox.enterText("\n");
 
         verify(listener, times(SEARCH_TEXT.length() + 1)).actionPerformed(
-                new ActionEvent<SearchField.SearchAction>(searchField, SearchField.SearchAction.PERFORM_SEARCH));
+                new ActionEvent<>(searchField, SearchField.SearchAction.PERFORM_SEARCH));
 
+    }
+
+    @Category(GUITest.class)
+    @GUITest
+    @Test
+    public void testListenersReceiveCorrectSearchTextPayload() {
+        frameFixture.show();
+
+        final String SEARCH_TEXT = "test";
+
+        final String[] payload = new String[1];
+        ActionListener<SearchField.SearchAction> listener = new ActionListener<SearchField.SearchAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<SearchField.SearchAction> actionEvent) {
+                payload[0] = (String) actionEvent.getPayload();
+            }
+        };
+
+        JTextComponentFixture textBox = frameFixture.textBox(SearchField.VIEW_NAME);
+
+        searchField.addSearchListener(listener);
+
+        textBox.enterText(SEARCH_TEXT);
+
+        assertThat(payload[0], is(SEARCH_TEXT));
     }
 
 }
