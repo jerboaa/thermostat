@@ -36,22 +36,10 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
-import junit.framework.Assert;
-
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.testutils.StubExecutor;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
@@ -64,15 +52,39 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaClass;
+import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+
+import java.io.IOException;
+import java.util.Collections;
+
+import static junit.framework.Assert.fail;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class HeapDumpDetailsControllerTest {
 
     private HeapDumpDetailsView view;
     private HeapDumpDetailsViewProvider viewProvider;
     private HeapHistogramViewProvider histogramProvider;
+    private HeapHistogramView histogramView;
     private HeapTreeMapViewProvider treeMapProvider;
     private ObjectDetailsViewProvider objectDetailsProvider;
     private ObjectRootsViewProvider objectRootsProvider;
+    private ApplicationService appService;
+
+    private HeapDumpDetailsController controller;
 
     @Before
     public void setUp() {
@@ -80,7 +92,7 @@ public class HeapDumpDetailsControllerTest {
         view = mock(HeapDumpDetailsView.class);
         when(viewProvider.createView()).thenReturn(view);
 
-        HeapHistogramView histogramView = mock(HeapHistogramView.class);
+        histogramView = mock(HeapHistogramView.class);
         histogramProvider = mock(HeapHistogramViewProvider.class);
         when(histogramProvider.createView()).thenReturn(histogramView);
 
@@ -95,36 +107,24 @@ public class HeapDumpDetailsControllerTest {
         ObjectRootsView objectRootsView = mock(ObjectRootsView.class);
         objectRootsProvider = mock(ObjectRootsViewProvider.class);
         when(objectRootsProvider.createView()).thenReturn(objectRootsView);
+
+        appService = mock(ApplicationService.class);
+        when(appService.getApplicationExecutor()).thenReturn(new StubExecutor());
+
+        controller = new HeapDumpDetailsController(appService, viewProvider, histogramProvider, treeMapProvider,
+                objectDetailsProvider, objectRootsProvider);
     }
 
-    @After
-    public void tearDown() {
-        viewProvider = null;
-        histogramProvider = null;
-        objectDetailsProvider = null;
-        objectRootsProvider = null;
-    }
-
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testSetDumpFailsWithEmptyDump() throws IOException {
-        HeapDumpDetailsController controller = setupController();
-
         HeapDump emptyDump = mock(HeapDump.class);
         when(emptyDump.getHistogram()).thenReturn(null);
 
-        boolean caught = false;
-        try {
-            controller.setDump(emptyDump);
-        } catch (NullPointerException e) {
-            caught = true;
-        }
-        assertTrue("Null pointer exception expected", caught);
+        controller.setDump(emptyDump);
     }
 
     @Test
     public void testSetDumpWorksWithValidDump() throws IOException {
-        HeapDumpDetailsController controller = setupController();
-
         HeapDump dump = mock(HeapDump.class);
         ObjectHistogram histogram = mock(ObjectHistogram.class);
         when(dump.getHistogram()).thenReturn(histogram);
@@ -132,7 +132,7 @@ public class HeapDumpDetailsControllerTest {
         try {
             controller.setDump(dump);
         } catch (NullPointerException e) {
-            Assert.fail("Did not expect null pointer exception");
+            fail("Did not expect null pointer exception");
         }
 
         verify(dump).searchObjects(isA(String.class), anyInt());
@@ -140,11 +140,62 @@ public class HeapDumpDetailsControllerTest {
                 isA(HeapTreeMapView.class));
     }
 
-    private HeapDumpDetailsController setupController() {
-        ApplicationService appService = mock(ApplicationService.class);
-        return new HeapDumpDetailsController(
-                appService, viewProvider, histogramProvider, treeMapProvider,
-                objectDetailsProvider, objectRootsProvider);
+    @Test
+    public void testEmptySearchStringDisplaysFullHistogram() throws IOException {
+        HeapDump dump = mock(HeapDump.class);
+        ObjectHistogram histogram = mock(ObjectHistogram.class);
+        when(dump.getHistogram()).thenReturn(histogram);
+
+        controller.setDump(dump);
+        verify(histogramView).setHistogram(histogram);
+
+        ArgumentCaptor<ActionListener> captor =
+                ArgumentCaptor.forClass(ActionListener.class);
+        verify(histogramView).addHistogramActionListener(captor.capture());
+        ActionListener<HeapHistogramView.HistogramAction> listener = captor.getValue();
+
+        ActionEvent<HeapHistogramView.HistogramAction> actionEvent = new ActionEvent<>(this, HeapHistogramView.HistogramAction.SEARCH);
+        actionEvent.setPayload("");
+        listener.actionPerformed(actionEvent);
+
+        verify(histogramView, times(2)).setHistogram(histogram);
+
+        verify(dump, never()).wildcardSearch(anyString());
+        verify(dump, never()).findObject(anyString());
+    }
+
+    @Test
+    public void testNonEmptySearchStringDisplaysFilteredHistogram() throws IOException {
+        HeapDump dump = mock(HeapDump.class);
+        ObjectHistogram histogram = mock(ObjectHistogram.class);
+        String objectId = "objectId";
+        when(dump.getHistogram()).thenReturn(histogram);
+        when(dump.wildcardSearch(anyString())).thenReturn(Collections.singleton(objectId));
+        JavaHeapObject javaHeapObject = mock(JavaHeapObject.class);
+        when(javaHeapObject.getClazz()).thenReturn(mock(JavaClass.class));
+        when(dump.findObject(anyString())).thenReturn(javaHeapObject);
+
+        controller.setDump(dump);
+        verify(histogramView).setHistogram(histogram);
+
+        ArgumentCaptor<ActionListener> captor =
+                ArgumentCaptor.forClass(ActionListener.class);
+        verify(histogramView).addHistogramActionListener(captor.capture());
+        ActionListener<HeapHistogramView.HistogramAction> listener = captor.getValue();
+
+        ActionEvent<HeapHistogramView.HistogramAction> actionEvent = new ActionEvent<>(this, HeapHistogramView.HistogramAction.SEARCH);
+        String searchTerm = "SEARCH_TERM";
+        actionEvent.setPayload(searchTerm);
+        listener.actionPerformed(actionEvent);
+
+        verify(histogramView, times(1)).setHistogram(histogram); // verify full histogram still displayed only once
+        verify(dump).wildcardSearch(searchTerm);
+        verify(dump).findObject(objectId);
+
+        ArgumentCaptor<ObjectHistogram> histogramCaptor = ArgumentCaptor.forClass(ObjectHistogram.class);
+        verify(histogramView, times(2)).setHistogram(histogramCaptor.capture());
+        ObjectHistogram objectHistogram = histogramCaptor.getValue();
+        assertThat(objectHistogram.getHistogram().size(), is(1));
     }
 
 }

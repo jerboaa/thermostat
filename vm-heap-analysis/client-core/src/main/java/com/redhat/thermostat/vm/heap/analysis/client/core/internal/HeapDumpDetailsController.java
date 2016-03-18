@@ -87,14 +87,8 @@ public class HeapDumpDetailsController {
 
     public void setDump(HeapDump dump) {
         this.heapDump = dump;
-        ObjectHistogram histogram = null;
 
-        try {
-            histogram = dump.getHistogram();
-        } catch (IOException e) {
-            log.log(Level.SEVERE, "unexpected error while reading heap dump", e);
-        }
-
+        ObjectHistogram histogram = readHistogram();
         Objects.requireNonNull(histogram);
 
         heapHistogramView = histogramViewProvider.createView();
@@ -124,17 +118,32 @@ public class HeapDumpDetailsController {
         dump.searchObjects("A_RANDOM_PATTERN", 1);
     }
 
+    private ObjectHistogram readHistogram() {
+        try {
+            return heapDump.getHistogram();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, "unexpected error while reading heap dump", e);
+            return null;
+        }
+    }
+
     private void searchForObject(final String searchText) {
-        
         appService.getApplicationExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                Collection<String> objectIds = heapDump.wildcardSearch(searchText);
-
-                ObjectHistogram toDisplay = new ObjectHistogram();
-                for (String id : objectIds) {
-                    JavaHeapObject heapObject = heapDump.findObject(id);
-                    toDisplay.addThing(heapObject);
+                ObjectHistogram toDisplay;
+                if (searchText == null || searchText.trim().isEmpty()) {
+                    toDisplay = readHistogram();
+                    if (toDisplay == null) {
+                        return;
+                    }
+                } else {
+                    toDisplay = new ObjectHistogram();
+                    Collection<String> objectIds = heapDump.wildcardSearch(searchText);
+                    for (String id : objectIds) {
+                        JavaHeapObject heapObject = heapDump.findObject(id);
+                        toDisplay.addThing(heapObject);
+                    }
                 }
                 heapHistogramView.setHistogram(toDisplay);
             }

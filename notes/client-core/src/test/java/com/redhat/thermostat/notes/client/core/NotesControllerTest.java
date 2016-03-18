@@ -46,6 +46,7 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.notes.common.VmNote;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.testutils.StubExecutor;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -260,37 +261,6 @@ public class NotesControllerTest {
         protected VmNote copyNote(VmNote note) {
             copyCount++;
             return copyNote;
-        }
-    }
-
-    private static class StubExecutor extends AbstractExecutorService {
-        @Override
-        public void shutdown() {
-        }
-
-        @Override
-        public List<Runnable> shutdownNow() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public boolean isShutdown() {
-            return false;
-        }
-
-        @Override
-        public boolean isTerminated() {
-            return false;
-        }
-
-        @Override
-        public boolean awaitTermination(long l, TimeUnit timeUnit) throws InterruptedException {
-            return false;
-        }
-
-        @Override
-        public void execute(Runnable runnable) {
-            runnable.run();
         }
     }
 
