@@ -75,6 +75,7 @@ public class ProfilerAgent {
     }
 
     private static void addJarsToClassPath(String jars, Instrumentation instrumentation) throws AssertionError {
+        Debug.println("Boot-Classpath: " + System.getProperty("sun.boot.class.path"));
         Debug.println("Classpath: " + System.getProperty("java.class.path"));
         boolean addToBoot = true;
         String[] jarPaths = jars.split(":");

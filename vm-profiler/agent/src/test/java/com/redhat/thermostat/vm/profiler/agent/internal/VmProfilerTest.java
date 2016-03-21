@@ -69,7 +69,7 @@ public class VmProfilerTest {
 
     private static final String AGENT_JAR = "foo";
     private static final String ASM_JAR = "bar";
-    private static final String AGENT_OPTIONS = ASM_JAR + ":" + AGENT_JAR;
+    private static final String AGENT_OPTIONS = AGENT_JAR;
     private static final long TIMESTAMP = 1_000_000_000;
 
     private VmProfiler profiler;

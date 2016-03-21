@@ -87,7 +87,6 @@ public class VmProfiler {
     private final RemoteProfilerCommunicator remote;
 
     private final String agentJarPath;
-    private final String asmJarPath;
 
     public VmProfiler(String agentId, Properties configuration, ProfileDAO dao, MXBeanConnectionPool pool) {
         this(agentId, configuration, dao, new SystemClock(), new ProfileUploaderCreator(), new RemoteProfilerCommunicator(pool));
@@ -104,7 +103,6 @@ public class VmProfiler {
 
         // requireNonNull protects against bad config with missing values
         agentJarPath = Objects.requireNonNull(configuration.getProperty("AGENT_JAR"));
-        asmJarPath = Objects.requireNonNull(configuration.getProperty("ASM_JAR"));
     }
 
     public synchronized void vmStarted(String vmId, int pid) {
@@ -142,7 +140,7 @@ public class VmProfiler {
         }
 
         if (!vmsWithAgentLoaded.contains((Integer)pid)) {
-            String jarsToLoad = asmJarPath + ":" + agentJarPath;
+            String jarsToLoad = agentJarPath;
             logger.info("Asking " + pid + " to load agent '" + agentJarPath + "' with arguments '" + jarsToLoad + "'");
 
             remote.loadAgentIntoPid(pid, agentJarPath, jarsToLoad);

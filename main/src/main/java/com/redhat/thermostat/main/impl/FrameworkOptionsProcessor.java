@@ -65,8 +65,8 @@ public class FrameworkOptionsProcessor {
         // correctly by default
         globalOptions.put(FrameworkOptions.BOOT_DELEGATION,
                 "com.redhat.thermostat.vm.profiler.agent.jvm," +
-                "org.objectweb.asm," +
-                "org.objectweb.asm.commons");
+                "com.redhat.thermostat.vm.profiler.agent.asm," +
+                "com.redhat.thermostat.vm.profiler.agent.asm.commons");
     }
 
     private String[] processGlobalOptions(String[] args) {

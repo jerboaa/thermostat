@@ -57,9 +57,8 @@ public abstract class ProfilerInstrumentor implements ClassFileTransformer {
 
         // this class
         ignorePackageRegexps.add(Pattern.compile("com\\.redhat\\.thermostat\\.vm\\.profiler\\.agent\\.jvm\\..*"));
-
-        // our dependencies
-        ignorePackageRegexps.add(Pattern.compile("org\\.objectweb\\.asm\\..*"));
+        // our dependencies: shaded asm
+        ignorePackageRegexps.add(Pattern.compile("com\\.redhat\\.thermostat\\.vm\\.profiler\\.agent\\.asm\\..*"));
     }
 
     @Override
@@ -67,6 +66,12 @@ public abstract class ProfilerInstrumentor implements ClassFileTransformer {
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain, byte[] classfileBuffer)
             throws IllegalClassFormatException {
+
+        if (!loader.equals(classBeingRedefined.getClassLoader())) {
+            String message = "ERROR: classloader " + loader + " didn't load " + className;
+            Debug.println(message);
+            throw new AssertionError(message);
+        }
 
         className = className.replace('/', '.');
         if (!shouldInstrument(className)) {
