@@ -46,22 +46,69 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 public class UnixSocketIPCProperties extends IPCProperties {
     
     static final String PROP_UNIX_SOCKET_DIR = "unixsocket.dir";
+    private static final String SOCKET_DIR_NAME = "thermostat-socks";
     
     private final File sockDir;
-
+    private final PathUtils pathUtils;
+    
     UnixSocketIPCProperties(Properties props) throws IOException {
+        this(props, new PathUtils());
+    }
+
+    UnixSocketIPCProperties(Properties props, PathUtils pathUtils) throws IOException {
         super(IPCType.UNIX_SOCKET);
+        this.pathUtils = pathUtils;
         
+        // If not specified, use default socket directory
         String sockDirPath = props.getProperty(PROP_UNIX_SOCKET_DIR);
-        if (sockDirPath == null) {
-            throw new IOException("Socket directory must be specified for " + 
-                    IPCType.UNIX_SOCKET.getConfigValue() + " IPC type");
+        if (sockDirPath != null) {
+            this.sockDir = new File(sockDirPath);
+        } else {
+            this.sockDir = getDefaultSocketDir();
         }
-        this.sockDir = new File(sockDirPath);
     }
     
     public File getSocketDirectory() {
         return sockDir;
     }
+    
+    /*
+     * Default socket directory is calculated using the first available from the following:
+     * 1. Environment variable "$XDG_RUNTIME_DIR" (e.g. /run/user/1000/)
+     * 2. System property "java.io.tmpdir", with a subdirectory named from
+     *    the value of system property "user.name" (e.g. /tmp/alice/)
+     */
+    private File getDefaultSocketDir() throws IOException {
+        File result;
+        // First check XDG_RUNTIME_DIR
+        String path = pathUtils.getEnvironmentVariable("XDG_RUNTIME_DIR");
+        if (path != null) {
+            result = new File(path);
+        } else {
+            // Fall back to java.io.tmpdir
+            path = pathUtils.getSystemProperty("java.io.tmpdir");
+            if (path == null) {
+                throw new IOException("Failed to build default socket directory");
+            }
+            String username = pathUtils.getSystemProperty("user.name");
+            if (username == null) {
+                throw new IOException("Unable to build socket directory path without username");
+            }
+            result = new File(path, username);
+        }
+        
+        // Append our socket directory name
+        result = new File(result, SOCKET_DIR_NAME);
+        return result;
+    }
 
+    // Helper class for testing purposes
+    static class PathUtils {
+        String getSystemProperty(String name) {
+            return System.getProperty(name);
+        }
+        String getEnvironmentVariable(String name) {
+            return System.getenv(name);
+        }
+    }
 }

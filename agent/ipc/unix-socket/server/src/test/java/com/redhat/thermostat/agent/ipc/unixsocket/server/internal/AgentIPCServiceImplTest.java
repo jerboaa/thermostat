@@ -52,10 +52,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Selector;
 import java.nio.file.DirectoryStream;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.attribute.UserPrincipal;
+import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -71,15 +74,14 @@ import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCP
 import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.AgentIPCServiceImpl.ChannelCreator;
 import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.AgentIPCServiceImpl.FileUtils;
 import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.AgentIPCServiceImpl.ThreadCreator;
-import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class AgentIPCServiceImplTest {
     
     private static final String SERVER_NAME = "test";
+    private static final String USERNAME = "testUser";
     
     private AgentIPCServiceImpl ipcService;
     private Selector selector;
-    private CommonPaths paths;
     private ExecutorService execService;
     private FilenameValidator validator;
     private FileUtils fileUtils;
@@ -91,30 +93,37 @@ public class AgentIPCServiceImplTest {
     private ThermostatIPCCallbacks callbacks;
     private ChannelCreator channelCreator;
     private ThermostatLocalServerSocketChannelImpl channel;
+    private UnixSocketIPCProperties props;
+    private UserPrincipalLookupService lookup;
 
     @SuppressWarnings("unchecked")
     @Before
     public void setup() throws Exception {
         selector = mock(Selector.class);
         
-        paths = mock(CommonPaths.class);
-        File userData = mock(File.class);
-        when(paths.getUserRuntimeDataDirectory()).thenReturn(userData);
-        Path userDataPath = mock(Path.class);
-        when(userData.toPath()).thenReturn(userDataPath);
+        props = mock(UnixSocketIPCProperties.class);
+        File sockDirFile = mock(File.class);
+        when(props.getSocketDirectory()).thenReturn(sockDirFile);
         socketDirPath = mock(Path.class);
-        UnixSocketIPCProperties props = mock(UnixSocketIPCProperties.class);
-        File socketDirFile = mock(File.class);
-        when(socketDirFile.toPath()).thenReturn(socketDirPath);
-        when(props.getSocketDirectory()).thenReturn(socketDirFile);
+        when(socketDirPath.toAbsolutePath()).thenReturn(socketDirPath);
+        when(socketDirPath.normalize()).thenReturn(socketDirPath);
+        when(sockDirFile.toPath()).thenReturn(socketDirPath);
         socketPath = mock(Path.class);
         when(socketDirPath.resolve(AgentIPCServiceImpl.SOCKET_PREFIX + SERVER_NAME)).thenReturn(socketPath);
         
         fileUtils = mock(FileUtils.class);
         when(fileUtils.exists(socketDirPath)).thenReturn(false);
+        when(fileUtils.getPosixFilePermissions(socketDirPath)).thenReturn(PosixFilePermissions.fromString("rwx------"));
         
         fileAttr = mock(FileAttribute.class);
         when(fileUtils.toFileAttribute(any(Set.class))).thenReturn(fileAttr);
+        
+        lookup = mock(UserPrincipalLookupService.class);
+        when(fileUtils.getUserPrincipalLookupService()).thenReturn(lookup);
+        when(fileUtils.getUsername()).thenReturn(USERNAME);
+        UserPrincipal principal = mock(UserPrincipal.class);
+        when(lookup.lookupPrincipalByName(USERNAME)).thenReturn(principal);
+        when(fileUtils.getOwner(socketDirPath)).thenReturn(principal);
         
         execService = mock(ExecutorService.class);
         validator = mock(FilenameValidator.class);
@@ -129,6 +138,7 @@ public class AgentIPCServiceImplTest {
         File socketFile = mock(File.class);
         when(socketFile.toPath()).thenReturn(socketPath);
         when(channel.getSocketFile()).thenReturn(socketFile);
+        when(fileUtils.getOwner(socketPath)).thenReturn(principal);
         
         callbacks = mock(ThermostatIPCCallbacks.class);
         when(channelCreator.createServerSocketChannel(SERVER_NAME, socketPath, callbacks, selector)).thenReturn(channel);
@@ -146,10 +156,23 @@ public class AgentIPCServiceImplTest {
     @Test(expected=IOException.class)
     public void testInitBadProperties() throws Exception {
         // Not UnixSocketIPCProperties
-        IPCProperties props = mock(IPCProperties.class);
-        when(props.getType()).thenReturn(IPCType.UNKNOWN);
+        IPCProperties badProps = mock(IPCProperties.class);
+        when(badProps.getType()).thenReturn(IPCType.UNKNOWN);
+        ipcService = new AgentIPCServiceImpl(selector, badProps, execService, validator, fileUtils, 
+                threadCreator, channelCreator);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testInitBadPath() throws Exception {
+        when(socketDirPath.normalize()).thenThrow(new InvalidPathException("TEST", "TEST"));
         ipcService = new AgentIPCServiceImpl(selector, props, execService, validator, fileUtils, 
                 threadCreator, channelCreator);
+    }
+    
+    @Test
+    public void testPathNormalized() throws Exception {
+        verify(socketDirPath).toAbsolutePath();
+        verify(socketDirPath).normalize();
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -164,7 +187,7 @@ public class AgentIPCServiceImplTest {
         verify(fileUtils).toFileAttribute(permsCaptor.capture());
         
         Set<PosixFilePermission> perms = (Set<PosixFilePermission>) permsCaptor.getValue();
-        Set<PosixFilePermission> expectedPerms = PosixFilePermissions.fromString("rwxrwx---");
+        Set<PosixFilePermission> expectedPerms = PosixFilePermissions.fromString("rwx------");
         assertEquals(perms, expectedPerms);
         
         verify(fileUtils).createDirectory(socketDirPath, fileAttr);
@@ -177,7 +200,6 @@ public class AgentIPCServiceImplTest {
     public void testStartSuccessDirExists() throws Exception {
         when(fileUtils.exists(socketDirPath)).thenReturn(true);
         when(fileUtils.isDirectory(socketDirPath)).thenReturn(true);
-        when(fileUtils.getPosixFilePermissions(socketDirPath)).thenReturn(PosixFilePermissions.fromString("rwxrwx---"));
         
         ipcService.start();
         
@@ -206,6 +228,41 @@ public class AgentIPCServiceImplTest {
             verify(fileUtils, never()).createDirectory(any(Path.class));
             verify(acceptThread, never()).start();
         }
+    }
+    
+    @Test
+    public void testStartCreateParent() throws Exception {
+        Path sockDirParent = mock(Path.class);
+        when(socketDirPath.getParent()).thenReturn(sockDirParent);
+        
+        ipcService.start();
+        verify(fileUtils).createDirectories(sockDirParent);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testStartBadOwner() throws Exception {
+        UserPrincipal badPrincipal = mock(UserPrincipal.class);
+        when(fileUtils.getOwner(socketDirPath)).thenReturn(badPrincipal);
+        
+        ipcService.start();
+    }
+    
+    @Test(expected=IOException.class)
+    public void testStartOwnerCheckUnsupported() throws Exception {
+        when(fileUtils.getOwner(socketDirPath)).thenThrow(new UnsupportedOperationException());
+        ipcService.start();
+    }
+    
+    @Test(expected=IOException.class)
+    public void testStartOwnerCheckNullOwner() throws Exception {
+        when(fileUtils.getOwner(socketDirPath)).thenReturn(null);
+        ipcService.start();
+    }
+    
+    @Test(expected=IOException.class)
+    public void testStartOwnerCheckNullLookup() throws Exception {
+        when(lookup.lookupPrincipalByName(USERNAME)).thenReturn(null);
+        ipcService.start();
     }
     
     @Test
@@ -288,6 +345,26 @@ public class AgentIPCServiceImplTest {
     @Test(expected=IOException.class)
     public void testCreateServerInvalidName() throws Exception {
         when(validator.validate(SERVER_NAME)).thenReturn(false);
+        ipcService.createServer(SERVER_NAME, callbacks);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testCreateServerPermsChanged() throws Exception {
+        when(fileUtils.getPosixFilePermissions(socketDirPath)).thenReturn(PosixFilePermissions.fromString("rwxrwxrwx"));
+        ipcService.createServer(SERVER_NAME, callbacks);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testCreateServerOwnerChanged() throws Exception {
+        UserPrincipal badPrincipal = mock(UserPrincipal.class);
+        when(fileUtils.getOwner(socketDirPath)).thenReturn(badPrincipal);
+        ipcService.createServer(SERVER_NAME, callbacks);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testCreateServerBadSocketOwner() throws Exception {
+        UserPrincipal badPrincipal = mock(UserPrincipal.class);
+        when(fileUtils.getOwner(socketPath)).thenReturn(badPrincipal);
         ipcService.createServer(SERVER_NAME, callbacks);
     }
     

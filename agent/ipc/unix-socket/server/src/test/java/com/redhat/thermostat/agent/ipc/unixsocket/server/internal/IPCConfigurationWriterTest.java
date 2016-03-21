@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.agent.ipc.unixsocket.server.internal;
 
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,8 +54,6 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class IPCConfigurationWriterTest {
     
-    private static final String RUN_DATA_PATH = "/path/to/thermostat/run";
-    
     @Test
     public void testWrite() throws Exception {
         PropertiesHelper helper = mock(PropertiesHelper.class);
@@ -61,12 +61,6 @@ public class IPCConfigurationWriterTest {
         CommonPaths paths = mock(CommonPaths.class);
         File configFile = mock(File.class);
         when(paths.getUserIPCConfigurationFile()).thenReturn(configFile);
-        File runDataDir = mock(File.class);
-        File socketDir = mock(File.class);
-        String socketDirPath = RUN_DATA_PATH + File.separator + IPCConfigurationWriter.DEFAULT_SOCKET_DIR_NAME;
-        when(socketDir.getAbsolutePath()).thenReturn(socketDirPath);
-        when(helper.createDirectory(runDataDir, IPCConfigurationWriter.DEFAULT_SOCKET_DIR_NAME)).thenReturn(socketDir);
-        when(paths.getUserRuntimeDataDirectory()).thenReturn(runDataDir);
         
         Properties props = mock(Properties.class);
         when(helper.createProperties()).thenReturn(props);
@@ -77,8 +71,7 @@ public class IPCConfigurationWriterTest {
         writer.write();
         
         verify(props).setProperty(IPCConfigurationWriter.PROP_IPC_TYPE, IPCType.UNIX_SOCKET.getConfigValue());
-        verify(props).setProperty(IPCConfigurationWriter.PROP_UNIX_SOCKET_DIR, socketDirPath);
-        verify(props).store(fos, null);
+        verify(props).store(eq(fos), anyString());
         verify(fos).close();
     }
 

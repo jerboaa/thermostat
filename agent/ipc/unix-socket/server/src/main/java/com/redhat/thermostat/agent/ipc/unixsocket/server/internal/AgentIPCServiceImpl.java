@@ -36,14 +36,19 @@
 
 package com.redhat.thermostat.agent.ipc.unixsocket.server.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Selector;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.attribute.UserPrincipal;
+import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,8 +73,6 @@ class AgentIPCServiceImpl implements AgentIPCService {
     private static final Logger logger = LoggingUtils.getLogger(AgentIPCServiceImpl.class);
     // Filename prefix for socket file
     static final String SOCKET_PREFIX = "sock-";
-    // Client environment variable containing path to socket directory
-    static final String ENVVAR_SOCKET_DIR = "__THERMOSTAT_IPC_SOCKET_DIR";
     // Permissions to allow only the owner and group access to the directory
     private static final Set<PosixFilePermission> SOCKET_DIR_PERM;
     static {
@@ -77,9 +80,6 @@ class AgentIPCServiceImpl implements AgentIPCService {
         perms.add(PosixFilePermission.OWNER_READ);
         perms.add(PosixFilePermission.OWNER_WRITE);
         perms.add(PosixFilePermission.OWNER_EXECUTE);
-        perms.add(PosixFilePermission.GROUP_READ);
-        perms.add(PosixFilePermission.GROUP_WRITE);
-        perms.add(PosixFilePermission.GROUP_EXECUTE);
         SOCKET_DIR_PERM = Collections.unmodifiableSet(perms);
     }
     
@@ -110,7 +110,8 @@ class AgentIPCServiceImpl implements AgentIPCService {
             IPCType type = props.getType();
             throw new IOException("Unsupported IPC type: " + type.getConfigValue());
         }
-        this.socketDir = ((UnixSocketIPCProperties) props).getSocketDirectory().toPath();
+        File sockDirFile = ((UnixSocketIPCProperties) props).getSocketDirectory();
+        this.socketDir = createSocketDirPath(sockDirFile);
         
         this.acceptThread = threadCreator.createAcceptThread(selector, execService);
     }
@@ -120,6 +121,15 @@ class AgentIPCServiceImpl implements AgentIPCService {
         checkSocketDir();
         acceptThread.start();
         logger.info("Agent IPC service started");
+    }
+    
+    private Path createSocketDirPath(File sockDirFile) throws IOException {
+        try {
+            // Make absolute and remove redundant elements
+            return sockDirFile.toPath().toAbsolutePath().normalize();
+        } catch (InvalidPathException e) {
+            throw new IOException("Invalid socket directory path", e);
+        }
     }
 
     private Path getPathToServer(String name) throws IOException {
@@ -146,14 +156,26 @@ class AgentIPCServiceImpl implements AgentIPCService {
             throw new IOException("IPC server with name \"" + name + "\" already exists");
         }
 
-        // Create socket
+        // Check for existing socket
         Path socketPath = getPathToServer(name);
         if (fileUtils.exists(socketPath)) {
             // Must have been left behind, so delete before attempting to bind
             fileUtils.delete(socketPath);
         }
+        
+        // Check that socket directory permissions haven't changed
+        if (!permissionsMatch(socketDir)) {
+            throw new IOException("Socket directory permissions are insecure");
+        }
+        checkOwner(socketDir, "Socket directory");
+        
+        // Create socket
         ThermostatLocalServerSocketChannelImpl socket = 
                 channelCreator.createServerSocketChannel(name, socketPath, callbacks, selector);
+        
+        // Verify owner of new socket file
+        File socketFile = socket.getSocketFile();
+        checkOwner(socketFile.toPath(), "Socket file " + socketFile.getName());
         sockets.put(name, socket);
     }
     
@@ -166,15 +188,44 @@ class AgentIPCServiceImpl implements AgentIPCService {
         } else if (!permissionsMatch(socketDir)) {
             throw new IOException("Socket directory has incorrect permissions");
         } // else -> socket directory exists and is valid
+        
+        // Verify correct ownership
+        checkOwner(socketDir, "Socket directory");
+        logger.fine("Using Unix socket directory: " + socketDir.toString());
     }
     
     private boolean permissionsMatch(Path path) throws IOException {
         Set<PosixFilePermission> acutalPerms = fileUtils.getPosixFilePermissions(path);
         return SOCKET_DIR_PERM.equals(acutalPerms);
     }
+    
+    private void checkOwner(Path path, String errorMessagePrefix) throws IOException {
+        String username = fileUtils.getUsername();
+        UserPrincipalLookupService lookup = fileUtils.getUserPrincipalLookupService();
+        UserPrincipal principal = lookup.lookupPrincipalByName(username);
+        if (principal == null) {
+            throw new IOException("No Principal found for user: " + username);
+        }
+        
+        try {
+            UserPrincipal owner = fileUtils.getOwner(path);
+            if (owner == null) {
+                throw new IOException("Unable to determine owner for path: " + path.toString());
+            } else if (!owner.equals(principal)) {
+                throw new IOException(errorMessagePrefix + " insecure with owner: " + owner.getName());
+            }
+        } catch (UnsupportedOperationException e) {
+            throw new IOException("Cannot determine owner from file system", e);
+        }
+    }
 
     private void prepareSocketDir(Path path) throws IOException {
-        // Create directory with 770 permissions
+        Path parent = path.getParent();
+        if (parent != null) {
+            // Create parent directories
+            fileUtils.createDirectories(parent);
+        }
+        // Create socket directory with 700 permissions
         fileUtils.createDirectory(path, fileUtils.toFileAttribute(SOCKET_DIR_PERM));
     }
     
@@ -274,6 +325,10 @@ class AgentIPCServiceImpl implements AgentIPCService {
             return Files.createDirectory(dir, attrs);
         }
         
+        Path createDirectories(Path dir, FileAttribute<?>... attrs) throws IOException {
+            return Files.createDirectories(dir, attrs);
+        }
+        
         Set<PosixFilePermission> getPosixFilePermissions(Path path) throws IOException {
             return Files.getPosixFilePermissions(path);
         }
@@ -284,6 +339,18 @@ class AgentIPCServiceImpl implements AgentIPCService {
         
         DirectoryStream<Path> newDirectoryStream(Path dir) throws IOException {
             return Files.newDirectoryStream(dir);
+        }
+        
+        UserPrincipalLookupService getUserPrincipalLookupService() {
+            return FileSystems.getDefault().getUserPrincipalLookupService();
+        }
+        
+        String getUsername() {
+            return System.getProperty("user.name");
+        }
+        
+        UserPrincipal getOwner(Path path) throws IOException {
+            return Files.getOwner(path);
         }
         
     }

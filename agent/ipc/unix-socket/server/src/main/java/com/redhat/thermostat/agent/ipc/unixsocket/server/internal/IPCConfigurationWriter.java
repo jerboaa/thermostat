@@ -46,9 +46,13 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 
 class IPCConfigurationWriter {
 
-    static final String DEFAULT_SOCKET_DIR_NAME = "sockets";
     static final String PROP_IPC_TYPE = "type";
     static final String PROP_UNIX_SOCKET_DIR = "unixsocket.dir";
+    private static final String COMMENTS = "Configuration for Inter-process Communication (IPC) used in the Thermostat agent.\n"
+    + "The agent is configured to use Unix sockets for IPC by default.\n"
+    + "The options below can be set to modify the defaults used by the agent:\n\n" 
+    + "Directory where Unix sockets are created, which may be deleted if it already exists.\n"
+    + PROP_UNIX_SOCKET_DIR + "=/path/to/unix/sockets\n";
     
     private final CommonPaths paths;
     private final PropertiesHelper helper;
@@ -67,15 +71,12 @@ class IPCConfigurationWriter {
         File configFile = paths.getUserIPCConfigurationFile();
         configFile.createNewFile();
         
-        File runData = paths.getUserRuntimeDataDirectory();
-        File socketDir = helper.createDirectory(runData, DEFAULT_SOCKET_DIR_NAME);
-        
         Properties props = helper.createProperties();
+        // Leave remainder of properties as defaults
         props.setProperty(PROP_IPC_TYPE, IPCType.UNIX_SOCKET.getConfigValue());
-        props.setProperty(PROP_UNIX_SOCKET_DIR, socketDir.getAbsolutePath());
         
         FileOutputStream fos = helper.createStream(configFile);
-        props.store(fos, null);
+        props.store(fos, COMMENTS);
         fos.close();
     }
     
@@ -86,9 +87,6 @@ class IPCConfigurationWriter {
         }
         Properties createProperties() {
             return new Properties();
-        }
-        File createDirectory(File parent, String name) {
-            return new File(parent, DEFAULT_SOCKET_DIR_NAME);
         }
     }
 
