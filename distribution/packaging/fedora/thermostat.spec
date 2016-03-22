@@ -300,6 +300,7 @@ BuildRequires: java-devel >= 1:1.7.0
 BuildRequires: %{?scl_prefix_java_common}javapackages-tools
 BuildRequires: %{?scl_prefix_java_common}maven-local
 BuildRequires: %{?scl_prefix_maven}maven-dependency-plugin
+BuildRequires: %{?scl_prefix_maven}maven-shade-plugin
 BuildRequires: %{?scl_prefix_maven}maven-surefire-plugin
 BuildRequires: %{?scl_prefix_maven}maven-war-plugin
 BuildRequires: %{?scl_prefix_maven}maven-clean-plugin
@@ -478,6 +479,10 @@ Requires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpmime) >= 
 Obsoletes: %{?scl_prefix}mvn(com.redhat.thermostat:thermostat-agent-proxy-common) <= %{version}
 
 %{?scl:Requires: %scl_runtime}
+
+# The version of asm that this package builds against gets bundled in
+# See https://fedorahosted.org/fpc/ticket/226 for the same issue in another package
+Provides: %{?scl_prefix}bundled(%{?scl_prefix_maven}mvn(%{object_web_asm_maven_coords})
 
 %description
 Thermostat is a monitoring and instrumentation tool for the Hotspot JVM,
