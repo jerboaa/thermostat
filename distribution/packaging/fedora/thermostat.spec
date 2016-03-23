@@ -136,7 +136,7 @@ __DEFAULT_RELEASE__ 7
 # thread plugin needs jgraphx. See gui.properties hunk in
 # 0001_shared_fix_bundle_loading.patch We pass in
 # jgraphx.osgi.version via the command line.
-%global jgraphx_bundle_version     3.1.2
+%global jgraphx_bundle_version     3.5.0
 
 # Base path to the JDK which will be used in boot scripts
 %if 0%{?fedora} >= 22
