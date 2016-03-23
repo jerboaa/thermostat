@@ -893,23 +893,6 @@ diff --git a/pom.xml b/pom.xml
  
      <felix.scr.version>1.8.2</felix.scr.version>
      <felix.scr.annotations.version>1.9.12</felix.scr.annotations.version>
-@@ -642,16 +654,6 @@
-       </dependency>
- 
-       <dependency>
--        <groupId>org.osgi</groupId>
--        <artifactId>org.osgi.core</artifactId>
--        <version>${osgi.core.version}</version>
--      </dependency>
--      <dependency>
--        <groupId>org.osgi</groupId>
--        <artifactId>org.osgi.compendium</artifactId>
--        <version>${osgi.compendium.version}</version>
--      </dependency>
--      <dependency>
-         <groupId>org.apache.felix</groupId>
-         <artifactId>org.apache.felix.framework</artifactId>
-         <version>${felix.framework.version}</version>
 diff --git a/storage/cli/pom.xml b/storage/cli/pom.xml
 --- a/storage/cli/pom.xml
 +++ b/storage/cli/pom.xml

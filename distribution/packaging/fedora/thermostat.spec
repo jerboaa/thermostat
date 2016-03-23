@@ -76,6 +76,7 @@ __DEFAULT_RELEASE__ 7
   %global jnr_posix_symbolic_name    com.github.jnr.posix
   %global jnr_ffi_version            2.0.6
   %global jnr_ffi_symbolic_name      com.github.jnr.ffi
+  %global osgi_compendium_maven_version 1.4.0
 
 %else
 
@@ -119,13 +120,15 @@ __DEFAULT_RELEASE__ 7
   %global jnr_posix_symbolic_name    jnr.posix
   %global jnr_ffi_version            2.0.3
   %global jnr_ffi_symbolic_name      jnr.ffi
+  # Use compat version of 1 which is provided by the SCL-ized version
+  # in our collection.
+  %global osgi_compendium_maven_version 1
 
 %endif
 
 # Real OSGi Bundle-Version is 4.0.28.Final
 %global netty_bundle_version          4.0.28
 %global kxml2_version                 2.3.0
-%global osgi_compendium_maven_version 1.4.0
 
 # apache-commons-collections
 %global collections_bundle_version 3.2.1
