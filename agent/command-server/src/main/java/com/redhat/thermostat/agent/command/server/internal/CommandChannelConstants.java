@@ -36,17 +36,31 @@
 
 package com.redhat.thermostat.agent.command.server.internal;
 
+import java.nio.charset.Charset;
+
 interface CommandChannelConstants {
 
-    String BEGIN_SSL_CONFIG_TOKEN = "<BEGIN SSL CONFIG>";
-    String KEYSTORE_FILE_PREFIX = "KSFILE:";
-    String KEYSTORE_PASS_PREFIX = "KSPASS:";
-    String KEYSTORE_NULL = "KSNULL";
-    String END_SSL_CONFIG_TOKEN = "<END SSL CONFIG>";
-    String BEGIN_REQUEST_TOKEN = "<BEGIN REQUEST>";
-    String END_REQUEST_TOKEN = "<END REQUEST>";
-    String BEGIN_RESPONSE_TOKEN = "<BEGIN RESPONSE>";
-    String END_RESPONSE_TOKEN = "<END RESPONSE>";
-    String SERVER_STARTED_TOKEN = "<SERVER STARTED>";
+    // Server startup state tokens
+    byte[] SERVER_STARTED_TOKEN = "<SERVER STARTED>".getBytes(Charset.forName("UTF-8"));
+    byte[] SERVER_READY_TOKEN = "<SERVER READY>".getBytes(Charset.forName("UTF-8"));
+    
+    // SSLConfiguration JSON members
+    String SSL_JSON_ROOT = "sslConfiguration";
+    String SSL_JSON_KEYSTORE_FILE = "keystoreFile";
+    String SSL_JSON_KEYSTORE_PASS = "keystorePass";
+    String SSL_JSON_COMMAND_CHANNEL = "enabledCommandChannel";
+    String SSL_JSON_BACKING_STORAGE = "enabledBackingStorage";
+    String SSL_JSON_HOSTNAME_VERIFICATION = "disableHostnameVerification";
+    
+    // Request JSON members
+    String REQUEST_JSON_TOP = "request";
+    String REQUEST_JSON_TYPE = "type";
+    String REQUEST_JSON_HOST = "targetHost";
+    String REQUEST_JSON_PORT = "targetPort";
+    String REQUEST_JSON_PARAMS = "parameters";
+    
+    // Response JSON members
+    String RESPONSE_JSON_TOP = "response";
+    String RESPONSE_JSON_TYPE = "type";
 
 }

@@ -44,7 +44,6 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.command.DecodingHelper;
 import com.redhat.thermostat.common.command.InvalidMessageException;
-import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.ParameterDecodingContext;
 import com.redhat.thermostat.common.command.ParameterDecodingState;
 import com.redhat.thermostat.common.command.Request;
@@ -59,9 +58,35 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 /**
+ * <p>
+ * {@link Request} objects are serialized over the command channel in the
+ * following format:
+ * <pre>
+ * -------------------------
+ * | A | TYPE | B | PARAMS |
+ * -------------------------
  * 
- * See implementation of {@link MessageEncoder} for documentation of the
- * {@link Request} encoding format.
+ * A is an 32 bit integer representing the length - in bytes - of TYPE. TYPE
+ * is a byte array representing the string of the request type (e.g.
+ * "RESPONSE_EXPECTED") B is a 32 bit integer representing the number of
+ * request parameters which follow.
+ * 
+ * PARAMS (if B > 0) is a variable length stream of the following format:
+ * 
+ * It is a simple encoding of name => value pairs.
+ * 
+ * -----------------------------------------------------------------------------------------------
+ * | I_1 | K_1 | P_1 | V_1 | ... | I_(n-1) | K_(n-1) | P_(n-1) | V_(n-1) | I_n | K_n | P_n | V_n |
+ * -----------------------------------------------------------------------------------------------
+ * 
+ * I_n  A 32 bit integer representing the length - in bytes - of the n'th
+ *      parameter name.
+ * K_n  A 32 bit integer representing the length - in bytes - of the n'th
+ *      parameter value.
+ * P_n  A byte array representing the string of the n'th parameter name.
+ * V_n  A byte array representing the string of the n'th parameter value.
+ * </pre>
+ * </p>
  */
 class CommandChannelRequestDecoder extends ByteToMessageDecoder {
     

@@ -36,105 +36,97 @@
 
 package com.redhat.thermostat.agent.command.server.internal;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
+import java.nio.charset.Charset;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 class SSLConfigurationParser {
     
-    SSLConfiguration parse(InputStream in) throws IOException {
-        /* Read in SSLConfiguration from agent as follows:
-         * '<BEGIN SSL CONFIG>'
-         * KSFILE:Keystore File Path
-         * KSPASS:Keystore Password
-         * Enabled for Command Channel (true/false)
-         * Enabled for Backing Storage (true/false)
-         * Disable Hostname Verification (true/false)
-         * '<END SSL CONFIG>'
-         * 
-         * If either the keystore file or password are null, the respective
-         * KSFILE or KSPASS token will be replaced with KSNULL. This is
-         * done to account for the case where the keystore password is the
-         * string "null".
-         */
-        BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-        String line = br.readLine();
-        requireNonNull(line, "Expected " + CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + ", got EOF");
-        if (!CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN.equals(line)) {
-            throw new IOException("Expected " + CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + ", got: " + line);
+    // Total size of JSON encoded SSLConfiguration should be no more than this size in bytes
+    private static final int SSL_CONF_MAX_BYTES = 8192;
+    
+    SSLConfiguration parseSSLConfiguration(ByteChannel channel) throws IOException {
+        ByteBuffer buf = ByteBuffer.allocate(SSL_CONF_MAX_BYTES);
+        int read = channel.read(buf);
+        if (read < 0) {
+            throw new IOException("Failed to read SSL configuration, got EOF");
         }
+        byte[] jsonSslConf = new byte[read];
+        buf.get(jsonSslConf);
         
-        // Read keystore path
-        line = br.readLine();
-        requireNonNull(line, "Expected path to keystore file, got EOF");
-        File keystoreFile;
-        if (CommandChannelConstants.KEYSTORE_NULL.equals(line)) {
-            keystoreFile = null;
-        } else if (line.startsWith(CommandChannelConstants.KEYSTORE_FILE_PREFIX)) {
-            String path = line.substring(CommandChannelConstants.KEYSTORE_FILE_PREFIX.length());
-            keystoreFile = new File(path);
-        } else {
-            throw new IOException("Expected " + CommandChannelConstants.KEYSTORE_FILE_PREFIX + ": or " + CommandChannelConstants.KEYSTORE_NULL + ", got: " + line);
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        JsonParser parser = new JsonParser();
+        
+        try {
+            String jsonSslConfString = new String(jsonSslConf, Charset.forName("UTF-8"));
+            JsonElement parsed = parser.parse(jsonSslConfString);
+            requireNonNull(parsed, "Entire SSL configuration missing");
+            JsonObject root = toJsonObject(parsed);
+            
+            JsonElement sslConfigElement = root.get(CommandChannelConstants.SSL_JSON_ROOT);
+            requireNonNull(sslConfigElement, "SSL configuration parameters missing");
+            JsonObject sslConfigObj = toJsonObject(sslConfigElement);
+            
+            // Construct SSLConfiguration from parameters
+            String keystorePath = getStringOrNull(gson, sslConfigObj, CommandChannelConstants.SSL_JSON_KEYSTORE_FILE);
+            File keystoreFile = null;
+            if (keystorePath != null) {
+                keystoreFile = new File(keystorePath);
+            }
+            String keystorePass = getStringOrNull(gson, sslConfigObj, CommandChannelConstants.SSL_JSON_KEYSTORE_PASS);
+            boolean cmdChannel = getBoolean(gson, sslConfigObj, CommandChannelConstants.SSL_JSON_COMMAND_CHANNEL);
+            boolean backingStorage = getBoolean(gson, sslConfigObj, CommandChannelConstants.SSL_JSON_BACKING_STORAGE);
+            boolean disableVerification = getBoolean(gson, sslConfigObj, CommandChannelConstants.SSL_JSON_HOSTNAME_VERIFICATION);
+            
+            return new CommandChannelSSLConfiguration(keystoreFile, keystorePass, cmdChannel, 
+                    backingStorage, disableVerification);
+        } catch (JsonParseException e) {
+            throw new IOException("Invalid encoded SSL configuration", e);
         }
-        
-        // Read keystore password
-        line = br.readLine();
-        requireNonNull(line, "Expected keystore password, got EOF");
-        String keystorePass;
-        if (CommandChannelConstants.KEYSTORE_NULL.equals(line)) {
-            keystorePass = null;
-        } else if (line.startsWith(CommandChannelConstants.KEYSTORE_PASS_PREFIX)) {
-            keystorePass = line.substring(CommandChannelConstants.KEYSTORE_PASS_PREFIX.length());
-        } else {
-            throw new IOException("Expected " + CommandChannelConstants.KEYSTORE_PASS_PREFIX + ": or " + CommandChannelConstants.KEYSTORE_NULL + ", got: " + line);
-        }
-        
-        // Read enabled for command channel
-        line = br.readLine();
-        requireNonNull(line, "Expected enabled for command channel boolean, got EOF");
-        if (!isBoolean(line)) {
-            throw new IOException("Expected enabled for command channel boolean, got: " + line);
-        }
-        Boolean cmdChannel = Boolean.valueOf(line);
-        
-        // Read enabled for backing storage
-        line = br.readLine();
-        requireNonNull(line, "Expected enabled for backing storage boolean, got EOF");
-        if (!isBoolean(line)) {
-            throw new IOException("Expected enabled for backing storage boolean, got: " + line);
-        }
-        Boolean backingStorage = Boolean.valueOf(line);
-        
-        // Read disable host verification boolean
-        line = br.readLine();
-        requireNonNull(line, "Expected disable host verification boolean, got EOF");
-        if (!isBoolean(line)) {
-            throw new IOException("Expected disable host verification boolean, got: " + line);
-        }
-        Boolean disableVerification = Boolean.valueOf(line);
-        
-        line = br.readLine();
-        requireNonNull(line, "Expected " + CommandChannelConstants.END_SSL_CONFIG_TOKEN + ", got EOF");
-        if (!CommandChannelConstants.END_SSL_CONFIG_TOKEN.equals(line)) {
-            throw new IOException("Expected " + CommandChannelConstants.END_SSL_CONFIG_TOKEN + ", got: " + line);
-        }
-        
-        return new CommandChannelSSLConfiguration(keystoreFile, keystorePass, cmdChannel, 
-                backingStorage, disableVerification);
     }
     
-    private boolean isBoolean(String line) {
-        return "true".equalsIgnoreCase(line) || "false".equalsIgnoreCase(line);
+    private String getStringOrNull(Gson gson, JsonObject sslConfigObj, String member) throws IOException {
+        String value = null;
+        // May be null value, but parameter must be specified
+        if (!sslConfigObj.has(member)) {
+            throw new IOException(member + " parameter missing");
+        }
+        JsonElement element = sslConfigObj.get(member);
+        if (element != null) {
+            value = gson.fromJson(element, String.class);
+        }
+        return value;
+    }
+
+    private boolean getBoolean(Gson gson, JsonObject sslConfigObj, String member) throws IOException {
+        JsonElement element = sslConfigObj.get(member);
+        requireNonNull(element, member + " parameter missing");
+        boolean value = gson.fromJson(element, Boolean.class);
+        return value;
     }
     
-    private void requireNonNull(String line, String errorMessage) throws IOException {
-        if (line == null) {
+    private void requireNonNull(JsonElement element, String errorMessage) throws IOException {
+        if (element == null || element.isJsonNull()) {
             throw new IOException(errorMessage);
         }
+    }
+    
+    private JsonObject toJsonObject(JsonElement element) throws IOException {
+        if (!element.isJsonObject()) {
+            throw new IOException("Malformed data received");
+        }
+        return element.getAsJsonObject();
     }
 
 }

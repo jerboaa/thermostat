@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.agent.command.server.internal;
 
+import java.nio.channels.ByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,13 +68,14 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
     private final ServerBootstrap bootstrap;
     private final SSLConfiguration sslConf;
 
-    CommandChannelServerContext(SSLConfiguration sslConf) {
-        this(sslConf, new ServerChannelPipelineInitializerCreator());
+
+    CommandChannelServerContext(SSLConfiguration sslConf, ByteChannel agentChannel) {
+        this(sslConf, agentChannel, new ServerChannelPipelineInitializerCreator());
     }
     
-    CommandChannelServerContext(SSLConfiguration sslConf, ServerChannelPipelineInitializerCreator initCreator) {
+    CommandChannelServerContext(SSLConfiguration sslConf, ByteChannel agentChannel, ServerChannelPipelineInitializerCreator initCreator) {
         this.sslConf = sslConf;
-        bootstrap = createBootstrap(sslConf, initCreator);
+        bootstrap = createBootstrap(sslConf, agentChannel, initCreator);
     }
 
     @Override
@@ -86,13 +88,13 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
         return sslConf;
     }
 
-    private ServerBootstrap createBootstrap(SSLConfiguration conf, ServerChannelPipelineInitializerCreator initCreator) {
+    private ServerBootstrap createBootstrap(SSLConfiguration conf, ByteChannel agentChannel, ServerChannelPipelineInitializerCreator initCreator) {
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         bootstrap.group(bossGroup, workerGroup)
             .channel(NioServerSocketChannel.class)
-            .childHandler(initCreator.createInitializer(conf))
+            .childHandler(initCreator.createInitializer(conf, agentChannel))
             .childOption(ChannelOption.TCP_NODELAY, true)
             .childOption(ChannelOption.SO_KEEPALIVE, true)
             .childOption(ChannelOption.SO_REUSEADDR, true);
@@ -103,9 +105,11 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
     static class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
         private final SSLConfiguration sslConf;
+        private final ByteChannel agentChannel;
         
-        ServerChannelInitializer(SSLConfiguration sslConf) {
+        ServerChannelInitializer(SSLConfiguration sslConf, ByteChannel agentChannel) {
             this.sslConf = sslConf;
+            this.agentChannel = agentChannel;
         }
         
         @Override
@@ -126,7 +130,7 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
             }
             pipeline.addLast("decoder", new CommandChannelRequestDecoder());
             pipeline.addLast("encoder", new ResponseEncoder());
-            pipeline.addLast("handler", new ServerHandler(sslConf));
+            pipeline.addLast("handler", new ServerHandler(sslConf, agentChannel));
         }
         
     }
@@ -134,8 +138,8 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
     // Testing hook
     static class ServerChannelPipelineInitializerCreator {
         
-        ServerChannelInitializer createInitializer(SSLConfiguration sslConf) {
-            return new ServerChannelInitializer(sslConf);
+        ServerChannelInitializer createInitializer(SSLConfiguration sslConf, ByteChannel agentChannel) {
+            return new ServerChannelInitializer(sslConf, agentChannel);
         }
     }
 

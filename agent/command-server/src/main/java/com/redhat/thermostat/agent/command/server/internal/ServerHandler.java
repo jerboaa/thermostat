@@ -36,23 +36,18 @@
 
 package com.redhat.thermostat.agent.command.server.internal;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
+import java.nio.channels.ByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.command.Message.MessageType;
 import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestEncoder;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -62,21 +57,22 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 class ServerHandler extends SimpleChannelInboundHandler<Request> {
 
-    private static final Object STDIO_LOCK = new Object();
     private static final Logger logger = LoggingUtils.getLogger(ServerHandler.class);
     
-    private SSLConfiguration sslConf;
-    private ResponseParser responseParser;
-    private OutputStream outStream;
+    private final SSLConfiguration sslConf;
+    private final ByteChannel agentChannel;
+    private final JsonRequestEncoder requestEncoder;
+    private final JsonResponseParser responseParser;
     
-    ServerHandler(SSLConfiguration sslConf) {
-        this(sslConf, new ResponseParser(), System.out);
+    ServerHandler(SSLConfiguration sslConf, ByteChannel agentChannel) {
+        this(sslConf, agentChannel, new JsonRequestEncoder(), new JsonResponseParser());
     }
     
-    ServerHandler(SSLConfiguration sslConf, ResponseParser responseParser, OutputStream outStream) {
+    ServerHandler(SSLConfiguration sslConf, ByteChannel agentChannel, JsonRequestEncoder requestEncoder, JsonResponseParser responseParser) {
         this.sslConf = sslConf;
+        this.agentChannel = agentChannel;
+        this.requestEncoder = requestEncoder;
         this.responseParser = responseParser;
-        this.outStream = outStream;
     }
     
     @Override
@@ -96,9 +92,9 @@ class ServerHandler extends SimpleChannelInboundHandler<Request> {
     
     /*
      * 1. Read request from command channel
-     * 2. Write request to agent in described form
+     * 2. Write request to agent encoded as JSON
      * 3. Wait on agent for response (maybe add timeout here)
-     * 4. Read response from agent
+     * 4. Read JSON-encoded response from agent
      * 5. Write response to command channel
      */
     @Override
@@ -112,19 +108,17 @@ class ServerHandler extends SimpleChannelInboundHandler<Request> {
             response = new Response(ResponseType.ERROR);
         } else {
             // Reading/writing to agent should be synchronized
-            synchronized (STDIO_LOCK) {
+            synchronized (agentChannel) {
                 logger.info("Request received: '" + requestType + "' for '" + receiverName + "'");
                 try {
-                    writeRequest(request);
+                    // Ensure channel is still open
+                    if (!agentChannel.isOpen()) {
+                        throw new IOException("Communication channel with agent is closed");
+                    }
+                    requestEncoder.encodeRequestAndSend(agentChannel, request);
+                    response = responseParser.parseResponse(agentChannel);
                 } catch (IOException ex) {
-                    logger.log(Level.WARNING, "Failed to write request to agent", ex);
-                    response = new Response(ResponseType.ERROR);
-                }
-
-                try {
-                    response = responseParser.parseResponse(System.in);
-                } catch (IOException ex) {
-                    logger.log(Level.WARNING, "Failed to read response from agent", ex);
+                    logger.log(Level.WARNING, "Failed to communicate with agent", ex);
                     response = new Response(ResponseType.ERROR);
                 }
             }
@@ -134,35 +128,6 @@ class ServerHandler extends SimpleChannelInboundHandler<Request> {
         logger.info("Sending response: " + response.getType().toString());
         channel.pipeline().writeAndFlush(response);
         ctx.close();
-    }
-
-    /**
-     * Write request using the following protocol:
-     * <pre>
-     * '&lt;BEGIN REQUEST&gt;'
-     * Target Address Host
-     * Target Address Port
-     * Length of encoded request in bytes
-     * Encoded Request (see format: {@link RequestEncoder})
-     * '&lt;END REQUEST&gt;'
-     * </pre>
-     */
-    private void writeRequest(Request request) throws IOException {
-        DataOutputStream dos = new DataOutputStream(outStream);
-        RequestEncoder encoder = new RequestEncoder();
-        ByteBuf buf = encoder.encode(request);
-
-        dos.writeUTF(CommandChannelConstants.BEGIN_REQUEST_TOKEN);
-        InetSocketAddress addr = request.getTarget();
-        dos.writeUTF(addr.getHostString());
-        dos.writeInt(addr.getPort());
-        // The buf returned by encoder.encode() might be a composite
-        // buffer and thus, make an explicit copy before calling array()
-        // This avoids an UnsupportedOperationException on compositeBuf.array()
-        byte[] requestBytes = Unpooled.copiedBuffer(buf).array();
-        dos.writeInt(requestBytes.length);
-        dos.write(requestBytes);
-        dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
     }
 
     @Override

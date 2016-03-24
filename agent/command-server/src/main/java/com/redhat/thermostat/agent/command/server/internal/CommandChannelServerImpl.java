@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent.command.server.internal;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,15 +50,9 @@ class CommandChannelServerImpl implements ConfigurationServer {
 
     private static final Logger logger = LoggingUtils.getLogger(CommandChannelServerImpl.class);
     private final CommandChannelServerContext ctx;
-    private final PrintStream printer;
     
     CommandChannelServerImpl(CommandChannelServerContext ctx) {
-        this(ctx, System.out);
-    }
-
-    CommandChannelServerImpl(CommandChannelServerContext ctx, PrintStream printer) {
         this.ctx = ctx;
-        this.printer = printer;
     }
 
     @Override
@@ -75,9 +68,6 @@ class CommandChannelServerImpl implements ConfigurationServer {
         } catch (InterruptedException e) {
             logger.log(Level.WARNING, "Cmd channel server bind was interrupted!");
         }
-        
-        // Output server started token to agent
-        printer.println(CommandChannelConstants.SERVER_STARTED_TOKEN);
         logger.log(Level.FINEST, "Bound command channel server to " + addr.toString());
     }
 

@@ -36,46 +36,26 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.Channels;
+import java.nio.charset.Charset;
 
-abstract class ProcessStreamReader extends Thread {
-    
-    private InputStream is;
-    private ReaderCreator readerCreator;
-    protected ExceptionListener exceptionListener;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.redhat.thermostat.common.command.Response;
 
-    ProcessStreamReader(InputStream is, ExceptionListener listener) {
-        this(is, listener, new ReaderCreator());
-    }
-    
-    ProcessStreamReader(InputStream is, ExceptionListener listener, ReaderCreator readerCreator) {
-        this.is = is;
-        this.readerCreator = readerCreator;
-        this.exceptionListener = listener;
-    }
+class AgentResponseEncoder {
 
-    @Override
-    public void run() {
-        // Wrap inputstream in a channel so we can interrupt it
-        InputStream wrappedInput = Channels.newInputStream(Channels.newChannel(is));
-        DataInputStream dis = readerCreator.createReader(wrappedInput);
-        handleInput(dis);
-    }
-
-    abstract void handleInput(DataInputStream input);
-    
-    static class ReaderCreator {
+    byte[] encodeResponse(Response response) {
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
         
-        DataInputStream createReader(InputStream is) {
-            return new DataInputStream(is);
-        }
+        JsonObject responseTypeObj = new JsonObject();
+        responseTypeObj.addProperty(CommandChannelConstants.RESPONSE_JSON_TYPE, response.getType().name());
+        JsonObject responseRoot = new JsonObject();
+        responseRoot.add(CommandChannelConstants.RESPONSE_JSON_TOP, responseTypeObj);
         
+        String jsonResponse = gson.toJson(responseRoot);
+        return jsonResponse.getBytes(Charset.forName("UTF-8"));
     }
     
-    static interface ExceptionListener {
-        void notifyException(IOException e);
-    }
 }

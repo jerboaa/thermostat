@@ -42,42 +42,28 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.nio.charset.Charset;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-public class SSLConfigurationWriterTest {
+public class SSLConfigurationEncoderTest {
     
-    private static final String SSL_OUT = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-            + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-            + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-            + "true\ntrue\nfalse\n"
-            + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-    
-    private static final String SSL_OUT_NO_KS_FILE = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-            + CommandChannelConstants.KEYSTORE_NULL + "\n"
-            + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-            + "true\ntrue\nfalse\n"
-            + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-    
-    private static final String SSL_OUT_NO_KS_PASS = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-            + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-            + CommandChannelConstants.KEYSTORE_NULL + "\n"
-            + "true\ntrue\nfalse\n"
-            + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-
+    private static final String KEYSTORE_PASS = "My Keystore Password";
+    private static final String KEYSTORE_FILE = "/path/to/keystore";
     private SSLConfiguration sslConf;
     
     @Before
     public void setUp() {
         sslConf = mock(SSLConfiguration.class);
-        File keystore = new File("/path/to/keystore");
+        File keystore = new File(KEYSTORE_FILE);
         when(sslConf.getKeystoreFile()).thenReturn(keystore);
-        when(sslConf.getKeyStorePassword()).thenReturn("My Keystore Password");
+        when(sslConf.getKeyStorePassword()).thenReturn(KEYSTORE_PASS);
         when(sslConf.enableForBackingStorage()).thenReturn(true);
         when(sslConf.enableForCmdChannel()).thenReturn(true);
         when(sslConf.disableHostnameVerification()).thenReturn(false);
@@ -85,34 +71,50 @@ public class SSLConfigurationWriterTest {
     
     @Test
     public void testSSLConfig() throws IOException {
-        String result = getSSLConfiguration();
-        assertEquals(SSL_OUT, result);
+        String expected = getJsonString(KEYSTORE_FILE, KEYSTORE_PASS);
+        String result = getEncodedSSLConfiguration();
+        assertEquals(expected, result);
     }
     
     @Test
     public void testSSLConfigNoKeystoreFile() throws IOException {
         when(sslConf.getKeystoreFile()).thenReturn(null);
         
-        String result = getSSLConfiguration();
-        assertEquals(SSL_OUT_NO_KS_FILE, result);
+        String expected = getJsonString(null, KEYSTORE_PASS);
+        String result = getEncodedSSLConfiguration();
+        assertEquals(expected, result);
     }
     
     @Test
     public void testSSLConfigNoKeystorePass() throws IOException {
         when(sslConf.getKeyStorePassword()).thenReturn(null);
         
-        String result = getSSLConfiguration();
-        assertEquals(SSL_OUT_NO_KS_PASS, result);
+        String expected = getJsonString(KEYSTORE_FILE, null);
+        String result = getEncodedSSLConfiguration();
+        assertEquals(expected, result);
     }
 
-    private String getSSLConfiguration() {
-        StringWriter buf = new StringWriter();
-        final PrintWriter printer = new PrintWriter(buf);
+    private String getEncodedSSLConfiguration() throws IOException {
+        SSLConfigurationEncoder encoder = new SSLConfigurationEncoder();
+        byte[] encoded = encoder.encodeAsJson(sslConf);
+        return new String(encoded, Charset.forName("UTF-8"));
+    }
+    
+    private String getJsonString(String keystoreFile, String keystorePass) {
+        GsonBuilder builder = new GsonBuilder();
+        builder.serializeNulls();
+        Gson gson = builder.create();
         
-        SSLConfigurationWriter writer = new SSLConfigurationWriter(printer);
-        writer.writeSSLConfiguration(sslConf);
-        printer.close();
-        return buf.getBuffer().toString();
+        JsonObject params = new JsonObject();
+        params.addProperty(CommandChannelConstants.SSL_JSON_KEYSTORE_FILE, keystoreFile);
+        params.addProperty(CommandChannelConstants.SSL_JSON_KEYSTORE_PASS, keystorePass);
+        params.addProperty(CommandChannelConstants.SSL_JSON_COMMAND_CHANNEL, true);
+        params.addProperty(CommandChannelConstants.SSL_JSON_BACKING_STORAGE, true);
+        params.addProperty(CommandChannelConstants.SSL_JSON_HOSTNAME_VERIFICATION, false);
+        
+        JsonObject sslConfigJson = new JsonObject();
+        sslConfigJson.add(CommandChannelConstants.SSL_JSON_ROOT, params);
+        return gson.toJson(sslConfigJson);
     }
 
 }

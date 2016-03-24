@@ -37,36 +37,32 @@
 #####################################################################
 #
 
-# Source thermostat-common from same directory as this script
-CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-. "$CWD"/thermostat-common
-
-# NOTE: The following variables come from the system/user
-#       profiles (if any)
-#
-# THERMOSTAT_EXT_BOOT_CLASSPATH
-# THERMOSTAT_EXT_JAVA_OPTS
-# THERMOSTAT_EXT_OPTS
-
-# JARs necessary for the server
-BOOT_CLASSPATH="${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-buffer-@netty.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-common-@netty.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-transport-@netty.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-codec-@netty.version@.jar"
-BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/netty-handler-@netty.version@.jar"
-BOOT_CLASSPATH="${TOOLS_JAR}:${BOOT_CLASSPATH}"
-
-# Append extra class path entries coming from the profiles
-if [ ! -z ${THERMOSTAT_EXT_BOOT_CLASSPATH} ]; then
-  BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_EXT_BOOT_CLASSPATH}"
+if [ "$#" -lt 3 ]; then
+  echo "usage: $0 <hostname> <port> <ipcConfigFile>" >&2
+  exit 1
 fi
+HOSTNAME="$1"
+PORT="$2"
+CONFIG_FILE="$3"
 
-# Duplicated in ThermostatVmMainLabelDecorator
+# Source thermostat-ipc-client-common from same directory as this script
+CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$CWD"/thermostat-ipc-client-common
+
+# Additional JARs necessary for the server
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-buffer-@netty.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-common-@netty.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-transport-@netty.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-codec-@netty.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-handler-@netty.version@.jar"
+CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/gson-@gson.version@.jar"
+CLASSPATH="${TOOLS_JAR}:${CLASSPATH}"
+
 CMD_CHANNEL_CLASS="com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain"
 
 # Set this to remote debug
@@ -74,16 +70,15 @@ if [ x"$THERMOSTAT_CMDC_DEBUG" != x ] ; then
   DEBUG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,quiet=y,address=1083"
 fi
 
-# TODO Maybe there is a more reliable way to do this
+# Determine owner of this file
 THIS_SCRIPT="$CWD/thermostat-command-channel"
-SCRIPT_OWNER=$(stat -c '%U' "$THIS_SCRIPT")
+SCRIPT_OWNER=$(stat -c '%U' "${THIS_SCRIPT}")
 
 # Start server
-HOSTNAME=$1
-PORT=$2
+CONFIG_FILE_ARG="-DipcConfigFile=${CONFIG_FILE}"
 # Drop permissions, if root
 if [ "$(id -u)" -eq 0 ]; then
-  exec /bin/su -s /bin/bash -c "${JAVA} ${THERMOSTAT_EXT_JAVA_OPTS} ${LOGGING_ARGS} -cp ${BOOT_CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} $HOSTNAME $PORT" "$SCRIPT_OWNER" 
+  exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} ${LOGGING_ARGS} -cp ${CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}" 
 else
-  exec ${JAVA} ${THERMOSTAT_EXT_JAVA_OPTS} ${LOGGING_ARGS} -cp ${BOOT_CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} $HOSTNAME $PORT
+  exec ${JAVA} "${CONFIG_FILE_ARG}" ${LOGGING_ARGS} -cp ${CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} "${HOSTNAME}" "${PORT}"
 fi

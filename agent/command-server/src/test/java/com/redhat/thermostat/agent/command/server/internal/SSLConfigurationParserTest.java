@@ -37,187 +37,304 @@
 package com.redhat.thermostat.agent.command.server.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
+import java.nio.charset.Charset;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
-import com.redhat.thermostat.agent.command.server.internal.SSLConfigurationParser;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class SSLConfigurationParserTest {
     
-    public void testSuccess() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\ntrue\nfalse\n"
-                + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-        SSLConfiguration config = parseTestData(testData);
+    private SSLConfigurationParser parser;
+    private ByteChannel agentChannel;
+    
+    @Before
+    public void setUp() throws Exception {
+        parser = new SSLConfigurationParser();
+        agentChannel = mock(ByteChannel.class);
+    }
+    
+    @Test
+    public void testSuccess() throws Exception {
+        JsonObject root = createConfig();
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        
+        SSLConfiguration config = parser.parseSSLConfiguration(agentChannel);
         assertEquals("/path/to/keystore", config.getKeystoreFile().getAbsolutePath());
         assertEquals("My Keystore Password", config.getKeyStorePassword());
         assertEquals(true, config.enableForCmdChannel());
         assertEquals(true, config.enableForBackingStorage());
         assertEquals(false, config.disableHostnameVerification());
     }
-    
+
+    @Test
     public void testSuccessNoKeystore() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_NULL + "\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\ntrue\nfalse\n"
-                + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-        SSLConfiguration config = parseTestData(testData);
-        assertEquals(null, config.getKeystoreFile());
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.addProperty(CommandChannelConstants.SSL_JSON_KEYSTORE_FILE, (String) null);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        
+        SSLConfiguration config = parser.parseSSLConfiguration(agentChannel);
+        assertNull(config.getKeystoreFile());
         assertEquals("My Keystore Password", config.getKeyStorePassword());
         assertEquals(true, config.enableForCmdChannel());
         assertEquals(true, config.enableForBackingStorage());
         assertEquals(false, config.disableHostnameVerification());
     }
     
+    @Test
     public void testSuccessNoKeystorePass() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_NULL + "\n"
-                + "true\ntrue\nfalse\n"
-                + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-        SSLConfiguration config = parseTestData(testData);
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.addProperty(CommandChannelConstants.SSL_JSON_KEYSTORE_PASS, (String) null);
+
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        
+        SSLConfiguration config = parser.parseSSLConfiguration(agentChannel);
         assertEquals("/path/to/keystore", config.getKeystoreFile().getAbsolutePath());
-        assertEquals(null, config.getKeyStorePassword());
+        assertNull(config.getKeyStorePassword());
         assertEquals(true, config.enableForCmdChannel());
         assertEquals(true, config.enableForBackingStorage());
         assertEquals(false, config.disableHostnameVerification());
     }
 
     @Test(expected=IOException.class)
-    public void testEOFStartToken() throws IOException {
-        SSLConfigurationParser parser = new SSLConfigurationParser();
-        ByteArrayInputStream bais = new ByteArrayInputStream(new byte[0]);
-        parser.parse(bais);
+    public void testConfigMissing() throws IOException {
+        mockByteChannel(new byte[0]);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testBadConfigNotJson() throws IOException {
+        mockByteChannel("Not JSON".getBytes(Charset.forName("UTF-8")));
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testBadConfigRoot() throws IOException {
+        byte[] encoded = toJson(new JsonArray());
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testParamsMissing() throws IOException {
+        byte[] encoded = toJson(new JsonObject());
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testBadParams() throws IOException {
+        JsonObject root = createConfig();
+        root.add(CommandChannelConstants.SSL_JSON_ROOT, new JsonArray());
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testNullParams() throws IOException {
+        JsonObject root = createConfig();
+        root.add(CommandChannelConstants.SSL_JSON_ROOT, null);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testKeystoreFileMissing() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.remove(CommandChannelConstants.SSL_JSON_KEYSTORE_FILE);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testKeystoreFileBad() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.add(CommandChannelConstants.SSL_JSON_KEYSTORE_FILE, new JsonArray());
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testKeystorePassMissing() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.remove(CommandChannelConstants.SSL_JSON_KEYSTORE_PASS);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testKeystorePassBad() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.add(CommandChannelConstants.SSL_JSON_KEYSTORE_PASS, new JsonArray());
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testCmdChannelMissing() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.remove(CommandChannelConstants.SSL_JSON_COMMAND_CHANNEL);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testCmdChannelBad() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.add(CommandChannelConstants.SSL_JSON_COMMAND_CHANNEL, new JsonArray());
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testCmdChannelNull() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.addProperty(CommandChannelConstants.SSL_JSON_COMMAND_CHANNEL, (String) null);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testBackingStorageMissing() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.remove(CommandChannelConstants.SSL_JSON_BACKING_STORAGE);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testBackingStorageBad() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.add(CommandChannelConstants.SSL_JSON_BACKING_STORAGE, new JsonArray());
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testBackingStorageNull() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.addProperty(CommandChannelConstants.SSL_JSON_BACKING_STORAGE, (String) null);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testHostnameVerifyMissing() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.remove(CommandChannelConstants.SSL_JSON_HOSTNAME_VERIFICATION);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testHostnameVerifyBad() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.add(CommandChannelConstants.SSL_JSON_HOSTNAME_VERIFICATION, new JsonArray());
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testHostnameVerifyNull() throws IOException {
+        JsonObject root = createConfig();
+        JsonObject params = root.get(CommandChannelConstants.SSL_JSON_ROOT).getAsJsonObject();
+        params.addProperty(CommandChannelConstants.SSL_JSON_HOSTNAME_VERIFICATION, (String) null);
+        
+        byte[] encoded = toJson(root);
+        mockByteChannel(encoded);
+        parser.parseSSLConfiguration(agentChannel);
+    }
+    
+    private JsonObject createConfig() {
+        JsonObject params = new JsonObject();
+        params.addProperty(CommandChannelConstants.SSL_JSON_KEYSTORE_FILE, "/path/to/keystore");
+        params.addProperty(CommandChannelConstants.SSL_JSON_KEYSTORE_PASS, "My Keystore Password");
+        params.addProperty(CommandChannelConstants.SSL_JSON_COMMAND_CHANNEL, true);
+        params.addProperty(CommandChannelConstants.SSL_JSON_BACKING_STORAGE, true);
+        params.addProperty(CommandChannelConstants.SSL_JSON_HOSTNAME_VERIFICATION, false);
+        
+        JsonObject root = new JsonObject();
+        root.add(CommandChannelConstants.SSL_JSON_ROOT, params);
+        return root;
     }
 
-    @Test(expected=IOException.class)
-    public void testBadStartToken() throws IOException {
-        final String testData = "<BEGIN TLS CONFIG>\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\ntrue\nfalse\n"
-                + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testEOFKeystoreFileToken() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testBadKeystoreFileToken() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + "KSFOOL:/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\ntrue\nfalse\n"
-                + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testEOFKeystorePassToken() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testBadKeystorePassToken() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + "KSPSWD:My Keystore Password\n"
-                + "true\ntrue\nfalse\n"
-                + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testEOFEnableForCommandChannel() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testBadEnableForCommandChannel() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "maybe\ntrue\nfalse\n"
-                + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testEOFEnableForBackingStorage() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testBadEnableForBackingStorage() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\nmaybe\nfalse\n"
-                + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testEOFDisableHostnameVerification() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\ntrue\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testBadDisableHostnameVerification() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\ntrue\nmaybe\n"
-                + CommandChannelConstants.END_SSL_CONFIG_TOKEN + "\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testEOFEndToken() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\ntrue\ntrue\n";
-        parseTestData(testData);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testBadEndToken() throws IOException {
-        final String testData = CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN + "\n"
-                + CommandChannelConstants.KEYSTORE_FILE_PREFIX + "/path/to/keystore\n"
-                + CommandChannelConstants.KEYSTORE_PASS_PREFIX + "My Keystore Password\n"
-                + "true\ntrue\ntrue\n"
-                + "<END TLS CONFIG>\n";
-        parseTestData(testData);
+    private byte[] toJson(JsonElement element) {
+        Gson gson = new GsonBuilder().serializeNulls().create();
+        String jsonString = gson.toJson(element);
+        return jsonString.getBytes(Charset.forName("UTF-8"));
     }
 
-    private SSLConfiguration parseTestData(String testData) throws IOException {
-        SSLConfigurationParser parser = new SSLConfigurationParser();
-        ByteArrayInputStream bais = new ByteArrayInputStream(testData.getBytes());
-        return parser.parse(bais);
+    private void mockByteChannel(final byte[] encoded) throws IOException {
+        when(agentChannel.read(any(ByteBuffer.class))).thenAnswer(new Answer<Integer>() {
+            @Override
+            public Integer answer(InvocationOnMock invocation) throws Throwable {
+                ByteBuffer buf = (ByteBuffer) invocation.getArguments()[0];
+                buf.put(encoded);
+                buf.flip();
+                return encoded.length;
+            }
+        });
     }
 }

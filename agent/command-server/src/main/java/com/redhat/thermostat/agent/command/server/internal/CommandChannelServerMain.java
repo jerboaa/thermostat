@@ -36,40 +36,64 @@
 
 package com.redhat.thermostat.agent.command.server.internal;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 
+import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
+import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class CommandChannelServerMain {
+    
+    static final String IPC_SERVER_NAME = "command-channel";
+    static final String CONFIG_FILE_PROP = "ipcConfigFile";
     
     private static SSLConfigurationParser sslConfParser = new SSLConfigurationParser();
     private static ServerCreator serverCreator = new ServerCreator();
     private static ShutdownHookHandler shutdownHandler = new ShutdownHookHandler();
     private static Sleeper sleeper = new Sleeper();
     private static CommandChannelServerImpl impl = null;
+    private static ClientIPCService ipcService = null;
 
     // TODO Add some keep alive check
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if (args.length != 2) {
-            System.err.println("usage: thermostat-command-channel hostname port");
-            return;
+            throw new IOException("usage: thermostat-command-channel <hostname> <port>");
         }
         String hostname = args[0];
         Integer port;
         try {
             port = Integer.valueOf(args[1]);
         } catch (NumberFormatException e) {
-            System.err.println("port number must be a valid integer");
-            return;
+            throw new IOException("Port number must be a valid integer");
         }
         
+        // Get IPC configuration file location from system property
+        String configFileStr = System.getProperty(CONFIG_FILE_PROP);
+        if (configFileStr == null) {
+            throw new IOException("Unknown IPC configuration file location");
+        }
+        File configFile = new File(configFileStr);
+        if (ipcService == null) { // Only non-null for testing
+            ipcService = ClientIPCServiceFactory.getIPCService(configFile);
+        }
+        // Connect to IPC server
+        ByteChannel channel = ipcService.connectToServer(IPC_SERVER_NAME);
+        
         try {
-            SSLConfiguration config = sslConfParser.parse(System.in);
+            // Notify server has started
+            sendMessage(channel, CommandChannelConstants.SERVER_STARTED_TOKEN);
+        
+            SSLConfiguration config = sslConfParser.parseSSLConfiguration(channel);
             
-            impl = serverCreator.createServer(config);
+            impl = serverCreator.createServer(config, channel);
             
             // Start listening on server
             impl.startListening(hostname, port);
+            // Notify server is ready to accept requests
+            sendMessage(channel, CommandChannelConstants.SERVER_READY_TOKEN);
             
             shutdownHandler.addShutdownHook(new Thread(new Runnable() {
                 @Override
@@ -80,17 +104,31 @@ public class CommandChannelServerMain {
             
             sleeper.sleepWait();
         } catch (IOException e) {
-            System.err.println("Failed to start command channel server");
-            e.printStackTrace();
+            // Shut down server
             if (impl != null) {
                 impl.stopListening();
+            }
+            throw new IOException("Failed to start command channel server");
+        } finally {
+            channel.close();
+        }
+    }
+    
+    private static void sendMessage(ByteChannel channel, byte[] message) throws IOException {
+        // Don't interleave with other messages or requests
+        synchronized (channel) {
+            ByteBuffer buf = ByteBuffer.wrap(message);
+            int written = channel.write(buf);
+            if (written != message.length) {
+                throw new IOException("Written message length incorrect. Wrote: " + written 
+                        + ", expected: " + message.length);
             }
         }
     }
     
     static class ServerCreator {
-        CommandChannelServerImpl createServer(SSLConfiguration sslConf) {
-            CommandChannelServerContext ctx = new CommandChannelServerContext(sslConf);
+        CommandChannelServerImpl createServer(SSLConfiguration sslConf, ByteChannel agentChannel) {
+            CommandChannelServerContext ctx = new CommandChannelServerContext(sslConf, agentChannel);
             return new CommandChannelServerImpl(ctx);
         }
     }
@@ -133,4 +171,8 @@ public class CommandChannelServerMain {
         CommandChannelServerMain.sleeper = sleeper;
     }
     
+    /* For testing purposes only */
+    static void setIPCService(ClientIPCService ipcService) {
+        CommandChannelServerMain.ipcService = ipcService;
+    }
 }

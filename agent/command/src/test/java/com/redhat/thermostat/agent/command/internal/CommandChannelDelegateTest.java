@@ -36,9 +36,11 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -46,24 +48,25 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.lang.ProcessBuilder.Redirect;
+import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.ProcessCreator;
-import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.ReaderCreator;
 import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.StorageGetter;
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.Response;
@@ -74,40 +77,153 @@ import com.redhat.thermostat.storage.core.SecureStorage;
 
 public class CommandChannelDelegateTest {
     
+    private static final String IPC_SERVER_NAME = "command-channel";
+    private static final byte[] ENCODED_SSL_CONFIG = { 'S', 'S', 'L' };
+    private static final byte[] ENCODED_REQUEST = { 'R', 'E', 'Q' };
+    private static final byte[] ENCODED_RESPONSE_OK = { 'O', 'K' };
+    private static final byte[] ENCODED_RESPONSE_AUTH_FAILED = { 'A', 'U', 'T', 'H' };
+    private static final byte[] ENCODED_RESPONSE_ERROR = { 'E', 'R', 'R' };
+    
     private StorageGetter storageGetter;
     private ProcessCreator processCreator;
-    private ReaderCreator readerCreator;
     private ReceiverRegistry receivers;
     private File binPath;
     private CommandChannelDelegate delegate;
-    private InputStream stdout;
-    private InputStream stderr;
-    private OutputStream stdin;
     private Process process;
+    private AgentIPCService ipcService;
+    private File ipcConfig;
+    private AgentRequestDecoder requestDecoder;
+    private AgentResponseEncoder responseEncoder;
+    private SSLConfigurationEncoder sslConfEncoder;
+    private CountDownLatch latch;
+    private SSLConfiguration sslConf;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         receivers = mock(ReceiverRegistry.class);
-        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        sslConf = mock(SSLConfiguration.class);
         binPath = new File("/path/to/thermostat/home/");
         storageGetter = mock(StorageGetter.class);
         processCreator = mock(ProcessCreator.class);
         process = mock(Process.class);
+        ipcService = mock(AgentIPCService.class);
+        ipcConfig = new File("/path/to/ipc/config");
         
-        readerCreator = mock(ReaderCreator.class);
-        stdout = mock(InputStream.class);
-        BufferedReader br = mock(BufferedReader.class);
-        when(br.readLine()).thenReturn(CommandChannelConstants.SERVER_STARTED_TOKEN);
-        when(readerCreator.createReader(stdout)).thenReturn(br);
-        stderr = mock(InputStream.class);
-        when(stderr.read(any(byte[].class), anyInt(), anyInt())).thenReturn(-1);
-        stdin = mock(OutputStream.class);
+        requestDecoder = mock(AgentRequestDecoder.class);
+        responseEncoder = mock(AgentResponseEncoder.class);
+        // Return different encoded response for different response types
+        when(responseEncoder.encodeResponse(any(Response.class))).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                Response resp = (Response) invocation.getArguments()[0];
+                ResponseType type = resp.getType();
+                switch (type) {
+                case OK:
+                    return ENCODED_RESPONSE_OK;
+                case AUTH_FAILED:
+                    return ENCODED_RESPONSE_AUTH_FAILED;
+                case ERROR:
+                    return ENCODED_RESPONSE_ERROR;
+                default:
+                    throw new IOException("Unexpected ResponseType: " + type.name());
+                }
+            }
+        });
+        sslConfEncoder = mock(SSLConfigurationEncoder.class);
+        when(sslConfEncoder.encodeAsJson(sslConf)).thenReturn(ENCODED_SSL_CONFIG);
         
-        when(process.getInputStream()).thenReturn(stdout);
-        when(process.getErrorStream()).thenReturn(stderr);
-        when(process.getOutputStream()).thenReturn(stdin);
-        when(processCreator.startProcess(any(String[].class))).thenReturn(process);
-        delegate = new CommandChannelDelegate(receivers, sslConf, binPath, storageGetter, processCreator, readerCreator);
+        when(processCreator.startProcess(any(ProcessBuilder.class))).thenReturn(process);
+        
+        latch = mock(CountDownLatch.class);
+        delegate = new CommandChannelDelegate(receivers, sslConf, binPath, ipcService, ipcConfig, 
+                latch, sslConfEncoder, requestDecoder, responseEncoder, storageGetter, processCreator);
+        
+        // Mock server initialization
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                // Invoke callbacks with started message
+                byte[] result = delegate.dataReceived(CommandChannelConstants.SERVER_STARTED_TOKEN);
+                assertEquals(ENCODED_SSL_CONFIG, result);
+                // Invoke callbacks with ready message
+                result = delegate.dataReceived(CommandChannelConstants.SERVER_READY_TOKEN);
+                assertNull(result);
+                return null;
+            }
+        }).when(latch).await();
+    }
+
+    @Test
+    public void testServerStarted() throws Exception {
+        delegate.startListening("127.0.0.1", 123);
+        
+        verify(ipcService).createServer(IPC_SERVER_NAME, delegate);
+        verify(processCreator).startProcess(any(ProcessBuilder.class));
+    }
+    
+    @Test
+    public void testServerFailsToStart() throws Exception {
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                // Invoke callbacks with wrong started message
+                byte[] result = delegate.dataReceived("not the server started message".getBytes(Charset.forName("UTF-8")));
+                assertNull(result);
+                return null;
+            }
+        }).when(latch).await();
+        
+        try {
+            delegate.startListening("127.0.0.1", 123);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(ipcService).createServer(IPC_SERVER_NAME, delegate);
+            verify(processCreator).startProcess(any(ProcessBuilder.class));
+        }
+    }
+    
+    @Test
+    public void testServerFailsToStartParseFail() throws Exception {
+        when(sslConfEncoder.encodeAsJson(sslConf)).thenThrow(new IOException("TEST"));
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                // Invoke callbacks with started message
+                delegate.dataReceived(CommandChannelConstants.SERVER_STARTED_TOKEN);
+                return null;
+            }
+        }).when(latch).await();
+        
+        try {
+            delegate.startListening("127.0.0.1", 123);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(ipcService).createServer(IPC_SERVER_NAME, delegate);
+            verify(processCreator).startProcess(any(ProcessBuilder.class));
+        }
+    }
+    
+    @Test
+    public void testServerFailsToBecomeReady() throws Exception {
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                // Invoke callbacks with started message
+                byte[] result = delegate.dataReceived(CommandChannelConstants.SERVER_STARTED_TOKEN);
+                // Invoke callbacks with wrong ready message
+                result = delegate.dataReceived("not the server ready message".getBytes(Charset.forName("UTF-8")));
+                assertNull(result);
+                return null;
+            }
+        }).when(latch).await();
+        
+        try {
+            delegate.startListening("127.0.0.1", 123);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(ipcService).createServer(IPC_SERVER_NAME, delegate);
+            verify(processCreator).startProcess(any(ProcessBuilder.class));
+        }
     }
 
     @Test
@@ -117,40 +233,37 @@ public class CommandChannelDelegateTest {
         String[] args = new String[] { 
                 "/path/to/thermostat/home/thermostat-command-channel",
                 "127.0.0.1",
-                "123"
+                "123",
+                "/path/to/ipc/config"
         };
-        verify(processCreator).startProcess(eq(args));
-    }
-    
-    private void captureOutput(final StringBuilder builder) throws IOException {
-        doAnswer(new Answer<Void>() {
-
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                byte[] buf = (byte[]) args[0];
-                int off = (int) args[1];
-                int len = (int) args[2];
-                
-                builder.append(new String(buf, off, len));
-                return null;
-            }
-        }).when(stdin).write(any(byte[].class), anyInt(), anyInt());
-    }
-    
-    @Test(expected=IOException.class)
-    public void testServerFailsToStart() throws IOException {
-        BufferedReader br = mock(BufferedReader.class);
-        when(readerCreator.createReader(stdout)).thenReturn(br);
-        delegate.startListening("127.0.0.1", 123);
+        
+        ArgumentCaptor<ProcessBuilder> builderCaptor = ArgumentCaptor.forClass(ProcessBuilder.class);
+        verify(processCreator).startProcess(builderCaptor.capture());
+        ProcessBuilder builder = builderCaptor.getValue();
+        
+        assertEquals(Arrays.asList(args), builder.command());
+        assertEquals(Redirect.INHERIT, builder.redirectError());
+        assertEquals(Redirect.INHERIT, builder.redirectOutput());
+        assertEquals(Redirect.INHERIT, builder.redirectInput());
     }
     
     @Test
     public void testStopListening() throws IOException {
         delegate.startListening("127.0.0.1", 123);
+        when(ipcService.serverExists(IPC_SERVER_NAME)).thenReturn(true);
         delegate.stopListening();
         
         verify(process).destroy();
+        verify(ipcService).destroyServer(IPC_SERVER_NAME);
+    }
+    
+    @Test
+    public void testStopListeningNotExist() throws IOException {
+        delegate.startListening("127.0.0.1", 123);
+        delegate.stopListening();
+        
+        verify(process).destroy();
+        verify(ipcService, never()).destroyServer(IPC_SERVER_NAME);
     }
     
     @Test
@@ -158,23 +271,35 @@ public class CommandChannelDelegateTest {
         RequestReceiver receiver = mock(RequestReceiver.class);
         Request request = createRequest(receiver);
         
-        String result = receiveRequest(request);
-        
+        byte[] result = receiveRequest(request);
         verify(receivers).getReceiver("com.example.MyReceiver");
         verify(receiver).receive(request);
         
-        final String response = CommandChannelConstants.BEGIN_RESPONSE_TOKEN + "\n"
-                + "OK\n"
-                + CommandChannelConstants.END_RESPONSE_TOKEN + "\n";
-        assertEquals(response, result);
+        assertArrayEquals(ENCODED_RESPONSE_OK, result);
     }
 
-    private String receiveRequest(Request request) throws IOException {
+    private byte[] receiveRequest(Request request) throws IOException {
         delegate.startListening("127.0.0.1", 123);
-        StringBuilder builder = new StringBuilder();
-        captureOutput(builder);
-        delegate.requestReceived(request);
-        return builder.toString();
+        
+        // Receive encoded request
+        when(requestDecoder.decodeRequest(ENCODED_REQUEST)).thenReturn(request);
+        return delegate.dataReceived(ENCODED_REQUEST);
+    }
+    
+    @Test
+    public void testRequestReceivedParseFail() throws IOException {
+        RequestReceiver receiver = mock(RequestReceiver.class);
+        Request request = createRequest(receiver);
+        
+        // Should catch exception and return error response
+        delegate.startListening("127.0.0.1", 123);
+        when(requestDecoder.decodeRequest(ENCODED_REQUEST)).thenThrow(new IOException("TEST"));
+        
+        byte[] result = delegate.dataReceived(ENCODED_REQUEST);
+        verify(receivers, never()).getReceiver("com.example.MyReceiver");
+        verify(receiver, never()).receive(request);
+        
+        assertArrayEquals(ENCODED_RESPONSE_ERROR, result);
     }
     
     @Test
@@ -182,12 +307,8 @@ public class CommandChannelDelegateTest {
         Request request = mock(Request.class);
         when(request.getType()).thenReturn(RequestType.RESPONSE_EXPECTED);
         
-        String result = receiveRequest(request);
-        
-        final String response = CommandChannelConstants.BEGIN_RESPONSE_TOKEN + "\n"
-                + "ERROR\n"
-                + CommandChannelConstants.END_RESPONSE_TOKEN + "\n";
-        assertEquals(response, result);
+        byte[] result = receiveRequest(request);
+        assertArrayEquals(ENCODED_RESPONSE_ERROR, result);
     }
     
     @Test
@@ -199,14 +320,9 @@ public class CommandChannelDelegateTest {
         when(receivers.getReceiver("com.example.MyReceiver")).thenReturn(receiver);
         when(receiver.receive(request)).thenReturn(new Response(ResponseType.OK));
         
-        String result = receiveRequest(request);
-        
+        byte[] result = receiveRequest(request);
         verify(receiver, never()).receive(request);
-        
-        final String response = CommandChannelConstants.BEGIN_RESPONSE_TOKEN + "\n"
-                + "ERROR\n"
-                + CommandChannelConstants.END_RESPONSE_TOKEN + "\n";
-        assertEquals(response, result);
+        assertArrayEquals(ENCODED_RESPONSE_ERROR, result);
     }
     
     @Test
@@ -226,13 +342,9 @@ public class CommandChannelDelegateTest {
         
         mockVerifyToken(secStorage, authToken, clientToken);
         
-        String result = receiveRequest(request);
-        
+        byte[] result = receiveRequest(request);
         verify(receiver).receive(request);
-        final String response = CommandChannelConstants.BEGIN_RESPONSE_TOKEN + "\n"
-                + "OK\n"
-                + CommandChannelConstants.END_RESPONSE_TOKEN + "\n";
-        assertEquals(response, result);
+        assertArrayEquals(ENCODED_RESPONSE_OK, result);
     }
     
     @Test
@@ -252,13 +364,9 @@ public class CommandChannelDelegateTest {
         
         mockVerifyToken(secStorage, "TXlFdmlsVG9rZW4=", clientToken);
         
-        String result = receiveRequest(request);
-        
+        byte[] result = receiveRequest(request);
         verify(receiver, never()).receive(request);
-        final String response = CommandChannelConstants.BEGIN_RESPONSE_TOKEN + "\n"
-                + "AUTH_FAILED\n"
-                + CommandChannelConstants.END_RESPONSE_TOKEN + "\n";
-        assertEquals(response, result);
+        assertArrayEquals(ENCODED_RESPONSE_AUTH_FAILED, result);
     }
 
     @Test
@@ -277,13 +385,9 @@ public class CommandChannelDelegateTest {
         
         when(secStorage.verifyToken(any(AuthToken.class), any(String.class))).thenThrow(new NullPointerException());
         
-        String result = receiveRequest(request);
-        
+        byte[] result = receiveRequest(request);
         verify(receiver, never()).receive(request);
-        final String response = CommandChannelConstants.BEGIN_RESPONSE_TOKEN + "\n"
-                + "AUTH_FAILED\n"
-                + CommandChannelConstants.END_RESPONSE_TOKEN + "\n";
-        assertEquals(response, result);
+        assertArrayEquals(ENCODED_RESPONSE_AUTH_FAILED, result);
     }
     
     private void mockVerifyToken(SecureStorage secStorage,

@@ -46,6 +46,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -67,14 +68,16 @@ public class Activator implements BundleActivator {
         receivers = new ReceiverRegistry(context);
         receivers.registerReceiver(new PingReceiver());
         
-        Class<?>[] deps = { CommonPaths.class, SSLConfiguration.class };
+        Class<?>[] deps = { CommonPaths.class, SSLConfiguration.class, AgentIPCService.class };
         sslConfigTracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class.getName());
-                CommandChannelDelegate confServer = new CommandChannelDelegate(receivers, sslConf, paths.getSystemBinRoot());
+                AgentIPCService ipcService = (AgentIPCService) services.get(AgentIPCService.class.getName());
+                CommandChannelDelegate confServer = new CommandChannelDelegate(receivers, sslConf, 
+                        paths.getSystemBinRoot(), ipcService, paths.getUserIPCConfigurationFile());
                 confServerRegistration = context.registerService(ConfigurationServer.class.getName(), confServer, null);
             }
 

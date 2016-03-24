@@ -36,42 +36,272 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Arrays;
+import java.nio.charset.Charset;
+import java.util.Collection;
 
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.command.InvalidMessageException;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
-import com.redhat.thermostat.common.command.RequestEncoder;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 public class AgentRequestDecoderTest {
 
-    @Test
-    public void testDecodeSuccess() throws InvalidMessageException {
-        Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(3));
-        request.setParameter("receiver", "com.redhat.foo.bar.Receiver");
-        ByteBuf buf = new RequestEncoder().encode(request);
-        byte[] bytes = Unpooled.copiedBuffer(buf).array();
-        AgentRequestDecoder decoder = new AgentRequestDecoder();
-        Request actual = decoder.decode(new InetSocketAddress(3), bytes);
-        assertEquals(request.getParameter("receiver"), actual.getParameter("receiver"));
+    private AgentRequestDecoder decoder;
+
+    @Before
+    public void setUp() throws Exception {
+        decoder = new AgentRequestDecoder();
     }
     
-    @Test(expected = InvalidMessageException.class)
-    public void testDecodeFailNotAllData() throws InvalidMessageException {
-        Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(3));
-        request.setParameter("receiver", "com.redhat.foo.bar.Receiver");
-        ByteBuf buf = new RequestEncoder().encode(request);
-        byte[] bytes = Unpooled.copiedBuffer(buf).array();
-        byte[] tooShort = Arrays.copyOfRange(bytes, 0, bytes.length - 2);
-        AgentRequestDecoder decoder = new AgentRequestDecoder();
-        decoder.decode(new InetSocketAddress(3), tooShort);
+    @Test(expected=IOException.class)
+    public void testEmptyString() throws IOException {
+        decoder.decodeRequest(new byte[0]);
     }
+    
+    @Test(expected=IOException.class)
+    public void testNotJson() throws IOException {
+        decoder.decodeRequest("Not JSON".getBytes(Charset.forName("UTF-8")));
+    }
+    
+    @Test(expected=IOException.class)
+    public void testNotJsonObject() throws IOException {
+        byte[] json = toJson(new JsonArray());
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testRequestMissing() throws IOException {
+        byte[] json = toJson(new JsonObject());
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testBadRequestObject() throws IOException {
+        JsonObject root = createRequest();
+        root.add(CommandChannelConstants.REQUEST_JSON_TOP, new JsonArray());
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testNullRequestObject() throws IOException {
+        JsonObject root = createRequest();
+        root.add(CommandChannelConstants.REQUEST_JSON_TOP, null);
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testRequestTypeMissing() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.remove(CommandChannelConstants.REQUEST_JSON_TYPE);
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testRequestTypeNotString() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.add(CommandChannelConstants.REQUEST_JSON_TYPE, new JsonArray());
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testRequestTypeNull() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.addProperty(CommandChannelConstants.REQUEST_JSON_TYPE, (String) null);
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testRequestTypeNotEnum() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.addProperty(CommandChannelConstants.REQUEST_JSON_TYPE, "Not a RequestType");
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+
+    @Test(expected=IOException.class)
+    public void testHostnameMissing() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.remove(CommandChannelConstants.REQUEST_JSON_HOST);
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testHostnameNotString() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.add(CommandChannelConstants.REQUEST_JSON_HOST, new JsonArray());
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testHostnameNull() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.addProperty(CommandChannelConstants.REQUEST_JSON_HOST, (String) null);
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testPortMissing() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.remove(CommandChannelConstants.REQUEST_JSON_PORT);
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testPortNotInt() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.addProperty(CommandChannelConstants.REQUEST_JSON_PORT, "Not a Port");
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testPortNull() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.addProperty(CommandChannelConstants.REQUEST_JSON_PORT, (String) null);
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testParamsMissing() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.remove(CommandChannelConstants.REQUEST_JSON_PARAMS);
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testBadParams() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.add(CommandChannelConstants.REQUEST_JSON_PARAMS, new JsonArray());
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testParamsNull() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        jsonRequest.add(CommandChannelConstants.REQUEST_JSON_PARAMS, null);
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testParamsValueNotString() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        JsonObject params = jsonRequest.get(CommandChannelConstants.REQUEST_JSON_PARAMS).getAsJsonObject();
+        params.add("name", new JsonArray());
+        
+        byte[] json = toJson(root);
+        decoder.decodeRequest(json);
+    }
+    
+    @Test
+    public void testSuccess() throws IOException {
+        JsonObject root = createRequest();
+        byte[] json = toJson(root);
+        Request request = decoder.decodeRequest(json);
+        
+        assertEquals(RequestType.NO_RESPONSE_EXPECTED, request.getType());
+        assertEquals(new InetSocketAddress("127.0.0.1", 12000), request.getTarget());
+        
+        Collection<String> parameterNames = request.getParameterNames();
+        assertEquals(2, parameterNames.size());
+        assertTrue(parameterNames.contains("name1"));
+        assertTrue(parameterNames.contains("name2"));
+        assertEquals("value1", request.getParameter("name1"));
+        assertEquals("value2", request.getParameter("name2"));
+    }
+    
+    @Test
+    public void testSuccessNullValue() throws IOException {
+        JsonObject root = createRequest();
+        JsonObject jsonRequest = root.get(CommandChannelConstants.REQUEST_JSON_TOP).getAsJsonObject();
+        JsonObject params = jsonRequest.get(CommandChannelConstants.REQUEST_JSON_PARAMS).getAsJsonObject();
+        params.addProperty("name1", (String) null);
+
+        byte[] json = toJson(root);
+        Request request = decoder.decodeRequest(json);
+        
+        assertEquals(RequestType.NO_RESPONSE_EXPECTED, request.getType());
+        assertEquals(new InetSocketAddress("127.0.0.1", 12000), request.getTarget());
+        
+        Collection<String> parameterNames = request.getParameterNames();
+        assertEquals(2, parameterNames.size());
+        assertTrue(parameterNames.contains("name1"));
+        assertTrue(parameterNames.contains("name2"));
+        assertNull(request.getParameter("name1"));
+        assertEquals("value2", request.getParameter("name2"));
+    }
+    
+    private JsonObject createRequest() {
+        JsonObject jsonRequest = new JsonObject();
+        jsonRequest.addProperty(CommandChannelConstants.REQUEST_JSON_TYPE, RequestType.NO_RESPONSE_EXPECTED.name());
+        jsonRequest.addProperty(CommandChannelConstants.REQUEST_JSON_HOST, "127.0.0.1");
+        jsonRequest.addProperty(CommandChannelConstants.REQUEST_JSON_PORT, "12000");
+        
+        JsonObject params = new JsonObject();
+        params.addProperty("name1", "value1");
+        params.addProperty("name2", "value2");
+        jsonRequest.add(CommandChannelConstants.REQUEST_JSON_PARAMS, params);
+        
+        JsonObject root = new JsonObject();
+        root.add(CommandChannelConstants.REQUEST_JSON_TOP, jsonRequest);
+        return root;
+    }
+    
+    private byte[] toJson(JsonElement element) {
+        Gson gson = new GsonBuilder().serializeNulls().create();
+        String jsonString = gson.toJson(element);
+        return jsonString.getBytes(Charset.forName("UTF-8"));
+    }
+
 }

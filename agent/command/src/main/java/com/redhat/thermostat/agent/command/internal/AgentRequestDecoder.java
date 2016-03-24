@@ -36,95 +36,112 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Map.Entry;
+import java.nio.charset.Charset;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.command.DecodingHelper;
-import com.redhat.thermostat.common.command.InvalidMessageException;
-import com.redhat.thermostat.common.command.ParameterDecodingContext;
-import com.redhat.thermostat.common.command.ParameterDecodingState;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
-import com.redhat.thermostat.common.command.StringDecodingContext;
-import com.redhat.thermostat.common.command.StringDecodingState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
-
-/**
- * <p>
- * {@link Request} objects are serialized over the command channel in the
- * following format:
- * <pre>
- * -------------------------
- * | A | TYPE | B | PARAMS |
- * -------------------------
- * 
- * A is an 32 bit integer representing the length - in bytes - of TYPE. TYPE
- * is a byte array representing the string of the request type (e.g.
- * "RESPONSE_EXPECTED") B is a 32 bit integer representing the number of
- * request parameters which follow.
- * 
- * PARAMS (if B > 0) is a variable length stream of the following format:
- * 
- * It is a simple encoding of name => value pairs.
- * 
- * -----------------------------------------------------------------------------------------------
- * | I_1 | K_1 | P_1 | V_1 | ... | I_(n-1) | K_(n-1) | P_(n-1) | V_(n-1) | I_n | K_n | P_n | V_n |
- * -----------------------------------------------------------------------------------------------
- * 
- * I_n  A 32 bit integer representing the length - in bytes - of the n'th
- *      parameter name.
- * K_n  A 32 bit integer representing the length - in bytes - of the n'th
- *      parameter value.
- * P_n  A byte array representing the string of the n'th parameter name.
- * V_n  A byte array representing the string of the n'th parameter value.
- * </pre>
- * </p>
- */
 class AgentRequestDecoder {
     
     private static final Logger logger = LoggingUtils.getLogger(AgentRequestDecoder.class);
 
-    protected Request decode(InetSocketAddress addr, byte[] buf) throws InvalidMessageException {
+    Request decodeRequest(byte[] jsonRequest) throws IOException {
         logger.log(Level.FINEST, "Agent: decoding request received from command channel");
         
-        ByteBuf buffer = Unpooled.wrappedBuffer(buf);
-        StringDecodingContext stringCtx = DecodingHelper.decodeString(buffer);
-        if (stringCtx.getState() != StringDecodingState.VALUE_READ) {
-            // We received this from the forked process so we should never have
-            // fragmented data.
-            throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buffer));
-        }
-        // Adjust reader index, since decoding the string value didn't change it
-        buffer.readerIndex(buffer.readerIndex() + stringCtx.getBytesRead());
-        buffer.discardReadBytes();
-        String typeAsString = stringCtx.getValue();
-        if (typeAsString == null) {
-            throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buffer));
-        }
+        String jsonRequestString = new String(jsonRequest, Charset.forName("UTF-8"));
         Request request;
         try {
-            RequestType type = RequestType.valueOf(typeAsString);
-            request = new Request(type, addr);
-        } catch (IllegalArgumentException e) {
-            throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buffer));
+            GsonBuilder builder = new GsonBuilder();
+            Gson gson = builder.create();
+            JsonParser parser = new JsonParser();
+            JsonElement parsed = parser.parse(jsonRequestString);
+            
+            // Get root of JsonObject tree
+            JsonObject root = toJsonObject(parsed);
+            JsonElement requestElement = root.get(CommandChannelConstants.REQUEST_JSON_TOP);
+            requireNonJsonNull(requestElement, "Request data missing");
+            JsonObject requestObj = toJsonObject(requestElement);
+            
+            // Create Request
+            RequestType requestType = parseRequestType(gson, requestObj);
+            InetSocketAddress target = parseTargetAddress(gson, requestObj);
+            request = new Request(requestType, target);
+            
+            // Add parameters to Request
+            JsonElement paramsElement = requestObj.get(CommandChannelConstants.REQUEST_JSON_PARAMS);
+            requireNonJsonNull(paramsElement, "Request parameters missing");
+            JsonObject paramsObj = toJsonObject(paramsElement);
+            for (Map.Entry<String, JsonElement> param : paramsObj.entrySet()) {
+                String paramName = param.getKey();
+                
+                JsonElement value = param.getValue();
+                // Parameter value should be a string (JsonPrimitive) or null (JsonNull)
+                if (!value.isJsonPrimitive() && !value.isJsonNull()) {
+                    throw new IOException("Malformed parameter value");
+                }
+                String paramValue = gson.fromJson(value, String.class);
+                
+                request.setParameter(paramName, paramValue);
+            }
+        } catch (JsonParseException e) {
+            throw new IOException("Failed to parse request", e);
         }
-        ParameterDecodingContext paramCtx = DecodingHelper.decodeParameters(buffer);
-        if (paramCtx.getState() != ParameterDecodingState.ALL_PARAMETERS_READ) {
-            // We received this from the forked process so we should never have
-            // fragmented data.
-            throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buffer));
-        }
-        for (Entry<String, String> kv: paramCtx.getValues().entrySet()) {
-            request.setParameter(kv.getKey(), kv.getValue());
-        }
+        
         return request;
     }
 
+    private RequestType parseRequestType(Gson gson, JsonObject requestObj) throws IOException {
+        JsonElement requestTypeObj = requestObj.get(CommandChannelConstants.REQUEST_JSON_TYPE);
+        requireNonJsonNull(requestTypeObj, "Request type missing");
+        String requestTypeString = gson.fromJson(requestTypeObj, String.class);
+        try {
+            return RequestType.valueOf(requestTypeString);
+        } catch (IllegalArgumentException e) {
+            throw new IOException("Invalid request type: " + requestTypeString);
+        }
+    }
+
+    private InetSocketAddress parseTargetAddress(Gson gson, JsonObject requestObj) throws IOException {
+        JsonElement hostnameObj = requestObj.get(CommandChannelConstants.REQUEST_JSON_HOST);
+        requireNonJsonNull(hostnameObj, "Target hostname missing");
+        String hostname = gson.fromJson(hostnameObj, String.class);
+        
+        JsonElement portObj = requestObj.get(CommandChannelConstants.REQUEST_JSON_PORT);
+        requireNonJsonNull(portObj, "Target port number missing");
+        int port = gson.fromJson(portObj, int.class);
+        
+        // Ensure address is a valid one
+        try {
+            return new InetSocketAddress(hostname, port);
+        } catch (IllegalArgumentException e) {
+            throw new IOException("Invalid target address");
+        }
+    }
+    
+    private JsonObject toJsonObject(JsonElement element) throws IOException {
+        if (!element.isJsonObject()) {
+            throw new IOException("Malformed data received");
+        }
+        return element.getAsJsonObject();
+    }
+
+    private void requireNonJsonNull(JsonElement element, String errorMessage) throws IOException {
+        if (element == null || element.isJsonNull()) {
+            throw new IOException(errorMessage);
+        }
+    }
+    
 }
 

@@ -36,18 +36,35 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
-import java.io.IOException;
+import static org.junit.Assert.assertArrayEquals;
 
-class CommandChannelIOException extends IOException {
+import java.nio.charset.Charset;
 
-    private static final long serialVersionUID = 1985034238786501034L;
-    
-    public CommandChannelIOException(String message) {
-        super(message);
-    }
-    
-    public CommandChannelIOException(String message, Throwable cause) {
-        super(message, cause);
+import org.junit.Test;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
+
+public class AgentResponseEncoderTest {
+
+    @Test
+    public void testEncodedResponse() {
+        Gson gson = new GsonBuilder().create();
+        JsonObject jsonResponse = new JsonObject();
+        jsonResponse.addProperty(CommandChannelConstants.RESPONSE_JSON_TYPE, ResponseType.OK.name());
+        JsonObject jsonRoot = new JsonObject();
+        jsonRoot.add(CommandChannelConstants.RESPONSE_JSON_TOP, jsonResponse);
+        String expected = gson.toJson(jsonRoot);
+        byte[] expectedBytes = expected.getBytes(Charset.forName("UTF-8"));
+        
+        AgentResponseEncoder encoder = new AgentResponseEncoder();
+        Response response = new Response(ResponseType.OK);
+        byte[] result = encoder.encodeResponse(response);
+        
+        assertArrayEquals(expectedBytes, result);
     }
 
 }

@@ -36,36 +36,28 @@
 
 package com.redhat.thermostat.agent.command.server.internal;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.nio.channels.ByteChannel;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.agent.command.server.internal.ResponseParser;
-import com.redhat.thermostat.agent.command.server.internal.ServerHandler;
 import com.redhat.thermostat.agent.command.server.internal.ServerHandler.SSLHandshakeDoneListener;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
-import com.redhat.thermostat.common.command.RequestEncoder;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -77,6 +69,10 @@ public class ServerHandlerTest {
 
     private ChannelPipeline pipeline;
     private ChannelHandlerContext ctx;
+    private ServerHandler handler;
+    private ByteChannel agentChannel;
+    private JsonResponseParser responseParser;
+    private JsonRequestEncoder requestEncoder;
 
     @Before
     public void setup() {
@@ -88,14 +84,19 @@ public class ServerHandlerTest {
         when(channel.pipeline()).thenReturn(pipeline);
         ctx = mock(ChannelHandlerContext.class);
         when(ctx.channel()).thenReturn(channel);
+        
+        SSLConfiguration mockSSLConf = mock(SSLConfiguration.class);
+        when(mockSSLConf.enableForCmdChannel()).thenReturn(true);
+        agentChannel = mock(ByteChannel.class);
+        when(agentChannel.isOpen()).thenReturn(true);
+        
+        requestEncoder = mock(JsonRequestEncoder.class);
+        responseParser = mock(JsonResponseParser.class);
+        handler = new ServerHandler(mockSSLConf, agentChannel, requestEncoder, responseParser);
     }
 
     @Test
     public void channelActiveAddsSSLListener() throws Exception {
-        SSLConfiguration mockSSLConf = mock(SSLConfiguration.class);
-        when(mockSSLConf.enableForCmdChannel()).thenReturn(true);
-        ServerHandler handler = new ServerHandler(mockSSLConf);
-        
         ChannelPipeline pipeline = mock(ChannelPipeline.class);
         when(ctx.pipeline()).thenReturn(pipeline);
         SslHandler sslHandler = mock(SslHandler.class);
@@ -112,9 +113,9 @@ public class ServerHandlerTest {
     public void invalidRequestReturnsAnErrorResponse() throws Exception {
         // target and receiver are null
         Request request = mock(Request.class);
-        ServerHandler handler = new ServerHandler(null);
         handler.channelRead0(ctx, request);
-
+        verify(requestEncoder, never()).encodeRequestAndSend(agentChannel, request);
+        
         ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
         verify(pipeline).writeAndFlush(responseCaptor.capture());
         assertEquals(ResponseType.ERROR, responseCaptor.getValue().getType());
@@ -125,36 +126,29 @@ public class ServerHandlerTest {
         Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress("127.0.0.1", 123));
         request.setReceiver("com.example.MyReceiver");
         request.setParameter("hello", "world");
-        byte[] expectedRequest = constructRequestAsBytes(request);
         
-        ResponseParser responseParser = mock(ResponseParser.class);
         Response response = new Response(ResponseType.OK);
-        when(responseParser.parseResponse(any(InputStream.class))).thenReturn(response);
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        ServerHandler handler = new ServerHandler(null, responseParser, stdout);
+        when(responseParser.parseResponse(agentChannel)).thenReturn(response);
 
         handler.channelRead0(ctx, request);
         
-        assertArrayEquals(expectedRequest, stdout.toByteArray());
-
+        verify(requestEncoder).encodeRequestAndSend(agentChannel, request);
         verify(pipeline).writeAndFlush(response);
     }
     
-    private byte[] constructRequestAsBytes(Request request) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        dos.writeUTF(CommandChannelConstants.BEGIN_REQUEST_TOKEN);
-        dos.writeUTF("127.0.0.1");
-        dos.writeInt(123);
-        RequestEncoder encoder = new RequestEncoder();
-        ByteBuf buf = encoder.encode(request);
-        // Composite buffer does not support translation to array, copy it first
-        byte[] reqBytes = Unpooled.copiedBuffer(buf).array();
-        dos.writeInt(reqBytes.length);
-        dos.write(reqBytes);
-        dos.writeUTF(CommandChannelConstants.END_REQUEST_TOKEN);
-        dos.close();
-        return baos.toByteArray();
+    @Test
+    public void testRequestReceivedChannelClosed() throws Exception {
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress("127.0.0.1", 123));
+        request.setReceiver("com.example.MyReceiver");
+        request.setParameter("hello", "world");
+        
+        when(agentChannel.isOpen()).thenReturn(false);
+        handler.channelRead0(ctx, request);
+        verify(requestEncoder, never()).encodeRequestAndSend(agentChannel, request);
+        
+        ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
+        verify(pipeline).writeAndFlush(responseCaptor.capture());
+        assertEquals(ResponseType.ERROR, responseCaptor.getValue().getType());
     }
     
 }

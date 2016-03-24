@@ -42,6 +42,8 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.channels.ByteChannel;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
@@ -70,16 +72,17 @@ import io.netty.handler.ssl.SslHandler;
         SSLEngine.class, SSLContext.class })
 public class CommandChannelServerContextTest {
 
-    CommandChannelServerContext ctx;
-    SSLConfiguration mockSSLConf;
-    TestServerChannelPipelineInitializerCreator creator;
+    private CommandChannelServerContext ctx;
+    private SSLConfiguration mockSSLConf;
+    private TestServerChannelPipelineInitializerCreator creator;
 
     @Before
     public void setUp() {
         creator = new TestServerChannelPipelineInitializerCreator();
         mockSSLConf = mock(SSLConfiguration.class);
         when(mockSSLConf.enableForCmdChannel()).thenReturn(false);
-        ctx = new CommandChannelServerContext(mockSSLConf, creator);
+        ByteChannel agentChannel = mock(ByteChannel.class);
+        ctx = new CommandChannelServerContext(mockSSLConf, agentChannel, creator);
     }
 
     @Test
@@ -126,8 +129,8 @@ public class CommandChannelServerContextTest {
         TestServerPipelineInitializer initializer;
         
         @Override
-        ServerChannelInitializer createInitializer(SSLConfiguration sslConf) {
-            initializer = new TestServerPipelineInitializer(sslConf);
+        ServerChannelInitializer createInitializer(SSLConfiguration sslConf, ByteChannel agentChannel) {
+            initializer = new TestServerPipelineInitializer(sslConf, agentChannel);
             return initializer;
         }
     }
@@ -135,8 +138,8 @@ public class CommandChannelServerContextTest {
     static class TestServerPipelineInitializer extends ServerChannelInitializer {
         
         
-        TestServerPipelineInitializer(SSLConfiguration config) {
-            super(config);
+        TestServerPipelineInitializer(SSLConfiguration config, ByteChannel agentChannel) {
+            super(config, agentChannel);
         }
         
         SocketChannel getInitializedChannel(SocketChannel ch) throws Exception {

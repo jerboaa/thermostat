@@ -36,14 +36,12 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.lang.ProcessBuilder.Redirect;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,8 +53,8 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.agent.command.internal.ProcessOutputStreamReader.ProcessOutputStreamRequestListener;
-import com.redhat.thermostat.agent.command.internal.ProcessStreamReader.ExceptionListener;
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.command.Message.MessageType;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
@@ -67,38 +65,61 @@ import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
 
-class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStreamRequestListener {
+class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallbacks {
     
-    private static final String CMD_NAME = "thermostat-command-channel";
     private static final Logger logger = LoggingUtils.getLogger(CommandChannelDelegate.class);
+    private static final String CMD_NAME = "thermostat-command-channel";
+    private static final String IPC_SERVER_NAME = "command-channel";
+    // States for 'state' field
+    private static final int STATE_NOT_STARTED = 0;
+    private static final int STATE_STARTED = 1;
+    private static final int STATE_READY = 2;
+    private static final int STATE_ERROR = -1;
     
     private final ReceiverRegistry receivers;
     private final SSLConfiguration sslConf;
     private final StorageGetter storageGetter;
     private final File binPath;
+    private final AgentIPCService ipcService;
+    private final File ipcConfig;
+    private final CountDownLatch readyLatch;
+    private final SSLConfigurationEncoder sslEncoder;
+    private final AgentRequestDecoder requestDecoder;
+    private final AgentResponseEncoder responseEncoder;
     private final ProcessCreator procCreator;
-    private final ReaderCreator readerCreator;
     private Process process;
-    private ProcessStreamReader stdoutReader;
-    private PrintWriter printer;
+    private AtomicInteger state;
     
-    CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath) {
-        this(receivers, sslConf, binPath, new StorageGetter(), new ProcessCreator(), new ReaderCreator());
+    CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath,
+            AgentIPCService ipcService, File ipcConfig) {
+        this(receivers, sslConf, binPath, ipcService, ipcConfig, new CountDownLatch(1), new SSLConfigurationEncoder(), 
+                new AgentRequestDecoder(), new AgentResponseEncoder(), new StorageGetter(), new ProcessCreator());
     }
 
     /** For testing only */
     CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath, 
-            StorageGetter getter, ProcessCreator procCreator, ReaderCreator readerCreator) {
+            AgentIPCService ipcService, File ipcConfig, CountDownLatch readyLatch, SSLConfigurationEncoder sslEncoder, 
+            AgentRequestDecoder requestDecoder, AgentResponseEncoder responseEncoder, 
+            StorageGetter getter, ProcessCreator procCreator) {
         this.storageGetter = getter;
         this.receivers = receivers;
         this.sslConf = sslConf;
         this.binPath = binPath;
+        this.ipcService = ipcService;
+        this.ipcConfig = ipcConfig;
+        this.readyLatch = readyLatch;
+        this.sslEncoder = sslEncoder;
+        this.requestDecoder = requestDecoder;
+        this.responseEncoder = responseEncoder;
         this.procCreator = procCreator;
-        this.readerCreator = readerCreator;
+        this.state = new AtomicInteger();
     }
 
     @Override
     public void startListening(String hostname, int port) throws IOException {
+        // Create IPC server
+        ipcService.createServer(IPC_SERVER_NAME, this);
+        
         startServer(hostname, port);
     }
 
@@ -106,74 +127,103 @@ class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStream
     public void stopListening() {
         try {
             killServer();
+            // Clean up IPC server
+            destroyIPCServerIfExists();
         } catch (IOException e) {
             logger.log(Level.WARNING, "Error occurred while stopping command channel server", e);
         }
     }
+
+    private void destroyIPCServerIfExists() throws IOException {
+        if (ipcService.serverExists(IPC_SERVER_NAME)) {
+            ipcService.destroyServer(IPC_SERVER_NAME);
+        }
+    }
     
-    void startServer(String hostname, int port) throws IOException {
-        String[] processArgs = { binPath.getAbsolutePath() + File.separator + CMD_NAME, hostname, String.valueOf(port) };
-        logger.info("Starting command channel server process");
-        process = procCreator.startProcess(processArgs);
+    @Override
+    public byte[] dataReceived(byte[] data) {
+        byte[] result = null;
         
-        ExceptionListener exceptionListener = new ExceptionListener() {
-            
-            @Override
-            public void notifyException(IOException e) {
-                // Log exception, send ERROR Response
-                logger.log(Level.WARNING, "Unexpected input received from command channel server", e);
-                writeResponse(new Response(ResponseType.ERROR));
+        switch (state.get()) {
+        case STATE_NOT_STARTED:
+            // First message from server just tells us it's started
+            boolean started = checkStart(data);
+            if (started) {
+                // Return SSL Configuration
+                try {
+                    result = sslEncoder.encodeAsJson(sslConf);
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Unable to encode SSL configuration", e);
+                    state.set(STATE_ERROR);
+                }
             }
-        };
-        
-        // Must be instantiated before starting output reader
-        printer = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), "UTF-8"));
-        SSLConfigurationWriter sslWriter = new SSLConfigurationWriter(printer);
-        sslWriter.writeSSLConfiguration(sslConf);
+            break;
+        case STATE_STARTED:
+            // Second message from server indicates that it has processed
+            // the SSL configuration and is ready to receive requests
+            checkReady(data);
+            readyLatch.countDown();
+            // No response
+            break;
+        case STATE_READY:
+            // Parse requests
+            Request request;
+            try {
+                request = parseRequest(data);
+                // Return response as bytes
+                result = requestReceived(request);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Unable to process request from command channel", e);
+                // Send error response
+                Response error = new Response(ResponseType.ERROR);
+                result = encodeResponse(error);
+            }
+            break;
+        default: // STATE_ERROR
+            // Do nothing
+        }
+        return result;
+    }
+    
+    private void startServer(String hostname, int port) throws IOException {
+        String[] processArgs = { binPath.getAbsolutePath() + File.separator + CMD_NAME, hostname, 
+                String.valueOf(port), ipcConfig.getAbsolutePath() };
+        ProcessBuilder builder = new ProcessBuilder(processArgs);
+        // This has the problem of some messages/Exceptions not
+        // showing up in the parent's stderr stream if used together
+        // with JUL-logging. One such example is CNFE in
+        // the child process. In that case your best bet is
+        // Redirect.to(File).
+        builder.inheritIO();
+        logger.info("Starting command channel server process");
+        process = procCreator.startProcess(builder);
         
         // Wait for started notification
-        waitForStarted();
-        
-        stdoutReader = new ProcessOutputStreamReader(process.getInputStream(), this, exceptionListener);
-        stdoutReader.start();
-        
-    }
-
-    private void waitForStarted() throws IOException {
-        BufferedReader br = readerCreator.createReader(process.getInputStream());
-        String token = br.readLine();
-        if (token == null || !CommandChannelConstants.SERVER_STARTED_TOKEN.equals(token)) {
-            throw new IOException("Command channel server failed to start");
-        }
-        logger.info("Command channel server ready to accept requests");
-    }
-
-    private void shutdownProcess() throws IOException {
-        // Interrupt the reader thread to stop processing
-        if (stdoutReader != null) {
-            stdoutReader.interrupt();
-        }
-        
-        process.destroy();
-        
         try {
-            if (stdoutReader != null) {
-                stdoutReader.join();
-            }
+            waitForStarted();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-    void killServer() throws IOException {
+    private void waitForStarted() throws IOException, InterruptedException {
+        // Wait for started token
+        readyLatch.await();
+        // If not started at this point, there was a token mismatch
+        if (state.get() != STATE_READY) {
+            throw new IOException("Command channel server failed to start");
+        }
+        logger.info("Command channel server ready to accept requests");
+    }
+
+    private void killServer() {
         if (process != null) {
             logger.info("Stopping command channel server process");
-            shutdownProcess();
+            process.destroy();
         }
     }
     
-    @Override
-    public void requestReceived(Request request) {
+    private byte[] requestReceived(Request request) {
         String receiverName = request.getReceiver();
         MessageType requestType = request.getType();
         logger.info("Request received: '" + requestType + "' for '" + receiverName + "'");
@@ -196,21 +246,15 @@ class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStream
             }
         }
         
-        writeResponse(response);
+        return encodeResponse(response);
     }
 
-    private void writeResponse(Response response) {
-        /*
-         * Write out response to command channel server using the
-         * following protocol:
-         * '<BEGIN RESPONSE>'
-         * ResponseType
-         * '<END RESPONSE>'
-         */
-        printer.println(CommandChannelConstants.BEGIN_RESPONSE_TOKEN);
-        printer.println(response.getType().name());
-        printer.println(CommandChannelConstants.END_RESPONSE_TOKEN);
-        printer.flush();
+    private Request parseRequest(byte[] data) throws IOException {
+        return requestDecoder.decodeRequest(data);
+    }
+
+    private byte[] encodeResponse(Response response) {
+        return responseEncoder.encodeResponse(response);
     }
 
     private boolean authenticateRequestIfNecessary(Request request) {
@@ -247,6 +291,31 @@ class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStream
         }
     }
 
+    private boolean checkStart(byte[] data) {
+        boolean tokenMatch = Arrays.equals(CommandChannelConstants.SERVER_STARTED_TOKEN, data);
+        if (!tokenMatch) {
+            String message = new String(data, Charset.forName("UTF-8"));
+            logger.severe("Unexpected start message from command channel: " + message);
+            state.set(STATE_ERROR);
+        } else {
+            // Set state to indicate started
+            state.set(STATE_STARTED);
+        }
+        return tokenMatch;
+    }
+    
+    private void checkReady(byte[] data) {
+        boolean tokenMatch = Arrays.equals(CommandChannelConstants.SERVER_READY_TOKEN, data);
+        if (!tokenMatch) {
+            String message = new String(data, Charset.forName("UTF-8"));
+            logger.severe("Unexpected ready message from command channel: " + message);
+            state.set(STATE_ERROR);
+        } else {
+            // Set state to indicate ready
+            state.set(STATE_READY);
+        }
+    }
+
     /** for testing only */
     static class StorageGetter {
         Storage get() {
@@ -265,23 +334,11 @@ class CommandChannelDelegate implements ConfigurationServer, ProcessOutputStream
     
     /** for testing only */
     static class ProcessCreator {
-        Process startProcess(String[] args) throws IOException {
-            ProcessBuilder builder = new ProcessBuilder(args);
-            // This has the problem of some messages/Exceptions not
-            // showing up in the parent's stderr stream if used together
-            // with JUL-logging. One such example is CNFE in
-            // the child process. In that case your best bet is
-            // Redirect.to(File).
-            builder.redirectError(Redirect.INHERIT);
+        Process startProcess(ProcessBuilder builder) throws IOException {
             return builder.start();
         }
     }
     
-    /** for testing only */
-    static class ReaderCreator {
-        BufferedReader createReader(InputStream in) throws IOException {
-            return new BufferedReader(new InputStreamReader(in, "UTF-8"));
-        }
-    }
 }
+
 

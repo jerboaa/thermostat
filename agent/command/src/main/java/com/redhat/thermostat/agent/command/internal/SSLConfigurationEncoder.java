@@ -37,37 +37,48 @@
 package com.redhat.thermostat.agent.command.internal;
 
 import java.io.File;
-import java.io.PrintWriter;
+import java.io.IOException;
+import java.nio.charset.Charset;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-class SSLConfigurationWriter {
+class SSLConfigurationEncoder {
     
-    private PrintWriter printer;
+    // Total size of JSON encoded SSLConfiguration should be no more than this size in bytes
+    private static final int SSL_CONF_MAX_BYTES = 8192;
     
-    SSLConfigurationWriter(PrintWriter printer) {
-        this.printer = printer;
-    }
-    
-    void writeSSLConfiguration(SSLConfiguration sslConf) {
-        printer.println(CommandChannelConstants.BEGIN_SSL_CONFIG_TOKEN);
+    byte[] encodeAsJson(SSLConfiguration sslConf) throws IOException {
+        GsonBuilder builder = new GsonBuilder();
+        builder.serializeNulls(); // Necessary since keystore file/password can be null
+        Gson gson = builder.create();
+        
+        JsonObject paramsObj = new JsonObject();
         File keystoreFile = sslConf.getKeystoreFile();
-        if (keystoreFile == null) {
-            printer.println(CommandChannelConstants.KEYSTORE_NULL);
-        } else {
-            printer.println(CommandChannelConstants.KEYSTORE_FILE_PREFIX + keystoreFile.getAbsolutePath());
+        String keystorePath = null;
+        if (keystoreFile != null) {
+            keystorePath = keystoreFile.getAbsolutePath();
         }
-        String pass = sslConf.getKeyStorePassword();
-        if (pass == null) {
-            printer.println(CommandChannelConstants.KEYSTORE_NULL);
-        } else {
-            printer.println(CommandChannelConstants.KEYSTORE_PASS_PREFIX + pass);
+        paramsObj.addProperty(CommandChannelConstants.SSL_JSON_KEYSTORE_FILE, keystorePath);
+        paramsObj.addProperty(CommandChannelConstants.SSL_JSON_KEYSTORE_PASS, sslConf.getKeyStorePassword());
+        paramsObj.addProperty(CommandChannelConstants.SSL_JSON_COMMAND_CHANNEL, sslConf.enableForCmdChannel());
+        paramsObj.addProperty(CommandChannelConstants.SSL_JSON_BACKING_STORAGE, sslConf.enableForBackingStorage());
+        paramsObj.addProperty(CommandChannelConstants.SSL_JSON_HOSTNAME_VERIFICATION, sslConf.disableHostnameVerification());
+        
+        JsonObject sslConfigRoot = new JsonObject();
+        sslConfigRoot.add(CommandChannelConstants.SSL_JSON_ROOT, paramsObj);
+        
+        String jsonSslConf = gson.toJson(sslConfigRoot);
+        byte[] jsonSslConfBytes = jsonSslConf.getBytes(Charset.forName("UTF-8"));
+        if (jsonSslConfBytes.length > SSL_CONF_MAX_BYTES) {
+            throw new IOException("JSON-encoded SSL configuration larger than maximum of "
+                    + SSL_CONF_MAX_BYTES + " bytes");
         }
-        printer.println(String.valueOf(sslConf.enableForCmdChannel()));
-        printer.println(String.valueOf(sslConf.enableForBackingStorage()));
-        printer.println(String.valueOf(sslConf.disableHostnameVerification()));
-        printer.println(CommandChannelConstants.END_SSL_CONFIG_TOKEN);
-        printer.flush();
+        return jsonSslConfBytes;
     }
+    
+    
 
 }
