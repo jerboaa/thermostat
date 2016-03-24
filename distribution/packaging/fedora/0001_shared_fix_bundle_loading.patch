@@ -183,13 +183,27 @@ diff --git a/killvm/distribution/thermostat-plugin.xml b/killvm/distribution/the
 diff --git a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
 --- a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
 +++ b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
-@@ -7,3 +7,6 @@
+@@ -6,4 +6,8 @@
+         thermostat-launcher-${project.version}.jar, \
          jline-${jline.version}.jar, \
          commons-cli-${commons-cli.version}.jar, \
-         org.apache.felix.scr-${felix.scr.version}.jar, \
 +        org.osgi.compendium-${osgi.compendium.version}.jar, \
++        xpp3-${xpp3.version}.jar, \
 +        kxml2-${kxml2.version}.jar, \
+         org.apache.felix.scr-${felix.scr.version}.jar, \
 +        jansi-${jansi.version}.jar
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml
++++ b/pom.xml
+@@ -234,6 +234,8 @@
+     <felix.scr.version>1.8.2</felix.scr.version>
+     <felix.scr.annotations.version>1.9.12</felix.scr.annotations.version>
+     <kxml2.version>2.3.0</kxml2.version>
++    <!-- kxml2 needs xpp3 classes at runtime -->
++    <xpp3.version>1.1.4c</xpp3.version>
+ 
+     <netty.version>4.0.28.Final</netty.version>
+     <httpcomponents.core.version>4.3.2</httpcomponents.core.version>
 diff --git a/setup/distribution/thermostat-plugin.xml b/setup/distribution/thermostat-plugin.xml
 --- a/setup/distribution/thermostat-plugin.xml
 +++ b/setup/distribution/thermostat-plugin.xml
