@@ -80,5 +80,5 @@ CONFIG_FILE_ARG="-DipcConfigFile=${CONFIG_FILE}"
 if [ "$(id -u)" -eq 0 ]; then
   exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} ${LOGGING_ARGS} -cp ${CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}" 
 else
-  exec ${JAVA} "${CONFIG_FILE_ARG}" ${LOGGING_ARGS} -cp ${CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} "${HOSTNAME}" "${PORT}"
+  exec ${JAVA} "${CONFIG_FILE_ARG}" ${LOGGING_ARGS} -cp "${CLASSPATH}" ${DEBUG_OPTS} "${CMD_CHANNEL_CLASS}" "${HOSTNAME}" "${PORT}"
 fi
