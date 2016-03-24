@@ -16,7 +16,7 @@ diff --git a/agent/command/pom.xml b/agent/command/pom.xml
 --- a/agent/command/pom.xml
 +++ b/agent/command/pom.xml
 @@ -76,8 +76,8 @@
-       <artifactId>netty-buffer</artifactId>
+       <scope>test</scope>
      </dependency>
      <dependency>
 -      <groupId>org.osgi</groupId>
