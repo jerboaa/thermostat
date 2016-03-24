@@ -384,8 +384,6 @@ BuildRequires: %{?scl_prefix_java_common}mvn(org.eclipse.jetty:jetty-webapp)
 %if 0%{?fedora}
 BuildRequires: mvn(org.eclipse.jetty.toolchain:jetty-schemas)
 %endif
-# The thread plugin needs this for visualizing thread deadlocks
-BuildRequires: %{?scl_prefix}mvn(com.mxgraph:jgraphx)
 
 ###################################################
 # The following BRs are specified via osgi's
@@ -412,6 +410,7 @@ BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpcore
 # httpmime comes from httpcomponents-client just like httpclient itself
 BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpclient) = %{hc_client_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpmime) = %{hc_client_bundle_version}
+# The thread plugin needs this for visualizing thread deadlocks
 BuildRequires: %{?scl_prefix}osgi(com.mxgraph) = %{jgraphx_bundle_version}
 # The web endpoint plugin gets this bundle baked into the bundles list.
 BuildRequires: %{?scl_prefix_java_common}osgi(%{javax_servlet_bsn}) = %{javax_servlet_bundle_version}
