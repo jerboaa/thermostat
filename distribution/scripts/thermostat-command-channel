@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 # Copyright 2012-2015 Red Hat, Inc.
 #
@@ -46,22 +46,28 @@ PORT="$2"
 CONFIG_FILE="$3"
 
 # Source thermostat-ipc-client-common from same directory as this script
+# Defines IPC_CLASSPATH variable with JARs necessary for the IPC service
 CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-. "$CWD"/thermostat-ipc-client-common
+. "${CWD}"/thermostat-ipc-client-common
+
+# Ensure thermostat-ipc-client-common sourced correctly
+if [ -z "${IPC_CLASSPATH}" ]; then
+  echo "Classpath not properly defined for command channel" >&2
+  exit 1
+fi
 
 # Additional JARs necessary for the server
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-buffer-@netty.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-common-@netty.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-transport-@netty.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-codec-@netty.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/netty-handler-@netty.version@.jar"
-CLASSPATH="${CLASSPATH}:${THERMOSTAT_LIBS}/gson-@gson.version@.jar"
-CLASSPATH="${TOOLS_JAR}:${CLASSPATH}"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-common-command-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-command-server-@project.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-buffer-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-common-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-transport-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-codec-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-handler-@netty.version@.jar"
+IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/gson-@gson.version@.jar"
 
 CMD_CHANNEL_CLASS="com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain"
 
@@ -78,7 +84,7 @@ SCRIPT_OWNER=$(stat -c '%U' "${THIS_SCRIPT}")
 CONFIG_FILE_ARG="-DipcConfigFile=${CONFIG_FILE}"
 # Drop permissions, if root
 if [ "$(id -u)" -eq 0 ]; then
-  exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} ${LOGGING_ARGS} -cp ${CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}" 
+  exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} ${LOGGING_ARGS} -cp ${IPC_CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}" 
 else
-  exec ${JAVA} "${CONFIG_FILE_ARG}" ${LOGGING_ARGS} -cp "${CLASSPATH}" ${DEBUG_OPTS} "${CMD_CHANNEL_CLASS}" "${HOSTNAME}" "${PORT}"
+  exec ${JAVA} "${CONFIG_FILE_ARG}" ${LOGGING_ARGS} -cp "${IPC_CLASSPATH}" ${DEBUG_OPTS} "${CMD_CHANNEL_CLASS}" "${HOSTNAME}" "${PORT}"
 fi
