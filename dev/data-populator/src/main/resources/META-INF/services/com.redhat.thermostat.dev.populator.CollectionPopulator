@@ -1,4 +1,4 @@
-com.redhat.thermostat.dev.populator.impl.VmDeadlockPopulator
+com.redhat.thermostat.dev.populator.impl.ThreadPopulator
 com.redhat.thermostat.dev.populator.impl.AgentInfoPopulator
 com.redhat.thermostat.dev.populator.impl.VmInfoPopulator
 com.redhat.thermostat.dev.populator.impl.HostInfoPopulator

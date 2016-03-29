@@ -38,6 +38,7 @@ package com.redhat.thermostat.dev.populator.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.dev.populator.config.ConfigItem;
@@ -54,13 +55,26 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.dao.impl.ThreadDaoImpl;
+import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
+import com.redhat.thermostat.thread.model.ThreadSession;
+import com.redhat.thermostat.thread.model.ThreadState;
+import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
 
-public class VmDeadlockPopulator extends BasePopulator {
-    
+public class ThreadPopulator extends BasePopulator {
+
+    /**
+     * Package-private and static for testing.
+     */
+    static final int NUM_SAMPLES = 10;
+
+    public final String SESSION = "session";
     private final int NUM_THREADS = 3;
+    private final long SEED = 5;
+    Random generator = new Random(SEED);
     private static final String[] THREAD_NAMES = new String[] {
-            "Spencer", "Sheldon", "Alice", "Bob", "Julie", "Phoebe"
+            "Spencer", "Sheldon", "Alice", "Bob", "Julie", "Phoebe", "Alpha", "Beta", "Gamma",
+            "Theta", "Zeta",
     };
     static final String DEADLOCK_DESC_FORMAT = "" +
             "\"%s\" Id=%d WAITING on java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7 owned by \"%s\" Id=%d\n" +
@@ -106,43 +120,90 @@ public class VmDeadlockPopulator extends BasePopulator {
             "\t- java.util.concurrent.locks.ReentrantLock$NonfairSync@105ff84e\n\n\n";
             
     
-    private final ThreadDaoCountable dao;
-    
-    public VmDeadlockPopulator() {
+    private ThreadDaoCountable dao;
+
+    public ThreadPopulator() {
         this(null);
     }
-    
-    VmDeadlockPopulator(ThreadDaoCountable dao) {
+
+    ThreadPopulator(ThreadDaoCountable dao) {
         this.dao = dao;
+    }
+
+    // Testing hook
+    private void createDao(Storage storage) {
+        if (dao == null) {
+            dao = new ThreadDaoCountable(storage);
+        }
     }
 
     @Override
     public SharedState addPojos(Storage storage, ConfigItem item, SharedState relState) {
-        ThreadDaoCountable threadDao = getDao(storage);
+        createDao(storage);
         // creates records per agent *and* vm
         List<String> agentIds = relState.getProcessedRecordsFor("agentId").getAll();
         List<String> vmIds = relState.getProcessedRecordsFor("vmId").getAll();
         int perVmNumber = item.getNumber();
         int totalCount = perVmNumber * agentIds.size() * vmIds.size();
         int currCount = 0;
-        long countBefore = threadDao.getCount();
+        long countBefore = dao.getCount();
         System.out.println("Populating "+ totalCount  + " " + item.getName() + " records");
         long currTime = System.currentTimeMillis();
         for (String agentId: agentIds) {
             for (String vmId: vmIds) {
                 for (int i = 0; i < perVmNumber; i++) {
+                    ThreadSummary summary = new ThreadSummary();
+                    summary.setAgentId(agentId);
+                    summary.setVmId(vmId);
+                    int liveThreads = generator.nextInt(NUM_THREADS);
+                    summary.setCurrentLiveThreads(liveThreads);
+                    int daemonThreads = NUM_THREADS - liveThreads;
+                    summary.setCurrentDaemonThreads(daemonThreads);
+                    long timeStamp = currTime + i * 1000;
+                    summary.setTimeStamp(timeStamp);
+                    dao.saveSummary(summary);
+
+                    ThreadSession session = new ThreadSession();
+                    session.setSession(SESSION);
+                    session.setTimeStamp(timeStamp);
+                    session.setAgentId(agentId);
+                    session.setVmId(vmId);
+                    dao.saveSession(session);
+
+                    final Thread.State[] states = Thread.State.values();
+                    String state = states[generator.nextInt(states.length)].toString();
+                    String name = THREAD_NAMES[generator.nextInt(THREAD_NAMES.length)];
+
+                    for(int j = 0; j < NUM_SAMPLES; j++) {
+                        ThreadState threadState = new ThreadState();
+                        threadState.setTimeStamp(currTime + j * 1000);
+                        threadState.setVmId(vmId);
+                        threadState.setAgentId(agentId);
+                        threadState.setState(state);
+                        threadState.setId(i);
+                        threadState.setName(name);
+                        threadState.setSession(SESSION);
+                        dao.addThreadState(threadState);
+                    }
+
+                    ThreadHarvestingStatus status = new ThreadHarvestingStatus(agentId);
+                    status.setVmId(vmId);
+                    status.setTimeStamp(timeStamp);
+                    status.setHarvesting(generator.nextBoolean());
+                    dao.saveHarvestingStatus(status);
+
                     VmDeadLockData data = new VmDeadLockData();
                     data.setAgentId(agentId);
                     data.setVmId(vmId);
                     data.setTimeStamp(currTime + i * 10);
                     data.setDeadLockDescription(getDeadlockedDescription(currCount));
-                    threadDao.saveDeadLockStatus(data);
+                    dao.saveDeadLockStatus(data);
                     currCount++;
                     reportProgress(item, currCount);
                 }
             }
         }
-        doWaitUntilCount(threadDao, countBefore + totalCount);
+        doWaitUntilCount(dao, countBefore + totalCount);
         return relState;
     }
 
@@ -188,22 +249,14 @@ public class VmDeadlockPopulator extends BasePopulator {
 
     @Override
     public String getHandledCollection() {
-        return ThreadDao.DEADLOCK_INFO.getName();
-    }
-    
-    // Testing hook
-    private ThreadDaoCountable getDao(Storage storage) {
-        if (this.dao == null) {
-            return new ThreadDaoCountable(storage);
-        }
-        return this.dao;
+        return ThreadDao.THREAD_HARVESTING_STATUS.getName();
     }
 
     static class ThreadDaoCountable extends ThreadDaoImpl implements Countable {
-        
+
         private final Category<AggregateCount> aggregateCategory;
         private final Storage storage;
-        
+
         public ThreadDaoCountable(Storage storage) {
             super(storage);
             CategoryAdapter<VmDeadLockData, AggregateCount> adapter = new CategoryAdapter<>(DEADLOCK_INFO);
@@ -224,6 +277,6 @@ public class VmDeadlockPopulator extends BasePopulator {
                 throw new RuntimeException(e);
             }
         }
-        
+
     }
 }

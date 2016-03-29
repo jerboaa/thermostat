@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -57,11 +58,16 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.dev.populator.config.ConfigItem;
 import com.redhat.thermostat.dev.populator.dependencies.ProcessedRecords;
 import com.redhat.thermostat.dev.populator.dependencies.SharedState;
-import com.redhat.thermostat.dev.populator.impl.VmDeadlockPopulator.ThreadDaoCountable;
+import com.redhat.thermostat.dev.populator.impl.ThreadPopulator.ThreadDaoCountable;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
+import com.redhat.thermostat.thread.model.ThreadSession;
+import com.redhat.thermostat.thread.model.ThreadState;
+import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
 
-public class VmDeadlockPopulatorTest {
+public class ThreadPopulatorTest {
     
     private static final String EXPECTED_DESCRIPTION = "" +
             "\"Mallory\" Id=12 WAITING on java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7 owned by \"Alice\" Id=10\n" +
@@ -105,6 +111,15 @@ public class VmDeadlockPopulatorTest {
             "\t...\n\n" +
             "\tNumber of locked synchronizers = 1\n" +
             "\t- java.util.concurrent.locks.ReentrantLock$NonfairSync@105ff84e\n\n\n";
+
+    private static final String[] AGENTS = new String[] {
+            "fooAgent1", "fooBarAgent", "testAgent", "someAgent"
+    };
+    private static final String[] VMS = new String[] {
+            "vm1", "vm2", "vm3", "vm4", "vm5"
+    };
+
+    private ThreadDaoCountable countableDao;
     
     @Test
     public void testFormatDeadlockDesc() {
@@ -116,12 +131,12 @@ public class VmDeadlockPopulatorTest {
                 "Bob", 11,
                 "Mallory", 12
         };
-        assertEquals(EXPECTED_DESCRIPTION, String.format(VmDeadlockPopulator.DEADLOCK_DESC_FORMAT, stringFormatArgs));
+        assertEquals(EXPECTED_DESCRIPTION, String.format(ThreadPopulator.DEADLOCK_DESC_FORMAT, stringFormatArgs));
     }
     
     @Test
     public void canGetRandomThreadNames() {
-        Object[] args = new VmDeadlockPopulator().getFormatStringArgs(2);
+        Object[] args = new ThreadPopulator().getFormatStringArgs(2);
         assertEquals(12, args.length);
         Map<Integer, Integer> tids = new HashMap<>();
         Map<String, Integer> threadNames = new HashMap<>();
@@ -157,35 +172,87 @@ public class VmDeadlockPopulatorTest {
 
     @Test
     public void canHandleAppropriateCollection() {
-        VmDeadlockPopulator populator = new VmDeadlockPopulator();
-        assertEquals("vm-deadlock-data", populator.getHandledCollection());
+        ThreadPopulator populator = new ThreadPopulator();
+        assertEquals("vm-thread-harvesting", populator.getHandledCollection());
     }
-    
+
     @Test
-    public void canAddDeadlockInfo() {
+    public void canAddThreadData() {
         int perVmCount = 123;
+        int totalCount = perVmCount * AGENTS.length * VMS.length;
+        setUp(perVmCount, totalCount);
+
+        assertThreadSummaries(totalCount, perVmCount);
+        assertThreadSessions(totalCount, perVmCount);
+        assertThreadStates(totalCount, perVmCount);
+        assertThreadHarvestingStatus(totalCount, perVmCount);
+        assertDeadlockInfo(perVmCount, totalCount);
+    }
+
+    private void setUp(int perVmCount, int totalCount) {
         ConfigItem config = new ConfigItem(perVmCount, ConfigItem.UNSET, "vm-deadlock-data");
-        String[] agents = new String[] {
-                "fooAgent1", "fooBarAgent", "testAgent", "someAgent"
-        };
-        String[] vms = new String[] {
-                "vm1", "vm2", "vm3", "vm4", "vm5"
-        };
-        int totalCount = perVmCount * agents.length * vms.length;
-        ThreadDaoCountable countableDao = mock(ThreadDaoCountable.class);
+        countableDao = mock(ThreadDaoCountable.class);
         when(countableDao.getCount()).thenReturn(0L).thenReturn((long)totalCount);
-        VmDeadlockPopulator populator = new VmDeadlockPopulator(countableDao);
+        ThreadPopulator populator = new ThreadPopulator(countableDao);
         SharedState state = mock(SharedState.class);
-        when(state.getProcessedRecordsFor("agentId")).thenReturn(new ProcessedRecords<>(Arrays.asList(agents)));
-        when(state.getProcessedRecordsFor("vmId")).thenReturn(new ProcessedRecords<>(Arrays.asList(vms)));
+        when(state.getProcessedRecordsFor("agentId")).thenReturn(new ProcessedRecords<>(Arrays.asList(AGENTS)));
+        when(state.getProcessedRecordsFor("vmId")).thenReturn(new ProcessedRecords<>(Arrays.asList(VMS)));
         SharedState retval = populator.addPojos(mock(Storage.class), config, state);
         assertSame(retval, state);
+    }
+
+    private void assertThreadSummaries(int totalCount, int perVmCount) {
+        ArgumentCaptor<ThreadSummary> summaryCaptor = ArgumentCaptor.forClass(ThreadSummary.class);
+        verify(countableDao, times(totalCount)).saveSummary(summaryCaptor.capture());
+        List<ThreadSummary> savedValues = summaryCaptor.getAllValues();
+        assertEquals(totalCount, savedValues.size());
+        checkInstances(savedValues, VMS.length * perVmCount);
+    }
+
+    private void assertThreadSessions(int totalCount, int perVmCount) {
+        ArgumentCaptor<ThreadSession> sessionCaptor = ArgumentCaptor.forClass(ThreadSession.class);
+        verify(countableDao, times(totalCount)).saveSession(sessionCaptor.capture());
+        List<ThreadSession> savedValues = sessionCaptor.getAllValues();
+        assertEquals(totalCount, savedValues.size());
+        checkInstances(savedValues, VMS.length * perVmCount);
+    }
+
+    private void assertThreadStates(int totalCount, int perVmCount) {
+        ArgumentCaptor<ThreadState> stateCaptor = ArgumentCaptor.forClass(ThreadState.class);
+        verify(countableDao, times(totalCount * ThreadPopulator.NUM_SAMPLES)).
+                addThreadState(stateCaptor.capture());
+        List<ThreadState> savedValues = stateCaptor.getAllValues();
+        assertEquals(totalCount * ThreadPopulator.NUM_SAMPLES, savedValues.size());
+        checkInstances(savedValues, VMS.length * perVmCount * ThreadPopulator.NUM_SAMPLES);
+    }
+
+    private void assertThreadHarvestingStatus(int totalCount, int perVmCount) {
+        ArgumentCaptor<ThreadHarvestingStatus> statusCaptor =
+                ArgumentCaptor.forClass(ThreadHarvestingStatus.class);
+        verify(countableDao, times(totalCount)).saveHarvestingStatus(statusCaptor.capture());
+        List<ThreadHarvestingStatus> savedValues = statusCaptor.getAllValues();
+        checkInstances(savedValues, VMS.length * perVmCount);
+    }
+
+    private void checkInstances(List<? extends BasePojo> savedValues, int expected) {
+        List<String> agentIds = new ArrayList<>();
+        for (int i = 0; i < savedValues.size(); i++) {
+            agentIds.add(savedValues.get(i).getAgentId());
+        }
+
+        for (String agentId : AGENTS) {
+            int numInstances = Collections.frequency(agentIds, agentId);
+            assertEquals(expected, numInstances);
+        }
+    }
+
+    private void assertDeadlockInfo(int perVmCount, int totalCount) {
         ArgumentCaptor<VmDeadLockData> deadlockInfoCaptor = ArgumentCaptor.forClass(VmDeadLockData.class);
         verify(countableDao, times(totalCount)).saveDeadLockStatus(deadlockInfoCaptor.capture());
         List<VmDeadLockData> savedValues = deadlockInfoCaptor.getAllValues();
         assertEquals(totalCount, savedValues.size());
         List<VmDeadLockData> perVmIdAgentDeadlockData = getFilteredByVmId(savedValues, "vm3");
-        assertEquals(perVmCount * agents.length, perVmIdAgentDeadlockData.size());
+        assertEquals(perVmCount * AGENTS.length, perVmIdAgentDeadlockData.size());
         List<VmDeadLockData> perAgentIdDeadlockData = getFilteredByAgentId(savedValues, "fooAgent1");
         verifyVmIdsDifferent(perAgentIdDeadlockData);
     }
