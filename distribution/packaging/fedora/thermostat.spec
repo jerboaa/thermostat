@@ -52,8 +52,6 @@ __DEFAULT_RELEASE__ 7
   %global hc_core_bundle_version     4.4.4
   %global hc_client_bundle_version   4.5.2
   %global gson_bundle_version        2.3.1
-  # Real OSGi Bundle-Version is 3.2.1.RELEASE
-  %global mongo_bundle_version       3.2.1
   # Jansi is used as bootstrap bundle and the
   # bootstrap bundle properties file refers to the jar
   # with version suffix. See 0001_shared_fix_bundle_loading.patch
@@ -94,8 +92,6 @@ __DEFAULT_RELEASE__ 7
   %global hc_core_bundle_version     4.3.3
   %global hc_client_bundle_version   4.3.6
   %global gson_bundle_version        2.2.2
-  # Real OSGi Bundle-Version is 2.11.4.RELEASE
-  %global mongo_bundle_version       2.11.4
   # Jansi is used as bootstrap bundle and the
   # bootstrap bundle properties file refers to the jar
   # with version suffix. See 0001_shared_fix_bundle_loading.patch
@@ -125,6 +121,9 @@ __DEFAULT_RELEASE__ 7
   %global osgi_compendium_maven_version 1
 
 %endif
+
+# Real OSGi Bundle-Version is 3.2.1.RELEASE
+%global mongo_bundle_version         3.2.1
 
 # Real OSGi Bundle-Version is 4.0.28.Final
 %global netty_bundle_version          4.0.28
@@ -281,13 +280,9 @@ Patch2:     0002_shared_osgi_spec_fixes.patch
 # http://icedtea.classpath.org/hg/thermostat/rev/79df35f1ff13
 # Note: SCL-ized stack uses lucene 4.8 vs 5 in HEAD
 Patch3:     0003_rhel_lucene_4.patch
-# This is _NOT_ suitable for upstream at this point. It's a simple revert of
-# http://icedtea.classpath.org/hg/thermostat/rev/ab54f7b97515
-# which introduces code unavailable in older (2.11) release.
-Patch4:     0004_rhel_mongo-java-driver-2.11.patch
 # This patch can be pushed upstream when upstream JNR adds OSGi metadata to their
 # manifests. (e.g. https://github.com/jnr/jnr-unixsocket/pull/15 for jnr-unixsocket)
-Patch5:     0005_shared-remove-jnr-assembly-exclusion.patch
+Patch4:     0004_shared-remove-jnr-assembly-exclusion.patch
 
 %if 0%{?non_bootstrap_build}
 # Work-around xmvn-subst limitation
@@ -357,7 +352,7 @@ BuildRequires: %{?scl_prefix_java_common}mvn(com.google.code.gson:gson)
 BuildRequires: %{?scl_prefix}mvn(org.jfree:jfreechart)
 BuildRequires: %{?scl_prefix}mvn(org.jfree:jcommon)
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.commons:commons-beanutils)
-BuildRequires: %{?scl_prefix_mongodb}mvn(org.mongodb:mongo-java-driver)
+BuildRequires: %{?scl_prefix}mvn(org.mongodb:mongo-java-driver)
 BuildRequires: %{?scl_prefix}mvn(io.netty:netty-handler) >= %{netty_bundle_version}
 BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman)
 BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman-install)
@@ -398,9 +393,7 @@ BuildRequires: %{?scl_prefix}osgi(org.jfree.jcommon) = %{jcommon_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.commons.logging) = %{logging_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.commons.beanutils) = %{beanutils_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.commons.codec) = %{codec_bundle_version}
-# FIXME: switch back to mongodb prefix once 2.13.2 is available in
-# the mongodb collection.
-BuildRequires: %{?scl_prefix_mongodb}osgi(org.mongodb.mongo-java-driver) = %{mongo_bundle_version}
+BuildRequires: %{?scl_prefix}osgi(org.mongodb.mongo-java-driver) = %{mongo_bundle_version}
 BuildRequires: %{?scl_prefix}osgi(io.netty.buffer) >= %{netty_bundle_version}
 BuildRequires: %{?scl_prefix}osgi(io.netty.transport) >= %{netty_bundle_version}
 BuildRequires: %{?scl_prefix}osgi(io.netty.handler) >= %{netty_bundle_version}
@@ -463,9 +456,7 @@ Requires: %{?scl_prefix}osgi(org.jfree.jcommon) >= %{jcommon_bundle_version}
 Requires: %{?scl_prefix_java_common}osgi(org.apache.commons.logging) >= %{logging_bundle_version}
 Requires: %{?scl_prefix_java_common}osgi(org.apache.commons.beanutils) >= %{beanutils_bundle_version}
 Requires: %{?scl_prefix_java_common}osgi(org.apache.commons.codec) >= %{codec_bundle_version}
-# FIXME: switch back to mongodb prefix once 2.13.2 is available in
-# the mongodb collection.
-Requires: %{?scl_prefix_mongodb}osgi(org.mongodb.mongo-java-driver) >= %{mongo_bundle_version}
+Requires: %{?scl_prefix}osgi(org.mongodb.mongo-java-driver) >= %{mongo_bundle_version}
 
 Requires: %{?scl_prefix}osgi(io.netty.buffer)
 Requires: %{?scl_prefix}osgi(io.netty.transport)
@@ -536,12 +527,11 @@ security.
 #%%setup -q -n %%{pkg_name}-%%{major}-%%{minor}-%%{hgrev}
 %patch1 -p1
 %patch2 -p1
-# Lucene 4, mongo-java-driver patches only applicable for SCL
+# Lucene 4 patches only applicable for SCL
 %{?scl:
 %patch3 -p1
-%patch4 -p1
 }
-%patch5 -p1
+%patch4 -p1
 
 # Replace thermostatrc with Fedora's version
 cp %{SOURCE4} distribution/config/thermostatrc
