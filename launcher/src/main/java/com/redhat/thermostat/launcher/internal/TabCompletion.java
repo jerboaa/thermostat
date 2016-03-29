@@ -36,19 +36,26 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import jline.console.ConsoleReader;
 import jline.console.completer.Completer;
-import jline.console.completer.FileNameCompleter;
-import jline.console.completer.StringsCompleter;
 import org.apache.commons.cli.Option;
 import org.osgi.framework.BundleContext;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import static com.redhat.thermostat.launcher.internal.TreeCompleter.createStringNode;
 
@@ -57,21 +64,101 @@ public class TabCompletion {
     private static final String LONG_OPTION_PREFIX = "--";
     private static final String SHORT_OPTION_PREFIX = "-";
 
-    public static void setupTabCompletion(ConsoleReader reader, CommandInfoSource commandInfoSource, BundleContext context, StorageState storageState, ClientPreferences prefs) {
+    private Logger log;
+    private TreeCompleter treeCompleter;
+    private Map<String, TreeCompleter.Node> commandMap;
+
+    public TabCompletion() {
+        this(LoggingUtils.getLogger(TabCompletion.class),
+                new TreeCompleter(),
+                new HashMap<String, TreeCompleter.Node>());
+    }
+
+    /*
+     * Testing only
+     */
+    TabCompletion(Logger log, TreeCompleter treeCompleter, Map<String, TreeCompleter.Node> commandMap) {
+        this.log = log;
+        this.treeCompleter = treeCompleter;
+        this.commandMap = commandMap;
+
+        treeCompleter.setAlphabeticalCompletions(true);
+    }
+
+    public void addCompleterService(CompleterService service) {
+        if (commandMap.isEmpty()) {
+            return;
+        }
+        for (String commandName : service.getCommands()) {
+            TreeCompleter.Node command = commandMap.get(commandName);
+            if (command == null) {
+                log.info("Completer service for command \"" + commandName + "\" was attempted to be registered, but " +
+                        "this command is not recognized.");
+                continue;
+            }
+            addCompleterServiceImpl(command, service);
+        }
+    }
+
+    private void addCompleterServiceImpl(TreeCompleter.Node command, CompleterService service) {
+        for (Map.Entry<CliCommandOption, ? extends TabCompleter> entry : service.getOptionCompleters().entrySet()) {
+            for (TreeCompleter.Node branch : command.getBranches()) {
+                Set<String> completerOptions = getCompleterOptions(entry.getKey());
+                if (completerOptions.contains(branch.getTag())) {
+                    TreeCompleter.Node node = new TreeCompleter.Node(command.getTag() + " completer", entry.getValue());
+                    node.setRestartNode(command);
+                    branch.addBranch(node);
+                }
+            }
+        }
+    }
+
+    public void removeCompleterService(CompleterService service) {
+        if (commandMap.isEmpty()) {
+            return;
+        }
+        for (String commandName : service.getCommands()) {
+            TreeCompleter.Node command = commandMap.get(commandName);
+            if (command == null) {
+                log.info("Completer service for command \"" + commandName + "\" was attempted to be unregistered, but " +
+                        "this command is not recognized.");
+                continue;
+            }
+            removeCompleterServiceImpl(command, service);
+        }
+    }
+
+    private void removeCompleterServiceImpl(TreeCompleter.Node command, CompleterService service) {
+        for (Map.Entry<CliCommandOption, ? extends TabCompleter> entry : service.getOptionCompleters().entrySet()) {
+            for (TreeCompleter.Node branch : command.getBranches()) {
+                Set<String> completerOptions = getCompleterOptions(entry.getKey());
+                if (completerOptions.contains(branch.getTag())) {
+                    command.removeByTag(branch.getTag());
+                }
+            }
+        }
+    }
+
+    private static Set<String> getCompleterOptions(CliCommandOption option) {
+        Set<String> options = new HashSet<>();
+        options.add(LONG_OPTION_PREFIX + option.getLongOpt());
+        options.add(SHORT_OPTION_PREFIX + option.getOpt());
+        return options;
+    }
+
+    public void setupTabCompletion(ConsoleReader reader, CommandInfoSource commandInfoSource, BundleContext context, ClientPreferences prefs) {
         List<String> logLevels = new ArrayList<>();
 
         for (LoggingUtils.LogLevel level : LoggingUtils.LogLevel.values()) {
             logLevels.add(level.getLevel().getName());
         }
 
-        TreeCompleter treeCompleter = new TreeCompleter();
-        treeCompleter.setAlphabeticalCompletions(true);
-
         for (CommandInfo info : commandInfoSource.getCommandInfos()) {
 
             if (info.getEnvironments().contains(Environment.SHELL)) {
                 String commandName = info.getName();
                 TreeCompleter.Node command = createStringNode(commandName);
+                commandMap.put(commandName, command);
 
                 /* FIXME: the Ping command should be provided by a plugin and have a thermostat-plugin.xml of its own,
                 * and in thermostat-plugin.xmls we should also somehow be able to define custom tab completions, including
@@ -82,7 +169,7 @@ public class TabCompletion {
                 */
                 if (commandName.equals("ping")) {
                     TreeCompleter.Node agentIds =
-                            new TreeCompleter.Node(new IdCompleter(new AgentIdsFinder(context), storageState));
+                            new TreeCompleter.Node("agentId", new CompletionFinderTabCompleter(new AgentIdsFinder(context)));
                     agentIds.setRestartNode(command);
                     command.addBranch(agentIds);
                     treeCompleter.addBranch(command);
@@ -91,11 +178,11 @@ public class TabCompletion {
 
                 for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
                     if (option.getLongOpt().equals("logLevel")) {
-                        setupCompletion(command, option, new StringsCompleter(logLevels));
+                        setupCompletion(command, option, new JLineStringsCompleter(logLevels));
                     } else if (option.getLongOpt().equals("vmId")) {
-                        setupCompletion(command, option, new IdCompleter(new VmIdsFinder(context), storageState));
+                        setupCompletion(command, option, new CompletionFinderTabCompleter(new VmIdsFinder(context)));
                     } else if (option.getLongOpt().equals("agentId")) {
-                        setupCompletion(command, option, new IdCompleter(new AgentIdsFinder(context), storageState));
+                        setupCompletion(command, option, new CompletionFinderTabCompleter(new AgentIdsFinder(context)));
                     } else if (option.getLongOpt().equals(Arguments.DB_URL_ARGUMENT)) {
                         setupCompletion(command, option, new DbUrlCompleter(prefs));
                     } else {
@@ -105,7 +192,7 @@ public class TabCompletion {
                 }
 
                 if (info.needsFileTabCompletions()) {
-                    TreeCompleter.Node files = new TreeCompleter.Node(new FileNameCompleter());
+                    TreeCompleter.Node files = new TreeCompleter.Node("fileName", new JLineFileNameCompleter());
                     files.setRestartNode(command);
                     command.addBranch(files);
                 }
@@ -113,15 +200,15 @@ public class TabCompletion {
             }
         }
 
-        reader.addCompleter(treeCompleter);
+        reader.addCompleter(new JLineCompleterAdapter(treeCompleter));
     }
 
-    private static void setupDefaultCompletion(final TreeCompleter.Node command, final Option option) {
+    private void setupDefaultCompletion(final TreeCompleter.Node command, final Option option) {
         setupDefaultCompletion(command, option.getLongOpt(), LONG_OPTION_PREFIX);
         setupDefaultCompletion(command, option.getOpt(), SHORT_OPTION_PREFIX);
     }
 
-    private static void setupDefaultCompletion(final TreeCompleter.Node command, final String option, final String prefix) {
+    private void setupDefaultCompletion(final TreeCompleter.Node command, final String option, final String prefix) {
         if (option != null) {
             String optionShortName = prefix + option;
             TreeCompleter.Node defaultNode = createStringNode(optionShortName);
@@ -130,12 +217,12 @@ public class TabCompletion {
         }
     }
 
-    private static void setupCompletion(final TreeCompleter.Node command, final Option option, Completer completer) {
+    private void setupCompletion(final TreeCompleter.Node command, final Option option, TabCompleter completer) {
         setupCompletion(command, completer, option.getLongOpt(), LONG_OPTION_PREFIX);
         setupCompletion(command, completer, option.getOpt(), SHORT_OPTION_PREFIX);
     }
 
-    private static void setupCompletion(final TreeCompleter.Node command, final Completer completer, final String option, final String prefix) {
+    private void setupCompletion(final TreeCompleter.Node command, final TabCompleter completer, final String option, final String prefix) {
         if (option != null) {
             final String optionName = prefix + option;
             TreeCompleter.Node nodeOption = setupCompletionNode(command, optionName, completer);
@@ -143,13 +230,27 @@ public class TabCompletion {
         }
     }
 
-    private static TreeCompleter.Node setupCompletionNode(final TreeCompleter.Node command, final String optionName, Completer completer) {
+    private TreeCompleter.Node setupCompletionNode(final TreeCompleter.Node command, final String optionName, TabCompleter completer) {
         TreeCompleter.Node option = createStringNode(optionName);
-        TreeCompleter.Node choices = new TreeCompleter.Node(completer);
+        TreeCompleter.Node choices = new TreeCompleter.Node(optionName, completer);
         option.addBranch(choices);
         option.setRestartNode(command);
         choices.setRestartNode(command);
         return option;
+    }
+
+    private static class JLineCompleterAdapter implements Completer {
+
+        private TabCompleter tabCompleter;
+
+        public JLineCompleterAdapter(TabCompleter tabCompleter) {
+            this.tabCompleter = tabCompleter;
+        }
+
+        @Override
+        public int complete(String s, int i, List<CharSequence> list) {
+            return tabCompleter.complete(s, i, list);
+        }
     }
 
 }

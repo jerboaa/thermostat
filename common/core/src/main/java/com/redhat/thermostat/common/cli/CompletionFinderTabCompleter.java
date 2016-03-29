@@ -34,71 +34,67 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.common.cli;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 
-public class IdCompleter implements Completer {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-    private IdFinder finder;
-    private final StorageState storageState;
+/**
+ * Provides cli/shell tab completion for various strings, ex. agentId, vmId.
+ */
+public class CompletionFinderTabCompleter implements TabCompleter {
 
-    public IdCompleter(IdFinder finder, StorageState storageState) {
+    private CompletionFinder finder;
+
+    public CompletionFinderTabCompleter(CompletionFinder finder) {
         this.finder = finder;
-        this.storageState = storageState;
     }
 
     @Override
-    public int complete(final String buffer, final int cursor, final List<CharSequence> candidates) {
-        List<CompletionInfo> ids;
-        List<String> completions = new ArrayList<>();
+    public int complete(String buffer, int cursor, List<CharSequence> candidates) {
+        List<CompletionInfo> completions = filterCompletionsWithBuffer(finder.findCompletions(), buffer);
 
-        if (storageState.isStorageConnected()) {
-            ids = finder.findIds();
-            ids = filterIdsWithBuffer(ids, buffer);
-
-            //If there is only one it will be completed on the prompt line.
-            //Then any additional information is unwanted there.
-            if (ids.size() == 1) {
-                completions = getCompletions(ids);
-            } else {
-                completions = getCompletionsWithUserVisibleText(ids);
-            }
+        // If there is only one it will be completed on the prompt line.
+        // Then any additional information is unwanted there.
+        List<String> results;
+        if (completions.isEmpty()) {
+            results = Collections.emptyList();
+        } else if (completions.size() == 1) {
+            results = getCompletions(completions);
+        } else {
+            results = getCompletionsWithUserVisibleText(completions);
         }
 
-        StringsCompleter idsCompleter = new StringsCompleter(completions);
-        return idsCompleter.complete(buffer, cursor, candidates);
+        return new StringsCompleter(results).complete(buffer, cursor, candidates);
     }
 
-    private List<CompletionInfo> filterIdsWithBuffer(final List<CompletionInfo> ids, String buffer) {
+    private List<CompletionInfo> filterCompletionsWithBuffer(List<CompletionInfo> completions, String buffer) {
         List<CompletionInfo> result = new ArrayList<>();
-        for (CompletionInfo id : ids) {
-            if (buffer == null || id.getActualCompletion().startsWith(buffer)) {
-                result.add(id);
+        for (CompletionInfo completion : completions) {
+            if (buffer == null || completion.getActualCompletion().startsWith(buffer)) {
+                result.add(completion);
             }
         }
         return result;
     }
 
-    private List<String> getCompletions(final List<CompletionInfo> vmIds) {
+    private List<String> getCompletions(List<CompletionInfo> completions) {
         List<String> result = new ArrayList<>();
-        for (CompletionInfo vmId : vmIds) {
-            result.add(vmId.getActualCompletion());
+        for (CompletionInfo completion : completions) {
+            result.add(completion.getActualCompletion());
         }
         return result;
     }
 
-    private List<String> getCompletionsWithUserVisibleText(final List<CompletionInfo> vmIds) {
+    private List<String> getCompletionsWithUserVisibleText(List<CompletionInfo> completions) {
         List<String> result = new ArrayList<>();
-        for (CompletionInfo vmId : vmIds) {
-            result.add(vmId.getCompletionWithUserVisibleText());
+        for (CompletionInfo completion : completions) {
+            result.add(completion.getCompletionWithUserVisibleText());
         }
         return result;
     }
 
 }
-

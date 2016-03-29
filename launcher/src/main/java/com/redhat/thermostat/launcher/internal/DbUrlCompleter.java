@@ -36,13 +36,13 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.util.List;
-
+import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 
-public class DbUrlCompleter implements Completer {
+import java.util.List;
+
+public class DbUrlCompleter implements TabCompleter {
 
     private final ClientPreferences prefs;
 

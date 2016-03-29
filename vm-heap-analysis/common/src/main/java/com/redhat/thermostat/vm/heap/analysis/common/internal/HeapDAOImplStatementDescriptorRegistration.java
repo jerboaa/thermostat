@@ -52,6 +52,7 @@ public class HeapDAOImplStatementDescriptorRegistration implements
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>(2);
+        descs.add(HeapDAOImpl.QUERY_ALL_HEAPS_WITH_AGENT_AND_VM_IDS);
         descs.add(HeapDAOImpl.QUERY_ALL_HEAPS);
         descs.add(HeapDAOImpl.QUERY_HEAP_INFO);
         descs.add(HeapDAOImpl.DESC_ADD_VM_HEAP_INFO);

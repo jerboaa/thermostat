@@ -45,7 +45,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -94,6 +93,7 @@ public class ShellCommandTest {
     private CommandInfoSource infos;
     private File dir;
     private ClientPreferences prefs;
+    private TabCompletion tabCompletion;
 
     @Before
     public void setUp() {
@@ -102,11 +102,13 @@ public class ShellCommandTest {
         version = mock(Version.class);
         when(version.getVersionInfo()).thenReturn(VERSION);
         config = mock(ConfigurationInfoSource.class);
+        tabCompletion = new TabCompletion();
 
         prefs = mock(ClientPreferences.class);
         when(prefs.getConnectionUrl()).thenReturn("http://127.0.0.1:mockStorage");
         infos = mock(CommandInfoSource.class);
         cmd = new ShellCommand(bundleContext, version, historyProvider, config, prefs);
+        cmd.setTabCompletion(tabCompletion);
         setupCommandInfoSource();
 
         dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "shellcommand");

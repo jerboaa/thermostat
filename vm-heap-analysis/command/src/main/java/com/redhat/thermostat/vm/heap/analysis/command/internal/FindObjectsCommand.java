@@ -55,6 +55,8 @@ import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 public class FindObjectsCommand extends AbstractCommand {
 
+    static final String COMMAND_NAME = "find-objects";
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String HEADER_OBJECT_ID = translator.localize(LocaleResources.HEADER_OBJECT_ID).getContents();

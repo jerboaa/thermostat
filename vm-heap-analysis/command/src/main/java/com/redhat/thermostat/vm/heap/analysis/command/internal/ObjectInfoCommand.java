@@ -59,6 +59,8 @@ import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.Snapshot;
 
 public class ObjectInfoCommand extends AbstractCommand {
 
+    static final String COMMAND_NAME = "object-info";
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final BundleContext context;

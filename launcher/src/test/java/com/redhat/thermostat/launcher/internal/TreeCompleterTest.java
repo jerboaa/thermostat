@@ -464,7 +464,7 @@ public class TreeCompleterTest {
         {
             TreeCompleter.Node find = createStringNode("find");
             {
-                TreeCompleter.Node files = new TreeCompleter.Node(new FileNameCompleter());
+                TreeCompleter.Node files = new TreeCompleter.Node("fileName", new JLineFileNameCompleter());
                 find.addBranch(files);
             }
             TreeCompleter.Node climb = createStringNode("climb");

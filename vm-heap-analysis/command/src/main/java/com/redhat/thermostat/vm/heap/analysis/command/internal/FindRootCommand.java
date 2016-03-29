@@ -61,6 +61,8 @@ import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.Snapshot;
 
 public class FindRootCommand extends AbstractCommand {
 
+    static final String COMMAND_NAME = "find-root";
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String ALL_ARG = "all";

@@ -40,6 +40,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
+import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.storage.core.DbService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -64,6 +69,8 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 public class Activator implements BundleActivator {
+
+    private CompleterServiceRegistry completerServiceRegistry;
 
     @SuppressWarnings({ "rawtypes" })
     class RegisterLauncherAction implements Action {
@@ -138,6 +145,7 @@ public class Activator implements BundleActivator {
     private CommandRegistry registry;
 
     private ShellCommand shellCommand;
+    private TabCompletion tabCompletion;
     @SuppressWarnings("rawtypes")
     private ServiceTracker commandInfoSourceTracker;
     private ServiceTracker dbServiceTracker;
@@ -158,6 +166,27 @@ public class Activator implements BundleActivator {
                 registerLauncherAction);
         launcherDepsTracker.open();
 
+        tabCompletion = new TabCompletion();
+
+        completerServiceRegistry = new CompleterServiceRegistry(context);
+        completerServiceRegistry.addActionListener(new ActionListener<ThermostatExtensionRegistry.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<ThermostatExtensionRegistry.Action> actionEvent) {
+                CompleterService service = (CompleterService) actionEvent.getPayload();
+                switch (actionEvent.getActionId()) {
+                    case SERVICE_ADDED:
+                        tabCompletion.addCompleterService(service);
+                        break;
+                    case SERVICE_REMOVED:
+                        tabCompletion.removeCompleterService(service);
+                        break;
+                    default:
+                        throw new NotImplementedException("Unknown action: " + actionEvent.getActionId());
+                }
+            }
+        });
+        completerServiceRegistry.start();
+
         final HelpCommand helpCommand = new HelpCommand();
         environment.addListener(new CurrentEnvironmentChangeListener() {
             @Override
@@ -177,6 +206,7 @@ public class Activator implements BundleActivator {
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 ConfigurationInfoSource config = (ConfigurationInfoSource) services.get(ConfigurationInfoSource.class.getName());
                 shellCommand = new ShellCommand(context, paths, config);
+                shellCommand.setTabCompletion(tabCompletion);
                 registry.registerCommand("shell", shellCommand);
             }
 
@@ -242,6 +272,9 @@ public class Activator implements BundleActivator {
         }
         if (commandInfoSourceTracker != null) {
             commandInfoSourceTracker.close();
+        }
+        if (completerServiceRegistry != null) {
+            completerServiceRegistry.stop();
         }
         if (shellTracker != null) {
             shellTracker.close();

@@ -34,31 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.common.internal;
+package com.redhat.thermostat.common.cli;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+public abstract class AbstractCompleterService implements CompleterService {
 
-import java.util.Set;
+    protected DependencyServices dependencyServices = new DependencyServices();
 
-import org.junit.Test;
-
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.testutils.ServiceLoaderTest;
-
-public class HeapDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
-
-    public HeapDAOImplStatementDescriptorRegistrationTest() {
-        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, HeapDAOImplStatementDescriptorRegistration.class);
-    }
-
-    @Test
-    public void registersAllDescriptors() {
-        HeapDAOImplStatementDescriptorRegistration reg = new HeapDAOImplStatementDescriptorRegistration();
-        Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(4, descriptors.size());
-        assertFalse("null descriptor not allowed", descriptors.contains(null));
+    protected <T> void setService(Class<T> klazz, T t) {
+        if (t != null) {
+            dependencyServices.addService(klazz, t);
+        } else {
+            dependencyServices.removeService(klazz);
+        }
     }
 
 }
-

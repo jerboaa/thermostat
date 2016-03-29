@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.redhat.thermostat.common.cli.CompletionInfo;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -78,7 +79,7 @@ public class AgentIdsFinderTest {
         collection.add(agentInfo4);
         when(agentInfoDAO.getAllAgentInformation()).thenReturn((List<AgentInformation>) collection);
 
-        List<CompletionInfo> result = agentIdsFinder.findIds();
+        List<CompletionInfo> result = agentIdsFinder.findCompletions();
         assertEquals(4, result.size());
         assertEquals(id1, result.get(0).getActualCompletion());
         assertEquals(id2, result.get(1).getActualCompletion());

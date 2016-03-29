@@ -34,31 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.common.internal;
+package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import java.util.Set;
+public enum LocaleResources {
 
-import org.junit.Test;
+    HEAPID_COMPLETION_WITH_USER_TEXT,
+    ;
 
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.testutils.ServiceLoaderTest;
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.heap.analysis.command.internal.locale.strings";
 
-public class HeapDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
-
-    public HeapDAOImplStatementDescriptorRegistrationTest() {
-        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, HeapDAOImplStatementDescriptorRegistration.class);
-    }
-
-    @Test
-    public void registersAllDescriptors() {
-        HeapDAOImplStatementDescriptorRegistration reg = new HeapDAOImplStatementDescriptorRegistration();
-        Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(4, descriptors.size());
-        assertFalse("null descriptor not allowed", descriptors.contains(null));
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
 }
-

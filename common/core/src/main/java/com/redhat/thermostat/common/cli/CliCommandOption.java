@@ -34,11 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.common.cli;
 
-import java.util.List;
+public class CliCommandOption {
 
-public interface IdFinder {
+    private final String opt;
+    private final String longOpt;
+    private final boolean hasArg;
+    private final String description;
+    private final boolean required;
 
-    public List<CompletionInfo> findIds();
+    public CliCommandOption(String opt, String description) throws IllegalArgumentException {
+        this(opt, null, false, description, false);
+    }
+
+    public CliCommandOption(String opt, String longOpt, boolean hasArg, String description, boolean required) throws IllegalArgumentException {
+        this.opt = opt;
+        this.longOpt = longOpt;
+        this.hasArg = hasArg;
+        this.description = description;
+        this.required = required;
+    }
+
+    public String getOpt() {
+        return opt;
+    }
+
+    public String getLongOpt() {
+        return longOpt;
+    }
+
+    public boolean hasArg() {
+        return hasArg;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public boolean isRequired() {
+        return required;
+    }
+
 }

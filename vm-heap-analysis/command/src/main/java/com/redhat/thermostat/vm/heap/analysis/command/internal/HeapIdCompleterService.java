@@ -34,32 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-public class CompletionInfo {
+import com.redhat.thermostat.common.cli.AbstractCompleterService;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 
-    private String actualCompletion;
-    private String userVisibleText;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-    public CompletionInfo (String actualCompletion, String userVisibleText) {
-        this.actualCompletion = actualCompletion;
-        this.userVisibleText = userVisibleText;
+public class HeapIdCompleterService extends AbstractCompleterService {
+
+    @Override
+    public Set<String> getCommands() {
+        return new HashSet<>(Arrays.asList(
+                FindObjectsCommand.COMMAND_NAME,
+                FindRootCommand.COMMAND_NAME,
+                ObjectInfoCommand.COMMAND_NAME,
+                SaveHeapDumpToFileCommand.COMMAND_NAME,
+                ShowHeapHistogramCommand.COMMAND_NAME
+        ));
     }
 
-    public CompletionInfo (String actualCompletion) {
-        this.actualCompletion = actualCompletion;
-        this.userVisibleText = "";
+    @Override
+    public Map<CliCommandOption, TabCompleter> getOptionCompleters() {
+        CliCommandOption heapOption = new CliCommandOption("h", "heapId", true, "Heap ID", false);
+        TabCompleter heapCompleter = new CompletionFinderTabCompleter(new HeapIdsFinder(dependencyServices));
+
+        return Collections.singletonMap(heapOption, heapCompleter);
     }
 
-    public String getActualCompletion() {
-        return actualCompletion;
+    void setHeapDAO(HeapDAO heapDao) {
+        setService(HeapDAO.class, heapDao);
     }
 
-    public String getUserVisibleText() {
-        return userVisibleText;
+    void setVmInfoDAO(VmInfoDAO vmInfoDao) {
+        setService(VmInfoDAO.class, vmInfoDao);
     }
 
-    public String getCompletionWithUserVisibleText() {
-        return actualCompletion + userVisibleText;
-    }
 }

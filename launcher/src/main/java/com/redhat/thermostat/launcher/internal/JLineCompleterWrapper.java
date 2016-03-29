@@ -34,31 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.common.internal;
+package com.redhat.thermostat.launcher.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import com.redhat.thermostat.common.cli.TabCompleter;
+import jline.console.completer.Completer;
 
-import java.util.Set;
+import java.util.List;
 
-import org.junit.Test;
+public class JLineCompleterWrapper implements TabCompleter {
 
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.testutils.ServiceLoaderTest;
+    private final Completer jlineCompleter;
 
-public class HeapDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
-
-    public HeapDAOImplStatementDescriptorRegistrationTest() {
-        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, HeapDAOImplStatementDescriptorRegistration.class);
+    public JLineCompleterWrapper(Completer jlineCompleter) {
+        this.jlineCompleter = jlineCompleter;
     }
 
-    @Test
-    public void registersAllDescriptors() {
-        HeapDAOImplStatementDescriptorRegistration reg = new HeapDAOImplStatementDescriptorRegistration();
-        Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(4, descriptors.size());
-        assertFalse("null descriptor not allowed", descriptors.contains(null));
+    @Override
+    public int complete(String buffer, int cursor, List<CharSequence> candidates) {
+        return jlineCompleter.complete(buffer, cursor, candidates);
     }
-
 }
-

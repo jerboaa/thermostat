@@ -65,6 +65,8 @@ public interface HeapDAO {
 
     Collection<HeapInfo> getAllHeapInfo(AgentId agentId, VmId vmId);
 
+    Collection<HeapInfo> getAllHeapInfo();
+
     InputStream getHeapDumpData(HeapInfo heapInfo);
 
     ObjectHistogram getHistogram(HeapInfo heapInfo);

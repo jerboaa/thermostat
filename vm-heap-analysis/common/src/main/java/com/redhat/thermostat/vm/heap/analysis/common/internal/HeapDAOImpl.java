@@ -62,6 +62,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
@@ -73,10 +74,11 @@ public class HeapDAOImpl extends AbstractDao implements HeapDAO {
     
     // Query descriptors
     
-    static final String QUERY_ALL_HEAPS = "QUERY "
+    static final String QUERY_ALL_HEAPS_WITH_AGENT_AND_VM_IDS = "QUERY "
             + heapInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
             + Key.VM_ID.getName() + "' = ?s";
+    static final String QUERY_ALL_HEAPS = "QUERY " + heapInfoCategory.getName();
     static final String QUERY_HEAP_INFO = "QUERY "
             + heapInfoCategory.getName() + " WHERE '" 
             + heapIdKey.getName() + "' = ?s LIMIT 1";
@@ -186,11 +188,21 @@ public class HeapDAOImpl extends AbstractDao implements HeapDAO {
 
     @Override
     public Collection<HeapInfo> getAllHeapInfo(final AgentId agentId, final VmId vmId) {
-        return executeQuery(new AbstractDaoQuery<HeapInfo>(storage, heapInfoCategory, QUERY_ALL_HEAPS) {
+        return executeQuery(new AbstractDaoQuery<HeapInfo>(storage, heapInfoCategory, QUERY_ALL_HEAPS_WITH_AGENT_AND_VM_IDS) {
             @Override
             public PreparedStatement<HeapInfo> customize(PreparedStatement<HeapInfo> preparedStatement) {
                 preparedStatement.setString(0, agentId.get());
                 preparedStatement.setString(1, vmId.get());
+                return preparedStatement;
+            }
+        }).asList();
+    }
+
+    @Override
+    public Collection<HeapInfo> getAllHeapInfo() {
+        return executeQuery(new AbstractDaoQuery<HeapInfo>(storage, heapInfoCategory, QUERY_ALL_HEAPS) {
+            @Override
+            public PreparedStatement<HeapInfo> customize(PreparedStatement<HeapInfo> preparedStatement) {
                 return preparedStatement;
             }
         }).asList();

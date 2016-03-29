@@ -49,10 +49,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import jline.console.completer.Completer;
-import jline.console.completer.StringsCompleter;
+import com.redhat.thermostat.common.cli.TabCompleter;
 
-public class TreeCompleter implements Completer {
+public class TreeCompleter implements TabCompleter {
 
     private final ArgumentDelimiter delimiter;
 
@@ -136,7 +135,7 @@ public class TreeCompleter implements Completer {
 
         int position = cursorPosition;
         currentNode = traverseBranches(currentBuffer, Arrays.asList(list.getArguments()));
-        final List<Completer> completers = getAllCompleters(currentNode);
+        final List<TabCompleter> completers = getAllCompleters(currentNode);
 
         //Complete possible arguments off a space or the current word up to the cursor
         if (currentBuffer.endsWith(EMPTY_SPACE)) {
@@ -145,8 +144,8 @@ public class TreeCompleter implements Completer {
             if (currentNode != START_NODE && currentNode.getBranches().isEmpty()) {
                 currentNode = currentNode.getRestartNode();
             }
-            final List<Completer> relevantCompleters = filterRelevantCompleters(completers, list.getCursorArgument());
-            for (final Completer completer : relevantCompleters) {
+            final List<TabCompleter> relevantCompleters = filterRelevantCompleters(completers, list.getCursorArgument());
+            for (final TabCompleter completer : relevantCompleters) {
                 position = getInlinedCursorPosition(completer, candidates);
             }
         }
@@ -167,7 +166,7 @@ public class TreeCompleter implements Completer {
         });
     }
 
-    private int getInlinedCursorPosition(final Completer completer, final List<CharSequence> candidates) {
+    private int getInlinedCursorPosition(final TabCompleter completer, final List<CharSequence> candidates) {
         int cursor = completer.complete(list.getCursorArgument(), list.getArgumentPosition(), candidates);
         return cursor + list.getBufferPosition() - list.getArgumentPosition();
     }
@@ -193,14 +192,14 @@ public class TreeCompleter implements Completer {
         return resultNode;
     }
 
-    private void completeList(final List<CharSequence> candidates, final List<Completer> completerList) {
-        for (final Completer completer : completerList) {
+    private void completeList(final List<CharSequence> candidates, final List<TabCompleter> completerList) {
+        for (final TabCompleter completer : completerList) {
             completer.complete(null, 0, candidates);
         }
     }
 
-    private List<Completer> getAllCompleters(final Node currentNode) {
-        final List<Completer> completersFromBranches = new ArrayList<>();
+    private List<TabCompleter> getAllCompleters(final Node currentNode) {
+        final List<TabCompleter> completersFromBranches = new ArrayList<>();
         for (final Node node : findBranches(currentNode)) {
             completersFromBranches.add(node.getCompleter());
         }
@@ -218,9 +217,9 @@ public class TreeCompleter implements Completer {
         return childrenNodeList;
     }
 
-    private List<Completer> filterRelevantCompleters(final List<Completer> completersFromBranches, final String cursorArgument) {
-        final List<Completer> completers = new ArrayList<>();
-        for (final Completer branchCompleter : completersFromBranches) {
+    private List<TabCompleter> filterRelevantCompleters(final List<TabCompleter> completersFromBranches, final String cursorArgument) {
+        final List<TabCompleter> completers = new ArrayList<>();
+        for (final TabCompleter branchCompleter : completersFromBranches) {
             final List<CharSequence> candidates = new LinkedList<>();
             branchCompleter.complete(cursorArgument, 0, candidates);
             if (!candidates.isEmpty()) {
@@ -230,7 +229,7 @@ public class TreeCompleter implements Completer {
         return completers;
     }
 
-    private List<CharSequence> findCompletions(final Completer branchCompleter, String argument) {
+    private List<CharSequence> findCompletions(final TabCompleter branchCompleter, String argument) {
         final List<CharSequence> candidates = new LinkedList<>();
         branchCompleter.complete(argument, argument.length() - 1, candidates);
         return candidates;
@@ -278,13 +277,14 @@ public class TreeCompleter implements Completer {
      * any further completions.
      */
     public static class Node {
-        private final Completer completer;
+        private final String tag;
+        private final TabCompleter completer;
         private final List<Node> branches;
         private Node restartNode = START_NODE;
 
-        public Node(final Completer data) {
-            requireNonNull(data);
-            this.completer = data;
+        public Node(final String tag, final TabCompleter completer) {
+            this.tag = requireNonNull(tag);
+            this.completer = requireNonNull(completer);
             branches = new ArrayList<>();
         }
 
@@ -292,12 +292,30 @@ public class TreeCompleter implements Completer {
             branches.add(branch);
         }
 
-        public Completer getCompleter() {
+        public String getTag() {
+            return tag;
+        }
+
+        public TabCompleter getCompleter() {
             return completer;
         }
 
         public List<Node> getBranches() {
             return branches;
+        }
+
+        public void removeByTag(String tag) {
+            Iterator<Node> it = getBranches().iterator();
+            while (it.hasNext()) {
+                Node node = it.next();
+                if (node.getTag().equals(tag)) {
+                    it.remove();
+                }
+            }
+        }
+
+        public void clear() {
+            branches.clear();
         }
 
         public void setRestartNode(final Node restartNode) {
@@ -315,8 +333,12 @@ public class TreeCompleter implements Completer {
      * @param strings the strings to be completed by the strings completer
      * @return the node containing the string completer
      */
-    public static Node createStringNode(String... strings) {
-        return new Node(new StringsCompleter(strings));
+    public static Node createStringNode(String tag, String... strings) {
+        return new Node(tag, new JLineStringsCompleter(strings));
+    }
+
+    public static Node createStringNode(String tag) {
+        return createStringNode(tag, tag);
     }
 
     /**
@@ -324,7 +346,7 @@ public class TreeCompleter implements Completer {
      * @param strings the strings to be completed by the strings completer
      * @return the node containing the string completer
      */
-    public static Node createStringNode(List<String> strings) {
-        return new Node(new StringsCompleter(strings));
+    public static Node createStringNode(String tag, List<String> strings) {
+        return new Node(tag, new JLineStringsCompleter(strings));
     }
 }

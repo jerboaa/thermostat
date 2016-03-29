@@ -34,31 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.common.internal;
+package com.redhat.thermostat.common.cli;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+/**
+ * A simple structure used for tab-completion.
+ */
+public class CompletionInfo {
 
-import java.util.Set;
+    private String actualCompletion;
+    private String userVisibleText;
 
-import org.junit.Test;
-
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.testutils.ServiceLoaderTest;
-
-public class HeapDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
-
-    public HeapDAOImplStatementDescriptorRegistrationTest() {
-        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, HeapDAOImplStatementDescriptorRegistration.class);
+    public CompletionInfo (String actualCompletion, String userVisibleText) {
+        this.actualCompletion = actualCompletion;
+        this.userVisibleText = userVisibleText;
     }
 
-    @Test
-    public void registersAllDescriptors() {
-        HeapDAOImplStatementDescriptorRegistration reg = new HeapDAOImplStatementDescriptorRegistration();
-        Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(4, descriptors.size());
-        assertFalse("null descriptor not allowed", descriptors.contains(null));
+    public CompletionInfo (String actualCompletion) {
+        this.actualCompletion = actualCompletion;
+        this.userVisibleText = null;
     }
 
+    /**
+     * Provides the String completion when there is only one tab-completion match.
+     * @return the completed String
+     */
+    public String getActualCompletion() {
+        return actualCompletion;
+    }
+
+    /**
+     * Provides a human-friendly identifier text describing {@link #getActualCompletion()}.
+     * @return the identifier text
+     */
+    public String getUserVisibleText() {
+        return userVisibleText;
+    }
+
+    /**
+     * Provides the String displayed to the user when tab-completion returns more than one possible result.
+     * @return the display String
+     */
+    public String getCompletionWithUserVisibleText() {
+        if (userVisibleText == null) {
+            return actualCompletion;
+        } else {
+            return actualCompletion + " [" + userVisibleText + "]";
+        }
+    }
 }
-

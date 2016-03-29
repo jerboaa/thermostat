@@ -38,14 +38,17 @@ package com.redhat.thermostat.launcher.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+import com.redhat.thermostat.common.cli.CompletionFinder;
+import com.redhat.thermostat.common.cli.CompletionInfo;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-public class AgentIdsFinder implements IdFinder {
+public class AgentIdsFinder implements CompletionFinder {
 
     private BundleContext context;
 
@@ -54,18 +57,28 @@ public class AgentIdsFinder implements IdFinder {
     }
 
     @Override
-    public List<CompletionInfo> findIds() {
-        List<CompletionInfo> agentIds = new ArrayList<>();
+    public List<CompletionInfo> findCompletions() {
         ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
-        AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
 
-        Collection<AgentInformation> agentInfos = agentInfoDAO.getAllAgentInformation();
-        context.ungetService(agentInfoDAORef);
+        if (agentInfoDAORef == null) {
+            return Collections.emptyList();
+        }
 
+        try {
+            AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
+
+            return getAgentIdCompletions(agentInfoDAO.getAllAgentInformation());
+        } finally {
+            context.ungetService(agentInfoDAORef);
+        }
+    }
+
+    private List<CompletionInfo> getAgentIdCompletions(Collection<AgentInformation> agentInfos) {
+        List<CompletionInfo> agentIds = new ArrayList<>();
         for (AgentInformation agentInfo : agentInfos) {
             agentIds.add(new CompletionInfo(agentInfo.getAgentId()));
         }
-
         return agentIds;
     }
+
 }

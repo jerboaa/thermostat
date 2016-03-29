@@ -56,6 +56,8 @@ import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 public class ShowHeapHistogramCommand extends AbstractCommand {
 
+    static final String COMMAND_NAME = "show-heap-histogram";
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final BundleContext context;

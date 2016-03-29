@@ -61,6 +61,8 @@ import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 public class SaveHeapDumpToFileCommand extends AbstractCommand {
 
+    static final String COMMAND_NAME = "save-heap-dump-to-file";
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String HEAP_ID_ARGUMENT = "heapId";

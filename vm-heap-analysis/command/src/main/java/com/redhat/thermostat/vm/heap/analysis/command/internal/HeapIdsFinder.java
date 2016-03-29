@@ -34,70 +34,59 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.cli.CompletionFinder;
 import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
-public class VmIdsFinder implements CompletionFinder {
+public class HeapIdsFinder implements CompletionFinder {
 
-    private BundleContext context;
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    public VmIdsFinder(BundleContext context) {
-        this.context = context;
+    private DependencyServices dependencyServices;
+
+    public HeapIdsFinder(DependencyServices dependencyServices) {
+        this.dependencyServices = dependencyServices;
     }
 
     @Override
     public List<CompletionInfo> findCompletions() {
-        ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
-        ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
-
-        if (vmsDAORef == null
-                || agentInfoDAORef == null) {
+        if (!(dependencyServices.hasService(HeapDAO.class) && dependencyServices.hasService(VmInfoDAO.class))) {
             return Collections.emptyList();
         }
 
-        try {
-            VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
-            AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
+        HeapDAO heapDao = dependencyServices.getService(HeapDAO.class);
+        VmInfoDAO vmDao = dependencyServices.getService(VmInfoDAO.class);
 
-            return findVmIds(vmsDAO, agentInfoDAO, agentInfoDAO.getAgentIds());
-        } finally {
-            context.ungetService(vmsDAORef);
-            context.ungetService(agentInfoDAORef);
+        List<CompletionInfo> heapIds = new ArrayList<>();
+        for (HeapInfo heap : heapDao.getAllHeapInfo()) {
+            CompletionInfo completionInfo = getCompletionInfo(vmDao, heap);
+            heapIds.add(completionInfo);
         }
+        return heapIds;
     }
 
-    private List<CompletionInfo> findVmIds(VmInfoDAO vmsDAO, AgentInfoDAO agentInfoDAO, Set<AgentId> agentIds) {
-        List<CompletionInfo> vmIds = new ArrayList<>();
-        for (AgentId agentId : agentIds) {
-            AgentInformation agentInfo = agentInfoDAO.getAgentInformation(agentId);
-            if (agentInfo != null) {
-                Collection<VmId> vms = vmsDAO.getVmIds(agentId);
-                for (VmId vm : vms) {
-                    VmInfo info = vmsDAO.getVmInfo(vm);
-                    vmIds.add(new CompletionInfo(info.getVmId(), getUserVisibleText(info, agentInfo)));
-                }
-            }
-        }
-        return vmIds;
+    private CompletionInfo getCompletionInfo(VmInfoDAO vmDao, HeapInfo heap) {
+        VmInfo vmInfo = vmDao.getVmInfo(new VmId(heap.getVmId()));
+
+        String mainclass = vmInfo.getMainClass();
+        String timestamp = Clock.DEFAULT_DATE_FORMAT.format(new Date(heap.getTimeStamp()));
+
+        String userVisibleText = t.localize(LocaleResources.HEAPID_COMPLETION_WITH_USER_TEXT, mainclass, timestamp).getContents();
+        return new CompletionInfo(heap.getHeapId(), userVisibleText);
     }
 
-    private String getUserVisibleText(VmInfo info, AgentInformation agentInfo) {
-        return info.getMainClass() + "(" + info.isAlive(agentInfo).toString() + ")";
-    }
 }

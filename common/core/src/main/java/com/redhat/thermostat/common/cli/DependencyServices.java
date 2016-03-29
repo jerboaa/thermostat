@@ -78,6 +78,10 @@ public class DependencyServices {
         }
     }
 
+    public <T> boolean hasService(Class<T> serviceClass) {
+        return !getHolder(serviceClass).isEmpty();
+    }
+
     /** @return the service, or {@code null} */
     public <T> T getService(Class<T> serviceClass) {
         BlockingQueue<T> holder = getHolder(serviceClass);

@@ -36,16 +36,18 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-public class StorageState {
+import jline.console.completer.StringsCompleter;
 
-    private boolean storageConnected = false;
+import java.util.Collection;
 
-    public void setStorageConnected(boolean isStorageConnected) {
-        storageConnected = isStorageConnected;
+public class JLineStringsCompleter extends JLineCompleterWrapper {
+
+    public JLineStringsCompleter(String... strings) {
+        super(new StringsCompleter(strings));
     }
 
-    public boolean isStorageConnected() {
-        return storageConnected;
+    public JLineStringsCompleter(Collection<String> strings) {
+        super(new StringsCompleter(strings));
     }
 
 }

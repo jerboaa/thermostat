@@ -34,31 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.common.internal;
+package com.redhat.thermostat.common.cli;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import com.redhat.thermostat.annotations.ExtensionPoint;
 
-import java.util.Set;
+import java.util.List;
 
-import org.junit.Test;
-
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.testutils.ServiceLoaderTest;
-
-public class HeapDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
-
-    public HeapDAOImplStatementDescriptorRegistrationTest() {
-        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, HeapDAOImplStatementDescriptorRegistration.class);
-    }
-
-    @Test
-    public void registersAllDescriptors() {
-        HeapDAOImplStatementDescriptorRegistration reg = new HeapDAOImplStatementDescriptorRegistration();
-        Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(4, descriptors.size());
-        assertFalse("null descriptor not allowed", descriptors.contains(null));
-    }
-
+/**
+ * Intended for use with {@link TabCompleter}. Provides a list of {@link CompletionInfo}, which are displayed as
+ * tab-completion results in cli/shell in certain contexts.
+ *
+ * @see TabCompleter
+ * @see CompleterService
+ */
+@ExtensionPoint
+public interface CompletionFinder {
+    List<CompletionInfo> findCompletions();
 }
-

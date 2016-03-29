@@ -34,31 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.common.internal;
+package com.redhat.thermostat.common.cli;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import com.redhat.thermostat.annotations.ExtensionPoint;
 
+import java.util.Map;
 import java.util.Set;
 
-import org.junit.Test;
+/**
+ * An interface marking a service which provides tab completions for cli/shell commands.
+ * For example, a plugin providing a new "foo-command" which has an option "-f/--fooId", can provide a CompleterService
+ * implementation so that "-f TAB" can produce a list of possible fooIds. This implementation would return a singleton
+ * Set of "foo-command" for {@link CompleterService#getCommands()}, and a Map from a CliCommandOption with short-opt "-f"/
+ * long-opt "--fooId" to the relevant {@link TabCompleter} instance for {@link CompleterService#getOptionCompleters()}.
+ */
+@ExtensionPoint
+public interface CompleterService {
 
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.testutils.ServiceLoaderTest;
+    /**
+     * The set of command names for which this service provides completions. In the shell, these are top-level command
+     * names, such as "ping" or "list-vms". In the cli, there are preceded by "thermostat", eg. "thermostat list-vms".
+     * @return the set of command names
+     */
+    Set<String> getCommands();
 
-public class HeapDAOImplStatementDescriptorRegistrationTest extends ServiceLoaderTest<StatementDescriptorRegistration> {
-
-    public HeapDAOImplStatementDescriptorRegistrationTest() {
-        super(StatementDescriptorRegistration.class, STORAGE_SERVICES, HeapDAOImplStatementDescriptorRegistration.class);
-    }
-
-    @Test
-    public void registersAllDescriptors() {
-        HeapDAOImplStatementDescriptorRegistration reg = new HeapDAOImplStatementDescriptorRegistration();
-        Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(4, descriptors.size());
-        assertFalse("null descriptor not allowed", descriptors.contains(null));
-    }
+    /**
+     * Provides the mapping of options to corresponding completers.
+     * @return the map
+     */
+    Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters();
 
 }
-

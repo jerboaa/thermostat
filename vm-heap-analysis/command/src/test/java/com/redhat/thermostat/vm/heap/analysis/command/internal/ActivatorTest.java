@@ -36,12 +36,8 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
@@ -51,7 +47,12 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.testutils.StubBundleContext;
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+import static com.redhat.thermostat.testutils.Asserts.assertServiceIsRegistered;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({FrameworkUtil.class})
@@ -74,10 +75,11 @@ public class ActivatorTest {
         assertCommandIsRegistered(ctx, "object-info", ObjectInfoCommand.class);
         assertCommandIsRegistered(ctx, "save-heap-dump-to-file", SaveHeapDumpToFileCommand.class);
         assertCommandIsRegistered(ctx, "show-heap-histogram", ShowHeapHistogramCommand.class);
+        assertServiceIsRegistered(ctx, CompleterService.class, HeapIdCompleterService.class);
         
         activator.stop(ctx);
         
-        assertEquals(0, ctx.getAllServices().size());
+        assertEquals(1, ctx.getAllServices().size()); // CompleterService remains
     }
 
     private void makeConstructorsHappy(StubBundleContext ctx) {

@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import com.redhat.thermostat.common.cli.CompletionInfo;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -206,7 +207,7 @@ public class VmIdsFinderTest {
     @Test
     public void testFindIds() {
 
-        List<CompletionInfo> result = vmIdsFinder.findIds();
+        List<CompletionInfo> result = vmIdsFinder.findCompletions();
 
         // Sort to get some predictability in result order
         final Collator collator = Collator.getInstance(Locale.US);
@@ -230,12 +231,12 @@ public class VmIdsFinderTest {
 
     @Test
     public void testFindsIdsWithOnlyOneVm() {
-        List<CompletionInfo> result = vmIdsFinderWithOnlyOneVm.findIds();
+        List<CompletionInfo> result = vmIdsFinderWithOnlyOneVm.findCompletions();
         assertEquals(1, result.size());
         assertEquals(formatExpected(id0, mainClass0, aliveStatus0), result.get(0).getCompletionWithUserVisibleText());
     }
 
     private String formatExpected(String id, String mainClass, VmInfo.AliveStatus aliveStatus) {
-        return id + "[" + mainClass + "](" + aliveStatus.toString() + ")";
+        return id + " [" + mainClass + "(" + aliveStatus.toString() + ")]";
     }
 }
