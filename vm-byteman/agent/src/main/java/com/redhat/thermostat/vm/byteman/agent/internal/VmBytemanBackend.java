@@ -63,6 +63,7 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanMetricDAO;
 
 @Component
+@Service(value = Backend.class)
 public class VmBytemanBackend implements VmStatusListener, Backend {
 
     private static final String NAME = "VM Byteman backend (attacher)";
