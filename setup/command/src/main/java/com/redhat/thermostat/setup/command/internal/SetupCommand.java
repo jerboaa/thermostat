@@ -37,6 +37,7 @@
 package com.redhat.thermostat.setup.command.internal;
 
 import java.awt.EventQueue;
+import java.awt.GraphicsEnvironment;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -99,13 +100,19 @@ public class SetupCommand extends AbstractCommand {
         this.processHandler = dependentServices.getService(UNIXProcessHandler.class);
         requireNonNull(processHandler, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "UnixProcessHandler"));
         ThermostatSetup setup = createSetup();
-        if (args.hasArgument(NON_GUI_OPTION_NAME)) {
+
+        if (args.hasArgument(NON_GUI_OPTION_NAME) || isHeadless()) {
             runCLISetup(setup, ctx.getConsole());
         } else {
             runGUISetup(setup);
         }
         
         runOriginalCommand(origArgsList);
+    }
+
+    // package-private for testing
+    boolean isHeadless() {
+        return GraphicsEnvironment.isHeadless();
     }
 
     private Arguments mergeOriginalArgs(String[] origArgsList, Arguments args) {

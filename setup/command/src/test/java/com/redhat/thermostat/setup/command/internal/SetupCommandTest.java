@@ -231,6 +231,37 @@ public class SetupCommandTest {
         verify(thermostatSetup).createMongodbUser(eq("mongo"), argThat(matchesPassword(new char[] { 'm' })));
         verify(launcher, times(0)).run(argThat(new ArgsMatcher(new String[] { "setup", "-c" })), eq(false));
     }
+
+    @Test
+    public void verifyCLISetupRunsWhenHeadless() throws CommandException {
+        cmd = new SetupCommand() {
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
+
+            @Override
+            boolean isHeadless() {
+                return true;
+            }
+        };
+
+        setServices();
+
+        Arguments args = mock(Arguments.class);
+        CommandContext ctxt = mock(CommandContext.class);
+        when(ctxt.getArguments()).thenReturn(args);
+        when(args.hasArgument("origArgs")).thenReturn(false);
+        when(ctxt.getConsole()).thenReturn(console);
+        when(thermostatSetup.isWebAppInstalled()).thenReturn(true);
+        when(console.getInput())
+            .thenReturn(new ByteArrayInputStream("yes\nmongo\nm\nm\nclient\nc\nc\nagent\na\na\n".getBytes()));
+
+        cmd.run(ctxt);
+        verify(thermostatSetup).createAgentUser(eq("agent"), argThat(matchesPassword(new char[] { 'a' })));
+        verify(thermostatSetup).createClientAdminUser(eq("client"), argThat(matchesPassword(new char[] { 'c' })));
+        verify(thermostatSetup).createMongodbUser(eq("mongo"), argThat(matchesPassword(new char[] { 'm' })));
+    }
     
     private CharArrayMatcher matchesPassword(char[] expected) {
         return new CharArrayMatcher(expected);
