@@ -46,7 +46,7 @@
 # Source thermostat-common from same directory as this script
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
 
-THERMOSTAT_SETUP="$THERMOSTAT_HOME/bin/thermostat-setup"
+THERMOSTAT_SETUP="$THERMOSTAT_HOME/bin/thermostat setup -c"
 DEV_INPUT="$THERMOSTAT_HOME/etc/devsetup.input"
 
 # Call the setup script
