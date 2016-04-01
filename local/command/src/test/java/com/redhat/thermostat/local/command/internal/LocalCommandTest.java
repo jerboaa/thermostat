@@ -40,7 +40,6 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.local.command.internal.LocalCommand.ProcOutErrReader;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
@@ -115,12 +114,6 @@ public class LocalCommandTest {
         final Process mockProcess = mock(Process.class);
         when(mockProcess.waitFor()).thenReturn(0);
 
-        final ProcOutErrReader mockReader = mock(ProcOutErrReader.class);
-        doNothing().when(mockReader).start();
-        doNothing().when(mockReader).join();
-        when(mockReader.getOutput()).thenReturn("");
-        when(mockReader.getErrOutput()).thenReturn("");
-
         cmd = new LocalCommand() {
             @Override
             ServiceLauncher createServiceLauncher() {
@@ -133,11 +126,6 @@ public class LocalCommandTest {
                 assertArrayEquals("Incorrect thermostat service args", expectedArgs, command);
                 return mockProcess;
             }
-
-            @Override
-            ProcOutErrReader createProcessReader(Process process) {
-                return mockReader;
-            }
         };
 
         cmd.setPaths(paths);
@@ -148,10 +136,6 @@ public class LocalCommandTest {
         verify(service, times(1)).start();
         verify(service, times(1)).stop();
         verify(mockProcess, times(1)).waitFor();
-        verify(mockReader, times(1)).start();
-        verify(mockReader, times(1)).join();
-        verify(mockReader, times(1)).getOutput();
-        verify(mockReader, times(1)).getErrOutput();
     }
 }
 

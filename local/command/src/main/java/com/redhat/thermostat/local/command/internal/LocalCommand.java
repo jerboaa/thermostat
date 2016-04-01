@@ -40,21 +40,17 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.DependencyServices;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.local.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.launcher.Launcher;
 
+import java.lang.ProcessBuilder.Redirect;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.logging.Logger;
 
 public class LocalCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-    private static final Logger logger = LoggingUtils.getLogger(LocalCommand.class);
     private final DependencyServices dependentServices = new DependencyServices();
     private Launcher launcher;
     private CommonPaths paths;
@@ -90,9 +86,6 @@ public class LocalCommand extends AbstractCommand {
             throw new CommandException(t.localize(LocaleResources.ERROR_STARTING_GUI));
         }
 
-        ProcOutErrReader reader = createProcessReader(gui);
-        reader.start();
-
         int exitStatus;
         try {
             exitStatus = gui.waitFor();
@@ -103,24 +96,14 @@ public class LocalCommand extends AbstractCommand {
         if (exitStatus != 0) {
             throw new CommandException(t.localize(LocaleResources.ERROR_RUNNING_GUI));
         }
-
-        reader.join();
-        String stdOutput = reader.getOutput();
-        String errOutput = reader.getErrOutput();
-        logger.fine("GUI stdout >>> " + stdOutput);
-        logger.fine("GUI stderr >>> " + errOutput);
     }
 
     // package-private for testing
     Process execProcess(String... command) throws IOException {
         ProcessBuilder pb = new ProcessBuilder(command);
-        pb.redirectInput(ProcessBuilder.Redirect.PIPE);
+        pb.redirectOutput(Redirect.INHERIT);
+        pb.redirectError(Redirect.INHERIT);
         return pb.start();
-    }
-
-    //package-private for testing
-    ProcOutErrReader createProcessReader(Process process) {
-        return  new ProcOutErrReader(process);
     }
 
     public void setPaths(CommonPaths paths) {
@@ -139,84 +122,5 @@ public class LocalCommand extends AbstractCommand {
     @Override
     public boolean isStorageRequired() {
         return false;
-    }
-
-    // package-private for testing
-    static class ProcOutErrReader {
-        private final Thread errReaderThread;
-        private final Thread outReaderThread;
-        private final ProcStreamReader outReader;
-        private final ProcStreamReader errReader;
-
-        private ProcOutErrReader(Process process) {
-            outReader = new ProcStreamReader(process.getInputStream());
-            errReader = new ProcStreamReader(process.getErrorStream());
-            Runnable outRunnable = new Runnable() {
-
-                @Override
-                public void run() {
-                    outReader.readAll();
-                }
-
-            };
-            Runnable errRunnable = new Runnable() {
-
-                @Override
-                public void run() {
-                    errReader.readAll();
-                }
-
-            };
-            errReaderThread = new Thread(errRunnable);
-            outReaderThread = new Thread(outRunnable);
-        }
-
-        public void start() {
-            errReaderThread.start();
-            outReaderThread.start();
-        }
-
-        public void join() {
-            try {
-                errReaderThread.join();
-            } catch (InterruptedException e) {
-                // ignore
-            }
-            try {
-                outReaderThread.join();
-            } catch (InterruptedException e) {
-                // ignore
-            }
-        }
-
-        public String getOutput() {
-            return outReader.getOutput();
-        }
-        public String getErrOutput() {
-            return errReader.getOutput();
-        }
-
-    }
-
-    private static class ProcStreamReader {
-        private final InputStream in;
-
-        private byte[] contents;
-
-        private ProcStreamReader(InputStream in) {
-            this.in = in;
-        }
-
-        public void readAll() {
-            try {
-                contents = StreamUtils.readAll(in);
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-        public String getOutput() {
-            return new String(contents);
-        }
-
     }
 }
