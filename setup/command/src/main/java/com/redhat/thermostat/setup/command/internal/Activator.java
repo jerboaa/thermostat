@@ -38,6 +38,7 @@ package com.redhat.thermostat.setup.command.internal;
 
 import java.util.Map;
 
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
@@ -63,6 +64,7 @@ public class Activator implements BundleActivator {
         reg.registerCommand("setup", setupCommand);
 
         Class<?>[] deps = new Class<?>[] {
+                ExitStatus.class,
                 CommonPaths.class,
                 Launcher.class,
                 Keyring.class,
@@ -71,10 +73,12 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
+                ExitStatus exitStatus = (ExitStatus) services.get(ExitStatus.class.getName());
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 Launcher launcher = (Launcher) services.get(Launcher.class.getName());
                 Keyring keyring = (Keyring) services.get(Keyring.class.getName());
                 UNIXProcessHandler processHandler = (UNIXProcessHandler) services.get(UNIXProcessHandler.class.getName());
+                setupCommand.setExitStatusService(exitStatus);
                 setupCommand.setPaths(paths);
                 setupCommand.setLauncher(launcher);
                 setupCommand.setKeyring(keyring);

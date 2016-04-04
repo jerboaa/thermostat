@@ -56,6 +56,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Before;
@@ -86,6 +88,7 @@ public class SetupCommandTest {
     private UNIXProcessHandler processHandler;
     private Launcher launcher;
     private Keyring keyring;
+    private ExitStatus exitStatus;
     private ThermostatSetup thermostatSetup;
 
     @Before
@@ -104,6 +107,7 @@ public class SetupCommandTest {
         error = new PrintStream(errorBaos);
         launcher = mock(Launcher.class);
         keyring = mock(Keyring.class);
+        exitStatus = mock(ExitStatus.class);
         thermostatSetup = mock(ThermostatSetup.class);
 
         when(ctxt.getArguments()).thenReturn(mockArgs);
@@ -160,6 +164,7 @@ public class SetupCommandTest {
     public void testPathsNotSetFailure() {
         cmd = createSetupCommand();
 
+        cmd.setExitStatusService(mock(ExitStatus.class));
         try {
             cmd.run(ctxt);
             fail();
@@ -171,7 +176,8 @@ public class SetupCommandTest {
     @Test
     public void testLauncherNotSetFailure() {
         cmd = createSetupCommand();
-        
+
+        cmd.setExitStatusService(mock(ExitStatus.class));
         cmd.setPaths(mock(CommonPaths.class));
         try {
             cmd.run(ctxt);
@@ -181,6 +187,119 @@ public class SetupCommandTest {
         }
     }
     
+    @Test
+    public void testExitStatusNotSetFailure() {
+        cmd = createSetupCommand();
+
+        try {
+            cmd.run(ctxt);
+            fail();
+        } catch (CommandException e) {
+            assertTrue(e.getMessage().contains("ExitStatus service dependency unavailable"));
+        }
+    }
+
+    @Test
+    public void testExitStatusNonZeroWhenGUISetupFails() {
+        cmd = new SetupCommand() {
+            @Override
+            void setLookAndFeel() throws InvocationTargetException, InterruptedException {
+                // do nothing
+            }
+
+            @Override
+            void createMainWindowAndRun(ThermostatSetup setup) throws CommandException {
+                throw new CommandException(new LocalizedString("Setup fail exception"));
+            }
+
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
+        };
+
+        Arguments args = mock(Arguments.class);
+
+        testExitStatus(args, ExitStatus.EXIT_ERROR);
+    }
+
+    @Test
+    public void testExitZeroWhenGUISetupSuccess() {
+        cmd = new SetupCommand() {
+            @Override
+            void setLookAndFeel() throws InvocationTargetException, InterruptedException {
+                // do nothing
+            }
+
+            @Override
+            void createMainWindowAndRun(ThermostatSetup setup) throws CommandException {
+            }
+
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
+        };
+
+        Arguments args = mock(Arguments.class);
+
+        testExitStatus(args, ExitStatus.EXIT_SUCCESS);
+    }
+
+    @Test
+    public void testExitStatusNonZeroWhenCLISetupFails() {
+        cmd = new SetupCommand() {
+            @Override
+            void runCLISetup(ThermostatSetup setup, Console console) throws CommandException {
+                throw new CommandException(new LocalizedString("Setup fail exception"));
+            }
+
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
+        };
+
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument("nonGui")).thenReturn(true);
+
+        testExitStatus(args, ExitStatus.EXIT_ERROR);
+    }
+
+    @Test
+    public void testExitStatusZeroWhenCLISetupSuccess() {
+        cmd = new SetupCommand() {
+            @Override
+            void runCLISetup(ThermostatSetup setup, Console console) throws CommandException {
+                // do nothing
+            }
+
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
+        };
+
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument("nonGui")).thenReturn(true);
+
+        testExitStatus(args, ExitStatus.EXIT_SUCCESS);
+    }
+
+    private void testExitStatus(Arguments setupArgs, int exitVal) {
+        setServices();
+
+        CommandContext ctxt = mock(CommandContext.class);
+        when(ctxt.getArguments()).thenReturn(setupArgs);
+
+        try {
+            cmd.run(ctxt);
+        } catch (CommandException e) {
+            // ignore
+        }
+        verify(exitStatus).setExitStatus(eq(exitVal));
+    }
+
     @Test
     public void verifyOriginalCommandRunsAfterSetup() throws CommandException {
         doTestOriginalCmdRunsAfterSetup("web-storage-service", new String[] {
@@ -284,7 +403,8 @@ public class SetupCommandTest {
     @Test
     public void testKeyringNotSetFailure() {
         cmd = createSetupCommand();
-        
+
+        cmd.setExitStatusService(mock(ExitStatus.class));
         cmd.setPaths(mock(CommonPaths.class));
         cmd.setLauncher(mock(Launcher.class));
         try {
@@ -342,6 +462,7 @@ public class SetupCommandTest {
         cmd.setPaths(paths);
         cmd.setLauncher(launcher);
         cmd.setKeyring(keyring);
+        cmd.setExitStatusService(exitStatus);
         cmd.setProcessHandler(processHandler);
     }
     

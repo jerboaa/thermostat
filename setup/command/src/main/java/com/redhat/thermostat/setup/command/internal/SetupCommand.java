@@ -47,6 +47,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -89,24 +90,31 @@ public class SetupCommand extends AbstractCommand {
                 args = mergeOriginalArgs(optionArgs, args);
             }
         }
-        
-        
-        this.paths = dependentServices.getService(CommonPaths.class);
-        requireNonNull(paths, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "CommonPaths"));
-        this.launcher = dependentServices.getService(Launcher.class);
-        requireNonNull(launcher, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Launcher"));
-        this.keyring = dependentServices.getService(Keyring.class);
-        requireNonNull(keyring, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Keyring"));
-        this.processHandler = dependentServices.getService(UNIXProcessHandler.class);
-        requireNonNull(processHandler, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "UnixProcessHandler"));
-        ThermostatSetup setup = createSetup();
 
-        if (args.hasArgument(NON_GUI_OPTION_NAME) || isHeadless()) {
-            runCLISetup(setup, ctx.getConsole());
-        } else {
-            runGUISetup(setup);
+        ExitStatus exitStatus = dependentServices.getService(ExitStatus.class);
+        requireNonNull(exitStatus, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "ExitStatus"));
+
+        try {
+            this.paths = dependentServices.getService(CommonPaths.class);
+            requireNonNull(paths, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "CommonPaths"));
+            this.launcher = dependentServices.getService(Launcher.class);
+            requireNonNull(launcher, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Launcher"));
+            this.keyring = dependentServices.getService(Keyring.class);
+            requireNonNull(keyring, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Keyring"));
+            this.processHandler = dependentServices.getService(UNIXProcessHandler.class);
+            requireNonNull(processHandler, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "UnixProcessHandler"));
+            ThermostatSetup setup = createSetup();
+
+            if (args.hasArgument(NON_GUI_OPTION_NAME) || isHeadless()) {
+                runCLISetup(setup, ctx.getConsole());
+            } else {
+                runGUISetup(setup);
+            }
+        } catch (CommandException e) {
+            exitStatus.setExitStatus(ExitStatus.EXIT_ERROR);
+            throw e;
         }
-        
+        exitStatus.setExitStatus(ExitStatus.EXIT_SUCCESS);
         runOriginalCommand(origArgsList);
     }
 
@@ -120,7 +128,8 @@ public class SetupCommand extends AbstractCommand {
         return new MergedSetupArguments(args, origArgsList);
     }
 
-    private void runCLISetup(ThermostatSetup setup, Console console) throws CommandException {
+    // package-private for testing
+    void runCLISetup(ThermostatSetup setup, Console console) throws CommandException {
         CLISetup cliSetup = new CLISetup(setup, console);
         cliSetup.run();
     }
@@ -151,6 +160,10 @@ public class SetupCommand extends AbstractCommand {
     
     private boolean isSetupInvocation(String[] args) {
         return args[0].equals("setup");
+    }
+
+    public void setExitStatusService(ExitStatus exitStatus) {
+        dependentServices.addService(ExitStatus.class, exitStatus);
     }
 
     public void setPaths(CommonPaths paths) {
