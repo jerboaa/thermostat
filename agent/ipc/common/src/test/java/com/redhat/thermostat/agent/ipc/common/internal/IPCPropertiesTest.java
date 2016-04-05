@@ -38,21 +38,48 @@ package com.redhat.thermostat.agent.ipc.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
+import java.io.File;
+
+import org.junit.Before;
 import org.junit.Test;
 
 public class IPCPropertiesTest {
+    
+    private File propFile;
+
+    @Before
+    public void setUp() {
+        propFile = mock(File.class);
+    }
 
     @Test
     public void testGetType() {
-        IPCProperties props = new IPCProperties(IPCType.UNIX_SOCKET);
+        IPCProperties props = new IPCProperties(IPCType.UNIX_SOCKET, propFile);
         assertEquals(IPCType.UNIX_SOCKET, props.getType());
+    }
+    
+    @Test
+    public void testGetPropertiesFile() {
+        IPCProperties props = new IPCProperties(IPCType.UNIX_SOCKET, propFile);
+        assertEquals(propFile, props.getPropertiesFile());
     }
     
     @Test
     public void testNullType() {
         try {
-            new IPCProperties(null);
+            new IPCProperties(null, propFile);
+            fail("Expected NullPointerException");
+        } catch (NullPointerException ignored) {
+            // Pass
+        }
+    }
+    
+    @Test
+    public void testNullFile() {
+        try {
+            new IPCProperties(IPCType.UNKNOWN, null);
             fail("Expected NullPointerException");
         } catch (NullPointerException ignored) {
             // Pass

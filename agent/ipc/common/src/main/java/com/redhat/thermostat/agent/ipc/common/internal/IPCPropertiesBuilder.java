@@ -67,10 +67,10 @@ public abstract class IPCPropertiesBuilder {
         if (type == null) {
             throw new IOException("Unable to determine IPC type from property file");
         }
-        return getPropertiesForType(type, props);
+        return getPropertiesForType(type, props, ipcProperties);
     }
     
-    protected abstract IPCProperties getPropertiesForType(IPCType type, Properties props) throws IOException;
+    protected abstract IPCProperties getPropertiesForType(IPCType type, Properties props, File propFile) throws IOException;
     
     static class PropertiesHelper {
         

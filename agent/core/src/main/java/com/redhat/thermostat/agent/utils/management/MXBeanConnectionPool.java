@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.agent.utils.management;
 
+import java.io.IOException;
+
 import com.redhat.thermostat.annotations.Service;
 
 /**
@@ -47,5 +49,11 @@ public interface MXBeanConnectionPool {
     MXBeanConnection acquire(int pid) throws MXBeanConnectionException;
 
     void release(int pid, MXBeanConnection connection) throws MXBeanConnectionException;
-}
 
+    void start() throws IOException;
+
+    boolean isStarted();
+
+    void shutdown() throws IOException;
+    
+}

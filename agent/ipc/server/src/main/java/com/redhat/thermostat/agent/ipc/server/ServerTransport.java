@@ -34,54 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.ipc.client.internal;
+package com.redhat.thermostat.agent.ipc.server;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
-import java.util.ServiceLoader;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
-import com.redhat.thermostat.agent.ipc.common.internal.IPCPropertiesBuilder;
-import com.redhat.thermostat.agent.ipc.common.internal.IPCPropertiesProvider;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 
 /*
- * An IPC property builder that discovers IPC properties providers
- * using the ServiceLoader mechanism. This allows IPC clients to
- * not depend on OSGi for service discovery.
+ * non-API interface mirroring AgentIPCService that provides IPC mechanism-specific
+ * implementations of AgentIPCService's API methods
  */
-public class ClientIPCPropertiesBuilder extends IPCPropertiesBuilder {
+public interface ServerTransport extends AgentIPCService {
     
-    private final ServiceLoaderHelper serviceHelper;
+    void start(IPCProperties props) throws IOException;
     
-    public ClientIPCPropertiesBuilder() {
-        this(new ServiceLoaderHelper());
-    }
+    void shutdown() throws IOException;
     
-    ClientIPCPropertiesBuilder(ServiceLoaderHelper serviceHelper) {
-        this.serviceHelper = serviceHelper;
-    }
-    
-    protected IPCProperties getPropertiesForType(IPCType type, Properties props, File propFile) throws IOException {
-        IPCProperties result = null;
-        Iterable<IPCPropertiesProvider> loader = serviceHelper.getServiceLoader();
-        for (IPCPropertiesProvider provider : loader) {
-            if (provider.getType().equals(type)) {
-                result = provider.create(props, propFile);
-            }
-        }
-        if (result == null) {
-            throw new IOException("Unable to create properties for IPC type: " + type.getConfigValue());
-        }
-        return result;
-    }
-    
-    // For testing purposes. ServiceLoader is final and can't be mocked.
-    static class ServiceLoaderHelper {
-        Iterable<IPCPropertiesProvider> getServiceLoader() {
-            return ServiceLoader.load(IPCPropertiesProvider.class);
-        }
-    }
+    IPCType getType();
 
 }

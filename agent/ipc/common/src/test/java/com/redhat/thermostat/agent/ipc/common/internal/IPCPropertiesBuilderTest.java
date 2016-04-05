@@ -105,11 +105,11 @@ public class IPCPropertiesBuilderTest {
         }
         
         @Override
-        protected IPCProperties getPropertiesForType(IPCType type, Properties props) throws IOException {
-            if (IPCType.UNIX_SOCKET.equals(type) && jProps.equals(props)) {
+        protected IPCProperties getPropertiesForType(IPCType type, Properties props, File file) throws IOException {
+            if (IPCType.UNIX_SOCKET.equals(type) && jProps.equals(props) && propFile.equals(file)) {
                 return ipcProps;
             } else {
-                throw new IOException("Wrong type or properties");
+                throw new IOException("Wrong type, properties, or file");
             }
         }
         

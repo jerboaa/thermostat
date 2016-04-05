@@ -69,7 +69,7 @@ public class Activator implements BundleActivator {
     
     private ServiceTracker<CommonPaths, CommonPaths> commonPathsTracker;
     private MultipleServiceTracker agentIPCTracker;
-    private MXBeanConnectionPoolImpl pool;
+    private MXBeanConnectionPool pool;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -119,19 +119,15 @@ public class Activator implements BundleActivator {
                 AgentIPCService ipcService = (AgentIPCService) services.get(AgentIPCService.class.getName());
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 UserNameUtil util = (UserNameUtil) services.get(UserNameUtil.class.getName());
-                try {
-                    pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), util, 
-                        ipcService, paths.getUserIPCConfigurationFile());
-                    context.registerService(MXBeanConnectionPool.class, pool, null);
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Failed to start agent services", e);
-                }
+                pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), util, 
+                    ipcService, paths.getUserIPCConfigurationFile());
+                context.registerService(MXBeanConnectionPool.class, pool, null);
             }
 
             @Override
             public void dependenciesUnavailable() {
                 try {
-                    if (pool != null) {
+                    if (pool != null && pool.isStarted()) {
                         pool.shutdown();
                     }
                 } catch (IOException e) {
@@ -150,7 +146,7 @@ public class Activator implements BundleActivator {
     }
 
     // Testing hook.
-    void setPool(MXBeanConnectionPoolImpl pool) {
+    void setPool(MXBeanConnectionPool pool) {
         this.pool = pool;
     }
 

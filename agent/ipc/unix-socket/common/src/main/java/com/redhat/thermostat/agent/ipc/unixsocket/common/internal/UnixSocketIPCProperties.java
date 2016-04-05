@@ -51,12 +51,12 @@ public class UnixSocketIPCProperties extends IPCProperties {
     private final File sockDir;
     private final PathUtils pathUtils;
     
-    UnixSocketIPCProperties(Properties props) throws IOException {
-        this(props, new PathUtils());
+    UnixSocketIPCProperties(Properties props, File propFile) throws IOException {
+        this(props, propFile, new PathUtils());
     }
 
-    UnixSocketIPCProperties(Properties props, PathUtils pathUtils) throws IOException {
-        super(IPCType.UNIX_SOCKET);
+    UnixSocketIPCProperties(Properties props, File propFile, PathUtils pathUtils) throws IOException {
+        super(IPCType.UNIX_SOCKET, propFile);
         this.pathUtils = pathUtils;
         
         // If not specified, use default socket directory

@@ -46,6 +46,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
@@ -65,14 +66,17 @@ public class ServerIPCPropertiesBuilderTest {
     private IPCPropertiesProvider provider;
     private IPCProperties ipcProps;
     private Properties jProps;
+    private File propFile;
 
     @Before
     public void setUp() throws Exception {
         context = new StubBundleContext();
         ipcProps = mock(IPCProperties.class);
         provider = mock(IPCPropertiesProvider.class);
+        jProps = mock(Properties.class);
+        propFile = mock(File.class);
         when(provider.getType()).thenReturn(IPCType.UNIX_SOCKET);
-        when(provider.create(jProps)).thenReturn(ipcProps);
+        when(provider.create(jProps, propFile)).thenReturn(ipcProps);
     }
     
     @Test
@@ -111,7 +115,7 @@ public class ServerIPCPropertiesBuilderTest {
         context.registerService(IPCPropertiesProvider.class.getName(), provider, null);
         
         ServerIPCPropertiesBuilder builder = new ServerIPCPropertiesBuilder(context);
-        IPCProperties result = builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps);
+        IPCProperties result = builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps, propFile);
         assertEquals(ipcProps, result);
     }
     
@@ -122,10 +126,10 @@ public class ServerIPCPropertiesBuilderTest {
         
         ServerIPCPropertiesBuilder builder = new ServerIPCPropertiesBuilder(context);
         try {
-            builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps);
+            builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps, propFile);
             fail("Expected IOException");
         } catch (IOException e) {
-            verify(provider, never()).create(any(Properties.class));
+            verify(provider, never()).create(any(Properties.class), any(File.class));
         }
     }
     

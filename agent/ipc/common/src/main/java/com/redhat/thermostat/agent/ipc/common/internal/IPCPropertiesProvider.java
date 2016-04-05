@@ -36,12 +36,13 @@
 
 package com.redhat.thermostat.agent.ipc.common.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
 public interface IPCPropertiesProvider {
     
-    IPCProperties create(Properties props) throws IOException;
+    IPCProperties create(Properties props, File propFile) throws IOException;
     
     IPCType getType();
 

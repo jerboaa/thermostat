@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.ipc.unixsocket.server.internal;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Selector;
+import java.nio.channels.spi.SelectorProvider;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -63,14 +64,14 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
-import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.agent.ipc.server.ServerTransport;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCProperties;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-class AgentIPCServiceImpl implements AgentIPCService {
+class UnixSocketServerTransport implements ServerTransport {
     
-    private static final Logger logger = LoggingUtils.getLogger(AgentIPCServiceImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(UnixSocketServerTransport.class);
     // Filename prefix for socket file
     static final String SOCKET_PREFIX = "sock-";
     // Permissions to allow only the owner and group access to the directory
@@ -83,44 +84,58 @@ class AgentIPCServiceImpl implements AgentIPCService {
         SOCKET_DIR_PERM = Collections.unmodifiableSet(perms);
     }
     
-    private final Selector selector;
-    private final Path socketDir;
-    private final AcceptThread acceptThread;
+    private final SelectorProvider selectorProvider;
     // Access/modification of this field should by synchronized
     private final Map<String, ThermostatLocalServerSocketChannelImpl> sockets;
     private final FilenameValidator validator;
+    private final ExecutorService execService;
     private final FileUtils fileUtils;
-    private final ChannelCreator channelCreator;
+    private final ChannelUtils channelUtils;
+    private final ThreadCreator threadCreator;
     
-    AgentIPCServiceImpl(Selector selector, IPCProperties props) throws IOException {
-        this(selector, props, Executors.newFixedThreadPool(determineDefaultThreadPoolSize(), new CountingThreadFactory()), 
-                new FilenameValidator(), new FileUtils(), new ThreadCreator(), new ChannelCreator());
+    private UnixSocketIPCProperties props;
+    private AcceptThread acceptThread;
+    private Selector selector;
+    private Path socketDir;
+    
+    UnixSocketServerTransport(SelectorProvider selectorProvider) {
+        this(selectorProvider, Executors.newFixedThreadPool(determineDefaultThreadPoolSize(), new CountingThreadFactory()), 
+                new FilenameValidator(), new FileUtils(), new ThreadCreator(), new ChannelUtils());
     }
     
-    AgentIPCServiceImpl(Selector selector, IPCProperties props, ExecutorService execService, 
-            FilenameValidator validator, FileUtils fileUtils, ThreadCreator threadCreator,
-            ChannelCreator channelCreator) throws IOException {
-        this.selector = selector;
+    UnixSocketServerTransport(SelectorProvider selectorProvider, ExecutorService execService, FilenameValidator validator, 
+            FileUtils fileUtils, ThreadCreator threadCreator, ChannelUtils channelCreator) {
+        this.selectorProvider = selectorProvider;
         this.sockets = new HashMap<>();
         this.validator = validator;
+        this.execService = execService;
         this.fileUtils = fileUtils;
-        this.channelCreator = channelCreator;
-        
+        this.channelUtils = channelCreator;
+        this.threadCreator = threadCreator;
+    }
+    
+    @Override
+    public void start(IPCProperties props) throws IOException {
         if (!(props instanceof UnixSocketIPCProperties)) {
             IPCType type = props.getType();
             throw new IOException("Unsupported IPC type: " + type.getConfigValue());
         }
+        this.props = (UnixSocketIPCProperties) props;
+        // Prepare socket directory with strict permissions, which will contain the socket file when bound
         File sockDirFile = ((UnixSocketIPCProperties) props).getSocketDirectory();
         this.socketDir = createSocketDirPath(sockDirFile);
-        
-        this.acceptThread = threadCreator.createAcceptThread(selector, execService);
-    }
-    
-    void start() throws IOException {
-        // Prepare socket directory with strict permissions, which will contain the socket file when bound
         checkSocketDir();
+        
+        // Open the Selector and start accepting connections
+        this.selector = selectorProvider.openSelector();
+        this.acceptThread = threadCreator.createAcceptThread(selector, execService);
         acceptThread.start();
         logger.info("Agent IPC service started");
+    }
+    
+    @Override
+    public IPCType getType() {
+        return IPCType.UNIX_SOCKET;
     }
     
     private Path createSocketDirPath(File sockDirFile) throws IOException {
@@ -171,7 +186,7 @@ class AgentIPCServiceImpl implements AgentIPCService {
         
         // Create socket
         ThermostatLocalServerSocketChannelImpl socket = 
-                channelCreator.createServerSocketChannel(name, socketPath, callbacks, selector);
+                channelUtils.createServerSocketChannel(name, socketPath, callbacks, props, selector);
         
         // Verify owner of new socket file
         File socketFile = socket.getSocketFile();
@@ -242,7 +257,7 @@ class AgentIPCServiceImpl implements AgentIPCService {
     }
     
     @Override
-    public synchronized boolean serverExists(String name) {
+    public synchronized boolean serverExists(String name) throws IOException {
         return sockets.containsKey(name);
     }     
     
@@ -264,15 +279,18 @@ class AgentIPCServiceImpl implements AgentIPCService {
         }
     }
 
-    void shutdown() throws IOException {
+    @Override
+    public void shutdown() throws IOException {
         try {
+            // Stop accepting connections and close selector afterward
             acceptThread.shutdown();
+            channelUtils.closeSelector(selector);
             logger.info("Agent IPC service stopped");
         } finally {
             deleteSocketDir(socketDir);
         }
     }
-
+    
     private static int determineDefaultThreadPoolSize() {
         // Make the number of default thread pool size a function of available
         // processors.
@@ -363,10 +381,13 @@ class AgentIPCServiceImpl implements AgentIPCService {
     }
     
     /* For testing purposes */
-    static class ChannelCreator {
+    static class ChannelUtils {
         ThermostatLocalServerSocketChannelImpl createServerSocketChannel(String name, Path socketPath, 
-                ThermostatIPCCallbacks callbacks, Selector selector) throws IOException {
-            return ThermostatLocalServerSocketChannelImpl.open(name, socketPath.toFile(), callbacks, selector);
+                ThermostatIPCCallbacks callbacks, IPCProperties props, Selector selector) throws IOException {
+            return ThermostatLocalServerSocketChannelImpl.open(name, socketPath.toFile(), callbacks, props, selector);
+        }
+        void closeSelector(Selector selector) throws IOException {
+            selector.close();
         }
     }
     

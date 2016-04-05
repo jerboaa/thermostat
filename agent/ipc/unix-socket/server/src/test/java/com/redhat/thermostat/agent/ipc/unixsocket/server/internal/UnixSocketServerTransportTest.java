@@ -50,7 +50,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.Selector;
+import java.nio.channels.spi.AbstractSelector;
+import java.nio.channels.spi.SelectorProvider;
 import java.nio.file.DirectoryStream;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -71,17 +72,18 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCProperties;
-import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.AgentIPCServiceImpl.ChannelCreator;
-import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.AgentIPCServiceImpl.FileUtils;
-import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.AgentIPCServiceImpl.ThreadCreator;
+import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.UnixSocketServerTransport.ChannelUtils;
+import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.UnixSocketServerTransport.FileUtils;
+import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.UnixSocketServerTransport.ThreadCreator;
 
-public class AgentIPCServiceImplTest {
+public class UnixSocketServerTransportTest {
     
     private static final String SERVER_NAME = "test";
     private static final String USERNAME = "testUser";
     
-    private AgentIPCServiceImpl ipcService;
-    private Selector selector;
+    private UnixSocketServerTransport transport;
+    private SelectorProvider provider;
+    private AbstractSelector selector;
     private ExecutorService execService;
     private FilenameValidator validator;
     private FileUtils fileUtils;
@@ -91,7 +93,7 @@ public class AgentIPCServiceImplTest {
     private FileAttribute<Set<PosixFilePermission>> fileAttr;
     private Path socketPath;
     private ThermostatIPCCallbacks callbacks;
-    private ChannelCreator channelCreator;
+    private ChannelUtils channelUtils;
     private ThermostatLocalServerSocketChannelImpl channel;
     private UnixSocketIPCProperties props;
     private UserPrincipalLookupService lookup;
@@ -99,7 +101,9 @@ public class AgentIPCServiceImplTest {
     @SuppressWarnings("unchecked")
     @Before
     public void setup() throws Exception {
-        selector = mock(Selector.class);
+        provider = mock(SelectorProvider.class);
+        selector = mock(AbstractSelector.class);
+        when(provider.openSelector()).thenReturn(selector);
         
         props = mock(UnixSocketIPCProperties.class);
         File sockDirFile = mock(File.class);
@@ -109,7 +113,7 @@ public class AgentIPCServiceImplTest {
         when(socketDirPath.normalize()).thenReturn(socketDirPath);
         when(sockDirFile.toPath()).thenReturn(socketDirPath);
         socketPath = mock(Path.class);
-        when(socketDirPath.resolve(AgentIPCServiceImpl.SOCKET_PREFIX + SERVER_NAME)).thenReturn(socketPath);
+        when(socketDirPath.resolve(UnixSocketServerTransport.SOCKET_PREFIX + SERVER_NAME)).thenReturn(socketPath);
         
         fileUtils = mock(FileUtils.class);
         when(fileUtils.exists(socketDirPath)).thenReturn(false);
@@ -133,7 +137,7 @@ public class AgentIPCServiceImplTest {
         threadCreator = mock(ThreadCreator.class);
         when(threadCreator.createAcceptThread(selector, execService)).thenReturn(acceptThread);
         
-        channelCreator = mock(ChannelCreator.class);
+        channelUtils = mock(ChannelUtils.class);
         channel = mock(ThermostatLocalServerSocketChannelImpl.class);
         File socketFile = mock(File.class);
         when(socketFile.toPath()).thenReturn(socketPath);
@@ -141,36 +145,41 @@ public class AgentIPCServiceImplTest {
         when(fileUtils.getOwner(socketPath)).thenReturn(principal);
         
         callbacks = mock(ThermostatIPCCallbacks.class);
-        when(channelCreator.createServerSocketChannel(SERVER_NAME, socketPath, callbacks, selector)).thenReturn(channel);
+        when(channelUtils.createServerSocketChannel(SERVER_NAME, socketPath, callbacks, props, selector)).thenReturn(channel);
         
-        ipcService = new AgentIPCServiceImpl(selector, props, execService, validator, fileUtils, 
-                threadCreator, channelCreator);
+        transport = new UnixSocketServerTransport(provider, execService, validator, fileUtils, 
+                threadCreator, channelUtils);
     }
     
     @Test
     public void testInit() throws Exception {
+        transport.start(props);
+        verify(provider).openSelector();
         verify(threadCreator).createAcceptThread(selector, execService);
-        assertEquals(socketDirPath, ipcService.getSocketDirPath());
+        assertEquals(socketDirPath, transport.getSocketDirPath());
     }
     
     @Test(expected=IOException.class)
-    public void testInitBadProperties() throws Exception {
+    public void testStartBadProperties() throws Exception {
         // Not UnixSocketIPCProperties
         IPCProperties badProps = mock(IPCProperties.class);
         when(badProps.getType()).thenReturn(IPCType.UNKNOWN);
-        ipcService = new AgentIPCServiceImpl(selector, badProps, execService, validator, fileUtils, 
-                threadCreator, channelCreator);
+        transport = new UnixSocketServerTransport(provider, execService, validator, fileUtils, 
+                threadCreator, channelUtils);
+        transport.start(badProps);
     }
     
     @Test(expected=IOException.class)
     public void testInitBadPath() throws Exception {
         when(socketDirPath.normalize()).thenThrow(new InvalidPathException("TEST", "TEST"));
-        ipcService = new AgentIPCServiceImpl(selector, props, execService, validator, fileUtils, 
-                threadCreator, channelCreator);
+        transport = new UnixSocketServerTransport(provider, execService, validator, fileUtils, 
+                threadCreator, channelUtils);
+        transport.start(props);
     }
     
     @Test
     public void testPathNormalized() throws Exception {
+        transport.start(props);
         verify(socketDirPath).toAbsolutePath();
         verify(socketDirPath).normalize();
     }
@@ -178,7 +187,7 @@ public class AgentIPCServiceImplTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testStartSuccess() throws Exception {
-        ipcService.start();
+        transport.start(props);
         
         // Verify the socket directory is created with the proper permissions
         verify(fileUtils).exists(socketDirPath);
@@ -201,7 +210,7 @@ public class AgentIPCServiceImplTest {
         when(fileUtils.exists(socketDirPath)).thenReturn(true);
         when(fileUtils.isDirectory(socketDirPath)).thenReturn(true);
         
-        ipcService.start();
+        transport.start(props);
         
         // Verify the existing directory is checked and used
         verify(fileUtils).exists(socketDirPath);
@@ -222,7 +231,7 @@ public class AgentIPCServiceImplTest {
         when(fileUtils.isDirectory(socketDirPath)).thenReturn(false);
         
         try {
-            ipcService.start();
+            transport.start(props);
             fail("Expected IOException");
         } catch (IOException e) {
             verify(fileUtils, never()).createDirectory(any(Path.class));
@@ -235,7 +244,7 @@ public class AgentIPCServiceImplTest {
         Path sockDirParent = mock(Path.class);
         when(socketDirPath.getParent()).thenReturn(sockDirParent);
         
-        ipcService.start();
+        transport.start(props);
         verify(fileUtils).createDirectories(sockDirParent);
     }
     
@@ -244,25 +253,25 @@ public class AgentIPCServiceImplTest {
         UserPrincipal badPrincipal = mock(UserPrincipal.class);
         when(fileUtils.getOwner(socketDirPath)).thenReturn(badPrincipal);
         
-        ipcService.start();
+        transport.start(props);
     }
     
     @Test(expected=IOException.class)
     public void testStartOwnerCheckUnsupported() throws Exception {
         when(fileUtils.getOwner(socketDirPath)).thenThrow(new UnsupportedOperationException());
-        ipcService.start();
+        transport.start(props);
     }
     
     @Test(expected=IOException.class)
     public void testStartOwnerCheckNullOwner() throws Exception {
         when(fileUtils.getOwner(socketDirPath)).thenReturn(null);
-        ipcService.start();
+        transport.start(props);
     }
     
     @Test(expected=IOException.class)
     public void testStartOwnerCheckNullLookup() throws Exception {
         when(lookup.lookupPrincipalByName(USERNAME)).thenReturn(null);
-        ipcService.start();
+        transport.start(props);
     }
     
     @Test
@@ -273,7 +282,7 @@ public class AgentIPCServiceImplTest {
         when(fileUtils.getPosixFilePermissions(socketDirPath)).thenReturn(PosixFilePermissions.fromString("rwxrwxr-x"));
         
         try {
-            ipcService.start();
+            transport.start(props);
             fail("Expected IOException");
         } catch (IOException e) {
             verify(fileUtils, never()).createDirectory(any(Path.class));
@@ -283,9 +292,11 @@ public class AgentIPCServiceImplTest {
     
     @Test
     public void testShutdownSuccess() throws Exception {
+        transport.start(props);
         mockSocketDirOnShutdown();
-        ipcService.shutdown();
+        transport.shutdown();
         verify(acceptThread).shutdown();
+        verify(channelUtils).closeSelector(selector);
         
         // Check socket directory is removed
         verify(fileUtils).delete(socketPath);
@@ -294,11 +305,12 @@ public class AgentIPCServiceImplTest {
     
     @Test
     public void testShutdownFailure() throws Exception {
+        transport.start(props);
         mockSocketDirOnShutdown();
         doThrow(new IOException()).when(acceptThread).shutdown();
         
         try {
-            ipcService.shutdown();
+            transport.shutdown();
             fail("Expected IO Exception");
         } catch (IOException e) {
             // Socket directory should still be deleted
@@ -309,7 +321,8 @@ public class AgentIPCServiceImplTest {
     
     @Test
     public void testCreateServer() throws Exception {
-        ipcService.createServer(SERVER_NAME, callbacks);
+        transport.start(props);
+        transport.createServer(SERVER_NAME, callbacks);
         
         verify(fileUtils).exists(socketPath);
         verify(fileUtils, never()).delete(socketPath);
@@ -318,15 +331,16 @@ public class AgentIPCServiceImplTest {
     }
 
     private void checkChannel() throws IOException {
-        verify(channelCreator).createServerSocketChannel(SERVER_NAME, socketPath, callbacks, selector);
-        ThermostatLocalServerSocketChannelImpl result = ipcService.getSockets().get(SERVER_NAME);
+        verify(channelUtils).createServerSocketChannel(SERVER_NAME, socketPath, callbacks, props, selector);
+        ThermostatLocalServerSocketChannelImpl result = transport.getSockets().get(SERVER_NAME);
         assertEquals(channel, result);
     }
     
     @Test
     public void testCreateServerLeftoverFile() throws Exception {
+        transport.start(props);
         when(fileUtils.exists(socketPath)).thenReturn(true);
-        ipcService.createServer(SERVER_NAME, callbacks);
+        transport.createServer(SERVER_NAME, callbacks);
         
         verify(fileUtils).exists(socketPath);
         verify(fileUtils).delete(socketPath);
@@ -337,48 +351,51 @@ public class AgentIPCServiceImplTest {
     @Test(expected=IOException.class)
     public void testCreateServerServerExists() throws Exception {
         ThermostatLocalServerSocketChannelImpl channel = mock(ThermostatLocalServerSocketChannelImpl.class);
-        ipcService.getSockets().put(SERVER_NAME, channel);
+        transport.getSockets().put(SERVER_NAME, channel);
 
-        ipcService.createServer(SERVER_NAME, callbacks);
+        transport.createServer(SERVER_NAME, callbacks);
     }
     
     @Test(expected=IOException.class)
     public void testCreateServerInvalidName() throws Exception {
         when(validator.validate(SERVER_NAME)).thenReturn(false);
-        ipcService.createServer(SERVER_NAME, callbacks);
+        transport.createServer(SERVER_NAME, callbacks);
     }
     
     @Test(expected=IOException.class)
     public void testCreateServerPermsChanged() throws Exception {
+        transport.start(props);
         when(fileUtils.getPosixFilePermissions(socketDirPath)).thenReturn(PosixFilePermissions.fromString("rwxrwxrwx"));
-        ipcService.createServer(SERVER_NAME, callbacks);
+        transport.createServer(SERVER_NAME, callbacks);
     }
     
     @Test(expected=IOException.class)
     public void testCreateServerOwnerChanged() throws Exception {
+        transport.start(props);
         UserPrincipal badPrincipal = mock(UserPrincipal.class);
         when(fileUtils.getOwner(socketDirPath)).thenReturn(badPrincipal);
-        ipcService.createServer(SERVER_NAME, callbacks);
+        transport.createServer(SERVER_NAME, callbacks);
     }
     
     @Test(expected=IOException.class)
     public void testCreateServerBadSocketOwner() throws Exception {
+        transport.start(props);
         UserPrincipal badPrincipal = mock(UserPrincipal.class);
         when(fileUtils.getOwner(socketPath)).thenReturn(badPrincipal);
-        ipcService.createServer(SERVER_NAME, callbacks);
+        transport.createServer(SERVER_NAME, callbacks);
     }
     
     @Test
     public void testServerExists() throws Exception {
-        assertFalse(ipcService.serverExists(SERVER_NAME));
-        ipcService.getSockets().put(SERVER_NAME, channel);
-        assertTrue(ipcService.serverExists(SERVER_NAME));
+        assertFalse(transport.serverExists(SERVER_NAME));
+        transport.getSockets().put(SERVER_NAME, channel);
+        assertTrue(transport.serverExists(SERVER_NAME));
     }
     
     @Test
     public void testDestroyServer() throws Exception {
-        ipcService.getSockets().put(SERVER_NAME, channel);
-        ipcService.destroyServer(SERVER_NAME);
+        transport.getSockets().put(SERVER_NAME, channel);
+        transport.destroyServer(SERVER_NAME);
         
         verify(channel).close();
         verify(fileUtils).delete(socketPath);
@@ -386,16 +403,16 @@ public class AgentIPCServiceImplTest {
     
     @Test(expected=IOException.class)
     public void testDestroyServerNotExist() throws Exception {
-        ipcService.destroyServer(SERVER_NAME);
+        transport.destroyServer(SERVER_NAME);
     }
     
     @Test
     public void testDestroyServerCloseFails() throws Exception {
         doThrow(new IOException()).when(channel).close();
-        ipcService.getSockets().put(SERVER_NAME, channel);
+        transport.getSockets().put(SERVER_NAME, channel);
         
         try {
-            ipcService.destroyServer(SERVER_NAME);
+            transport.destroyServer(SERVER_NAME);
             fail("Expected IOException");
         } catch (IOException e) {
             // Socket file should still be deleted

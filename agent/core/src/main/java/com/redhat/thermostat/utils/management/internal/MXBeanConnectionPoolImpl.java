@@ -81,15 +81,16 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool, Thermosta
      * Access/modification must be synchronized using {@link #CURRENT_ENTRY_LOCK}.
      */
     private MXBeanConnectionPoolEntry currentNewEntry;
+    private boolean started;
 
     public MXBeanConnectionPoolImpl(File binPath, UserNameUtil userNameUtil, 
-            AgentIPCService ipcService, File ipcConfigFile) throws IOException {
+            AgentIPCService ipcService, File ipcConfigFile) {
         this(new ConnectorCreator(), binPath, new ProcessUserInfoBuilder(new ProcDataSource(), userNameUtil), 
                 ipcService, ipcConfigFile);
     }
 
     MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, File binPath, ProcessUserInfoBuilder userInfoBuilder, 
-            AgentIPCService ipcService, File ipcConfigFile) throws IOException {
+            AgentIPCService ipcService, File ipcConfigFile) {
         this.pool = new HashMap<>();
         this.creator = connectorCreator;
         this.binPath = binPath;
@@ -97,19 +98,31 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool, Thermosta
         this.ipcService = ipcService;
         this.ipcConfigFile = ipcConfigFile;
         this.currentNewEntry = null;
-        
-        // Create IPC server for agent proxies
-        startIPCServer();
+        this.started = false;
     }
 
+    @Override
+    public void start() throws IOException {
+        // Create IPC server for agent proxies
+        startIPCServer();
+        this.started = true;
+    }
+    
+    @Override
+    public boolean isStarted() {
+        return started;
+    }
+    
     private void startIPCServer() throws IOException {
         // IPC server may have been left behind
         deleteServerIfExists();
         ipcService.createServer(IPC_SERVER_NAME, this);
     }
     
+    @Override
     public void shutdown() throws IOException {
         deleteServerIfExists();
+        this.started = false;
     }
 
     private void deleteServerIfExists() throws IOException {

@@ -34,54 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.ipc.client.internal;
+package com.redhat.thermostat.agent.ipc.server.internal;
+
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileOutputStream;
 import java.util.Properties;
-import java.util.ServiceLoader;
 
-import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
-import com.redhat.thermostat.agent.ipc.common.internal.IPCPropertiesBuilder;
-import com.redhat.thermostat.agent.ipc.common.internal.IPCPropertiesProvider;
+import org.junit.Test;
+
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
+import com.redhat.thermostat.agent.ipc.server.internal.IPCConfigurationWriter.PropertiesHelper;
 
-/*
- * An IPC property builder that discovers IPC properties providers
- * using the ServiceLoader mechanism. This allows IPC clients to
- * not depend on OSGi for service discovery.
- */
-public class ClientIPCPropertiesBuilder extends IPCPropertiesBuilder {
+public class IPCConfigurationWriterTest {
     
-    private final ServiceLoaderHelper serviceHelper;
-    
-    public ClientIPCPropertiesBuilder() {
-        this(new ServiceLoaderHelper());
-    }
-    
-    ClientIPCPropertiesBuilder(ServiceLoaderHelper serviceHelper) {
-        this.serviceHelper = serviceHelper;
-    }
-    
-    protected IPCProperties getPropertiesForType(IPCType type, Properties props, File propFile) throws IOException {
-        IPCProperties result = null;
-        Iterable<IPCPropertiesProvider> loader = serviceHelper.getServiceLoader();
-        for (IPCPropertiesProvider provider : loader) {
-            if (provider.getType().equals(type)) {
-                result = provider.create(props, propFile);
-            }
-        }
-        if (result == null) {
-            throw new IOException("Unable to create properties for IPC type: " + type.getConfigValue());
-        }
-        return result;
-    }
-    
-    // For testing purposes. ServiceLoader is final and can't be mocked.
-    static class ServiceLoaderHelper {
-        Iterable<IPCPropertiesProvider> getServiceLoader() {
-            return ServiceLoader.load(IPCPropertiesProvider.class);
-        }
+    @Test
+    public void testWrite() throws Exception {
+        PropertiesHelper helper = mock(PropertiesHelper.class);
+        
+        File configFile = mock(File.class);
+        Properties props = mock(Properties.class);
+        when(helper.createProperties()).thenReturn(props);
+        FileOutputStream fos = mock(FileOutputStream.class);
+        when(helper.createStream(configFile)).thenReturn(fos);
+        
+        IPCConfigurationWriter writer = new IPCConfigurationWriter(configFile, helper);
+        writer.write();
+        
+        verify(props).setProperty(IPCConfigurationWriter.PROP_IPC_TYPE, IPCType.UNIX_SOCKET.getConfigValue());
+        verify(props).store(eq(fos), anyString());
+        verify(fos).close();
     }
 
 }

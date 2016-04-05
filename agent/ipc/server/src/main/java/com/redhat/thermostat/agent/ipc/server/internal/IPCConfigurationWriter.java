@@ -34,45 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.ipc.unixsocket.server.internal;
-
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+package com.redhat.thermostat.agent.ipc.server.internal;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Properties;
 
-import org.junit.Test;
-
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
-import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.IPCConfigurationWriter.PropertiesHelper;
-import com.redhat.thermostat.shared.config.CommonPaths;
 
-public class IPCConfigurationWriterTest {
+class IPCConfigurationWriter {
+
+    static final String PROP_IPC_TYPE = "type";
+    static final String PROP_UNIX_SOCKET_DIR = "unixsocket.dir";
+    private static final String COMMENTS = "Configuration for Inter-process Communication (IPC) used in the Thermostat agent.\n"
+    + "The agent is configured to use Unix sockets for IPC by default.\n"
+    + "The options below can be set to modify the defaults used by the agent:\n\n" 
+    + "Directory where Unix sockets are created, which may be deleted if it already exists.\n"
+    + PROP_UNIX_SOCKET_DIR + "=/path/to/unix/sockets\n";
     
-    @Test
-    public void testWrite() throws Exception {
-        PropertiesHelper helper = mock(PropertiesHelper.class);
+    private final File configFile;
+    private final PropertiesHelper helper;
+    
+    IPCConfigurationWriter(File configFile) {
+        this(configFile, new PropertiesHelper());
+    }
+    
+    IPCConfigurationWriter(File configFile, PropertiesHelper helper) {
+        this.configFile = configFile;
+        this.helper = helper;
+    }
+    
+    void write() throws IOException {
+        // Write defaults to config file
+        configFile.createNewFile();
         
-        CommonPaths paths = mock(CommonPaths.class);
-        File configFile = mock(File.class);
-        when(paths.getUserIPCConfigurationFile()).thenReturn(configFile);
+        Properties props = helper.createProperties();
+        // Leave remainder of properties as defaults
+        props.setProperty(PROP_IPC_TYPE, IPCType.UNIX_SOCKET.getConfigValue());
         
-        Properties props = mock(Properties.class);
-        when(helper.createProperties()).thenReturn(props);
-        FileOutputStream fos = mock(FileOutputStream.class);
-        when(helper.createStream(configFile)).thenReturn(fos);
-        
-        IPCConfigurationWriter writer = new IPCConfigurationWriter(paths, helper);
-        writer.write();
-        
-        verify(props).setProperty(IPCConfigurationWriter.PROP_IPC_TYPE, IPCType.UNIX_SOCKET.getConfigValue());
-        verify(props).store(eq(fos), anyString());
-        verify(fos).close();
+        FileOutputStream fos = helper.createStream(configFile);
+        props.store(fos, COMMENTS);
+        fos.close();
+    }
+    
+    // For testing purposes
+    static class PropertiesHelper {
+        FileOutputStream createStream(File configFile) throws IOException {
+            return new FileOutputStream(configFile);
+        }
+        Properties createProperties() {
+            return new Properties();
+        }
     }
 
 }

@@ -54,6 +54,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.ThermostatLocalServerSocketChannelImpl.UnixServerSocketChannelHelper;
 
@@ -72,6 +73,7 @@ public class ThermostatLocalServerSocketChannelImplTest {
     private Selector selector;
     private SelectionKey key;
     private ThermostatIPCCallbacks callbacks;
+    private IPCProperties props;
     
     @Before
     public void setUp() throws IOException {
@@ -92,6 +94,9 @@ public class ThermostatLocalServerSocketChannelImplTest {
         
         key = mock(SelectionKey.class);
         when(channelHelper.register(impl, selector, SelectionKey.OP_ACCEPT)).thenReturn(key);
+        props = mock(IPCProperties.class);
+        File propFile = mock(File.class);
+        when(props.getPropertiesFile()).thenReturn(propFile);
     }
     
     @After
@@ -197,7 +202,7 @@ public class ThermostatLocalServerSocketChannelImplTest {
     }
 
     private ThermostatLocalServerSocketChannelImpl createChannel() throws IOException {
-        return ThermostatLocalServerSocketChannelImpl.open(SERVER_NAME, path, callbacks, selector);
+        return ThermostatLocalServerSocketChannelImpl.open(SERVER_NAME, path, callbacks, props, selector);
     }
 
 }

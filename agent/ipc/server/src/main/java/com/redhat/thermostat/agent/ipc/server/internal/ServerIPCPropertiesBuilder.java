@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.agent.ipc.server.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -88,13 +89,13 @@ class ServerIPCPropertiesBuilder extends IPCPropertiesBuilder {
     }
 
     @Override
-    protected IPCProperties getPropertiesForType(IPCType type, Properties props) throws IOException {
+    protected IPCProperties getPropertiesForType(IPCType type, Properties props, File propFile) throws IOException {
         synchronized (providers) {
             IPCPropertiesProvider provider = providers.get(type);
             if (provider == null) {
                 throw new IOException("Unsupported IPC type: " + type.getConfigValue());
             }
-            return provider.create(props);
+            return provider.create(props, propFile);
         }
     }
     

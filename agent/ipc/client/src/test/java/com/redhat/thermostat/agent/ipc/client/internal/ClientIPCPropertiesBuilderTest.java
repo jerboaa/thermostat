@@ -44,6 +44,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Properties;
@@ -62,6 +63,7 @@ public class ClientIPCPropertiesBuilderTest {
     private Properties jProps;
     private ServiceLoaderHelper serviceHelper;
     private IPCPropertiesProvider provider;
+    private File propFile;
 
     @Before
     public void setUp() throws Exception {
@@ -71,7 +73,8 @@ public class ClientIPCPropertiesBuilderTest {
         provider = mock(IPCPropertiesProvider.class);
         when(provider.getType()).thenReturn(IPCType.UNIX_SOCKET);
         jProps = mock(Properties.class);
-        when(provider.create(jProps)).thenReturn(props);
+        propFile = mock(File.class);
+        when(provider.create(jProps, propFile)).thenReturn(props);
         
         serviceHelper = mock(ServiceLoaderHelper.class);
     }
@@ -82,7 +85,7 @@ public class ClientIPCPropertiesBuilderTest {
         when(serviceHelper.getServiceLoader()).thenReturn(providers);
         
         ClientIPCPropertiesBuilder builder = new ClientIPCPropertiesBuilder(serviceHelper);
-        IPCProperties result = builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps);
+        IPCProperties result = builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps, propFile);
         assertEquals(props, result);
     }
     
@@ -96,10 +99,10 @@ public class ClientIPCPropertiesBuilderTest {
         when(serviceHelper.getServiceLoader()).thenReturn(providers);
         
         ClientIPCPropertiesBuilder builder = new ClientIPCPropertiesBuilder(serviceHelper);
-        IPCProperties result = builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps);
+        IPCProperties result = builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps, propFile);
         assertEquals(props, result);
         
-        verify(otherProvider, never()).create(any(Properties.class));
+        verify(otherProvider, never()).create(any(Properties.class), any(File.class));
     }
     
     @Test
@@ -113,10 +116,10 @@ public class ClientIPCPropertiesBuilderTest {
         
         ClientIPCPropertiesBuilder builder = new ClientIPCPropertiesBuilder(serviceHelper);
         try {
-            builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps);
+            builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps, propFile);
             fail("Expected IOException");
         } catch (IOException e) {
-            verify(otherProvider, never()).create(any(Properties.class));
+            verify(otherProvider, never()).create(any(Properties.class), any(File.class));
         }
     }
     
@@ -126,7 +129,7 @@ public class ClientIPCPropertiesBuilderTest {
         when(serviceHelper.getServiceLoader()).thenReturn(providers);
         
         ClientIPCPropertiesBuilder builder = new ClientIPCPropertiesBuilder(serviceHelper);
-        builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps);
+        builder.getPropertiesForType(IPCType.UNIX_SOCKET, jProps, propFile);
     }
 
     @SuppressWarnings("unchecked")

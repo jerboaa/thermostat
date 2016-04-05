@@ -36,24 +36,49 @@
 
 package com.redhat.thermostat.agent.ipc.server.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.ipc.common.internal.IPCPropertiesBuilder;
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
     
     @Test
-    public void verifyServiceIsRegistered() throws Exception {
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
         StubBundleContext context = new StubBundleContext();
 
         Activator activator = new Activator();
+
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(IPCPropertiesBuilder.class.getName(), ServerIPCPropertiesBuilder.class));
+        assertEquals(0, context.getAllServices().size());
+        assertNotSame(1, context.getServiceListeners().size());
+
+        activator.stop(context);
+    }
+
+    @Test
+    public void verifyActivatorRegistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        
+        CommonPaths paths = mock(CommonPaths.class);
+        context.registerService(CommonPaths.class, paths, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+        assertTrue(context.isServiceRegistered(AgentIPCService.class.getName(), AgentIPCServiceImpl.class));
+        activator.stop(context);
+
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(1, context.getAllServices().size());
     }
     
     @Test

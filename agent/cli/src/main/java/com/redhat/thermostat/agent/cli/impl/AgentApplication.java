@@ -55,6 +55,7 @@ import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.ExitStatus;
@@ -109,7 +110,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private DbServiceFactory dbServiceFactory;
     @SuppressWarnings("rawtypes")
     private ServiceTracker configServerTracker;
-    private MultipleServiceTracker daoTracker;
+    private MultipleServiceTracker depTracker;
     private final ExitStatus exitStatus;
     private final WriterID writerId;
     private final SSLConfiguration sslConf;
@@ -256,8 +257,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             shutdownLatch.countDown();
         }
         
-        if (daoTracker != null) {
-            daoTracker.close();
+        if (depTracker != null) {
+            depTracker.close();
         }
         if (configServerTracker != null) {
             configServerTracker.close();
@@ -301,7 +302,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         
     }
 
-    Agent startAgent(final Storage storage, AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
+    Agent startAgent(final Storage storage, AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO, MXBeanConnectionPool pool) {
         BackendRegistry backendRegistry = null;
         try {
             backendRegistry = new BackendRegistry(bundleContext);
@@ -314,7 +315,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             throw new RuntimeException(e);
         }
 
-        final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO, writerId);
+        final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO, writerId, pool);
         try {
             logger.fine("Starting agent.");
             agent.start();
@@ -343,9 +344,10 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         Class<?>[] deps = new Class<?>[] {
                 Storage.class,
                 AgentInfoDAO.class,
-                BackendInfoDAO.class
+                BackendInfoDAO.class,
+                MXBeanConnectionPool.class
         };
-        daoTracker = new MultipleServiceTracker(bundleContext, deps, new Action() {
+        depTracker = new MultipleServiceTracker(bundleContext, deps, new Action() {
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
@@ -354,8 +356,10 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                         .get(AgentInfoDAO.class.getName());
                 BackendInfoDAO backendInfoDAO = (BackendInfoDAO) services
                         .get(BackendInfoDAO.class.getName());
+                MXBeanConnectionPool pool = (MXBeanConnectionPool) services
+                        .get(MXBeanConnectionPool.class.getName());
 
-                Agent agent = startAgent(storage, agentInfoDAO, backendInfoDAO);
+                Agent agent = startAgent(storage, agentInfoDAO, backendInfoDAO, pool);
                 handler = new CustomSignalHandler(agent, configServer);
                 Signal.handle(new Signal(SIGINT_NAME), handler);
                 Signal.handle(new Signal(SIGTERM_NAME), handler);
@@ -371,7 +375,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             }
             
         });
-        daoTracker.open();
+        depTracker.open();
     }
 
     static class ConfigurationCreator {

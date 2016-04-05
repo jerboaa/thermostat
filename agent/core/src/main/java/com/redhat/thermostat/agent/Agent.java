@@ -36,12 +36,14 @@
 
 package com.redhat.thermostat.agent;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.ActionEvent;
@@ -70,6 +72,7 @@ public class Agent {
     private final AgentInfoDAO agentDao;
     private final BackendInfoDAO backendDao;
     private final WriterID writerID;
+    private final MXBeanConnectionPool pool;
     
     private AgentInformation agentInfo;
     private boolean started = false;
@@ -122,13 +125,15 @@ public class Agent {
     };
 
     public Agent(BackendRegistry registry, AgentStartupConfiguration config, Storage storage,
-            AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao, WriterID writerId) {
+            AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao, WriterID writerId,
+            MXBeanConnectionPool pool) {
         this.backendRegistry = registry;
         this.config = config;
         this.storage = storage;
         this.agentDao = agentInfoDao;
         this.backendDao = backendInfoDao;
         this.writerID = writerId;
+        this.pool = pool;
         backendInfos = new ConcurrentHashMap<>();
         
         backendRegistry.addActionListener(backendRegistryListener);
@@ -141,8 +146,12 @@ public class Agent {
             agentDao.addAgentInformation(agentInfo);
             
             backendRegistry.start();
-            
-            started = true;
+            try {
+                pool.start();
+                started = true;
+            } catch (IOException e) {
+                throw new LaunchException("Failed to start JMX services for agent", e);
+            }
         } else {
             logger.warning("Attempt to start agent when already started.");
         }
@@ -171,6 +180,14 @@ public class Agent {
                 removeAllAgentRelatedInformation();
             } else {
                 updateAgentStatusToStopped();
+            }
+            
+            if (pool.isStarted()) {
+                try {
+                    pool.shutdown();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Failed to cleanly shut down JMX services", e);
+                }
             }
             started = false;
         } else {

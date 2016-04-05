@@ -45,6 +45,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.spi.AbstractInterruptibleChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
 
+import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 
 import jnr.unixsocket.UnixServerSocketChannel;
@@ -77,9 +78,10 @@ class ThermostatLocalServerSocketChannelImpl implements Channel {
     }
 
     static ThermostatLocalServerSocketChannelImpl open(String name, File path, ThermostatIPCCallbacks callbacks, 
-            Selector selector) throws IOException {
+            IPCProperties props, Selector selector) throws IOException {
         if (path.getAbsolutePath().length() > UNIX_PATH_MAX) {
-            throw new IOException("Socket path name is too long");
+            throw new IOException("Socket path name is too long: " + path.getAbsolutePath() 
+                + ". Alternative socket path can be specified in " + props.getPropertiesFile().getAbsolutePath());
         }
         
         // Fail early if socket file exists

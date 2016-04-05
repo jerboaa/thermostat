@@ -37,7 +37,9 @@
 package com.redhat.thermostat.utils.management.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -93,7 +95,54 @@ public class MXBeanConnectionPoolImplTest {
 
         pool = new MXBeanConnectionPoolImpl(creator, binDir, builder, ipcService, ipcConfigFile);
     }
+    
+    @Test
+    public void testStart() throws Exception {
+        assertFalse(pool.isStarted());
+        pool.start();
+        assertTrue(pool.isStarted());
+        verify(ipcService).createServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME, pool);
+    }
+    
+    @Test
+    public void testStartCleanup() throws Exception {
+        pool.start();
+        verify(ipcService).serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+        verify(ipcService, never()).destroyServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+    }
+    
+    @Test
+    public void testStartCleanupServerExists() throws Exception {
+        when(ipcService.serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME)).thenReturn(true);
+        pool.start();
+        verify(ipcService).serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+        verify(ipcService).destroyServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+    }
 
+    @Test
+    public void testShutdown() throws Exception {
+        pool.start();
+        assertTrue(pool.isStarted());
+        pool.shutdown();
+        assertFalse(pool.isStarted());
+        
+    }
+    
+    @Test
+    public void testShutdownCleanup() throws Exception {
+        pool.shutdown();
+        verify(ipcService).serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+        verify(ipcService, never()).destroyServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+    }
+    
+    @Test
+    public void testShutdownCleanupServerExists() throws Exception {
+        when(ipcService.serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME)).thenReturn(true);
+        pool.shutdown();
+        verify(ipcService).serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+        verify(ipcService).destroyServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+    }
+    
     @Test
     public void testAcquire() throws Exception {
         final byte[] data = getJsonString(8000, "jmxUrl://hello");

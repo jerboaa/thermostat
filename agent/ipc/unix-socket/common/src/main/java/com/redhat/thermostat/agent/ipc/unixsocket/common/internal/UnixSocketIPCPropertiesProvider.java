@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.agent.ipc.unixsocket.common.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -45,8 +46,8 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 public class UnixSocketIPCPropertiesProvider implements IPCPropertiesProvider {
 
     @Override
-    public UnixSocketIPCProperties create(Properties props) throws IOException {
-        return new UnixSocketIPCProperties(props);
+    public UnixSocketIPCProperties create(Properties props, File propFile) throws IOException {
+        return new UnixSocketIPCProperties(props, propFile);
     }
 
     @Override

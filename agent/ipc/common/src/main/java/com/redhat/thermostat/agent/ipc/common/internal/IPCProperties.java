@@ -36,19 +36,27 @@
 
 package com.redhat.thermostat.agent.ipc.common.internal;
 
+import java.io.File;
 import java.util.Objects;
 
 public class IPCProperties {
     
     private final IPCType type;
+    private final File propFile;
     
-    protected IPCProperties(IPCType type) {
+    protected IPCProperties(IPCType type, File propFile) {
         Objects.requireNonNull(type);
+        Objects.requireNonNull(propFile);
         this.type = type;
+        this.propFile = propFile;
     }
     
     public IPCType getType() {
         return type;
+    }
+    
+    public File getPropertiesFile() {
+        return propFile;
     }
 
 }

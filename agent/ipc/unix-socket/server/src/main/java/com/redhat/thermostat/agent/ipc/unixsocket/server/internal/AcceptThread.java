@@ -39,7 +39,7 @@ package com.redhat.thermostat.agent.ipc.unixsocket.server.internal;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -78,13 +78,13 @@ class AcceptThread extends Thread {
                 if (selected < 0) {
                     // Something bad happened
                     throw new IOException("Error occurred while selecting channel");
-                } else {
+                } else if (selected > 0) {
                     Set<SelectionKey> selectedKeys = selector.selectedKeys();
-                    Iterator<SelectionKey> iterator = selectedKeys.iterator();
-                    while (iterator.hasNext()) {
-                        SelectionKey key = iterator.next();
+                    // Use a copy to prevent concurrent modification
+                    Set<SelectionKey> selectedCopy = new HashSet<>(selectedKeys);
+                    for (SelectionKey key : selectedCopy) {
                         // Remove this key from selected set to indicate we've processed it
-                        iterator.remove();
+                        selectedKeys.remove(key);
                         processKey(key);
                     }
                 }

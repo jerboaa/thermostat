@@ -36,23 +36,63 @@
 
 package com.redhat.thermostat.agent.ipc.server.internal;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.agent.ipc.common.internal.IPCPropertiesBuilder;
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class Activator implements BundleActivator {
     
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
+    
     private ServerIPCPropertiesBuilder propBuilder;
+    private AgentIPCServiceImpl ipcService;
+    private ServiceTracker tracker;
+    private ServiceRegistration reg;
     
     public void start(BundleContext context) throws Exception {
         propBuilder = new ServerIPCPropertiesBuilder(context);
-        context.registerService(IPCPropertiesBuilder.class.getName(), propBuilder, null);
+        tracker = new ServiceTracker(context, CommonPaths.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                CommonPaths paths = (CommonPaths) super.addingService(reference);
+                File propFile = paths.getUserIPCConfigurationFile();
+                ipcService = new AgentIPCServiceImpl(propBuilder, context, propFile);
+                reg = context.registerService(AgentIPCService.class.getName(), ipcService, null);
+                return paths;
+            }
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                if (reg != null) {
+                    try {
+                        ipcService.shutdown();
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Failed to stop IPC service", e);
+                    }
+                    reg.unregister();
+                    reg = null;
+                }
+                super.removedService(reference, service);
+            }
+        };
+        
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         propBuilder.close();
+        tracker.close();
     }
     
     // For testing purposes
