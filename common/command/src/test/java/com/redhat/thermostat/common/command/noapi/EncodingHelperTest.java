@@ -34,15 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.common.command.noapi;
 
 import static org.junit.Assert.assertEquals;
 
 import java.nio.ByteBuffer;
 
 import org.junit.Test;
-
-import com.redhat.thermostat.common.command.EncodingHelper;
 
 import io.netty.buffer.ByteBuf;
 

@@ -85,6 +85,7 @@
             <Bundle-SymbolicName>com.redhat.thermostat.common.command</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.common.command,
+              com.redhat.thermostat.common.command.noapi
             </Export-Package>
             <Private-Package />
             <!-- Do not autogenerate uses clauses in Manifests -->

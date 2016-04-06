@@ -42,8 +42,8 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
-import com.redhat.thermostat.common.command.ConfigurationCommandContext;
-import com.redhat.thermostat.common.command.RequestEncoder;
+import com.redhat.thermostat.common.command.noapi.ConfigurationCommandContext;
+import com.redhat.thermostat.common.command.noapi.RequestEncoder;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;

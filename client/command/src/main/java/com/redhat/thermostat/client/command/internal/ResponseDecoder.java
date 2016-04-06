@@ -40,12 +40,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.command.DecodingHelper;
 import com.redhat.thermostat.common.command.InvalidMessageException;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.common.command.StringDecodingContext;
-import com.redhat.thermostat.common.command.StringDecodingState;
+import com.redhat.thermostat.common.command.noapi.DecodingHelper;
+import com.redhat.thermostat.common.command.noapi.StringDecodingContext;
+import com.redhat.thermostat.common.command.noapi.StringDecodingState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import io.netty.buffer.ByteBuf;

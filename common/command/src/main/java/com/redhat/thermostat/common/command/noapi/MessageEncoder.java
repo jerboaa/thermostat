@@ -34,35 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.common.command.noapi;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.redhat.thermostat.common.command.Message;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToByteEncoder;
 
-public class EncodingHelper {
+public abstract class MessageEncoder extends MessageToByteEncoder<Message> {
 
-    public static void encode(String name, String value, ByteBuf dynamicBuffer) {
-        byte[] nameBytes = name.getBytes();
-        byte[] valueBytes = value.getBytes();
-        dynamicBuffer.writeInt(nameBytes.length);
-        dynamicBuffer.writeInt(valueBytes.length);
-        dynamicBuffer.writeBytes(nameBytes);
-        dynamicBuffer.writeBytes(valueBytes);
+    private static final Logger logger = LoggingUtils.getLogger(MessageEncoder.class);
+    
+    protected MessageEncoder() {
+        super();
     }
     
-    public static ByteBuf encode(String value) {
-        byte[] valBytes = value.getBytes();
-        int length = 4 + valBytes.length;
-        ByteBuf buf = Unpooled.buffer(length, length);
-        buf.writeInt(valBytes.length);
-        buf.writeBytes(valBytes);
-        return buf;
+    @Override
+    public void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) {
+        ByteBuf encodedMessage = encode(msg);
+        out.writeBytes(encodedMessage);
     }
 
-    public static String trimType(String full) {
-        int typePointer = full.lastIndexOf('.');
-        return full.substring(typePointer + 1);
-    }
+    /**
+     * Transforms the specified message into another message and return the
+     * transformed message. Note that you can not return {@code null}, unlike
+     * you can in
+     * {@link MessageDecoder#decode(org.jboss.netty.buffer.ChannelBuffer)}; you
+     * must return something, at least {@link ChannelBuffers#EMPTY_BUFFER}.
+     */
+    protected abstract ByteBuf encode(Message originalMessage);
     
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.log(Level.WARNING, "Exception caught", cause);
+        ctx.close();
+    }
 }
 

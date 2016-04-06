@@ -34,21 +34,60 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.common.command.noapi;
 
-public enum ParameterDecodingState {
-    /** Insufficient data for decoding parameters */
-    INCOMPLETE_PARAMS_LENGTH,
-    /** Number of parameters has been read */
-    PARAMS_LENGTH_READ,
-    /** Insufficient data for decoding a parameter pair */
-    INCOMPLETE_PARAM_KV_LENGTH,
-    /** Length of param's key/value has been read */
-    PARAM_KV_LENGTH_READ,
-    /** Insufficient data for decoding values of a parameter pair */
-    INCOMPLETE_PARAM_KV_DATA,
-    /** One (of potentially many) KV data pair decoded */
-    PARAM_KV_DATA_PLUS_ONE_READ,
-    /** All parameters have been read from fragmented data */
-    ALL_PARAMETERS_READ
+/**
+ * Context for decoding Strings.
+ * 
+ * @see DecodingHelper
+ * @see StringDecodingState
+ */
+public class StringDecodingContext {
+    
+    StringDecodingContext() {
+        // package-private constructor. Only this package creates instances.
+    }
+    
+    private StringDecodingState state;
+    private String val;
+    private int bytesRead;
+    
+    /**
+     * 
+     * @return The decoded String value.
+     */
+    public String getValue() {
+        if (state != StringDecodingState.VALUE_READ) {
+            throw new IllegalStateException("Data not yet defragmented");
+        }
+        return val;
+    }
+    
+    /**
+     * 
+     * @return The current decoding state.
+     */
+    public StringDecodingState getState() {
+        return state;
+    }
+    
+    /**
+     * 
+     * @return The bytes read from a buffer.
+     */
+    public int getBytesRead() {
+        return bytesRead;
+    }
+    
+    void setState(StringDecodingState newState) {
+        state = newState;
+    }
+    
+    void setValue(String value) {
+        val = value;
+    }
+    
+    void addToBytesRead(int value) {
+        bytesRead += value;
+    }
 }

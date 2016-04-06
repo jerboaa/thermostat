@@ -34,12 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.common.command.noapi;
 
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.command.Message;
+import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import io.netty.buffer.ByteBuf;

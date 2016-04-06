@@ -34,17 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.common.command.noapi;
 
-import com.redhat.thermostat.shared.config.SSLConfiguration;
-
-import io.netty.bootstrap.AbstractBootstrap;
-
-public interface ConfigurationCommandContext {
-
-    public AbstractBootstrap<?, ?> getBootstrap();
-
-    public SSLConfiguration getSSLConfiguration();
-
+public enum ParameterDecodingState {
+    /** Insufficient data for decoding parameters */
+    INCOMPLETE_PARAMS_LENGTH,
+    /** Number of parameters has been read */
+    PARAMS_LENGTH_READ,
+    /** Insufficient data for decoding a parameter pair */
+    INCOMPLETE_PARAM_KV_LENGTH,
+    /** Length of param's key/value has been read */
+    PARAM_KV_LENGTH_READ,
+    /** Insufficient data for decoding values of a parameter pair */
+    INCOMPLETE_PARAM_KV_DATA,
+    /** One (of potentially many) KV data pair decoded */
+    PARAM_KV_DATA_PLUS_ONE_READ,
+    /** All parameters have been read from fragmented data */
+    ALL_PARAMETERS_READ
 }
-

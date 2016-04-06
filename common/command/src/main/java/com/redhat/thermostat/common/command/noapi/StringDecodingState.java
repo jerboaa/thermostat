@@ -34,66 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.common.command.noapi;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Parameter decoding context.
- * 
- * @see DecodingHelper
- * @see ParameterDecodingState
- */
-public class ParameterDecodingContext {
-    
-    ParameterDecodingContext() {
-        // package-private constructor. Only this package creates instances.
-    }
-
-    private final Map<String, String> values = new HashMap<>();
-    private ParameterDecodingState state;
-    private int bytesRead;
-    
+public enum StringDecodingState {
+    /** Not enough data to decode any String */
+    INCOMPLETE_LENGTH_VAL,
     /**
-     * 
-     * @return A map of parameter {@code key=value} pairs.
-     * 
-     * @throws IllegalStateException if not all parameters have yet been decoded.
+     * Enough data to decode the length of the String, but not the String
+     * value just yet.
      */
-    public Map<String, String> getValues() {
-        if (state != ParameterDecodingState.ALL_PARAMETERS_READ) {
-            throw new IllegalStateException("Not all parameters have yet been decoded");
-        }
-        return Collections.unmodifiableMap(values);
-    }
-    
-    /**
-     * 
-     * @return The current decoding state.
-     */
-    public ParameterDecodingState getState() {
-        return state;
-    }
-    
-    /**
-     * 
-     * @return The number of bytes consumed so far.
-     */
-    public int getBytesRead() {
-        return bytesRead;
-    }
-    
-    void setState(ParameterDecodingState newState) {
-        state = newState;
-    }
-    
-    void addParameter(String key, String value) {
-        values.put(key, value);
-    }
-    
-    void addToBytesRead(int numBytes) {
-        bytesRead += numBytes;
-    }
+    LENGTH_READ,
+    /** Incomplete data for string value decoding. */
+    INCOMPLETE_STR_VAL,
+    /** String length and value read **/
+    VALUE_READ
 }

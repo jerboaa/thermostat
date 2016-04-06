@@ -60,7 +60,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.client.command.internal.ConfigurationRequestContext.ClientPipelineInitializer;
 import com.redhat.thermostat.client.command.internal.ConfigurationRequestContext.ClientPipelineInitializerCreator;
-import com.redhat.thermostat.common.command.RequestEncoder;
+import com.redhat.thermostat.common.command.noapi.RequestEncoder;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 

@@ -39,10 +39,10 @@ package com.redhat.thermostat.agent.command.server.internal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.command.EncodingHelper;
 import com.redhat.thermostat.common.command.Message;
-import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.noapi.EncodingHelper;
+import com.redhat.thermostat.common.command.noapi.MessageEncoder;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import io.netty.buffer.ByteBuf;

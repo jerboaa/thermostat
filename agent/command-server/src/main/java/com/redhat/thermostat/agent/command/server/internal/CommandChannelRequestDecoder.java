@@ -42,14 +42,14 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.command.DecodingHelper;
 import com.redhat.thermostat.common.command.InvalidMessageException;
-import com.redhat.thermostat.common.command.ParameterDecodingContext;
-import com.redhat.thermostat.common.command.ParameterDecodingState;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
-import com.redhat.thermostat.common.command.StringDecodingContext;
-import com.redhat.thermostat.common.command.StringDecodingState;
+import com.redhat.thermostat.common.command.noapi.DecodingHelper;
+import com.redhat.thermostat.common.command.noapi.ParameterDecodingContext;
+import com.redhat.thermostat.common.command.noapi.ParameterDecodingState;
+import com.redhat.thermostat.common.command.noapi.StringDecodingContext;
+import com.redhat.thermostat.common.command.noapi.StringDecodingState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import io.netty.buffer.ByteBuf;
