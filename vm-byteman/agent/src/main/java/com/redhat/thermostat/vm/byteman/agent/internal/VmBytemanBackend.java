@@ -115,6 +115,10 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
         this.version = new Version(thisBundle);
         this.registrar = new VmStatusListenerRegistrar(ctx);
     }
+    
+    protected void deactivate(ComponentContext context) {
+        // DS wants to use this method
+    }
 
     @Override
     public int getOrderValue() {
