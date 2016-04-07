@@ -72,12 +72,26 @@ public class VmCompilerStatController implements InformationServiceController<Vm
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final Map<CompileType, String> COMPILATION_TYPES = new HashMap<>();
+    private static final Map<CompileType, String> FAILED_COMPILATION_TYPES = new HashMap<>();
 
     static {
-        COMPILATION_TYPES.put(CompileType.NO_COMPILE, "No Compiles");
-        COMPILATION_TYPES.put(CompileType.NORMAL_COMPILE, "Normal Compile");
-        COMPILATION_TYPES.put(CompileType.OSR_COMPILE, "OSR Compile");
-        COMPILATION_TYPES.put(CompileType.NATIVE_COMPILE, "Native Compile");
+        COMPILATION_TYPES.put(CompileType.NO_COMPILE,
+                translator.localize(LocaleResources.COMPILE_TYPE_NO_COMPILE).getContents());
+        COMPILATION_TYPES.put(CompileType.NORMAL_COMPILE,
+                translator.localize(LocaleResources.COMPILE_TYPE_NORMAL_COMPILE).getContents());
+        COMPILATION_TYPES.put(CompileType.OSR_COMPILE,
+                translator.localize(LocaleResources.COMPILE_TYPE_OSR_COMPILE).getContents());
+        COMPILATION_TYPES.put(CompileType.NATIVE_COMPILE,
+                translator.localize(LocaleResources.COMPILE_TYPE_NATIVE_COMPILE).getContents());
+
+        FAILED_COMPILATION_TYPES.put(CompileType.NO_COMPILE,
+                translator.localize(LocaleResources.COMPILE_TYPE_NO_FAILED_COMPILE).getContents());
+        FAILED_COMPILATION_TYPES.put(CompileType.NORMAL_COMPILE,
+                translator.localize(LocaleResources.COMPILE_TYPE_NORMAL_COMPILE).getContents());
+        FAILED_COMPILATION_TYPES.put(CompileType.OSR_COMPILE,
+                translator.localize(LocaleResources.COMPILE_TYPE_OSR_COMPILE).getContents());
+        FAILED_COMPILATION_TYPES.put(CompileType.NATIVE_COMPILE,
+                translator.localize(LocaleResources.COMPILE_TYPE_NATIVE_COMPILE).getContents());
     }
 
     private final VmCompilerStatView compilerView;
@@ -158,7 +172,7 @@ public class VmCompilerStatController implements InformationServiceController<Vm
             data.lastSize = stat.getLastSize().toString();
             data.lastType = translateCompileDescription(stat.getLastType());
             data.lastMethod = stat.getLastMethod();
-            data.lastFailedType = translateCompileDescription(stat.getLastFailedType());
+            data.lastFailedType = translateDecompileDescription(stat.getLastFailedType());
             data.lastFailedMethod = stat.getLastFailedMethod();
 
             compilerView.setCurrentDisplay(data);
@@ -208,6 +222,9 @@ public class VmCompilerStatController implements InformationServiceController<Vm
             return COMPILATION_TYPES.get(type);
         }
 
+        private String translateDecompileDescription(CompileType type) {
+            return FAILED_COMPILATION_TYPES.get(type);
+        }
     }
 
 }
