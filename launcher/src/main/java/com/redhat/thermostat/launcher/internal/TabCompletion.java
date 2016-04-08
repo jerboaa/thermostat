@@ -39,23 +39,21 @@ package com.redhat.thermostat.launcher.internal;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
+import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import jline.console.ConsoleReader;
 import jline.console.completer.Completer;
 import org.apache.commons.cli.Option;
 import org.osgi.framework.BundleContext;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import static com.redhat.thermostat.launcher.internal.TreeCompleter.createStringNode;
 
@@ -64,39 +62,40 @@ public class TabCompletion {
     private static final String LONG_OPTION_PREFIX = "--";
     private static final String SHORT_OPTION_PREFIX = "-";
 
-    private Logger log;
+    static final Set<String> ALL_COMMANDS_COMPLETER = Collections.singleton("ALL_COMMANDS_COMPLETER");
+
     private TreeCompleter treeCompleter;
+    private Set<CompleterService> globalCompleterServices;
     private Map<String, TreeCompleter.Node> commandMap;
 
     public TabCompletion() {
-        this(LoggingUtils.getLogger(TabCompletion.class),
-                new TreeCompleter(),
-                new HashMap<String, TreeCompleter.Node>());
+        this(new TreeCompleter(), new HashMap<String, TreeCompleter.Node>());
     }
 
     /*
      * Testing only
      */
-    TabCompletion(Logger log, TreeCompleter treeCompleter, Map<String, TreeCompleter.Node> commandMap) {
-        this.log = log;
+    TabCompletion(TreeCompleter treeCompleter, Map<String, TreeCompleter.Node> commandMap) {
         this.treeCompleter = treeCompleter;
         this.commandMap = commandMap;
+
+        this.globalCompleterServices = new HashSet<>();
 
         treeCompleter.setAlphabeticalCompletions(true);
     }
 
     public void addCompleterService(CompleterService service) {
+        if (ALL_COMMANDS_COMPLETER == service.getCommands()) {
+            globalCompleterServices.add(service);
+        }
         if (commandMap.isEmpty()) {
             return;
         }
         for (String commandName : service.getCommands()) {
             TreeCompleter.Node command = commandMap.get(commandName);
-            if (command == null) {
-                log.info("Completer service for command \"" + commandName + "\" was attempted to be registered, but " +
-                        "this command is not recognized.");
-                continue;
+            if (command != null) {
+                addCompleterServiceImpl(command, service);
             }
-            addCompleterServiceImpl(command, service);
         }
     }
 
@@ -114,17 +113,17 @@ public class TabCompletion {
     }
 
     public void removeCompleterService(CompleterService service) {
+        if (ALL_COMMANDS_COMPLETER == service.getCommands()) {
+            globalCompleterServices.remove(service);
+        }
         if (commandMap.isEmpty()) {
             return;
         }
         for (String commandName : service.getCommands()) {
             TreeCompleter.Node command = commandMap.get(commandName);
-            if (command == null) {
-                log.info("Completer service for command \"" + commandName + "\" was attempted to be unregistered, but " +
-                        "this command is not recognized.");
-                continue;
+            if (command != null) {
+                removeCompleterServiceImpl(command, service);
             }
-            removeCompleterServiceImpl(command, service);
         }
     }
 
@@ -147,12 +146,6 @@ public class TabCompletion {
     }
 
     public void setupTabCompletion(ConsoleReader reader, CommandInfoSource commandInfoSource, BundleContext context, ClientPreferences prefs) {
-        List<String> logLevels = new ArrayList<>();
-
-        for (LoggingUtils.LogLevel level : LoggingUtils.LogLevel.values()) {
-            logLevels.add(level.getLevel().getName());
-        }
-
         for (CommandInfo info : commandInfoSource.getCommandInfos()) {
 
             if (info.getEnvironments().contains(Environment.SHELL)) {
@@ -177,9 +170,7 @@ public class TabCompletion {
                 }
 
                 for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
-                    if (option.getLongOpt().equals("logLevel")) {
-                        setupCompletion(command, option, new JLineStringsCompleter(logLevels));
-                    } else if (option.getLongOpt().equals("vmId")) {
+                    if (option.getLongOpt().equals("vmId")) {
                         setupCompletion(command, option, new CompletionFinderTabCompleter(new VmIdsFinder(context)));
                     } else if (option.getLongOpt().equals("agentId")) {
                         setupCompletion(command, option, new CompletionFinderTabCompleter(new AgentIdsFinder(context)));
@@ -197,6 +188,10 @@ public class TabCompletion {
                     command.addBranch(files);
                 }
                 treeCompleter.addBranch(command);
+
+                for (CompleterService service : globalCompleterServices) {
+                    addCompleterServiceImpl(command, service);
+                }
             }
         }
 

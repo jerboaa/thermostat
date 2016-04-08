@@ -36,28 +36,18 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-
+import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.keyring.Keyring;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,17 +62,27 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
-import com.redhat.thermostat.launcher.BundleManager;
-import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.utils.keyring.Keyring;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Activator.class, Activator.RegisterLauncherAction.class, FrameworkUtil.class})
@@ -281,6 +281,32 @@ public class ActivatorTest {
         assertFalse(context.isServiceRegistered(CommandInfoSource.class.getName(), CompoundCommandInfoSource.class));
         assertFalse(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
         assertFalse(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
+    }
+
+    @Test
+    public void testLogLevelCompleterServiceAvailability() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
+        ArgumentCaptor<Action> unusedCaptor = ArgumentCaptor.forClass(Action.class);
+        Class<?>[] launcherDeps = new Class[] {
+                Keyring.class,
+                CommonPaths.class,
+                SSLConfiguration.class,
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(launcherDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
+
+        Class<?>[] shellDeps = new Class[] {
+                CommonPaths.class,
+                ConfigurationInfoSource.class,
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(shellDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
+
+        Activator activator = new Activator();
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(CompleterService.class.getName(), LogLevelCompleterService.class));
     }
 
     private Path createStubThermostatHome() throws Exception {

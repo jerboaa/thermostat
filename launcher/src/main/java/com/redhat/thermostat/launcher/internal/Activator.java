@@ -263,6 +263,9 @@ public class Activator implements BundleActivator {
         });
         dbServiceTracker.open();
         registry.registerCommand("help", helpCommand);
+
+        LogLevelCompleterService logLevelCompleterService = new LogLevelCompleterService();
+        context.registerService(CompleterService.class.getName(), logLevelCompleterService, null);
     }
 
     @Override

@@ -80,7 +80,7 @@ public class TabCompletionTest {
         log = mock(Logger.class);
         treeCompleter = mock(TreeCompleter.class);
         commandMap = new HashMap<>();
-        tabCompletion = new TabCompletion(log, treeCompleter, commandMap);
+        tabCompletion = new TabCompletion(treeCompleter, commandMap);
     }
 
     @Test
@@ -99,32 +99,6 @@ public class TabCompletionTest {
         verify(treeCompleter).setAlphabeticalCompletions(true);
         verifyNoMoreInteractions(treeCompleter);
         assertThat(commandMap.isEmpty(), is(true));
-    }
-
-    @Test
-    public void verifyLogErrorWhenAddingCompleterToNonExistentCommand() {
-        doSetupTabCompletion();
-        CompleterService service = mock(CompleterService.class);
-        when(service.getCommands()).thenReturn(Collections.singleton("other-command"));
-        tabCompletion.addCompleterService(service);
-
-        assertThat(commandMap.get("other-command"), is((TreeCompleter.Node) null));
-        ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
-        verify(log).info(logCaptor.capture());
-        assertThat(logCaptor.getValue(), containsString("command is not recognized"));
-    }
-
-    @Test
-    public void verifyLogErrorWhenRemovingCompleterFromNonExistentCommand() {
-        doSetupTabCompletion();
-        CompleterService service = mock(CompleterService.class);
-        when(service.getCommands()).thenReturn(Collections.singleton("other-command"));
-        tabCompletion.removeCompleterService(service);
-
-        assertThat(commandMap.get("other-command"), is((TreeCompleter.Node) null));
-        ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
-        verify(log).info(logCaptor.capture());
-        assertThat(logCaptor.getValue(), containsString("command is not recognized"));
     }
 
     @Test
