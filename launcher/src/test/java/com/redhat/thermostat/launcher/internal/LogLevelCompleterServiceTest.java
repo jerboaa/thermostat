@@ -36,38 +36,72 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.AbstractCompleterService;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class LogLevelCompleterService extends AbstractCompleterService {
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
 
-    public static final CliCommandOption LOG_LEVEL_OPTION = new CliCommandOption("l", "logLevel", true, "log level", false);
+public class LogLevelCompleterServiceTest {
 
-    static final List<String> LOG_LEVELS = new ArrayList<>();
+    private LogLevelCompleterService service;
 
-    static {
-        for (LoggingUtils.LogLevel level : LoggingUtils.LogLevel.values()) {
-            LOG_LEVELS.add(level.getLevel().getName());
+    @Before
+    public void setup() {
+        service = new LogLevelCompleterService();
+    }
+
+    @Test
+    public void testLogLevelsAreComplete() {
+        LoggingUtils.LogLevel[] levels = LoggingUtils.LogLevel.values();
+        List<String> expected = new ArrayList<>();
+        for (LoggingUtils.LogLevel level : levels) {
+            expected.add(level.getLevel().getName());
         }
+        Collections.sort(expected, String.CASE_INSENSITIVE_ORDER);
+
+        List<String> values = new ArrayList<>(LogLevelCompleterService.LOG_LEVELS);
+        Collections.sort(values, String.CASE_INSENSITIVE_ORDER);
+
+        assertThat(values, is(equalTo(expected)));
+
+        // check for no duplicates, order doesn't really matter
+        Set<String> expectedSet = new HashSet<>(expected);
+        Set<String> valuesSet = new HashSet<>(values);
+
+        assertThat(valuesSet, is(equalTo(expectedSet)));
+        assertThat(valuesSet.size(), is(values.size()));
     }
 
-    @Override
-    public Set<String> getCommands() {
-        return TabCompletion.ALL_COMMANDS_COMPLETER;
+    @Test
+    public void testCompleterAppliesToAllCommands() {
+        Set<String> commands = service.getCommands();
+        Set<String> expected = TabCompletion.ALL_COMMANDS_COMPLETER;
+        assertThat(commands, is(equalTo(expected)));
     }
 
-    @Override
-    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
-        TabCompleter logLevelCompleter = new JLineStringsCompleter(LOG_LEVELS);
-
-        return Collections.singletonMap(LOG_LEVEL_OPTION, logLevelCompleter);
+    @Test
+    public void testProvidesCompleterForLogLevelOptionOnly() {
+        Map<CliCommandOption, ? extends TabCompleter> map = service.getOptionCompleters();
+        assertThat(map.keySet(), is(equalTo(Collections.singleton(LogLevelCompleterService.LOG_LEVEL_OPTION))));
     }
+
+    @Test
+    public void testLogLevelCompleterIsProvided() {
+        TabCompleter completer = service.getOptionCompleters().get(LogLevelCompleterService.LOG_LEVEL_OPTION);
+        assertThat(completer, is(not(equalTo(null))));
+    }
+
 }
