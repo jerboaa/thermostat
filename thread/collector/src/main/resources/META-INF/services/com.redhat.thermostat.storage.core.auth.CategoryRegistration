@@ -1,2 +1,2 @@
-com.redhat.thermostat.thread.dao.impl.ThreadDAOCategoryRegistration
-com.redhat.thermostat.thread.dao.impl.LockInfoDaoCategoryRegistration
+com.redhat.thermostat.thread.dao.internal.ThreadDAOCategoryRegistration
+com.redhat.thermostat.thread.dao.internal.LockInfoDaoCategoryRegistration

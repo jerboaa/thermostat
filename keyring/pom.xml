@@ -60,7 +60,7 @@
 	        <Bundle-SymbolicName>com.redhat.thermostat.keyring</Bundle-SymbolicName>
 	        <Private-Package>
 	          com.redhat.thermostat.utils.keyring.activator,
-	          com.redhat.thermostat.utils.keyring.impl,
+	          com.redhat.thermostat.utils.keyring.internal,
 	        </Private-Package>
             <Export-Package>com.redhat.thermostat.utils.keyring</Export-Package>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>

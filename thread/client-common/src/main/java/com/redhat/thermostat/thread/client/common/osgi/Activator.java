@@ -43,7 +43,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.client.common.collector.impl.ThreadCollectorFactoryImpl;
+import com.redhat.thermostat.thread.client.common.collector.internal.ThreadCollectorFactoryImpl;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
 public class Activator implements BundleActivator {

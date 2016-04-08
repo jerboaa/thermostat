@@ -41,7 +41,7 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoKeys;
+import com.redhat.thermostat.thread.dao.internal.ThreadDaoKeys;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;

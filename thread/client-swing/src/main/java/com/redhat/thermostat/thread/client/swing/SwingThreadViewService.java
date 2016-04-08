@@ -39,7 +39,7 @@ package com.redhat.thermostat.thread.client.swing;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
-import com.redhat.thermostat.thread.client.swing.impl.SwingThreadView;
+import com.redhat.thermostat.thread.client.swing.internal.SwingThreadView;
 
 public class SwingThreadViewService implements ThreadViewProvider {
     

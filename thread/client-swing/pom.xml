@@ -119,9 +119,9 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.thread.client.swing.osgi,
-              com.redhat.thermostat.thread.client.swing.impl,
-                com.redhat.thermostat.thread.client.swing.impl.timeline,
-                com.redhat.thermostat.thread.client.swing.impl.timeline.model,
+              com.redhat.thermostat.thread.client.swing.internal,
+                com.redhat.thermostat.thread.client.swing.internal.timeline,
+                com.redhat.thermostat.thread.client.swing.internal.timeline.model,
                 com.redhat.thermostat.thread.client.swing.experimental.components,
                 com.redhat.thermostat.thread.client.swing.experimental.utils,
             </Private-Package>

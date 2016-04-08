@@ -124,7 +124,7 @@
               com.redhat.thermostat.thread.client.common.collector,
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.thread.client.common.collector.impl,
+              com.redhat.thermostat.thread.client.common.collector.internal,
               com.redhat.thermostat.thread.client.common.osgi,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->

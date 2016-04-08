@@ -120,8 +120,8 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.thread.common.osgi,
-              com.redhat.thermostat.thread.dao.impl,
-              com.redhat.thermostat.thread.dao.impl.statement,
+              com.redhat.thermostat.thread.dao.internal,
+              com.redhat.thermostat.thread.dao.internal.statement,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

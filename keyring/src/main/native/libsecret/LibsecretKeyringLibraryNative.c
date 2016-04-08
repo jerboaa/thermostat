@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-#include "com_redhat_thermostat_utils_keyring_impl_KeyringImpl.h"
+#include "com_redhat_thermostat_utils_keyring_internal_KeyringImpl.h"
 
 #include <jni.h>
 #include <glib.h>
@@ -58,7 +58,7 @@ static void init(void) {
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperSavePasswordNative
+Java_com_redhat_thermostat_utils_keyring_internal_KeyringImpl_gnomeKeyringWrapperSavePasswordNative
   (JNIEnv *env, jclass GnomeKeyringLibraryNativeClass, jstring jurl, jstring juserName, jbyteArray jpassword, jstring jdescription)
 {
     int passIndex;
@@ -141,7 +141,7 @@ Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperSav
 }
 
 JNIEXPORT jbyteArray JNICALL
-Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperGetPasswordNative
+Java_com_redhat_thermostat_utils_keyring_internal_KeyringImpl_gnomeKeyringWrapperGetPasswordNative
   (JNIEnv *env, jclass GnomeKeyringLibraryNative, jstring jurl, jstring juserName)
 {
     const char *url = (*env)->GetStringUTFChars(env, jurl, NULL);
@@ -188,7 +188,7 @@ Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperGet
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperClearPasswordNative
+Java_com_redhat_thermostat_utils_keyring_internal_KeyringImpl_gnomeKeyringWrapperClearPasswordNative
   (JNIEnv *env, jclass GnomeKeyringLibraryNative, jstring jurl, jstring juserName)
 {
     const char *url = (*env)->GetStringUTFChars(env, jurl, NULL);

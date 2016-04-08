@@ -127,7 +127,7 @@
               com.redhat.thermostat.main,
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.main.impl
+              com.redhat.thermostat.main.internal
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

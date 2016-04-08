@@ -686,7 +686,7 @@ pushd keyring
         -d target/classes \
            src/main/java/com/redhat/thermostat/utils/keyring/Keyring.java \
            src/main/java/com/redhat/thermostat/utils/keyring/KeyringException.java \
-           src/main/java/com/redhat/thermostat/utils/keyring/impl/KeyringImpl.java
+           src/main/java/com/redhat/thermostat/utils/keyring/internal/KeyringImpl.java
   autoreconf --install
   ./configure
   make all

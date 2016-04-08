@@ -18,7 +18,7 @@ MYCFLAGS   += `pkg-config --cflags libsecret-1`
 MYLDFLAGS  += `pkg-config --libs libsecret-1`
 
 .PHONY:
-JNI_LIST = com.redhat.thermostat.utils.keyring.impl.KeyringImpl
+JNI_LIST = com.redhat.thermostat.utils.keyring.internal.KeyringImpl
 
 $(JNI_LIST):
 	$(JAVAH) -force -classpath $(CLASSPATH) -d $(TARGET_DIR) $(JNI_LIST)

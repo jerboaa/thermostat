@@ -40,7 +40,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.utils.keyring.Keyring;
-import com.redhat.thermostat.utils.keyring.impl.KeyringImpl;
+import com.redhat.thermostat.utils.keyring.internal.KeyringImpl;
 
 public class Activator implements BundleActivator {
 

@@ -47,7 +47,7 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.controller.ThreadInformationService;
-import com.redhat.thermostat.thread.client.controller.impl.ThreadInformationServiceImpl;
+import com.redhat.thermostat.thread.client.controller.internal.ThreadInformationServiceImpl;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
 
 import java.util.Dictionary;

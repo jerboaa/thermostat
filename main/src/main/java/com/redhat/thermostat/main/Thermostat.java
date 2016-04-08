@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.main;
 
-import com.redhat.thermostat.main.impl.FrameworkOptionsProcessor;
-import com.redhat.thermostat.main.impl.FrameworkProvider;
+import com.redhat.thermostat.main.internal.FrameworkOptionsProcessor;
+import com.redhat.thermostat.main.internal.FrameworkProvider;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 

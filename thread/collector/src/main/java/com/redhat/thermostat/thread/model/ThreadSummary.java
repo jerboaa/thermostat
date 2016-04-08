@@ -40,7 +40,7 @@ import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
+import com.redhat.thermostat.thread.dao.internal.ThreadDaoCategories;
 import com.redhat.thermostat.storage.core.experimental.statement.Category;
 import com.redhat.thermostat.storage.core.experimental.statement.Indexed;
 

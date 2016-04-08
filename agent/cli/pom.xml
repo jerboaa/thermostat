@@ -122,11 +122,11 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.agent.cli.impl.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.agent.cli.internal.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.agent.cli</Bundle-SymbolicName>
             <Private-Package>
-              com.redhat.thermostat.agent.cli.impl,
-              com.redhat.thermostat.agent.cli.impl.locale,
+              com.redhat.thermostat.agent.cli.internal,
+              com.redhat.thermostat.agent.cli.internal.locale,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

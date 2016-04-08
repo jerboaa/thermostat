@@ -180,9 +180,9 @@ diff --git a/killvm/distribution/thermostat-plugin.xml b/killvm/distribution/the
        </bundles>
      </command>
    </commands>
-diff --git a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
---- a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
-+++ b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
+diff --git a/main/src/main/resources/com/redhat/thermostat/main/internal/bootstrapbundles.properties b/main/src/main/resources/com/redhat/thermostat/main/internal/bootstrapbundles.properties
+--- a/main/src/main/resources/com/redhat/thermostat/main/internal/bootstrapbundles.properties
++++ b/main/src/main/resources/com/redhat/thermostat/main/internal/bootstrapbundles.properties
 @@ -6,4 +6,8 @@
          thermostat-launcher-${project.version}.jar, \
          jline-${jline.version}.jar, \

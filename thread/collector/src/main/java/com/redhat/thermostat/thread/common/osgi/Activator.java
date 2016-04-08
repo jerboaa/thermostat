@@ -48,8 +48,8 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.dao.impl.LockInfoDaoImpl;
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoImpl;
+import com.redhat.thermostat.thread.dao.internal.LockInfoDaoImpl;
+import com.redhat.thermostat.thread.dao.internal.ThreadDaoImpl;
 
 public class Activator implements BundleActivator {
 

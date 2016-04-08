@@ -42,7 +42,7 @@ import com.redhat.thermostat.storage.core.experimental.statement.Category;
 import com.redhat.thermostat.storage.core.experimental.statement.Indexed;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
+import com.redhat.thermostat.thread.dao.internal.ThreadDaoCategories;
 
 /**
  * Represents a single delta variation of a Thread state.
