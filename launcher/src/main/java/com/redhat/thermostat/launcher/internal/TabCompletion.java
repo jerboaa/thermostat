@@ -170,16 +170,13 @@ public class TabCompletion {
                 }
 
                 for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
-                    if (option.getLongOpt().equals("vmId")) {
-                        setupCompletion(command, option, new CompletionFinderTabCompleter(new VmIdsFinder(context)));
-                    } else if (option.getLongOpt().equals("agentId")) {
+                    if (option.getLongOpt().equals("agentId")) {
                         setupCompletion(command, option, new CompletionFinderTabCompleter(new AgentIdsFinder(context)));
                     } else if (option.getLongOpt().equals(Arguments.DB_URL_ARGUMENT)) {
                         setupCompletion(command, option, new DbUrlCompleter(prefs));
                     } else {
                         setupDefaultCompletion(command, option);
                     }
-
                 }
 
                 if (info.needsFileTabCompletions()) {

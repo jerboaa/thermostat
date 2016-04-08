@@ -38,14 +38,13 @@ package com.redhat.thermostat.launcher.internal;
 
 import com.redhat.thermostat.common.cli.CompletionFinder;
 import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,31 +54,22 @@ import java.util.Set;
 
 public class VmIdsFinder implements CompletionFinder {
 
-    private BundleContext context;
+    private DependencyServices dependencyServices;
 
-    public VmIdsFinder(BundleContext context) {
-        this.context = context;
+    public VmIdsFinder(DependencyServices dependencyServices) {
+        this.dependencyServices = dependencyServices;
     }
 
     @Override
     public List<CompletionInfo> findCompletions() {
-        ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
-        ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
-
-        if (vmsDAORef == null
-                || agentInfoDAORef == null) {
+        if (!(dependencyServices.hasService(VmInfoDAO.class) && dependencyServices.hasService(AgentInfoDAO.class))) {
             return Collections.emptyList();
         }
 
-        try {
-            VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
-            AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
+        VmInfoDAO vmDao = dependencyServices.getService(VmInfoDAO.class);
+        AgentInfoDAO agentDao = dependencyServices.getService(AgentInfoDAO.class);
 
-            return findVmIds(vmsDAO, agentInfoDAO, agentInfoDAO.getAgentIds());
-        } finally {
-            context.ungetService(vmsDAORef);
-            context.ungetService(agentInfoDAORef);
-        }
+        return findVmIds(vmDao, agentDao, agentDao.getAgentIds());
     }
 
     private List<CompletionInfo> findVmIds(VmInfoDAO vmsDAO, AgentInfoDAO agentInfoDAO, Set<AgentId> agentIds) {

@@ -46,6 +46,8 @@ import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 import org.junit.Before;
@@ -153,12 +155,12 @@ public class ActivatorTest {
 
         assertCommandIsRegistered(context, "help", HelpCommand.class);
 
-        verify(mockTracker, times(2)).open();
+        verify(mockTracker, times(3)).open();
 
         Action action = actionCaptor.getValue();
         assertNotNull(action);
         activator.stop(context);
-        verify(mockTracker, times(2)).close();
+        verify(mockTracker, times(3)).close();
     }
     
     @Test
@@ -181,6 +183,12 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(shellDeps), actionCaptor.capture()).thenReturn(unusedTracker);
+        Class<?>[] vmIdCompleterDeps = new Class[] {
+                VmInfoDAO.class,
+                AgentInfoDAO.class
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(vmIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
 
         Activator activator = new Activator();
         context.registerService(Keyring.class, mock(Keyring.class), null);
@@ -248,6 +256,12 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(shellDeps), actionCaptor.capture()).thenReturn(shellTracker);
+        Class<?>[] vmIdCompleterDeps = new Class[] {
+                VmInfoDAO.class,
+                AgentInfoDAO.class
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(vmIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
 
         Activator activator = new Activator();
         ConfigurationInfoSource configurationInfoSource = mock(ConfigurationInfoSource.class);
@@ -302,11 +316,59 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(shellDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
+        Class<?>[] vmIdCompleterDeps = new Class[] {
+                VmInfoDAO.class,
+                AgentInfoDAO.class
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(vmIdCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
 
         Activator activator = new Activator();
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(CompleterService.class.getName(), LogLevelCompleterService.class));
+    }
+
+    @Test
+    public void testVmIdCompleterServiceAvailability() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
+        ArgumentCaptor<Action> unusedCaptor = ArgumentCaptor.forClass(Action.class);
+        ArgumentCaptor<Action> vmCaptor = ArgumentCaptor.forClass(Action.class);
+        Class<?>[] launcherDeps = new Class[] {
+                Keyring.class,
+                CommonPaths.class,
+                SSLConfiguration.class,
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(launcherDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
+
+        Class<?>[] shellDeps = new Class[] {
+                CommonPaths.class,
+                ConfigurationInfoSource.class,
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(shellDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
+        Class<?>[] vmIdCompleterDeps = new Class[] {
+                VmInfoDAO.class,
+                AgentInfoDAO.class
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(vmIdCompleterDeps), vmCaptor.capture()).thenReturn(unusedTracker);
+
+        Activator activator = new Activator();
+        activator.start(context);
+
+        Action action = vmCaptor.getValue();
+
+        Map<String, Object> services = new HashMap<>();
+        action.dependenciesAvailable(services);
+
+        assertTrue(context.isServiceRegistered(CompleterService.class.getName(), VmIdCompleterService.class));
+
+        action.dependenciesUnavailable();
+
+        assertTrue(context.isServiceRegistered(CompleterService.class.getName(), VmIdCompleterService.class));
     }
 
     private Path createStubThermostatHome() throws Exception {

@@ -36,9 +36,16 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.text.Collator;
 import java.util.Collections;
@@ -48,17 +55,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import com.redhat.thermostat.common.cli.CompletionInfo;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.testutils.StubBundleContext;
+import static junit.framework.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class VmIdsFinderTest {
 
@@ -89,13 +88,15 @@ public class VmIdsFinderTest {
 
     @Before
     public void setupVmIdsFinder() {
-        StubBundleContext context = new StubBundleContext();
+        DependencyServices dependencyServices = mock(DependencyServices.class);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        when(dependencyServices.hasService(AgentInfoDAO.class)).thenReturn(true);
+        when(dependencyServices.getService(AgentInfoDAO.class)).thenReturn(agentInfoDAO);
         VmInfoDAO vmsInfoDAO = mock(VmInfoDAO.class);
-        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
-        context.registerService(VmInfoDAO.class, vmsInfoDAO, null);
+        when(dependencyServices.hasService(VmInfoDAO.class)).thenReturn(true);
+        when(dependencyServices.getService(VmInfoDAO.class)).thenReturn(vmsInfoDAO);
 
-        vmIdsFinder = new VmIdsFinder(context);
+        vmIdsFinder = new VmIdsFinder(dependencyServices);
 
         Set<AgentId> agentIds = new HashSet<>();
         AgentId agentId1 = mock(AgentId.class);
@@ -173,13 +174,15 @@ public class VmIdsFinderTest {
     }
 
     private void setupVmIdsFinderWithOnlyOneVm() {
-        StubBundleContext context = new StubBundleContext();
+        DependencyServices dependencyServices = mock(DependencyServices.class);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        when(dependencyServices.hasService(AgentInfoDAO.class)).thenReturn(true);
+        when(dependencyServices.getService(AgentInfoDAO.class)).thenReturn(agentInfoDAO);
         VmInfoDAO vmsInfoDAO = mock(VmInfoDAO.class);
-        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
-        context.registerService(VmInfoDAO.class, vmsInfoDAO, null);
+        when(dependencyServices.hasService(VmInfoDAO.class)).thenReturn(true);
+        when(dependencyServices.getService(VmInfoDAO.class)).thenReturn(vmsInfoDAO);
 
-        vmIdsFinderWithOnlyOneVm = new VmIdsFinder(context);
+        vmIdsFinderWithOnlyOneVm = new VmIdsFinder(dependencyServices);
 
         Set<AgentId> agentIds = new HashSet<>();
         AgentId agentId = new AgentId(id0);

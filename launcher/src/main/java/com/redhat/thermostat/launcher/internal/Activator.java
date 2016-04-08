@@ -46,6 +46,8 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.storage.core.DbService;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -141,6 +143,7 @@ public class Activator implements BundleActivator {
 
     private MultipleServiceTracker launcherDepsTracker;
     private MultipleServiceTracker shellTracker;
+    private MultipleServiceTracker vmIdCompleterDepsTracker;
 
     private CommandRegistry registry;
 
@@ -264,8 +267,30 @@ public class Activator implements BundleActivator {
         dbServiceTracker.open();
         registry.registerCommand("help", helpCommand);
 
+        final VmIdCompleterService vmIdCompleterService = new VmIdCompleterService();
+        final Class<?>[] vmIdCompleterDeps = new Class[] { VmInfoDAO.class, AgentInfoDAO.class };
+        vmIdCompleterDepsTracker = new MultipleServiceTracker(context, vmIdCompleterDeps, new Action() {
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                vmIdCompleterService.setVmInfoDAO(vmDao);
+                vmIdCompleterService.setAgentInfoDAO(agentDao);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                vmIdCompleterService.setVmInfoDAO(null);
+                vmIdCompleterService.setAgentInfoDAO(null);
+            }
+        });
+        vmIdCompleterDepsTracker.open();
+
         LogLevelCompleterService logLevelCompleterService = new LogLevelCompleterService();
         context.registerService(CompleterService.class.getName(), logLevelCompleterService, null);
+
+        context.registerService(CompleterService.class.getName(), vmIdCompleterService, null);
     }
 
     @Override
@@ -281,6 +306,9 @@ public class Activator implements BundleActivator {
         }
         if (shellTracker != null) {
             shellTracker.close();
+        }
+        if (vmIdCompleterDepsTracker != null) {
+            vmIdCompleterDepsTracker.close();
         }
         registry.unregisterCommands();
     }
