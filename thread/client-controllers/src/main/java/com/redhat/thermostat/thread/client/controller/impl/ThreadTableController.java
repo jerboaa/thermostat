@@ -97,12 +97,17 @@ public class ThreadTableController extends CommonController {
 
         @Override
         public void run() {
-
-            SessionID session = collector.getLastThreadSession();
+            SessionID session = ThreadTableController.this.session;
             if (session == null) {
-                // ok, no data, let's skip this round
-                return;
+                // no session selected, but let's try to default to the last
+                // available
+                session = collector.getLastThreadSession();
+                if (session == null) {
+                    // ok, really no data, let's skip this round
+                    return;
+                }
             }
+
             if (lastSession == null ||
                     !session.get().equals(lastSession.get())) {
                 // since we only visualise one session at a time and this is

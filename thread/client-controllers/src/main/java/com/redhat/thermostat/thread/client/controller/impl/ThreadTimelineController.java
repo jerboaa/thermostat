@@ -46,6 +46,7 @@ import com.redhat.thermostat.thread.client.common.model.timeline.TimelineProbe;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadState;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -94,12 +95,15 @@ public class ThreadTimelineController extends CommonController {
 
         @Override
         public void run() {
-            // FIXME: show only the last sessions for now, support for
-            // filtering over sessions will come later
-            SessionID session = collector.getLastThreadSession();
+            SessionID session = ThreadTimelineController.this.session;
             if (session == null) {
-                // ok, no data, let's skip this round
-                return;
+                // no session selected, but let's try to default to the last
+                // available
+                session = collector.getLastThreadSession();
+                if (session == null) {
+                    // ok, really no data, let's skip this round
+                    return;
+                }
             }
 
             if (lastSession == null ||

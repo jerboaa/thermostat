@@ -67,6 +67,7 @@ public class ThreadTimelineControllerTest {
         collector = mock(ThreadCollector.class);
         timer = mock(Timer.class);
         session = mock(SessionID.class);
+        when(session.get()).thenReturn("42");
         when(collector.getLastThreadSession()).thenReturn(session);
     }
 
@@ -83,6 +84,31 @@ public class ThreadTimelineControllerTest {
         timerAction.run();
 
         verify(collector).getLastThreadSession();
+        verify(collector).getThreadRange(session);
+    }
+
+    @Test
+    public void verifySessionIfSet() {
+        ArgumentCaptor<Runnable> captor =
+                ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(timer).setAction(captor.capture());
+
+        SessionID newSession = mock(SessionID.class);
+        when(newSession.get()).thenReturn("0");
+
+        ThreadTimelineController controller =
+                new ThreadTimelineController(view, collector, timer);
+        Runnable timerAction = captor.getValue();
+
+        timerAction.run();
+
+        verify(collector).getThreadRange(session);
+
+        controller.setSession(newSession);
+
+        timerAction.run();
+
+        verify(collector).getThreadRange(newSession);
     }
 
     @Test

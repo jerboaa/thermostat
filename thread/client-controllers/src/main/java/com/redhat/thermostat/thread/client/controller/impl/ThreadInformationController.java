@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -59,7 +60,12 @@ import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView.ThreadAction;
 import com.redhat.thermostat.thread.client.controller.impl.cache.AppCache;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
+import com.redhat.thermostat.thread.model.SessionID;
+import com.redhat.thermostat.thread.model.ThreadSession;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,6 +87,12 @@ public class ThreadInformationController implements InformationServiceController
 
     private AppCache cache;
     private ProgressNotifier notifier;
+
+    private CommonController threadTimeline;
+    private CommonController threadTableController;
+    private CommonController threadCountController;
+    private VmDeadLockController deadLockController;
+    private CommonController lockTableController;
 
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        VmInfoDAO vmInfoDao,
@@ -139,11 +151,47 @@ public class ThreadInformationController implements InformationServiceController
                 stopHarvester();
                 view.setRecording(ThreadView.MonitoringState.STOPPED, false);
                 break;
-                
+
+            case REQUEST_DISPLAY_RECORDED_SESSIONS:
+                loadSessionsList();
+                break;
+
+            case REQUEST_LOAD_SESSION: {
+                ThreadSession session = (ThreadSession) actionEvent.getPayload();
+                if (session != null) {
+                    threadTimeline.setSession(session.getSessionID());
+                    threadTableController.setSession(session.getSessionID());
+                }
+            } break;
+
             default:
                 logger.log(Level.WARNING, "unknown action: " + actionEvent.getActionId());
                 break;
             }
+        }
+
+        private class SessionComparator implements Comparator<ThreadSession> {
+            @Override
+            public int compare(ThreadSession o1, ThreadSession o2) {
+                // TODO: descending order only for now, we should allow the users
+                // to sort this via the UI though
+                int result = Long.compare(o1.getTimeStamp(), o2.getTimeStamp());
+                return -result;
+            }
+        }
+
+        private void loadSessionsList() {
+            submitTask(new Runnable() {
+                @Override
+                public void run() {
+                    Range<Long> range = new Range<>(0L, System.currentTimeMillis());
+                    List<ThreadSession> threadSessions = collector.getThreadSessions(range);
+
+                    Collections.sort(threadSessions, new SessionComparator());
+                    view.displayTimelineSessionList(threadSessions);
+
+                }
+            }, translator.localize(LocaleResources.LOADING_SESSION_LIST));
         }
 
         private void startHarvester() {
@@ -194,11 +242,28 @@ public class ThreadInformationController implements InformationServiceController
             view.displayThreadDetails((ThreadTableBean) actionEvent.getPayload());
         }
     }
-    
+
+    void ___injectControllersForTesting(ThreadTimelineController timeline,
+                                        ThreadTableController table,
+                                        ThreadCountController count,
+                                        LockController lock,
+                                        VmDeadLockController deadLock)
+    {
+        this.threadTableController = table;
+        this.threadCountController = count;
+        this.deadLockController = deadLock;
+        this.threadTimeline = timeline;
+        this.lockTableController = lock;
+    }
+
+    void ___injectCollectorForTesting(ThreadCollector collector)   {
+        this.collector = collector;
+    }
+
     private void initControllers() {
         TimerFactory tf = appService.getTimerFactory();
 
-        VmDeadLockController deadLockController =
+        deadLockController =
                 new VmDeadLockController(vmInfoDAO, ref, view.createDeadLockView(), collector, tf.createTimer(),
                         appService.getApplicationExecutor(), notifier);
         deadLockController.initialize();
@@ -206,21 +271,22 @@ public class ThreadInformationController implements InformationServiceController
         ThreadTableView threadTableView = view.createThreadTableView();
         threadTableView.addThreadSelectionActionListener(new ThreadSelectionActionListener());
         
-        CommonController threadCountController =
+        threadCountController =
                 new ThreadCountController(view.createThreadCountView(), collector, tf.createTimer());
         threadCountController.initialize();
 
-        CommonController threadTableController =
+        threadTableController =
                 new ThreadTableController(threadTableView, collector, tf.createTimer());
         threadTableController.initialize();
         
-        CommonController threadTimeline =
-                new ThreadTimelineController(view.createThreadTimelineView(),
-                                             collector,
-                                             tf.createTimer());
+        threadTimeline = new ThreadTimelineController(view.createThreadTimelineView(),
+                                                      collector,
+                                                      tf.createTimer());
         threadTimeline.initialize();
+        SessionID lastThreadSession = collector.getLastThreadSession();
+        threadTimeline.setSession(lastThreadSession);
 
-        CommonController lockTableController =
+        lockTableController =
                 new LockController(view.createLockView(),
                                    tf.createTimer(),
                                    lockInfoDao,

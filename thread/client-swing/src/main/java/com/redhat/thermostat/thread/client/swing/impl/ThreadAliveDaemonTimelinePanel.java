@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+
 import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -43,9 +46,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingConstants;
-
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 
 @SuppressWarnings("serial")
 class ThreadAliveDaemonTimelinePanel extends JPanel {
@@ -60,10 +60,8 @@ class ThreadAliveDaemonTimelinePanel extends JPanel {
      * Create the panel.
      */
     public ThreadAliveDaemonTimelinePanel() {
-        
         JPanel runningPanel = new JPanel();
-        runningPanel.setOpaque(false);
-        
+
         timelinePanel = new JPanel();
         timelinePanel.setOpaque(false);
         timelinePanel.setLayout(new BoxLayout(timelinePanel, BoxLayout.X_AXIS));

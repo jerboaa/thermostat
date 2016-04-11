@@ -36,20 +36,23 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import java.util.concurrent.TimeUnit;
-
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.thread.model.SessionID;
+
+import java.util.concurrent.TimeUnit;
 
 public abstract class CommonController {
     
     protected Timer timer;
     protected BasicView view;
-    
+
+    protected volatile SessionID session;
+
     public CommonController(Timer timer, BasicView view) {
         this.view = view;
         this.timer = timer;
@@ -84,5 +87,9 @@ public abstract class CommonController {
 
     protected void onViewVisible() {}
     protected void onViewHidden() {}
+
+    public void setSession(SessionID session) {
+        this.session = session;
+    }
 }
 

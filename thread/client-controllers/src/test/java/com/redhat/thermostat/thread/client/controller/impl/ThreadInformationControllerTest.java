@@ -43,6 +43,7 @@ import com.redhat.thermostat.common.ApplicationCache;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -55,14 +56,20 @@ import com.redhat.thermostat.thread.client.common.view.LockView;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
-import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
-
+import com.redhat.thermostat.thread.dao.LockInfoDao;
+import com.redhat.thermostat.thread.model.SessionID;
+import com.redhat.thermostat.thread.model.ThreadSession;
+import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.any;
@@ -71,8 +78,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.concurrent.ExecutorService;
 
 public class ThreadInformationControllerTest {
 
@@ -275,6 +280,71 @@ public class ThreadInformationControllerTest {
         
         threadTableActionListener.actionPerformed(event);
         verify(view).displayThreadDetails(bean);
+    }
+
+    @Test
+    public void verifySessionListDisplays() {
+
+        ThreadCollector collector = mock(ThreadCollector.class);
+        List<ThreadSession> list = new ArrayList<>();
+        list.add(mock(ThreadSession.class));
+        list.add(mock(ThreadSession.class));
+
+        when(collector.getThreadSessions(any(Range.class))).thenReturn(list);
+
+        ActionListener<ThreadView.ThreadAction> threadActionListener;
+        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addThreadActionListener(viewArgumentCaptor.capture());
+
+        ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(appExecutor).execute(taskCaptor.capture());
+
+        createController();
+
+        controller.___injectCollectorForTesting(collector);
+
+        threadActionListener = viewArgumentCaptor.getValue();
+        ActionEvent<ThreadView.ThreadAction> action = new ActionEvent<>(view, ThreadView.ThreadAction.REQUEST_DISPLAY_RECORDED_SESSIONS);
+        threadActionListener.actionPerformed(action);
+
+        Runnable runnable = taskCaptor.getValue();
+        runnable.run();
+
+        ArgumentCaptor<List> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(view).displayTimelineSessionList(listCaptor.capture());
+
+        Assert.assertTrue(listCaptor.getValue().equals(list));
+    }
+
+    @Test
+    public void verifySessionLoads() {
+
+        ThreadTimelineController timeline = mock(ThreadTimelineController.class);
+        ThreadTableController table = mock(ThreadTableController.class);
+        ThreadCountController count = mock(ThreadCountController.class);
+        LockController lock = mock(LockController.class);
+        VmDeadLockController deadLock = mock(VmDeadLockController.class);
+
+        ThreadSession session = mock(ThreadSession.class);
+        SessionID id = mock(SessionID.class);
+        when(session.getSessionID()).thenReturn(id);
+
+        ActionListener<ThreadView.ThreadAction> threadActionListener;
+        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addThreadActionListener(viewArgumentCaptor.capture());
+
+        createController();
+
+        controller.___injectControllersForTesting(timeline, table, count, lock, deadLock);
+
+        threadActionListener = viewArgumentCaptor.getValue();
+        ActionEvent<ThreadView.ThreadAction> action = new ActionEvent<>(view, ThreadView.ThreadAction.REQUEST_LOAD_SESSION);
+        action.setPayload(session);
+
+        threadActionListener.actionPerformed(action);
+
+        verify(timeline).setSession(id);
+        verify(table).setSession(id);
     }
 }
 

@@ -44,12 +44,17 @@ import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
+import com.redhat.thermostat.thread.model.ThreadSession;
+
+import java.util.List;
 
 public abstract class ThreadView extends BasicView implements UIComponent {
 
     public enum ThreadAction {
         START_LIVE_RECORDING,
-        STOP_LIVE_RECORDING
+        STOP_LIVE_RECORDING,
+        REQUEST_DISPLAY_RECORDED_SESSIONS,
+        REQUEST_LOAD_SESSION,
     };
 
     public enum MonitoringState implements ToggleActionState {
@@ -120,6 +125,7 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     public abstract void displayThreadDetails(ThreadTableBean thread);
 
     public abstract VmDeadLockView createDeadLockView();
+    public abstract void displayTimelineSessionList(List<ThreadSession> threadSessions);
 
 }
 

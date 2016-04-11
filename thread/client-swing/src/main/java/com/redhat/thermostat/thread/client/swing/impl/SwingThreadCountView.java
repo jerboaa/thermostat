@@ -36,17 +36,16 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
-import java.awt.Component;
+import com.redhat.thermostat.client.swing.ComponentVisibleListener;
+import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ChartPanel;
+import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
+import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-
-import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.ChartPanel;
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
-import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
-import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import javax.swing.SwingWorker;
+import java.awt.Component;
 
 public class SwingThreadCountView extends ThreadCountView implements SwingComponent {
     
@@ -100,6 +99,7 @@ public class SwingThreadCountView extends ThreadCountView implements SwingCompon
                 pane.removeAll();
                 
                 ChartPanel charts = new ChartPanel(model.createChart(pane.getWidth(), pane.getBackground()));
+                charts.setName("threadChartPanel");
                 pane.add(charts);
                 pane.revalidate();
                 pane.repaint();

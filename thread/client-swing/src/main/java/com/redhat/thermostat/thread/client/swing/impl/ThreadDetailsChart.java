@@ -43,7 +43,6 @@ import javax.swing.JPanel;
 public class ThreadDetailsChart extends JPanel {
     
     public ThreadDetailsChart() {
-        setOpaque(false);
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
     }
 }

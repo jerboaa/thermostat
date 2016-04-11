@@ -36,13 +36,6 @@
 
 package com.redhat.thermostat.thread.client.common.chart;
 
-import java.awt.Color;
-import java.awt.GradientPaint;
-import java.awt.Paint;
-import java.util.Date;
-
-import javax.swing.plaf.ColorUIResource;
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -55,9 +48,16 @@ import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import javax.swing.plaf.ColorUIResource;
+import java.awt.Color;
+import java.awt.GradientPaint;
+import java.awt.Paint;
+import java.util.Date;
+
 public class LivingDaemonThreadDifferenceChart {
     
     private static final ColorUIResource MAIN_BAR_BASE_COLOR = new ColorUIResource(0x4A90D9);
+    private static final ColorUIResource MAIN_BASE_COLOR = new ColorUIResource(0xFFFFFF);
 
     private static final String lock = new String("chartLock");
 
@@ -104,8 +104,10 @@ public class LivingDaemonThreadDifferenceChart {
                 false   // URLs
         );
 
-        Paint paint = new GradientPaint(0, 0, MAIN_BAR_BASE_COLOR, 0, height, bgColor);
-        Paint paint2 = new GradientPaint(0, 0, Color.GREEN, 0, height, bgColor);
+        chart.setBackgroundPaint(bgColor);
+
+        Paint paint = new GradientPaint(0, 0, MAIN_BAR_BASE_COLOR, 0, height, MAIN_BASE_COLOR);
+        Paint paint2 = new GradientPaint(0, 0, Color.GREEN, 0, height, MAIN_BASE_COLOR);
 
         XYPlot plot = (XYPlot) chart.getPlot();
         plot.setDomainPannable(true);

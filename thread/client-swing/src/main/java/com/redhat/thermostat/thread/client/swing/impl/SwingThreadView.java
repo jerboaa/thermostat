@@ -51,18 +51,21 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
-
-import java.awt.Component;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import com.redhat.thermostat.thread.model.ThreadSession;
 
 import javax.swing.JOptionPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import java.awt.Component;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.List;
 
 public class SwingThreadView extends ThreadView implements SwingComponent {
     
@@ -120,8 +123,8 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                     }
                 });
 
-        panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING).getContents());
-        panel.getToggleButton().addItemListener(new ItemListener()
+        panel.getRecordingToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING).getContents());
+        panel.getRecordingToggleButton().addItemListener(new ItemListener()
         {
             @Override
             public void itemStateChanged(ItemEvent e) {
@@ -129,10 +132,10 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                 ThreadAction action = null;                
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     action = ThreadAction.START_LIVE_RECORDING;
-                    panel.getToggleButton().setToolTipText(t.localize(LocaleResources.STOP_RECORDING).getContents());
+                    panel.getRecordingToggleButton().setToolTipText(t.localize(LocaleResources.STOP_RECORDING).getContents());
                 } else {
                     action = ThreadAction.STOP_LIVE_RECORDING;
-                    panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING).getContents());
+                    panel.getRecordingToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING).getContents());
                 }
                 
                 if (skipNotification) return;
@@ -149,6 +152,33 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             }
         });
 
+        panel.getShowRecordedSessionsButton().setToolTipText(t.localize(LocaleResources.RECORDING_LIST_HINT).getContents());
+        panel.getShowRecordedSessionsButton().addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() != ItemEvent.SELECTED) {
+                    panel.toggleOverlayPanel(false);
+                    return;
+                }
+
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        notifier.fireAction(ThreadAction.REQUEST_DISPLAY_RECORDED_SESSIONS);
+                        return null;
+                    }
+                };
+                worker.execute();
+            }
+        });
+
+        panel.getSessionsPanel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                notifier.fireAction(ThreadAction.REQUEST_LOAD_SESSION,
+                                    panel.getSessionsPanel().getSelectedValue());
+            }
+        });
         setupTopPane();
         setupBottomPane();
     }
@@ -218,9 +248,9 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             public void run() {
                 if (!notify) skipNotification = true;
                 if (!viewControlsEnabled) {
-                    panel.getToggleButton().setToggleActionState(MonitoringState.DISABLED);
+                    panel.getRecordingToggleButton().setToggleActionState(MonitoringState.DISABLED);
                 } else {
-                    panel.getToggleButton().setToggleActionState(monitoringState);
+                    panel.getRecordingToggleButton().setToggleActionState(monitoringState);
                 }
                 if (!notify) skipNotification = false;
             }
@@ -288,6 +318,17 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     @Override
     public LockView createLockView() {
         return lockView;
+    }
+
+    @Override
+    public void displayTimelineSessionList(final List<ThreadSession> threadSessions) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                panel.setOverlayContent(threadSessions);
+                panel.toggleOverlayPanel(true);
+            }
+        });
     }
 }
 

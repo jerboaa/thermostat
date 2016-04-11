@@ -50,6 +50,8 @@ public enum LocaleResources {
 
     STARTING_MONITORING,
     STOPPING_MONITORING,
+
+    LOADING_SESSION_LIST,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.thread.client.controller.impl.strings";

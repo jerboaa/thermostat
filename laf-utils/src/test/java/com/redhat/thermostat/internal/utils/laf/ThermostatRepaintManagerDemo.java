@@ -101,9 +101,7 @@ public class ThermostatRepaintManagerDemo {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-
-                System.err.println("STARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
-
+                
                 RepaintManager.setCurrentManager(new ThermostatRepaintManager());
 
                 JFrame frame = new JFrame();

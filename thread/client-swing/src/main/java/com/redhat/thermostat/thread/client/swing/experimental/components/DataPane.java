@@ -57,6 +57,7 @@ public class DataPane extends ContentPane {
         this.top = top;
         this.bottom = bottom;
         setLayout(new BorderLayout());
+        setOpaque(false);
     }
 
     @Override
