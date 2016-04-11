@@ -36,6 +36,21 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
+import com.redhat.thermostat.client.swing.ThermostatSwingCursors;
+import com.redhat.thermostat.client.swing.components.ShadowLabel;
+
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.BorderFactory;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -61,22 +76,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Stack;
 
-import javax.swing.AbstractAction;
-import javax.swing.ActionMap;
-import javax.swing.BorderFactory;
-import javax.swing.InputMap;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.LineBorder;
-
-import com.redhat.thermostat.client.swing.ThermostatSwingCursors;
-
 /**
  * This class directs the representation of a tree model as a graphical TreeMap. It extends
  * {@link JComponent} and as such can be used like a typical Swing object.
@@ -95,7 +94,7 @@ public class TreeMapComponent extends JComponent {
     /**
      * Label Object to clone for faster initialization.
      */
-    private Label cachedLabel;
+    private ShadowLabel cachedLabel;
 
     /**
      * The tree to render as TreeMap.
@@ -119,15 +118,20 @@ public class TreeMapComponent extends JComponent {
      */
     private static final String TITLE = "";
 
+    @Override
+    public boolean isOptimizedDrawingEnabled() {
+        return false;
+    }
+
     /*
-     * TreeMap border styles
-     */
+         * TreeMap border styles
+         */
     public static final int BORDER_SIMPLE = 0;
     public static final int BORDER_FLAT = 1;
     public static final int BORDER_ETCHED_LOWERED = 2;
     public static final int BORDER_ETCHED_RAISED = 3;
 
-    private int borderStyle = BORDER_ETCHED_LOWERED;
+    private int borderStyle = BORDER_SIMPLE;
 
     /**
      * Font and size for this component's label.
@@ -178,6 +182,16 @@ public class TreeMapComponent extends JComponent {
             Color.decode("#E4D1FC"), // purple
             Color.decode("#FFFFFF"), // white
             Color.decode("#CDF9D4")  // green
+    };
+    static final Color[] borderColors = {
+            Color.decode("#EBC2C6"), // red
+            Color.decode("#A8C2E7"), // blue
+            Color.decode("#D6D6D6"), // grey
+            Color.decode("#E3BCA9"), // orange
+            Color.decode("#94CDDE"), // aqua
+            Color.decode("#D1C0E7"), // purple
+            Color.decode("#EEEEEE"), // white
+            Color.decode("#BEE7C5")  // green
     };
 
     public static final Color START_COLOR = colors[0];
@@ -257,14 +271,16 @@ public class TreeMapComponent extends JComponent {
         rootTile.setBounds(rectangle.getBounds());
         rootTile.setNode(tree);
         rootTile.setColor(colors[tree.getDepth() % colors.length]);
+        rootTile.setBorderColor(borderColors[tree.getDepth() % borderColors.length]);
+
         rootTile.setToolTipText(
                 Objects.requireNonNull(this.tooltipRenderer).render(tree));
-        cachedLabel = new Label(TITLE + tree.getLabel());
+        cachedLabel = createLabel(TITLE + tree.getLabel());
         addLabelIfPossible(TITLE + tree.getLabel(), rootTile);
     }
 
     /**
-     * This method, with the aid of {@link #processNode(TreeMapNode, Rectangle2D.Double, Color,
+     * This method, with the aid of {@link #processNode(TreeMapNode, Rectangle2D.Double, Color, Color, Tile)}
      * Tile)}, generates (if appropriate) the tile representing each node in the subtree rooted at
      * {@param root}.
      *
@@ -281,14 +297,16 @@ public class TreeMapComponent extends JComponent {
                 getSquarifiedRectangles(elements, rectangle);
 
         // any children will all have the same color
-        Color nextColor = getNextColor(rootTile.getColor());
+        Color nextColor = getNextColor(rootTile.getColor(), colors);
+        Color nextBorderColor = getNextColor(rootTile.getBorderColor(), borderColors);
 
         for (int i = 0; i < elements.size(); i++) {
             TreeMapNode child = elements.get(i);
 
             if (rectangleHasDrawableSides(squarifiedMap.get(child))) {
                 // attempt to add a tile for this node
-                processNode(child, squarifiedMap.get(child), nextColor, rootTile);
+                processNode(child, squarifiedMap.get(child), nextColor,
+                            nextBorderColor, rootTile);
             }
         }
     }
@@ -303,14 +321,15 @@ public class TreeMapComponent extends JComponent {
      * @param color the color of the tile.
      * @param parentTile the parent to which a tile, if created, is added.
      */
-    private void processNode(TreeMapNode node, Rectangle2D.Double rectangle, Color color,
-                             Tile parentTile) {
-
+    private void processNode(TreeMapNode node, Rectangle2D.Double rectangle,
+                             Color color, Color borderColor, Tile parentTile)
+    {
         Tile tile = addTileIfPossible(rectangle, node.getLabel(), parentTile);
 
         if (tile != null) {
             tile.setNode(node);
             tile.setColor(color);
+            tile.setBorderColor(borderColor);
             tile.setToolTipText(
                     Objects.requireNonNull(this.tooltipRenderer).render(node));
             processSubtree(node, rectangle, tile);
@@ -328,7 +347,7 @@ public class TreeMapComponent extends JComponent {
     /**
      * Package-private for testing.
      */
-    static Color getNextColor(Color currentColor) {
+    static Color getNextColor(Color currentColor, Color[] colors) {
         if (currentColor != null) {
             for (int i = 0; i < colors.length; i++) {
                 if (currentColor.equals(colors[i])) {
@@ -395,7 +414,7 @@ public class TreeMapComponent extends JComponent {
      * @param cont the parent container which will contain the new label.
      * @return the cloned label.
      */
-    private Label addLabelIfPossible(String s, Container cont) {
+    private ShadowLabel addLabelIfPossible(String s, Container cont) {
         if (s == null || s.equals("")) {
             return null;
         }
@@ -408,7 +427,7 @@ public class TreeMapComponent extends JComponent {
 
         // if the container is greater than the label, add it to the container
         if (componentW > fontArea.width && componentH > fontArea.height) {
-            Label label = new Label(cachedLabel);
+            ShadowLabel label = createLabel(cachedLabel);
             label.setBounds(5, 1, cont.getWidth(), fontArea.height);
             label.setText(s);
             cont.add(label);
@@ -668,24 +687,22 @@ public class TreeMapComponent extends JComponent {
         return lastClicked;
     }
 
-    class Label extends JLabel {
+    private ShadowLabel createLabel(ShadowLabel other) {
+        ShadowLabel label = createLabel(other.getText());
+        label.setFont(other.getFont());
+        label.setBackground(other.getBackground());
+        label.setBounds(other.getBounds());
+        label.setBorder(other.getBorder());
+        return label;
+    }
 
-        private static final long serialVersionUID = 1L;
-
-        public Label(String s) {
-            super(s);
-            setFont(FONT);
-            setBounds(0, 0, getPreferredSize().width, FONT_SIZE);
-        }
-
-        protected Label(Label other) {
-            this(other.getText());
-            this.setFont(other.getFont());
-            this.setBackground(other.getBackground());
-            this.setBounds(other.getBounds());
-            this.setBorder(other.getBorder());
-        }
-    }    
+    private ShadowLabel createLabel(String text) {
+        ShadowLabel label = new ShadowLabel();
+        label.setText(text);
+        label.setFont(FONT);
+        label.setBounds(0, 0, getPreferredSize().width, FONT_SIZE);
+        return label;
+    }
 
     /**
      * This class describes a graphical representation for a {@link TreeMapNode} and enables
@@ -704,6 +721,12 @@ public class TreeMapComponent extends JComponent {
          * The background color. It depends by the node's depth.
          */
         private Color color;
+
+        /**
+         * The border color. It depends by the node's depth, and only
+         * painted if the border is "simple".
+         */
+        private Color borderColor;
 
         /**
          * Reference to this.
@@ -741,12 +764,26 @@ public class TreeMapComponent extends JComponent {
             this.color = c;
         }
 
+        public Color getBorderColor() {
+            return borderColor;
+        }
+
+        public void setBorderColor(Color borderColor) {
+            this.borderColor = borderColor;
+        }
+
         @Override
         public void paintComponent(Graphics g) {
             super.paintComponent(g); 
             if (this.color != null) {
                 g.setColor(color);
                 g.fillRect(0, 0, getWidth(), getHeight());
+                if (borderStyle == BORDER_SIMPLE) {
+                    // paint a very subtle border using the current color
+                    // as a base
+                    g.setColor(borderColor);
+                    g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+                }
             }
         }   
 
@@ -833,6 +870,7 @@ public class TreeMapComponent extends JComponent {
             lastClicked = thisComponent;
             if (!getNode().isLeaf()) {
                 setColor(getColor().darker());
+                setBorderColor(getColor().darker());
             }
             repaint();
             notifySelectionToObservers(node);

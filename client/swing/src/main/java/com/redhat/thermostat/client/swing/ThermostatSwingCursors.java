@@ -36,29 +36,14 @@
 
 package com.redhat.thermostat.client.swing;
 
-import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
-
 import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Toolkit;
 
 public final class ThermostatSwingCursors {
-
-    private static final Dimension BEST_CURSOR_DIMENSION = Toolkit.getDefaultToolkit().getBestCursorSize(18, 18);
-    private static final int CURSOR_SIZE = (int) Math.min(BEST_CURSOR_DIMENSION.getWidth(), BEST_CURSOR_DIMENSION.getHeight());
 
     private ThermostatSwingCursors() {}
 
     public static Cursor getZoomIconCursor() {
-        char zoomIconId = '\uf00e';
-        Point zoomCursorHotspot = new Point(CURSOR_SIZE / 2, CURSOR_SIZE / 2);
-        String zoomCursorName = "zoom-cursor";
-        return Toolkit.getDefaultToolkit().createCustomCursor(
-                new FontAwesomeIcon(zoomIconId, CURSOR_SIZE).getImage(),
-                zoomCursorHotspot,
-                zoomCursorName
-        );
+        return Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
     }
 
 }

@@ -36,15 +36,18 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -63,18 +66,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class TreeMapComponentTest {
 
@@ -299,19 +298,19 @@ public class TreeMapComponentTest {
                 Color rootColor = Objects.requireNonNull(rootTile.getColor());
                 assertEquals(TreeMapComponent.START_COLOR, rootColor);
 
-                checkTileColorSetup(rootTile, rootColor);
+                checkTileColorSetup(rootTile, rootColor, TreeMapComponent.colors);
                 checkTileColorConsistency(path, rootTile);
             }
         });
     }
 
-    private void checkTileColorSetup(TreeMapComponent.Tile tile, Color parentColor) {
-        Color expectedColor = TreeMapComponent.getNextColor(parentColor);
+    private void checkTileColorSetup(TreeMapComponent.Tile tile, Color parentColor, Color[] colors) {
+        Color expectedColor = TreeMapComponent.getNextColor(parentColor, colors);
         for (Component component : Arrays.asList(tile.getComponents())) {
             if (component instanceof TreeMapComponent.Tile) {
                 TreeMapComponent.Tile childTile = ((TreeMapComponent.Tile) component);
                 assertEquals(expectedColor, childTile.getColor());
-                checkTileColorSetup(childTile, expectedColor);
+                checkTileColorSetup(childTile, expectedColor, colors);
             }
         }
     }
