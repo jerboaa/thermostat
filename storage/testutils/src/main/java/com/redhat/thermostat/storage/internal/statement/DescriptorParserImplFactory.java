@@ -60,7 +60,7 @@ class DescriptorParserImplFactory {
         case BASIC:
             return new BasicDescriptorParser<>(getBasicBackingStorage(), desc);
         case SEMANTIC:
-            return new SemanticsEnabledDescriptorParser<>(getSemanticBackingStorage(), desc);
+            return new SemanticsEnabledDescriptorParser<>(getSemanticBackingStorage(desc.getDescriptor()), desc);
         default:
             throw new IllegalStateException("Not implemented");
         }
@@ -71,14 +71,21 @@ class DescriptorParserImplFactory {
     }
     
     @SuppressWarnings("unchecked")
-    private BackingStorage getSemanticBackingStorage() {
+    private BackingStorage getSemanticBackingStorage(String desc) {
         BackingStorage storage = mock(BackingStorage.class);
         when(storage.createAdd(any(Category.class))).thenReturn(mock(Add.class));
         when(storage.createUpdate(any(Category.class))).thenReturn(mock(Update.class));
         when(storage.createRemove(any(Category.class))).thenReturn(mock(Remove.class));
         when(storage.createReplace(any(Category.class))).thenReturn(mock(Replace.class));
         when(storage.createQuery(any(Category.class))).thenReturn(mock(Query.class));
-        when(storage.createAggregateQuery(any(AggregateFunction.class), any(Category.class))).thenReturn(mock(AggregateQuery.class));
+
+        AggregateQuery aggregateQuery = mock(AggregateQuery.class);
+        if (desc.contains("QUERY-COUNT")) {
+            when(aggregateQuery.getAggregateFunction()).thenReturn(AggregateFunction.COUNT);
+        } else {
+            when(aggregateQuery.getAggregateFunction()).thenReturn(AggregateFunction.DISTINCT);
+        }
+        when(storage.createAggregateQuery(any(AggregateFunction.class), any(Category.class))).thenReturn(aggregateQuery);
         return storage;
     }
 }

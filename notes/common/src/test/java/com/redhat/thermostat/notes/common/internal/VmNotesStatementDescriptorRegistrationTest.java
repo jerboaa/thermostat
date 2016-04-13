@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.notes.common.internal;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
@@ -50,9 +52,11 @@ public class VmNotesStatementDescriptorRegistrationTest {
         Set<String> descriptors = statementRegistration.getStatementDescriptors();
 
         assertTrue(descriptors.contains(VmNoteDAOImpl.ADD_VM_NOTE));
+        assertTrue(descriptors.contains(VmNoteDAOImpl.QUERY_COUNT_VM_NOTES_BY_VM_ID));
         assertTrue(descriptors.contains(VmNoteDAOImpl.QUERY_VM_NOTE_BY_ID));
         assertTrue(descriptors.contains(VmNoteDAOImpl.QUERY_VM_NOTES_BY_VM_ID));
         assertTrue(descriptors.contains(VmNoteDAOImpl.UPDATE_VM_NOTE));
         assertTrue(descriptors.contains(VmNoteDAOImpl.REMOVE_VM_NOTE_BY_ID));
+        assertThat(descriptors.size(), is(6));
     }
 }

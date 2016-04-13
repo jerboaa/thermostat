@@ -34,30 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.common;
+package com.redhat.thermostat.notes.common.internal;
 
-import java.util.List;
+import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Ref;
+import java.util.Set;
 
-public interface NoteDAO<T extends Ref, U extends Note> {
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-    Key<String> KEY_CONTENT = new Key<>("content");
-    Key<String> KEY_ID = new Key<>("id");
+public class HostNotesStatementDescriptorRegistrationTest {
 
-    void add(U note);
+    @Test
+    public void verifyVmNotesAddAndQueryDescriptorsAreIncluded() {
+        HostNotesStatementDescriptorRegistration statementRegistration = new HostNotesStatementDescriptorRegistration();
+        Set<String> descriptors = statementRegistration.getStatementDescriptors();
 
-    /** Returns a {@link List} of {@link HostNote} objects. May return an empty list */
-    List<U> getFor(T ref);
+        assertTrue(descriptors.contains(HostNoteDAOImpl.ADD_HOST_NOTE));
+        assertTrue(descriptors.contains(HostNoteDAOImpl.QUERY_COUNT_HOST_NOTES_BY_AGENT_ID));
+        assertTrue(descriptors.contains(HostNoteDAOImpl.QUERY_HOST_NOTE_BY_ID));
+        assertTrue(descriptors.contains(HostNoteDAOImpl.QUERY_HOST_NOTES_BY_AGENT_ID));
+        assertTrue(descriptors.contains(HostNoteDAOImpl.REMOVE_HOST_NOTE_BY_ID));
+        assertTrue(descriptors.contains(HostNoteDAOImpl.UPDATE_HOST_NOTE));
+        assertThat(descriptors.size(), is(6));
+    }
 
-    long getCount(T ref);
-
-    U getById(T ref, String id);
-
-    void update(U note);
-
-    void remove(U note);
-
-    void removeById(T ref, String id);
 }

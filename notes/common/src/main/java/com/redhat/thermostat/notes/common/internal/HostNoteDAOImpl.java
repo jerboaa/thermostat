@@ -55,7 +55,7 @@ import com.redhat.thermostat.storage.model.AggregateCount;
 
 public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
 
-    private final Category<AggregateCount> aggregateCountCategory;
+    final Category<AggregateCount> aggregateCountCategory;
 
     static final String ADD_HOST_NOTE = ""
             + "ADD " + hostNotesCategory.getName() + " "
@@ -68,7 +68,7 @@ public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
             + "QUERY-COUNT " + hostNotesCategory.getName() + " "
             + "WHERE 'agentId' = ?s";
 
-    static final String QUERY_HOST_NOTES_BY_VM_ID = ""
+    static final String QUERY_HOST_NOTES_BY_AGENT_ID = ""
             + "QUERY " + hostNotesCategory.getName() + " "
             + "WHERE 'agentId' = ?s";
 
@@ -102,14 +102,14 @@ public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
     }
 
     @Override
-    public void add(final HostNote vmNote) {
+    public void add(final HostNote hostNote) {
         executeStatement(new AbstractDaoStatement<HostNote>(storage, hostNotesCategory, ADD_HOST_NOTE) {
             @Override
             public PreparedStatement<HostNote> customize(PreparedStatement<HostNote> preparedStatement) {
-                preparedStatement.setString(0, vmNote.getAgentId());
-                preparedStatement.setString(1, vmNote.getId());
-                preparedStatement.setLong(2, vmNote.getTimeStamp());
-                preparedStatement.setString(3, vmNote.getContent());
+                preparedStatement.setString(0, hostNote.getAgentId());
+                preparedStatement.setString(1, hostNote.getId());
+                preparedStatement.setLong(2, hostNote.getTimeStamp());
+                preparedStatement.setString(3, hostNote.getContent());
                 return preparedStatement;
             }
         });
@@ -128,7 +128,7 @@ public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
 
     @Override
     public List<HostNote> getFor(final HostRef host) {
-        return executeQuery(new AbstractDaoQuery<HostNote>(storage, hostNotesCategory, QUERY_HOST_NOTES_BY_VM_ID) {
+        return executeQuery(new AbstractDaoQuery<HostNote>(storage, hostNotesCategory, QUERY_HOST_NOTES_BY_AGENT_ID) {
             @Override
             public PreparedStatement<HostNote> customize(PreparedStatement<HostNote> preparedStatement) {
                 preparedStatement.setString(0, host.getAgentId());

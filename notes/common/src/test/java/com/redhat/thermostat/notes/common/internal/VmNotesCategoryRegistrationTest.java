@@ -36,11 +36,14 @@
 
 package com.redhat.thermostat.notes.common.internal;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
 import com.redhat.thermostat.notes.common.VmNoteDAO;
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
 public class VmNotesCategoryRegistrationTest {
@@ -50,5 +53,6 @@ public class VmNotesCategoryRegistrationTest {
         VmNotesCategoryRegistration registration = new VmNotesCategoryRegistration();
         Set<String> names = registration.getCategoryNames();
         assertTrue(names.contains(VmNoteDAO.vmNotesCategory.getName()));
+        assertThat(names.size(), is(1));
     }
 }

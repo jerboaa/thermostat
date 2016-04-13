@@ -34,30 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.common;
+package com.redhat.thermostat.notes.common.internal;
 
-import java.util.List;
+import com.redhat.thermostat.notes.common.HostNoteDAO;
+import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Ref;
+import java.util.Set;
 
-public interface NoteDAO<T extends Ref, U extends Note> {
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-    Key<String> KEY_CONTENT = new Key<>("content");
-    Key<String> KEY_ID = new Key<>("id");
+public class HostNotesCategoryRegistrationTest {
 
-    void add(U note);
+    @Test
+    public void verifyThatVmNotesCategoryIsExported() {
+        HostNotesCategoryRegistration registration = new HostNotesCategoryRegistration();
+        Set<String> names = registration.getCategoryNames();
+        assertTrue(names.contains(HostNoteDAO.hostNotesCategory.getName()));
+        assertThat(names.size(), is(1));
+    }
 
-    /** Returns a {@link List} of {@link HostNote} objects. May return an empty list */
-    List<U> getFor(T ref);
-
-    long getCount(T ref);
-
-    U getById(T ref, String id);
-
-    void update(U note);
-
-    void remove(U note);
-
-    void removeById(T ref, String id);
 }

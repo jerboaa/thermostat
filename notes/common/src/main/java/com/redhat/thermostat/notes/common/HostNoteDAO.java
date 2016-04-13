@@ -43,9 +43,6 @@ import com.redhat.thermostat.storage.core.Key;
 
 @Service
 public interface HostNoteDAO extends NoteDAO<HostRef, HostNote> {
-    Key<String> KEY_CONTENT = new Key<>("content");
-    Key<String> KEY_ID = new Key<>("id");
     Category<HostNote> hostNotesCategory = new Category<>("host-notes", HostNote.class,
         Key.AGENT_ID, KEY_ID, Key.TIMESTAMP, KEY_CONTENT);
-    // see HostNote
 }

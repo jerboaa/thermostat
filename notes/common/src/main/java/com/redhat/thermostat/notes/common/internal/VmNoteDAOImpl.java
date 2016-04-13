@@ -55,7 +55,7 @@ import com.redhat.thermostat.storage.model.AggregateCount;
 
 class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
 
-    private final Category<AggregateCount> aggregateCountCategory;
+    final Category<AggregateCount> aggregateCountCategory;
 
     static final String ADD_VM_NOTE = ""
             + "ADD " + vmNotesCategory.getName() + " "
