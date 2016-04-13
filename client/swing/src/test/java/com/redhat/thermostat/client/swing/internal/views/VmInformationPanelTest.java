@@ -37,6 +37,8 @@
 package com.redhat.thermostat.client.swing.internal.views;
 
 import static org.mockito.Mockito.mock;
+
+import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
@@ -51,6 +53,9 @@ import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.FrameWithPanelTest;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
+import javax.swing.JTabbedPane;
+import java.lang.reflect.InvocationTargetException;
+
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class VmInformationPanelTest extends FrameWithPanelTest<VmInformationPanel> {
@@ -63,6 +68,22 @@ public class VmInformationPanelTest extends FrameWithPanelTest<VmInformationPane
                 return new VmInformationPanel();
             }
         });
+    }
+
+    @Test
+    public void testAddTwice() throws InvocationTargetException, InterruptedException {
+        UIComponent mock1 = createPanel();
+
+        panel.addChildView(new LocalizedString("foo1"), mock1);
+
+        // The panel in test has no views added so the matcher with a tab count > 0 works
+        // in order to select the right panel.
+        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1");
+
+        UIComponent mock2 = createPanel();
+        panel.addChildView(new LocalizedString("foo2"), mock2);
+
+        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1", "foo2");
     }
 
     @GUITest

@@ -46,6 +46,7 @@ import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -56,8 +57,6 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
 
     private JPanel visiblePanel;
     private final JTabbedPane tabPane;
-
-    private int viewCount = 0;
 
     public HostInformationPanel() {
         super();
@@ -74,8 +73,11 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    tabPane.insertTab(title.getContents(), null, component.getUiComponent(), null, viewCount);
-                    viewCount++;
+                    tabPane.addTab(title.getContents(), null, component.getUiComponent(), null);
+                    if (view instanceof OverlayContainer) {
+                        OverlayContainer overlayContainer = (OverlayContainer) view;
+                        tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
+                    }
                 }
                 
             });
@@ -97,10 +99,10 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                for (int i = 0; i < viewCount; i++) {
+                for (int i = 0; i < tabPane.getComponentCount(); i++) {
                     if (tabPane.getTitleAt(i).equals(title.getContents())) {
                         tabPane.remove(i);
-                        return;
+                        break;
                     }
                 }
             }

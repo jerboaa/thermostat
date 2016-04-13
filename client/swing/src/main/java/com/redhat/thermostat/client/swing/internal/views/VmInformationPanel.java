@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.VmInformationView;
@@ -57,8 +58,6 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     private final JTabbedPane tabPane = new JTabbedPane();
     private JPanel visiblePanel;
 
-    private int tabCount = 0;
-
     public VmInformationPanel() {
         super();
         visiblePanel = new JPanel();
@@ -68,15 +67,19 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     }
 
     @Override
-    public void addChildView(LocalizedString title, UIComponent view) {
+    public void addChildView(final LocalizedString title, final UIComponent view) {
         if (view instanceof SwingComponent) {
-            SwingComponent panel = (SwingComponent)view;
-            tabPane.insertTab(title.getContents(), null, panel.getUiComponent(), null, tabCount);
-            if (view instanceof OverlayContainer) {
-                OverlayContainer overlayContainer = (OverlayContainer) view;
-                tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
-            }
-            tabCount++;
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    SwingComponent panel = (SwingComponent) view;
+                    tabPane.addTab(title.getContents(), null, panel.getUiComponent(), null);
+                    if (view instanceof OverlayContainer) {
+                        OverlayContainer overlayContainer = (OverlayContainer) view;
+                        tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
+                    }
+                }
+            });
         } else {
             String message = ""
                     + "There's a non-swing view registered: '" + view.toString()
