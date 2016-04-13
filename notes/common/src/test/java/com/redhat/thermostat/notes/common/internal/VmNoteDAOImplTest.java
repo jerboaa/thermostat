@@ -192,7 +192,7 @@ public class VmNoteDAOImplTest {
 
         verify(statement).execute();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(VmNoteDAO.vmNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) VmNoteDAO.vmNotesCategory)));
         assertThat(desc.getDescriptor(), is(VmNoteDAOImpl.ADD_VM_NOTE));
     }
 
@@ -217,7 +217,7 @@ public class VmNoteDAOImplTest {
 
         verify(statement).executeQuery();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(dao.aggregateCountCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) dao.aggregateCountCategory)));
         assertThat(desc.getDescriptor(), is(VmNoteDAOImpl.QUERY_COUNT_VM_NOTES_BY_VM_ID));
     }
 
@@ -233,7 +233,7 @@ public class VmNoteDAOImplTest {
 
         verify(statement).executeQuery();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(VmNoteDAO.vmNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) VmNoteDAO.vmNotesCategory)));
         assertThat(desc.getDescriptor(), is(VmNoteDAOImpl.QUERY_VM_NOTES_BY_VM_ID));
     }
 
@@ -250,7 +250,7 @@ public class VmNoteDAOImplTest {
 
         verify(statement).executeQuery();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(VmNoteDAO.vmNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) VmNoteDAO.vmNotesCategory)));
         assertThat(desc.getDescriptor(), is(VmNoteDAOImpl.QUERY_VM_NOTE_BY_ID));
     }
 
@@ -269,7 +269,7 @@ public class VmNoteDAOImplTest {
 
         verify(statement).execute();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(VmNoteDAO.vmNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) VmNoteDAO.vmNotesCategory)));
         assertThat(desc.getDescriptor(), is(VmNoteDAOImpl.UPDATE_VM_NOTE));
     }
 
@@ -286,7 +286,7 @@ public class VmNoteDAOImplTest {
 
         verify(statement).execute();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(VmNoteDAO.vmNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) VmNoteDAO.vmNotesCategory)));
         assertThat(desc.getDescriptor(), is(VmNoteDAOImpl.REMOVE_VM_NOTE_BY_ID));
     }
 
@@ -303,7 +303,7 @@ public class VmNoteDAOImplTest {
 
         verify(statement).execute();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(VmNoteDAO.vmNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) VmNoteDAO.vmNotesCategory)));
         assertThat(desc.getDescriptor(), is(VmNoteDAOImpl.REMOVE_VM_NOTE_BY_ID));
     }
 

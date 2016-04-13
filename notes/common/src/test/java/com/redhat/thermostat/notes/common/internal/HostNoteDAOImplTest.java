@@ -185,7 +185,7 @@ public class HostNoteDAOImplTest {
 
         verify(statement).execute();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(HostNoteDAO.hostNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) HostNoteDAO.hostNotesCategory)));
         assertThat(desc.getDescriptor(), is(HostNoteDAOImpl.ADD_HOST_NOTE));
     }
 
@@ -210,7 +210,7 @@ public class HostNoteDAOImplTest {
 
         verify(statement).executeQuery();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(dao.aggregateCountCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) dao.aggregateCountCategory)));
         assertThat(desc.getDescriptor(), is(HostNoteDAOImpl.QUERY_COUNT_HOST_NOTES_BY_AGENT_ID));
     }
 
@@ -225,7 +225,7 @@ public class HostNoteDAOImplTest {
 
         verify(statement).executeQuery();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(HostNoteDAO.hostNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) HostNoteDAO.hostNotesCategory)));
         assertThat(desc.getDescriptor(), is(HostNoteDAOImpl.QUERY_HOST_NOTES_BY_AGENT_ID));
     }
 
@@ -241,7 +241,7 @@ public class HostNoteDAOImplTest {
 
         verify(statement).executeQuery();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(HostNoteDAO.hostNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) HostNoteDAO.hostNotesCategory)));
         assertThat(desc.getDescriptor(), is(HostNoteDAOImpl.QUERY_HOST_NOTE_BY_ID));
     }
 
@@ -259,7 +259,7 @@ public class HostNoteDAOImplTest {
 
         verify(statement).execute();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(HostNoteDAO.hostNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) HostNoteDAO.hostNotesCategory)));
         assertThat(desc.getDescriptor(), is(HostNoteDAOImpl.UPDATE_HOST_NOTE));
     }
 
@@ -275,7 +275,7 @@ public class HostNoteDAOImplTest {
 
         verify(statement).execute();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(HostNoteDAO.hostNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) HostNoteDAO.hostNotesCategory)));
         assertThat(desc.getDescriptor(), is(HostNoteDAOImpl.REMOVE_HOST_NOTE_BY_ID));
     }
 
@@ -291,7 +291,7 @@ public class HostNoteDAOImplTest {
 
         verify(statement).execute();
         StatementDescriptor desc = statementCaptor.getValue();
-        assertThat(desc.getCategory(), is(equalTo(HostNoteDAO.hostNotesCategory)));
+        assertThat(desc.getCategory(), is(equalTo((Category) HostNoteDAO.hostNotesCategory)));
         assertThat(desc.getDescriptor(), is(HostNoteDAOImpl.REMOVE_HOST_NOTE_BY_ID));
     }
 
