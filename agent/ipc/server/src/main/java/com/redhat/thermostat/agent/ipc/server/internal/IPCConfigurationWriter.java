@@ -73,9 +73,9 @@ class IPCConfigurationWriter {
         // Leave remainder of properties as defaults
         props.setProperty(PROP_IPC_TYPE, IPCType.UNIX_SOCKET.getConfigValue());
         
-        FileOutputStream fos = helper.createStream(configFile);
-        props.store(fos, COMMENTS);
-        fos.close();
+        try (FileOutputStream fos = helper.createStream(configFile)) {
+            props.store(fos, COMMENTS);
+        }
     }
     
     // For testing purposes

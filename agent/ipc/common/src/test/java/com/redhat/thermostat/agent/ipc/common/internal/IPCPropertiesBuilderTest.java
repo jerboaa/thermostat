@@ -37,13 +37,18 @@
 package com.redhat.thermostat.agent.ipc.common.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -58,6 +63,7 @@ public class IPCPropertiesBuilderTest {
     private PropertiesHelper helper;
     private File propFile;
     private FileInputStream propFileInputStream;
+    private IPCPropertiesBuilder builder;
     
     @Before
     public void setUp() throws Exception {
@@ -68,11 +74,11 @@ public class IPCPropertiesBuilderTest {
         when(helper.createProperties()).thenReturn(jProps);
         propFileInputStream = mock(FileInputStream.class);
         when(helper.getInputStream(propFile)).thenReturn(propFileInputStream);
+        builder = new TestIPCPropertiesBuilder();
     }
     
     @Test
     public void testGetProperties() throws Exception {
-        IPCPropertiesBuilder builder = new TestIPCPropertiesBuilder();
         when(jProps.getProperty(IPCPropertiesBuilder.PROP_IPC_TYPE)).thenReturn(IPCType.UNIX_SOCKET.getConfigValue());
         
         IPCProperties result = builder.getProperties(propFile);
@@ -80,24 +86,50 @@ public class IPCPropertiesBuilderTest {
         verify(helper).createProperties();
         verify(helper).getInputStream(propFile);
         verify(jProps).load(propFileInputStream);
+        verify(propFileInputStream).close();
         
         assertEquals(ipcProps, result);
     }
     
-    @Test(expected=IOException.class)
+    @Test
     public void testGetPropertiesNoType() throws Exception {
-        IPCPropertiesBuilder builder = new TestIPCPropertiesBuilder();
         when(jProps.getProperty(IPCPropertiesBuilder.PROP_IPC_TYPE)).thenReturn(null);
-        builder.getProperties(propFile);
+        getPropertiesAndVerifyClosed();
     }
-    
-    @Test(expected=IOException.class)
+
+    @Test
     public void testGetPropertiesBadType() throws Exception {
-        IPCPropertiesBuilder builder = new TestIPCPropertiesBuilder();
         when(jProps.getProperty(IPCPropertiesBuilder.PROP_IPC_TYPE)).thenReturn("Not A Real IPC Type");
-        builder.getProperties(propFile);
+        getPropertiesAndVerifyClosed();
     }
     
+    @Test
+    public void testCloseOnLoadException() throws Exception {
+        doThrow(new IOException("TEST")).when(jProps).load(any(InputStream.class));
+        getPropertiesAndVerifyClosed();
+    }
+    
+    @Test
+    public void testNoCloseOnNullStream() throws Exception {
+        when(helper.getInputStream(any(File.class))).thenThrow(new IOException("TEST"));
+        
+        try {
+            builder.getProperties(propFile);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(propFileInputStream, never()).close();
+        }
+    }
+    
+    private void getPropertiesAndVerifyClosed() throws IOException {
+        try {
+            builder.getProperties(propFile);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(propFileInputStream).close();
+        }
+    }
+
     private class TestIPCPropertiesBuilder extends IPCPropertiesBuilder {
         
         private TestIPCPropertiesBuilder() {

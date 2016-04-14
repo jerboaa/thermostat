@@ -36,16 +36,23 @@
 
 package com.redhat.thermostat.agent.ipc.server.internal;
 
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Properties;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
@@ -53,22 +60,55 @@ import com.redhat.thermostat.agent.ipc.server.internal.IPCConfigurationWriter.Pr
 
 public class IPCConfigurationWriterTest {
     
-    @Test
-    public void testWrite() throws Exception {
-        PropertiesHelper helper = mock(PropertiesHelper.class);
+    private IPCConfigurationWriter writer;
+    private Properties props;
+    private FileOutputStream fos;
+    private PropertiesHelper helper;
+
+    @Before
+    public void setUp() throws Exception {
+        helper = mock(PropertiesHelper.class);
         
         File configFile = mock(File.class);
-        Properties props = mock(Properties.class);
+        props = mock(Properties.class);
         when(helper.createProperties()).thenReturn(props);
-        FileOutputStream fos = mock(FileOutputStream.class);
+        fos = mock(FileOutputStream.class);
         when(helper.createStream(configFile)).thenReturn(fos);
         
-        IPCConfigurationWriter writer = new IPCConfigurationWriter(configFile, helper);
+        writer = new IPCConfigurationWriter(configFile, helper);
+    }
+    
+    @Test
+    public void testWrite() throws Exception {
         writer.write();
         
         verify(props).setProperty(IPCConfigurationWriter.PROP_IPC_TYPE, IPCType.UNIX_SOCKET.getConfigValue());
         verify(props).store(eq(fos), anyString());
         verify(fos).close();
+    }
+    
+    @Test
+    public void testCloseOnStoreException() throws Exception {
+        doThrow(new IOException("TEST")).when(props).store(any(OutputStream.class), anyString());
+
+        try {
+            writer.write();
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(fos).close();
+        }
+    }
+    
+    @Test
+    public void testNoCloseOnNullStream() throws Exception {
+        when(helper.createStream(any(File.class))).thenThrow(new IOException("TEST"));
+
+        try {
+            writer.write();
+            fail("Expected IOException");
+        } catch (IOException e) {
+            verify(fos, never()).close();
+        }
     }
 
 }

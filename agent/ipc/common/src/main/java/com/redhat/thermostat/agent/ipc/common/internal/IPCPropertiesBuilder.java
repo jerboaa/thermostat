@@ -57,17 +57,19 @@ public abstract class IPCPropertiesBuilder {
     
     public IPCProperties getProperties(File ipcProperties) throws IOException {
         Properties props = helper.createProperties();
-        props.load(helper.getInputStream(ipcProperties));
-        
-        String typeString = props.getProperty(PROP_IPC_TYPE);
-        if (typeString == null) {
-            throw new IOException("No IPC type specified in property file");
+        try (FileInputStream fis = helper.getInputStream(ipcProperties)) {
+            props.load(fis);
+            
+            String typeString = props.getProperty(PROP_IPC_TYPE);
+            if (typeString == null) {
+                throw new IOException("No IPC type specified in property file");
+            }
+            IPCType type = IPCType.fromConfigValue(typeString);
+            if (type == null) {
+                throw new IOException("Unable to determine IPC type from property file");
+            }
+            return getPropertiesForType(type, props, ipcProperties);
         }
-        IPCType type = IPCType.fromConfigValue(typeString);
-        if (type == null) {
-            throw new IOException("Unable to determine IPC type from property file");
-        }
-        return getPropertiesForType(type, props, ipcProperties);
     }
     
     protected abstract IPCProperties getPropertiesForType(IPCType type, Properties props, File propFile) throws IOException;
