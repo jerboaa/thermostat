@@ -58,6 +58,7 @@ import org.mockito.ArgumentCaptor;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -118,6 +119,51 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(null);
 
         doInvalidVmIdTest(args);
+    }
+
+    @Test
+    public void testRunWithNoMatchingHostNoteFromStorage() throws CommandException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
+        when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(mock(HostInfo.class));
+        when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(mock(AgentInformation.class));
+        when(hostNoteDAO.getById(any(HostRef.class), any(String.class))).thenReturn(null);
+
+        CommandContext ctx = contextFactory.createContext(args);
+        try {
+            command.run(ctx);
+            fail();
+        } catch (CommandException ex) {
+            // pass
+        }
+    }
+
+    @Test
+    public void testRunWithNoMatchingVmNoteFromStorage() throws CommandException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
+        when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setAgentId("foo-agentid");
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
+        when(vmNoteDAO.getById(any(VmRef.class), any(String.class))).thenReturn(null);
+
+        CommandContext ctx = contextFactory.createContext(args);
+        try {
+            command.run(ctx);
+            fail();
+        } catch (CommandException ex) {
+            // pass
+        }
     }
 
     @Test

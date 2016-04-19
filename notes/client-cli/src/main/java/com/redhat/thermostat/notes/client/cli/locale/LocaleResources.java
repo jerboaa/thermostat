@@ -58,6 +58,8 @@ public enum LocaleResources {
     CONTENT_COLUMN,
 
     TRIMMED_NOTE_CONTENT,
+    NO_SUCH_AGENT_NOTE,
+    NO_SUCH_VM_NOTE,
 
     ;
 

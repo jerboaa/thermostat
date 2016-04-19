@@ -41,6 +41,7 @@ import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.notes.client.cli.locale.LocaleResources;
 import com.redhat.thermostat.notes.common.HostNote;
 import com.redhat.thermostat.notes.common.VmNote;
 import com.redhat.thermostat.storage.core.AgentId;
@@ -67,6 +68,9 @@ public class UpdateNoteCommand extends AbstractNotesCommand {
             checkAgentExists(agentId);
 
             VmNote note = vmNoteDAO.getById(getVmRefFromVmId(vmId), noteId);
+            if (note == null) {
+                throw new CommandException(translator.localize(LocaleResources.NO_SUCH_VM_NOTE, vmId.get(), noteId));
+            }
             note.setContent(noteContent);
             note.setTimeStamp(System.currentTimeMillis());
             vmNoteDAO.update(note);
@@ -75,9 +79,13 @@ public class UpdateNoteCommand extends AbstractNotesCommand {
             checkAgentExists(agentId);
 
             HostNote note = hostNoteDAO.getById(getHostRefFromAgentId(agentId), noteId);
+            if (note == null) {
+                throw new CommandException(translator.localize(LocaleResources.NO_SUCH_AGENT_NOTE, agentId.get(), noteId));
+            }
             note.setContent(noteContent);
             note.setTimeStamp(System.currentTimeMillis());
             hostNoteDAO.update(note);
         }
     }
+
 }
