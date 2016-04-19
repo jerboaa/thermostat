@@ -217,11 +217,9 @@ public class NoteIdsFinderTest {
         assertThat(in.length(), is(expected.length()));
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testTrimContentWithNullInput() {
-        String in = null;
-        String trimmed = NoteIdsFinder.trimContent(in);
-        assertThat(trimmed, is(""));
+        NoteIdsFinder.trimContent(null);
     }
 
     private static <T extends Note> List<CompletionInfo> convertNotesToInfos(Iterable<T> notes) {
