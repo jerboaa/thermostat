@@ -34,48 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
-public class CliCommandOption {
+import com.redhat.thermostat.common.cli.AbstractCompleterService;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
+import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 
-    public static final CliCommandOption POSITIONAL_ARG_COMPLETION = new CliCommandOption("__NO_ARG__", "__NO_ARG__");
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
-    private final String opt;
-    private final String longOpt;
-    private final boolean hasArg;
-    private final String description;
-    private final boolean required;
+public class AgentIdCompleterService extends AbstractCompleterService {
 
-    public CliCommandOption(String opt, String description) throws IllegalArgumentException {
-        this(opt, null, false, description, false);
+    public static final CliCommandOption AGENT_ID_OPTION = new CliCommandOption("a", "agentId", true, "Agent ID", false);
+
+    @Override
+    public Set<String> getCommands() {
+        return TabCompletion.ALL_COMMANDS_COMPLETER;
     }
 
-    public CliCommandOption(String opt, String longOpt, boolean hasArg, String description, boolean required) throws IllegalArgumentException {
-        this.opt = opt;
-        this.longOpt = longOpt;
-        this.hasArg = hasArg;
-        this.description = description;
-        this.required = required;
+    @Override
+    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
+        TabCompleter completer = new CompletionFinderTabCompleter(new AgentIdsFinder(dependencyServices));
+
+        return Collections.singletonMap(AGENT_ID_OPTION, completer);
     }
 
-    public String getOpt() {
-        return opt;
-    }
-
-    public String getLongOpt() {
-        return longOpt;
-    }
-
-    public boolean hasArg() {
-        return hasArg;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public boolean isRequired() {
-        return required;
+    void setAgentInfoDAO(AgentInfoDAO agentInfoDAO) {
+        setService(AgentInfoDAO.class, agentInfoDAO);
     }
 
 }

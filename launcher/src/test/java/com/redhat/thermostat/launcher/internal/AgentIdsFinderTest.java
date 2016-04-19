@@ -36,28 +36,30 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.testutils.StubBundleContext;
-import org.junit.Test;
+import static junit.framework.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class AgentIdsFinderTest {
 
     @Test
     public void testFindIds() {
-        StubBundleContext context = new StubBundleContext();
+        DependencyServices dependencyServices = mock(DependencyServices.class);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
-        AgentIdsFinder agentIdsFinder = new AgentIdsFinder(context);
+        when(dependencyServices.hasService(AgentInfoDAO.class)).thenReturn(true);
+        when(dependencyServices.getService(AgentInfoDAO.class)).thenReturn(agentInfoDAO);
+
+        AgentIdsFinder agentIdsFinder = new AgentIdsFinder(dependencyServices);
 
         String id1 = "012345-56789";
         String id2 = "111111-22222";

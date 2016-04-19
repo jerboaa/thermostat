@@ -61,10 +61,6 @@ import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 
 /*
- * See TabCompletion.setupTabCompletion for where tab completion for AgentIDs as the Ping command's non-opt main
- * argument is set up.
- */
-/*
  * FIXME: extract PingCommand out into a ping plugin with its own thermostat-plugin.xml, rather than being a
  * hardcoded/built-in command
  */

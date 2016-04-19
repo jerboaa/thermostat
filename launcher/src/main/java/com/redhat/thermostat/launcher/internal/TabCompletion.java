@@ -39,7 +39,6 @@ package com.redhat.thermostat.launcher.internal;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import jline.console.ConsoleReader;
@@ -88,19 +87,19 @@ public class TabCompletion {
         if (ALL_COMMANDS_COMPLETER == service.getCommands()) {
             globalCompleterServices.add(service);
         }
-        if (commandMap.isEmpty()) {
-            return;
-        }
         for (String commandName : service.getCommands()) {
-            TreeCompleter.Node command = commandMap.get(commandName);
-            if (command != null) {
-                addCompleterServiceImpl(command, service);
-            }
+            TreeCompleter.Node command = getCommandByName(commandName);
+            addCompleterServiceImpl(command, service);
         }
     }
 
     private void addCompleterServiceImpl(TreeCompleter.Node command, CompleterService service) {
         for (Map.Entry<CliCommandOption, ? extends TabCompleter> entry : service.getOptionCompleters().entrySet()) {
+            if (entry.getKey() == CliCommandOption.POSITIONAL_ARG_COMPLETION) {
+                TreeCompleter.Node node = new TreeCompleter.Node(command.getTag() + " completer", entry.getValue());
+                node.setRestartNode(command);
+                command.addBranch(node);
+            }
             for (TreeCompleter.Node branch : command.getBranches()) {
                 Set<String> completerOptions = getCompleterOptions(entry.getKey());
                 if (completerOptions.contains(branch.getTag())) {
@@ -129,6 +128,9 @@ public class TabCompletion {
 
     private void removeCompleterServiceImpl(TreeCompleter.Node command, CompleterService service) {
         for (Map.Entry<CliCommandOption, ? extends TabCompleter> entry : service.getOptionCompleters().entrySet()) {
+            if (entry.getKey() == CliCommandOption.POSITIONAL_ARG_COMPLETION) {
+                command.removeByTag(command.getTag() + " completer");
+            }
             for (TreeCompleter.Node branch : command.getBranches()) {
                 Set<String> completerOptions = getCompleterOptions(entry.getKey());
                 if (completerOptions.contains(branch.getTag())) {
@@ -149,30 +151,10 @@ public class TabCompletion {
         for (CommandInfo info : commandInfoSource.getCommandInfos()) {
 
             if (info.getEnvironments().contains(Environment.SHELL)) {
-                String commandName = info.getName();
-                TreeCompleter.Node command = createStringNode(commandName);
-                commandMap.put(commandName, command);
-
-                /* FIXME: the Ping command should be provided by a plugin and have a thermostat-plugin.xml of its own,
-                * and in thermostat-plugin.xmls we should also somehow be able to define custom tab completions, including
-                * for the no-opt arg case (such as this). When this is possible then this hard-coded completion installation
-                * should be replaced with the proper custom ping-plugin custom completion setup.
-                * http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2876
-                * http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2877
-                */
-                if (commandName.equals("ping")) {
-                    TreeCompleter.Node agentIds =
-                            new TreeCompleter.Node("agentId", new CompletionFinderTabCompleter(new AgentIdsFinder(context)));
-                    agentIds.setRestartNode(command);
-                    command.addBranch(agentIds);
-                    treeCompleter.addBranch(command);
-                    continue;
-                }
+                TreeCompleter.Node command = getCommandByName(info.getName());
 
                 for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
-                    if (option.getLongOpt().equals("agentId")) {
-                        setupCompletion(command, option, new CompletionFinderTabCompleter(new AgentIdsFinder(context)));
-                    } else if (option.getLongOpt().equals(Arguments.DB_URL_ARGUMENT)) {
+                    if (option.getLongOpt().equals(Arguments.DB_URL_ARGUMENT)) {
                         setupCompletion(command, option, new DbUrlCompleter(prefs));
                     } else {
                         setupDefaultCompletion(command, option);
@@ -193,6 +175,14 @@ public class TabCompletion {
         }
 
         reader.addCompleter(new JLineCompleterAdapter(treeCompleter));
+    }
+
+    private TreeCompleter.Node getCommandByName(String commandName) {
+        if (!commandMap.containsKey(commandName)) {
+            TreeCompleter.Node command = createStringNode(commandName);
+            commandMap.put(commandName, command);
+        }
+        return commandMap.get(commandName);
     }
 
     private void setupDefaultCompletion(final TreeCompleter.Node command, final Option option) {

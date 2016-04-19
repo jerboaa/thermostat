@@ -36,30 +36,17 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.NotImplementedException;
-import com.redhat.thermostat.common.ThermostatExtensionRegistry;
-import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.storage.core.DbService;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.launcher.BundleManager;
@@ -67,8 +54,20 @@ import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnvironmentChangeListener;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.storage.core.DbService;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 public class Activator implements BundleActivator {
 
@@ -144,6 +143,8 @@ public class Activator implements BundleActivator {
     private MultipleServiceTracker launcherDepsTracker;
     private MultipleServiceTracker shellTracker;
     private MultipleServiceTracker vmIdCompleterDepsTracker;
+    private MultipleServiceTracker agentIdCompleterDepsTracker;
+    private MultipleServiceTracker pingCommandCompleterDepsTracker;
 
     private CommandRegistry registry;
 
@@ -287,10 +288,44 @@ public class Activator implements BundleActivator {
         });
         vmIdCompleterDepsTracker.open();
 
+        final AgentIdCompleterService agentIdCompleterService = new AgentIdCompleterService();
+        final Class<?>[] agentIdCompleterDeps = new Class[] { AgentInfoDAO.class };
+        agentIdCompleterDepsTracker = new MultipleServiceTracker(context, agentIdCompleterDeps, new Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                agentIdCompleterService.setAgentInfoDAO(agentDao);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                agentIdCompleterService.setAgentInfoDAO(null);
+            }
+        });
+        agentIdCompleterDepsTracker.open();
+
+        final PingCommandCompleterService pingCommandCompleterService = new PingCommandCompleterService();
+        final Class<?>[] pingCommandCompleterDeps = new Class[] { AgentInfoDAO.class };
+        pingCommandCompleterDepsTracker = new MultipleServiceTracker(context, pingCommandCompleterDeps, new Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                pingCommandCompleterService.setAgentInfoDAO(agentDao);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                pingCommandCompleterService.setAgentInfoDAO(null);
+            }
+        });
+        pingCommandCompleterDepsTracker.open();
+
         LogLevelCompleterService logLevelCompleterService = new LogLevelCompleterService();
         context.registerService(CompleterService.class.getName(), logLevelCompleterService, null);
 
         context.registerService(CompleterService.class.getName(), vmIdCompleterService, null);
+        context.registerService(CompleterService.class.getName(), agentIdCompleterService, null);
+        context.registerService(CompleterService.class.getName(), pingCommandCompleterService, null);
     }
 
     @Override
@@ -309,6 +344,12 @@ public class Activator implements BundleActivator {
         }
         if (vmIdCompleterDepsTracker != null) {
             vmIdCompleterDepsTracker.close();
+        }
+        if (agentIdCompleterDepsTracker != null) {
+            agentIdCompleterDepsTracker.close();
+        }
+        if (pingCommandCompleterDepsTracker != null) {
+            pingCommandCompleterDepsTracker.close();
         }
         registry.unregisterCommands();
     }

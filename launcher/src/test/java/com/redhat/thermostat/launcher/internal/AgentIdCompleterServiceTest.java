@@ -34,48 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
-public class CliCommandOption {
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.TabCompleter;
+import org.junit.Before;
+import org.junit.Test;
 
-    public static final CliCommandOption POSITIONAL_ARG_COMPLETION = new CliCommandOption("__NO_ARG__", "__NO_ARG__");
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
-    private final String opt;
-    private final String longOpt;
-    private final boolean hasArg;
-    private final String description;
-    private final boolean required;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
 
-    public CliCommandOption(String opt, String description) throws IllegalArgumentException {
-        this(opt, null, false, description, false);
+public class AgentIdCompleterServiceTest {
+
+    private AgentIdCompleterService service;
+
+    @Before
+    public void setup() {
+        service = new AgentIdCompleterService();
     }
 
-    public CliCommandOption(String opt, String longOpt, boolean hasArg, String description, boolean required) throws IllegalArgumentException {
-        this.opt = opt;
-        this.longOpt = longOpt;
-        this.hasArg = hasArg;
-        this.description = description;
-        this.required = required;
+    @Test
+    public void testCompleterAppliesToAllCommands() {
+        Set<String> commands = service.getCommands();
+        Set<String> expected = TabCompletion.ALL_COMMANDS_COMPLETER;
+        assertThat(commands, is(equalTo(expected)));
     }
 
-    public String getOpt() {
-        return opt;
+    @Test
+    public void testProvidesCompleterForAgentIdOptionOnly() {
+        Map<CliCommandOption, ? extends TabCompleter> map = service.getOptionCompleters();
+        assertThat(map.keySet(), is(equalTo(Collections.singleton(AgentIdCompleterService.AGENT_ID_OPTION))));
     }
 
-    public String getLongOpt() {
-        return longOpt;
-    }
-
-    public boolean hasArg() {
-        return hasArg;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public boolean isRequired() {
-        return required;
+    @Test
+    public void testAgentIdCompleterIsProvided() {
+        TabCompleter completer = service.getOptionCompleters().get(AgentIdCompleterService.AGENT_ID_OPTION);
+        assertThat(completer, is(not(equalTo(null))));
     }
 
 }
