@@ -166,7 +166,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.client.swing.internal.osgi.ThermostatActivator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.client.swing.internal.ThermostatActivator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.client.swing</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.client.swing,
@@ -181,7 +181,6 @@
               com.redhat.thermostat.client.swing.internal.splitpane,
               com.redhat.thermostat.client.swing.internal.progress,
               com.redhat.thermostat.client.swing.internal.components,
-              com.redhat.thermostat.client.swing.internal.osgi,
               com.redhat.thermostat.client.swing.internal.views,
               com.redhat.thermostat.client.swing.internal.vmlist,
               com.redhat.thermostat.client.swing.internal.vmlist.controller,

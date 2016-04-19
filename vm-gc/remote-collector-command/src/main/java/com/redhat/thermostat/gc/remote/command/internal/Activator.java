@@ -34,46 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.osgi;
+package com.redhat.thermostat.gc.remote.command.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.ui.ReferenceContextAction;
+import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.gc.remote.command.GCRequestReceiver;
 
-@SuppressWarnings("rawtypes")
-public class ContextActionServiceTracker extends ServiceTracker {
-    
-    private List<ReferenceContextAction> hostContextActions;
+public class Activator implements BundleActivator {
 
-    @SuppressWarnings("unchecked")
-    public ContextActionServiceTracker(BundleContext context) {
-        super(context, ReferenceContextAction.class.getName(), null);
-        this.hostContextActions = new CopyOnWriteArrayList<>();
+    private ServiceTracker tracker;
+
+    @Override
+    public void start(BundleContext context) throws Exception {
+        final ReceiverRegistry registry = new ReceiverRegistry(context);
+
+        tracker = new ServiceTracker(context, MXBeanConnectionPool.class, null) {
+            @Override
+            public MXBeanConnectionPool addingService(ServiceReference reference) {
+                MXBeanConnectionPool pool = (MXBeanConnectionPool) super.addingService(reference);
+                registry.registerReceiver(new GCRequestReceiver(pool));
+                return pool;
+            };
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                registry.unregisterReceivers();
+                super.removedService(reference, service);
+            };
+        };
+        tracker.open();
     }
 
     @Override
-    public Object addingService(ServiceReference reference) {
-        @SuppressWarnings("unchecked")
-        ReferenceContextAction service = (ReferenceContextAction) super.addingService(reference);
-        hostContextActions.add(service);
-        return service;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void removedService(ServiceReference reference, Object service) {
-        hostContextActions.remove((ReferenceContextAction)service);
-        super.removedService(reference, service);
-    }
-
-    public List<ReferenceContextAction> getActions() {
-        return new ArrayList<>(hostContextActions);
+    public void stop(BundleContext context) throws Exception {
+        tracker.close();
     }
 }
 

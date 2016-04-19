@@ -42,7 +42,7 @@ import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
-import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
+import com.redhat.thermostat.client.swing.internal.ContextActionServiceTracker;
 import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.ActionEvent;

@@ -62,8 +62,6 @@ import com.redhat.thermostat.client.core.views.IssueView;
 import com.redhat.thermostat.client.core.views.IssueViewProvider;
 import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
-import com.redhat.thermostat.client.swing.internal.osgi.InformationServiceTracker;
 import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
 import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;

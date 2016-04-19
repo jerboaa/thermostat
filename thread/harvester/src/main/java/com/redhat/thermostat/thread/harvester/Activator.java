@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester.osgi;
+package com.redhat.thermostat.thread.harvester;
 
 import java.util.Map;
 import java.util.Objects;
@@ -57,10 +57,6 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.harvester.LockInfoBackend;
-import com.redhat.thermostat.thread.harvester.ThreadBackend;
-import com.redhat.thermostat.thread.harvester.ThreadCountBackend;
-import com.redhat.thermostat.thread.harvester.ThreadHarvester;
 
 public class Activator implements BundleActivator {
     

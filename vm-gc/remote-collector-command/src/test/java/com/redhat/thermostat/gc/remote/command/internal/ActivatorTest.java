@@ -34,58 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester.osgi;
+package com.redhat.thermostat.gc.remote.command.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Version;
 
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.gc.remote.command.GCRequestReceiver;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.harvester.ThreadCountBackend;
 
 public class ActivatorTest {
 
-    private Bundle bundle;
-    private Version version;
-    private WriterID writerId;
-    private ThreadDao threadDao;
+    private StubBundleContext context;
+    private Activator activator;
 
     @Before
-    public void setUp() {
-        version = new Version("0.1.2");
-
-        bundle = mock(Bundle.class);
-        when(bundle.getVersion()).thenReturn(version);
-
-        writerId = mock(WriterID.class);
-
-        threadDao = mock(ThreadDao.class);
+    public void setup() {
+        context = new StubBundleContext();
+        activator = new Activator();
     }
 
-    @Ignore("Activator assumes that Harvester is always registered and fails with NullPointerException")
     @Test
-    public void verifyThreadCountUpdaterIsRegistered() throws Exception {
-        StubBundleContext bundleContext = new StubBundleContext();
-        bundleContext.setBundle(bundle);
+    public void verifyReceiverRegistered() throws Exception {
+        MXBeanConnectionPool mxBeanConnectionPool = mock(MXBeanConnectionPool.class);
+        context.registerService(MXBeanConnectionPool.class, mxBeanConnectionPool, null);
 
-        bundleContext.registerService(WriterID.class, writerId, null);
-        bundleContext.registerService(ThreadDao.class, threadDao, null);
+        activator.start(context);
 
-        Activator activator = new Activator();
+        assertEquals(2, context.getAllServices().size());
+        assertTrue(context.isServiceRegistered(RequestReceiver.class.getName(), GCRequestReceiver.class));
 
-        activator.start(bundleContext);
+        activator.stop(context);
+    }
 
-        assertTrue(bundleContext.isServiceRegistered(VmUpdateListener.class.getName(), ThreadCountBackend.class));
+    @Test
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        activator.start(context);
 
-        activator.stop(bundleContext);
+        assertEquals(0, context.getAllServices().size());
+
+        activator.stop(context);
     }
 }

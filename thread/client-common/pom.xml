@@ -114,7 +114,7 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.thread.client.common</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.thread.client.common.osgi.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.thread.client.common.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.thread.client.common,
               com.redhat.thermostat.thread.client.common.view,
@@ -125,7 +125,7 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.thread.client.common.collector.internal,
-              com.redhat.thermostat.thread.client.common.osgi,
+              com.redhat.thermostat.thread.client.common.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

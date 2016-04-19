@@ -34,50 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.command.osgi;
+package com.redhat.thermostat.client.swing.internal;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.gc.remote.command.GCRequestReceiver;
+import com.redhat.thermostat.client.swing.internal.ContextActionServiceTracker;
+import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
-public class ActivatorTest {
-
-    private StubBundleContext context;
-    private Activator activator;
-
-    @Before
-    public void setup() {
-        context = new StubBundleContext();
-        activator = new Activator();
-    }
+public class HostContextActionServiceTrackerTest {
 
     @Test
-    public void verifyReceiverRegistered() throws Exception {
-        MXBeanConnectionPool mxBeanConnectionPool = mock(MXBeanConnectionPool.class);
-        context.registerService(MXBeanConnectionPool.class, mxBeanConnectionPool, null);
+    public void verifyHostActionIsAddedToAndRemovedFromUiModel() {
+        StubBundleContext bundleContext = new StubBundleContext();
 
-        activator.start(context);
+        ReferenceContextAction hostAction = mock(ReferenceContextAction.class);
+        ServiceRegistration registration = bundleContext.registerService(ReferenceContextAction.class, hostAction, null);
 
-        assertEquals(2, context.getAllServices().size());
-        assertTrue(context.isServiceRegistered(RequestReceiver.class.getName(), GCRequestReceiver.class));
+        ContextActionServiceTracker tracker = new ContextActionServiceTracker(bundleContext);
+        tracker.open();
+        
+        assertTrue(tracker.getActions().contains(hostAction));
 
-        activator.stop(context);
+        registration.unregister();
+
+        tracker.close();
+
+        assertFalse(tracker.getActions().contains(hostAction));
     }
 
-    @Test
-    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
-        activator.start(context);
-
-        assertEquals(0, context.getAllServices().size());
-
-        activator.stop(context);
-    }
 }
+

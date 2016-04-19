@@ -56,10 +56,9 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Activator>com.redhat.thermostat.utils.keyring.activator.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.utils.keyring.internal.Activator</Bundle-Activator>
 	        <Bundle-SymbolicName>com.redhat.thermostat.keyring</Bundle-SymbolicName>
 	        <Private-Package>
-	          com.redhat.thermostat.utils.keyring.activator,
 	          com.redhat.thermostat.utils.keyring.internal,
 	        </Private-Package>
             <Export-Package>com.redhat.thermostat.utils.keyring</Export-Package>

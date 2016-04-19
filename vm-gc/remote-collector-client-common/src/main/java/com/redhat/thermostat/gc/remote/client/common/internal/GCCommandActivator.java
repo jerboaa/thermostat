@@ -34,53 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.keyring.activator;
+package com.redhat.thermostat.gc.remote.client.common.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.utils.keyring.Keyring;
-import com.redhat.thermostat.utils.keyring.internal.KeyringImpl;
+import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.gc.remote.common.GCRequest;
 
-public class Activator implements BundleActivator {
+@SuppressWarnings({ "rawtypes", "unchecked" })
+public class GCCommandActivator implements BundleActivator {
+
+    private ServiceTracker tracker;
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        Keyring theKeyring = null;
-        try {
-            theKeyring = new KeyringImpl();
-        } catch (UnsatisfiedLinkError e) {
-            theKeyring = new Keyring() {
-                /* Trivial implementation just to keep the world from blowing up.
-                 * Everything noop.
-                 */
-
-                @Override
-                public void savePassword(String url, String username,
-                        char[] password) {
-                    // NOOP
-                }
-
-                @Override
-                public char[] getPassword(String url, String username) {
-                    // NOOP
-                    return new char[]{};
-                }
-
-                @Override
-                public void clearPassword(String url, String username) {
-                    // NOOP
-                }
+    public void start(final BundleContext context) throws Exception {
+        tracker = new ServiceTracker(context, RequestQueue.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
                 
-            };
-        }
-        context.registerService(Keyring.class.getName(), theKeyring, null);
+                RequestQueue requestqueue = (RequestQueue) context.getService(reference);
+                
+                GCRequest gcRequest = new GCRequest(requestqueue); 
+                context.registerService(GCRequest.class, gcRequest, null);
+                return super.addingService(reference);
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                
+                context.ungetService(reference);
+                super.removedService(reference, service);
+            }
+        };
         
+        tracker.open();
     }
     
     @Override
     public void stop(BundleContext context) throws Exception {
-        // Nothing to do
+        tracker.close();
     }
 }
 

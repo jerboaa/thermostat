@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.osgi;
+package com.redhat.thermostat.backend.system;
 
 import java.util.Map;
 
@@ -46,8 +46,6 @@ import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
-import com.redhat.thermostat.backend.system.SystemBackend;
-import com.redhat.thermostat.backend.system.VmStatusChangeNotifier;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;

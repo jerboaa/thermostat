@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.osgi;
+package com.redhat.thermostat.thread.client.common.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;

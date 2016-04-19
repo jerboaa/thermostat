@@ -114,13 +114,13 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.gc.remote.client.common</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.gc.remote.client.common.osgi.GCCommandActivator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.gc.remote.client.common.internal.GCCommandActivator</Bundle-Activator>
             <Export-Package>
                 com.redhat.thermostat.gc.remote.client.common,
                 com.redhat.thermostat.gc.remote.common,
             </Export-Package>
             <Private-Package>
-                com.redhat.thermostat.gc.remote.client.common.osgi,
+                com.redhat.thermostat.gc.remote.client.common.internal,
             </Private-Package>            
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

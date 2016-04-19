@@ -34,45 +34,61 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.command.osgi;
+package com.redhat.thermostat.thread.internal;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.agent.command.ReceiverRegistry;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.gc.remote.command.GCRequestReceiver;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
+import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.dao.internal.LockInfoDaoImpl;
+import com.redhat.thermostat.thread.dao.internal.ThreadDaoImpl;
 
 public class Activator implements BundleActivator {
 
-    private ServiceTracker tracker;
+    @SuppressWarnings("rawtypes")
+    private List<ServiceRegistration> registrations = new ArrayList<>();
 
     @Override
     public void start(BundleContext context) throws Exception {
-        final ReceiverRegistry registry = new ReceiverRegistry(context);
-
-        tracker = new ServiceTracker(context, MXBeanConnectionPool.class, null) {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        ServiceTracker tracker = new ServiceTracker(context, Storage.class.getName(), null) {
             @Override
-            public MXBeanConnectionPool addingService(ServiceReference reference) {
-                MXBeanConnectionPool pool = (MXBeanConnectionPool) super.addingService(reference);
-                registry.registerReceiver(new GCRequestReceiver(pool));
-                return pool;
-            };
-
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                registry.unregisterReceivers();
-                super.removedService(reference, service);
-            };
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) context.getService(reference);
+                ThreadDao threadDao = new ThreadDaoImpl(storage);
+                registrations.add(context.registerService(ThreadDao.class.getName(), threadDao, null));
+                return super.addingService(reference);
+            }
         };
         tracker.open();
+
+        ServiceTracker lockInfoDaoTracker = new ServiceTracker(context, Storage.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) context.getService(reference);
+                LockInfoDao lockInfoDao = new LockInfoDaoImpl(storage);
+                registrations.add(context.registerService(LockInfoDao.class.getName(), lockInfoDao, null));
+                return super.addingService(reference);
+            }
+        };
+        lockInfoDaoTracker.open();
+
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        tracker.close();
+        for (ServiceRegistration reg : registrations) {
+            reg.unregister();
+        }
     }
+
 }
 

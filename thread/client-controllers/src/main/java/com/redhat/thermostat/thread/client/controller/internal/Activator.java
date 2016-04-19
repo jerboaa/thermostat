@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.controller.osgi;
+package com.redhat.thermostat.thread.client.controller.internal;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
@@ -47,7 +47,6 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.controller.ThreadInformationService;
-import com.redhat.thermostat.thread.client.controller.internal.ThreadInformationServiceImpl;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
 
 import java.util.Dictionary;

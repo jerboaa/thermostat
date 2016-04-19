@@ -106,12 +106,11 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.gc.remote.command</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.gc.remote.command.osgi.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.gc.remote.command.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.gc.remote.command,
             </Export-Package>
             <Private-Package>
-                com.redhat.thermostat.gc.remote.command.osgi,
                 com.redhat.thermostat.gc.remote.command.internal,
             </Private-Package>               
             <!-- Do not autogenerate uses clauses in Manifests -->

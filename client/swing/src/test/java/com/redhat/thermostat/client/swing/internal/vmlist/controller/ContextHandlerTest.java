@@ -63,8 +63,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
+import com.redhat.thermostat.client.swing.internal.ContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponent;
-import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler.ContextHandlerAction;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler.Payload;
 import com.redhat.thermostat.client.ui.ReferenceContextAction;

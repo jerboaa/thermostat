@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.osgi;
+package com.redhat.thermostat.thread.client.swing.internal;
 
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.common.MultipleServiceTracker;

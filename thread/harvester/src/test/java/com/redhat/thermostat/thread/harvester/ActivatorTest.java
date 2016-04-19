@@ -34,38 +34,57 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.osgi;
+package com.redhat.thermostat.thread.harvester;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 
-import com.redhat.thermostat.client.ui.ReferenceContextAction;
+import com.redhat.thermostat.backend.VmUpdateListener;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.thread.dao.ThreadDao;
 
-public class HostContextActionServiceTrackerTest {
+public class ActivatorTest {
 
-    @Test
-    public void verifyHostActionIsAddedToAndRemovedFromUiModel() {
-        StubBundleContext bundleContext = new StubBundleContext();
+    private Bundle bundle;
+    private Version version;
+    private WriterID writerId;
+    private ThreadDao threadDao;
 
-        ReferenceContextAction hostAction = mock(ReferenceContextAction.class);
-        ServiceRegistration registration = bundleContext.registerService(ReferenceContextAction.class, hostAction, null);
+    @Before
+    public void setUp() {
+        version = new Version("0.1.2");
 
-        ContextActionServiceTracker tracker = new ContextActionServiceTracker(bundleContext);
-        tracker.open();
-        
-        assertTrue(tracker.getActions().contains(hostAction));
+        bundle = mock(Bundle.class);
+        when(bundle.getVersion()).thenReturn(version);
 
-        registration.unregister();
+        writerId = mock(WriterID.class);
 
-        tracker.close();
-
-        assertFalse(tracker.getActions().contains(hostAction));
+        threadDao = mock(ThreadDao.class);
     }
 
-}
+    @Ignore("Activator assumes that Harvester is always registered and fails with NullPointerException")
+    @Test
+    public void verifyThreadCountUpdaterIsRegistered() throws Exception {
+        StubBundleContext bundleContext = new StubBundleContext();
+        bundleContext.setBundle(bundle);
 
+        bundleContext.registerService(WriterID.class, writerId, null);
+        bundleContext.registerService(ThreadDao.class, threadDao, null);
+
+        Activator activator = new Activator();
+
+        activator.start(bundleContext);
+
+        assertTrue(bundleContext.isServiceRegistered(VmUpdateListener.class.getName(), ThreadCountBackend.class));
+
+        activator.stop(bundleContext);
+    }
+}

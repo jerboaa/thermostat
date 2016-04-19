@@ -111,7 +111,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.thread.common.osgi.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.thread.internal.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.thread.collector</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.thread.collector,
@@ -119,7 +119,7 @@
               com.redhat.thermostat.thread.model,
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.thread.common.osgi,
+              com.redhat.thermostat.thread.internal,
               com.redhat.thermostat.thread.dao.internal,
               com.redhat.thermostat.thread.dao.internal.statement,
             </Private-Package>
