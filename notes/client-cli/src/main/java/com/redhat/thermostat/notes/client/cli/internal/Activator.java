@@ -40,6 +40,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -57,6 +58,7 @@ public class Activator implements BundleActivator {
 
     private CommandRegistry reg;
     private MultipleServiceTracker serviceTracker;
+    private MultipleServiceTracker noteIdCompleterDepsTracker;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -113,6 +115,27 @@ public class Activator implements BundleActivator {
         });
 
         serviceTracker.open();
+
+        final NoteIdCompleterService noteIdCompleterService = new NoteIdCompleterService();
+        final Class<?>[] noteIdCompleterDeps = new Class<?>[] { HostNoteDAO.class, VmNoteDAO.class };
+        noteIdCompleterDepsTracker = new MultipleServiceTracker(context, noteIdCompleterDeps, new MultipleServiceTracker.Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                HostNoteDAO hostNoteDAO = (HostNoteDAO) services.get(HostNoteDAO.class.getName());
+                VmNoteDAO vmNoteDAO = (VmNoteDAO) services.get(VmNoteDAO.class.getName());
+                noteIdCompleterService.setHostNoteDao(hostNoteDAO);
+                noteIdCompleterService.setVmNoteDao(vmNoteDAO);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                noteIdCompleterService.setHostNoteDao(null);
+                noteIdCompleterService.setVmNoteDao(null);
+            }
+        });
+        noteIdCompleterDepsTracker.open();
+
+        context.registerService(CompleterService.class, noteIdCompleterService, null);
     }
 
     private void registerCommand(String name, Command command) {
@@ -123,6 +146,9 @@ public class Activator implements BundleActivator {
     public void stop(BundleContext context) throws Exception {
         if (serviceTracker != null) {
             serviceTracker.close();
+        }
+        if (noteIdCompleterDepsTracker != null) {
+            noteIdCompleterDepsTracker.close();
         }
         if (reg != null) {
             reg.unregisterCommands();

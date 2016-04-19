@@ -50,6 +50,7 @@ public class HostNotesStatementDescriptorRegistration implements StatementDescri
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>();
         descs.add(HostNoteDAOImpl.ADD_HOST_NOTE);
+        descs.add(HostNoteDAOImpl.QUERY_ALL_HOST_NOTES);
         descs.add(HostNoteDAOImpl.QUERY_COUNT_HOST_NOTES_BY_AGENT_ID);
         descs.add(HostNoteDAOImpl.QUERY_HOST_NOTE_BY_ID);
         descs.add(HostNoteDAOImpl.QUERY_HOST_NOTES_BY_AGENT_ID);

@@ -60,4 +60,6 @@ public interface NoteDAO<T extends Ref, U extends Note> {
     void remove(U note);
 
     void removeById(T ref, String id);
+
+    List<U> getAll();
 }

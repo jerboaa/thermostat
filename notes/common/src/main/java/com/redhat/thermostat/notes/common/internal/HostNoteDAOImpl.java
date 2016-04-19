@@ -51,6 +51,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.model.AggregateCount;
 
 public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
@@ -63,6 +64,9 @@ public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
             + "    'id' = ?s ,"
             + "    'timeStamp' = ?l ,"
             + "    'content' = ?s";
+
+    static final String QUERY_ALL_HOST_NOTES = "" +
+            "QUERY " + hostNotesCategory.getName();
 
     static final String QUERY_COUNT_HOST_NOTES_BY_AGENT_ID = ""
             + "QUERY-COUNT " + hostNotesCategory.getName() + " "
@@ -124,6 +128,11 @@ public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
                 return preparedStatement;
             }
         }).head().getCount();
+    }
+
+    @Override
+    public List<HostNote> getAll() {
+        return executeQuery(new SimpleDaoQuery<>(storage, hostNotesCategory, QUERY_ALL_HOST_NOTES)).asList();
     }
 
     @Override

@@ -34,30 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.common.internal;
+package com.redhat.thermostat.notes.client.cli.internal;
 
+import com.redhat.thermostat.common.cli.AbstractCompleterService;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
+import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.notes.common.HostNoteDAO;
+import com.redhat.thermostat.notes.common.VmNoteDAO;
+
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+public class NoteIdCompleterService extends AbstractCompleterService {
 
-/**
- * Registers the prepared queries issued by this module
- */
-public class VmNotesStatementDescriptorRegistration implements StatementDescriptorRegistration {
+    public static final CliCommandOption NOTE_ID_OPTION = new CliCommandOption("n", "noteId", true, "Note ID", false);
 
     @Override
-    public Set<String> getStatementDescriptors() {
-        Set<String> descs = new HashSet<>();
-        descs.add(VmNoteDAOImpl.ADD_VM_NOTE);
-        descs.add(VmNoteDAOImpl.QUERY_ALL_VM_NOTES);
-        descs.add(VmNoteDAOImpl.QUERY_COUNT_VM_NOTES_BY_VM_ID);
-        descs.add(VmNoteDAOImpl.QUERY_VM_NOTE_BY_ID);
-        descs.add(VmNoteDAOImpl.QUERY_VM_NOTES_BY_VM_ID);
-        descs.add(VmNoteDAOImpl.UPDATE_VM_NOTE);
-        descs.add(VmNoteDAOImpl.REMOVE_VM_NOTE_BY_ID);
-        return descs;
+    public Set<String> getCommands() {
+        return new HashSet<>(Arrays.asList(
+            DeleteNoteCommand.NAME,
+            UpdateNoteCommand.NAME
+        ));
+    }
+
+    @Override
+    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
+        TabCompleter completer = new CompletionFinderTabCompleter(new NoteIdsFinder(dependencyServices));
+        return Collections.singletonMap(NOTE_ID_OPTION, completer);
+    }
+
+    public void setHostNoteDao(HostNoteDAO hostNoteDao) {
+        setService(HostNoteDAO.class, hostNoteDao);
+    }
+
+    public void setVmNoteDao(VmNoteDAO vmNoteDao) {
+        setService(VmNoteDAO.class, vmNoteDao);
     }
 
 }
-

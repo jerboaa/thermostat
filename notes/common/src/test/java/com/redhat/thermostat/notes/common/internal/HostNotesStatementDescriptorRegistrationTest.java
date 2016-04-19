@@ -52,12 +52,13 @@ public class HostNotesStatementDescriptorRegistrationTest {
         Set<String> descriptors = statementRegistration.getStatementDescriptors();
 
         assertTrue(descriptors.contains(HostNoteDAOImpl.ADD_HOST_NOTE));
+        assertTrue(descriptors.contains(HostNoteDAOImpl.QUERY_ALL_HOST_NOTES));
         assertTrue(descriptors.contains(HostNoteDAOImpl.QUERY_COUNT_HOST_NOTES_BY_AGENT_ID));
         assertTrue(descriptors.contains(HostNoteDAOImpl.QUERY_HOST_NOTE_BY_ID));
         assertTrue(descriptors.contains(HostNoteDAOImpl.QUERY_HOST_NOTES_BY_AGENT_ID));
         assertTrue(descriptors.contains(HostNoteDAOImpl.REMOVE_HOST_NOTE_BY_ID));
         assertTrue(descriptors.contains(HostNoteDAOImpl.UPDATE_HOST_NOTE));
-        assertThat(descriptors.size(), is(6));
+        assertThat(descriptors.size(), is(7));
     }
 
 }

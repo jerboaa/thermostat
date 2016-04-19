@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.common.cli;
 
+import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * A simple structure used for tab-completion.
  */
@@ -44,14 +48,13 @@ public class CompletionInfo {
     private String actualCompletion;
     private String userVisibleText;
 
-    public CompletionInfo (String actualCompletion, String userVisibleText) {
-        this.actualCompletion = actualCompletion;
+    public CompletionInfo(String actualCompletion, String userVisibleText) {
+        this.actualCompletion = requireNonNull(actualCompletion);
         this.userVisibleText = userVisibleText;
     }
 
-    public CompletionInfo (String actualCompletion) {
-        this.actualCompletion = actualCompletion;
-        this.userVisibleText = null;
+    public CompletionInfo(String actualCompletion) {
+        this(actualCompletion, null);
     }
 
     /**
@@ -80,5 +83,24 @@ public class CompletionInfo {
         } else {
             return actualCompletion + " [" + userVisibleText + "]";
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        CompletionInfo that = (CompletionInfo) o;
+        return Objects.equals(this.actualCompletion, that.actualCompletion)
+                && Objects.equals(this.userVisibleText, that.userVisibleText);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(actualCompletion, userVisibleText);
     }
 }

@@ -55,7 +55,11 @@ public enum LocaleResources {
 
     NOTE_ID_COLUMN,
     TIMESTAMP_COLUMN,
-    CONTENT_COLUMN;
+    CONTENT_COLUMN,
+
+    TRIMMED_NOTE_CONTENT,
+
+    ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.notes.client.cli.locale.strings";
 

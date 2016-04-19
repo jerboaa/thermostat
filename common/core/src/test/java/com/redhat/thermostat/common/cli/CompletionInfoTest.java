@@ -34,30 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.common.internal;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Set;
+package com.redhat.thermostat.common.cli;
 
 import org.junit.Test;
 
-public class VmNotesStatementDescriptorRegistrationTest {
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
+
+public class CompletionInfoTest {
+
+    @Test(expected = NullPointerException.class)
+    public void testInstantiateWithNullActualCompletion() {
+        new CompletionInfo(null, "foo");
+    }
 
     @Test
-    public void verifyVmNotesAddAndQueryDescriptorsAreIncluded() {
-        VmNotesStatementDescriptorRegistration statementRegistration = new VmNotesStatementDescriptorRegistration();
-        Set<String> descriptors = statementRegistration.getStatementDescriptors();
-
-        assertTrue(descriptors.contains(VmNoteDAOImpl.ADD_VM_NOTE));
-        assertTrue(descriptors.contains(VmNoteDAOImpl.QUERY_ALL_VM_NOTES));
-        assertTrue(descriptors.contains(VmNoteDAOImpl.QUERY_COUNT_VM_NOTES_BY_VM_ID));
-        assertTrue(descriptors.contains(VmNoteDAOImpl.QUERY_VM_NOTE_BY_ID));
-        assertTrue(descriptors.contains(VmNoteDAOImpl.QUERY_VM_NOTES_BY_VM_ID));
-        assertTrue(descriptors.contains(VmNoteDAOImpl.UPDATE_VM_NOTE));
-        assertTrue(descriptors.contains(VmNoteDAOImpl.REMOVE_VM_NOTE_BY_ID));
-        assertThat(descriptors.size(), is(7));
+    public void testInstantiateWithNullUserVisibleText() {
+        CompletionInfo info = new CompletionInfo("foo", null);
+        assertThat(info.getActualCompletion(), is("foo"));
+        assertThat(info.getUserVisibleText(), is(nullValue()));
+        assertThat(info.getCompletionWithUserVisibleText(), is("foo"));
     }
+
+    @Test
+    public void testCompletionWithUserVisibleText() {
+        CompletionInfo info = new CompletionInfo("foo", "bar");
+        assertThat(info.getActualCompletion(), is("foo"));
+        assertThat(info.getUserVisibleText(), is("bar"));
+        assertThat(info.getCompletionWithUserVisibleText(), is("foo [bar]"));
+    }
+
+    @Test
+    public void testEqualsWhenSame() {
+        CompletionInfo info1 = new CompletionInfo("foo", "bar");
+        CompletionInfo info2 = new CompletionInfo("foo", "bar");
+        assertThat(info1, is(equalTo(info2)));
+    }
+
+    @Test
+    public void testEqualsWhenDifferent() {
+        CompletionInfo info1 = new CompletionInfo("foo", "bar");
+        CompletionInfo info2 = new CompletionInfo("foo", "foo");
+        assertThat(info1, is(not(equalTo(info2))));
+    }
+
+    @Test
+    public void testHashcodeWhenSame() {
+        CompletionInfo info1 = new CompletionInfo("foo", "bar");
+        CompletionInfo info2 = new CompletionInfo("foo", "bar");
+        assertThat(info1.hashCode(), is(info2.hashCode()));
+    }
+
 }

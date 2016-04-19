@@ -36,10 +36,6 @@
 
 package com.redhat.thermostat.notes.common.internal;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.logging.Logger;
-
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.notes.common.VmNote;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
@@ -51,7 +47,12 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.model.AggregateCount;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.logging.Logger;
 
 class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
 
@@ -64,6 +65,9 @@ class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
             + "    'id' = ?s ,"
             + "    'timeStamp' = ?l ,"
             + "    'content' = ?s";
+
+    static final String QUERY_ALL_VM_NOTES = "" +
+            "QUERY " + vmNotesCategory.getName();
 
     static final String QUERY_COUNT_VM_NOTES_BY_VM_ID = ""
             + "QUERY-COUNT " + vmNotesCategory.getName() + " "
@@ -119,6 +123,11 @@ class VmNoteDAOImpl extends AbstractDao implements VmNoteDAO {
                 return preparedStatement;
             }
         });
+    }
+
+    @Override
+    public List<VmNote> getAll() {
+        return executeQuery(new SimpleDaoQuery<>(storage, vmNotesCategory, QUERY_ALL_VM_NOTES)).asList();
     }
 
     @Override

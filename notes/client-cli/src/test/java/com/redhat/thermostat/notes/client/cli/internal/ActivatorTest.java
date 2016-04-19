@@ -36,10 +36,13 @@
 
 package com.redhat.thermostat.notes.client.cli.internal;
 
+import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import org.junit.Test;
 
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsNotRegistered;
 import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+import static com.redhat.thermostat.testutils.Asserts.assertServiceIsRegistered;
 import static org.junit.Assert.assertEquals;
 
 public class ActivatorTest {
@@ -55,12 +58,18 @@ public class ActivatorTest {
         assertCommandIsRegistered(context, DeleteNoteCommand.NAME, DeleteNoteCommand.class);
         assertCommandIsRegistered(context, UpdateNoteCommand.NAME, UpdateNoteCommand.class);
         assertCommandIsRegistered(context, ListNotesCommand.NAME, ListNotesCommand.class);
+        assertServiceIsRegistered(context, CompleterService.class, NoteIdCompleterService.class);
 
-        assertEquals(4, context.getAllServices().size());
+        assertEquals(5, context.getAllServices().size());
 
         activator.stop(context);
 
-        assertEquals(0, context.getAllServices().size());
+        assertEquals(1, context.getAllServices().size());
+        assertCommandIsNotRegistered(context, AddNoteCommand.NAME, AddNoteCommand.class);
+        assertCommandIsNotRegistered(context, DeleteNoteCommand.NAME, DeleteNoteCommand.class);
+        assertCommandIsNotRegistered(context, UpdateNoteCommand.NAME, UpdateNoteCommand.class);
+        assertCommandIsNotRegistered(context, ListNotesCommand.NAME, ListNotesCommand.class);
+        assertServiceIsRegistered(context, CompleterService.class, NoteIdCompleterService.class);
     }
 
 }
