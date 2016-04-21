@@ -81,6 +81,7 @@ public class VmNotesControllerTest {
         when(hostRef.getAgentId()).thenReturn("foo-agent");
         ref = mock(VmRef.class);
         when(ref.getHostRef()).thenReturn(hostRef);
+        when(ref.getVmId()).thenReturn("vmId");
     }
 
     @Test

@@ -126,15 +126,23 @@ public abstract class AbstractNotesCommand extends AbstractCommand implements No
         return args.getArgument(NOTE_ID_ARGUMENT);
     }
 
-    protected static String getNoteContent(Arguments args) {
+    protected static String getNoteContent(Arguments args) throws CommandException {
         if (args.hasArgument(NOTE_CONTENT_ARGUMENT)) {
-            return args.getArgument(NOTE_CONTENT_ARGUMENT);
+            String content = args.getArgument(NOTE_CONTENT_ARGUMENT);
+            if (content == null) {
+                content = "";
+            }
+            return content;
         } else { // assume all non-option arguments are together meant to be the note content
             StringBuilder sb = new StringBuilder();
             for (String word : args.getNonOptionArguments()) {
                 sb.append(word).append(' ');
             }
-            return sb.toString().trim();
+            String content = sb.toString().trim();
+            if (content.isEmpty()) {
+                throw new CommandException(translator.localize(LocaleResources.NOTE_CONTENT_ARG_REQUIRED));
+            }
+            return content;
         }
     }
 

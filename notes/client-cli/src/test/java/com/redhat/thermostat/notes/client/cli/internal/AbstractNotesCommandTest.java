@@ -304,16 +304,20 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
     }
 
     @Test
-    public void testGetNoteContentWithNoFlagAndNoNonOptionArgs() {
+    public void testGetNoteContentWithNoFlagAndNoNonOptionArgs() throws CommandException {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(false);
         when(args.getNonOptionArguments()).thenReturn(Collections.<String>emptyList());
-        String result = AbstractNotesCommand.getNoteContent(args);
-        assertThat(result, is(""));
+        try {
+            AbstractNotesCommand.getNoteContent(args);
+            fail();
+        } catch (CommandException ex) {
+            // pass
+        }
     }
 
     @Test
-    public void testGetNoteContentWithNonOptionArgs() {
+    public void testGetNoteContentWithNonOptionArgs() throws CommandException {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(false);
         when(args.getNonOptionArguments()).thenReturn(Arrays.asList("this", "is", "a", "note"));
@@ -322,7 +326,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
     }
 
     @Test
-    public void testGetNoteContentWithFlag() {
+    public void testGetNoteContentWithFlag() throws CommandException {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
         when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("this is a note");
@@ -332,7 +336,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
     }
 
     @Test
-    public void testGetNoteContentWithFlagAndNonOptionArgs() {
+    public void testGetNoteContentWithFlagAndNonOptionArgs() throws CommandException {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
         when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("this is a note");
@@ -342,13 +346,22 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
     }
 
     @Test
-    public void testGetNoteContentWithStrangeInput() {
+    public void testGetNoteContentWithStrangeInput() throws CommandException {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
         when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("this is a note");
         when(args.getNonOptionArguments()).thenReturn(Arrays.asList("here", "is", "another", "--noteContent", "strange", "--noteContent", "--input"));
         String result = AbstractNotesCommand.getNoteContent(args);
         assertThat(result, is("this is a note"));
+    }
+
+    @Test
+    public void testGetNoteContentDoesNotReturnNull() throws CommandException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(null);
+        String result = AbstractNotesCommand.getNoteContent(args);
+        assertThat(result, is(""));
     }
 
     public void doInvalidAgentIdTest(Arguments args) {

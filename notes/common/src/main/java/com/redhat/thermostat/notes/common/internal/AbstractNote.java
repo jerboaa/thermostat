@@ -34,51 +34,60 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.common;
+package com.redhat.thermostat.notes.common.internal;
 
-import com.redhat.thermostat.notes.common.internal.AbstractNote;
-import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.storage.core.Persist;
-
-import java.util.Objects;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 import static java.util.Objects.requireNonNull;
 
-@Entity
-public class VmNote extends AbstractNote {
+public abstract class AbstractNote extends BasePojo implements TimeStampedPojo, Note {
 
-    private String vmId;
+    protected String id;
+    protected long timeStamp;
+    protected String content;
 
-    public VmNote() {
-        super();
-        setVmId("");
-    }
-
-    @Persist
-    public String getVmId() {
-        return vmId;
-    }
-
-    @Persist
-    public void setVmId(String vmId) {
-        this.vmId = requireNonNull(vmId);
+    protected AbstractNote() {
+        super(null);
+        setId("");
+        setContent("");
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(getAgentId(), vmId, id, content);
+    @Persist
+    public String getId() {
+        return id;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof VmNote)) {
-            return false;
-        }
-        VmNote other = (VmNote) obj;
-        return super.equals(obj)
-                && Objects.equals(this.content, other.content)
-                && Objects.equals(this.id, other.id)
-                && Objects.equals(this.timeStamp, other.timeStamp)
-                && Objects.equals(this.vmId, other.vmId);
+    @Persist
+    public void setId(String id) {
+        this.id = requireNonNull(id);
     }
+
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    @Persist
+    @Override
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    @Persist
+    @Override
+    public void setContent(String content) {
+        this.content = requireNonNull(content);
+    }
+
+    @Persist
+    @Override
+    public String getContent() {
+        return this.content;
+    }
+
 }

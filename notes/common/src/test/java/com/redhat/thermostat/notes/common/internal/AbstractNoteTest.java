@@ -34,51 +34,74 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.common;
+package com.redhat.thermostat.notes.common.internal;
 
-import com.redhat.thermostat.notes.common.internal.AbstractNote;
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
+import org.junit.Before;
+import org.junit.Test;
 
-import java.util.Objects;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
-import static java.util.Objects.requireNonNull;
+public class AbstractNoteTest<T extends AbstractNote> {
 
-@Entity
-public class VmNote extends AbstractNote {
+    protected T note;
 
-    private String vmId;
-
-    public VmNote() {
-        super();
-        setVmId("");
+    @Before
+    public void setup() {
+        note = createNewNote();
     }
 
-    @Persist
-    public String getVmId() {
-        return vmId;
+    protected T createNewNote() {
+        return (T) new TestNote();
     }
 
-    @Persist
-    public void setVmId(String vmId) {
-        this.vmId = requireNonNull(vmId);
+    @Test(expected = NullPointerException.class)
+    public void testNullContentNotAccepted() {
+        note.setContent(null);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getAgentId(), vmId, id, content);
+    @Test
+    public void testInitialContentIsEmptyString() {
+        assertThat(note.getContent(), is(""));
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof VmNote)) {
-            return false;
-        }
-        VmNote other = (VmNote) obj;
-        return super.equals(obj)
-                && Objects.equals(this.content, other.content)
-                && Objects.equals(this.id, other.id)
-                && Objects.equals(this.timeStamp, other.timeStamp)
-                && Objects.equals(this.vmId, other.vmId);
+    @Test
+    public void testSetGetContent() {
+        String content = "content";
+        note.setContent(content);
+        assertThat(note.getContent(), is(content));
     }
+
+    @Test(expected = NullPointerException.class)
+    public void testNullIdNotAccepted() {
+        note.setId(null);
+    }
+
+    @Test
+    public void testInitialIdIsEmptyString() {
+        assertThat(note.getId(), is(""));
+    }
+
+    @Test
+    public void testSetGetId() {
+        String id = "id";
+        note.setId(id);
+        assertThat(note.getId(), is(id));
+    }
+
+    @Test
+    public void testInitialTimestampIsZero() {
+        assertThat(note.getTimeStamp(), is(0L));
+    }
+
+    @Test
+    public void testSetGetTimestamp() {
+        long timestmap = 100L;
+        note.setTimeStamp(timestmap);
+        assertThat(note.getTimeStamp(), is(timestmap));
+    }
+
+    private static class TestNote extends AbstractNote {
+    }
+
 }

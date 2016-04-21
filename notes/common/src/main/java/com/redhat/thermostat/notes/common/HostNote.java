@@ -36,60 +36,13 @@
 
 package com.redhat.thermostat.notes.common;
 
+import com.redhat.thermostat.notes.common.internal.AbstractNote;
+import com.redhat.thermostat.storage.core.Entity;
+
 import java.util.Objects;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
-
 @Entity
-public class HostNote extends BasePojo implements TimeStampedPojo, Note {
-
-    /** a GUID */
-    private String id;
-    private long timeStamp;
-    private String content;
-
-    public HostNote() {
-        super(null);
-        this.content = "";
-    }
-
-    @Override
-    @Persist
-    public String getId() {
-        return id;
-    }
-
-    @Persist
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    @Persist
-    @Override
-    public long getTimeStamp() {
-        return timeStamp;
-    }
-
-    @Persist
-    @Override
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-
-    @Persist
-    @Override
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    @Persist
-    @Override
-    public String getContent() {
-        return this.content;
-    }
+public class HostNote extends AbstractNote {
 
     @Override
     public int hashCode() {
@@ -108,7 +61,7 @@ public class HostNote extends BasePojo implements TimeStampedPojo, Note {
         return super.equals(obj)
                 && Objects.equals(this.id, other.id)
                 && Objects.equals(this.timeStamp, other.timeStamp)
-                && Objects.equals(this.content,  other.content);
+                && Objects.equals(this.content, other.content);
     }
 
 }
