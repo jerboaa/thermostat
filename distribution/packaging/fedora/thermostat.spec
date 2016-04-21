@@ -62,17 +62,21 @@ __DEFAULT_RELEASE__ 7
   %global javax_servlet_bundle_version 3.1.0
   %global javax_servlet_bsn            javax.servlet-api
   # jnr-unixsocket and deps
-  %global jnr_unixsocket_version     0.10.0
-  %global jnr_enxio_version          0.10.0
-  %global jnr_constants_version      0.9.0
+  %global jnr_unixsocket_version     0.12.0
+  %global jnr_unixsocket_symbolic_name   com.github.jnr.unixsocket
+  %global jnr_enxio_version          0.12.0
+  %global jnr_enxio_symbolic_name    com.github.jnr.enxio
+  %global jnr_constants_version      0.9.1
+  %global jnr_constants_symbolic_name  com.github.jnr.constants
   %global jnr_x86asm_version         1.0.2
-  %global jffi_version               1.2.10
+  %global jffi_version               1.2.11
+  %global jffi_symbolic_name         com.github.jnr.jffi
   # OSGi metadata added to upstream jnr-posix in version 3.0.17 and
   # upstream jnr-ffi in version 2.0.4, which use different 
   # Bundle-SymbolicNames than previous RPMs.
-  %global jnr_posix_version          3.0.27
+  %global jnr_posix_version          3.0.29
   %global jnr_posix_symbolic_name    com.github.jnr.posix
-  %global jnr_ffi_version            2.0.6
+  %global jnr_ffi_version            2.0.9
   %global jnr_ffi_symbolic_name      com.github.jnr.ffi
   %global osgi_compendium_maven_version 1.4.0
 
@@ -107,8 +111,10 @@ __DEFAULT_RELEASE__ 7
   %global jnr_unixsocket_version     0.8.0
   %global jnr_enxio_version          0.9.0
   %global jnr_constants_version      0.8.8
+  %global jnr_constants_symbolic_name  jnr.constants
   %global jnr_x86asm_version         1.0.2
   %global jffi_version               1.2.9
+  %global jffi_symbolic_name         com.kenai.jffi
   # OSGi metadata added to upstream jnr-posix in version 3.0.17 and
   # upstream jnr-ffi in version 2.0.4, which use different 
   # Bundle-SymbolicNames than previous RPMs.
@@ -116,6 +122,8 @@ __DEFAULT_RELEASE__ 7
   %global jnr_posix_symbolic_name    jnr.posix
   %global jnr_ffi_version            2.0.3
   %global jnr_ffi_symbolic_name      jnr.ffi
+  %global jnr_unixsocket_symbolic_name   jnr.unixsocket
+  %global jnr_enxio_symbolic_name    jnr.enxio
   # Use compat version of 1 which is provided by the SCL-ized version
   # in our collection.
   %global osgi_compendium_maven_version 1
@@ -409,13 +417,13 @@ BuildRequires: %{?scl_prefix}osgi(com.mxgraph) = %{jgraphx_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}osgi(%{javax_servlet_bsn}) = %{javax_servlet_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}mvn(%{object_web_asm_maven_coords}) >= 5
 # jnr-unixsocket and deps
-BuildRequires: %{?scl_prefix}osgi(jnr.unixsocket) = %{jnr_unixsocket_version}
-BuildRequires: %{?scl_prefix}osgi(jnr.enxio) = %{jnr_enxio_version}
-BuildRequires: %{?scl_prefix}osgi(jnr.constants) = %{jnr_constants_version}
+BuildRequires: %{?scl_prefix}osgi(%{jnr_unixsocket_symbolic_name}) = %{jnr_unixsocket_version}
+BuildRequires: %{?scl_prefix}osgi(%{jnr_enxio_symbolic_name}) = %{jnr_enxio_version}
+BuildRequires: %{?scl_prefix}osgi(%{jnr_constants_symbolic_name}) = %{jnr_constants_version}
 BuildRequires: %{?scl_prefix}osgi(jnr.x86asm) = %{jnr_x86asm_version}
 BuildRequires: %{?scl_prefix}osgi(%{jnr_posix_symbolic_name}) = %{jnr_posix_version}
 BuildRequires: %{?scl_prefix}osgi(%{jnr_ffi_symbolic_name}) = %{jnr_ffi_version}
-BuildRequires: %{?scl_prefix}osgi(com.kenai.jffi) = %{jffi_version}
+BuildRequires: %{?scl_prefix}osgi(%{jffi_symbolic_name}) = %{jffi_version}
 
 %{?!scl:
 Requires: javapackages-tools
@@ -741,14 +749,18 @@ popd
                  -Dkxml2.version=%{kxml2_version} \
                  -Dosgi.compendium.version=%{osgi_compendium_maven_version} \
                  -Djnr-unixsocket.version=%{jnr_unixsocket_version} \
+                 -Djnr-unixsocket.bundle.symbolic.name=%{jnr_unixsocket_symbolic_name} \
                  -Djnr-enxio.version=%{jnr_enxio_version} \
+                 -Djnr-enxio.bundle.symbolic.name=%{jnr_enxio_symbolic_name} \
                  -Djnr-constants.version=%{jnr_constants_version} \
                  -Djnr-x86asm.version=%{jnr_x86asm_version} \
                  -Djnr-posix.bundle.symbolic.name=%{jnr_posix_symbolic_name} \
                  -Djnr-posix.version=%{jnr_posix_version} \
                  -Djnr-ffi.bundle.symbolic.name=%{jnr_ffi_symbolic_name} \
                  -Djnr-ffi.version=%{jnr_ffi_version} \
-                 -Djffi.version=%{jffi_version}
+                 -Djffi.version=%{jffi_version} \
+                 -Djffi.bundle.symbolic.name=%{jffi_symbolic_name}
+        
 
 %{?scl:EOF}
 
