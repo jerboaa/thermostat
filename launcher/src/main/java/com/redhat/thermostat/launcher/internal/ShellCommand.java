@@ -38,6 +38,7 @@ package com.redhat.thermostat.launcher.internal;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,6 +46,7 @@ import java.util.logging.Logger;
 import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
+import jline.console.UserInterruptException;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.PersistentHistory;
@@ -72,7 +74,7 @@ public class ShellCommand extends AbstractCommand {
     private static final Logger logger = LoggingUtils.getLogger(ShellCommand.class);
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    private static final String[] exitKeywords = { "exit", "quit", "q" };
+    private static final List<String> exitKeywords = Arrays.asList("exit", "quit", "q" );
 
     private HistoryProvider historyProvider;
     private Version version;
@@ -148,7 +150,7 @@ public class ShellCommand extends AbstractCommand {
         }
     }
 
-    private void closeTerminal(Terminal term) throws CommandException {
+    private void closeTerminal(Terminal term) {
         try {
             term.restore();
         } catch (Exception e) {
@@ -158,32 +160,65 @@ public class ShellCommand extends AbstractCommand {
 
     private void shellMainLoop(CommandContext ctx, History history, Terminal term) throws IOException, CommandException {
         ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), ctx.getConsole().getOutput(), term);
+        reader.setHandleUserInterrupt(true);
+        reader.setPrompt(shellPrompt.getPrompt());
         if (reader.getCompleters().isEmpty() && commandInfoSource != null && tabCompletion != null) {
             tabCompletion.setupTabCompletion(reader, commandInfoSource, bundleContext, prefs);
         }
         if (history != null) {
             reader.setHistory(history);
         }
-        while (handleConsoleInput(reader, ctx.getConsole())) { /* no-op; the loop conditional performs the action */ }
+        try {
+            while (handleConsoleInput(reader, ctx.getConsole(), shellPrompt.getPrompt())) { /* no-op; the loop conditional performs the action */ }
+        } finally {
+            reader.shutdown();
+        }
     }
 
     /**
      * @return true if the shell should continue accepting more input or false if the shell should quit
      */
-    private boolean handleConsoleInput(ConsoleReader reader, Console console) throws IOException, CommandException {
+    private boolean handleConsoleInput(ConsoleReader reader, Console console, String prompt) throws IOException, CommandException {
         String line;
-        line = reader.readLine(shellPrompt.getPrompt());
+        try {
+            line = reader.readLine(prompt);
+        } catch (UserInterruptException uie) {
+            return handleUserInterrupt(reader, console);
+        }
         if (line == null) {
+            // ex. Ctrl-D on empty line
             return false;
         }
         line = line.trim();
         if (line.equals("")) {
             return true;
-        } else if (Arrays.asList(exitKeywords).contains(line)) {
+        } else if (exitKeywords.contains(line)) {
             return false;
         } else {
             launchCommand(line);
             return true;
+        }
+    }
+
+    private boolean handleUserInterrupt(ConsoleReader reader, Console console) {
+        String prompt = reader.getPrompt();
+        try {
+            console.getOutput().println(t.localize(LocaleResources.QUIT_PROMPT).getContents());
+
+            String confirmChars = t.localize(LocaleResources.QUIT_CONFIRM).getContents();
+            String denyChars = t.localize(LocaleResources.QUIT_DENY).getContents();
+            char[] expectedChars = (confirmChars + denyChars).toCharArray();
+
+            char val;
+            try {
+                val = (char) reader.readCharacter(expectedChars);
+            } catch (IOException ioe) {
+                return false;
+            }
+
+            return confirmChars.indexOf(val) == -1;
+        } finally {
+            reader.setPrompt(prompt);
         }
     }
 

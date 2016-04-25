@@ -74,6 +74,10 @@ public enum LocaleResources {
     PARSE_ISSUES_CALLED_BEFORE_PARSE,
     PARSER_ERROR,
     PARSER_WARNING,
+
+    QUIT_PROMPT,
+    QUIT_CONFIRM,
+    QUIT_DENY,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";
