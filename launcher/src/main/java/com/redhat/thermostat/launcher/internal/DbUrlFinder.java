@@ -36,31 +36,53 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.LinkedList;
-import java.util.List;
-
+import com.redhat.thermostat.common.cli.CompletionFinder;
+import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import org.junit.Test;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
-public class DbUrlCompleterTest {
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
-    @Test
-    public void testDbUrlCompleter() {
-        ClientPreferences prefs = mock(ClientPreferences.class);
-        DbUrlCompleter dbUrlCompleter = new DbUrlCompleter(prefs);
+public class DbUrlFinder implements CompletionFinder {
 
-        String partialUrl = "https://ip.addr";
-        String fullUrl = partialUrl + "ess.example.com:25813/thermostat/storage";
-        when(prefs.getConnectionUrl()).thenReturn(fullUrl);
+    private DependencyServices dependencyServices;
+    private CommonPaths paths;
+    private ClientPreferences prefs;
 
-        List<CharSequence> candidates = new LinkedList<>();
-        dbUrlCompleter.complete(partialUrl, partialUrl.length(), candidates);
-
-        assertEquals(1, candidates.size());
-        assertEquals(fullUrl, candidates.get(0).toString().trim());
+    public DbUrlFinder(DependencyServices dependencyServices) {
+        this.dependencyServices = dependencyServices;
     }
+
+    /* Testing only */
+    void setPaths(CommonPaths paths) {
+        this.paths = paths;
+    }
+
+    /* Testing only */
+    void setPrefs(ClientPreferences prefs) {
+        this.prefs = prefs;
+    }
+
+    @Override
+    public List<CompletionInfo> findCompletions() {
+        if (!dependencyServices.hasService(CommonPaths.class)) {
+            return Collections.emptyList();
+        }
+
+        CommonPaths paths = dependencyServices.getService(CommonPaths.class);
+        if (!Objects.equals(this.paths, paths)) {
+            this.paths = paths;
+            this.prefs = new ClientPreferences(paths);
+        }
+
+        String dbUrl = prefs.getConnectionUrl();
+        if (dbUrl == null) {
+            dbUrl = "";
+        }
+        return Collections.singletonList(new CompletionInfo(dbUrl));
+    }
+
 }

@@ -154,11 +154,7 @@ public class TabCompletion {
                 TreeCompleter.Node command = getCommandByName(info.getName());
 
                 for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
-                    if (option.getLongOpt().equals(Arguments.DB_URL_ARGUMENT)) {
-                        setupCompletion(command, option, new DbUrlCompleter(prefs));
-                    } else {
-                        setupDefaultCompletion(command, option);
-                    }
+                    setupDefaultCompletion(command, option);
                 }
 
                 if (info.needsFileTabCompletions()) {

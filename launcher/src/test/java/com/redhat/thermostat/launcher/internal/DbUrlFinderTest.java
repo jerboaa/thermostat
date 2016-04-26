@@ -36,27 +36,38 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import jline.console.completer.StringsCompleter;
+import com.redhat.thermostat.shared.config.CommonPaths;
+import org.junit.Test;
 
 import java.util.List;
 
-public class DbUrlCompleter implements TabCompleter {
+import static junit.framework.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-    private final ClientPreferences prefs;
+public class DbUrlFinderTest {
 
-    public DbUrlCompleter(ClientPreferences preferences) {
-        this.prefs = preferences;
-    }
+    @Test
+    public void testDbUrlCompleter() {
+        DependencyServices dependencyServices = mock(DependencyServices.class);
+        CommonPaths paths = mock(CommonPaths.class);
+        ClientPreferences prefs = mock(ClientPreferences.class);
+        when(dependencyServices.hasService(CommonPaths.class)).thenReturn(true);
+        when(dependencyServices.getService(CommonPaths.class)).thenReturn(paths);
+        DbUrlFinder dbUrlFinder = new DbUrlFinder(dependencyServices);
+        dbUrlFinder.setPaths(paths);
+        dbUrlFinder.setPrefs(prefs);
 
-    @Override
-    public int complete(final String buffer, final int cursor, final List<CharSequence> candidates) {
-        String dbUrl = "";
-        if (prefs.getConnectionUrl() != null) {
-            dbUrl = prefs.getConnectionUrl();
-        }
-        StringsCompleter stringsCompleter = new StringsCompleter(dbUrl);
-        return stringsCompleter.complete(buffer, cursor, candidates);
+        String partialUrl = "https://ip.addr";
+        String fullUrl = partialUrl + "ess.example.com:25813/thermostat/storage";
+        when(prefs.getConnectionUrl()).thenReturn(fullUrl);
+
+        List<CompletionInfo> completions = dbUrlFinder.findCompletions();
+
+        assertEquals(1, completions.size());
+        assertEquals(fullUrl, completions.get(0).getCompletionWithUserVisibleText().trim());
     }
 }

@@ -50,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 
+import com.redhat.thermostat.shared.config.CommonPaths;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.junit.After;
@@ -393,27 +394,6 @@ public class ShellCommandTest {
         assertEquals(PROMPT + "exit", usefulOutput.split("\n")[1]);
         assertEquals("", ctxFactory.getError());
 
-    }
-
-    @Test
-    public void testDbUrlOptionCompletes() throws CommandException {
-        ServiceReference ref = mock(ServiceReference.class);
-        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
-        Launcher launcher = mock(Launcher.class);
-        when(bundleContext.getService(ref)).thenReturn(launcher);
-
-        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
-        ctxFactory.setInput("validate --dbUrl \t\nexit\n");
-        Arguments args = new SimpleArguments();
-        CommandContext ctx = ctxFactory.createContext(args);
-        cmd.run(ctx);
-
-        String usefulOutput = getOutputWithoutIntro(ctxFactory);
-        String tabOutput = getTabOutput(usefulOutput);
-        assertTrue(tabOutput.length() == 0);
-        assertEquals(PROMPT + "validate --dbUrl http://127.0.0.1:mockStorage ", usefulOutput.split("\n")[0]);
-        assertEquals(PROMPT + "exit", usefulOutput.split("\n")[1]);
-        assertEquals("", ctxFactory.getError());
     }
 
     @Test
