@@ -34,28 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.storage.dao;
 
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.QueryResult;
-import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.model.AggregateCount;
-import com.redhat.thermostat.storage.model.Pojo;
 
-import static com.redhat.thermostat.storage.internal.dao.LoggingUtil.logDescriptorParsingException;
-import static com.redhat.thermostat.storage.internal.dao.LoggingUtil.logStatementExecutionException;
-
-class BaseCountable extends AbstractDao {
+/**
+ * This class provides generic functionality for performing an aggregate count query.
+ */
+public class BaseCountable extends AbstractDao {
     
     private static final int ERROR_COUNT_RESULT = -1;
     private static final Logger logger = LoggingUtils.getLogger(BaseCountable.class);

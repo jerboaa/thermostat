@@ -40,12 +40,13 @@ import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Countable;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 @Service
-public interface NetworkInterfaceInfoDAO {
+public interface NetworkInterfaceInfoDAO extends Countable {
 
     static Key<String> ifaceKey = new Key<>("interfaceName");
     static Key<String> ip4AddrKey = new Key<>("ip4Addr");

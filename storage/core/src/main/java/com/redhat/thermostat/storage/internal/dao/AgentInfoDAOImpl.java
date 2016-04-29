@@ -52,6 +52,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.BaseCountable;
 import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;

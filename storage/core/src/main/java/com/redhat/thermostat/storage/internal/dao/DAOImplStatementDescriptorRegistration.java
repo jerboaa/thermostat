@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.internal.dao;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -69,6 +68,7 @@ public class DAOImplStatementDescriptorRegistration implements
         daoDescs.add(HostInfoDAOImpl.DESC_ADD_HOST_INFO);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.DESC_REPLACE_NETWORK_INFO);
+        daoDescs.add(NetworkInterfaceInfoDAOImpl.AGGREGATE_COUNT_ALL_NETWORK_INTERFACES);
         daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST);
         daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS);
         daoDescs.add(VmInfoDAOImpl.QUERY_VM_INFO);

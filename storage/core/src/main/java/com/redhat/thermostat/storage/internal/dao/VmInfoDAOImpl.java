@@ -56,6 +56,7 @@ import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.dao.BaseCountable;
 import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;

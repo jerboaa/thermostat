@@ -36,11 +36,20 @@
 
 package com.redhat.thermostat.thread.dao.internal;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.Id;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
@@ -49,10 +58,11 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapter;
 import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapterBuilder;
-import com.redhat.thermostat.storage.core.Id;
 import com.redhat.thermostat.storage.core.experimental.statement.Query;
 import com.redhat.thermostat.storage.core.experimental.statement.QueryValues;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
+import com.redhat.thermostat.storage.dao.BaseCountable;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.dao.internal.statement.SessionQueries;
@@ -64,14 +74,8 @@ import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import static com.redhat.thermostat.common.utils.IteratorUtils.head;
-
-public class ThreadDaoImpl implements ThreadDao {
+public class ThreadDaoImpl extends BaseCountable implements ThreadDao {
     
     private static final Logger logger = LoggingUtils.getLogger(ThreadDaoImpl.class);
 
@@ -90,6 +94,9 @@ public class ThreadDaoImpl implements ThreadDao {
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
             + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
+
+    static final String AGGREGATE_COUNT_ALL_DEADLOCKS = "QUERY-COUNT " +
+            DEADLOCK_INFO.getName();
 
     static final String DESC_ADD_THREAD_HARVESTING_STATUS = "ADD " + THREAD_HARVESTING_STATUS.getName() +
             " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
@@ -120,6 +127,7 @@ public class ThreadDaoImpl implements ThreadDao {
             + ThreadDaoKeys.THREAD_HEADER_UUID.getName() + "' = ?s SORT '"
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
 
+    private final Category<AggregateCount> aggregateCategory;
     private Storage storage;
     
     public ThreadDaoImpl(Storage storage) {
@@ -131,6 +139,10 @@ public class ThreadDaoImpl implements ThreadDao {
         storage.registerCategory(THREAD_CONTENTION_SAMPLE);
 
         storage.registerCategory(DEADLOCK_INFO);
+
+        CategoryAdapter<VmDeadLockData, AggregateCount> adapter = new CategoryAdapter<>(DEADLOCK_INFO);
+        aggregateCategory = adapter.getAdapted(AggregateCount.class);
+        storage.registerCategory(aggregateCategory);
     }
 
     @Override
@@ -309,6 +321,11 @@ public class ThreadDaoImpl implements ThreadDao {
         } catch (StatementExecutionException e) {
             logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
         }
+    }
+
+    @Override
+    public long getDeadLockCount() {
+        return getCount(storage, aggregateCategory, AGGREGATE_COUNT_ALL_DEADLOCKS);
     }
 
 

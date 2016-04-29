@@ -45,6 +45,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.NoSuchElementException;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -58,6 +60,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
@@ -89,6 +92,9 @@ public class ThreadDaoImplTest {
 
         String expectedQueryThreadLatestDeadlockInfo = "QUERY vm-deadlock-data WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryThreadLatestDeadlockInfo, ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO);
+
+        String aggregateCountAllDeadLocks = "QUERY-COUNT vm-deadlock-data";
+        assertEquals(aggregateCountAllDeadLocks, ThreadDaoImpl.AGGREGATE_COUNT_ALL_DEADLOCKS);
 
         String addThreadHarvesting = "ADD vm-thread-harvesting SET 'agentId' = ?s , " +
                                                     "'vmId' = ?s , " +
@@ -257,6 +263,30 @@ public class ThreadDaoImplTest {
         verify(add).setBoolean(3, status.isHarvesting());
         verify(add).execute();
         verifyNoMoreInteractions(add);
+    }
+
+    @Test
+    public void testGetDeadLockCount()
+            throws DescriptorParsingException, StatementExecutionException {
+
+        AggregateCount count = new AggregateCount();
+        count.setCount(2);
+
+        @SuppressWarnings("unchecked")
+        Cursor<AggregateCount> c = (Cursor<AggregateCount>) mock(Cursor.class);
+        when(c.hasNext()).thenReturn(true).thenReturn(false);
+        when(c.next()).thenReturn(count).thenThrow(new NoSuchElementException());
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<AggregateCount> stmt = (PreparedStatement<AggregateCount>) mock(PreparedStatement.class);
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
+        when(storage.prepareStatement(desc)).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(c);
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+
+        assertEquals(2, dao.getDeadLockCount());
     }
 
 }

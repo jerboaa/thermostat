@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -59,6 +60,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 public class NetworkInterfaceInfoDAOTest {
@@ -84,6 +86,9 @@ public class NetworkInterfaceInfoDAOTest {
     public void preparedQueryDescriptorsAreSane() {
         String expectedNetworkInfo = "QUERY network-info WHERE 'agentId' = ?s";
         assertEquals(expectedNetworkInfo, NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
+        String aggregateCountAllNetworkInterfaces = "QUERY-COUNT network-info";
+        assertEquals(aggregateCountAllNetworkInterfaces,
+                NetworkInterfaceInfoDAOImpl.AGGREGATE_COUNT_ALL_NETWORK_INTERFACES);
         String replaceNetworkInfo = "REPLACE network-info SET 'agentId' = ?s , " +
             "'interfaceName' = ?s , " +
             "'ip4Addr' = ?s , " +
@@ -168,6 +173,28 @@ public class NetworkInterfaceInfoDAOTest {
         verify(replace).execute();
         verifyNoMoreInteractions(replace);
     }
-    
+
+    @Test
+    public void testGetCount()
+            throws DescriptorParsingException, StatementExecutionException {
+        AggregateCount count = new AggregateCount();
+        count.setCount(2);
+
+        @SuppressWarnings("unchecked")
+        Cursor<AggregateCount> c = (Cursor<AggregateCount>) mock(Cursor.class);
+        when(c.hasNext()).thenReturn(true).thenReturn(false);
+        when(c.next()).thenReturn(count).thenThrow(new NoSuchElementException());
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<AggregateCount> stmt = (PreparedStatement<AggregateCount>) mock(PreparedStatement.class);
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
+        when(storage.prepareStatement(desc)).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(c);
+        NetworkInterfaceInfoDAOImpl dao = new NetworkInterfaceInfoDAOImpl(storage);
+
+        assertEquals(2, dao.getCount());
+    }
 }
 

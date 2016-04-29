@@ -40,17 +40,20 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.dao.BaseCountable;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
-public class NetworkInterfaceInfoDAOImpl extends AbstractDao implements NetworkInterfaceInfoDAO {
+public class NetworkInterfaceInfoDAOImpl extends BaseCountable implements NetworkInterfaceInfoDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(NetworkInterfaceInfoDAOImpl.class);
     static final String QUERY_NETWORK_INFO = "QUERY "
@@ -69,14 +72,21 @@ public class NetworkInterfaceInfoDAOImpl extends AbstractDao implements NetworkI
                     "'" + ip4AddrKey.getName() + "' = ?s , " +
                     "'" + ip6AddrKey.getName() + "' = ?s " +
                  "WHERE '" + Key.AGENT_ID.getName() + "' = ?s AND " +
-                       "'" + ifaceKey.getName() + "' = ?s"; 
-                                
+                       "'" + ifaceKey.getName() + "' = ?s";
+    static final String AGGREGATE_COUNT_ALL_NETWORK_INTERFACES = "QUERY-COUNT " +
+            networkInfoCategory.getName();
 
+
+    private final Category<AggregateCount> aggregateCategory;
     private final Storage storage;
 
     public NetworkInterfaceInfoDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(networkInfoCategory);
+        CategoryAdapter<NetworkInterfaceInfo, AggregateCount> adapter =
+                new CategoryAdapter<>(networkInfoCategory);
+        aggregateCategory = adapter.getAdapted(AggregateCount.class);
+        storage.registerCategory(aggregateCategory);
     }
 
     @Override
@@ -108,6 +118,11 @@ public class NetworkInterfaceInfoDAOImpl extends AbstractDao implements NetworkI
                         return preparedStatement;
                     }
                 });
+    }
+
+    @Override
+    public long getCount() {
+        return getCount(storage, aggregateCategory, AGGREGATE_COUNT_ALL_NETWORK_INTERFACES);
     }
 
     @Override

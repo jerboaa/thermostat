@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.thread.dao;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
@@ -49,8 +52,6 @@ import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
-import java.util.Arrays;
-import java.util.List;
 
 public interface ThreadDao {
 
@@ -131,4 +132,6 @@ public interface ThreadDao {
     void getThreadStates(VmRef ref, SessionID session,
                          ResultHandler<ThreadState> handler,
                          Range<Long> range, int limit, Sort order);
+
+    long getDeadLockCount();
 }
