@@ -94,46 +94,6 @@
               <excludeTransitive>true</excludeTransitive>
             </configuration>
           </execution>
-          <!-- Extract the byteman helper distro (including transitive deps) into directory
-               image/libs/byteman/thermostat-helper by using maven-dependency-plugin. -->
-          <execution>
-            <id>copy-byteman-helper-to-libs</id>
-            <phase>package</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>com.redhat.thermostat</groupId>
-                  <artifactId>thermostat-vm-byteman-helper-distro</artifactId>
-                  <type>zip</type>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>${project.build.directory}/image/libs/byteman/thermostat-helper</outputDirectory>
-            </configuration>
-          </execution>
-          <!-- Extract the byteman jar to directory
-               image/libs/byteman/byteman-install/lib by using maven-dependency-plugin.
-               The byteman plugin uses $THERMOSTAT_HOME/byteman/byteman-install as
-               $BYTEMAN_HOME.
-             -->
-          <execution>
-            <id>copy-byteman-jar-to-byteman-install</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.jboss.byteman</groupId>
-                  <artifactId>byteman</artifactId>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>${project.build.directory}/image/libs/byteman/byteman-install/lib</outputDirectory>
-            </configuration>
-          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -161,6 +121,20 @@
             <configuration>
               <descriptors>
                 <descriptor>assembly/all-plugin-assembly.xml</descriptor>
+              </descriptors>
+              <finalName>image/plugins</finalName>
+              <attach>false</attach>
+            </configuration>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>assemble-all-plugin-libs</id>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly/plugin-libs-assembly.xml</descriptor>
               </descriptors>
               <finalName>image/plugins</finalName>
               <attach>false</attach>
@@ -304,19 +278,6 @@
                 <chmod file="${project.build.directory}/image/etc/thermostat-users.properties" perm="600" />
                 <chmod file="${project.build.directory}/image/etc/web.auth" perm="600" />
                 <chmod file="${project.build.directory}/image/etc/agent.auth" perm="600" />
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>symlink-byteman.jar</id>
-            <phase>package</phase>
-            <configuration>
-              <target>
-                <symlink link="${project.build.directory}/image/libs/byteman/byteman-install/lib/byteman.jar"
-                         resource="${project.build.directory}/image/libs/byteman/byteman-install/lib/byteman-${byteman.version}.jar"/>
               </target>
             </configuration>
             <goals>
@@ -701,16 +662,6 @@
       <type>zip</type>
     </dependency>
 
-    <!-- Third party libs -->
-
-    <!--
-        Dependency merely for byteman.jar copying to the right place
-    -->
-    <dependency>
-      <groupId>org.jboss.byteman</groupId>
-      <artifactId>byteman</artifactId>
-      <version>${byteman.version}</version>
-    </dependency>
   </dependencies>
 
 </project>

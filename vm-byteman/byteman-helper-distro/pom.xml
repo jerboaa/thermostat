@@ -47,11 +47,23 @@
   <packaging>pom</packaging>
   <name>Thermostat Byteman Helper Distribution</name>
   <description>A build artifact for collecting the byteman helper + required libs</description>
+  <properties>
+    <thermostat.plugin.libs.dir>${project.build.directory}/byteman-distro</thermostat.plugin.libs.dir>
+    <thermostat.plugin>vm-byteman</thermostat.plugin>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-byteman-helper</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <!--
+        Dependency merely for byteman.jar copying to the right place
+    -->
+    <dependency>
+      <groupId>org.jboss.byteman</groupId>
+      <artifactId>byteman</artifactId>
+      <version>${byteman.version}</version>
     </dependency>
   </dependencies>
   <build>
@@ -60,6 +72,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
+          <!-- copy byteman-helper jar + transitive deps to
+               ${thermostat.plugin.libs.dir}/thermostat-helper -->
           <execution>
             <id>copy-byteman-helper-to-build-dir</id>
             <phase>process-sources</phase>
@@ -67,23 +81,73 @@
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <outputDirectory>${project.build.directory}/foo</outputDirectory>
+              <outputDirectory>${thermostat.plugin.libs.dir}/thermostat-helper</outputDirectory>
+            </configuration>
+          </execution>
+          <!-- Copy the byteman jar to directory
+               ${thermostat.plugin.libs.dir}/byteman-install/lib 
+               The byteman plugin uses
+               $THERMOSTAT_HOME/plugins/vm-byteman/plugin-libs/byteman-install as
+               $BYTEMAN_HOME.
+             -->
+          <execution>
+            <id>copy-byteman-jar-to-byteman-install</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.jboss.byteman</groupId>
+                  <artifactId>byteman</artifactId>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${thermostat.plugin.libs.dir}/byteman-install/lib</outputDirectory>
             </configuration>
           </execution>
         </executions>
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-assembly</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>plugin-libs-assembly</descriptorRef>
+          </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+        </configuration>
         <executions>
           <execution>
-            <configuration>
-              <descriptor>src/assembly/deps.xml</descriptor>
-              <appendAssemblyId>false</appendAssemblyId> 
-            </configuration>
-            <id>create-zip-archive</id>
+            <id>assemble-byteman-helper-libs</id>
             <phase>package</phase>
             <goals>
               <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>rename-byteman.jar</id>
+            <phase>process-sources</phase>
+            <configuration>
+              <target>
+                <move file="${thermostat.plugin.libs.dir}/byteman-install/lib/byteman-${byteman.version}.jar"
+                      tofile="${thermostat.plugin.libs.dir}/byteman-install/lib/byteman.jar" />
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
             </goals>
           </execution>
         </executions>

@@ -58,7 +58,9 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 
 class UpdateRulePollingAction implements VmPollingAction {
     
-    private static final String BYTEMAN_HELPER_DIR = "byteman" + File.separator + "thermostat-helper";
+    private static final String BYTEMAN_PLUGIN_DIR = System.getProperty("thermostat.plugin", "vm-byteman");
+    private static final String BYTEMAN_PLUGIN_LIBS_DIR = BYTEMAN_PLUGIN_DIR + File.separator + "plugin-libs";
+    private static final String BYTEMAN_HELPER_DIR = BYTEMAN_PLUGIN_LIBS_DIR + File.separator + "thermostat-helper";
     private static final String BYTEMAN_SCRIPT_NAME = "bytemanRule.btm";
     private static final Logger logger = LoggingUtils.getLogger(UpdateRulePollingAction.class);
     static final List<ScriptText> bmScripts;
@@ -74,7 +76,7 @@ class UpdateRulePollingAction implements VmPollingAction {
     UpdateRulePollingAction(BytemanAgentInfo agentInfo, CommonPaths paths) {
         this.agentInfo = agentInfo;
         this.rulesSubmitted = new HashMap<>();
-        File bytemanHelperDir = new File(paths.getSystemLibRoot(), BYTEMAN_HELPER_DIR);
+        File bytemanHelperDir = new File(paths.getSystemPluginRoot(), BYTEMAN_HELPER_DIR);
         initListOfHelperJars(bytemanHelperDir);
     }
 

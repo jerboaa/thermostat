@@ -69,7 +69,8 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     private static final String NAME = "VM Byteman backend (attacher)";
     private static final String DESCRIPTION = "Attaches the byteman java agent to JVMs";
     private static final String VENDOR = "Red Hat Inc.";
-    private static final String BYTEMAN_INSTALL_HOME = "byteman" + File.separator + "byteman-install";
+    private static final String BYTEMAN_PLUGIN_DIR = System.getProperty("thermostat.plugin", "vm-byteman");
+    private static final String BYTEMAN_INSTALL_HOME = BYTEMAN_PLUGIN_DIR + File.separator + "plugin-libs" + File.separator + "byteman-install";
     private static final String BYTEMAN_HOME_PROPERTY = "org.jboss.byteman.home";
     private static final Logger logger = LoggingUtils.getLogger(VmBytemanBackend.class);
     static final int BACKEND_ORDER_VALUE = ORDER_CODE_GROUP + 3;
@@ -128,7 +129,7 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     @Override
     public boolean activate() {
         if (!started) {
-            String bytemanHome = paths.getSystemLibRoot() + File.separator + BYTEMAN_INSTALL_HOME;
+            String bytemanHome = paths.getSystemPluginRoot().getAbsolutePath() + File.separator + BYTEMAN_INSTALL_HOME;
             // This will depend on BYTEMAN-303 being fixed and incorporated in a release
             logger.fine("Setting system property " + BYTEMAN_HOME_PROPERTY + "=" + bytemanHome);
             System.setProperty(BYTEMAN_HOME_PROPERTY, bytemanHome);
