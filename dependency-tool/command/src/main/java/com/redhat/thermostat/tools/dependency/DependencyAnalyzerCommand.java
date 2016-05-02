@@ -95,7 +95,10 @@ public class DependencyAnalyzerCommand implements Command {
         JarLocations locations = new JarLocations();
         locations.getLocations().add(systemPluginRoot.toPath());
         locations.getLocations().add(userPluginRoot.toPath());
-        locations.getLocations().add(systemLibRoot.toPath());
+        // System lib root shall not be scanned recursively. See BundleManagerImpl.
+        for (File f: systemLibRoot.listFiles()) {
+            locations.getLocations().add(f.toPath());
+        }
 
         handler = new PathProcessorHandler(locations);
     }

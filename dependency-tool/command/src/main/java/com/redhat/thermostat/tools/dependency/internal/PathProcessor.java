@@ -44,6 +44,8 @@ import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import com.redhat.thermostat.launcher.PluginDirFileVisitor;
+
 /**
  */
 public abstract class PathProcessor {
@@ -53,7 +55,7 @@ public abstract class PathProcessor {
 
     public PathProcessor() {
         matcher = FileSystems.getDefault().getPathMatcher("glob:*.jar");
-        visitor = new SimpleFileVisitor<Path>() {
+        visitor = new PluginDirFileVisitor() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 Path name = file.getFileName();
