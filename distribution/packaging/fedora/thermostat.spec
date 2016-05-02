@@ -873,10 +873,10 @@ done
 popd
 # Byteman agent plugin needs byteman and the helper. Replace
 # deps with symlinks
-pushd %{buildroot}%{thermostat_home}/libs/byteman/byteman-install/lib
+pushd %{buildroot}%{thermostat_home}/plugins/vm-byteman/plugin-libs/byteman-install/lib
   xmvn-subst .
 popd
-pushd %{buildroot}%{thermostat_home}/libs/byteman/thermostat-helper
+pushd %{buildroot}%{thermostat_home}/plugins/vm-byteman/plugin-libs/thermostat-helper
   xmvn-subst .
 popd
 
