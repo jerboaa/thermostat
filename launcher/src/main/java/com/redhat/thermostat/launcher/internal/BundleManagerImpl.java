@@ -42,8 +42,6 @@ import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,13 +64,12 @@ import org.osgi.framework.launch.Framework;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.PluginDirFileVisitor;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class BundleManagerImpl extends BundleManager {
 
     private static final Logger logger = LoggingUtils.getLogger(BundleManagerImpl.class);
-
-    private static final Path DONT_SCAN_DIR = Paths.get("plugin-libs");
 
     // Bundle Name and version -> path (with symlinks resolved)
     // Match FrameworkProvider which uses canonical/symlink-resolved paths. If
@@ -82,7 +79,6 @@ public class BundleManagerImpl extends BundleManager {
     // http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1514
     private final Map<BundleInformation, Path> known;
     private CommonPaths paths;
-    private boolean printOSGiInfo = false;
     private boolean ignoreBundleVersions = false;
     private BundleLoader loader;
 
@@ -92,47 +88,51 @@ public class BundleManagerImpl extends BundleManager {
         this.paths = paths;
         loader = new BundleLoader();
 
-        scanForBundles();
+        scanForBundles(paths, known);
     }
 
-    private void scanForBundles() {
+    private static void scanForBundles(CommonPaths paths, Map<BundleInformation, Path> known) {
         long t1 = System.nanoTime();
 
         final FileInspector inspector = new FileInspector(known);
         try {
             // Don't scan libs folder recursively. We only do that for the
-            // plugins folder
+            // plugins folders
             for (File file: paths.getSystemLibRoot().listFiles()) {
                 inspector.inspectFile(file);
             }
-            Files.walkFileTree(paths.getSystemPluginRoot().toPath(), new SimpleFileVisitor<Path>() {
-                
-                @Override
-                public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
-                    // Don't visit directories with name "plugin-libs"
-                    return previsitDir(file);
-                }
-                
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    inspector.inspectFile(file.toFile());
-                    return FileVisitResult.CONTINUE;
-                }
-
-            });
+            Path[] pluginsFolders = getPluginRoots(paths);
+            for (Path p: pluginsFolders) {
+                Files.walkFileTree(p, new PluginDirFileVisitor() {
+                    
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        inspector.inspectFile(file.toFile());
+                        return FileVisitResult.CONTINUE;
+                    }
+    
+                });
+            }
         } catch (IOException e) {
             logger.log(Level.WARNING, "Error scanning bundles for metadata", e);
         }
 
         long t2 = System.nanoTime();
-        if (printOSGiInfo) {
-            logger.fine("Found: " + known.size() + " bundles");
-            logger.fine("Took " + (t2 -t1) + "ns");
-        }
+        logger.fine("Found: " + known.size() + " bundles");
+        logger.fine("Took " + (t2 -t1) + "ns");
 
         for (Entry<BundleInformation, Path> bundles : known.entrySet()) {
             logger.finest(bundles.getKey().toString() + " is at " + bundles.getValue().toString());
         }
+    }
+
+    /** For TESTS only */
+    static Path[] getPluginRoots(CommonPaths paths) {
+        Path[] pluginsFolders = new Path[] {
+                paths.getSystemPluginRoot().toPath(),
+                paths.getUserPluginRoot().toPath()
+        };
+        return pluginsFolders;
     }
 
     /** For TESTS only: explicitly specify known bundles */
@@ -142,19 +142,9 @@ public class BundleManagerImpl extends BundleManager {
             known.put(entry.getKey(), entry.getValue());
         }
     }
-    
-    // package-private for testing
-    FileVisitResult previsitDir(Path file) {
-        Path fileName = file.getFileName();
-        if (fileName != null && fileName.equals(DONT_SCAN_DIR)) {
-            return FileVisitResult.SKIP_SUBTREE;
-        }
-        return FileVisitResult.CONTINUE;
-    }
 
     /* Used via reflection from launcher */
     public void setPrintOSGiInfo(boolean printOSGiInfo) {
-        this.printOSGiInfo = printOSGiInfo;
         loader.setPrintOSGiInfo(printOSGiInfo);
     }
 

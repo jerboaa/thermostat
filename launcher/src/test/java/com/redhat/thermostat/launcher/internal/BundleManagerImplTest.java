@@ -46,7 +46,6 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.FileVisitResult;
@@ -58,8 +57,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -105,6 +106,7 @@ public class BundleManagerImplTest {
         paths = mock(CommonPaths.class);
         when(paths.getSystemLibRoot()).thenReturn(jarRootDir.toFile());
         when(paths.getSystemPluginRoot()).thenReturn(pluginRootDir.toFile());
+        when(paths.getUserPluginRoot()).thenReturn(pluginRootDir.toFile());
 
         theContext = mock(BundleContext.class);
         theFramework = mock(Framework.class);
@@ -292,19 +294,27 @@ public class BundleManagerImplTest {
     }
     
     @Test
-    public void verifyDontScanDirIsNotVisited() throws FileNotFoundException, IOException {
-        BundleManagerImpl manager = new BundleManagerImpl(paths);
-        Path skipMe = Paths.get("plugin-libs");
-        FileVisitResult result = manager.previsitDir(skipMe);
-        assertEquals(FileVisitResult.SKIP_SUBTREE, result);
-    }
-    
-    @Test
-    public void verifyRegularDirIsVisited() throws FileNotFoundException, IOException {
-        BundleManagerImpl manager = new BundleManagerImpl(paths);
-        Path pathNotToSkip = Paths.get("/path/to/plugins/vm-byteman");
-        FileVisitResult result = manager.previsitDir(pathNotToSkip);
-        assertEquals(FileVisitResult.CONTINUE, result);
+    public void verifyUserPluginsAreUsedForDepScanning() throws Exception {
+        CommonPaths customPaths = mock(CommonPaths.class);
+        File systemPluginsFile = mock(File.class);
+        Path systemPluginsPath = mock(Path.class);
+        when(systemPluginsFile.toPath()).thenReturn(systemPluginsPath);
+        File userPluginsFile = mock(File.class);
+        Path userPluginsPath = mock(Path.class);
+        when(userPluginsFile.toPath()).thenReturn(userPluginsPath);
+        when(customPaths.getSystemPluginRoot()).thenReturn(systemPluginsFile);
+        when(customPaths.getUserPluginRoot()).thenReturn(userPluginsFile);
+        
+        Path[] paths = BundleManagerImpl.getPluginRoots(customPaths);
+        assertEquals(2, paths.length);
+        
+        Set<Path> expected = new HashSet<>();
+        expected.add(systemPluginsPath);
+        expected.add(userPluginsPath);
+        
+        Set<Path> actual = new HashSet<>();
+        actual.addAll(Arrays.asList(paths));
+        assertEquals(expected, actual);
     }
 
 }
