@@ -60,7 +60,6 @@ import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.setup.command.internal.cli.CLISetup;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.utils.keyring.Keyring;

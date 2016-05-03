@@ -60,6 +60,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.cli.AgentArgument;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -68,7 +69,6 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class FindVmCommandTest {
 

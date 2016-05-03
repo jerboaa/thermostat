@@ -43,7 +43,7 @@ import java.text.SimpleDateFormat;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
+import com.redhat.thermostat.setup.command.internal.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.utils.keyring.Keyring;

@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.find.command.internal;
 
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.vm.find.command.locale.LocaleResources;
 
 import java.util.Collection;
 

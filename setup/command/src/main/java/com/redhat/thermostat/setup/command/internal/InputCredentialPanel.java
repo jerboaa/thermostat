@@ -39,7 +39,6 @@ package com.redhat.thermostat.setup.command.internal;
 import com.redhat.thermostat.client.swing.components.ThermostatPasswordField;
 import com.redhat.thermostat.setup.command.internal.model.CredentialGenerator;
 import com.redhat.thermostat.setup.command.internal.model.UserCredsValidator;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 
 import javax.swing.JButton;

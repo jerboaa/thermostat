@@ -43,7 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.redhat.thermostat.plugin.validator.locale.LocaleResources;
+import com.redhat.thermostat.plugin.validator.internal.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 
 /**

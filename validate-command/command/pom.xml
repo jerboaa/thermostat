@@ -59,12 +59,8 @@
           <instructions>
             <Bundle-SymbolicName>com.redhat.thermostat.validate.command</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Export-Package>
-              com.redhat.thermostat.validate.command,
-            </Export-Package>
             <Private-Package>
               com.redhat.thermostat.validate.command.internal,
-              com.redhat.thermostat.validate.command.locale,
             </Private-Package>
             <Bundle-Activator>com.redhat.thermostat.validate.command.internal.Activator</Bundle-Activator>
             <!-- Do not autogenerate uses clauses in Manifests -->

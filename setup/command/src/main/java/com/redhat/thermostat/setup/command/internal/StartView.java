@@ -63,7 +63,6 @@ import com.redhat.thermostat.client.swing.components.ThermostatEditorPane;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class StartView extends JPanel implements SetupView {

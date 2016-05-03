@@ -49,7 +49,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.redhat.thermostat.test.Bug;
+import com.redhat.thermostat.common.internal.test.Bug;
 
 @Bug(id="976",
      summary="About dialog creashes with GTK look and feel",

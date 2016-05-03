@@ -84,7 +84,6 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.vm.gc.common.internal,
-              com.redhat.thermostat.vm.gc.common.locale
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

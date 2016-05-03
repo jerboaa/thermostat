@@ -38,7 +38,7 @@ package com.redhat.thermostat.common;
 
 import java.util.Objects;
 
-import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.internal.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 
 /**

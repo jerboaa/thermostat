@@ -42,7 +42,6 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.validate.command.ValidateCommand;
 
 public class ActivatorTest {
 

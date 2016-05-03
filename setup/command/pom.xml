@@ -64,7 +64,6 @@
               com.redhat.thermostat.setup.command.internal,
               com.redhat.thermostat.setup.command.internal.model,
               com.redhat.thermostat.setup.command.internal.cli,
-              com.redhat.thermostat.setup.command.locale,
             </Private-Package>
             <Bundle-Activator>com.redhat.thermostat.setup.command.internal.Activator</Bundle-Activator>
             <!-- Do not autogenerate uses clauses in Manifests -->

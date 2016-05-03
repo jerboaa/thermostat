@@ -45,7 +45,6 @@ import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.killvm.client.locale.LocaleResources;
 import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;

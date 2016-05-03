@@ -57,7 +57,6 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.vm.find.command.locale.LocaleResources;
 
 public class FindVmCommand extends AbstractCommand {
 

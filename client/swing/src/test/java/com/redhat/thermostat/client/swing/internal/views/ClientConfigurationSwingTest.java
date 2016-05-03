@@ -66,7 +66,7 @@ import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.test.Bug;
+import com.redhat.thermostat.common.internal.test.Bug;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)

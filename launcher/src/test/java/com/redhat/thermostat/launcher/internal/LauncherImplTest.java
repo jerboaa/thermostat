@@ -82,6 +82,8 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
+import com.redhat.thermostat.common.internal.test.TestTimerFactory;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
@@ -92,8 +94,6 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.StorageCredentials;
-import com.redhat.thermostat.test.TestCommandContextFactory;
-import com.redhat.thermostat.test.TestTimerFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 

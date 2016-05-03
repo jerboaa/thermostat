@@ -128,7 +128,6 @@
             <Export-Package/>
             <Private-Package>
               com.redhat.thermostat.vm.gc.command.internal,
-              com.redhat.thermostat.vm.gc.command.locale,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

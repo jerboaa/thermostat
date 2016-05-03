@@ -46,7 +46,6 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.killvm.command.KillVMCommand;
 import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;

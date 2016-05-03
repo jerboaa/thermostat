@@ -66,10 +66,10 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
 import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.internal.ShellCommand.HistoryProvider;
-import com.redhat.thermostat.test.TestCommandContextFactory;
 
 import jline.TerminalFactory;
 import jline.TerminalFactory.Flavor;

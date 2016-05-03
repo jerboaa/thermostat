@@ -43,7 +43,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.validate.command.ValidateCommand;
 
 public class Activator implements BundleActivator {
 

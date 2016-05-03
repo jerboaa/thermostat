@@ -85,7 +85,6 @@
             <Private-Package>
               com.redhat.thermostat.storage.internal,
               com.redhat.thermostat.storage.internal.dao,
-              com.redhat.thermostat.storage.locale,
               com.redhat.thermostat.storage.internal.statement,
               com.redhat.thermostat.storage.monitor.internal,
             </Private-Package>

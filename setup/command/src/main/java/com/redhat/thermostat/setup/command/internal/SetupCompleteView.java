@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.setup.command.internal;
 
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 
 import javax.swing.BorderFactory;

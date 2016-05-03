@@ -53,7 +53,7 @@ import org.mockito.stubbing.OngoingStubbing;
 
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;

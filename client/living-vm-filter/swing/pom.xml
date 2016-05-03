@@ -64,11 +64,11 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Activator>com.redhat.thermostat.client.filter.vm.swing.VMFilterActivator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.client.filter.internal.vm.swing.VMFilterActivator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.filter.livingvm.swing</Bundle-SymbolicName>
             <Private-Package>
-            com.redhat.thermostat.client.filter.vm.swing,
-            com.redhat.thermostat.client.filter.host.swing
+            com.redhat.thermostat.client.filter.internal.vm.swing,
+            com.redhat.thermostat.client.filter.internal.host.swing
             </Private-Package>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <!-- Do not autogenerate uses clauses in Manifests -->

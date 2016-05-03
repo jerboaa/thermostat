@@ -37,7 +37,7 @@
 package com.redhat.thermostat.vm.gc.common.params;
 
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.vm.gc.common.locale.LocaleResources;
+import com.redhat.thermostat.vm.gc.common.internal.LocaleResources;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

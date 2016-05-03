@@ -56,7 +56,6 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.vm.gc.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
 import com.redhat.thermostat.vm.gc.common.params.GcParamsMapper;

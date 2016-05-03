@@ -37,7 +37,6 @@
 package com.redhat.thermostat.setup.command.internal;
 
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 

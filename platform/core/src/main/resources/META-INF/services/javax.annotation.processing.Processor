@@ -1,1 +1,1 @@
-com.redhat.thermostat.platform.annotations.processor.PlatformConfigurationProcessor
+com.redhat.thermostat.platform.internal.annotations.processor.PlatformConfigurationProcessor

@@ -50,9 +50,9 @@ import org.junit.Test;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.DbService;
-import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class DisconnectCommandTest {

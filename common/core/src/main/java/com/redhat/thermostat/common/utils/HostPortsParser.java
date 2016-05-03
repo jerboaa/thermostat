@@ -39,7 +39,7 @@ package com.redhat.thermostat.common.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.internal.LocaleResources;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 

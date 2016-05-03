@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.find.command.internal;
 
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.vm.find.command.locale.LocaleResources;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;

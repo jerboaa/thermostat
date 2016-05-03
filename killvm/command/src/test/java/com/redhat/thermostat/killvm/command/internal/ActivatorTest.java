@@ -41,7 +41,6 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.killvm.command.KillVMCommand;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {

@@ -52,7 +52,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
 
 public class HelpCommandTest {
 

@@ -44,10 +44,10 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import com.redhat.thermostat.storage.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.StorageCredentials;
+import com.redhat.thermostat.storage.internal.LocaleResources;
 
 public class FileStorageCredentials implements StorageCredentials {
 

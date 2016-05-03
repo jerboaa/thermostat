@@ -101,10 +101,10 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.thread.harvester.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.thread.harvester.internal.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.thread.harvester</Bundle-SymbolicName>
             <Private-Package>
-              com.redhat.thermostat.thread.harvester,
+              com.redhat.thermostat.thread.harvester.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

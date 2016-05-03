@@ -61,7 +61,6 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Private-Package>
               com.redhat.thermostat.schemainfo.command.internal,
-              com.redhat.thermostat.schemainfo.command.locale,
             </Private-Package>
             <Bundle-Activator>com.redhat.thermostat.schemainfo.command.internal.Activator</Bundle-Activator>
             <!-- Do not autogenerate uses clauses in Manifests -->

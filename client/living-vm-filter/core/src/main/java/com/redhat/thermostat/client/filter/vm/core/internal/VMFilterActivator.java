@@ -46,8 +46,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
-import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.MultipleServiceTracker;

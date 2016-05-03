@@ -54,7 +54,6 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.model.VmInfo.AliveStatus;
-import com.redhat.thermostat.vm.gc.command.locale.LocaleResources;
 
 public class GCCommand extends AbstractCommand {
 

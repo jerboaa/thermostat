@@ -39,7 +39,7 @@ package com.redhat.thermostat.vm.gc.common.params;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper;
-import com.redhat.thermostat.vm.gc.common.locale.LocaleResources;
+import com.redhat.thermostat.vm.gc.common.internal.LocaleResources;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

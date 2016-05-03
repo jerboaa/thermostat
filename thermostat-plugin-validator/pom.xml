@@ -81,7 +81,6 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.plugin.validator.internal,
-              com.redhat.thermostat.plugin.validator.locale,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

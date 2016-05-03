@@ -42,7 +42,6 @@ import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.local.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 import org.junit.Before;
 import org.junit.Test;

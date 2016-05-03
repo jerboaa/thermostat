@@ -46,7 +46,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.internal.LocaleResources;
 
 public class ApplicationInfoTest {
 

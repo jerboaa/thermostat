@@ -53,8 +53,8 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 
+import com.redhat.thermostat.common.internal.test.Bug;
 import com.redhat.thermostat.launcher.internal.BundleLoader;
-import com.redhat.thermostat.test.Bug;
 
 public class BundleLoaderTest {
 

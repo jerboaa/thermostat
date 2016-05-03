@@ -47,7 +47,6 @@ import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.vm.gc.command.locale.LocaleResources;
 
 public class GCCommandListener implements RequestResponseListener {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();

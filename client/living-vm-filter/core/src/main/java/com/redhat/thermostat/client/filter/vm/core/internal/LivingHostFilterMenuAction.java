@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.filter.vm.core.internal;
 
-import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;

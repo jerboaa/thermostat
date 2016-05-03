@@ -140,15 +140,15 @@
                             com.redhat.thermostat.platform.event,
                         </Export-Package>
                         <Private-Package>
-                            com.redhat.thermostat.platform.command,
                             com.redhat.thermostat.platform.internal,
+                            com.redhat.thermostat.platform.internal.annotations.processor,
                             com.redhat.thermostat.platform.internal.application,
                             com.redhat.thermostat.platform.internal.application.lifecycle,
+                            com.redhat.thermostat.platform.internal.command,
                             com.redhat.thermostat.platform.internal.mvc,
                             com.redhat.thermostat.platform.internal.mvc.lifecycle,
                             com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers,
                             com.redhat.thermostat.platform.internal.locale,
-                            com.redhat.thermostat.platform.annotations.processor,
                         </Private-Package>
                         <!--Do not autogenerate uses clauses in Manifests -->
                         <_nouses>true</_nouses>

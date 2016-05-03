@@ -47,8 +47,8 @@ import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.setup.command.internal.LocaleResources;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 

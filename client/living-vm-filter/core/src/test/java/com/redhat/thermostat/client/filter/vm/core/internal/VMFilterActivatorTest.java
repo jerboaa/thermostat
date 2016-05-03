@@ -41,8 +41,6 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
-import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;

@@ -44,7 +44,6 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.client.command.cli.PingCommand;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 

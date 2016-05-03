@@ -42,7 +42,7 @@ import java.util.Arrays;
 import jline.console.ConsoleReader;
 
 import com.redhat.thermostat.common.cli.Console;
-import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.internal.LocaleResources;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 

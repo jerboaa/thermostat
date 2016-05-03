@@ -59,4 +59,3 @@ internal.
  - c.r.t.*.internal (and subpackages)
  - c.r.t.storage.mongodb (and subpackages)
  - c.r.t.web (and subpackages)
- - c.r.t.client.filter.vm.core

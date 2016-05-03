@@ -60,12 +60,8 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.killvm.command.internal.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.killvm.command</Bundle-SymbolicName>
-            <Export-Package>
-              com.redhat.thermostat.killvm.command,
-            </Export-Package>
             <Private-Package>
               com.redhat.thermostat.killvm.command.internal,
-              com.redhat.thermostat.killvm.command.locale,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

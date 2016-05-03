@@ -48,8 +48,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.internal.test.Bug;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.test.Bug;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuStatBuilderTest {

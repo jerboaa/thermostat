@@ -53,7 +53,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.test.Bug;
+import com.redhat.thermostat.common.internal.test.Bug;
 
 public class ThreadPoolTimerFactoryTest {
 

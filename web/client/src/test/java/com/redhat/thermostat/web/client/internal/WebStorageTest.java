@@ -91,6 +91,8 @@ import org.mockito.Mockito;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.redhat.thermostat.common.internal.test.FreePortFinder;
+import com.redhat.thermostat.common.internal.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.BackingStorage;
@@ -114,8 +116,6 @@ import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.test.FreePortFinder;
-import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatement;

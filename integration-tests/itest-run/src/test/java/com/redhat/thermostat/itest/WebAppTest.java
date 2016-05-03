@@ -75,6 +75,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.ApplicationInfo;
+import com.redhat.thermostat.common.internal.test.FreePortFinder;
+import com.redhat.thermostat.common.internal.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -105,8 +107,6 @@ import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
-import com.redhat.thermostat.test.FreePortFinder;
-import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;

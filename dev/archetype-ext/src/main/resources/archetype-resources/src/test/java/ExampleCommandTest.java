@@ -17,7 +17,7 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
-import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
 
 public class ExampleCommandTest {
 

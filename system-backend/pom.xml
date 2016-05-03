@@ -108,10 +108,10 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.backend.system.SystemBackendActivator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.backend.system.internal.SystemBackendActivator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.backend.system</Bundle-SymbolicName>
             <Private-Package>
-                com.redhat.thermostat.backend.system,
+                com.redhat.thermostat.backend.system.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

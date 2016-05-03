@@ -41,8 +41,8 @@ import java.io.PrintWriter;
 
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
+import com.redhat.thermostat.setup.command.internal.LocaleResources;
 import com.redhat.thermostat.setup.command.internal.model.UserCredsValidator;
-import com.redhat.thermostat.setup.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
