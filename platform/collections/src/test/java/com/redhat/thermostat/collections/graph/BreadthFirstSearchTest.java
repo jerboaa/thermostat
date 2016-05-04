@@ -63,19 +63,19 @@ public class BreadthFirstSearchTest {
         Node i = new Node("I");
 
         
-        Relationship ab = graph.addRelationship(a, b, "knows");
-        Relationship ac = graph.addRelationship(a, c, "knows");
+        Relationship ab = graph.addRelationship(a, "knows", b);
+        Relationship ac = graph.addRelationship(a, "knows", c);
         
-        Relationship bd = graph.addRelationship(b, d, "knows");
-        Relationship be = graph.addRelationship(b, e, "knows");
+        Relationship bd = graph.addRelationship(b, "knows", d);
+        Relationship be = graph.addRelationship(b, "knows", e);
         
-        Relationship cf = graph.addRelationship(c, f, "knows");
-        Relationship cg = graph.addRelationship(c, g, "knows");
+        Relationship cf = graph.addRelationship(c, "knows", f);
+        Relationship cg = graph.addRelationship(c, "knows", g);
         
-        Relationship eh = graph.addRelationship(e, h, "knows");
+        Relationship eh = graph.addRelationship(e, "knows", h);
         
-        Relationship ei = graph.addRelationship(e, i, "knows");
-        Relationship ia = graph.addRelationship(i, a, "knows");
+        Relationship ei = graph.addRelationship(e, "knows", i);
+        Relationship ia = graph.addRelationship(i, "knows", a);
         
         final List<Relationship> results = new ArrayList<>();
         final List<Node> nodes = new ArrayList<>();

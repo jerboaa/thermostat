@@ -143,10 +143,10 @@ public class DependencyGraphBuilder extends PathProcessor {
                     Relationship relationship = null;
                     Set<Relationship> relationships = null;
                     if (swap) {
-                        relationship = new Relationship("<-", destination, source);
+                        relationship = new Relationship(destination, "<-", source);
                         relationships = graph.getRelationships(destination);
                     } else {
-                        relationship = new Relationship("->", source, destination);
+                        relationship = new Relationship(source, "->", destination);
                         relationships = graph.getRelationships(source);
                     }
 

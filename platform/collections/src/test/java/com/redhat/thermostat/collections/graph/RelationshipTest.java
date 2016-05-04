@@ -48,14 +48,14 @@ public class RelationshipTest {
         Node a = new Node("A");
         Node b = new Node("B");
         
-        Relationship relationship = new Relationship("knows", a, b);
+        Relationship relationship = new Relationship(a, "knows", b);
         assertEquals(a, relationship.getFrom());
         assertEquals(b, relationship.getTo());
         
         String toString = relationship.toString();
         assertEquals("(A)-[:knows]->(B)", toString);
         
-        relationship = new Relationship("knows", b, a);
+        relationship = new Relationship(b, "knows", a);
         assertEquals(b, relationship.getFrom());
         assertEquals(a, relationship.getTo());
         

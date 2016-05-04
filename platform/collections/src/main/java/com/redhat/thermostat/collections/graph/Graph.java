@@ -46,11 +46,12 @@ public interface Graph extends Iterable<Node> {
 
     /**
      * Creates a new {@link Relationship} to this Graph
-     * from the given {@code node}s and {@code id}.
+     * from the given {@code node}s and {@code relationship} {@code String}
+     * representation.
      * Returns the {@link Relationship} just created or {@code null} if the
      * {@link Relationship} was not added to the Graph.
      */
-    Relationship addRelationship(Node source, Node destination, String id);
+    Relationship addRelationship(Node source, String relationship, Node destination);
 
     /**
      * Adds the given {@link Relationship} to this Graph.

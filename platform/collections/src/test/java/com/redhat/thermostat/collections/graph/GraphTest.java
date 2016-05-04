@@ -56,30 +56,30 @@ public class GraphTest {
         Node a = new Node("A");
         Node b = new Node("B");
         
-        graph.addRelationship(a, b, "knows");
+        graph.addRelationship(a, "knows", b);
         
         assertEquals(1, graph.size());
         assertEquals(2, graph.order());
         
-        graph.addRelationship(b, a, "knows");
+        graph.addRelationship(b, "knows", a);
         assertEquals(2, graph.size());
         
         // same nodes, the order is not changed
         assertEquals(2, graph.order());
 
         // same relationship, no-op
-        graph.addRelationship(b, a, "knows");
+        graph.addRelationship(b, "knows", a);
         assertEquals(2, graph.size());
         assertEquals(2, graph.order());
 
-        graph.addRelationship(a, b, "plays with");
+        graph.addRelationship(a, "plays with", b);
         assertEquals(3, graph.size());
 
         // same nodes again
         assertEquals(2, graph.order());
         
         Node c = new Node("C");
-        graph.addRelationship(a, c, "knows");
+        graph.addRelationship(a, "knows", c);
         assertEquals(3, graph.order());
     }
     
@@ -90,14 +90,43 @@ public class GraphTest {
         Node a = new Node("A");
         Node b = new Node("B");
         
-        Relationship r0 = graph.addRelationship(a, b, "knows");
-        Relationship r1 = graph.addRelationship(a, b, "plays football with");
-        Relationship r2 = graph.addRelationship(a, b, "watch movies with");
+        Relationship r0 = graph.addRelationship(a, "knows", b);
+        Relationship r1 = graph.addRelationship(a, "plays football with", b);
+        Relationship r2 = graph.addRelationship(a, "watch movies with", b);
         
         Set<Relationship> rel = graph.getRelationships(a);
         assertEquals(3, rel.size());
         assertTrue(rel.contains(r0));
         assertTrue(rel.contains(r1));
         assertTrue(rel.contains(r2));
+    }
+
+    @Test
+    public void testGraphRelationship1() {
+        Graph graph = new HashGraph();
+
+        Node a = new Node("A");
+        Node b = new Node("B");
+        Node c = new Node("B");
+
+        Relationship r0 = graph.addRelationship(a, "knows", b);
+        assertEquals(1, graph.size());
+        assertEquals(2, graph.order());
+
+        Relationship r1 = graph.addRelationship(b, "knows", a);
+        assertEquals(2, graph.size());
+        assertEquals(2, graph.order());
+
+        Relationship r2 = graph.addRelationship(a, "watch movies with", b);
+        assertEquals(3, graph.size());
+        assertEquals(2, graph.order());
+
+        // represents the same relationship as (A)->[plays with]->(B)
+        // - this really depends on nodes being equals just by name, hence
+        // the extra assert check
+        assertEquals(b, c);
+        Relationship r3 = graph.addRelationship(a, "watch movies with", c);
+        assertEquals(3, graph.size());
+        assertEquals(2, graph.order());
     }
 }

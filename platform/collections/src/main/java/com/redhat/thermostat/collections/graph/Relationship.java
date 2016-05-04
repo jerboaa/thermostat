@@ -48,7 +48,7 @@ public class Relationship {
     
     private Map<String, Object> properties;
     
-    public Relationship(String name, Node from, Node to) {
+    public Relationship(Node from, String name, Node to) {
         
         this.from = from;
         this.to = to;

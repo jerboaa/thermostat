@@ -54,8 +54,8 @@ public class HashGraph implements Graph {
     }
 
     @Override
-    public Relationship addRelationship(Node source, Node destination, String id) {
-        Relationship rel = new Relationship(id, source, destination);
+    public Relationship addRelationship(Node source, String id, Node destination) {
+        Relationship rel = new Relationship(source, id, destination);
         if (!addRelationship(rel)) {
             return null;
         }

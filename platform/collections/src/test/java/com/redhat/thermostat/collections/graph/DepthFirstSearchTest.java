@@ -72,19 +72,19 @@ public class DepthFirstSearchTest {
         
         Node i = new Node("I");
         
-        Relationship ab = graph.addRelationship(a, b, "knows");
-        Relationship ac = graph.addRelationship(a, c, "knows");
+        Relationship ab = graph.addRelationship(a, "knows", b);
+        Relationship ac = graph.addRelationship(a, "knows", c);
         
-        Relationship bd = graph.addRelationship(b, d, "knows");
-        Relationship be = graph.addRelationship(b, e, "knows");
+        Relationship bd = graph.addRelationship(b, "knows", d);
+        Relationship be = graph.addRelationship(b, "knows", e);
         
-        Relationship cf = graph.addRelationship(c, f, "knows");
-        Relationship cg = graph.addRelationship(c, g, "knows");
+        Relationship cf = graph.addRelationship(c, "knows", f);
+        Relationship cg = graph.addRelationship(c, "knows", g);
         
-        Relationship eh = graph.addRelationship(e, h, "knows");
+        Relationship eh = graph.addRelationship(e, "knows", h);
         
-        Relationship ei = graph.addRelationship(e, i, "knows");
-        Relationship ia = graph.addRelationship(i, a, "knows");
+        Relationship ei = graph.addRelationship(e, "knows", i);
+        Relationship ia = graph.addRelationship(i, "knows", a);
 
         final List<Relationship> results = new ArrayList<>();
         final List<Node> nodes = new ArrayList<>();
@@ -134,19 +134,19 @@ public class DepthFirstSearchTest {
         
         Node i = new Node("I");
         
-        Relationship ab = graph.addRelationship(a, b, "knows");
-        Relationship ac = graph.addRelationship(a, c, "knows");
+        Relationship ab = graph.addRelationship(a, "knows", b);
+        Relationship ac = graph.addRelationship(a, "knows", c);
         
-        Relationship bd = graph.addRelationship(b, d, "knows");
-        Relationship be = graph.addRelationship(b, e, "knows");
+        Relationship bd = graph.addRelationship(b, "knows", d);
+        Relationship be = graph.addRelationship(b, "knows", e);
         
-        Relationship cf = graph.addRelationship(c, f, "knows");
-        Relationship cg = graph.addRelationship(c, g, "knows");
+        Relationship cf = graph.addRelationship(c, "knows", f);
+        Relationship cg = graph.addRelationship(c, "knows", g);
         
-        Relationship eh = graph.addRelationship(e, h, "knows");
+        Relationship eh = graph.addRelationship(e, "knows", h);
         
-        Relationship ei = graph.addRelationship(e, i, "knows");
-        Relationship ia = graph.addRelationship(i, a, "knows");
+        Relationship ei = graph.addRelationship(e, "knows", i);
+        Relationship ia = graph.addRelationship(i, "knows", a);
 
         final Map<String, Relationship> backNodes = new HashMap<>();
 
@@ -300,28 +300,28 @@ public class DepthFirstSearchTest {
         Node i = new Node("I");
         Node l = new Node("L");
 
-        Relationship ab = graph.addRelationship(a, b, "knows");
-        Relationship ac = graph.addRelationship(a, c, "knows");
-        Relationship ae = graph.addRelationship(a, e, "knows");
-        Relationship ad = graph.addRelationship(a, d, "knows");
-        Relationship al = graph.addRelationship(a, l, "knows");
+        Relationship ab = graph.addRelationship(a, "knows", b);
+        Relationship ac = graph.addRelationship(a, "knows", c);
+        Relationship ae = graph.addRelationship(a, "knows", e);
+        Relationship ad = graph.addRelationship(a, "knows", d);
+        Relationship al = graph.addRelationship(a, "knows", l);
 
-        Relationship bc = graph.addRelationship(b, c, "knows");
-        Relationship bd = graph.addRelationship(b, d, "knows");
+        Relationship bc = graph.addRelationship(b, "knows", c);
+        Relationship bd = graph.addRelationship(b, "knows", d);
 
-        Relationship ce = graph.addRelationship(c, e, "knows");
-        Relationship cf = graph.addRelationship(c, f, "knows");
+        Relationship ce = graph.addRelationship(c, "knows", e);
+        Relationship cf = graph.addRelationship(c, "knows", f);
 
-        Relationship ed = graph.addRelationship(e, d, "knows");
+        Relationship ed = graph.addRelationship(e, "knows", d);
 
-        Relationship fe = graph.addRelationship(f, e, "knows");
+        Relationship fe = graph.addRelationship(f, "knows", e);
 
-        Relationship gf = graph.addRelationship(g, f, "knows");
-        Relationship ga = graph.addRelationship(g, a, "knows");
+        Relationship gf = graph.addRelationship(g, "knows", f);
+        Relationship ga = graph.addRelationship(g, "knows", a);
 
-        Relationship hc = graph.addRelationship(h, c, "knows");
+        Relationship hc = graph.addRelationship(h, "knows", c);
 
-        Relationship il = graph.addRelationship(i, l, "knows");
+        Relationship il = graph.addRelationship(i, "knows", l);
 
         DepthFirstSearch dfs = new DepthFirstSearch(graph);
 
