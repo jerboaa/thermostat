@@ -45,7 +45,7 @@ public enum HarvesterCommand {
     VM_ID,
     VM_PID;
 
-    public static final String RECEIVER = "com.redhat.thermostat.thread.harvester.ThreadHarvester";
+    public static final String RECEIVER = "com.redhat.thermostat.thread.harvester.internal.ThreadHarvester";
 
 }
 
