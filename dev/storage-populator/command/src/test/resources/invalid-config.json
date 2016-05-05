@@ -1,0 +1,20 @@
+{
+  "records": [
+    {
+      "name": "foo",
+      "number": 1
+    },
+    {
+      "name": "bar",
+      "number": 5
+    }
+  ],
+
+  "relationships": [
+    {
+      "from": "foo",
+      "to": "bar",
+      "key": "tar"
+    }
+  ]
+}

@@ -55,6 +55,7 @@
         <include>com.redhat.thermostat:thermostat-notes-distribution</include>
         <include>com.redhat.thermostat:thermostat-numa-distribution</include>
         <include>com.redhat.thermostat:thermostat-storage-profile-distribution</include>
+        <include>com.redhat.thermostat:thermostat-storage-populator-distribution</include>
         <include>com.redhat.thermostat:thermostat-thread-distribution</include>
         <include>com.redhat.thermostat:thermostat-validate-distribution</include>
         <include>com.redhat.thermostat:thermostat-setup-distribution</include>

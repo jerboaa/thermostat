@@ -41,24 +41,58 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-storage-populator</artifactId>
     <version>1.99.10-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-devel-modules</artifactId>
+  <artifactId>thermostat-storage-populator-distribution</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Development Modules</name>
+  <name>Thermostat storage populator plugin distribution</name>
 
-  <modules>
-    <module>archetype-ext</module>
-    <module>multi-module-plugin-archetype</module>
-    <module>ide-launcher</module>
-    <module>schema-info-command</module>
-    <module>perflog-analyzer</module>
-    <module>storage-populator</module>
-    <module>ipc-test</module>
-  </modules>
+  <properties>
+    <thermostat.plugin>storage-populator</thermostat.plugin>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-assembly</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>plugin-assembly</descriptorRef>
+          </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+        </configuration>
+        <executions>
+          <execution>
+            <id>assemble-plugin</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- Explicitly list all plug-in artifacts, transitive dependencies
+       are not included in assembly. -->
+  <dependencies>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-populator-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 
 </project>
 

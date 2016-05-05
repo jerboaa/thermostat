@@ -209,6 +209,7 @@
                   <filtering>true</filtering>
                   <includes>
                     <include>shell-command/shell-prompt.conf</include>
+                    <include>storage-populator/*.json</include>
                     <include>platform/*.json</include>
                     <include>thermostat-gui/*.json</include>
                   </includes>
@@ -543,6 +544,12 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-storage-profile-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-populator-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>

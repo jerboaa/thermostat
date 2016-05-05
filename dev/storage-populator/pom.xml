@@ -41,23 +41,18 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-devel-modules</artifactId>
     <version>1.99.10-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-devel-modules</artifactId>
+  <artifactId>thermostat-storage-populator</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Development Modules</name>
+  <name>Thermostat Storage Populating Support</name>
 
   <modules>
-    <module>archetype-ext</module>
-    <module>multi-module-plugin-archetype</module>
-    <module>ide-launcher</module>
-    <module>schema-info-command</module>
-    <module>perflog-analyzer</module>
-    <module>storage-populator</module>
-    <module>ipc-test</module>
+    <module>command</module>
+    <module>distribution</module>
   </modules>
 
 </project>

@@ -1,5 +1,0 @@
-com.redhat.thermostat.dev.populator.internal.ThreadPopulator
-com.redhat.thermostat.dev.populator.internal.AgentInfoPopulator
-com.redhat.thermostat.dev.populator.internal.VmInfoPopulator
-com.redhat.thermostat.dev.populator.internal.HostInfoPopulator
-com.redhat.thermostat.dev.populator.internal.NetworkInfoPopulator
