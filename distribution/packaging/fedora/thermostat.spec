@@ -613,6 +613,9 @@ cp %{SOURCE4} distribution/config/thermostatrc
 %pom_disable_module schema-info-command dev
 %pom_disable_module perflog-analyzer dev
 %pom_disable_module ipc-test dev
+# Disable storage-populator in RPMs for the time being since it's mostly
+# relevant for development work.
+%pom_disable_module storage-populator dev
 # SCL would need maven archetype packaging plugin for this to work. For now package in
 # Fedora only.
 %{?scl:
@@ -620,6 +623,7 @@ cp %{SOURCE4} distribution/config/thermostatrc
 %pom_disable_module multi-module-plugin-archetype dev
 }
 %pom_remove_dep com.redhat.thermostat:thermostat-schema-info-distribution distribution
+%pom_remove_dep com.redhat.thermostat:thermostat-storage-populator-distribution distribution
 
 # Remove system scope and systempath from tools jar dependency.
 # That dependency is activated via the needs-tools-jar profile.
