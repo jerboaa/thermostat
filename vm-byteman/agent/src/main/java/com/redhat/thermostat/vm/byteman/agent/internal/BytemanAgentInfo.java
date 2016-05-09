@@ -42,12 +42,14 @@ class BytemanAgentInfo {
     private final int agentListenPort;
     private final String listenHost;
     private final String vmId;
+    private final String writerId;
     
-    BytemanAgentInfo(int vmPid, int agentListenPort, String listenHost, String vmId) {
+    BytemanAgentInfo(int vmPid, int agentListenPort, String listenHost, String vmId, String writerId) {
         this.agentListenPort = agentListenPort;
         this.listenHost = listenHost;
         this.vmPid = vmPid;
         this.vmId = vmId;
+        this.writerId = writerId;
     }
 
     int getVmPid() {
@@ -64,5 +66,9 @@ class BytemanAgentInfo {
 
     String getVmId() {
         return vmId;
+    }
+    
+    String getWriterId() {
+        return writerId;
     }
 }

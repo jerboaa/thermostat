@@ -91,7 +91,7 @@ class BytemanAttacher {
             // Port might have changed here if agent rebooted and targed jvm
             // stayed alive
             if (actualPort > 0) {
-                return new BytemanAgentInfo(pid, actualPort, null, vmId);
+                return new BytemanAgentInfo(pid, actualPort, null, vmId, agentId);
             } else {
                 return null;
             }

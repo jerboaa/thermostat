@@ -34,22 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.common.internal;
+package com.redhat.thermostat.vm.byteman.common;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 
-public class VmBytemanMetricDAOCategoryRegistration
-        implements CategoryRegistration {
+public interface VmBytemanDAO {
 
-    @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(1);
-        categories.add(VmBytemanDAOImpl.VM_BYTEMAN_METRICS_CATEGORY.getName());
-        categories.add(VmBytemanDAOImpl.VM_BYTEMAN_STATUS_CATEGORY.getName());
-        return categories;
-    }
-
+    void addMetric(BytemanMetric metric);
+    
+    void addOrReplaceBytemanStatus(VmBytemanStatus status);
+    
+    VmBytemanStatus findBytemanStatus(VmId vmId);
+    
+    List<BytemanMetric> findBytemanMetrics(Range<Long> timeRange, VmId vmId, AgentId agentId);
 }

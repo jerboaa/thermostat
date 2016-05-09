@@ -47,15 +47,15 @@ import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.byteman.agent.internal.typeadapter.BytemanMetricTypeAdapter;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanMetricDAO;
+import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 
 class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
     
     private static final Logger logger = LoggingUtils.getLogger(BytemanMetricsReceiver.class);
-    private final VmBytemanMetricDAO dao;
+    private final VmBytemanDAO dao;
     private final VmSocketIdentifier socketId;
     
-    BytemanMetricsReceiver(VmBytemanMetricDAO dao, VmSocketIdentifier socketId) {
+    BytemanMetricsReceiver(VmBytemanDAO dao, VmSocketIdentifier socketId) {
         this.dao = dao;
         this.socketId = socketId;
     }
@@ -66,7 +66,7 @@ class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
         logger.fine("Received metrics from byteman for socketId: " + socketId.getName() + ". Metric was: " + jsonMetric);
         List<BytemanMetric> metrics = convertFromJson(jsonMetric);
         for (BytemanMetric metric: metrics) {
-            dao.putMetric(metric);
+            dao.addMetric(metric);
         }
         return null; // No response to send back to the IPC endpoint
     }

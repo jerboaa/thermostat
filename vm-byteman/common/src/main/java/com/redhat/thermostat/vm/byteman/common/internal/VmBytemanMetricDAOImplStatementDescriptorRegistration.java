@@ -41,20 +41,21 @@ import java.util.Set;
 
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanMetricDAO;
 
 public class VmBytemanMetricDAOImplStatementDescriptorRegistration
         implements StatementDescriptorRegistration {
     
     static final String intervalDescriptor = String.format(
             VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
-            VmBytemanMetricDAO.CATEGORY.getName());
+            VmBytemanDAOImpl.VM_BYTEMAN_METRICS_CATEGORY.getName());
 
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>(7);
-        descs.add(VmBytemanMetricDAOImpl.STATEMENT_DESCRIPTOR);
+        descs.add(VmBytemanDAOImpl.ADD_METRIC_DESC);
         descs.add(intervalDescriptor);
+        descs.add(VmBytemanDAOImpl.REPLACE_OR_ADD_STATUS_DESC);
+        descs.add(VmBytemanDAOImpl.QUERY_VM_BYTEMAN_STATUS);
         return descs;
     }
 

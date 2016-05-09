@@ -49,7 +49,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanMetricDAO;
+import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 
 public class BytemanMetricsReceiverTest {
 
@@ -57,13 +57,13 @@ public class BytemanMetricsReceiverTest {
 
     @Test
     public void canSendDataToStorage() {
-        VmBytemanMetricDAO dao = mock(VmBytemanMetricDAO.class);
+        VmBytemanDAO dao = mock(VmBytemanDAO.class);
         ArgumentCaptor<BytemanMetric> metricsCaptor = ArgumentCaptor.forClass(BytemanMetric.class);
         VmSocketIdentifier sockId = new VmSocketIdentifier("vm-id", SOME_PID, "agent-id");
         BytemanMetricsReceiver receiver = new BytemanMetricsReceiver(dao, sockId);
         String jsonString = JsonHelper.buildJsonArray(3);
         receiver.dataReceived(jsonString.getBytes());
-        verify(dao, times(3)).putMetric(metricsCaptor.capture());
+        verify(dao, times(3)).addMetric(metricsCaptor.capture());
         List<BytemanMetric> metrics = metricsCaptor.getAllValues();
         assertEquals("vm-id", metrics.get(0).getVmId());
         assertEquals("agent-id", metrics.get(2).getAgentId());
@@ -71,4 +71,5 @@ public class BytemanMetricsReceiverTest {
         assertEquals("baz0", metrics.get(0).getMarker());
         assertNotNull(metrics.get(2).getData());
     }
+    
 }

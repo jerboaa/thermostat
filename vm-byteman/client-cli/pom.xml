@@ -43,9 +43,9 @@
     <groupId>com.redhat.thermostat</groupId>
     <version>1.99.10-SNAPSHOT</version>
   </parent>
-  <artifactId>thermostat-vm-byteman-common</artifactId>
+  <artifactId>thermostat-vm-byteman-client-cli</artifactId>
   <packaging>bundle</packaging>
-  <name>Thermostat VM Byteman Common plugin</name>
+  <name>Thermostat VM Byteman plugin: CLI client</name>
   <build>
     <plugins>
       <plugin>
@@ -54,14 +54,12 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Bundle-Activator>com.redhat.thermostat.vm.byteman.client.cli.internal.Activator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>com.redhat.thermostat.vm.byteman.common</Bundle-SymbolicName>
-            <Export-Package>
-              com.redhat.thermostat.vm.byteman.common,
-              com.redhat.thermostat.vm.byteman.common.command,
-            </Export-Package>
+            <Bundle-SymbolicName>com.redhat.thermostat.vm.byteman.client.cli</Bundle-SymbolicName>
+            <Export-Package />
             <Private-Package>
-              com.redhat.thermostat.vm.byteman.common.internal
+              com.redhat.thermostat.vm.byteman.client.cli.internal
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
@@ -110,7 +108,17 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-command</artifactId>
+      <artifactId>thermostat-client-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-byteman-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -125,10 +133,19 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-storage-testutils</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
+      <groupId>org.jboss.byteman</groupId>
+      <artifactId>byteman-submit</artifactId>
+      <version>${byteman.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.byteman</groupId>
+      <artifactId>byteman-install</artifactId>
+      <version>${byteman.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${gson.version}</version>
     </dependency>
     <!-- declarative services -->
     <dependency>

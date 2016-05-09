@@ -34,49 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.agent.internal;
+package com.redhat.thermostat.vm.byteman.common.command;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.util.List;
+import java.net.InetSocketAddress;
 
-import org.jboss.byteman.agent.submit.ScriptText;
 import org.junit.Test;
 
-public class UpdateRulePollingActionTest {
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAction;
+
+public class BytemanRequestTest {
 
     @Test
-    public void canGetScriptText() {
-        List<ScriptText> text = UpdateRulePollingAction.bmScripts;
-        assertEquals(1, text.size());
-        ScriptText script = text.get(0);
-        String scriptText = script.getText();
-        assertTrue(scriptText.contains("ThermostatHelper"));
-    }
-    
-    @Test
-    public void canGetListOfJarsForBytemanHelper() {
-        String parent = "/foo";
-        File file = mock(File.class);
-        File[] mockFiles = new File[7];
-        for (int i = 0; i < 7; i++) {
-            mockFiles[i] = getFileMockWithName(parent, "test-file" + i + ".jar");
-        }
-        when(file.listFiles()).thenReturn(mockFiles);
-        List<String> jars = UpdateRulePollingAction.initListOfHelperJars(file);
-        assertEquals(7, jars.size());
-        for (int i = 0; i < 7; i++) {
-            assertEquals("/foo/test-file" + i + ".jar", jars.get(i));
-        }
-    }
-
-    private File getFileMockWithName(String parent, String name) {
-        File f = mock(File.class);
-        when(f.getAbsolutePath()).thenReturn(parent + "/" + name);
-        return f;
+    public void testCreateRequestWithRule() {
+        Request req = BytemanRequest.create(new InetSocketAddress("127.0.0.1", 12000), new VmId("vmId"), RequestAction.LOAD_RULES, 3, "foo-bar");
+        assertEquals(RequestType.RESPONSE_EXPECTED, req.getType());
     }
 }

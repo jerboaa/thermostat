@@ -37,6 +37,67 @@
 
 -->
 <plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 http://icedtea.classpath.org/thermostat/docs/1.0/thermostat-plugin.xsd">
+    <commands>
+        <command>
+            <name>byteman</name>
+            <summary>instrument a target VM with Byteman rules</summary>
+            <description>
+            Instrument a target VM with Byteman rules.
+            This command takes a subcommand that describes what to do.
+            'load' loads rule as specified by the command option -r 
+            into a VM. 'unload' unloads all loaded Byteman rules from a VM.
+            'status' shows the currently loaded rules for a VM. 'show-metrics'
+            displays raw metrics gathered via an injected Byteman rule.
+            </description>
+            <arguments>
+            	<argument>action</argument>
+            </arguments>
+            <options>
+              <option>
+                <long>vmId</long>
+                <short>v</short>
+                <argument>vm</argument>
+                <required>true</required>
+                <description>the ID of the VM to instrument</description>
+              </option>
+              <option>
+                <long>rules</long>
+                <short>r</short>
+                <argument>file</argument>
+                <required>false</required>
+                <description>a file with Byteman rules to load into a VM</description>
+              </option>
+            </options>
+            <environments>
+                <environment>cli</environment>
+                <environment>shell</environment>
+            </environments>
+            <bundles>
+                <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.common</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.buffer</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.codec</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.transport</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>io.netty.handler</symbolic-name><version>${netty.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.common</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.client.cli</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+                <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+                <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+                <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+                <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+                <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+                <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+                <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
+            </bundles>
+        </command>
+    </commands>
     <extensions>
         <extension>
             <name>agent</name>

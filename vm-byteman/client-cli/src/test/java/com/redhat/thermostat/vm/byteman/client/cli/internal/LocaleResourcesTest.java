@@ -34,22 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.common.internal;
+package com.redhat.thermostat.vm.byteman.client.cli.internal;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
 
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-
-public class VmBytemanMetricDAOCategoryRegistration
-        implements CategoryRegistration {
+public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
 
     @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(1);
-        categories.add(VmBytemanDAOImpl.VM_BYTEMAN_METRICS_CATEGORY.getName());
-        categories.add(VmBytemanDAOImpl.VM_BYTEMAN_STATUS_CATEGORY.getName());
-        return categories;
+    protected Class<LocaleResources> getEnumClass() {
+        return LocaleResources.class;
+    }
+
+    @Override
+    protected String getResourceBundle() {
+        return LocaleResources.RESOURCE_BUNDLE;
     }
 
 }

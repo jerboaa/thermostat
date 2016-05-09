@@ -34,29 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.agent.internal;
+package com.redhat.thermostat.vm.byteman.client.cli.internal;
 
-import java.util.concurrent.Executors;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmPollingBackend;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.shared.config.CommonPaths;
+public enum LocaleResources {
 
-public class PeriodicBytemanPollingBackend extends VmPollingBackend {
+    VM_SERVICE_UNAVAILABLE,
+    AGENT_SERVICE_UNAVAILABLE,
+    QUEUE_SERVICE_UNAVAILABLE,
+    BYTEMAN_METRICS_SERVICE_UNAVAILABLE,
+    AGENT_NOT_FOUND,
+    AGENT_DEAD,
+    COMMAND_EXPECTED,
+    UNKNOWN_COMMAND,
+    NO_RULE_OPTION,
+    RULE_FILE_NOT_FOUND,
+    ERROR_READING_RULE_FILE,
+    NO_METRICS_AVAILABLE,
+    ERROR_NO_STATUS,
+    BYTEMAN_STATUS_MSG,
+    REQUEST_FAILED_AUTH_ISSUE,
+    REQUEST_FAILED_UNKNOWN_ISSUE,
+    REQUEST_SUCCESS,
+    ERROR_UNKNOWN_RESPONSE,
+    ;
 
-    public PeriodicBytemanPollingBackend(Version version,
-            VmStatusListenerRegistrar registrar, BytemanAgentInfo info, CommonPaths paths) {
-        super("VM Byteman backend (rule updater)",
-              "Updates a byteman rule periodically",
-              "Red Hat Inc.",
-              version, Executors.newSingleThreadScheduledExecutor(), registrar);
-        registerAction(new UpdateRulePollingAction(info, paths));
+    static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
-
-    @Override
-    public int getOrderValue() {
-        return VmBytemanBackend.BACKEND_ORDER_VALUE + 1;
-    }
-
 }

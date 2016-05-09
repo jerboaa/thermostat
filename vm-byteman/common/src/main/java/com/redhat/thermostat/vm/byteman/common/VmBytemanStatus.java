@@ -36,25 +36,66 @@
 
 package com.redhat.thermostat.vm.byteman.common;
 
-import java.util.List;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.VmId;
+@Entity
+public class VmBytemanStatus extends BasePojo implements TimeStampedPojo {
 
-public interface VmBytemanMetricDAO {
+    private String vmId;
+    private long timestamp;
+    private String rule;
+    private int listenPort;
     
-    public static final Key<String> MARKER = new Key<>("marker");
-    public static final Key<String> DATA = new Key<>("data");
+    public VmBytemanStatus(String writerId) {
+        super(writerId);
+    }
     
-    public static final Category<BytemanMetric> CATEGORY = new Category<>(
-            "vm-byteman-metrics",
-            BytemanMetric.class,
-            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
-            MARKER, DATA);
+    public VmBytemanStatus() {
+        super(null);
+    }
+    
+    @Persist
+    public String getVmId() {
+        return vmId;
+    }
 
-    void putMetric(BytemanMetric metric);
+    @Persist
+    public void setVmId(String vmId) {
+        this.vmId = vmId;
+    }
     
-    List<BytemanMetric> findBytemanMetrics(long from, long to, VmId vmId, AgentId agentId);
+    @Persist
+    public void setTimeStamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timestamp;
+    }
+    
+    @Persist
+    public void setRule(String rule) {
+        this.rule = rule;
+    }
+    
+    @Persist
+    public String getRule() {
+        return rule;
+    }
+    
+    @Persist
+    public void setListenPort(int port) {
+        this.listenPort = port;
+    }
+    
+    @Persist
+    public int getListenPort() {
+        return listenPort;
+    }
+
 }

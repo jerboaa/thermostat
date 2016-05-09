@@ -69,7 +69,8 @@ public interface UserRoles {
     final String GRANT_CMD_CHANNEL_KILLVM = "thermostat-cmdc-grant-killvm";
     final String GRANT_CMD_CHANNEL_PING = "thermostat-cmdc-grant-ping";
     final String GRANT_CMD_CHANNEL_JMX_TOGGLE_NOTIFICATION = "thermostat-cmdc-grant-jmx-toggle-notifications";
-    final String GRANT_CMD_PROFILE_VM = "thermostat-cmdc-grant-profile-vm";
+    final String GRANT_CMD_CHANNEL_PROFILE_VM = "thermostat-cmdc-grant-profile-vm";
+    final String GRANT_CMD_CHANNEL_BYTEMAN_INSTRUMENT = "thermostat-cmdc-grant-vm-byteman-instrument";
 
     final String PREPARE_STATEMENT = "thermostat-prepare-statement";
     final String READ = "thermostat-query";
@@ -126,6 +127,7 @@ public interface UserRoles {
             UserRoles.GRANT_CMD_CHANNEL_JMX_TOGGLE_NOTIFICATION,
             UserRoles.GRANT_CMD_CHANNEL_KILLVM,
             UserRoles.GRANT_CMD_CHANNEL_PING,
-            UserRoles.GRANT_CMD_PROFILE_VM
+            UserRoles.GRANT_CMD_CHANNEL_PROFILE_VM,
+            UserRoles.GRANT_CMD_CHANNEL_BYTEMAN_INSTRUMENT
     };
 }

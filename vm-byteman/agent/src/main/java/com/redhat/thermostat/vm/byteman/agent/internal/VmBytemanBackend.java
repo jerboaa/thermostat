@@ -40,7 +40,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,7 +62,8 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanMetricDAO;
+import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
+import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 
 @Component
 @Service(value = Backend.class)
@@ -75,6 +78,7 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     private static final Logger logger = LoggingUtils.getLogger(VmBytemanBackend.class);
     static final int BACKEND_ORDER_VALUE = ORDER_CODE_GROUP + 3;
     private final Set<String> sockets = Collections.synchronizedSet(new HashSet<String>());
+    private final Map<String, BytemanAgentInfo> agentInfos = new ConcurrentHashMap<>();
     private boolean started;
     private boolean observeNewJVMs;
     private BytemanAttacher attacher;
@@ -84,7 +88,7 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     // Services
     
     @Reference
-    private VmBytemanMetricDAO dao;
+    private VmBytemanDAO dao;
     
     @Reference
     private CommonPaths paths;
@@ -113,8 +117,8 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     protected void activate(ComponentContext context) {
         BundleContext ctx = context.getBundleContext();
         Bundle thisBundle = ctx.getBundle();
-        this.version = new Version(thisBundle);
-        this.registrar = new VmStatusListenerRegistrar(ctx);
+        version = new Version(thisBundle);
+        registrar = new VmStatusListenerRegistrar(ctx);
     }
     
     protected void deactivate(ComponentContext context) {
@@ -181,26 +185,29 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
         }
     }
 
-    private void attachBytemanToVm(String vmId, int pid) {
+    private synchronized void attachBytemanToVm(String vmId, int pid) {
         if (!started) {
             logger.fine(getName() +" not active. Thus not attaching Byteman agent to VM '" + pid + "'");
             return;
         }
         logger.fine("Attaching byteman agent to VM '" + pid + "'");
         BytemanAgentInfo info = attacher.attach(vmId, pid, writerId.getWriterID());
+        agentInfos.put(vmId, info);
         if (info == null) {
             logger.warning("Failed to attach byteman agent for VM '" + pid + "'. Skipping rule updater and IPC channel.");
             return;
         }
+        logger.fine("Attached byteman agent to VM '" + pid + "' at port: '" + info.getAgentListenPort());
         logger.fine("Starting IPC socket for byteman helper");
         VmSocketIdentifier socketId = new VmSocketIdentifier(vmId, pid, writerId.getWriterID());
         final ThermostatIPCCallbacks callback = new BytemanMetricsReceiver(dao, socketId);
         startIPCEndpoint(socketId, callback);
-        // Finally activate the rule submitter backend. The metrics will be sent
-        // back to us via the byteman helper and received via BytemanMetricsReceiver.
-        PeriodicBytemanPollingBackend ruleBackend = new PeriodicBytemanPollingBackend(version, registrar, info, paths);
-        logger.fine("Activating byteman rule updater backend for VM '" + pid + "'");
-        ruleBackend.activate();
+        // Add a status record to storage
+        VmBytemanStatus status = new VmBytemanStatus(writerId.getWriterID());
+        status.setListenPort(info.getAgentListenPort());
+        status.setTimeStamp(System.currentTimeMillis());
+        status.setVmId(vmId);
+        dao.addOrReplaceBytemanStatus(status);
     }
 
     private void startIPCEndpoint(VmSocketIdentifier identifier, ThermostatIPCCallbacks callback) {
