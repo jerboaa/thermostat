@@ -84,7 +84,7 @@ public class CompletionFinderTabCompleter implements TabCompleter {
     private List<String> getCompletions(List<CompletionInfo> completions) {
         List<String> result = new ArrayList<>();
         for (CompletionInfo completion : completions) {
-            result.add(completion.getActualCompletion());
+            result.add(completion.getActualCompletion() + " ");
         }
         return result;
     }

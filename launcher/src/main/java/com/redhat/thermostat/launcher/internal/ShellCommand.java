@@ -47,6 +47,7 @@ import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
 import jline.console.UserInterruptException;
+import jline.console.completer.CandidateListCompletionHandler;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.PersistentHistory;
@@ -168,6 +169,9 @@ public class ShellCommand extends AbstractCommand {
         if (history != null) {
             reader.setHistory(history);
         }
+        CandidateListCompletionHandler completionHandler = new CandidateListCompletionHandler();
+        completionHandler.setPrintSpaceAfterFullCompletion(false);
+        reader.setCompletionHandler(completionHandler);
         try {
             while (handleConsoleInput(reader, ctx.getConsole(), shellPrompt.getPrompt())) { /* no-op; the loop conditional performs the action */ }
         } finally {

@@ -55,7 +55,7 @@ public class LogLevelCompleterService extends AbstractCompleterService {
 
     static {
         for (LoggingUtils.LogLevel level : LoggingUtils.LogLevel.values()) {
-            LOG_LEVELS.add(level.getLevel().getName());
+            LOG_LEVELS.add(level.getLevel().getName() + " ");
         }
     }
 

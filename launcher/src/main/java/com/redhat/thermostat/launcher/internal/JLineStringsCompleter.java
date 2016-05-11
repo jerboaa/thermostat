@@ -38,12 +38,13 @@ package com.redhat.thermostat.launcher.internal;
 
 import jline.console.completer.StringsCompleter;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 public class JLineStringsCompleter extends JLineCompleterWrapper {
 
     public JLineStringsCompleter(String... strings) {
-        super(new StringsCompleter(strings));
+        this(Arrays.asList(strings));
     }
 
     public JLineStringsCompleter(Collection<String> strings) {

@@ -334,7 +334,7 @@ public class TreeCompleter implements TabCompleter {
      * @return the node containing the string completer
      */
     public static Node createStringNode(String tag, String... strings) {
-        return new Node(tag, new JLineStringsCompleter(strings));
+        return createStringNode(tag, Arrays.asList(strings));
     }
 
     public static Node createStringNode(String tag) {
@@ -347,6 +347,14 @@ public class TreeCompleter implements TabCompleter {
      * @return the node containing the string completer
      */
     public static Node createStringNode(String tag, List<String> strings) {
-        return new Node(tag, new JLineStringsCompleter(strings));
+        List<String> spaced = new ArrayList<>();
+        for (String s : strings) {
+            if (s.endsWith(" ")) {
+                spaced.add(s);
+            } else {
+                spaced.add(s + " ");
+            }
+        }
+        return new Node(tag, new JLineStringsCompleter(spaced));
     }
 }

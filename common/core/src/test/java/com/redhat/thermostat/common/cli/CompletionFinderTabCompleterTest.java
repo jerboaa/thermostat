@@ -86,7 +86,7 @@ public class CompletionFinderTabCompleterTest {
 
         verify(finder).findCompletions();
 
-        assertThat(candidates, is(equalTo(Collections.singletonList((CharSequence) completionInfo.getActualCompletion()))));
+        assertThat(candidates, is(equalTo(Collections.singletonList((CharSequence) (completionInfo.getActualCompletion() + " ")))));
     }
 
     @Test
