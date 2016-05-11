@@ -41,6 +41,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -286,6 +288,46 @@ public class SetupCommandTest {
         testExitStatus(args, ExitStatus.EXIT_SUCCESS);
     }
 
+    @Test
+    public void testExitStatusNonZeroWhenSilentSetupFails() {
+        cmd = new SetupCommand() {
+            @Override
+            void runSilentSetup(ThermostatSetup setup) throws CommandException {
+                throw new CommandException(new LocalizedString("Setup fail exception"));
+            }
+
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
+        };
+
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument("silent")).thenReturn(true);
+
+        testExitStatus(args, ExitStatus.EXIT_ERROR);
+    }
+
+    @Test
+    public void testExitStatusZeroWhenSilentSetupSuccess() {
+        cmd = new SetupCommand() {
+            @Override
+            void runSilentSetup(ThermostatSetup setup) throws CommandException {
+                // do nothing
+            }
+
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
+        };
+
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument("silent")).thenReturn(true);
+
+        testExitStatus(args, ExitStatus.EXIT_SUCCESS);
+    }
+
     private void testExitStatus(Arguments setupArgs, int exitVal) {
         setServices();
 
@@ -381,7 +423,32 @@ public class SetupCommandTest {
         verify(thermostatSetup).createClientAdminUser(eq("client"), argThat(matchesPassword(new char[] { 'c' })));
         verify(thermostatSetup).createMongodbUser(eq("mongo"), argThat(matchesPassword(new char[] { 'm' })));
     }
-    
+
+    @Test
+    public void verifySilentSetupRunsWithLocalCommand() throws CommandException {
+        cmd = new SetupCommand() {
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
+        };
+
+        setServices();
+
+        Arguments args = mock(Arguments.class);
+        CommandContext ctxt = mock(CommandContext.class);
+        when(ctxt.getArguments()).thenReturn(args);
+        when(args.hasArgument("origArgs")).thenReturn(true);
+        when(args.getArgument("origArgs")).thenReturn("local");
+        when(thermostatSetup.isWebAppInstalled()).thenReturn(true);
+
+        cmd.run(ctxt);
+
+        verify(thermostatSetup).createAgentUser(matches("agent-[a-zA-Z0-9]+"), any(char[].class));
+        verify(thermostatSetup).createClientAdminUser(matches("client-[a-zA-Z0-9]+"), any(char[].class));
+        verify(thermostatSetup).createMongodbUser(matches("mongodb-[a-zA-Z0-9]+"), any(char[].class));
+    }
+
     private CharArrayMatcher matchesPassword(char[] expected) {
         return new CharArrayMatcher(expected);
     }

@@ -58,6 +58,12 @@
           <required>false</required>
           <description>Don't use the graphical user interface, but use the command line instead for interactive questions.</description>
         </option>
+        <option>
+          <long>silent</long>
+          <short>s</short>
+          <required>false</required>
+          <description>Run quick setup and auto-generate all required credentials.</description>
+        </option>
       </options>
       <environments>
         <environment>cli</environment>

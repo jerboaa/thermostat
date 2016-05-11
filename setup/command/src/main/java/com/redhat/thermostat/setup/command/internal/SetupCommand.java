@@ -38,6 +38,7 @@ package com.redhat.thermostat.setup.command.internal;
 
 import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,6 +60,7 @@ import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.setup.command.internal.cli.CLISetup;
+import com.redhat.thermostat.setup.command.internal.model.ThermostatQuickSetup;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -69,6 +71,8 @@ public class SetupCommand extends AbstractCommand {
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final String ORIG_CMD_ARGUMENT_NAME = "origArgs";
     private static final String NON_GUI_OPTION_NAME = "nonGui";
+    private static final String SILENT_OPTION_NAME = "silent";
+    private static final String LOCAL_COMMAND_NAME = "local";
     private static final Logger logger = LoggingUtils.getLogger(SetupCommand.class);
     private final DependencyServices dependentServices = new DependencyServices();
     private SetupWindow mainWindow;
@@ -106,6 +110,8 @@ public class SetupCommand extends AbstractCommand {
 
             if (args.hasArgument(NON_GUI_OPTION_NAME) || isHeadless()) {
                 runCLISetup(setup, ctx.getConsole());
+            } else if (args.hasArgument(SILENT_OPTION_NAME) || isSilentSetupRequired(origArgsList)) {
+                runSilentSetup(setup);
             } else {
                 runGUISetup(setup);
             }
@@ -131,6 +137,19 @@ public class SetupCommand extends AbstractCommand {
     void runCLISetup(ThermostatSetup setup, Console console) throws CommandException {
         CLISetup cliSetup = new CLISetup(setup, console);
         cliSetup.run();
+    }
+
+    // package-private for testing
+    void runSilentSetup(ThermostatSetup setup) throws CommandException {
+        try {
+            new ThermostatQuickSetup(setup).run();
+        } catch (IOException e) {
+            throw new CommandException(t.localize(LocaleResources.SETUP_FAILED), e);
+        }
+    }
+
+    private boolean isSilentSetupRequired(String[] args) {
+        return args != null && args[0].equals(LOCAL_COMMAND_NAME);
     }
 
     private void runGUISetup(ThermostatSetup setup) throws CommandException {
@@ -219,7 +238,8 @@ public class SetupCommand extends AbstractCommand {
         private static final String SINGLE_DASH = "-";
         private static final String DOUBLE_DASH = "--";
         private static final String NON_GUI_SHORT_OPT = "c";
-        
+        private static final String SILENT_SHORT_OPT = "s";
+
         private final Arguments argsDelegate;
         private final String[] origArgs;
         private final Map<String, String> additionalOptions;
@@ -248,6 +268,8 @@ public class SetupCommand extends AbstractCommand {
                     String cleanedOp = opt.substring(1);
                     if (cleanedOp.equals(NON_GUI_SHORT_OPT)) {
                         options.put(NON_GUI_OPTION_NAME, Boolean.TRUE.toString());
+                    } else if (cleanedOp.equals(SILENT_SHORT_OPT)) {
+                        options.put(SILENT_OPTION_NAME, Boolean.TRUE.toString());
                     }
                     continue;
                 } else {

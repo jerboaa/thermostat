@@ -83,6 +83,7 @@ import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.setup.command.internal.model.CredentialGenerator;
+import com.redhat.thermostat.setup.command.internal.model.ThermostatQuickSetup;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -344,77 +345,33 @@ public class SetupWindow {
     }
 
     private void runSetup() {
-        finishAction = new SwingWorker<IOException, Void>() {
+        finishAction = new SetupSwingWorker() {
             @Override
-            public IOException doInBackground() {
-                try {
-                    doSynchronouslyOnEdt(new Runnable() {
-                        @Override
-                        public void run() {
-                            frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                            startView.disableButtons();
-                            mongoUserSetupView.disableButtons();
-                            userPropertiesView.disableButtons();
-                        }
-                    });
-                } catch (InvocationTargetException | InterruptedException e) {
-                    e.printStackTrace();
-                }
+            void doSetup() throws IOException {
                 thermostatSetup.createMongodbUser(storageUsername, storagePassword);
-                try {
-                    if (thermostatSetup.isWebAppInstalled()) {
-                        thermostatSetup.createAgentUser(agentUsername, agentPassword);
-                        thermostatSetup.createClientAdminUser(clientUsername, clientPassword);
-                    }
-                    thermostatSetup.commit();
-                    return null;
-                } catch (IOException e) {
-                    shutdown();
-                    return e;
+                if (thermostatSetup.isWebAppInstalled()) {
+                    thermostatSetup.createAgentUser(agentUsername, agentPassword);
+                    thermostatSetup.createClientAdminUser(clientUsername, clientPassword);
                 }
-            }
-
-            @Override
-            public void done() {
-                startView.enableButtons();
-                mongoUserSetupView.enableButtons();
-                userPropertiesView.enableButtons();
-                frame.setCursor(Cursor.getDefaultCursor());
-                shutdown();
+                thermostatSetup.commit();
             }
         };
         finishAction.execute();
     }
 
     private void runQuickSetup() {
-        if(thermostatSetup.isWebAppInstalled()) {
-            CredentialGenerator storage = new CredentialGenerator(translator.localize(LocaleResources.MONGO_USER_PREFIX).getContents());
-            CredentialGenerator agent = new CredentialGenerator(translator.localize(LocaleResources.AGENT_USER_PREFIX).getContents());
-            CredentialGenerator client = new CredentialGenerator(translator.localize(LocaleResources.CLIENT_USER_PREFIX).getContents());
+        final ThermostatQuickSetup quickSetup = new ThermostatQuickSetup(thermostatSetup);
 
-            storageUsername = storage.generateRandomUsername();
-            storagePassword = storage.generateRandomPassword();
-            agentUsername = agent.generateRandomUsername();
-            agentPassword = agent.generateRandomPassword();
-            clientUsername = client.generateRandomUsername();
-            clientPassword = client.generateRandomPassword();
-        } else {
-            CredentialGenerator user = new CredentialGenerator(translator.localize(LocaleResources.USER_PREFIX).getContents());
+        setupCompleteView.setClientCredentials(quickSetup.getClientUsername(), quickSetup.getClientPassword());
+        setupCompleteView.setAgentCredentials(quickSetup.getAgentUsername(), quickSetup.getAgentPassword());
 
-            String username = user.generateRandomUsername();
-            char[] password = user.generateRandomPassword();
-            storageUsername = username;
-            storagePassword = password;
-            agentUsername = username;
-            agentPassword = password;
-            clientUsername = username;
-            clientPassword = password;
-        }
-
-        setupCompleteView.setClientCredentials(clientUsername, clientPassword);
-        setupCompleteView.setAgentCredentials(agentUsername, agentPassword);
-
-        runSetup();
+        finishAction = new SetupSwingWorker() {
+            @Override
+            void doSetup() throws IOException {
+                quickSetup.run();
+            }
+        };
+        finishAction.execute();
     }
 
     private void showView(SetupView view) {
@@ -434,6 +391,44 @@ public class SetupWindow {
 
     private void shutdown() {
         shutdown.countDown();
+    }
+
+    private abstract class SetupSwingWorker extends SwingWorker<IOException, Void> {
+        @Override
+        public IOException doInBackground() {
+            try {
+                doSynchronouslyOnEdt(new Runnable() {
+                    @Override
+                    public void run() {
+                        frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        startView.disableButtons();
+                        mongoUserSetupView.disableButtons();
+                        userPropertiesView.disableButtons();
+                    }
+                });
+            } catch (InvocationTargetException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                doSetup();
+                return null;
+            } catch (IOException e) {
+                shutdown();
+                return e;
+            }
+        }
+
+        @Override
+        public void done() {
+            startView.enableButtons();
+            mongoUserSetupView.enableButtons();
+            userPropertiesView.enableButtons();
+            frame.setCursor(Cursor.getDefaultCursor());
+            shutdown();
+        }
+
+        abstract void doSetup() throws IOException;
     }
 
     private static class ErrorDialog extends JDialog {
