@@ -54,6 +54,9 @@
           <required>true</required>
           <description>the json config file to use</description>
         </option>
+        <option common="true">
+            <long>dbUrl</long>
+        </option>
       </options>
       <environments>
         <environment>cli</environment>
