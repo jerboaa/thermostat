@@ -91,7 +91,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 class CommandChannelRequestDecoder extends ByteToMessageDecoder {
     
     private static final Logger logger = LoggingUtils.getLogger(CommandChannelRequestDecoder.class);
-
+    
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
         logger.log(Level.FINEST, "Command channel server: decoding Request object");
@@ -104,19 +104,20 @@ class CommandChannelRequestDecoder extends ByteToMessageDecoder {
         if (typeAsString == null) {
             throw new InvalidMessageException("Could not decode message: " + ByteBufUtil.hexDump(buf));
         }
-        // clean up resources
-        buf.readerIndex(buf.readerIndex() + stringDecCtx.getBytesRead());
-        buf.discardReadBytes();
         // Netty javadoc tells us it's safe to downcast to more concrete type.
         InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
         Request request = new Request(RequestType.valueOf(typeAsString), addr);
-        ParameterDecodingContext paramCtx = DecodingHelper.decodeParameters(buf);
+        int remainingLength = buf.readableBytes() - stringDecCtx.getBytesRead();
+        ByteBuf adjustedBuffer = buf.slice(stringDecCtx.getBytesRead(), remainingLength);
+        ParameterDecodingContext paramCtx = DecodingHelper.decodeParameters(adjustedBuffer);
         if (paramCtx.getState() != ParameterDecodingState.ALL_PARAMETERS_READ) {
             // insufficient data
             return;
         }
-        // clean up resources
-        buf.readerIndex(buf.readerIndex() + paramCtx.getBytesRead());
+        // clean up resources from the request type + parameters
+        int totalBytesRead = stringDecCtx.getBytesRead() +
+                                paramCtx.getBytesRead();
+        buf.readerIndex(buf.readerIndex() + totalBytesRead);
         buf.discardReadBytes();
         for (Entry<String, String> kv: paramCtx.getValues().entrySet()) {
             request.setParameter(kv.getKey(), kv.getValue());

@@ -59,7 +59,7 @@ import com.google.gson.JsonObject;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 
-public class ResponseParserTest {
+public class JsonResponseParserTest {
     
     private ByteChannel agentChannel;
     private JsonResponseParser parser;
