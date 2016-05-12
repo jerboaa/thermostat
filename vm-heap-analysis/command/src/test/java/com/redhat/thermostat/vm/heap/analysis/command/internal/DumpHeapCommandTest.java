@@ -97,7 +97,8 @@ public class DumpHeapCommandTest {
 
         HeapInfo heapInfo = new HeapInfo();
         heapInfo.setHeapDumpId("0001");
-        when(heapDao.getAllHeapInfo(new AgentId("myAgent"), new VmId(vmInfo.getVmId()))).thenReturn(Collections.singleton(heapInfo));
+        heapInfo.setHeapId("0001-0002");
+        when(heapDao.getAllHeapInfo(any(AgentId.class), any(VmId.class))).thenReturn(Collections.singleton(heapInfo));
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
         final ArgumentCaptor<Runnable> successHandler = ArgumentCaptor
@@ -129,6 +130,50 @@ public class DumpHeapCommandTest {
         verify(impl).execute(eq(vmInfoDao), eq(agentInfoDao), isA(AgentId.class), isA(VmId.class), eq(queue),
                 any(Runnable.class), any(Runnable.class));
         assertThat(factory.getOutput(), is(equalTo("Heap dump ID: " + heapInfo.getHeapId() + "\n")));
+    }
+
+    @Test
+    public void verifyEchosNoIdMessageWhenNoResultFromStorageAfterDumpCompletes() throws CommandException {
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        HeapDAO heapDao = mock(HeapDAO.class);
+        RequestQueue queue = mock(RequestQueue.class);
+        VmInfo vmInfo = new VmInfo("myAgent", "foo", 123, 0, 0, null, null, null, null, null, null, null, null, null,
+                null, null,0, "myUsername");
+        when(vmInfoDao.getVmInfo(new VmId("foo"))).thenReturn(vmInfo);
+
+        when(heapDao.getAllHeapInfo(any(AgentId.class), any(VmId.class))).thenReturn(Collections.<HeapInfo>emptyList());
+
+        DumpHeapHelper impl = mock(DumpHeapHelper.class);
+        final ArgumentCaptor<Runnable> successHandler = ArgumentCaptor
+                .forClass(Runnable.class);
+        doAnswer(new Answer<Void>() {
+
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                successHandler.getValue().run();
+                return null;
+            }
+        }).when(impl).execute(eq(vmInfoDao), eq(agentInfoDao), any(AgentId.class), any(VmId.class), eq(queue),
+                successHandler.capture(), any(Runnable.class));
+
+        DumpHeapCommand command = new DumpHeapCommand(impl);
+
+        command.setVmInfoDAO(vmInfoDao);
+        command.setAgentInfoDAO(agentInfoDao);
+        command.setHeapDAO(heapDao);
+        command.setRequestQueue(queue);
+
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument(VmArgument.ARGUMENT_NAME, "foo");
+
+        command.run(factory.createContext(args));
+
+        verify(impl).execute(eq(vmInfoDao), eq(agentInfoDao), isA(AgentId.class), isA(VmId.class), eq(queue),
+                any(Runnable.class), any(Runnable.class));
+        assertThat(factory.getOutput(), is(equalTo("Heap dump completed\n")));
     }
 
     @Test

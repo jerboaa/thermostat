@@ -97,8 +97,13 @@ public class DumpHeapCommand extends AbstractCommand {
             @Override
             public void run() {
                 String latestHeapId = getLatestHeapId(heapDAO, agentId, vmId);
-                ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE,
-                        latestHeapId).getContents());
+                // latestHeapId may be null if last heap dump is actually not yet available in storage
+                if (latestHeapId != null) {
+                    ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE,
+                            latestHeapId).getContents());
+                } else {
+                    ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE_NOID).getContents());
+                }
                 s.release();
             }
         };
@@ -124,8 +129,16 @@ public class DumpHeapCommand extends AbstractCommand {
         }
     }
 
+    // FIXME: storage may actually return us outdated results which do not contain the latest
+    // heap dump(s). This can result in an empty list being returned (which we signal here by
+    // returning null), or can result in a second dump-heap command incorrectly echoing the same
+    // heap dump ID as the immediately prior dump-heap command.
+    // See discussion here: http://icedtea.classpath.org/pipermail/thermostat/2016-May/018753.html
     static String getLatestHeapId(HeapDAO heapDao, AgentId agentId, VmId vmId) {
         Collection<HeapInfo> heapInfos = heapDao.getAllHeapInfo(agentId, vmId);
+        if (heapInfos.isEmpty()) {
+            return null;
+        }
         List<HeapInfo> sortedByLatest = new ArrayList<>(heapInfos);
         Collections.sort(sortedByLatest, new Comparator<HeapInfo>() {
             @Override
