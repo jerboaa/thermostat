@@ -118,7 +118,9 @@ class LocalSocketTransport extends Transport {
     public void close() {
         super.close();
         try {
-            channel.close();
+            synchronized (channel) {
+                channel.close();
+            }
         } catch (IOException e) {
             System.err.println("WARNING: Thermostat error closing socket channel: [" + socketName + "]");
             e.printStackTrace();
@@ -153,7 +155,9 @@ class LocalSocketTransport extends Transport {
         }
         sb.append("]");
         ByteBuffer envelope = ByteBuffer.wrap(sb.toString().getBytes(Charset.forName("UTF-8")));
-        channel.write(envelope);
+        synchronized (channel) {
+            channel.write(envelope);
+        }
     }
 
     // package-private for testing

@@ -49,10 +49,8 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.thermostat.helper.BytemanMetric;
-import org.jboss.byteman.thermostat.helper.ThermostatHelper;
-import org.jboss.byteman.thermostat.helper.Transport;
 import org.jboss.byteman.thermostat.helper.transport.stdout.TestStdOutTransport;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -66,7 +64,13 @@ public class ThermostatHelperTest {
     @Before
     public void setup() {
         mockTransport = mock(Transport.class);
-        helper = new ThermostatHelper(mock(Rule.class), mockTransport);
+        ThermostatHelper.setTransport(mockTransport);
+        helper = new ThermostatHelper(mock(Rule.class));
+    }
+    
+    @After
+    public void teardown() {
+        ThermostatHelper.setTransport(new TransportFactory().create());
     }
     
     @Test
@@ -158,7 +162,8 @@ public class ThermostatHelperTest {
         final PrintStream oldOut = System.out;
         final CountDownLatch latch = new CountDownLatch(1);
         Transport stdoutTransport = new TestStdOutTransport(latch);
-        ThermostatHelper helperWithStdout = new ThermostatHelper(mock(Rule.class), stdoutTransport);
+        ThermostatHelper.setTransport(stdoutTransport);
+        ThermostatHelper helperWithStdout = new ThermostatHelper(mock(Rule.class));
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         PrintStream testSysout = new PrintStream(bout);
         System.setOut(testSysout);

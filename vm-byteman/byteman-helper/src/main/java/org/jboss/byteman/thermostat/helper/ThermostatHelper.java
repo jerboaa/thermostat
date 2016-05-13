@@ -50,18 +50,8 @@ import org.jboss.byteman.rule.helper.Helper;
  */
 public class ThermostatHelper extends Helper {
     
-    private final Transport transport;
-
-    /**
-     * Constructor
-     */
-    protected ThermostatHelper(Rule rule) {
-        this(rule, new TransportFactory().create());
-    }
-    
-    ThermostatHelper(final Rule rule, final Transport transport) {
-        super(rule);
-        this.transport = transport;
+    private static Transport transport = new TransportFactory().create();
+    static {
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
@@ -70,6 +60,13 @@ public class ThermostatHelper extends Helper {
         }));
     }
 
+    /**
+     * Constructor
+     */
+    protected ThermostatHelper(Rule rule) {
+        super(rule);
+    }
+    
     public void send(String marker, String key, String value) {
         send(marker, new Object[]{key, value});
     }
@@ -103,6 +100,11 @@ public class ThermostatHelper extends Helper {
         LinkedHashMap<String, Object> data = toMap(dataArray);
         BytemanMetric rec = new BytemanMetric(marker, data);
         transport.send(rec);
+    }
+    
+    // For testing purposes
+    static void setTransport(Transport transport) {
+        ThermostatHelper.transport = transport;
     }
 
 }

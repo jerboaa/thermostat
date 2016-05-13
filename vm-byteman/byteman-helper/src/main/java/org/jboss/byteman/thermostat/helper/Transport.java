@@ -38,9 +38,10 @@ package org.jboss.byteman.thermostat.helper;
 
 import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -63,7 +64,7 @@ public abstract class Transport implements Closeable {
     private final Object cacheLock = new Object();
     private long lostCount = 0;
     // executor
-    private final Executor executor = Executors.newSingleThreadExecutor(new ThermostatThreadFactory("thermostat"));
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(new ThermostatThreadFactory("thermostat"));
 
     /**
      * Constructor for inheritors
@@ -113,6 +114,13 @@ public abstract class Transport implements Closeable {
                 TransferTask task = new TransferTask(cache);
                 task.run();
             }
+        }
+        // Shut down executor and wait (with a timeout) for it to finish
+        executor.shutdown();
+        try {
+            executor.awaitTermination(5000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
