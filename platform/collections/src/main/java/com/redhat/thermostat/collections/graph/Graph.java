@@ -83,4 +83,10 @@ public interface Graph extends Iterable<Node> {
      */
     @Override
     Iterator<Node> iterator();
+
+    /**
+     * Clear the graph by removing all its content. The running time of this
+     * method is implementation dependent.
+     */
+    void clear();
 }

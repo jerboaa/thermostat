@@ -41,6 +41,7 @@ import org.junit.Test;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -127,6 +128,32 @@ public class GraphTest {
         assertEquals(b, c);
         Relationship r3 = graph.addRelationship(a, "watch movies with", c);
         assertEquals(3, graph.size());
+        assertEquals(2, graph.order());
+    }
+
+    @Test
+    public void testClear() {
+        Graph graph = new HashGraph();
+        assertEquals(0, graph.size());
+        assertEquals(0, graph.order());
+
+        Node a = new Node("A");
+        Node b = new Node("B");
+
+        graph.addRelationship(a, "knows", b);
+
+        assertEquals(1, graph.size());
+        assertEquals(2, graph.order());
+
+        graph.clear();
+        assertEquals(0, graph.size());
+        assertEquals(0, graph.order());
+
+        Set<Relationship> rel = graph.getRelationships(a);
+        assertNull(rel);
+
+        graph.addRelationship(a, "knows", b);
+        assertEquals(1, graph.size());
         assertEquals(2, graph.order());
     }
 }

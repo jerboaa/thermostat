@@ -112,4 +112,10 @@ public class HashGraph implements Graph {
     public Iterator<Node> iterator() {
         return relationships.keySet().iterator();
     }
+
+    @Override
+    public void clear() {
+        relationships.clear();
+        size = 0;
+    }
 }
