@@ -351,8 +351,10 @@ BuildRequires: %{?scl_prefix}mvn(%{kxml2_coords})
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.felix:org.apache.felix.framework)
 BuildRequires: %{?scl_prefix_maven}mvn(org.fusesource:fusesource-pom:pom:)
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.commons:commons-cli)
-# jline 2.10 is known to work
-BuildRequires: %{?scl_prefix}mvn(jline:jline) >= 2.10
+# jline 2.13 which adds
+# CandidateListCompletionHandler.setPrintSpaceAfterFullCompletion(boolean)
+# required as of commit e8aa651b0627
+BuildRequires: %{?scl_prefix}mvn(jline:jline) >= 2.13
 BuildRequires: %{?scl_prefix_java_common}mvn(org.fusesource.jansi:jansi)
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.lucene:lucene-core) >= 4.7.0
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.lucene:lucene-analyzers) >= 4.7.0
@@ -570,9 +572,9 @@ cp %{SOURCE4} distribution/config/thermostatrc
 #  httpcore
 %pom_remove_dep org.apache.httpcomponents:httpcore-osgi web/client
 %pom_add_dep org.apache.httpcomponents:httpcore:4.4.0 web/client
-# need jline 2.10 (otherwise this resolves to jline 1)
+# need jline 2.13 (otherwise this resolves to jline 1)
 %pom_xpath_remove "pom:properties/pom:jline.version"
-%pom_xpath_inject "pom:properties" "<jline.version>2.10</jline.version>"
+%pom_xpath_inject "pom:properties" "<jline.version>2.13</jline.version>"
 # Don't use bundle-wrapped jnr-unixsocket and deps
 %pom_disable_module jnr-wrapped agent/ipc/unix-socket
 %pom_remove_dep com.redhat.thermostat:jnr-unixsocket agent/ipc/unix-socket/server
