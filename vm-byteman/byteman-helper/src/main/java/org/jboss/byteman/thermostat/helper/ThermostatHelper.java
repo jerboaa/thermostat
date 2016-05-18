@@ -50,8 +50,12 @@ import org.jboss.byteman.rule.helper.Helper;
  */
 public class ThermostatHelper extends Helper {
     
-    private static Transport transport = new TransportFactory().create();
-    static {
+    // Lock to synchronize initialization of transport between instances
+    private static final Object transportLock = new Object();
+    private static Transport transport = null;
+    
+    static void initTransport() {
+        transport = new TransportFactory().create();
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
@@ -65,6 +69,12 @@ public class ThermostatHelper extends Helper {
      */
     protected ThermostatHelper(Rule rule) {
         super(rule);
+        // Initialize transport if not yet done
+        synchronized (transportLock) {
+            if (transport == null) {
+                initTransport();
+            }
+        }
     }
     
     public void send(String marker, String key, String value) {
@@ -104,7 +114,9 @@ public class ThermostatHelper extends Helper {
     
     // For testing purposes
     static void setTransport(Transport transport) {
-        ThermostatHelper.transport = transport;
+        synchronized (transportLock) {
+            ThermostatHelper.transport = transport;
+        }
     }
 
 }

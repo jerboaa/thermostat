@@ -70,7 +70,7 @@ public class ThermostatHelperTest {
     
     @After
     public void teardown() {
-        ThermostatHelper.setTransport(new TransportFactory().create());
+        ThermostatHelper.setTransport(null);
     }
     
     @Test
