@@ -15,7 +15,7 @@ diff --git a/agent/cli/pom.xml b/agent/cli/pom.xml
 diff --git a/agent/command/pom.xml b/agent/command/pom.xml
 --- a/agent/command/pom.xml
 +++ b/agent/command/pom.xml
-@@ -76,8 +76,8 @@
+@@ -72,8 +72,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
@@ -126,7 +126,7 @@ diff --git a/client/core/pom.xml b/client/core/pom.xml
 diff --git a/client/living-vm-filter/core/pom.xml b/client/living-vm-filter/core/pom.xml
 --- a/client/living-vm-filter/core/pom.xml
 +++ b/client/living-vm-filter/core/pom.xml
-@@ -90,15 +90,8 @@
+@@ -89,15 +89,8 @@
      </dependency>
  
      <dependency>
@@ -188,7 +188,7 @@ diff --git a/client/swing/pom.xml b/client/swing/pom.xml
 diff --git a/common/core/pom.xml b/common/core/pom.xml
 --- a/common/core/pom.xml
 +++ b/common/core/pom.xml
-@@ -145,16 +145,6 @@
+@@ -144,16 +144,6 @@
        <artifactId>commons-cli</artifactId>
      </dependency>
      
@@ -228,7 +228,7 @@ diff --git a/config/pom.xml b/config/pom.xml
 diff --git a/dependency-tool/command/pom.xml b/dependency-tool/command/pom.xml
 --- a/dependency-tool/command/pom.xml
 +++ b/dependency-tool/command/pom.xml
-@@ -72,9 +72,8 @@
+@@ -77,9 +77,8 @@
      </dependency>
  
      <dependency>
@@ -525,7 +525,7 @@ diff --git a/host-overview/client-swing/pom.xml b/host-overview/client-swing/pom
 diff --git a/keyring/pom.xml b/keyring/pom.xml
 --- a/keyring/pom.xml
 +++ b/keyring/pom.xml
-@@ -168,14 +168,8 @@
+@@ -167,14 +167,8 @@
      </dependency>
      
      <dependency>
@@ -559,7 +559,7 @@ diff --git a/killvm/agent/pom.xml b/killvm/agent/pom.xml
 diff --git a/killvm/client-swing/pom.xml b/killvm/client-swing/pom.xml
 --- a/killvm/client-swing/pom.xml
 +++ b/killvm/client-swing/pom.xml
-@@ -100,14 +100,8 @@
+@@ -99,14 +99,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
@@ -579,7 +579,7 @@ diff --git a/killvm/client-swing/pom.xml b/killvm/client-swing/pom.xml
 diff --git a/killvm/command/pom.xml b/killvm/command/pom.xml
 --- a/killvm/command/pom.xml
 +++ b/killvm/command/pom.xml
-@@ -87,9 +87,8 @@
+@@ -83,9 +83,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
@@ -862,7 +862,7 @@ diff --git a/platform/swing/widgets/pom.xml b/platform/swing/widgets/pom.xml
 diff --git a/pom.xml b/pom.xml
 --- a/pom.xml
 +++ b/pom.xml
-@@ -222,14 +222,26 @@
+@@ -239,14 +239,26 @@
      <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>
      <lucene-core.bundle.symbolic-name>org.apache.servicemix.bundles.lucene</lucene-core.bundle.symbolic-name>
      <!--
@@ -1077,10 +1077,25 @@ diff --git a/vm-byteman/agent/pom.xml b/vm-byteman/agent/pom.xml
      </dependency>
      <dependency>
        <groupId>org.osgi</groupId>
+diff --git a/vm-byteman/client-cli/pom.xml b/vm-byteman/client-cli/pom.xml
+--- a/vm-byteman/client-cli/pom.xml
++++ b/vm-byteman/client-cli/pom.xml
+@@ -92,9 +92,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.osgi</groupId>
 diff --git a/vm-byteman/common/pom.xml b/vm-byteman/common/pom.xml
 --- a/vm-byteman/common/pom.xml
 +++ b/vm-byteman/common/pom.xml
-@@ -93,9 +93,8 @@
+@@ -94,9 +94,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
@@ -1452,7 +1467,7 @@ diff --git a/vm-gc/command/pom.xml b/vm-gc/command/pom.xml
 diff --git a/vm-gc/common/pom.xml b/vm-gc/common/pom.xml
 --- a/vm-gc/common/pom.xml
 +++ b/vm-gc/common/pom.xml
-@@ -105,14 +105,8 @@
+@@ -104,14 +104,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
