@@ -52,10 +52,6 @@ __DEFAULT_RELEASE__ 7
   %global hc_core_bundle_version     4.4.4
   %global hc_client_bundle_version   4.5.2
   %global gson_bundle_version        2.3.1
-  # Jansi is used as bootstrap bundle and the
-  # bootstrap bundle properties file refers to the jar
-  # with version suffix. See 0001_shared_fix_bundle_loading.patch
-  %global jansi_version              1.11
   %global lucene_analysis_core_bsn   org.apache.lucene.analyzers-common
   # The javax.servlet bundle version used by the
   # endpoint plugin: a.k.a web-storage-service
@@ -96,10 +92,6 @@ __DEFAULT_RELEASE__ 7
   %global hc_core_bundle_version     4.3.3
   %global hc_client_bundle_version   4.3.6
   %global gson_bundle_version        2.2.2
-  # Jansi is used as bootstrap bundle and the
-  # bootstrap bundle properties file refers to the jar
-  # with version suffix. See 0001_shared_fix_bundle_loading.patch
-  %global jansi_version              1.9
   %global lucene_analysis_core_bsn   org.apache.lucene.analysis
   # The javax.servlet bundle version used by the
   # endpoint plugin: a.k.a web-storage-service
@@ -129,6 +121,12 @@ __DEFAULT_RELEASE__ 7
   %global osgi_compendium_maven_version 1
 
 %endif
+
+# Jansi is used as bootstrap bundle and the
+# bootstrap bundle properties file refers to the jar
+# with version suffix. See 0001_shared_fix_bundle_loading.patch
+%global jansi_version                1.11
+%global jline_version                2.13
 
 # Real OSGi Bundle-Version is 3.2.1.RELEASE
 %global mongo_bundle_version         3.2.1
@@ -354,7 +352,7 @@ BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.commons:commons-cli)
 # jline 2.13 which adds
 # CandidateListCompletionHandler.setPrintSpaceAfterFullCompletion(boolean)
 # required as of commit e8aa651b0627
-BuildRequires: %{?scl_prefix}mvn(jline:jline) >= 2.13
+BuildRequires: %{?scl_prefix}mvn(jline:jline) >= %{jline_version}
 BuildRequires: %{?scl_prefix_java_common}mvn(org.fusesource.jansi:jansi)
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.lucene:lucene-core) >= 4.7.0
 BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.lucene:lucene-analyzers) >= 4.7.0
@@ -472,6 +470,7 @@ Requires: %{?scl_prefix}osgi(io.netty.buffer)
 Requires: %{?scl_prefix}osgi(io.netty.transport)
 Requires: %{?scl_prefix}osgi(io.netty.handler)
 Requires: %{?scl_prefix}osgi(io.netty.codec)
+Requires: %{?scl_prefix}osgi(jline) >= %{jline_version}
 Requires: %{?scl_prefix_java_common}osgi(com.google.gson) >= %{gson_bundle_version}
 Requires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpcore) >= %{hc_core_bundle_version}
 # httpmime comes from httpcomponents-client just like httpclient itself
@@ -574,7 +573,7 @@ cp %{SOURCE4} distribution/config/thermostatrc
 %pom_add_dep org.apache.httpcomponents:httpcore:4.4.0 web/client
 # need jline 2.13 (otherwise this resolves to jline 1)
 %pom_xpath_remove "pom:properties/pom:jline.version"
-%pom_xpath_inject "pom:properties" "<jline.version>2.13</jline.version>"
+%pom_xpath_inject "pom:properties" "<jline.version>%{jline_version}</jline.version>"
 # Don't use bundle-wrapped jnr-unixsocket and deps
 %pom_disable_module jnr-wrapped agent/ipc/unix-socket
 %pom_remove_dep com.redhat.thermostat:jnr-unixsocket agent/ipc/unix-socket/server
