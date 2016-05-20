@@ -75,7 +75,7 @@ public class Activator implements BundleActivator {
                 VmNumaDAO vmNumaDAO = (VmNumaDAO) services.get(VmNumaDAO.class.getName());
                 Version version = new Version(context.getBundle());
                 WriterID writerID = (WriterID) services.get(WriterID.class.getName());
-                backend = new VmNumaBackend(executor, vmNumaDAO, version, registrar, writerID);
+                backend = constructBackend(executor, vmNumaDAO, version, registrar, writerID);
                 if (backend.canRegister()) {
                     reg = context.registerService(Backend.class, backend, null);
                 }
@@ -101,8 +101,13 @@ public class Activator implements BundleActivator {
         tracker.close();
     }
 
-    //For testing only
+    //Package private for testing
     VmNumaBackend getBackend() {
         return backend;
+    }
+
+    //Package private for testing
+    VmNumaBackend constructBackend(ScheduledExecutorService executor, VmNumaDAO vmNumaDAO, Version version, VmStatusListenerRegistrar registrar, WriterID writerID) {
+        return new VmNumaBackend(executor, vmNumaDAO, version, registrar, writerID);
     }
 }

@@ -54,18 +54,6 @@ public class VmNumaCollectorTest {
 
     private VmNumaCollector collector;
 
-    /**
-     * Verify numastat output that we expect still occurs. If numastat is changed then this
-     * test failure signals VmNumaCollector and VmNumaStatParser needs to change.
-     */
-    @Ignore("This test depends on numastat being installed")
-    @Test
-    public void verifyNumastatOutput() throws IOException, InterruptedException, ParseException {
-        //Arbitrary choice of pid 2 which should be readable. May fail if not readable.
-        collector = new VmNumaCollector(2);
-        collector.collect();
-    }
-
     @Test
     public void testCollectSingleNodeStat() throws ParseException {
         final String input = "\n" +

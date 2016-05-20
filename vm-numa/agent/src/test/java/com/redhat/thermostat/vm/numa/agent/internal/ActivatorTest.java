@@ -43,11 +43,14 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -69,7 +72,6 @@ public class ActivatorTest {
         activator.stop(context);
     }
 
-    @Ignore("This test depends on numastat being installed")
     @Test
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext() {
@@ -88,11 +90,25 @@ public class ActivatorTest {
         context.registerService(VmNumaDAO.class, vmNumaDAO, null);
         context.registerService(WriterID.class, idService, null);
 
-        Activator activator = new Activator();
+        final VmNumaBackend[] mock = new VmNumaBackend[1];
+
+        Activator activator = new Activator() {
+            @Override
+            VmNumaBackend constructBackend(ScheduledExecutorService executor, VmNumaDAO vmNumaDAO, com.redhat.thermostat.common.Version version, VmStatusListenerRegistrar registrar, WriterID writerID) {
+                mock[0] = new VmNumaBackend(executor, vmNumaDAO, version, registrar, writerID)
+                {
+                    @Override
+                    public boolean canRegister() {
+                        return true;
+                    }
+                };
+                return mock[0];
+            }
+        };
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(Backend.class.getName(), VmNumaBackend.class));
+        assertTrue(context.isServiceRegistered(Backend.class.getName(), mock[0].getClass()));
         VmNumaBackend backend = activator.getBackend();
         assertNotNull(backend);
 
