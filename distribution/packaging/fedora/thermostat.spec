@@ -62,10 +62,10 @@ __DEFAULT_RELEASE__ 7
   %global jnr_unixsocket_symbolic_name   com.github.jnr.unixsocket
   %global jnr_enxio_version          0.12.0
   %global jnr_enxio_symbolic_name    com.github.jnr.enxio
-  %global jnr_constants_version      0.9.1
+  %global jnr_constants_version      0.9.2
   %global jnr_constants_symbolic_name  com.github.jnr.constants
   %global jnr_x86asm_version         1.0.2
-  %global jffi_version               1.2.11
+  %global jffi_version               1.2.12
   %global jffi_symbolic_name         com.github.jnr.jffi
   # OSGi metadata added to upstream jnr-posix in version 3.0.17 and
   # upstream jnr-ffi in version 2.0.4, which use different 
