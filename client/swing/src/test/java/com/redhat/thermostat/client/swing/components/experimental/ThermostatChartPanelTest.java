@@ -67,9 +67,9 @@ import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
-public class SingleValueChartPanelTest {
+public class ThermostatChartPanelTest {
 
-    private SingleValueChartPanel singleValueChartPanel;
+    private ThermostatChartPanel thermostatChartPanel;
     private final TimeSeriesCollection dataset = new TimeSeriesCollection();
     private Duration duration;
     private JFreeChart chart;
@@ -97,9 +97,9 @@ public class SingleValueChartPanelTest {
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
-                singleValueChartPanel = new SingleValueChartPanel(chart, duration);
+                thermostatChartPanel = new ThermostatChartPanel(chart, duration);
                 frame = new JFrame();
-                frame.add(singleValueChartPanel);
+                frame.add(thermostatChartPanel);
             }
         });
         frameFixture = new FrameFixture(frame);
@@ -108,7 +108,7 @@ public class SingleValueChartPanelTest {
 
     @After
     public void tearDown() {
-        singleValueChartPanel = null;
+        thermostatChartPanel = null;
         duration = null;
         frameFixture.cleanUp();
         frameFixture = null;
@@ -120,7 +120,7 @@ public class SingleValueChartPanelTest {
 
         final boolean[] b = new boolean[] {false};
 
-        singleValueChartPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+        thermostatChartPanel.addPropertyChangeListener(ThermostatChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 Duration d = (Duration) evt.getNewValue();
@@ -143,7 +143,7 @@ public class SingleValueChartPanelTest {
 
         final boolean[] b = new boolean[] {false};
 
-        singleValueChartPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+        thermostatChartPanel.addPropertyChangeListener(ThermostatChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 Duration d = (Duration) evt.getNewValue();
@@ -163,7 +163,7 @@ public class SingleValueChartPanelTest {
     @Test
     public void testTimeRangeToShow() {
         Duration time = new Duration(20, TimeUnit.MINUTES);
-        singleValueChartPanel.setTimeRangeToShow(time);
+        thermostatChartPanel.setTimeRangeToShow(time);
         assertEquals(time.asMilliseconds(), (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
     }
 
@@ -185,13 +185,13 @@ public class SingleValueChartPanelTest {
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
-                singleValueChartPanel.addChart(chart2);
-                singleValueChartPanel.addChart(chart3);
+                thermostatChartPanel.addChart(chart2);
+                thermostatChartPanel.addChart(chart3);
             }
         });
 
         Duration time = new Duration(20, TimeUnit.MINUTES);
-        singleValueChartPanel.setTimeRangeToShow(time);
+        thermostatChartPanel.setTimeRangeToShow(time);
 
         assertEquals(time.asMilliseconds(), (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
         assertEquals(time.asMilliseconds(), (long) chart2.getXYPlot().getDomainAxis().getRange().getLength());
@@ -208,7 +208,7 @@ public class SingleValueChartPanelTest {
     @GUITest
     @Test
     public void testSetDataInformationLabel() {
-        singleValueChartPanel.setDataInformationLabel("15");
+        thermostatChartPanel.setDataInformationLabel("15");
         assertEquals("15", frameFixture.textBox("crossHair").text());
     }
 

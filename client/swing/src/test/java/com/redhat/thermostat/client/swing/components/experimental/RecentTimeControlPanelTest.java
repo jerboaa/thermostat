@@ -134,7 +134,7 @@ public class RecentTimeControlPanelTest {
     public void testTextFieldUpdatingFiresTimeChangeListener() {
         final boolean[] b = new boolean[] {false};
 
-        recentTimeControlPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+        recentTimeControlPanel.addPropertyChangeListener(ThermostatChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
               Duration d = (Duration) evt.getNewValue();
@@ -158,7 +158,7 @@ public class RecentTimeControlPanelTest {
     public void testComboBoxUpdatingFiresTimeChangeListener() {
         final boolean[] b = new boolean[] {false};
 
-        recentTimeControlPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+        recentTimeControlPanel.addPropertyChangeListener(ThermostatChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
               Duration d = (Duration) evt.getNewValue();

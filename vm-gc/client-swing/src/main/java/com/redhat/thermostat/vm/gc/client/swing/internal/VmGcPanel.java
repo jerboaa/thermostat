@@ -94,7 +94,7 @@ import com.redhat.thermostat.client.swing.components.OverlayPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
-import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
+import com.redhat.thermostat.client.swing.components.experimental.ThermostatChartPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.SampledDataset;
@@ -308,7 +308,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
 
         Duration defaultDuration = new Duration(DEFAULT_VALUE, DEFAULT_UNIT);
         final RecentTimeSeriesChartController chartController = new RecentTimeSeriesChartController(chart);
-        final SingleValueChartPanel chartPanel = new SingleValueChartPanel(chart, defaultDuration);
+        final ThermostatChartPanel chartPanel = new ThermostatChartPanel(chart, defaultDuration);
         subPanelDurations.put(tag, defaultDuration);
         chartPanel.enableDynamicCrosshairs();
 

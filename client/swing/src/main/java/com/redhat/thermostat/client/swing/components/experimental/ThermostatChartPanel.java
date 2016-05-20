@@ -64,7 +64,7 @@ import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.Duration;
 
 
-public class SingleValueChartPanel extends JPanel {
+public class ThermostatChartPanel extends JPanel {
 
     public static final String PROPERTY_VISIBLE_TIME_RANGE = "visibleTimeRange";
 
@@ -85,13 +85,13 @@ public class SingleValueChartPanel extends JPanel {
     private ChartPanel chartPanel;
     private Crosshair xCrosshair;
 
-    public SingleValueChartPanel(JFreeChart chart, Duration initialDuration) {
+    public ThermostatChartPanel(JFreeChart chart, Duration initialDuration) {
         this(initialDuration);
 
         addChart(chart);
     }
 
-    public SingleValueChartPanel(Duration initialDuration) {
+    public ThermostatChartPanel(Duration initialDuration) {
         this.initialDuration = initialDuration;
         this.chartsPanel = new JPanel();
         this.charts = new ArrayList<>();
@@ -105,7 +105,7 @@ public class SingleValueChartPanel extends JPanel {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 Duration d = (Duration) evt.getNewValue();
-                SingleValueChartPanel.this.firePropertyChange(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, null, d);
+                ThermostatChartPanel.this.firePropertyChange(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, null, d);
             }
         });
 

@@ -63,7 +63,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
-import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
+import com.redhat.thermostat.client.swing.components.experimental.ThermostatChartPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -88,7 +88,7 @@ public class NumaPanel extends NumaView implements SwingComponent {
     private Map<String, TimeSeriesCollection> collections = new HashMap<>();
     private Map<String, JFreeChart> charts = new HashMap<>();
 
-    private SingleValueChartPanel chartPanel;
+    private ThermostatChartPanel chartPanel;
     private Duration duration;
 
     private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<>(this);
@@ -117,9 +117,9 @@ public class NumaPanel extends NumaView implements SwingComponent {
 
 
         duration = new Duration(10, TimeUnit.MINUTES);
-        chartPanel = new SingleValueChartPanel(duration);
+        chartPanel = new ThermostatChartPanel(duration);
 
-        chartPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+        chartPanel.addPropertyChangeListener(ThermostatChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 duration = (Duration) evt.getNewValue();

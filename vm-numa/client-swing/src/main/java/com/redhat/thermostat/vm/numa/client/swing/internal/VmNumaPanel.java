@@ -61,7 +61,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
-import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
+import com.redhat.thermostat.client.swing.components.experimental.ThermostatChartPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -86,7 +86,7 @@ public class VmNumaPanel extends VmNumaView implements SwingComponent {
 
     private final Map<String, TimeSeriesCollection> datasets = new HashMap<>();
 
-    private SingleValueChartPanel chartPanel;
+    private ThermostatChartPanel chartPanel;
 
     public VmNumaPanel() {
         super();
@@ -105,9 +105,9 @@ public class VmNumaPanel extends VmNumaView implements SwingComponent {
 
     private JPanel initializeChartsPanel() {
         duration = new Duration(DEFAULT_VALUE, DEFAULT_UNIT);
-        chartPanel = new SingleValueChartPanel(duration);
+        chartPanel = new ThermostatChartPanel(duration);
 
-        chartPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+        chartPanel.addPropertyChangeListener(ThermostatChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 duration = (Duration) evt.getNewValue();
