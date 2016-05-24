@@ -69,7 +69,7 @@ public class DAOImplStatementDescriptorRegistration implements
         daoDescs.add(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.DESC_REPLACE_NETWORK_INFO);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.AGGREGATE_COUNT_ALL_NETWORK_INTERFACES);
-        daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST);
+        daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_AGENT);
         daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS);
         daoDescs.add(VmInfoDAOImpl.QUERY_VM_INFO);
         daoDescs.add(VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS);

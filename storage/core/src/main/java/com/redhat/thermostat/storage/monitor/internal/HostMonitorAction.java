@@ -38,8 +38,10 @@ package com.redhat.thermostat.storage.monitor.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -72,12 +74,12 @@ class HostMonitorAction extends MonitorAction<VmRef, HostMonitor.Action> {
 
     @Override
     protected Collection<VmRef> getNewReferences() {
-        Collection<VmRef> vms = vmsDao.getVMs(host);
+        List<VmInfo> vms = vmsDao.getAllVmInfosForAgent(new AgentId(host.getAgentId()));
         Collection<VmRef> livingVMS = new ArrayList<>();
-        for (VmRef vm : vms) {
-            VmInfo vmInfo = vmsDao.getVmInfo(vm);
+        for (VmInfo vmInfo : vms) {
             if (vmInfo.isAlive()) {
-                livingVMS.add(vm);
+                VmRef vmRef = new VmRef(host, vmInfo);
+                livingVMS.add(vmRef);
             }
         }
         return livingVMS;

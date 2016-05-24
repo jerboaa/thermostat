@@ -69,7 +69,7 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
             + vmInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s AND '"
             + Key.VM_ID.getName() + "' = ?s LIMIT 1";
-    static final String QUERY_ALL_VMS_FOR_HOST = "QUERY " 
+    static final String QUERY_ALL_VMS_FOR_AGENT = "QUERY "
             + vmInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s";
 
@@ -167,7 +167,7 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
     public Collection<VmRef> getVMs(HostRef host) {
         AgentId agentId = new AgentId(host.getAgentId());
 
-        Collection<VmInfo> vmInfos = getAllVmInfosForHost(agentId);
+        Collection<VmInfo> vmInfos = getAllVmInfosForAgent(agentId);
         if (vmInfos.equals(Collections.emptyList())) {
             return Collections.emptyList();
         }
@@ -198,7 +198,7 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
     @Override
     public Set<VmId> getVmIds(AgentId agentId) {
         Set<VmId> vmIds = new HashSet<>();
-        Collection<VmInfo> vmInfos = getAllVmInfosForHost(agentId);
+        Collection<VmInfo> vmInfos = getAllVmInfosForAgent(agentId);
         for (VmInfo vmInfo : vmInfos) {
             vmIds.add(new VmId(vmInfo.getVmId()));
         }
@@ -206,9 +206,10 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
         return vmIds;
     }
 
-    private Collection<VmInfo> getAllVmInfosForHost(final AgentId agentId) {
+    @Override
+    public List<VmInfo> getAllVmInfosForAgent(final AgentId agentId) {
         return executeQuery(
-                new AbstractDaoQuery<VmInfo>(storage, vmInfoCategory, QUERY_ALL_VMS_FOR_HOST) {
+                new AbstractDaoQuery<VmInfo>(storage, vmInfoCategory, QUERY_ALL_VMS_FOR_AGENT) {
                     @Override
                     public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
                         preparedStatement.setString(0, agentId.get());

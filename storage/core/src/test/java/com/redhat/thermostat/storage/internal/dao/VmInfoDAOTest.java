@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.internal.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -49,6 +48,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -68,7 +68,6 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -120,7 +119,7 @@ public class VmInfoDAOTest {
         String expectedVmInfo = "QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1";
         assertEquals(expectedVmInfo, VmInfoDAOImpl.QUERY_VM_INFO);
         String expectedVmInfoAll = "QUERY vm-info WHERE 'agentId' = ?s";
-        assertEquals(expectedVmInfoAll, VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST);
+        assertEquals(expectedVmInfoAll, VmInfoDAOImpl.QUERY_ALL_VMS_FOR_AGENT);
         String expectedAllVms = "QUERY vm-info";
         assertEquals(expectedAllVms, VmInfoDAOImpl.QUERY_ALL_VMS);
         String aggregateAllVms = "QUERY-COUNT vm-info";
@@ -272,7 +271,7 @@ public class VmInfoDAOTest {
     }
 
     @Test
-    public void testgetVmIdsWithSingleVM() throws DescriptorParsingException, StatementExecutionException {
+    public void testGetVmIdsWithSingleVM() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = setupStorageForSingleVM();
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         AgentId agentId = new AgentId("123");
@@ -322,6 +321,28 @@ public class VmInfoDAOTest {
         Set<VmId> vmIds = dao.getVmIds(agentId);
 
         assertVmIdCollection(vmIds, new VmId("vmId1"), new VmId("vmId2"));
+    }
+
+
+    @Test
+    public void testGetAllVmInfos() throws DescriptorParsingException, StatementExecutionException {
+        Storage storage = setupStorageForMultiVM();
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+
+        List<VmInfo> vmInfos = dao.getAllVmInfos();
+
+        assertTrue(vmInfos.size() == 2);
+    }
+
+    @Test
+    public void testGetAllVmInfosForAgent() throws DescriptorParsingException, StatementExecutionException {
+        Storage storage = setupStorageForMultiVM();
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+        AgentId agentId = new AgentId("456");
+
+        List<VmInfo> vmInfos = dao.getAllVmInfosForAgent(agentId);
+
+        assertTrue(vmInfos.size() == 2);
     }
 
     private Storage setupStorageForMultiVM() throws DescriptorParsingException, StatementExecutionException {

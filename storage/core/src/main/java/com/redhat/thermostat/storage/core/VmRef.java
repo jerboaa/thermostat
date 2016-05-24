@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.model.VmInfo;
+
 public class VmRef implements Ref {
 
     private final HostRef hostRef;
@@ -48,6 +50,13 @@ public class VmRef implements Ref {
         this.id = id;
         this.pid = pid;
         this.name = name;
+    }
+
+    public VmRef(HostRef hostRef, VmInfo vmInfo) {
+        this.hostRef = hostRef;
+        this.id = vmInfo.getVmId();
+        this.pid = vmInfo.getVmPid();
+        this.name = vmInfo.getMainClass();
     }
 
     @Override

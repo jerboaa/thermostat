@@ -82,6 +82,9 @@ public interface VmInfoDAO extends Countable {
     /** @return information on all known VMs */
     List<VmInfo> getAllVmInfos();
 
+    /** @return information on all known VMs monitored by give agent */
+    List<VmInfo> getAllVmInfosForAgent(AgentId agentId);
+
     /** @return {@code null} if no information can be found */
     VmInfo getVmInfo(VmId id);
 

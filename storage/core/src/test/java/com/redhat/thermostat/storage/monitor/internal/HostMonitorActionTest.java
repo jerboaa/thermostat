@@ -45,7 +45,9 @@ import static org.mockito.Mockito.times;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import com.redhat.thermostat.storage.core.AgentId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -75,65 +77,62 @@ public class HostMonitorActionTest {
 
         HostRef host = new HostRef("01", "01");
         
-        Collection<VmRef> currentVMs = new ArrayList<>();
-        VmRef a = new VmRef(host, "0", 0, "a");
-        VmRef b = new VmRef(host, "1", 1, "b");
-        VmRef c = new VmRef(host, "2", 2, "c");
-        VmRef d = new VmRef(host, "3", 3, "d");
-        VmRef e = new VmRef(host, "4", 3, "e");
+        List<VmInfo> currentVMs = new ArrayList<>();
 
         VmInfo info_a = mock(VmInfo.class);
         when(info_a.isAlive()).thenReturn(true);
+        when(info_a.getVmId()).thenReturn("0");
+        when(info_a.getVmPid()).thenReturn(0);
+        when(info_a.getVmName()).thenReturn("0");
         
         VmInfo info_b = mock(VmInfo.class);
         when(info_b.isAlive()).thenReturn(true);
+        when(info_b.getVmId()).thenReturn("1");
+        when(info_b.getVmPid()).thenReturn(1);
+        when(info_b.getVmName()).thenReturn("1");
         
         VmInfo info_c = mock(VmInfo.class);
         when(info_c.isAlive()).thenReturn(true);
+        when(info_c.getVmId()).thenReturn("2");
+        when(info_c.getVmPid()).thenReturn(2);
+        when(info_c.getVmName()).thenReturn("2");
         
         VmInfo info_d = mock(VmInfo.class);
         when(info_d.isAlive()).thenReturn(true);
+        when(info_d.getVmId()).thenReturn("3");
+        when(info_d.getVmPid()).thenReturn(3);
+        when(info_d.getVmName()).thenReturn("3");
         
         VmInfo info_e = mock(VmInfo.class);
         when(info_e.isAlive()).thenReturn(false);
+        when(info_e.getVmId()).thenReturn("4");
+        when(info_e.getVmPid()).thenReturn(4);
+        when(info_e.getVmName()).thenReturn("4");
         
-        when(vmsDAO.getVmInfo(a)).thenReturn(info_a);
-        when(vmsDAO.getVmInfo(b)).thenReturn(info_b);
-        when(vmsDAO.getVmInfo(c)).thenReturn(info_c);
-        when(vmsDAO.getVmInfo(d)).thenReturn(info_d);
-        when(vmsDAO.getVmInfo(e)).thenReturn(info_e);
-        
-        currentVMs.add(a);
-        currentVMs.add(b);
-        currentVMs.add(c);
-        currentVMs.add(d);
-        currentVMs.add(e);
+        currentVMs.add(info_a);
+        currentVMs.add(info_b);
+        currentVMs.add(info_c);
+        currentVMs.add(info_d);
+        currentVMs.add(info_e);
 
-        when(vmsDAO.getVMs(host)).thenReturn(currentVMs);
+        when(vmsDAO.getAllVmInfosForAgent(any(AgentId.class))).thenReturn(currentVMs);
         
 
         // the first result is to be notified of all those vms
         HostMonitorAction action = new HostMonitorAction(notifier, vmsDAO, host);
         action.run();
 
-        verify(notifier).fireAction(Action.VM_ADDED, a);
-        verify(notifier).fireAction(Action.VM_ADDED, b);
-        verify(notifier).fireAction(Action.VM_ADDED, c);
-        verify(notifier).fireAction(Action.VM_ADDED, d);
-
-        verify(notifier,times(0)).fireAction(Action.VM_ADDED, e);
-        verify(notifier, times(0)).fireAction(Action.VM_REMOVED, eq(any(VmRef.class)));
+        verify(notifier, times(4)).fireAction(eq(Action.VM_ADDED), any(VmRef.class));
+        verify(notifier, times(0)).fireAction(eq(Action.VM_REMOVED), any(VmRef.class));
 
         // now remove one vm from each side
-        currentVMs.remove(b);
-        currentVMs.remove(c);
+        currentVMs.remove(info_b);
+        currentVMs.remove(info_c);
 
         action.run();
 
-        verify(notifier).fireAction(Action.VM_REMOVED, b);
-        verify(notifier).fireAction(Action.VM_REMOVED, c);
-        
-        verify(notifier, times(0)).fireAction(Action.VM_ADDED, eq(any(VmRef.class)));
+        verify(notifier, times(4)).fireAction(eq(Action.VM_ADDED), any(VmRef.class));
+        verify(notifier, times(2)).fireAction(eq(Action.VM_REMOVED), any(VmRef.class));
         
         when(info_a.isAlive()).thenReturn(false);
         
@@ -142,11 +141,8 @@ public class HostMonitorActionTest {
 
         action.run();
 
-        verify(notifier,times(1)).fireAction(Action.VM_ADDED, e);
-        verify(notifier,times(1)).fireAction(Action.VM_REMOVED, a);
-        
-        verify(notifier, times(0)).fireAction(Action.VM_ADDED, eq(any(VmRef.class)));
-        verify(notifier, times(0)).fireAction(Action.VM_REMOVED, eq(any(VmRef.class)));
+        verify(notifier, times(5)).fireAction(eq(Action.VM_ADDED), any(VmRef.class));
+        verify(notifier, times(3)).fireAction(eq(Action.VM_REMOVED), any(VmRef.class));
     }
 }
 
