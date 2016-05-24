@@ -39,6 +39,10 @@ package com.redhat.thermostat.collections.graph;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A class abstracting a connection between two {@link Node}s, such as an Edge
+ * in a Graph.
+ */
 public class Relationship {
     
     public static final String NAME = "name";
@@ -67,7 +71,16 @@ public class Relationship {
     public final String getName() {
         return (String) properties.get(NAME);
     }
-    
+
+    @SuppressWarnings("unchecked")
+    public <E> E getProperty(String propertyName) {
+        return (E) properties.get(propertyName);
+    }
+
+    public Map<String, Object> getProperties() {
+        return properties;
+    }
+
     public Node getFrom() {
         return from;
     }

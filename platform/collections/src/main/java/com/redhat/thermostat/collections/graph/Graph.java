@@ -40,7 +40,9 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * A simple interface defining methods for a general purpose Graph.
+ * A simple interface defining methods for a general purpose Graph where
+ * the {@code Vertices} in the Graph are represented by {@link Node}s and the
+ * {@code Edges} are the {@link Relationship}s between them.
  */
 public interface Graph extends Iterable<Node> {
 
@@ -61,13 +63,17 @@ public interface Graph extends Iterable<Node> {
     boolean addRelationship(Relationship relationship);
 
     /**
-     * Returns the size of this Graph. The size is intended as the number of
-     * {@link Relationship}s contained in the Graph.
+     * Returns the size of this Graph. The size of a Graph is the number of
+     * {@link Relationship}s contained in the Graph, not the number of
+     * {@link Node}s. A Graph with size of zero may still
+     * contain a number of not-connected Nodes. Such Graph is considered empty
+     * and is referred to as Null-Graph or Edgeless.
      */
     int size();
 
     /**
      * Returns the order, or the number of {@link Node}s, of this Graph.
+     * A Zero-Order Graph is an empty graph with no Nodes and no Relationships.
      */
     int order();
 
