@@ -195,7 +195,7 @@ diff --git a/main/src/main/resources/com/redhat/thermostat/main/internal/bootstr
 diff --git a/pom.xml b/pom.xml
 --- a/pom.xml
 +++ b/pom.xml
-@@ -234,6 +234,8 @@
+@@ -251,6 +251,8 @@
      <felix.scr.version>1.8.2</felix.scr.version>
      <felix.scr.annotations.version>1.9.12</felix.scr.annotations.version>
      <kxml2.version>2.3.0</kxml2.version>
@@ -207,7 +207,7 @@ diff --git a/pom.xml b/pom.xml
 diff --git a/setup/distribution/thermostat-plugin.xml b/setup/distribution/thermostat-plugin.xml
 --- a/setup/distribution/thermostat-plugin.xml
 +++ b/setup/distribution/thermostat-plugin.xml
-@@ -71,6 +71,8 @@
+@@ -77,6 +77,8 @@
          <bundle><symbolic-name>com.redhat.thermostat.internal.utils.laf</symbolic-name><version>${project.version}</version></bundle>
          <bundle><symbolic-name>com.redhat.thermostat.plugin.validator</symbolic-name><version>${project.version}</version></bundle>
          <bundle><symbolic-name>com.redhat.thermostat.process</symbolic-name><version>${project.version}</version></bundle>
@@ -396,9 +396,9 @@ diff --git a/vm-heap-analysis/distribution/thermostat-plugin.xml b/vm-heap-analy
 +        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
 +        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
        </bundles>
-       <add-file-completion>true</add-file-completion>
      </command>
-@@ -438,7 +450,7 @@
+     <command>
+@@ -437,7 +449,7 @@
          <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
          <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
@@ -407,7 +407,7 @@ diff --git a/vm-heap-analysis/distribution/thermostat-plugin.xml b/vm-heap-analy
          <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
          <bundle><symbolic-name>io.netty.common</symbolic-name><version>${netty.version}</version></bundle>
          <bundle><symbolic-name>io.netty.buffer</symbolic-name><version>${netty.version}</version></bundle>
-@@ -447,6 +459,8 @@
+@@ -446,6 +458,8 @@
          <bundle><symbolic-name>io.netty.handler</symbolic-name><version>${netty.version}</version></bundle>
          <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
          <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
