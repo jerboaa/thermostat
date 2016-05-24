@@ -36,9 +36,10 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import jline.console.completer.FileNameCompleter;
 
-public class JLineFileNameCompleter extends JLineCompleterWrapper {
+public class JLineFileNameCompleter extends JLineCompleterWrapper implements FileNameTabCompleter {
 
     public JLineFileNameCompleter() {
         super(new FileNameCompleter());

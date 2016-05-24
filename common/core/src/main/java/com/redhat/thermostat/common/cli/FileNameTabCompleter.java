@@ -34,53 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.common.cli;
 
-import java.util.List;
-import java.util.Set;
+import com.redhat.thermostat.annotations.Service;
 
-import org.apache.commons.cli.Options;
-
-import com.redhat.thermostat.launcher.BundleInformation;
-
-public interface CommandInfo {
-
-    /**
-     * Returns a name for this command. This will be used by the user to select
-     * this command.
-     */
-    public String getName();
-
-    /**
-     * A very short description of the command indicating what it does. Ideally
-     * a small sentence.
-     */
-    public String getSummary();
-
-    /**
-     * A description of the command indicating what it does. Unlike
-     * {@link #getSummary()}, this can be as detailed as needed.
-     */
-    public String getDescription();
-
-    /**
-     * How the user should invoke this command
-     */
-    public String getUsage();
-
-    /**
-     * Environments where this command is available
-     */
-    public Set<Environment> getEnvironments();
-
-    /**
-     * Returns the Options that the command is prepared to handle.
-     * If the user provides unknown or malformed arguments, this command will
-     * not be invoked.
-     */
-    public Options getOptions();
-
-    List<BundleInformation> getBundles();
-
+/**
+ * A stub interface for marking a TabCompleter which specifically provides file name completions.
+ * This is intended to be exported as an OSGi service. If you are writing a {@link CompleterService}
+ * which provides file name completion, you may use this interface as a dependency and use the
+ * Thermostat-provided file name completions this way.
+ *
+ * However, if it is applicable, you may alternatively simply use the convention of naming your
+ * filename option argument -f/--filename (ex. foo-command -f /path/to/file, or
+ * foo-command --filename /path/to/file). If you define your file name completion argument to match
+ * this naming convention exactly in your thermostat-plugin.xml, then the filename completions will
+ * be taken care of automatically by Thermostat.
+ */
+@Service
+public interface FileNameTabCompleter extends TabCompleter {
 }
-

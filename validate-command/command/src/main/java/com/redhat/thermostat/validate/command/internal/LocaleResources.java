@@ -43,9 +43,9 @@ public enum LocaleResources {
     
     VALIDATION_SUCCESSFUL,
     VALIDATION_FAILED, 
-    
-    FILE_REQUIRED,
-    FILE_NOT_FOUND, 
+
+    ONE_ARGUMENT_EXPECTED,
+    FILE_NOT_FOUND,
     ;
 
     static final String RESOURCE_BUNDLE =

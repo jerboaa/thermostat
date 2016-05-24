@@ -37,11 +37,17 @@
 package com.redhat.thermostat.validate.command.internal;
 
 import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+import static com.redhat.thermostat.testutils.Asserts.assertServiceIsRegistered;
 import static org.junit.Assert.*;
 
+import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import org.junit.Test;
 
 import com.redhat.thermostat.testutils.StubBundleContext;
+
+import java.util.List;
 
 public class ActivatorTest {
 
@@ -58,6 +64,25 @@ public class ActivatorTest {
         activator.stop(ctx);
         
         assertEquals(0, ctx.getAllServices().size());
+    }
+
+    @Test
+    public void testValidateCompleterBecomesAvailableWhenFileNameCompleterAppears() throws Exception {
+        StubBundleContext ctx = new StubBundleContext();
+        ctx.registerService(FileNameTabCompleter.class, new StubFileNameTabCompleter(), null);
+        Activator activator = new Activator();
+        activator.start(ctx);
+        assertEquals(3, ctx.getAllServices().size());
+        assertServiceIsRegistered(ctx, FileNameTabCompleter.class, StubFileNameTabCompleter.class);
+        assertServiceIsRegistered(ctx, CompleterService.class, ValidateCommandCompleterService.class);
+        assertServiceIsRegistered(ctx, Command.class, ValidateCommand.class);
+    }
+
+    private static class StubFileNameTabCompleter implements FileNameTabCompleter {
+        @Override
+        public int complete(String buffer, int cursor, List<CharSequence> candidates) {
+            return 0;
+        }
     }
 
 }

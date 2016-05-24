@@ -54,7 +54,6 @@ public class TestCommandInfo implements CommandInfo {
 
     private Options options = new Options();
     private Set<Environment> environments;
-    private boolean fileTabCompletionNeeded;
 
     public TestCommandInfo(String name) {
         this.name = name;
@@ -95,15 +94,6 @@ public class TestCommandInfo implements CommandInfo {
     @Override
     public Options getOptions() {
         return options;
-    }
-
-    @Override
-    public boolean needsFileTabCompletions() {
-        return fileTabCompletionNeeded;
-    }
-
-    public void setFileTabCompletionNeeded(boolean fileTabCompletionNeeded) {
-        this.fileTabCompletionNeeded = fileTabCompletionNeeded;
     }
 
     public void addOptions(Option... options) {

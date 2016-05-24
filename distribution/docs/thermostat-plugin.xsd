@@ -36,13 +36,6 @@
 
 <xs:element name="required" type="xs:boolean"/>
 
-<xs:element name="add-file-completion" type="xs:boolean">
-  <xs:annotation>
-    <xs:documentation>Determines whether a command gets tab completion added for files.
-      That is, in addition to command option completion.</xs:documentation>
-  </xs:annotation>
-</xs:element>
-
 <xs:element name="id" type="xs:string"/>
 
 <xs:element name="configuration" type="xs:string"/>
@@ -104,7 +97,6 @@
       <xs:element ref="options" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="environments"/>
       <xs:element ref="bundles"/>
-      <xs:element ref="add-file-completion" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 </xs:element> 

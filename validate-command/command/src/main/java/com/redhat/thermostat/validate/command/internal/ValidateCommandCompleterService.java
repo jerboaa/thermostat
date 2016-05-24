@@ -34,53 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.validate.command.internal;
 
-import java.util.List;
+import com.redhat.thermostat.common.cli.AbstractCompleterService;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
+import com.redhat.thermostat.common.cli.TabCompleter;
+
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.cli.Options;
+public class ValidateCommandCompleterService extends AbstractCompleterService {
 
-import com.redhat.thermostat.launcher.BundleInformation;
+    private FileNameTabCompleter tabCompleter;
 
-public interface CommandInfo {
+    @Override
+    public Set<String> getCommands() {
+        return Collections.singleton(ValidateCommand.COMMAND_NAME);
+    }
 
-    /**
-     * Returns a name for this command. This will be used by the user to select
-     * this command.
-     */
-    public String getName();
+    @Override
+    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
+        if (tabCompleter == null) {
+            return Collections.emptyMap();
+        }
+        CliCommandOption option = CliCommandOption.POSITIONAL_ARG_COMPLETION;
 
-    /**
-     * A very short description of the command indicating what it does. Ideally
-     * a small sentence.
-     */
-    public String getSummary();
+        return Collections.singletonMap(option, tabCompleter);
+    }
 
-    /**
-     * A description of the command indicating what it does. Unlike
-     * {@link #getSummary()}, this can be as detailed as needed.
-     */
-    public String getDescription();
-
-    /**
-     * How the user should invoke this command
-     */
-    public String getUsage();
-
-    /**
-     * Environments where this command is available
-     */
-    public Set<Environment> getEnvironments();
-
-    /**
-     * Returns the Options that the command is prepared to handle.
-     * If the user provides unknown or malformed arguments, this command will
-     * not be invoked.
-     */
-    public Options getOptions();
-
-    List<BundleInformation> getBundles();
-
+    public void setFileNameTabCompleter(FileNameTabCompleter tabCompleter) {
+        this.tabCompleter = tabCompleter;
+    }
 }
-

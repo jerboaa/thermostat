@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.cli.TabCompleter;
@@ -115,9 +114,6 @@ public class TabCompletion {
         if (ALL_COMMANDS_COMPLETER == service.getCommands()) {
             globalCompleterServices.remove(service);
         }
-        if (commandMap.isEmpty()) {
-            return;
-        }
         for (String commandName : service.getCommands()) {
             TreeCompleter.Node command = commandMap.get(commandName);
             if (command != null) {
@@ -157,11 +153,6 @@ public class TabCompletion {
                     setupDefaultCompletion(command, option);
                 }
 
-                if (info.needsFileTabCompletions()) {
-                    TreeCompleter.Node files = new TreeCompleter.Node("fileName", new JLineFileNameCompleter());
-                    files.setRestartNode(command);
-                    command.addBranch(files);
-                }
                 treeCompleter.addBranch(command);
 
                 for (CompleterService service : globalCompleterServices) {

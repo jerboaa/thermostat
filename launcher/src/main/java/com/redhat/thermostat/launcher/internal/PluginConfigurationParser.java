@@ -359,7 +359,6 @@ public class PluginConfigurationParser {
         Options options = new Options();
         Set<Environment> availableInEnvironments = EnumSet.noneOf(Environment.class);
         List<BundleInformation> bundles = new ArrayList<>();
-        boolean fileTabCompletionNeeded = false;
 
         NodeList nodes = commandNode.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
@@ -380,8 +379,6 @@ public class PluginConfigurationParser {
                 availableInEnvironments = parseEnvironment(pluginName, name, node);
             } else if (node.getNodeName().equals("bundles")) {
                 bundles.addAll(parseBundles(pluginName, name, node));
-            } else if (node.getNodeName().equals("add-file-completion")) {
-                fileTabCompletionNeeded = Boolean.parseBoolean(node.getTextContent().trim());
             }
         }
 
@@ -394,7 +391,7 @@ public class PluginConfigurationParser {
                     "name='" + name + "', summary='" + summary + ", description='" + description + "', options='" + options + "'");
             return null;
         } else {
-            return new NewCommand(name, usage, summary, description, arguments, options, availableInEnvironments, bundles, fileTabCompletionNeeded);
+            return new NewCommand(name, usage, summary, description, arguments, options, availableInEnvironments, bundles);
         }
     }
 

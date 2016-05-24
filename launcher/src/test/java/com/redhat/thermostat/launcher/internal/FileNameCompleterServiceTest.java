@@ -36,71 +36,55 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.util.List;
-import java.util.Set;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.TabCompleter;
+import org.junit.Before;
+import org.junit.Test;
 
-import org.apache.commons.cli.Options;
+import java.util.Collections;
+import java.util.Map;
 
-import com.redhat.thermostat.launcher.BundleInformation;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
 
-public class BasicCommandInfo implements CommandInfo {
+public class FileNameCompleterServiceTest {
 
-    private final String name;
-    private final String summary;
-    private final String description;
-    private final String usage;
-    private final Options options;
-    private final Set<Environment> environments;
-    private final List<BundleInformation> bundles;
+    private FileNameCompleterService completerService;
 
-    public BasicCommandInfo(String name, String summary, String description, String usage, Options options, Set<Environment> environments, List<BundleInformation> bundles) {
-        this.name = name;
-        this.summary = summary;
-        this.description = description;
-        this.usage = usage;
-        this.options = options;
-        this.environments = environments;
-        this.bundles = bundles;
+    @Before
+    public void setup() {
+        completerService = new FileNameCompleterService();
     }
 
-    @Override
-    public String getName() {
-        return name;
+    @Test
+    public void testProvidesAllCommandsCompletion() {
+        assertThat(completerService.getCommands(), is(equalTo(TabCompletion.ALL_COMMANDS_COMPLETER)));
     }
 
-    @Override
-    public String getSummary() {
-        return summary;
+    @Test
+    public void testProvidesOnlyOneCompletion() {
+        Map<CliCommandOption, ? extends TabCompleter> map = completerService.getOptionCompleters();
+        assertThat(map.size(), is(1));
     }
 
-    @Override
-    public String getDescription() {
-        return description;
+    @Test
+    public void testProvidesCompletionForFileNameArguments() {
+        Map<CliCommandOption, ? extends TabCompleter> map = completerService.getOptionCompleters();
+        assertThat(map.keySet(), is(equalTo(Collections.singleton(FileNameCompleterService.FILENAME_OPTION))));
     }
 
-    @Override
-    public String getUsage() {
-        return usage;
+    @Test
+    public void testFileNameCompleterIsNotNull() {
+        Map<CliCommandOption, ? extends TabCompleter> map = completerService.getOptionCompleters();
+        assertThat(map.get(FileNameCompleterService.FILENAME_OPTION), is(not(equalTo(null))));
     }
 
-    @Override
-    public Options getOptions() {
-        return options;
+    @Test
+    public void testFileNameOptionArgumentName() {
+        assertThat(FileNameCompleterService.FILENAME_OPTION.getLongOpt(), is("filename"));
+        assertThat(FileNameCompleterService.FILENAME_OPTION.getOpt(), is("f"));
     }
 
-    @Override
-    public Set<Environment> getEnvironments() {
-        return environments;
-    }
-
-    @Override
-    public List<BundleInformation> getBundles() {
-        return bundles;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s (summary='%s', description='%s', dependencies='%s')", name, summary, description, bundles.toString());
-    }
 }
-

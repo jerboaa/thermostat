@@ -47,6 +47,11 @@ import java.util.Set;
  * implementation so that "-f TAB" can produce a list of possible fooIds. This implementation would return a singleton
  * Set of "foo-command" for {@link CompleterService#getCommands()}, and a Map from a CliCommandOption with short-opt "-f"/
  * long-opt "--fooId" to the relevant {@link TabCompleter} instance for {@link CompleterService#getOptionCompleters()}.
+ *
+ * There are several built-in completions which Thermostat provides. If your command uses a vmId, then declaring a
+ * -v/--vmId option in your thermostat-plugin.xml will give you automagic vmId completions in Thermostat shell.
+ * Likewise, -a/--agentId, -d/--dbUrl, and -f/--filename completions are provided if you simply include these options
+ * in your XML.
  */
 @ExtensionPoint
 public interface CompleterService {

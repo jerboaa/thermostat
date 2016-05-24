@@ -81,7 +81,7 @@ public class SaveHeapDumpToFileCommandTest {
         SimpleArguments args = new SimpleArguments();
         args.addArgument(Arguments.HOST_ID_ARGUMENT, "host-id");
         args.addArgument(VmArgument.ARGUMENT_NAME, "1");
-        args.addArgument("file", "heap-id-1");
+        args.addArgument("filename", "heap-id-1");
 
         HeapDAO heapDAO = mock(HeapDAO.class);
         context.registerService(HeapDAO.class, heapDAO, null);
@@ -125,7 +125,7 @@ public class SaveHeapDumpToFileCommandTest {
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("heapId", HEAP_ID);
-        args.addArgument("file", FILE_NAME);
+        args.addArgument("filename", FILE_NAME);
 
         FileStreamCreator creator = mock(FileStreamCreator.class);
         when(creator.createOutputStream(FILE_NAME)).thenReturn(heapDumpStream);
@@ -144,7 +144,7 @@ public class SaveHeapDumpToFileCommandTest {
         args.addArgument(Arguments.HOST_ID_ARGUMENT, "host-id");
         args.addArgument(VmArgument.ARGUMENT_NAME, "1");
         args.addArgument("heapId", "heap-id-1");
-        args.addArgument("file", "heap-id-1");
+        args.addArgument("filename", "heap-id-1");
 
         Command command = new SaveHeapDumpToFileCommand(context, mock(FileStreamCreator.class));
         

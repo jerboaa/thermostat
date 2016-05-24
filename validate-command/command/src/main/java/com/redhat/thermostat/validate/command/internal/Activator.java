@@ -38,26 +38,66 @@ package com.redhat.thermostat.validate.command.internal;
 
 import java.util.Hashtable;
 
+import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.cli.Command;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 public class Activator implements BundleActivator {
 
-    private ServiceRegistration registration;
+    private ServiceRegistration commandRegistration;
+    private ValidateCommandCompleterService completerService;
+    private ServiceTracker fileNameCompleterTracker;
+    private ServiceRegistration completerRegistration;
 
     @Override
+    @SuppressWarnings("unchecked")
     public void start(final BundleContext context) throws Exception {
-        Hashtable<String,String> properties = new Hashtable<>();
+        Hashtable<String, String> properties = new Hashtable<>();
         properties.put(Command.NAME, "validate");
-        registration = context.registerService(Command.class.getName(), new ValidateCommand(), properties);
+
+        commandRegistration = context.registerService(Command.class.getName(), new ValidateCommand(), properties);
+
+        completerService = new ValidateCommandCompleterService();
+
+        fileNameCompleterTracker = new ServiceTracker(context, FileNameTabCompleter.class, new ServiceTrackerCustomizer() {
+            @Override
+            public Object addingService(ServiceReference serviceReference) {
+                FileNameTabCompleter tabCompleter = (FileNameTabCompleter) context.getService(serviceReference);
+                completerService.setFileNameTabCompleter(tabCompleter);
+                completerRegistration = context.registerService(CompleterService.class.getName(), completerService, null);
+                return context.getService(serviceReference);
+            }
+
+            @Override
+            public void modifiedService(ServiceReference serviceReference, Object o) {
+            }
+
+            @Override
+            public void removedService(ServiceReference serviceReference, Object o) {
+                completerService.setFileNameTabCompleter(null);
+            }
+        });
+        fileNameCompleterTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        registration.unregister();
+        if (commandRegistration != null) {
+            commandRegistration.unregister();
+        }
+        if (completerRegistration != null) {
+            completerRegistration.unregister();
+        }
+        if (fileNameCompleterTracker != null) {
+            fileNameCompleterTracker.close();
+        }
     }
 }
 

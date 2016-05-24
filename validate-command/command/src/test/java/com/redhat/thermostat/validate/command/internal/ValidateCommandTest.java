@@ -38,12 +38,14 @@ package com.redhat.thermostat.validate.command.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.cli.MissingArgumentException;
@@ -64,13 +66,11 @@ public class ValidateCommandTest {
     private Arguments mockArgs;
     private Console console;
     private String fileName;
-    private List<String> list = new ArrayList<>();
     private ByteArrayOutputStream outputBaos, errorBaos;
     private PrintStream output, error;
         
     @Before
     public void setUp() {
-        
         cmd = new ValidateCommand();
         ctxt = mock(CommandContext.class);
         mockArgs = mock(Arguments.class);
@@ -86,15 +86,15 @@ public class ValidateCommandTest {
         when(ctxt.getConsole()).thenReturn(console);
         when(console.getError()).thenReturn(error);
         when(console.getOutput()).thenReturn(output);
-        when(mockArgs.getNonOptionArguments()).thenReturn(list);
-        
+        when(mockArgs.hasArgument("filename")).thenReturn(true);
     }
     
     @Test
     public void validateIncorrectFile() throws CommandException, MissingArgumentException {
         fileName = PluginValidator.class.getResource("/incorrectPlugin.xml").getPath().toString();
-        list.add(fileName);
-        
+
+        when(mockArgs.getNonOptionArguments()).thenReturn(Collections.singletonList(fileName));
+
         cmd.run(ctxt);
         String errorOutput = new String(errorBaos.toByteArray());
         String validateOutput = buildErrorMessage();
@@ -106,8 +106,9 @@ public class ValidateCommandTest {
     @Test
     public void validateCorrectFile() throws CommandException, MissingArgumentException {
         fileName = PluginValidator.class.getResource("/correctPlugin.xml").getPath().toString();
-        list.add(fileName);
-        
+
+        when(mockArgs.getNonOptionArguments()).thenReturn(Collections.singletonList(fileName));
+
         cmd.run(ctxt);
         
         String expected = "Validation successful for file " + fileName + "\n\n";
@@ -120,8 +121,8 @@ public class ValidateCommandTest {
     @Test
     public void validateNonExistingFile() throws CommandException, MissingArgumentException {
         fileName = "/nonExistingFile.xml";
-        list.add(fileName);
-        
+        when(mockArgs.getNonOptionArguments()).thenReturn(Collections.singletonList(fileName));
+
         try {
             cmd.run(ctxt);    
         } catch(CommandLineArgumentParseException clpae) {
@@ -131,10 +132,11 @@ public class ValidateCommandTest {
     
     @Test
     public void missingFileAsArgument() throws CommandException, MissingArgumentException {
-        
+        when(mockArgs.getNonOptionArguments()).thenReturn(Collections.<String>emptyList());
         try {
-            cmd.run(ctxt);    
-        } catch(CommandLineArgumentParseException clpae) {
+            cmd.run(ctxt);
+            fail();
+        } catch(CommandException clpae) {
             // pass
         }
     }

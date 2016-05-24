@@ -39,7 +39,6 @@ package com.redhat.thermostat.validate.command.internal;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -51,40 +50,39 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public class ValidateCommand implements Command {
 
+    public static final String COMMAND_NAME = "validate";
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    private PluginValidator validator;
+    private final PluginValidator validator;
+
+    public ValidateCommand() {
+        this.validator = new PluginValidator();
+    }
 
     public void run(CommandContext ctx) throws CommandException {
-        Arguments args = ctx.getArguments();
-        validator = new PluginValidator();
+        if (ctx.getArguments().getNonOptionArguments().size() != 1) {
+            throw new CommandException(translator.localize(LocaleResources.ONE_ARGUMENT_EXPECTED));
+        }
+        String filename = ctx.getArguments().getNonOptionArguments().get(0);
         File pluginFile = null;
-        String argString = null;
-        
-            try {
-                argString = args.getNonOptionArguments().get(0);
-                pluginFile = new File(argString);
-                validator.validate(pluginFile);
-                ctx.getConsole().getOutput().println(translator.localize(
-                                LocaleResources.VALIDATION_SUCCESSFUL, pluginFile.getAbsolutePath())
-                                .getContents());
-                
-            } catch (PluginConfigurationValidatorException e) {
-                ValidationErrorsFormatter formatter = new ValidationErrorsFormatter();
-                ctx.getConsole().getError().println(formatter.format(e.getAllErrors()));
-                ctx.getConsole().getError().println(translator.localize(
-                                LocaleResources.VALIDATION_FAILED, pluginFile.getAbsolutePath())
-                               .getContents());
-                
-            } catch (IndexOutOfBoundsException | NullPointerException e) {
-                throw new CommandLineArgumentParseException
-                (translator.localize(
-                        LocaleResources.FILE_REQUIRED));
-                
-            } catch (FileNotFoundException fnfe) {
-                throw new CommandLineArgumentParseException
-                (translator.localize(
-                        LocaleResources.FILE_NOT_FOUND, pluginFile.getAbsolutePath()));
-            }        
+        try {
+            pluginFile = new File(filename);
+            validator.validate(pluginFile);
+            ctx.getConsole().getOutput().println(translator.localize(
+                            LocaleResources.VALIDATION_SUCCESSFUL, pluginFile.getAbsolutePath())
+                            .getContents());
+
+        } catch (PluginConfigurationValidatorException e) {
+            ValidationErrorsFormatter formatter = new ValidationErrorsFormatter();
+            ctx.getConsole().getError().println(formatter.format(e.getAllErrors()));
+            ctx.getConsole().getError().println(translator.localize(
+                            LocaleResources.VALIDATION_FAILED, pluginFile.getAbsolutePath())
+                           .getContents());
+
+        } catch (FileNotFoundException fnfe) {
+            throw new CommandLineArgumentParseException(translator.localize(
+                    LocaleResources.FILE_NOT_FOUND, pluginFile.getAbsolutePath()));
+        }
     }
 
     public boolean isStorageRequired() {

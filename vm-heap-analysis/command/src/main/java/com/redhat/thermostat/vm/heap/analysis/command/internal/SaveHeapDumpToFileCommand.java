@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.redhat.thermostat.client.cli.FileNameArgument;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -66,7 +67,6 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String HEAP_ID_ARGUMENT = "heapId";
-    private static final String FILE_NAME_ARGUMENT = "file";
 
     private final FileStreamCreator creator;
     private final BundleContext context;
@@ -89,7 +89,6 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
             run(ctx, heapDAO);
         } finally {
             context.ungetService(ref);
-            heapDAO = null;
         }
     }
 
@@ -99,10 +98,8 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
         if (heapId == null) {
             throw new CommandLineArgumentParseException(translator.localize(LocaleResources.HEAP_ID_REQUIRED));
         }
-        String filename = args.getArgument(FILE_NAME_ARGUMENT);
-        if (filename == null) {
-            throw new CommandLineArgumentParseException(translator.localize(LocaleResources.FILE_REQUIRED));
-        }
+        FileNameArgument fileNameArgument = FileNameArgument.required(args);
+        String filename = fileNameArgument.getFileName();
 
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
         try (InputStream heapStream = heapDAO.getHeapDumpData(heapInfo)) {
@@ -121,7 +118,7 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
         }
     }
 
-    private void saveHeapDump(InputStream heapStream, String filename) throws FileNotFoundException, IOException {
+    private void saveHeapDump(InputStream heapStream, String filename) throws IOException {
         try (BufferedInputStream bis = new BufferedInputStream(heapStream);
              BufferedOutputStream bout = new BufferedOutputStream(creator.createOutputStream(filename))) {
             StreamUtils.copyStream(bis, bout);

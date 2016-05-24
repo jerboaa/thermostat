@@ -44,20 +44,17 @@
       <name>validate</name>
       <summary>validate a thermostat plug-in XML file</summary>
       <description>Validate a thermostat plug-in XML file against the standard schema and report any issues.</description>
-      <arguments>
-        <argument>file</argument>
-      </arguments>
       <environments>
         <environment>cli</environment>
         <environment>shell</environment>
       </environments>
       <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.validate.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.validate.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.configuration</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.plugin.validator</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
-      <add-file-completion>true</add-file-completion>
     </command>
   </commands>
 </plugin>

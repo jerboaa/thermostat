@@ -34,53 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.client.cli;
 
-import java.util.List;
-import java.util.Set;
+import com.redhat.thermostat.client.cli.internal.LocaleResources;
+import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import org.apache.commons.cli.Options;
+public class FileNameArgument {
 
-import com.redhat.thermostat.launcher.BundleInformation;
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    public static final String ARGUMENT_NAME = "filename";
 
-public interface CommandInfo {
+    private final String fileName;
 
-    /**
-     * Returns a name for this command. This will be used by the user to select
-     * this command.
-     */
-    public String getName();
+    private FileNameArgument(Arguments args, boolean isRequired) throws CommandException {
+        this.fileName = args.getArgument(ARGUMENT_NAME);
+        if (isRequired && fileName == null) {
+            throw new CommandException(translator.localize(LocaleResources.FILENAME_REQUIRED));
+        }
+    }
 
-    /**
-     * A very short description of the command indicating what it does. Ideally
-     * a small sentence.
-     */
-    public String getSummary();
+    public static FileNameArgument required(Arguments args) throws CommandException {
+        return new FileNameArgument(args, true);
+    }
 
-    /**
-     * A description of the command indicating what it does. Unlike
-     * {@link #getSummary()}, this can be as detailed as needed.
-     */
-    public String getDescription();
-
-    /**
-     * How the user should invoke this command
-     */
-    public String getUsage();
+    public static FileNameArgument optional(Arguments args) throws CommandException {
+        return new FileNameArgument(args, false);
+    }
 
     /**
-     * Environments where this command is available
+     * @return The value of filename stored in this object, which may be null.
      */
-    public Set<Environment> getEnvironments();
+    public String getFileName() {
+        return fileName;
+    }
 
-    /**
-     * Returns the Options that the command is prepared to handle.
-     * If the user provides unknown or malformed arguments, this command will
-     * not be invoked.
-     */
-    public Options getOptions();
-
-    List<BundleInformation> getBundles();
+    public boolean isPresent() {
+        return fileName != null;
+    }
 
 }
-

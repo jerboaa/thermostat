@@ -586,7 +586,6 @@ public class PluginConfigurationParserTest {
                 "        <environment>shell</environment>" +
                 "        <environment>cli</environment>" +
                 "      </environments>" +
-                "      <add-file-completion>true</add-file-completion>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -601,7 +600,6 @@ public class PluginConfigurationParserTest {
 
         NewCommand command = newCommands.get(0);
         assertEquals("test", command.getCommandName());
-        assertTrue(command.needsFileTabCompletions());
     }
 
     @Test
@@ -617,7 +615,6 @@ public class PluginConfigurationParserTest {
                 "        <environment>shell</environment>" +
                 "        <environment>cli</environment>" +
                 "      </environments>" +
-                "      <add-file-completion>false</add-file-completion>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -632,7 +629,6 @@ public class PluginConfigurationParserTest {
 
         NewCommand command = newCommands.get(0);
         assertEquals("test", command.getCommandName());
-        assertFalse(command.needsFileTabCompletions());
     }
 
     @Test
@@ -648,7 +644,6 @@ public class PluginConfigurationParserTest {
                 "        <environment>shell</environment>" +
                 "        <environment>cli</environment>" +
                 "      </environments>" +
-                "      <add-file-completion>invalid</add-file-completion>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -663,7 +658,6 @@ public class PluginConfigurationParserTest {
 
         NewCommand command = newCommands.get(0);
         assertEquals("test", command.getCommandName());
-        assertFalse(command.needsFileTabCompletions());
     }
 
 }

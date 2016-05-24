@@ -138,10 +138,8 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
         List<BundleInformation> bundles = new ArrayList<>();
         bundles.addAll(info1.getBundles());
         bundles.addAll(info2.getBundles());
-        boolean fileTabCompletionNeeded = info1.needsFileTabCompletions() || info2.needsFileTabCompletions();
 
-
-        return new BasicCommandInfo(name, summary, description, usage, options, environment, bundles, fileTabCompletionNeeded);
+        return new BasicCommandInfo(name, summary, description, usage, options, environment, bundles);
     }
 
     private <T> T selectBest(T first, T second) {
