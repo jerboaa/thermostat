@@ -124,20 +124,21 @@ Thermostat consists of:
 
   cd into distribution/target/image directory just created
 
-  On first run, set up thermostat using GUI with:
-  bin/thermostat setup
+  Run GUI thermostat:
 
-  or CLI-based with
-  bin/thermostat setup -c
+    Start thermostat local (this will run setup silently on first run):
+    bin/thermostat local
 
-  To start the agent and the db:
-  bin/thermostat web-storage-service
+  Or run CLI thermostat:
 
-  To start the gui client:
-  bin/thermostat gui
+    Run CLI-based setup with:
+    bin/thermostat setup -c
 
-  To start the thermostat shell:
-  bin/thermostat shell
+    Start the agent and the db:
+    bin/thermostat web-storage-service
+
+    Start the shell client:
+    bin/thermostat shell
 
   Use the help command in order to find out about all available commands:
   bin/thermostat help
