@@ -39,8 +39,11 @@ package com.redhat.thermostat.vm.byteman.client.cli.internal;
 import java.util.Hashtable;
 import java.util.Map;
 
+import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.command.RequestQueue;
@@ -50,14 +53,20 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 public class Activator implements BundleActivator {
 
     private ServiceRegistration<Command> commandReg;
-    private MultipleServiceTracker depsTracker;
-    
+    private ServiceRegistration completerRegistration;
+    private MultipleServiceTracker commandDepsTracker;
+    private ServiceTracker fileNameTabCompleterTracker;
+    private BytemanCompleterService completerService;
+
     @Override
-    public void start(BundleContext context) throws Exception {
+    @SuppressWarnings("unchecked")
+    public void start(final BundleContext context) throws Exception {
         Hashtable<String, String> properties = new Hashtable<>();
         properties.put(Command.NAME, BytemanControlCommand.COMMAND_NAME);
         final BytemanControlCommand bytemanCommand = new BytemanControlCommand();
@@ -68,7 +77,7 @@ public class Activator implements BundleActivator {
                 VmBytemanDAO.class,
                 RequestQueue.class,
         };
-        depsTracker = new MultipleServiceTracker(context, deps, new Action() {
+        commandDepsTracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
             public void dependenciesUnavailable() {
@@ -90,13 +99,48 @@ public class Activator implements BundleActivator {
                 bytemanCommand.setRequestQueue(queue);
             }
         });
-        depsTracker.open();
+        commandDepsTracker.open();
+
+        completerService = new BytemanCompleterService();
+
+        fileNameTabCompleterTracker = new ServiceTracker(context, FileNameTabCompleter.class, new ServiceTrackerCustomizer() {
+            @Override
+            public Object addingService(ServiceReference serviceReference) {
+                FileNameTabCompleter fileNameTabCompleter = (FileNameTabCompleter) context.getService(serviceReference);
+                completerService.setFileNameTabCompleter(fileNameTabCompleter);
+                completerRegistration = context.registerService(CompleterService.class.getName(), completerService, null);
+                return context.getService(serviceReference);
+            }
+
+            @Override
+            public void modifiedService(ServiceReference serviceReference, Object o) {
+            }
+
+            @Override
+            public void removedService(ServiceReference serviceReference, Object o) {
+                completerService.setFileNameTabCompleter(null);
+            }
+        });
+        fileNameTabCompleterTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        depsTracker.close();
-        commandReg.unregister();
+        if (commandDepsTracker != null) {
+            commandDepsTracker.close();
+        }
+        if (commandReg != null) {
+            commandReg.unregister();
+        }
+        if (fileNameTabCompleterTracker != null) {
+            fileNameTabCompleterTracker.close();
+        }
+        if (completerRegistration != null) {
+            completerRegistration.unregister();
+        }
+        if (completerService != null) {
+            completerService.setFileNameTabCompleter(null);
+        }
     }
 
 }
