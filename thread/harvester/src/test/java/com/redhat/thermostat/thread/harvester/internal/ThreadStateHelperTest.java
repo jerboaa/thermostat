@@ -85,6 +85,7 @@ public class ThreadStateHelperTest {
 
         ThreadInfo info = mock(ThreadInfo.class);
         when(info.getThreadState()).thenReturn(Thread.State.BLOCKED);
+        when(info.getStackTrace()).thenReturn(new StackTraceElement[0]);
 
         long timestamp = -1l;
 

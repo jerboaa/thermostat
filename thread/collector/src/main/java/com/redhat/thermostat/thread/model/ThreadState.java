@@ -43,6 +43,7 @@ import com.redhat.thermostat.storage.core.experimental.statement.Indexed;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.thread.dao.internal.ThreadDaoCategories;
+import com.sun.tools.hat.internal.model.StackTrace;
 
 /**
  * Represents a single delta variation of a Thread state.
@@ -63,6 +64,7 @@ public class ThreadState extends BasePojo implements TimeStampedPojo {
     private long blockedTime;
     private long waitedCount;
     private long waitedTime;
+    private String stackTrace;
 
     public ThreadState() {
         this(null);
@@ -163,6 +165,16 @@ public class ThreadState extends BasePojo implements TimeStampedPojo {
         return inNative;
     }
 
+    @Persist
+    public void setStackTrace(String stackTrace) {
+        this.stackTrace = stackTrace;
+    }
+
+    @Persist
+    public String getStackTrace() {
+        return stackTrace;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -182,6 +194,8 @@ public class ThreadState extends BasePojo implements TimeStampedPojo {
             return false;
         if (vmId != null ? !vmId.equals(that.vmId) : that.vmId != null)
             return false;
+        if (stackTrace != null ? !stackTrace.equals(that.stackTrace) : that.stackTrace != null)
+            return false;
 
         return true;
     }
@@ -196,6 +210,7 @@ public class ThreadState extends BasePojo implements TimeStampedPojo {
         result = 31 * result + (int) (id ^ (id >>> 32));
         result = 31 * result + (suspended ? 1 : 0);
         result = 31 * result + (inNative ? 1 : 0);
+        result = 31 * result + (stackTrace != null ? stackTrace.hashCode() : 0);
         return result;
     }
 

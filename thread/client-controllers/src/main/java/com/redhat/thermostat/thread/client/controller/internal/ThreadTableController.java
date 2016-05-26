@@ -44,6 +44,7 @@ import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.model.timeline.ThreadInfo;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.model.SessionID;
+import com.redhat.thermostat.thread.model.StackTrace;
 import com.redhat.thermostat.thread.model.ThreadState;
 import java.util.HashMap;
 import java.util.Map;
@@ -180,6 +181,8 @@ public class ThreadTableController extends CommonController {
             bean.setWaitedCount(thread.getWaitedCount());
 
             bean.setStopTimeStamp(thread.getTimeStamp());
+
+            bean.addStackTrace(StackTrace.fromJson(thread.getStackTrace()));
 
             threadTableView.display(bean);
 

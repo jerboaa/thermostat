@@ -36,7 +36,11 @@
 
 package com.redhat.thermostat.thread.client.common;
 
+import com.redhat.thermostat.thread.model.StackTrace;
+
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 public class ThreadTableBean {
@@ -57,6 +61,8 @@ public class ThreadTableBean {
     private long waitingTime;
     private long monitorTime;
     private long sleepingTime;
+
+    private List<StackTrace> stackTraces = new ArrayList<>();
 
     public long getId() {
         return id;
@@ -200,5 +206,14 @@ public class ThreadTableBean {
     public long getWaitingTime() {
         return waitingTime;
     }
+
+    public void addStackTrace(StackTrace stackTrace) {
+        stackTraces.add(stackTrace);
+    }
+
+    public List<StackTrace> getStackTraces() {
+        return stackTraces;
+    }
+
 }
 

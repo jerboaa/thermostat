@@ -39,7 +39,9 @@ package com.redhat.thermostat.thread.harvester.internal;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.SessionID;
+import com.redhat.thermostat.thread.model.StackTrace;
 import com.redhat.thermostat.thread.model.ThreadState;
+
 import java.lang.management.ThreadInfo;
 
 public class ThreadStateHelper {
@@ -81,6 +83,8 @@ public class ThreadStateHelper {
         state.setBlockedTime(beanInfo.getBlockedTime());
         state.setWaitedCount(beanInfo.getWaitedCount());
         state.setWaitedTime(beanInfo.getWaitedTime());
+
+        state.setStackTrace(new StackTrace(beanInfo.getStackTrace()).toString());
 
         // TODO: lock information
 
