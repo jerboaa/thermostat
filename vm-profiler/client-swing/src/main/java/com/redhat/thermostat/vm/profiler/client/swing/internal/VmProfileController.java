@@ -273,8 +273,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                         updateViewWithCurrentProfilingStatus();
                         break;
                     default:
-                        // FIXME show message to user
-
+                        view.displayErrorMessage(translator.localize(LocaleResources.PROFILER_ERROR));
                         hideProgressNotificationIfVisible();
                         profilingStartOrStopRequested = false;
                         profilingState = ProfilingState.DISABLED;

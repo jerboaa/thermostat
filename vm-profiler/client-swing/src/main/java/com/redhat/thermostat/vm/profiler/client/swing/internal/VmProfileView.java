@@ -149,4 +149,6 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
 
     public abstract void addTabToTabbedPane(final LocalizedString title, final Component component);
 
+    public abstract void displayErrorMessage(final LocalizedString message);
+
 }

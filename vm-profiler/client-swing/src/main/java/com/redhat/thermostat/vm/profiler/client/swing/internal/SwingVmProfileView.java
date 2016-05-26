@@ -54,6 +54,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -455,6 +456,11 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 }
             }
         });
+    }
+
+    public void displayErrorMessage(final LocalizedString message) {
+        JOptionPane.showMessageDialog(this.getUiComponent(), message.getContents(),
+                translator.localize(LocaleResources.ERROR_HEADER).getContents(), JOptionPane.ERROR_MESSAGE);
     }
 
     @Override
