@@ -41,18 +41,26 @@ import jline.console.completer.StringsCompleter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Provides cli/shell tab completion for various strings, ex. agentId, vmId.
+ * Provides shell tab completions as provided by {@link CompletionFinder}s.
  */
 public class CompletionFinderTabCompleter implements TabCompleter {
 
     private CompletionFinder finder;
 
+    /**
+     * Construct a new instance.
+     * @param finder the CompletionFinder which provides completion candidates. Must not be null.
+     */
     public CompletionFinderTabCompleter(CompletionFinder finder) {
-        this.finder = finder;
+        this.finder = Objects.requireNonNull(finder);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int complete(String buffer, int cursor, List<CharSequence> candidates) {
         List<CompletionInfo> completions = filterCompletionsWithBuffer(finder.findCompletions(), buffer);

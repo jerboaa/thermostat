@@ -60,6 +60,11 @@ public class TabCompletion {
     private static final String LONG_OPTION_PREFIX = "--";
     private static final String SHORT_OPTION_PREFIX = "-";
 
+    /**
+     * Not intended to be available to plugins, only built-ins such as vmId and agentId completion.
+     * This is why reference equality is used when checking for this constant, otherwise it is too
+     * easy for plugins to "hijack" this class and offer completions for commands from other plugins.
+     */
     static final Set<String> ALL_COMMANDS_COMPLETER = Collections.singleton("ALL_COMMANDS_COMPLETER");
 
     private TreeCompleter treeCompleter;

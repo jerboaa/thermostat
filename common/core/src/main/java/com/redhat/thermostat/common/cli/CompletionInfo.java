@@ -41,18 +41,29 @@ import java.util.Objects;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A simple structure used for tab-completion.
+ * A simple structure used for tab-completion candidates.
  */
 public class CompletionInfo {
 
     private String actualCompletion;
     private String userVisibleText;
 
+    /**
+     * Cosntruct a CompletionInfo with a tab completion candidate as well as a descriptive label
+     * to distinguish the candidate.
+     * @param actualCompletion the text which may be tab completed
+     * @param userVisibleText a label displayed beside the completion text
+     */
     public CompletionInfo(String actualCompletion, String userVisibleText) {
         this.actualCompletion = requireNonNull(actualCompletion);
         this.userVisibleText = userVisibleText;
     }
 
+    /**
+     * Construct a CompletionInfo with a tab completion candidate, and no additional label to
+     * distinguish the candidate.
+     * @param actualCompletion the text which may be tab completed
+     */
     public CompletionInfo(String actualCompletion) {
         this(actualCompletion, null);
     }
@@ -75,6 +86,8 @@ public class CompletionInfo {
 
     /**
      * Provides the String displayed to the user when tab-completion returns more than one possible result.
+     * This will contain the completion candidate ({@link #getActualCompletion()}), as well as the descriptive
+     * label ({@link #getUserVisibleText()}), if available.
      * @return the display String
      */
     public String getCompletionWithUserVisibleText() {

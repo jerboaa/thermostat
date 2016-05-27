@@ -41,10 +41,10 @@ import com.redhat.thermostat.annotations.ExtensionPoint;
 import java.util.List;
 
 /**
- * Intended for use with {@link TabCompleter}. Provides a list of {@link CompletionInfo}, which are displayed as
- * tab-completion results in cli/shell in certain contexts.
+ * Intended for use with {@link CompletionFinderTabCompleter}. Provides a list of {@link CompletionInfo},
+ * which is displayed as tab-completion results in Thermostat shell.
  *
- * @see TabCompleter
+ * @see CompletionFinderTabCompleter
  * @see CompleterService
  */
 @ExtensionPoint

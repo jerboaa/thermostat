@@ -36,8 +36,18 @@
 
 package com.redhat.thermostat.common.cli;
 
+/**
+ * Used for describing command line flags or options.
+ *
+ * Example: in "foo-command --help", a CliCommandOption could be used to describe "--help".
+ */
 public class CliCommandOption {
 
+    /**
+     * Special constant for use with {@link CompleterService}, which indicates a "meta-option" which is really
+     * the first non-option argument. Use this constant if you are implementing a command which takes a
+     * non-option argument and for which you intend to provide tab completions.
+     */
     public static final CliCommandOption POSITIONAL_ARG_COMPLETION = new CliCommandOption("__NO_ARG__", "__NO_ARG__");
 
     private final String opt;
@@ -46,11 +56,18 @@ public class CliCommandOption {
     private final String description;
     private final boolean required;
 
-    public CliCommandOption(String opt, String description) throws IllegalArgumentException {
+    private CliCommandOption(String opt, String description) {
         this(opt, null, false, description, false);
     }
 
-    public CliCommandOption(String opt, String longOpt, boolean hasArg, String description, boolean required) throws IllegalArgumentException {
+    /**
+     * @param opt the short-option, ex. in the case of "-h", this should be "h"
+     * @param longOpt the long-option, ex. in the case of "--help", this should be "help"
+     * @param hasArg defines whether or not this option expects an argument
+     * @param description a description of what the option does
+     * @param required defines whether or not this option is optional or must be included in a command invocation
+     */
+    public CliCommandOption(String opt, String longOpt, boolean hasArg, String description, boolean required) {
         this.opt = opt;
         this.longOpt = longOpt;
         this.hasArg = hasArg;

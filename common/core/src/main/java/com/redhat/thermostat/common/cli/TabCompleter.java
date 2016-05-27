@@ -38,6 +38,17 @@ package com.redhat.thermostat.common.cli;
 
 import java.util.List;
 
+/**
+ * Interface for tab completion providers.
+ */
 public interface TabCompleter {
+    /**
+     * Perform tab completion.
+     *
+     * @param buffer the current contents of the command line
+     * @param cursor the position of the editor cursor within the command line
+     * @param candidates out variable containing the possible completions
+     * @return -1 iff no completions are available from this TabCompleter
+     */
     int complete(String buffer, int cursor, List<CharSequence> candidates);
 }
