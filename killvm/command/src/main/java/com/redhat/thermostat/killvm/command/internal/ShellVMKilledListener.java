@@ -51,7 +51,6 @@ public class ShellVMKilledListener implements RequestResponseListener {
 
     private static final Logger logger = LoggingUtils
             .getLogger(ShellVMKilledListener.class);
-    private boolean complete = false;
 
     private PrintStream out;
     private PrintStream err;
@@ -65,27 +64,34 @@ public class ShellVMKilledListener implements RequestResponseListener {
             case ERROR:
                 String pid = request.getParameter("vm-pid");
                 message = "Kill request error for VM ID " + pid;
-                logger.log(Level.SEVERE, message);
-                if (err != null) {
-                    err.println(message);
-                }
+                printMessage(err, Level.SEVERE, message);
                 break;
             case OK:
                 message = "VM with id " + request.getParameter("vm-pid") + " killed.";
-                logger.log(Level.INFO, message);
-                if (out != null) {
-                    out.println(message);
-                }
+                printMessage(out, Level.INFO, message);
+                break;
+            case NOK:
+            case NOOP:
+                message = "Request to kill VM was ignored.";
+                printMessage(out, Level.WARNING, message);
+                break;
+            case AUTH_FAILED:
+                message = "Unauthorized request was ignored.";
+                printMessage(out, Level.WARNING, message);
                 break;
             default:
                 message = "Unknown result from KILL VM command.";
-                logger.log(Level.WARNING, message);
-                if (out != null) {
-                    out.println(message);
-                }
+                printMessage(err, Level.WARNING, message);
                 break;
         }
         latch.countDown();
+    }
+
+    private void printMessage(PrintStream printStream, Level level, String message) {
+        logger.log(level, message);
+        if (printStream != null) {
+            printStream.println(message);
+        }
     }
 
     public void setOut(PrintStream out) {
