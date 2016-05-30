@@ -34,32 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.client.cli.internal;
+package com.redhat.thermostat.vm.byteman.common.command;
 
-import java.io.PrintStream;
 import java.util.concurrent.CountDownLatch;
 
-import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.byteman.common.internal.LocaleResources;
 
-class BytemanRequestResponseListener implements RequestResponseListener {
+public class BytemanRequestResponseListener implements RequestResponseListener {
     
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private final CountDownLatch latch;
-    private final CommandContext ctx;
+    private String errorMsg = "";
+    private boolean isError = false;
     
-    BytemanRequestResponseListener(CountDownLatch latch, CommandContext ctx) {
+    public BytemanRequestResponseListener(CountDownLatch latch) {
         this.latch = latch;
-        this.ctx = ctx;
     }
 
     @Override
     public void fireComplete(Request request, Response response) {
-        boolean isError = false;
-        String errorMsg = "";
         switch(response.getType()) {
         case AUTH_FAILED:
             isError = true;
@@ -76,13 +73,14 @@ class BytemanRequestResponseListener implements RequestResponseListener {
             errorMsg = t.localize(LocaleResources.ERROR_UNKNOWN_RESPONSE, response.getType().toString()).getContents();
         }
         latch.countDown();
-        if (isError) {
-            PrintStream err = ctx.getConsole().getError();
-            err.println(errorMsg);
-        } else {
-            PrintStream out = ctx.getConsole().getOutput();
-            out.println(t.localize(LocaleResources.REQUEST_SUCCESS).getContents());
-        }
+    }
+    
+    public String getErrorMessage() {
+        return errorMsg;
+    }
+    
+    public boolean isError() {
+        return isError;
     }
 
 }

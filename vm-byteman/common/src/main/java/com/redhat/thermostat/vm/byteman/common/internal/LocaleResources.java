@@ -34,29 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.client.cli.internal;
+package com.redhat.thermostat.vm.byteman.common.internal;
 
 import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
 
-    VM_SERVICE_UNAVAILABLE,
-    AGENT_SERVICE_UNAVAILABLE,
-    QUEUE_SERVICE_UNAVAILABLE,
-    BYTEMAN_METRICS_SERVICE_UNAVAILABLE,
-    AGENT_NOT_FOUND,
-    AGENT_DEAD,
-    COMMAND_EXPECTED,
-    UNKNOWN_COMMAND,
-    NO_RULE_OPTION,
-    RULE_FILE_NOT_FOUND,
-    ERROR_READING_RULE_FILE,
-    NO_METRICS_AVAILABLE,
-    ERROR_NO_STATUS,
-    BYTEMAN_STATUS_MSG,
-    REQUEST_SUCCESS,
+    REQUEST_FAILED_AUTH_ISSUE,
+    REQUEST_FAILED_UNKNOWN_ISSUE,
+    ERROR_UNKNOWN_RESPONSE,
     ;
-
+    
     static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";
 
     public static Translate<LocaleResources> createLocalizer() {

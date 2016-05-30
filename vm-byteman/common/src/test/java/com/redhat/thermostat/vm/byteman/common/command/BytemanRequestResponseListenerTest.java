@@ -34,86 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.client.cli.internal;
+package com.redhat.thermostat.vm.byteman.common.command;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.vm.byteman.common.command.BytemanRequestResponseListener;
 
 public class BytemanRequestResponseListenerTest {
 
-    private static final String EMPTY_STRING = "";
     private BytemanRequestResponseListener listener;
-    private ByteArrayOutputStream bout;
-    private ByteArrayOutputStream berr;
     private CountDownLatch latch;
     
     @Before
     public void setup() {
-        bout = new ByteArrayOutputStream();
-        berr = new ByteArrayOutputStream();
-        CommandContext ctx = mock(CommandContext.class);
-        Console console = mock(Console.class);
-        when(ctx.getConsole()).thenReturn(console);
-        PrintStream outStream = new PrintStream(bout);
-        PrintStream errStream = new PrintStream(berr);
-        when(console.getError()).thenReturn(errStream);
-        when(console.getOutput()).thenReturn(outStream);
         latch = mock(CountDownLatch.class);
-        listener = new BytemanRequestResponseListener(latch, ctx);
+        listener = new BytemanRequestResponseListener(latch);
     }
     
     @Test
     public void testAuthIssue() {
         listener.fireComplete(mock(Request.class), new Response(ResponseType.AUTH_FAILED));
         verify(latch).countDown();
-        String stdOut = getOutAsString();
-        String errOut = getErrAsString(); 
-        assertEquals(EMPTY_STRING, stdOut);
+        assertTrue(listener.isError());
+        String errOut = listener.getErrorMessage(); 
         assertTrue(errOut.contains("authentication"));
         assertTrue(errOut.contains("issue"));
     }
     
-    private String getOutAsString() {
-        return new String(bout.toByteArray());
-    }
-    
-    private String getErrAsString() {
-        return new String(berr.toByteArray());
-    }
-
     @Test
     public void testSuccess() {
         listener.fireComplete(mock(Request.class), new Response(ResponseType.OK));
         verify(latch).countDown();
-        String stdOut = getOutAsString();
-        String errOut = getErrAsString(); 
-        assertEquals("Request submitted successfully.\n", stdOut);
-        assertEquals(EMPTY_STRING, errOut);
+        assertFalse(listener.isError());
     }
     
     @Test
     public void testUnknownError() {
         listener.fireComplete(mock(Request.class), new Response(ResponseType.ERROR));
         verify(latch).countDown();
-        String stdOut = getOutAsString();
-        String errOut = getErrAsString(); 
-        assertEquals(EMPTY_STRING, stdOut);
+        assertTrue(listener.isError());
+        String errOut = listener.getErrorMessage();
         assertTrue(errOut.contains("unknown"));
         assertTrue(errOut.contains("reason"));
     }
@@ -122,9 +94,8 @@ public class BytemanRequestResponseListenerTest {
     public void testUnknownType() {
         listener.fireComplete(mock(Request.class), new Response(ResponseType.NOK));
         verify(latch).countDown();
-        String stdOut = getOutAsString();
-        String errOut = getErrAsString(); 
-        assertEquals(EMPTY_STRING, stdOut);
-        assertEquals("Unknown response: NOK\n", errOut);
+        assertTrue(listener.isError());
+        String errOut = listener.getErrorMessage();
+        assertEquals("Unknown response: NOK", errOut);
     }
 }

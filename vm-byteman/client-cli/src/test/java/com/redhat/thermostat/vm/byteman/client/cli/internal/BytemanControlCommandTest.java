@@ -80,6 +80,7 @@ import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest;
+import com.redhat.thermostat.vm.byteman.common.command.BytemanRequestResponseListener;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAction;
 
 public class BytemanControlCommandTest {
@@ -350,6 +351,8 @@ public class BytemanControlCommandTest {
         String expectedRule = new String(StreamUtils.readAll(new FileInputStream(new File(file))));
         assertEquals(expectedRule, submittedRequest.getParameter(BytemanRequest.RULE_PARAM_NAME));
         assertSame(REQUEST_QUEUE_ADDRESS, submittedRequest.getTarget());
+        String out = ctxFactory.getOutput();
+        assertEquals("Request submitted successfully.\n", out);
     }
     
     @SuppressWarnings("unchecked")

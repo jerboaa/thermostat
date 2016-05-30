@@ -68,6 +68,7 @@ import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest;
+import com.redhat.thermostat.vm.byteman.common.command.BytemanRequestResponseListener;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAction;
 
 public class BytemanControlCommand extends AbstractCommand {
@@ -206,9 +207,22 @@ public class BytemanControlCommand extends AbstractCommand {
 
     private void submitRequest(CommandContext ctx, RequestQueue requestQueue, Request request) {
         CountDownLatch latch = new CountDownLatch(1);
-        request.addListener(new BytemanRequestResponseListener(latch, ctx));
+        BytemanRequestResponseListener listener = new BytemanRequestResponseListener(latch);
+        request.addListener(listener);
         requestQueue.putRequest(request);
         waitWithTimeout(latch);
+        printResponse(listener, ctx);
+    }
+    
+    private void printResponse(BytemanRequestResponseListener listener, CommandContext ctx) {
+        if (listener.isError()) {
+            PrintStream err = ctx.getConsole().getError();
+            err.println(listener.getErrorMessage());
+        } else {
+            PrintStream out = ctx.getConsole().getOutput();
+            out.println(translator.localize(LocaleResources.REQUEST_SUCCESS)
+                    .getContents());
+        }
     }
     
     // package-private for testing
