@@ -70,6 +70,8 @@ import com.redhat.thermostat.thread.dao.ThreadDao;
 
 public class StoragePopulatorCommand extends AbstractCommand {
 
+    public static final String COMMAND_NAME = "storage-populator";
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(StoragePopulatorCommand.class);
 
@@ -191,8 +193,12 @@ public class StoragePopulatorCommand extends AbstractCommand {
      * Package-private to allow overriding for testing.
      */
     File getConfigFile(Arguments args) {
-        return new File(paths.getSystemPluginConfigurationDirectory().getAbsolutePath() +
-                    "/storage-populator/" + args.getArgument(CONFIG_FILE_NAME));
+        return new File(getConfigFileDirectoryPath(paths) + args.getArgument(CONFIG_FILE_NAME));
+    }
+
+    public static String getConfigFileDirectoryPath(CommonPaths paths) {
+        return paths.getSystemPluginConfigurationDirectory().getAbsolutePath() +
+                "/storage-populator/";
     }
 
     /**
