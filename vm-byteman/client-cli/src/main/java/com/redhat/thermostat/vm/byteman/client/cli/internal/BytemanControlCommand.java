@@ -228,7 +228,6 @@ public class BytemanControlCommand extends AbstractCommand {
     // package-private for testing
     void waitWithTimeout(CountDownLatch latch) {
         try {
-            // wait for request to finish. The listener does the rest.
             latch.await(5, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             // ignore
