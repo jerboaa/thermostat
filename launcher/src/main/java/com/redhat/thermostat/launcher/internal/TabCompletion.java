@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,17 +100,20 @@ public class TabCompletion {
 
     private void addCompleterServiceImpl(TreeCompleter.Node command, CompleterService service) {
         for (Map.Entry<CliCommandOption, ? extends TabCompleter> entry : service.getOptionCompleters().entrySet()) {
-            if (entry.getKey() == CliCommandOption.POSITIONAL_ARG_COMPLETION) {
+            CliCommandOption cliCommandOption = entry.getKey();
+            if (cliCommandOption == CliCommandOption.POSITIONAL_ARG_COMPLETION) {
                 TreeCompleter.Node node = new TreeCompleter.Node(command.getTag() + " completer", entry.getValue());
                 node.setRestartNode(command);
                 command.addBranch(node);
             }
-            for (TreeCompleter.Node branch : command.getBranches()) {
-                Set<String> completerOptions = getCompleterOptions(entry.getKey());
-                if (completerOptions.contains(branch.getTag())) {
-                    TreeCompleter.Node node = new TreeCompleter.Node(command.getTag() + " completer", entry.getValue());
-                    node.setRestartNode(command);
-                    branch.addBranch(node);
+            if (completerIsApplicable(cliCommandOption, command)) {
+                for (TreeCompleter.Node branch : command.getBranches()) {
+                    if (branch.getTag().equals("-" + cliCommandOption.getOpt())
+                            || branch.getTag().equals("--" + cliCommandOption.getLongOpt())) {
+                        TreeCompleter.Node node = new TreeCompleter.Node(command.getTag() + " completer", entry.getValue());
+                        node.setRestartNode(command);
+                        branch.addBranch(node);
+                    }
                 }
             }
         }
@@ -129,23 +133,30 @@ public class TabCompletion {
 
     private void removeCompleterServiceImpl(TreeCompleter.Node command, CompleterService service) {
         for (Map.Entry<CliCommandOption, ? extends TabCompleter> entry : service.getOptionCompleters().entrySet()) {
-            if (entry.getKey() == CliCommandOption.POSITIONAL_ARG_COMPLETION) {
+            CliCommandOption cliCommandOption = entry.getKey();
+            if (cliCommandOption == CliCommandOption.POSITIONAL_ARG_COMPLETION) {
                 command.removeByTag(command.getTag() + " completer");
             }
             for (TreeCompleter.Node branch : command.getBranches()) {
-                Set<String> completerOptions = getCompleterOptions(entry.getKey());
-                if (completerOptions.contains(branch.getTag())) {
+                if (branch.getTag().equals("-" + cliCommandOption.getOpt())
+                        || branch.getTag().equals("--" + cliCommandOption.getLongOpt())) {
                     command.removeByTag(branch.getTag());
                 }
             }
         }
     }
 
-    private static Set<String> getCompleterOptions(CliCommandOption option) {
-        Set<String> options = new HashSet<>();
-        options.add(LONG_OPTION_PREFIX + option.getLongOpt());
-        options.add(SHORT_OPTION_PREFIX + option.getOpt());
-        return options;
+    private static boolean completerIsApplicable(CliCommandOption option, TreeCompleter.Node node) {
+        boolean matchesLongOpt = false;
+        boolean matchesShortOpt = false;
+        for (TreeCompleter.Node branch : node.getBranches()) {
+            if (branch.getTag().equals("--" + option.getLongOpt())) {
+                matchesLongOpt = true;
+            } else if (branch.getTag().equals("-" + option.getOpt())) {
+                matchesShortOpt = true;
+            }
+        }
+        return matchesLongOpt && matchesShortOpt;
     }
 
     public void setupTabCompletion(ConsoleReader reader, CommandInfoSource commandInfoSource, BundleContext context, ClientPreferences prefs) {

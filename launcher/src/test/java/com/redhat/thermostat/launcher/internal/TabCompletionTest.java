@@ -52,7 +52,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -68,14 +67,12 @@ import static org.mockito.Mockito.when;
 public class TabCompletionTest {
 
     private TabCompletion tabCompletion;
-    private Logger log;
     private TreeCompleter treeCompleter;
     private Map<String, TreeCompleter.Node> commandMap;
 
     @Before
     @SuppressWarnings("unchecked")
     public void setup() {
-        log = mock(Logger.class);
         treeCompleter = mock(TreeCompleter.class);
         commandMap = new HashMap<>();
         tabCompletion = new TabCompletion(treeCompleter, commandMap);
@@ -140,6 +137,70 @@ public class TabCompletionTest {
         for (TreeCompleter.Node branch : node.getBranches()) {
             if (branch.getTag().equals("--long")) {
                 assertThat(branch.getBranches().isEmpty(), is(true));
+            }
+        }
+    }
+
+    @Test
+    public void testAddCompleterWithConflictingShortOpt() {
+        ConsoleReader reader = mock(ConsoleReader.class);
+
+        Options mockOptions = new Options();
+        mockOptions.addOption("a", "agentId", true, "Agent ID");
+
+        Options fakeOptions = new Options();
+        fakeOptions.addOption("a", "all", false, "all data");
+
+        CommandInfo mockCommand = mock(CommandInfo.class);
+        when(mockCommand.getName()).thenReturn("mock-command");
+        when(mockCommand.getBundles()).thenReturn(Collections.<BundleInformation>emptyList());
+        when(mockCommand.getDescription()).thenReturn("description");
+        when(mockCommand.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+        when(mockCommand.getOptions()).thenReturn(mockOptions);
+
+        CommandInfo fakeCommand = mock(CommandInfo.class);
+        when(fakeCommand.getName()).thenReturn("fake-command");
+        when(fakeCommand.getBundles()).thenReturn(Collections.<BundleInformation>emptyList());
+        when(fakeCommand.getDescription()).thenReturn("description");
+        when(fakeCommand.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+        when(fakeCommand.getOptions()).thenReturn(fakeOptions);
+
+        CommandInfoSource infoSource = mock(CommandInfoSource.class);
+        when(infoSource.getCommandInfos()).thenReturn(Arrays.asList(mockCommand, fakeCommand));
+        when(infoSource.getCommandInfo(mockCommand.getName())).thenReturn(mockCommand);
+        when(infoSource.getCommandInfo(fakeCommand.getName())).thenReturn(fakeCommand);
+
+        BundleContext context = mock(BundleContext.class);
+
+        ClientPreferences prefs = mock(ClientPreferences.class);
+
+        CompleterService service = mock(CompleterService.class);
+        when(service.getCommands()).thenReturn(TabCompletion.ALL_COMMANDS_COMPLETER);
+        Map completerMap = new HashMap();
+        TabCompleter completer = mock(TabCompleter.class);
+        completerMap.put(new CliCommandOption("a", "agentId", true, "Agent ID", false), completer);
+        when(service.getOptionCompleters()).thenReturn(completerMap);
+
+        tabCompletion.addCompleterService(service);
+        tabCompletion.setupTabCompletion(reader, infoSource, context, prefs);
+
+        TreeCompleter.Node mockNode = commandMap.get("mock-command");
+        assertThat(mockNode, is(not(equalTo(null))));
+        for (TreeCompleter.Node branch : mockNode.getBranches()) {
+            if (branch.getTag().equals("--agentId")) {
+                assertThat(branch.getBranches(), is(not(equalTo(Collections.<TreeCompleter.Node>emptyList()))));
+            } else if (branch.getTag().equals("-a")) {
+                assertThat(branch.getBranches(), is(not(equalTo(Collections.<TreeCompleter.Node>emptyList()))));
+            }
+        }
+
+        TreeCompleter.Node fakeNode = commandMap.get("fake-command");
+        assertThat(fakeNode, is(not(equalTo(null))));
+        for (TreeCompleter.Node branch : fakeNode.getBranches()) {
+            if (branch.getTag().equals("--all")) {
+                assertThat(branch.getBranches(), is(equalTo(Collections.<TreeCompleter.Node>emptyList())));
+            } else if (branch.getTag().equals("-a")) {
+                assertThat(branch.getBranches(), is(equalTo(Collections.<TreeCompleter.Node>emptyList())));
             }
         }
     }
