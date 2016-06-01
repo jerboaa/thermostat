@@ -36,31 +36,51 @@
 
 package com.redhat.thermostat.storage.populator.internal;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static com.redhat.thermostat.testutils.Asserts.assertServiceIsNotRegistered;
-import static com.redhat.thermostat.testutils.Asserts.assertServiceIsRegistered;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-
-import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.common.cli.DirectoryContentsCompletionFinder;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.populator.StoragePopulatorCommand;
-import com.redhat.thermostat.testutils.StubBundleContext;
+import java.util.List;
 
-public class ActivatorTest {
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+
+public class StoragePopulatorConfigFinderTest {
+
+    private DependencyServices dependencyServices;
+    private StoragePopulatorConfigFinder finder;
+    private DirectoryContentsCompletionFinder directoryFinder;
+
+    @Before
+    public void setup() {
+        dependencyServices = mock(DependencyServices.class);
+        when(dependencyServices.hasService(CommonPaths.class)).thenReturn(true);
+        when(dependencyServices.getService(CommonPaths.class)).thenReturn(mock(CommonPaths.class));
+        finder = new StoragePopulatorConfigFinder(dependencyServices);
+        directoryFinder = mock(DirectoryContentsCompletionFinder.class);
+        finder.setDirectoryFinder(directoryFinder);
+    }
+
     @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext ctx = new StubBundleContext();
-        Activator activator = new Activator();
+    public void testDelegatesFindCompletions() {
+        finder.findCompletions();
+        verify(directoryFinder).findCompletions();
+    }
 
-        activator.start(ctx);
-        assertCommandIsRegistered(ctx, "storage-populator", StoragePopulatorCommand.class);
-        assertServiceIsRegistered(ctx, CompleterService.class, StoragePopulatorCompleterService.class);
-        activator.stop(ctx);
-
-        assertEquals(0, ctx.getServiceListeners().size());
+    @Test
+    public void testReturnsEmptyResultWithoutDelegationIfCommonPathsUnavailable() {
+        when(dependencyServices.hasService(CommonPaths.class)).thenReturn(false);
+        when(dependencyServices.getService(CommonPaths.class)).thenReturn(null);
+        List<CompletionInfo> result = finder.findCompletions();
+        verifyZeroInteractions(directoryFinder);
+        assertThat(result.size(), is(0));
     }
 
 }

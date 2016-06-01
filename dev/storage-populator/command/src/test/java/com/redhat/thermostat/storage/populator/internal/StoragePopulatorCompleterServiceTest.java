@@ -36,31 +36,50 @@
 
 package com.redhat.thermostat.storage.populator.internal;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static com.redhat.thermostat.testutils.Asserts.assertServiceIsNotRegistered;
-import static com.redhat.thermostat.testutils.Asserts.assertServiceIsRegistered;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-
-import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.storage.populator.StoragePopulatorCommand;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.populator.StoragePopulatorCommand;
-import com.redhat.thermostat.testutils.StubBundleContext;
+import java.util.Collections;
+import java.util.Map;
 
-public class ActivatorTest {
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+
+public class StoragePopulatorCompleterServiceTest {
+
+    private StoragePopulatorCompleterService service;
+
+    @Before
+    public void setup() {
+        service = new StoragePopulatorCompleterService();
+        service.setCommonPaths(mock(CommonPaths.class));
+    }
+
     @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext ctx = new StubBundleContext();
-        Activator activator = new Activator();
+    public void testOnlyProvidesCompletionForStoragePopulatorCommand() {
+        assertThat(service.getCommands(), is(equalTo(Collections.singleton(StoragePopulatorCommand.COMMAND_NAME))));
+    }
 
-        activator.start(ctx);
-        assertCommandIsRegistered(ctx, "storage-populator", StoragePopulatorCommand.class);
-        assertServiceIsRegistered(ctx, CompleterService.class, StoragePopulatorCompleterService.class);
-        activator.stop(ctx);
+    @Test
+    public void testProvidesCompleterOnlyForConfigOption() {
+        Map<CliCommandOption, ? extends TabCompleter> completerMap = service.getOptionCompleters();
+        assertThat(completerMap.keySet(), is(equalTo(Collections.singleton(StoragePopulatorCompleterService.CONFIG_OPTION))));
+        assertThat(completerMap.get(StoragePopulatorCompleterService.CONFIG_OPTION), is(not(equalTo(null))));
+    }
 
-        assertEquals(0, ctx.getServiceListeners().size());
+    @Test
+    public void testConfigOptionProperties() {
+        assertThat(StoragePopulatorCompleterService.CONFIG_OPTION.getOpt(), is("c"));
+        assertThat(StoragePopulatorCompleterService.CONFIG_OPTION.getLongOpt(), is("config"));
+        assertThat(StoragePopulatorCompleterService.CONFIG_OPTION.hasArg(), is(true));
+        assertThat(StoragePopulatorCompleterService.CONFIG_OPTION.isRequired(), is(true));
     }
 
 }

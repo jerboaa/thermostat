@@ -63,9 +63,16 @@ public class Asserts {
     }
 
     public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
-        if (!(context.isServiceRegistered(service.getName(), implementation))) {
+        if (!context.isServiceRegistered(service.getName(), implementation)) {
             throw new AssertionError("Service " + implementation.getName() + " is not registered under the API " + service.getName());
         }
     }
+
+    public static <T, U extends T> void assertServiceIsNotRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
+        if (context.isServiceRegistered(service.getName(), implementation)) {
+            throw new AssertionError("Service " + implementation.getName() + " is registered under the API " + service.getName());
+        }
+    }
+
 }
 

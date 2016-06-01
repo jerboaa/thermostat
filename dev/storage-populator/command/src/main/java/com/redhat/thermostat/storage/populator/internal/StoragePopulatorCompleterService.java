@@ -36,31 +36,36 @@
 
 package com.redhat.thermostat.storage.populator.internal;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static com.redhat.thermostat.testutils.Asserts.assertServiceIsNotRegistered;
-import static com.redhat.thermostat.testutils.Asserts.assertServiceIsRegistered;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-
-import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.common.cli.AbstractCompleterService;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
+import com.redhat.thermostat.common.cli.DirectoryContentsCompletionFinder;
+import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import org.junit.Test;
-
 import com.redhat.thermostat.storage.populator.StoragePopulatorCommand;
-import com.redhat.thermostat.testutils.StubBundleContext;
 
-public class ActivatorTest {
-    @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext ctx = new StubBundleContext();
-        Activator activator = new Activator();
+import java.io.File;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
-        activator.start(ctx);
-        assertCommandIsRegistered(ctx, "storage-populator", StoragePopulatorCommand.class);
-        assertServiceIsRegistered(ctx, CompleterService.class, StoragePopulatorCompleterService.class);
-        activator.stop(ctx);
+public class StoragePopulatorCompleterService extends AbstractCompleterService {
 
-        assertEquals(0, ctx.getServiceListeners().size());
+    static final CliCommandOption CONFIG_OPTION = new CliCommandOption("c", "config", true, "the json config file to use", true);
+
+    @Override
+    public Set<String> getCommands() {
+        return Collections.singleton(StoragePopulatorCommand.COMMAND_NAME);
+    }
+
+    @Override
+    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
+        CompletionFinderTabCompleter completer = new CompletionFinderTabCompleter(new StoragePopulatorConfigFinder(dependencyServices));
+        return Collections.singletonMap(CONFIG_OPTION, completer);
+    }
+
+    public void setCommonPaths(CommonPaths paths) {
+        setService(CommonPaths.class, paths);
     }
 
 }
