@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.populator.internal;
 import java.util.Hashtable;
 import java.util.Map;
 
-import com.redhat.thermostat.common.cli.CompleterService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -52,20 +51,13 @@ import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.populator.StoragePopulatorCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 public class Activator implements BundleActivator {
 
-    private MultipleServiceTracker cmdDepsTracker;
-    private ServiceTracker completerDepsTracker;
-    private ServiceRegistration completerRegistration;
+    private MultipleServiceTracker tracker;
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void start(final BundleContext context) throws Exception {
+    public void start(BundleContext context) throws Exception {
 
         final StoragePopulatorCommand command = new StoragePopulatorCommand();
         Hashtable<String,String> properties = new Hashtable<>();
@@ -81,7 +73,7 @@ public class Activator implements BundleActivator {
                 ThreadDao.class,
         };
 
-        cmdDepsTracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
+        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
@@ -106,37 +98,12 @@ public class Activator implements BundleActivator {
                 command.setServicesUnavailable();
             }
         });
-        cmdDepsTracker.open();
-
-        final StoragePopulatorCompleterService completerService = new StoragePopulatorCompleterService();
-        completerDepsTracker = new ServiceTracker(context, CommonPaths.class, new ServiceTrackerCustomizer() {
-            @Override
-            public Object addingService(ServiceReference serviceReference) {
-                CommonPaths paths = (CommonPaths) context.getService(serviceReference);
-                completerService.setCommonPaths(paths);
-                completerRegistration = context.registerService(CompleterService.class.getName(), completerService, null);
-                return context.getService(serviceReference);
-            }
-
-            @Override
-            public void modifiedService(ServiceReference serviceReference, Object o) {
-            }
-
-            @Override
-            public void removedService(ServiceReference serviceReference, Object o) {
-                completerService.setCommonPaths(null);
-            }
-        });
-        completerDepsTracker.open();
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        cmdDepsTracker.close();
-        completerDepsTracker.close();
-        if (completerRegistration != null) {
-            completerRegistration.unregister();
-        }
+        tracker.close();
     }
 
 }
