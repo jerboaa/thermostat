@@ -44,11 +44,11 @@ import java.util.Random;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.populator.internal.BasePopulator;
 import com.redhat.thermostat.storage.populator.internal.config.ConfigItem;
 import com.redhat.thermostat.storage.populator.internal.dependencies.SharedState;
-import com.redhat.thermostat.storage.populator.internal.LocaleResources;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.StackFrame;
+import com.redhat.thermostat.thread.model.StackTrace;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
@@ -71,6 +71,18 @@ public class ThreadPopulator extends BasePopulator {
     private static final String[] THREAD_NAMES = new String[] {
             "Spencer", "Sheldon", "Alice", "Bob", "Julie", "Phoebe", "Alpha", "Beta", "Gamma",
             "Theta", "Zeta",
+    };
+    private static final String[] FILE_NAMES = new String[] {
+            "fileA", "fileB", "fileC", "fileD", "fileE",
+    };
+    private static final String[] PACKAGE_NAMES = new String[] {
+            "pkgA", "pkgB", "pkgC", "pkgD", "pkgE",
+    };
+    private static final String[] CLASS_NAMES = new String[] {
+            "classA", "classB", "classC", "classD", "classE",
+    };
+    private static final String[] METHOD_NAME = new String[] {
+            "methodA", "methodB", "methodC", "methodD", "methodE",
     };
     static final String DEADLOCK_DESC_FORMAT = "" +
             "\"%s\" Id=%d WAITING on java.util.concurrent.locks.ReentrantLock$NonfairSync@52de95c7 owned by \"%s\" Id=%d\n" +
@@ -165,7 +177,7 @@ public class ThreadPopulator extends BasePopulator {
                     String state = states[generator.nextInt(states.length)].toString();
                     String name = THREAD_NAMES[generator.nextInt(THREAD_NAMES.length)];
 
-                    for(int j = 0; j < NUM_SAMPLES; j++) {
+                    for (int j = 0; j < NUM_SAMPLES; j++) {
                         ThreadState threadState = new ThreadState();
                         threadState.setTimeStamp(currTime + j * 1000);
                         threadState.setVmId(vmId);
@@ -174,6 +186,23 @@ public class ThreadPopulator extends BasePopulator {
                         threadState.setId(i);
                         threadState.setName(name);
                         threadState.setSession(SESSION);
+
+                        List<StackFrame> frames = new ArrayList<>();
+                        for (int k = 0; k < NUM_SAMPLES; k++) {
+                            StackFrame frame = new StackFrame();
+                            frame.setFileName(FILE_NAMES[generator.nextInt(FILE_NAMES.length)]);
+                            frame.setPackageName(
+                                    PACKAGE_NAMES[generator.nextInt(PACKAGE_NAMES.length)]);
+                            frame.setClassName(CLASS_NAMES[generator.nextInt(CLASS_NAMES.length)]);
+                            frame.setMethodName(METHOD_NAME[generator.nextInt(METHOD_NAME.length)]);
+                            int lineNumber = generator.nextInt(100_000) - 2;
+                            frame.setLineNumber(lineNumber);
+                            frame.setNativeMethod(lineNumber == -2);
+                            frames.add(frame);
+                        }
+                        StackTrace stackTrace = new StackTrace(frames);
+                        threadState.setStackTrace(stackTrace.toString());
+
                         dao.addThreadState(threadState);
                     }
 
