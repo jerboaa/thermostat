@@ -41,7 +41,7 @@
   <parent>
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat-validate</artifactId>
-    <version>1.99.10-SNAPSHOT</version>
+    <version>1.99.11-SNAPSHOT</version>
   </parent>
   
   <artifactId>thermostat-validate-command</artifactId>
