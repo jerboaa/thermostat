@@ -40,6 +40,11 @@ import java.util.List;
 
 /**
  * Interface for tab completion providers.
+ *
+ * Tab completions for plugins are typically expected to use {@link CompletionFinderTabCompleter}
+ * rather than implementing this interface directly.
+ *
+ * If you need to supply tab completions for a filename, see {@link FileNameTabCompleter}.
  */
 public interface TabCompleter {
     /**

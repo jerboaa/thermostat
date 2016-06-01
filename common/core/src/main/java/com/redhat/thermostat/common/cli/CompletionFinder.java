@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.common.cli;
 
-import com.redhat.thermostat.annotations.ExtensionPoint;
-
 import java.util.List;
 
 /**
@@ -47,7 +45,6 @@ import java.util.List;
  * @see CompletionFinderTabCompleter
  * @see CompleterService
  */
-@ExtensionPoint
 public interface CompletionFinder {
     List<CompletionInfo> findCompletions();
 }

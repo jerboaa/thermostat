@@ -36,6 +36,15 @@
 
 package com.redhat.thermostat.common.cli;
 
+/**
+ * An abstract {@link CompleterService} implementation which simply adds facilities for easy
+ * dependency tracking.
+ *
+ * May be useful for CompleterServices which require access to a resource like a DAO to perform
+ * their duties. In this situation, consider also passing the DependencyServices instance
+ * through to a {@link CompletionFinder}, which can decide to provide no results if the
+ * dependencies are unavailable, or use the dependency resources to gather results.
+ */
 public abstract class AbstractCompleterService implements CompleterService {
 
     protected DependencyServices dependencyServices = new DependencyServices();
