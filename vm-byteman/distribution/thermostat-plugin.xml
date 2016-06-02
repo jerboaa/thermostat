@@ -120,5 +120,12 @@
                 <bundle><symbolic-name>org.objectweb.asm</symbolic-name><version>${asm.version}</version></bundle>
             </bundles>
         </extension>
+        <extension>
+            <name>gui</name>
+            <bundles>
+                <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.common</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.client.swing</symbolic-name><version>${project.version}</version></bundle>
+            </bundles>
+        </extension>
     </extensions>
 </plugin>
