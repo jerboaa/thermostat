@@ -38,8 +38,10 @@ package com.redhat.thermostat.vm.byteman.agent.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,6 +51,7 @@ import java.util.logging.Logger;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.byteman.agent.submit.Submit;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
@@ -73,10 +76,16 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     private static final String DESCRIPTION = "Attaches the byteman java agent to JVMs";
     private static final String VENDOR = "Red Hat Inc.";
     private static final String BYTEMAN_PLUGIN_DIR = System.getProperty("thermostat.plugin", "vm-byteman");
-    private static final String BYTEMAN_INSTALL_HOME = BYTEMAN_PLUGIN_DIR + File.separator + "plugin-libs" + File.separator + "byteman-install";
+    private static final String BYTEMAN_PLUGIN_LIBS_DIR = BYTEMAN_PLUGIN_DIR + File.separator + "plugin-libs";
+    private static final String BYTEMAN_INSTALL_HOME = BYTEMAN_PLUGIN_LIBS_DIR + File.separator + "byteman-install";
+    private static final String BYTEMAN_HELPER_DIR = BYTEMAN_PLUGIN_LIBS_DIR + File.separator + "thermostat-helper";
     private static final String BYTEMAN_HOME_PROPERTY = "org.jboss.byteman.home";
     private static final Logger logger = LoggingUtils.getLogger(VmBytemanBackend.class);
+    
     static final int BACKEND_ORDER_VALUE = ORDER_CODE_GROUP + 3;
+    // package-private for testing
+    static List<String> helperJars;
+
     private final Set<String> sockets = Collections.synchronizedSet(new HashSet<String>());
     private final Map<String, BytemanAgentInfo> agentInfos = new ConcurrentHashMap<>();
     private boolean started;
@@ -84,6 +93,11 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     private BytemanAttacher attacher;
     private VmStatusListenerRegistrar registrar;
     private Version version;
+    
+    public VmBytemanBackend() {
+        // Default public constructor for DS
+        this.observeNewJVMs = true;
+    }
 
     // Services
     
@@ -99,19 +113,23 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     @Reference
     private WriterID writerId;
     
-    public VmBytemanBackend() {
-        // Default public constructor for DS
-        this.observeNewJVMs = true;
-    }
+    ////////////////////////////////////////////////
+    // methods used by DS
+    ////////////////////////////////////////////////
     
     protected void bindPaths(CommonPaths paths) {
         this.paths = paths;
         this.attacher = new BytemanAttacher(paths);
+        File bytemanHelperDir = new File(paths.getSystemPluginRoot(), BYTEMAN_HELPER_DIR);
+        initListOfHelperJars(bytemanHelperDir);
     }
     
     protected void unBindPaths(CommonPaths paths) {
         this.paths = null;
         this.attacher = null;
+        synchronized (helperJars) {
+            helperJars = null;
+        }
     }
     
     protected void activate(ComponentContext context) {
@@ -122,8 +140,12 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     }
     
     protected void deactivate(ComponentContext context) {
-        // DS wants to use this method
+        // nothing
     }
+    
+    ////////////////////////////////////////////////
+    // end methods used by DS
+    ////////////////////////////////////////////////
 
     @Override
     public int getOrderValue() {
@@ -198,6 +220,10 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
             return;
         }
         logger.fine("Attached byteman agent to VM '" + pid + "' at port: '" + info.getAgentListenPort());
+        if (!addThermostatHelperJarsToClasspath(info)) {
+            logger.warning("VM '" + pid + "': Failed to add helper jars to target VM's classpath.");
+            return;
+        }
         logger.fine("Starting IPC socket for byteman helper");
         VmSocketIdentifier socketId = new VmSocketIdentifier(vmId, pid, writerId.getWriterID());
         final ThermostatIPCCallbacks callback = new BytemanMetricsReceiver(dao, socketId);
@@ -208,6 +234,18 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
         status.setTimeStamp(System.currentTimeMillis());
         status.setVmId(vmId);
         dao.addOrReplaceBytemanStatus(status);
+    }
+
+    private boolean addThermostatHelperJarsToClasspath(BytemanAgentInfo info) {
+        Submit submit = new Submit(null /* localhost */, info.getAgentListenPort());
+        try {
+            String addJarsResult = submit.addJarsToSystemClassloader(helperJars);
+            logger.fine("Added jars for byteman helper with result: " + addJarsResult);
+            return true;
+        } catch (Exception e) {
+            logger.log(Level.INFO, e.getMessage(), e);
+            return false;
+        }
     }
 
     private void startIPCEndpoint(VmSocketIdentifier identifier, ThermostatIPCCallbacks callback) {
@@ -265,5 +303,17 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     public String toString() {
         return "Backend [name=" + getName() + ", version=" + getVersion() + ", vendor=" + getVendor()
                 + ", description=" + getDescription() + "]";
+    }
+    
+    // package private for testing
+    static synchronized List<String> initListOfHelperJars(File helperDir) {
+        if (helperJars == null) {
+            List<String> jars = new ArrayList<>();
+            for (File f: helperDir.listFiles()) {
+                jars.add(f.getAbsolutePath());
+            }
+            helperJars = jars;
+        }
+        return helperJars;
     }
 }

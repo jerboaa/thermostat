@@ -39,31 +39,26 @@ package com.redhat.thermostat.vm.byteman.agent.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.net.InetSocketAddress;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
-import org.junit.After;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
@@ -73,11 +68,6 @@ import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAct
 
 public class BytemanRequestReceiverTest {
     
-    @After
-    public void tearDown() {
-        BytemanRequestReceiver.helperJars = null;
-    }
-
     @Test
     public void testLoadRules() throws Exception {
         Submit submit = mock(Submit.class);
@@ -97,10 +87,7 @@ public class BytemanRequestReceiverTest {
     public void testUnLoadRulesWithNoExistingRules() throws Exception {
         Submit submit = mock(Submit.class);
         when(submit.getAllScripts()).thenReturn(Collections.<ScriptText>emptyList());
-        CommonPaths paths = mock(CommonPaths.class);
-        File helperRootFile = getHelperRootFile();
-        when(paths.getSystemPluginRoot()).thenReturn(helperRootFile);
-        BytemanRequestReceiver receiver = createReceiver(submit, null, paths, null);
+        BytemanRequestReceiver receiver = createReceiver(submit, null, null);
         Response response = receiver.receive(BytemanRequest.create(mock(InetSocketAddress.class), new VmId("ignored"), RequestAction.UNLOAD_RULES, -1));
         assertEquals(ResponseType.OK, response.getType());
         verify(submit, never()).deleteAllRules();
@@ -110,16 +97,13 @@ public class BytemanRequestReceiverTest {
     public void testUnLoadRulesWithExistingRules() throws Exception {
         Submit submit = mock(Submit.class);
         when(submit.getAllScripts()).thenReturn(Arrays.asList(mock(ScriptText.class)));
-        CommonPaths paths = mock(CommonPaths.class);
-        File helperRootFile = getHelperRootFile();
-        when(paths.getSystemPluginRoot()).thenReturn(helperRootFile);
         WriterID writerId = mock(WriterID.class);
         String someAgentId = "some-agent-id";
         String someVmId = "some-vm-id";
         int someListenPort = 3333;
         VmBytemanDAO bytemanDao = mock(VmBytemanDAO.class);
         when(writerId.getWriterID()).thenReturn(someAgentId);
-        BytemanRequestReceiver receiver = createReceiver(submit, writerId, paths, bytemanDao);
+        BytemanRequestReceiver receiver = createReceiver(submit, writerId, bytemanDao);
         ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
         Response response = receiver.receive(BytemanRequest.create(mock(InetSocketAddress.class), new VmId(someVmId), RequestAction.UNLOAD_RULES, someListenPort));
         assertEquals(ResponseType.OK, response.getType());
@@ -143,16 +127,13 @@ public class BytemanRequestReceiverTest {
 
     @SuppressWarnings("unchecked")
     private void doLoadRulesTest(Submit submit) throws Exception {
-        File helperRootFile = getHelperRootFile();
-        CommonPaths paths = mock(CommonPaths.class);
-        when(paths.getSystemPluginRoot()).thenReturn(helperRootFile);
         VmBytemanDAO bytemanDao = mock(VmBytemanDAO.class);
         WriterID wid = mock(WriterID.class);
         String writerId = "some-writer-id";
         String someVmId = "some-id";
         int listenPort = 333;
         when(wid.getWriterID()).thenReturn(writerId);
-        BytemanRequestReceiver receiver = createReceiver(submit, wid, paths, bytemanDao);
+        BytemanRequestReceiver receiver = createReceiver(submit, wid, bytemanDao);
         String rule = "some-rule";
         ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
         Response response = receiver.receive(BytemanRequest.create(mock(InetSocketAddress.class), new VmId(someVmId), RequestAction.LOAD_RULES, listenPort, rule));
@@ -162,21 +143,13 @@ public class BytemanRequestReceiverTest {
         assertEquals(writerId, capturedStatus.getAgentId());
         assertEquals(rule, capturedStatus.getRule());
         assertEquals(listenPort, capturedStatus.getListenPort());
-        List<String> expectedList = new ArrayList<>();
-        expectedList.add(helperRootFile.getAbsolutePath() + File.separator + "vm-byteman" + File.separator + "plugin-libs" + File.separator + "thermostat-helper" + File.separator + "not-really-a-jar-file.jar");
-        // Verify thermostat helper jars get added
-        verify(submit).addJarsToSystemClassloader(eq(expectedList));
+        // verify no helper jars get added on rule submission
+        verify(submit, times(0)).addJarsToSystemClassloader(any(List.class));
         verify(submit).addRulesFromResources(any(List.class));
         assertEquals(ResponseType.OK, response.getType());
     }
 
-    private File getHelperRootFile() {
-        URL rootFile = getClass().getResource("/byteman-helper-root");
-        File helperRootFile = new File(rootFile.getFile());
-        return helperRootFile;
-    }
-    
-    private BytemanRequestReceiver createReceiver(final Submit submit, WriterID writerId, CommonPaths paths, VmBytemanDAO dao) {
+    private BytemanRequestReceiver createReceiver(final Submit submit, WriterID writerId, VmBytemanDAO dao) {
         BytemanRequestReceiver receiver = new BytemanRequestReceiver() {
             @Override 
             protected Submit getSubmit(int port) {
@@ -184,31 +157,9 @@ public class BytemanRequestReceiverTest {
             }
             
         };
-        receiver.bindPaths(paths);
         receiver.bindVmBytemanDao(dao);
         receiver.bindWriterId(writerId);
         return receiver;
     }
     
-    @Test
-    public void canGetListOfJarsForBytemanHelper() {
-        String parent = "/foo";
-        File file = mock(File.class);
-        File[] mockFiles = new File[7];
-        for (int i = 0; i < 7; i++) {
-            mockFiles[i] = getFileMockWithName(parent, "test-file" + i + ".jar");
-        }
-        when(file.listFiles()).thenReturn(mockFiles);
-        List<String> jars = BytemanRequestReceiver.initListOfHelperJars(file);
-        assertEquals(7, jars.size());
-        for (int i = 0; i < 7; i++) {
-            assertEquals("/foo/test-file" + i + ".jar", jars.get(i));
-        }
-    }
-
-    private File getFileMockWithName(String parent, String name) {
-        File f = mock(File.class);
-        when(f.getAbsolutePath()).thenReturn(parent + "/" + name);
-        return f;
-    }
 }

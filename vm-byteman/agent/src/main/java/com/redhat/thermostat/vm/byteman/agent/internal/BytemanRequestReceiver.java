@@ -37,10 +37,8 @@
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -58,7 +56,6 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
@@ -78,15 +75,7 @@ public class BytemanRequestReceiver implements RequestReceiver {
     private static final Logger logger = LoggingUtils.getLogger(BytemanRequestReceiver.class);
     private static final Response ERROR_RESPONSE = new Response(ResponseType.ERROR);
     private static final Response OK_RESPONSE = new Response(ResponseType.OK);
-    private static final String BYTEMAN_PLUGIN_DIR = System.getProperty("thermostat.plugin", "vm-byteman");
-    private static final String BYTEMAN_PLUGIN_LIBS_DIR = BYTEMAN_PLUGIN_DIR + File.separator + "plugin-libs";
-    private static final String BYTEMAN_HELPER_DIR = BYTEMAN_PLUGIN_LIBS_DIR + File.separator + "thermostat-helper";
     
-    // package-private for testing
-    static List<String> helperJars;
-    
-    @Reference
-    private CommonPaths paths;
     
     @Reference
     private VmBytemanDAO vmBytemanDao;
@@ -97,17 +86,6 @@ public class BytemanRequestReceiver implements RequestReceiver {
     ////////////////////////////////////////////////
     // methods used by DS
     ////////////////////////////////////////////////
-    
-    protected void bindPaths(CommonPaths paths) {
-        File bytemanHelperDir = new File(paths.getSystemPluginRoot(), BYTEMAN_HELPER_DIR);
-        initListOfHelperJars(bytemanHelperDir);
-    }
-    
-    protected void unbindPaths(CommonPaths paths) {
-        synchronized (helperJars) {
-            helperJars = null;
-        }
-    }
     
     protected void bindWriterId(WriterID writerId) {
         this.writerId = writerId;
@@ -162,9 +140,6 @@ public class BytemanRequestReceiver implements RequestReceiver {
     private Response loadRules(int listenPort, VmId vmId, String bytemanRules) {
         Submit submit = getSubmit(listenPort);
         try {
-            // Add jar files for Thermostat byteman helper:
-            String addJarsResult = submit.addJarsToSystemClassloader(helperJars);
-            logger.fine("Added jars for byteman helper with result: " + addJarsResult);
             List<ScriptText> existingScripts = submit.getAllScripts();
             if (existingScripts.size() > 0) {
                 String deleteResult = submit.deleteAllRules();
@@ -212,16 +187,4 @@ public class BytemanRequestReceiver implements RequestReceiver {
         return new Submit(null /* localhost */, listenPort);
     }
     
-    // package private for testing
-    static synchronized List<String> initListOfHelperJars(File helperDir) {
-        if (helperJars == null) {
-            List<String> jars = new ArrayList<>();
-            for (File f: helperDir.listFiles()) {
-                jars.add(f.getAbsolutePath());
-            }
-            helperJars = jars;
-        }
-        return helperJars;
-    }
-
 }
