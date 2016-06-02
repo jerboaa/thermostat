@@ -1092,6 +1092,21 @@ diff --git a/vm-byteman/client-cli/pom.xml b/vm-byteman/client-cli/pom.xml
      </dependency>
      <dependency>
        <groupId>org.osgi</groupId>
+diff --git a/vm-byteman/client-swing/pom.xml b/vm-byteman/client-swing/pom.xml
+--- a/vm-byteman/client-swing/pom.xml
++++ b/vm-byteman/client-swing/pom.xml
+@@ -91,9 +91,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.osgi</groupId>
 diff --git a/vm-byteman/common/pom.xml b/vm-byteman/common/pom.xml
 --- a/vm-byteman/common/pom.xml
 +++ b/vm-byteman/common/pom.xml
