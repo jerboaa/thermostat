@@ -42,6 +42,7 @@ import java.util.List;
  * Intended for use with {@link CompletionFinderTabCompleter}. Provides a list of {@link CompletionInfo},
  * which is displayed as tab-completion results in Thermostat shell.
  *
+ * @see AbstractCompletionFinder
  * @see CompletionFinderTabCompleter
  * @see CompleterService
  */

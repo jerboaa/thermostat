@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.notes.client.cli.internal;
 
-import com.redhat.thermostat.common.cli.CompletionFinder;
+import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
 import com.redhat.thermostat.common.cli.CompletionInfo;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.notes.client.cli.locale.LocaleResources;
@@ -49,24 +49,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class NoteIdsFinder implements CompletionFinder {
+public class NoteIdsFinder extends AbstractCompletionFinder {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    private DependencyServices dependencyServices;
-
     public NoteIdsFinder(DependencyServices dependencyServices) {
-        this.dependencyServices = dependencyServices;
+        super(dependencyServices);
+    }
+
+    @Override
+    protected Class<?>[] getRequiredDependencies() {
+        return new Class<?>[]{ HostNoteDAO.class, VmNoteDAO.class };
     }
 
     @Override
     public List<CompletionInfo> findCompletions() {
-        if (!(dependencyServices.hasService(HostNoteDAO.class) && dependencyServices.hasService(VmNoteDAO.class))) {
+        if (!allDependenciesAvailable()) {
             return Collections.emptyList();
         }
 
-        HostNoteDAO host = dependencyServices.getService(HostNoteDAO.class);
-        VmNoteDAO vm = dependencyServices.getService(VmNoteDAO.class);
+        HostNoteDAO host = getService(HostNoteDAO.class);
+        VmNoteDAO vm = getService(VmNoteDAO.class);
 
         List<Note> notes = new ArrayList<>();
         notes.addAll(host.getAll());

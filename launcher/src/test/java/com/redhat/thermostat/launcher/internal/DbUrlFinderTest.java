@@ -40,34 +40,51 @@ import com.redhat.thermostat.common.cli.CompletionInfo;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DbUrlFinderTest {
 
+    private DependencyServices dependencyServices;
+    private DbUrlFinder finder;
+
+    @Before
+    public void setup() {
+        dependencyServices = mock(DependencyServices.class);
+        finder = new DbUrlFinder(dependencyServices);
+    }
+
     @Test
     public void testDbUrlCompleter() {
-        DependencyServices dependencyServices = mock(DependencyServices.class);
         CommonPaths paths = mock(CommonPaths.class);
         ClientPreferences prefs = mock(ClientPreferences.class);
         when(dependencyServices.hasService(CommonPaths.class)).thenReturn(true);
         when(dependencyServices.getService(CommonPaths.class)).thenReturn(paths);
-        DbUrlFinder dbUrlFinder = new DbUrlFinder(dependencyServices);
-        dbUrlFinder.setPaths(paths);
-        dbUrlFinder.setPrefs(prefs);
+        finder.setPaths(paths);
+        finder.setPrefs(prefs);
 
         String partialUrl = "https://ip.addr";
         String fullUrl = partialUrl + "ess.example.com:25813/thermostat/storage";
         when(prefs.getConnectionUrl()).thenReturn(fullUrl);
 
-        List<CompletionInfo> completions = dbUrlFinder.findCompletions();
+        List<CompletionInfo> completions = finder.findCompletions();
 
         assertEquals(1, completions.size());
         assertEquals(fullUrl, completions.get(0).getCompletionWithUserVisibleText().trim());
     }
+
+    @Test
+    public void testListDependencies() {
+        assertThat(finder.getRequiredDependencies(), is(equalTo(new Class[]{CommonPaths.class})));
+    }
+
 }

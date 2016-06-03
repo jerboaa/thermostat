@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.CompletionFinder;
+import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
 import com.redhat.thermostat.common.cli.CompletionInfo;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.config.ClientPreferences;
@@ -44,21 +44,18 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
-public class DbUrlFinder implements CompletionFinder {
+public class DbUrlFinder extends AbstractCompletionFinder {
 
-    private DependencyServices dependencyServices;
-    private CommonPaths paths;
     private ClientPreferences prefs;
 
     public DbUrlFinder(DependencyServices dependencyServices) {
-        this.dependencyServices = dependencyServices;
+        super(dependencyServices);
     }
 
     /* Testing only */
     void setPaths(CommonPaths paths) {
-        this.paths = paths;
+        dependencyServices.addService(CommonPaths.class, paths);
     }
 
     /* Testing only */
@@ -67,14 +64,18 @@ public class DbUrlFinder implements CompletionFinder {
     }
 
     @Override
+    protected Class<?>[] getRequiredDependencies() {
+        return new Class<?>[] { CommonPaths.class };
+    }
+
+    @Override
     public List<CompletionInfo> findCompletions() {
-        if (!dependencyServices.hasService(CommonPaths.class)) {
+        if (!allDependenciesAvailable()) {
             return Collections.emptyList();
         }
 
-        CommonPaths paths = dependencyServices.getService(CommonPaths.class);
-        if (!Objects.equals(this.paths, paths)) {
-            this.paths = paths;
+        if (this.prefs == null) {
+            CommonPaths paths = getService(CommonPaths.class);
             this.prefs = new ClientPreferences(paths);
         }
 

@@ -56,6 +56,9 @@ import java.util.Locale;
 import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -209,7 +212,6 @@ public class VmIdsFinderTest {
 
     @Test
     public void testFindIds() {
-
         List<CompletionInfo> result = vmIdsFinder.findCompletions();
 
         // Sort to get some predictability in result order
@@ -242,4 +244,10 @@ public class VmIdsFinderTest {
     private String formatExpected(String id, String mainClass, VmInfo.AliveStatus aliveStatus) {
         return id + " [" + mainClass + "(" + aliveStatus.toString() + ")]";
     }
+
+    @Test
+    public void testListDependencies() {
+        assertThat(vmIdsFinder.getRequiredDependencies(), is(equalTo(new Class[]{ VmInfoDAO.class, AgentInfoDAO.class })));
+    }
+
 }

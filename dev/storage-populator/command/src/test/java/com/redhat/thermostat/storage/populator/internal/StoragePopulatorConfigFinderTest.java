@@ -45,6 +45,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
@@ -81,6 +82,11 @@ public class StoragePopulatorConfigFinderTest {
         List<CompletionInfo> result = finder.findCompletions();
         verifyZeroInteractions(directoryFinder);
         assertThat(result.size(), is(0));
+    }
+
+    @Test
+    public void testListDependencies() {
+        assertThat(finder.getRequiredDependencies(), is(equalTo(new Class[]{CommonPaths.class})));
     }
 
 }

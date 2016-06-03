@@ -230,4 +230,9 @@ public class NoteIdsFinderTest {
         return result;
     }
 
+    @Test
+    public void testListDependencies() {
+        assertThat(finder.getRequiredDependencies(), is(equalTo(new Class[]{ HostNoteDAO.class, VmNoteDAO.class })));
+    }
+
 }

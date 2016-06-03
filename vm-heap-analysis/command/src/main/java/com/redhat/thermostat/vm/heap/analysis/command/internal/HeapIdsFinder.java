@@ -37,7 +37,7 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.cli.CompletionFinder;
+import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
 import com.redhat.thermostat.common.cli.CompletionInfo;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -52,24 +52,27 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-public class HeapIdsFinder implements CompletionFinder {
+public class HeapIdsFinder extends AbstractCompletionFinder {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    private DependencyServices dependencyServices;
-
     public HeapIdsFinder(DependencyServices dependencyServices) {
-        this.dependencyServices = dependencyServices;
+        super(dependencyServices);
+    }
+
+    @Override
+    protected Class<?>[] getRequiredDependencies() {
+        return new Class<?>[] { HeapDAO.class, VmInfoDAO.class };
     }
 
     @Override
     public List<CompletionInfo> findCompletions() {
-        if (!(dependencyServices.hasService(HeapDAO.class) && dependencyServices.hasService(VmInfoDAO.class))) {
+        if (!allDependenciesAvailable()) {
             return Collections.emptyList();
         }
 
-        HeapDAO heapDao = dependencyServices.getService(HeapDAO.class);
-        VmInfoDAO vmDao = dependencyServices.getService(VmInfoDAO.class);
+        HeapDAO heapDao = getService(HeapDAO.class);
+        VmInfoDAO vmDao = getService(VmInfoDAO.class);
 
         List<CompletionInfo> heapIds = new ArrayList<>();
         for (HeapInfo heap : heapDao.getAllHeapInfo()) {

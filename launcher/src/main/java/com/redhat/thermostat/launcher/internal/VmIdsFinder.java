@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.CompletionFinder;
+import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
 import com.redhat.thermostat.common.cli.CompletionInfo;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.storage.core.AgentId;
@@ -52,22 +52,25 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class VmIdsFinder implements CompletionFinder {
-
-    private DependencyServices dependencyServices;
+public class VmIdsFinder extends AbstractCompletionFinder {
 
     public VmIdsFinder(DependencyServices dependencyServices) {
-        this.dependencyServices = dependencyServices;
+        super(dependencyServices);
+    }
+
+    @Override
+    protected Class<?>[] getRequiredDependencies() {
+        return new Class<?>[]{ VmInfoDAO.class, AgentInfoDAO.class };
     }
 
     @Override
     public List<CompletionInfo> findCompletions() {
-        if (!(dependencyServices.hasService(VmInfoDAO.class) && dependencyServices.hasService(AgentInfoDAO.class))) {
+        if (!allDependenciesAvailable()) {
             return Collections.emptyList();
         }
 
-        VmInfoDAO vmDao = dependencyServices.getService(VmInfoDAO.class);
-        AgentInfoDAO agentDao = dependencyServices.getService(AgentInfoDAO.class);
+        VmInfoDAO vmDao = getService(VmInfoDAO.class);
+        AgentInfoDAO agentDao = getService(AgentInfoDAO.class);
 
         return findVmIds(vmDao, agentDao, agentDao.getAgentIds());
     }

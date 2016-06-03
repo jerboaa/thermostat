@@ -47,7 +47,6 @@ import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -151,6 +150,11 @@ public class HeapIdsFinderTest {
 
         assertThat(fooInfo.getActualCompletion(), is("foo-heap"));
         assertThat(fooInfo.getUserVisibleText(), is("foo-mainclass @ " + Clock.DEFAULT_DATE_FORMAT.format(new Date(100L))));
+    }
+
+    @Test
+    public void testListDependencies() {
+        assertThat(finder.getRequiredDependencies(), is(equalTo(new Class[]{HeapDAO.class, VmInfoDAO.class})));
     }
 
 }

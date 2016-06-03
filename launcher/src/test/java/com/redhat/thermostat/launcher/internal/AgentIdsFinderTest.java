@@ -40,6 +40,7 @@ import com.redhat.thermostat.common.cli.CompletionInfo;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -47,19 +48,28 @@ import java.util.Collection;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class AgentIdsFinderTest {
 
+    private DependencyServices dependencyServices;
+    private AgentIdsFinder finder;
+
+    @Before
+    public void setup() {
+        dependencyServices = mock(DependencyServices.class);
+        finder = new AgentIdsFinder(dependencyServices);
+    }
+
     @Test
     public void testFindIds() {
-        DependencyServices dependencyServices = mock(DependencyServices.class);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         when(dependencyServices.hasService(AgentInfoDAO.class)).thenReturn(true);
         when(dependencyServices.getService(AgentInfoDAO.class)).thenReturn(agentInfoDAO);
-
-        AgentIdsFinder agentIdsFinder = new AgentIdsFinder(dependencyServices);
 
         String id1 = "012345-56789";
         String id2 = "111111-22222";
@@ -81,11 +91,16 @@ public class AgentIdsFinderTest {
         collection.add(agentInfo4);
         when(agentInfoDAO.getAllAgentInformation()).thenReturn((List<AgentInformation>) collection);
 
-        List<CompletionInfo> result = agentIdsFinder.findCompletions();
+        List<CompletionInfo> result = finder.findCompletions();
         assertEquals(4, result.size());
         assertEquals(id1, result.get(0).getActualCompletion());
         assertEquals(id2, result.get(1).getActualCompletion());
         assertEquals(id3, result.get(2).getActualCompletion());
         assertEquals(id4, result.get(3).getActualCompletion());
+    }
+
+    @Test
+    public void testListDependencies() {
+        assertThat(finder.getRequiredDependencies(), is(equalTo(new Class[]{AgentInfoDAO.class})));
     }
 }

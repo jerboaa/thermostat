@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.storage.populator.internal;
 
-import com.redhat.thermostat.common.cli.CompletionFinder;
+import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
 import com.redhat.thermostat.common.cli.CompletionInfo;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.cli.DirectoryContentsCompletionFinder;
@@ -48,13 +48,12 @@ import java.io.FileFilter;
 import java.util.Collections;
 import java.util.List;
 
-public class StoragePopulatorConfigFinder implements CompletionFinder {
+public class StoragePopulatorConfigFinder extends AbstractCompletionFinder {
 
-    private DependencyServices dependencyServices;
     private DirectoryContentsCompletionFinder directoryFinder;
 
     public StoragePopulatorConfigFinder(DependencyServices dependencyServices) {
-        this.dependencyServices = dependencyServices;
+        super(dependencyServices);
     }
 
     /* Testing hook only */
@@ -63,12 +62,17 @@ public class StoragePopulatorConfigFinder implements CompletionFinder {
     }
 
     @Override
+    protected Class<?>[] getRequiredDependencies() {
+        return new Class<?>[]{ CommonPaths.class };
+    }
+
+    @Override
     public List<CompletionInfo> findCompletions() {
-        if (!dependencyServices.hasService(CommonPaths.class)) {
+        if (!allDependenciesAvailable()) {
             return Collections.emptyList();
         }
         if (directoryFinder == null) {
-            CommonPaths paths = dependencyServices.getService(CommonPaths.class);
+            CommonPaths paths = getService(CommonPaths.class);
             String configDirectory = StoragePopulatorCommand.getConfigFileDirectoryPath(paths);
             directoryFinder = new DirectoryContentsCompletionFinder(new File(configDirectory));
             directoryFinder.setFileFilter(new StoragePopulatorConfigFilter());
