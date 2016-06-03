@@ -110,6 +110,33 @@
         <bundle><symbolic-name>io.netty.handler</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
     </command>
+    <command>
+      <name>web-storage</name>
+      <summary>start backing storage and deploy the web endpoint in a servlet container</summary>
+      <description>
+        Start mongodb storage, an embedded servlet container with the web
+        archive deployed as a foreground process. On exit, shut them down.
+      </description>
+      <environments>
+        <environment>cli</environment>
+      </environments>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.common.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.configuration</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.endpoint</symbolic-name><version>${project.version}</version></bundle>
+
+        <bundle><symbolic-name>org.eclipse.jetty.server</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.http</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.util</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.io</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.webapp</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.security</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.servlet</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.xml</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.jaas</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>${javax.servlet.bsn}</symbolic-name><version>${jetty.javax.servlet.osgi.version}</version></bundle>
+     </bundles>
+    </command>
   </commands>
 </plugin>
 

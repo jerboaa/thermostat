@@ -109,7 +109,7 @@ class WebappLauncherCommand extends AbstractStateNotifyingCommand {
             getNotifier().fireAction(ApplicationState.FAIL, e);
             throw new CommandException(translator.localize(LocaleResources.STORAGE_WAIT_INTERRUPTED));
         }
-        if (storageListener.startupFailed) {
+        if (!storageListener.isStartupSuccessful()) {
             getNotifier().fireAction(ApplicationState.FAIL);
             throw new CommandException(translator.localize(LocaleResources.ERROR_STARTING_STORAGE));
         }
@@ -185,35 +185,6 @@ class WebappLauncherCommand extends AbstractStateNotifyingCommand {
                 "storage", "--stop"
         };
         launcher.run(storageStopArgs, false);
-    }
-
-    private static class StorageStartedListener implements ActionListener<ApplicationState> {
-
-        private final CountDownLatch storageStarted;
-        private boolean startupFailed;
-        
-        private StorageStartedListener(CountDownLatch latch) {
-            storageStarted = latch;
-            // Assume startup has failed initially, until a
-            // START action event is received
-            startupFailed = true;
-        }
-        
-        @Override
-        public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
-            if (actionEvent.getSource() instanceof AbstractStateNotifyingCommand) {
-                ApplicationState state = actionEvent.getActionId();
-                switch(state) {
-                case START:
-                    startupFailed = false;
-                    // fall-through
-                default:
-                    storageStarted.countDown();
-                    break;
-                }
-            }
-        }
-        
     }
 
     private class AgentStartedListener implements ActionListener<ApplicationState> {
