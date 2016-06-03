@@ -40,11 +40,14 @@ import com.redhat.thermostat.collections.graph.Node;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
 import com.redhat.thermostat.common.model.Range;
 
+import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.redhat.thermostat.ui.swing.components.graph.GraphContainer.PREFERRED_HEIGHT;
 import static com.redhat.thermostat.ui.swing.model.graph.GraphModel.SAMPLE_COUNT_PROPERTY;
 
 class IcicleLayout extends GraphLayout {
@@ -66,6 +69,21 @@ class IcicleLayout extends GraphLayout {
 
     public boolean isInvertedIcicle() {
         return invertedIcicle;
+    }
+
+    @Override
+    public Dimension preferredLayoutSize(Container parent) {
+        GraphContainer graphContainer = (GraphContainer) parent;
+        Dimension size = graphContainer.getParent().getSize();
+
+        if (!graphContainer.getAdjacencyTree().isEmpty()) {
+            int prefHeight = graphContainer.getAdjacencyTree().size() * PREFERRED_HEIGHT;
+            if (prefHeight > size.height) {
+                size.height = prefHeight;
+            }
+        }
+
+        return size;
     }
 
     @Override
@@ -96,9 +114,9 @@ class IcicleLayout extends GraphLayout {
                 long samples = node.getProperty(SAMPLE_COUNT_PROPERTY);
 
                 int x = 0;
-                int y = (level * GraphContainer.PREFERRED_HEIGHT) + 1;
+                int y = (level * PREFERRED_HEIGHT) + 1;
                 int w = (int) normalizer.getValueNormalized(samples);
-                int h = GraphContainer.PREFERRED_HEIGHT;
+                int h = PREFERRED_HEIGHT;
 
                 if (invertedIcicle) {
                     y = totalHeight - y - h + 1;

@@ -53,10 +53,13 @@ import com.redhat.thermostat.ui.swing.model.Model;
 import com.redhat.thermostat.ui.swing.model.ModelListener;
 import com.redhat.thermostat.ui.swing.model.graph.GraphModel;
 
+import javax.swing.Scrollable;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -68,7 +71,7 @@ import static com.redhat.thermostat.ui.swing.model.graph.GraphModel.TRACE_REAL_I
 
 /**
  */
-public class GraphContainer extends ThermostatComponent {
+public class GraphContainer extends ThermostatComponent implements Scrollable {
     private static final boolean PRINT_BUILD_GRAPH_STATS = false;
 
     static final int PREFERRED_HEIGHT = 20;
@@ -96,8 +99,30 @@ public class GraphContainer extends ThermostatComponent {
 
     private StepGradient stepGradient;
 
+    private ModelListener modelListener;
+
+    public GraphContainer() {
+        this(null, new IcicleLayout(true));
+    }
+
     public GraphContainer(GraphModel model) {
         this(model, new IcicleLayout(true));
+    }
+
+    public void setModel(GraphModel model) {
+        if (model == null) {
+            return;
+        }
+
+        if (this.model != null) {
+            this.model.removeModelListener(modelListener);
+        }
+
+        this.model = model;
+        this.model.addModelListener(modelListener);
+
+        clearAll();
+        model.rebuild();
     }
 
     public GraphContainer(GraphModel model, GraphLayout layout) {
@@ -116,7 +141,7 @@ public class GraphContainer extends ThermostatComponent {
         parents = new HashMap<>();
         knownColours = new HashMap<>();
 
-        model.addModelListener(new ModelListener<Graph>() {
+        modelListener = new ModelListener<Graph>() {
             @Override
             public void modelRebuilt(Model<Graph> model, final Graph data) {
                 // no need to do anything if the graph is zero order
@@ -131,13 +156,18 @@ public class GraphContainer extends ThermostatComponent {
             public void modelCleared(Model<Graph> model) {
                 clearAll();
             }
-        });
+        };
+
+        setModel(model);
 
         addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
-                // trigger a rebuild right away
-                getModel().rebuild();
+                GraphModel _model = getModel();
+                if (_model != null) {
+                    // trigger a rebuild right away
+                    getModel().rebuild();
+                }
             }
 
             @Override
@@ -281,7 +311,8 @@ public class GraphContainer extends ThermostatComponent {
             node.setProperty(SAMPLE_COUNT_PROPERTY, source.getProperty(SAMPLE_COUNT_PROPERTY));
             node.setProperty(TRACE_REAL_ID_PROPERTY, source.getProperty(TRACE_REAL_ID_PROPERTY));
             Tile component = new Tile((String) source.getProperty(TRACE_REAL_ID_PROPERTY));
-            component.setToolTipText("samples: " + source.getProperty(SAMPLE_COUNT_PROPERTY));
+            component.setToolTipText("name: " + source.getProperty(TRACE_REAL_ID_PROPERTY) +
+                                     ", samples: " + source.getProperty(SAMPLE_COUNT_PROPERTY));
             add(component);
 
             node.setProperty(COMPONENT_PROPERTY, component);
@@ -289,6 +320,9 @@ public class GraphContainer extends ThermostatComponent {
             getNodeCache().put(node.getName(), node);
         } else {
             node.setProperty(SAMPLE_COUNT_PROPERTY, source.getProperty(SAMPLE_COUNT_PROPERTY));
+            Tile component = node.getProperty(COMPONENT_PROPERTY);
+            component.setToolTipText("name: " + source.getProperty(TRACE_REAL_ID_PROPERTY) +
+                                     ", samples: " + source.getProperty(SAMPLE_COUNT_PROPERTY));
         }
 
         return node;
@@ -305,5 +339,30 @@ public class GraphContainer extends ThermostatComponent {
 
         graphics.setPaint(gradient);
         graphics.fillRect(0, 0, getWidth(), getHeight());
+    }
+
+    @Override
+    public Dimension getPreferredScrollableViewportSize() {
+        return getSize();
+    }
+
+    @Override
+    public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return 1;
+    }
+
+    @Override
+    public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return 1;
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportWidth() {
+        return false;
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportHeight() {
+        return false;
     }
 }

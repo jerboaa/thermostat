@@ -36,17 +36,12 @@
 
 package com.redhat.thermostat.thread.client.swing.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.awt.Color;
-import java.awt.Component;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Locale;
-
-import javax.swing.JFrame;
-
+import com.redhat.thermostat.annotations.internal.CacioTest;
+import com.redhat.thermostat.client.swing.UIDefaults;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.thread.client.common.view.ThreadView;
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
@@ -62,13 +57,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.annotations.internal.CacioTest;
-import com.redhat.thermostat.client.swing.UIDefaults;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
-import com.redhat.thermostat.thread.client.common.view.ThreadView;
+import javax.swing.JFrame;
+import java.awt.Color;
+import java.awt.Component;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Locale;
 
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -169,45 +166,5 @@ public class SwingThreadViewTest {
         togglefixture.requireDisabled();
     }
 
-//    @GUITest
-//    @Test
-//    public void verifTableViewLinksToDetailsView() throws InvocationTargetException, InterruptedException {
-//
-//        final boolean listenerCalled[] = new boolean[1];
-//
-//        ThreadTableBean bean1 = mock(ThreadTableBean.class);
-//        when(bean1.getName()).thenReturn("mocked bean 1");
-//
-//        ThreadTableBean bean2 = mock(ThreadTableBean.class);
-//        when(bean2.getName()).thenReturn("mocked bean 2");
-//
-//        List<ThreadTableBean> threadList = new ArrayList<>();
-//        threadList.add(bean1);
-//        threadList.add(bean2);
-//
-//        frameFixture.show();
-//
-//        frameFixture.splitPane("threadMainPanelSplitPane").moveDividerTo(0);
-//        frameFixture.tabbedPane("bottomTabbedPane").selectTab(0);
-//
-//        final Semaphore sem = new Semaphore(1);
-//        ThreadTableView tableView = view.createThreadTableView();
-//        tableView.addThreadSelectionActionListener(new ActionListener<ThreadTableView.ThreadSelectionAction>() {
-//            @Override
-//            public void actionPerformed(ActionEvent<ThreadSelectionAction> actionEvent) {
-//                listenerCalled[0] = true;
-//                view.displayThreadDetails((ThreadTableBean) actionEvent.getPayload());
-//                sem.release();
-//            }
-//        });
-//
-//        tableView.display(threadList);
-//
-//        frameFixture.table("threadBeansTable").cell(TableCell.row(1).column(0)).doubleClick();
-//        sem.acquire();
-//
-//        assertTrue(listenerCalled[0]);
-//        assertEquals(1, frameFixture.tabbedPane("bottomTabbedPane").target.getSelectedIndex());
-//    }
 }
 

@@ -93,6 +93,7 @@ public class ThreadInformationController implements InformationServiceController
     private CommonController threadCountController;
     private VmDeadLockController deadLockController;
     private CommonController lockTableController;
+    private CommonController stackTraceProfilerController;
 
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        VmInfoDAO vmInfoDao,
@@ -161,6 +162,7 @@ public class ThreadInformationController implements InformationServiceController
                 if (session != null) {
                     threadTimeline.setSession(session.getSessionID());
                     threadTableController.setSession(session.getSessionID());
+                    stackTraceProfilerController.setSession(session.getSessionID());
                 }
             } break;
 
@@ -247,13 +249,15 @@ public class ThreadInformationController implements InformationServiceController
                                         ThreadTableController table,
                                         ThreadCountController count,
                                         LockController lock,
-                                        VmDeadLockController deadLock)
+                                        VmDeadLockController deadLock,
+                                        StackTraceProfilerController profiler)
     {
         this.threadTableController = table;
         this.threadCountController = count;
         this.deadLockController = deadLock;
         this.threadTimeline = timeline;
         this.lockTableController = lock;
+        this.stackTraceProfilerController = profiler;
     }
 
     void ___injectCollectorForTesting(ThreadCollector collector)   {
@@ -261,6 +265,9 @@ public class ThreadInformationController implements InformationServiceController
     }
 
     private void initControllers() {
+
+        SessionID lastThreadSession = collector.getLastThreadSession();
+
         TimerFactory tf = appService.getTimerFactory();
 
         deadLockController =
@@ -278,12 +285,12 @@ public class ThreadInformationController implements InformationServiceController
         threadTableController =
                 new ThreadTableController(threadTableView, collector, tf.createTimer());
         threadTableController.initialize();
-        
+        threadTableController.setSession(lastThreadSession);
+
         threadTimeline = new ThreadTimelineController(view.createThreadTimelineView(),
                                                       collector,
                                                       tf.createTimer());
         threadTimeline.initialize();
-        SessionID lastThreadSession = collector.getLastThreadSession();
         threadTimeline.setSession(lastThreadSession);
 
         lockTableController =
@@ -292,6 +299,14 @@ public class ThreadInformationController implements InformationServiceController
                                    lockInfoDao,
                                    ref);
         lockTableController.initialize();
+
+        stackTraceProfilerController =
+                new StackTraceProfilerController(view.createStackTraceProfilerView(),
+                                                 collector,
+                                                 tf.createTimer(),
+                                                 ref);
+        stackTraceProfilerController.initialize();
+        stackTraceProfilerController.setSession(lastThreadSession);
     }
 }
 

@@ -40,14 +40,11 @@ import com.redhat.thermostat.collections.graph.Graph;
 import com.redhat.thermostat.collections.graph.HashGraph;
 import com.redhat.thermostat.collections.graph.Node;
 import com.redhat.thermostat.ui.swing.model.Model;
-import com.redhat.thermostat.ui.swing.model.ModelListener;
 import com.redhat.thermostat.ui.swing.model.Trace;
 import com.redhat.thermostat.ui.swing.model.TraceElement;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  */

@@ -114,7 +114,8 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     public abstract ThreadTimelineView createThreadTimelineView();
     public abstract ThreadCountView createThreadCountView();
     public abstract LockView createLockView();
-    
+    public abstract StackTraceProfilerView createStackTraceProfilerView();
+
     public abstract void displayWarning(LocalizedString warning);
 
     public void setApplicationService(ApplicationService appService, String uniqueId) {

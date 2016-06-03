@@ -36,22 +36,6 @@
 
 package com.redhat.thermostat.thread.client.controller.internal;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -69,6 +53,7 @@ import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.common.view.LockView;
+import com.redhat.thermostat.thread.client.common.view.StackTraceProfilerView;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
@@ -78,8 +63,22 @@ import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadSession;
-
 import junit.framework.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class ThreadInformationControllerTest {
 
@@ -102,6 +101,7 @@ public class ThreadInformationControllerTest {
     private ThreadTimelineView threadTimelineView;
     private ThreadCountView threadCountView;
     private LockView lockView;
+    private StackTraceProfilerView stackTraceProfilerView;
 
     @Before
     public void setUp() {
@@ -124,7 +124,8 @@ public class ThreadInformationControllerTest {
         threadTimelineView = mock(ThreadTimelineView.class);
         threadCountView = mock(ThreadCountView.class);
         lockView = mock(LockView.class);
-        
+        stackTraceProfilerView = mock(StackTraceProfilerView.class);
+
         view = mock(ThreadView.class);
         viewFactory = mock(ThreadViewProvider.class);
         when(viewFactory.createView()).thenReturn(view);
@@ -134,6 +135,7 @@ public class ThreadInformationControllerTest {
         when(view.createThreadTimelineView()).thenReturn(threadTimelineView);
         when(view.createThreadCountView()).thenReturn(threadCountView);
         when(view.createLockView()).thenReturn(lockView);
+        when(view.createStackTraceProfilerView()).thenReturn(stackTraceProfilerView);
 
     }
     
@@ -326,6 +328,7 @@ public class ThreadInformationControllerTest {
         ThreadCountController count = mock(ThreadCountController.class);
         LockController lock = mock(LockController.class);
         VmDeadLockController deadLock = mock(VmDeadLockController.class);
+        StackTraceProfilerController profiler = mock(StackTraceProfilerController.class);
 
         ThreadSession session = mock(ThreadSession.class);
         SessionID id = mock(SessionID.class);
@@ -337,7 +340,7 @@ public class ThreadInformationControllerTest {
 
         createController();
 
-        controller.___injectControllersForTesting(timeline, table, count, lock, deadLock);
+        controller.___injectControllersForTesting(timeline, table, count, lock, deadLock, profiler);
 
         threadActionListener = viewArgumentCaptor.getValue();
         ActionEvent<ThreadView.ThreadAction> action = new ActionEvent<>(view, ThreadView.ThreadAction.REQUEST_LOAD_SESSION);
@@ -347,6 +350,7 @@ public class ThreadInformationControllerTest {
 
         verify(timeline).setSession(id);
         verify(table).setSession(id);
+        verify(profiler).setSession(id);
     }
 }
 

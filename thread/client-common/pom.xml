@@ -101,7 +101,13 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-        
+
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-platform-swing-widgets</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>

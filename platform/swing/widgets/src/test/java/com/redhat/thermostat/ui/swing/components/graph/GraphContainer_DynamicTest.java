@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.ui.swing.components.graph;
 
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.platform.swing.components.ContentPane;
 import com.redhat.thermostat.ui.swing.model.Trace;
 import com.redhat.thermostat.ui.swing.model.graph.GraphModel;
@@ -94,7 +95,10 @@ public class GraphContainer_DynamicTest {
         }
 
         Trace trace1 = new Trace("trace0");
-        trace1.add("A").add("C").add("C").add("C").add("C");
+        trace1.add("A").add("C").add("C").add("C").add("C").add("F").add("G").add("H").
+        add("C").add("C").add("C").add("C").add("F").add("G").add("H").
+        add("C").add("C").add("C").add("C").add("F").add("G").add("H").
+        add("I").add("L").add("M").add("N").add("O").add("P").add("Q");
         for (int i = 0; i  < 15; i++) {
             model.addTrace(trace1);
         }
@@ -199,7 +203,9 @@ public class GraphContainer_DynamicTest {
                 thread.start();
 
                 GraphContainer graphContainer = new GraphContainer(model);
-                pane.add(graphContainer);
+                ThermostatScrollPane scrollPane = new ThermostatScrollPane(graphContainer);
+
+                pane.add(scrollPane);
 
                 frame.setVisible(true);
             }

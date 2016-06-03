@@ -46,6 +46,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.thread.client.common.view.LockView;
+import com.redhat.thermostat.thread.client.common.view.StackTraceProfilerView;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
@@ -78,6 +79,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     private SwingVmDeadLockView vmDeadLockView;
     private SwingThreadTimelineView threadTimelineView;
     private SwingThreadDetailsView threadDetailsView;
+    private SwingStackTraceProfilerView stackTraceProfilerView;
     private SwingLockView lockView;
 
     private JTabbedPane topPane;
@@ -202,6 +204,11 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         comp.setName("lock");
         topPane.addTab(t.localize(LocaleResources.LOCKS).getContents(), comp);
 
+        stackTraceProfilerView = new SwingStackTraceProfilerView();
+        comp = stackTraceProfilerView.getUiComponent();
+        comp.setName("stackTraceProfiler");
+        topPane.addTab(t.localize(LocaleResources.STACK_TRACE_PROFILER).getContents(), comp);
+
         panel.getSplitPane().setTopComponent(topPane);
     }
     
@@ -318,6 +325,11 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     @Override
     public LockView createLockView() {
         return lockView;
+    }
+
+    @Override
+    public StackTraceProfilerView createStackTraceProfilerView() {
+        return stackTraceProfilerView;
     }
 
     @Override

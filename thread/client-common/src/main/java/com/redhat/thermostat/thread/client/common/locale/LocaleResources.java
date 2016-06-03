@@ -106,6 +106,7 @@ public enum LocaleResources {
     LOCK_DESCRIPTION_SLOW_NOTIFY_ALL,
     LOCK_DESCRIPTION_SUCCESSFUL_SPINS,
 
+    STACK_TRACE_PROFILER,
     ;
 
     public static final String RESOURCE_BUNDLE =
