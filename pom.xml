@@ -116,7 +116,7 @@
     <profile>
       <id>cacio-version-jdk8</id>
       <activation>
-        <jdk>[1.8,1.9)</jdk>
+        <jdk>[1.8,)</jdk>
       </activation>
       <properties>
         <cacio-version>1.9</cacio-version>
