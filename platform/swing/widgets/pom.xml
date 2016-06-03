@@ -100,11 +100,23 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-client-swing</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- plugin specific dependencies -->
 
         <dependency>
             <groupId>com.redhat.thermostat</groupId>
             <artifactId>thermostat-platform-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-platform-collections</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -132,6 +144,9 @@
                         <Export-Package>
                             com.redhat.thermostat.animation,
                             com.redhat.thermostat.ui.swing.components,
+                            com.redhat.thermostat.ui.swing.components.graph,
+                            com.redhat.thermostat.ui.swing.model,
+                            com.redhat.thermostat.ui.swing.model.graph,
                             com.redhat.thermostat.platform.swing.components,
                             com.redhat.thermostat.event,
                         </Export-Package>

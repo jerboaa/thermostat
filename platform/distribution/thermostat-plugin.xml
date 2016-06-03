@@ -59,6 +59,10 @@
             </environments>
             <bundles>
                 <bundle>
+                    <symbolic-name>com.redhat.thermostat.collections</symbolic-name>
+                    <version>${project.version}</version>
+                </bundle>
+                <bundle>
                     <symbolic-name>com.redhat.thermostat.beans</symbolic-name>
                     <version>${project.version}</version>
                 </bundle>

@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.itest;
 
-import static org.junit.Assert.assertTrue;
+import expectj.Spawn;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,11 +49,7 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import expectj.Spawn;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verifies that all commands OSGi-resolve properly by invoking them
@@ -77,6 +76,7 @@ public class AllCommandsResolvableTest extends IntegrationTest {
         System.out.println(allCmds);
         assertTrue("sanity check help output failed", allCmds.containsAll(Arrays.asList("list-vms", "help")));
         for (String command: allCmds) {
+            System.out.println("###### testing command: " + command);
             Spawn shell = spawnThermostat(command, UNKNOWN_CMD_OPTION);
             shell.expectClose();
             String stdOut = shell.getCurrentStandardOutContents();
