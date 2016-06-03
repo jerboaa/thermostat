@@ -90,7 +90,7 @@ public class Utils {
      * @return constructed map
      */
     public static LinkedHashMap<String, Object> toMap(Object[] dataArray){
-        LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+        LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
         if (0 != dataArray.length % 2) {
             throw new IllegalArgumentException("Invalid odd elements count in array: [" + Arrays.toString(dataArray) + "]");
         }

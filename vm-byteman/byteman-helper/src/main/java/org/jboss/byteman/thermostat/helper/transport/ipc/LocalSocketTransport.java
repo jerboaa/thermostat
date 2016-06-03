@@ -94,7 +94,7 @@ class LocalSocketTransport extends Transport {
      */
     @Override
     protected void transferToPeer(ArrayList<BytemanMetric> records) {
-        List<Exception> exList = new ArrayList<>();
+        List<Exception> exList = new ArrayList<Exception>();
         for (int i = 0; i < attempts; i++) {
             try {
                 tryToWrite(records);
@@ -128,7 +128,7 @@ class LocalSocketTransport extends Transport {
     }
 
     private void tryToWrite(ArrayList<BytemanMetric> records) throws IOException {
-        ArrayList<BytemanMetric> batch = new ArrayList<>(batchSize);
+        ArrayList<BytemanMetric> batch = new ArrayList<BytemanMetric>(batchSize);
         for (BytemanMetric re : records) {
             batch.add(re);
             if (batchSize == batch.size()) {

@@ -88,7 +88,7 @@ public class ThermostatHelperTest {
     
     @Test
     public void canSendSimpleValueMultiple2() {
-        helper.send("my-marker", "key1", "value1", "key2", 3_000);
+        helper.send("my-marker", "key1", "value1", "key2", 3000);
         ArgumentCaptor<BytemanMetric> metricCaptor = ArgumentCaptor.forClass(BytemanMetric.class);
         verify(mockTransport).send(metricCaptor.capture());
         BytemanMetric metric = metricCaptor.getValue();
@@ -103,7 +103,7 @@ public class ThermostatHelperTest {
     
     @Test
     public void canSendSimpleValueMultiple3() {
-        helper.send("my-marker", "key1", "value1", "key2", 3_000, "key3", Math.PI);
+        helper.send("my-marker", "key1", "value1", "key2", 3000, "key3", Math.PI);
         ArgumentCaptor<BytemanMetric> metricCaptor = ArgumentCaptor.forClass(BytemanMetric.class);
         verify(mockTransport).send(metricCaptor.capture());
         BytemanMetric metric = metricCaptor.getValue();
@@ -115,7 +115,7 @@ public class ThermostatHelperTest {
         assertTrue(data.containsKey("key2"));
         assertEquals(3000, data.get("key2"));
         assertTrue(data.containsKey("key3"));
-        assertEquals(Math.PI, (double)data.get("key3"), DELTA);
+        assertEquals(Math.PI, (Double)data.get("key3"), DELTA);
     }
 
     @Test

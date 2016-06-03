@@ -39,7 +39,6 @@ package com.redhat.thermostat.agent.ipc.unixsocket.client.internal;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.ByteChannel;
-import java.util.Objects;
 
 import com.redhat.thermostat.agent.ipc.client.internal.ClientTransport;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
@@ -73,7 +72,7 @@ public class UnixSocketTransportImpl implements ClientTransport {
     }
     
     private File verifySocketFile(String name) throws IOException {
-        Objects.requireNonNull(name, "Server name cannot be null");
+        requireNonNull(name, "Server name cannot be null");
         File socketDir = socketProps.getSocketDirectory();
         if (!socketDir.exists()) {
             throw new IOException("Server address is invalid");
@@ -83,6 +82,13 @@ public class UnixSocketTransportImpl implements ClientTransport {
             throw new IOException("IPC server with name \"" + name + "\" does not exist");
         }
         return socketFile;
+    }
+    
+    // java.lang.Objects is JDK 7+ and we need this to be JDK 6 compat.
+    private static void requireNonNull(Object item, String message) {
+        if (item == null) {
+            throw new NullPointerException(message);
+        }
     }
     
     // Helper class for testing

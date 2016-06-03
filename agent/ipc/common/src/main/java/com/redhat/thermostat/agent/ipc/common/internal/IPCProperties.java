@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent.ipc.common.internal;
 
 import java.io.File;
-import java.util.Objects;
 
 public class IPCProperties {
     
@@ -45,8 +44,8 @@ public class IPCProperties {
     private final File propFile;
     
     protected IPCProperties(IPCType type, File propFile) {
-        Objects.requireNonNull(type);
-        Objects.requireNonNull(propFile);
+        requireNonNull(type);
+        requireNonNull(propFile);
         this.type = type;
         this.propFile = propFile;
     }
@@ -57,6 +56,13 @@ public class IPCProperties {
     
     public File getPropertiesFile() {
         return propFile;
+    }
+    
+    // java.lang.Objects is JDK 7+ and we need this to be JDK 6 compat.
+    private static void requireNonNull(Object item) {
+        if (item == null) {
+            throw new NullPointerException();
+        }
     }
 
 }

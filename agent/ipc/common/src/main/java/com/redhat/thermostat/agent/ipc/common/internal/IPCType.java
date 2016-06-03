@@ -50,7 +50,7 @@ public enum IPCType {
     private String configValue;
     
     static {
-        Map<String, IPCType> tempValuesMap = new HashMap<>();
+        Map<String, IPCType> tempValuesMap = new HashMap<String, IPCType>();
         for (IPCType type : IPCType.values()) {
             String value = type.getConfigValue();
             if (value != null) {

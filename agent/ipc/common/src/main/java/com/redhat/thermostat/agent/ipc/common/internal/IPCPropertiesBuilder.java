@@ -57,7 +57,9 @@ public abstract class IPCPropertiesBuilder {
     
     public IPCProperties getProperties(File ipcProperties) throws IOException {
         Properties props = helper.createProperties();
-        try (FileInputStream fis = helper.getInputStream(ipcProperties)) {
+        FileInputStream fis = null;
+        try  {
+            fis = helper.getInputStream(ipcProperties);
             props.load(fis);
             
             String typeString = props.getProperty(PROP_IPC_TYPE);
@@ -69,6 +71,10 @@ public abstract class IPCPropertiesBuilder {
                 throw new IOException("Unable to determine IPC type from property file");
             }
             return getPropertiesForType(type, props, ipcProperties);
+        } finally {
+            if (fis != null) {
+                fis.close();
+            }
         }
     }
     

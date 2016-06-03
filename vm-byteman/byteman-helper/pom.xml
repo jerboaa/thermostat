@@ -47,6 +47,18 @@
   <packaging>jar</packaging>
   <name>Thermostat Byteman Helper</name>
   <description>This is a stand-alone byteman helper enabling byteman to send metrics back to Thermostat</description>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

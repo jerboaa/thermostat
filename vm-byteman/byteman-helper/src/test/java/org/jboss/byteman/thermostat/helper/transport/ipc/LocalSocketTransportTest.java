@@ -74,9 +74,9 @@ public class LocalSocketTransportTest {
     
     @Test
     public void instantiationOpensChannel() {
-        try (Transport t = new LocalSocketTransport(0, 0, mock(File.class), "foo-name", 10, 1, 100, factory)) {
-            // empty - using try-with-resources
-        }
+        Transport t = null;
+        t = new LocalSocketTransport(0, 0, mock(File.class), "foo-name", 10, 1, 100, factory);
+        t.close();
         verify(factory).open(any(File.class), eq("foo-name"));
     }
 
@@ -84,14 +84,27 @@ public class LocalSocketTransportTest {
     public void sendWritesToChannelInBatches() throws InterruptedException, IOException {
         ArgumentCaptor<ByteBuffer> byteBuffer = ArgumentCaptor.forClass(ByteBuffer.class);
         CountDownLatch latch = new CountDownLatch(1); // expect transfer to be called a single time
-        try (SynchronizableLocalSocketTransport transport = new SynchronizableLocalSocketTransport(3, Integer.MAX_VALUE, "foo-name", 10, 1, 100, factory, latch)) {
+        SynchronizableLocalSocketTransport transport = null;
+        try  {
+            transport = new SynchronizableLocalSocketTransport(3, Integer.MAX_VALUE, "foo-name", 10, 1, 100, factory, latch);
             transport.send(new BytemanMetric("marker1", Utils.toMap(new Object[] { "key1", "value1" })));
             transport.send(new BytemanMetric("marker2", Utils.toMap(new Object[] { "key2", "value2" })));
             transport.send(new BytemanMetric("marker3", Utils.toMap(new Object[] { "key3", "value3" })));
             latch.await(); // wait for async transfer
             verify(socketChannel).write(byteBuffer.capture());
             assertEquals("expected transferToPeer() to be called once", 1, transport.callCount);
+        } catch (InterruptedException e) {
+            if (transport != null) {
+                transport.close();
+            }
+            throw e;
+        } catch (IOException e) {
+            if (transport != null) {
+                transport.close();
+            }
+            throw e;
         }
+        transport.close();
         String actualJson = getFromByteBuffer(byteBuffer.getValue());
         String expectedJson = "[" +
                                     "{" +

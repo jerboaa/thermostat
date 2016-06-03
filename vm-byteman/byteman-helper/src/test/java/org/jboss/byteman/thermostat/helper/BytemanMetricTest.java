@@ -65,7 +65,7 @@ public class BytemanMetricTest {
     
     @Test
     public void testToJsonMapDataNonNull() {
-        LinkedHashMap<String, Object> data = new LinkedHashMap<>();
+        LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("foo1", "ba\"r1");
         data.put("foo2", 42);
         data.put("foo3", 42.000);
@@ -89,7 +89,7 @@ public class BytemanMetricTest {
     
     @Test
     public void testToJsonMarkerNullDataNonNull() {
-        LinkedHashMap<String, Object> data = new LinkedHashMap<>();
+        LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("foo1", "bar1");
         BytemanMetric recData = new BytemanMetric(null, data);
         // marker will be the default string
@@ -104,7 +104,7 @@ public class BytemanMetricTest {
     
     @Test(expected = UnsupportedOperationException.class)
     public void testUnsupportedObjectJson() {
-        LinkedHashMap<String, Object> data = new LinkedHashMap<>();
+        LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("foo1", new Object());
         BytemanMetric metric = new BytemanMetric("something", data);
         metric.toJson(); // throws UnsupportedOperationException
@@ -121,7 +121,7 @@ public class BytemanMetricTest {
     
     @Test
     public void testDataKeyContainsQuotes() {
-        LinkedHashMap<String, Object> data = new LinkedHashMap<>();
+        LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("foo\"1", "bar1");
         BytemanMetric recData = new BytemanMetric("baz", data);
         assertEquals(

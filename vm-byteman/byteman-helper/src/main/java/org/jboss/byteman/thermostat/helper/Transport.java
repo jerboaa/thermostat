@@ -60,7 +60,7 @@ public abstract class Transport implements Closeable {
     // state
     private AtomicBoolean sending = new AtomicBoolean(false);
     // cache
-    private ArrayList<BytemanMetric> cache = new ArrayList<>();
+    private ArrayList<BytemanMetric> cache = new ArrayList<BytemanMetric>();
     private final Object cacheLock = new Object();
     private long lostCount = 0;
     // executor
@@ -93,7 +93,7 @@ public abstract class Transport implements Closeable {
                     cache.add(rec);
                     if (cache.size() >= sendThreshold && !sending.get()) {
                         ArrayList<BytemanMetric> records = cache;
-                        cache = new ArrayList<>();
+                        cache = new ArrayList<BytemanMetric>();
                         TransferTask task = new TransferTask(records);
                         executor.execute(task);
                     }
