@@ -60,6 +60,6 @@ public interface VmNumaDAO {
 
     VmNumaStat getNewest(AgentId agentId, VmId vmId);
 
-    VmNumaStat getOldest(AgentId agentId, VmId id);
+    VmNumaStat getOldest(AgentId agentId, VmId vmId);
 
 }

@@ -41,13 +41,11 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.dao.AbstractDao;
 import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
@@ -97,17 +95,17 @@ public class VmNumaDAOImpl extends AbstractDao implements VmNumaDAO {
 
     @Override
     public List<VmNumaStat> getNumaStats(AgentId agentId, VmId vmId, long since, long to) {
-        return intervalGetter.getLatest(new VmRef(new HostRef(agentId.get(), ""), vmId.get(), -1, ""), since, to);
+        return intervalGetter.getLatest(agentId, vmId, since, to);
     }
 
     @Override
     public VmNumaStat getNewest(AgentId agentId, VmId vmId) {
-        return boundaryGetter.getOldestStat(new VmRef(new HostRef(agentId.get(), ""), "", -1, ""));
+        return boundaryGetter.getOldestStat(vmId, agentId);
     }
 
     @Override
-    public VmNumaStat getOldest(AgentId agentId, VmId id) {
-        return boundaryGetter.getOldestStat(new VmRef(new HostRef(agentId.get(), ""), "", -1, ""));
+    public VmNumaStat getOldest(AgentId agentId, VmId vmId) {
+        return boundaryGetter.getOldestStat(vmId, agentId);
     }
 
     @Override
