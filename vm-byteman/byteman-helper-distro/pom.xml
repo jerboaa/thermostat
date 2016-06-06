@@ -56,6 +56,7 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-byteman-helper</artifactId>
       <version>${project.version}</version>
+      <classifier>shaded</classifier>
     </dependency>
     <!--
         Dependency merely for byteman.jar copying to the right place
@@ -82,6 +83,10 @@
             </goals>
             <configuration>
               <outputDirectory>${thermostat.plugin.libs.dir}/thermostat-helper</outputDirectory>
+              <excludeTransitive>true</excludeTransitive>
+              <!-- Exclude byteman.jar and tools jar from the helper. Not needed
+                   at runtime -->
+              <excludeArtifactIds>byteman,tools</excludeArtifactIds>
             </configuration>
           </execution>
           <!-- Copy the byteman jar to directory

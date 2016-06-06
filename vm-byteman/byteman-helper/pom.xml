@@ -57,6 +57,127 @@
           <target>1.6</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <configuration>
+          <shadedArtifactAttached>true</shadedArtifactAttached>
+          <artifactSet>
+            <includes>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-client</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-common</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-unixsocket-client</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-unixsocket-common</include>
+              <include>com.github.jnr:jnr-ffi</include>
+              <include>com.github.jnr:jnr-enxio</include>
+              <include>com.github.jnr:jnr-constants</include>
+              <include>com.github.jnr:jnr-posix</include>
+              <include>com.github.jnr:jnr-unixsocket</include>
+              <include>com.github.jnr:jnr-x86asm</include>
+              <include>com.github.jnr:jffi</include>
+              <include>com.github.jnr:jffi:*:native</include>
+              <!-- deps of jnr-ffi -->
+              <include>org.ow2.asm:asm</include>
+              <include>org.ow2.asm:asm-util</include>
+              <include>org.ow2.asm:asm-tree</include>
+              <include>org.ow2.asm:asm-analysis</include>
+              <include>org.ow2.asm:asm-commons</include>
+            </includes>
+          </artifactSet>
+          <relocations>
+            <relocation>
+              <pattern>org.objectweb.asm</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.objectweb.asm</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.redhat.thermostat.agent.ipc.client</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.agent.ipc.client</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.redhat.thermostat.agent.ipc.common</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.agent.ipc.common</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.redhat.thermostat.agent.ipc.unixsocket.client</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.agent.ipc.unixsocket.client</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.redhat.thermostat.agent.ipc.unixsocket.common</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.agent.ipc.unixsocket.common</shadedPattern>
+            </relocation>
+            <!-- jnr-ffi -->
+            <relocation>
+              <pattern>jnr.ffi</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.ffi</shadedPattern>
+            </relocation>
+            <!-- jnr-unixsocket -->
+            <relocation>
+              <pattern>jnr.unixsocket</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.unixsocket</shadedPattern>
+            </relocation>
+            <!-- FIXME:
+                 jffi cannot be relocated easily since it contains JNI functions for
+                 com.kenai.jffi.Foreign. Thus it can only be done if natives get renamed accordingly and
+                 subsequently recompiled too. -->
+            <!--
+            <relocation>
+              <pattern>com.kenai.jffi</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.com.kenai.jffi</shadedPattern>
+            </relocation>
+            -->
+            <!-- jnr-x86asm -->
+            <relocation>
+              <pattern>com.kenai.jnr.x86asm</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.com.kenai.jnr.x86asm</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>jnr.x86asm</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.x86asm</shadedPattern>
+            </relocation>
+            <!-- jnr-constants -->
+            <relocation>
+              <pattern>com.kenai.constantine</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.com.kenai.constantine</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>jnr.constants</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.constants</shadedPattern>
+            </relocation>
+            <!-- jnr-enxio -->
+            <relocation>
+              <pattern>jnr.enxio</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.enxio</shadedPattern>
+            </relocation>
+            <!-- jnr-posix -->
+            <relocation>
+              <pattern>jnr.posix</pattern>
+              <shadedPattern>org.jboss.byteman.thermostat.helper.jnr.posix</shadedPattern>
+            </relocation>
+          </relocations>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <!-- We need to shade deps as this would otherwise result in undesired behaviour in
+                 target JVMs which get the helper jar added to classpath/boot classpath. -->
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <!-- Skip inclusion of untransformed META-INF/services files. We use our own, relocated,
+                   versions included as resources. -->
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
+                  <resources>
+                    <resource>com.redhat.thermostat.agent.ipc.client.internal.ClientTransportProvider</resource>
+                    <resource>com.redhat.thermostat.agent.ipc.common.internal.IPCPropertiesProvider</resource>
+                  </resources>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -92,6 +213,7 @@
       <groupId>org.jboss.byteman</groupId>
       <artifactId>byteman</artifactId>
       <version>${byteman.version}</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>
