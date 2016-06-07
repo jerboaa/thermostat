@@ -204,7 +204,7 @@ public class AgentApplicationTest {
                 exitStatus, writerId,  mock(SSLConfiguration.class),
                 mock(DependencyServices.class), configCreator, dbServiceFactory);
         try {
-            agent.startAgent(null, null, null, null);
+            agent.startAgent(null, null, null);
         } catch (RuntimeException e) {
             assertEquals(InvalidSyntaxException.class, e.getCause().getClass());
         }
@@ -220,18 +220,17 @@ public class AgentApplicationTest {
         Agent mockAgent = mock(Agent.class);
         whenNew(Agent.class).withParameterTypes(BackendRegistry.class,
                 AgentStartupConfiguration.class, Storage.class,
-                AgentInfoDAO.class, BackendInfoDAO.class, WriterID.class, 
-                MXBeanConnectionPool.class).withArguments(
+                AgentInfoDAO.class, BackendInfoDAO.class, WriterID.class).withArguments(
                 any(BackendRegistry.class),
                 any(AgentStartupConfiguration.class), any(Storage.class),
-                any(AgentInfoDAO.class), any(BackendInfoDAO.class), any(WriterID.class), 
-                any(MXBeanConnectionPool.class)).thenReturn(mockAgent);
+                any(AgentInfoDAO.class), any(BackendInfoDAO.class), 
+                any(WriterID.class)).thenReturn(mockAgent);
         doThrow(LaunchException.class).when(mockAgent).start();
         final AgentApplication agent = new AgentApplication(context,
                 exitStatus, writerId,  mock(SSLConfiguration.class),
                 mock(DependencyServices.class), configCreator, dbServiceFactory);
         try {
-            agent.startAgent(null, null, null, null);
+            agent.startAgent(null, null, null);
         } catch (RuntimeException e) {
             fail("Should not have thrown RuntimeException");
         }

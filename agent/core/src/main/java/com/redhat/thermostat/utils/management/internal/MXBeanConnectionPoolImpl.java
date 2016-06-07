@@ -54,11 +54,10 @@ import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.utils.management.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 
-public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool, ThermostatIPCCallbacks {
+public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, ThermostatIPCCallbacks {
 
     private static final Object CURRENT_ENTRY_LOCK = new Object();
     static final String IPC_SERVER_NAME = "agent-proxy";

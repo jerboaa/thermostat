@@ -55,7 +55,6 @@ import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.ExitStatus;
@@ -302,7 +301,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         
     }
 
-    Agent startAgent(final Storage storage, AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO, MXBeanConnectionPool pool) {
+    Agent startAgent(final Storage storage, AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
         BackendRegistry backendRegistry = null;
         try {
             backendRegistry = new BackendRegistry(bundleContext);
@@ -315,7 +314,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             throw new RuntimeException(e);
         }
 
-        final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO, writerId, pool);
+        final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO, writerId);
         try {
             logger.fine("Starting agent.");
             agent.start();
@@ -344,8 +343,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         Class<?>[] deps = new Class<?>[] {
                 Storage.class,
                 AgentInfoDAO.class,
-                BackendInfoDAO.class,
-                MXBeanConnectionPool.class
+                BackendInfoDAO.class
         };
         depTracker = new MultipleServiceTracker(bundleContext, deps, new Action() {
 
@@ -356,10 +354,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                         .get(AgentInfoDAO.class.getName());
                 BackendInfoDAO backendInfoDAO = (BackendInfoDAO) services
                         .get(BackendInfoDAO.class.getName());
-                MXBeanConnectionPool pool = (MXBeanConnectionPool) services
-                        .get(MXBeanConnectionPool.class.getName());
 
-                Agent agent = startAgent(storage, agentInfoDAO, backendInfoDAO, pool);
+                Agent agent = startAgent(storage, agentInfoDAO, backendInfoDAO);
                 handler = new CustomSignalHandler(agent, configServer);
                 Signal.handle(new Signal(SIGINT_NAME), handler);
                 Signal.handle(new Signal(SIGTERM_NAME), handler);

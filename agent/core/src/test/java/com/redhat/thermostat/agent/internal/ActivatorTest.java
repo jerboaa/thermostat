@@ -55,6 +55,7 @@ import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
@@ -82,6 +83,7 @@ public class ActivatorTest {
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
+        assertTrue(context.isServiceRegistered(MXBeanConnectionPoolControl.class.getName(), MXBeanConnectionPoolImpl.class));
         assertTrue(context.isServiceRegistered(UserNameUtil.class.getName(), UserNameUtilImpl.class));
         assertTrue(context.isServiceRegistered(VmBlacklist.class.getName(), VmBlacklistImpl.class));
     }

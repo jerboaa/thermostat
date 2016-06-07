@@ -60,6 +60,7 @@ import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.config.FileStorageCredentials;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
+import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
@@ -69,7 +70,7 @@ public class Activator implements BundleActivator {
     
     private ServiceTracker<CommonPaths, CommonPaths> commonPathsTracker;
     private MultipleServiceTracker agentIPCTracker;
-    private MXBeanConnectionPool pool;
+    private MXBeanConnectionPoolControl pool;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -122,6 +123,8 @@ public class Activator implements BundleActivator {
                 pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), util, 
                     ipcService, paths.getUserIPCConfigurationFile());
                 context.registerService(MXBeanConnectionPool.class, pool, null);
+                // Used only internally
+                context.registerService(MXBeanConnectionPoolControl.class, pool, null);
             }
 
             @Override
@@ -146,7 +149,7 @@ public class Activator implements BundleActivator {
     }
 
     // Testing hook.
-    void setPool(MXBeanConnectionPool pool) {
+    void setPool(MXBeanConnectionPoolControl pool) {
         this.pool = pool;
     }
 

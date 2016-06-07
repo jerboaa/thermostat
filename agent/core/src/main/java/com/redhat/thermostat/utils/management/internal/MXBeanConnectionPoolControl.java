@@ -34,18 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.utils.management;
+package com.redhat.thermostat.utils.management.internal;
 
-import com.redhat.thermostat.annotations.Service;
+import java.io.IOException;
 
-/**
- * A pool for caching and reusing MXBeanConnections.
- */
-@Service
-public interface MXBeanConnectionPool {
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 
-    MXBeanConnection acquire(int pid) throws MXBeanConnectionException;
-
-    void release(int pid, MXBeanConnection connection) throws MXBeanConnectionException;
+public interface MXBeanConnectionPoolControl extends MXBeanConnectionPool {
+    
+    void start() throws IOException;
+    
+    boolean isStarted();
+    
+    void shutdown() throws IOException;
 
 }
