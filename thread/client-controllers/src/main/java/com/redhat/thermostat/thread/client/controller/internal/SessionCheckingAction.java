@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.thread.client.controller.internal;
 
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.model.SessionID;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  */
@@ -45,30 +48,106 @@ public abstract class SessionCheckingAction implements Runnable {
     private SessionID lastSession;
     private long lastUpdate;
 
-    protected abstract SessionID getCurrentSessionID();
-    protected abstract SessionID getLastAvailableSessionID();
+    public SessionCheckingAction() {
+        lastUpdate  = getTimeDeltaOnNewSession();
+    }
 
-    @Override
-    public void run() {
+    protected long getTimeDeltaOnNewSession() {
+        return System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
+    }
+
+    /**
+     * Returns the sessions ID the user wants to track, which can be null.
+     */
+    protected abstract SessionID getCurrentSessionID();
+
+    /**
+     * Returns the last available sessions ID. This is typically the sessions
+     * with the most recent timestamp from a set of sessions.
+     */
+    protected abstract SessionID getLastAvailableSessionID() ;
+
+    /**
+     * Returns the sessions id to track by this action, which is either the
+     * session returned by {@link #getCurrentSessionID()} or, if null,
+     * the one returned by {@link #getLastAvailableSessionID()}.
+     */
+    protected SessionID getSessionID() {
         SessionID session = getCurrentSessionID();
         if (session == null) {
             // no session selected, but let's try to default to the last
             // available
             session = getLastAvailableSessionID();
-            if (session == null) {
-                // ok, really no data, let's skip this round
-                return;
-            }
         }
-
-        if (lastSession == null || !session.get().equals(lastSession.get())) {
-            onNewSession();
-        }
-        lastSession = session;
-
-        actionPerformed(session);
+        return session;
     }
 
+
+    /**
+     * The actual action to perform.
+     */
+    protected abstract void actionPerformed(SessionID session,
+                                            Range<Long> range,
+                                            Range<Long> totalRange);
+
+    protected abstract Range<Long> getTotalRange(SessionID session);
+
+    protected Range<Long> getRange(SessionID session, Range<Long> totalRange) {
+        if (totalRange == null) {
+            // there is range to check
+            return null;
+        }
+
+        if (lastUpdate == totalRange.getMax()) {
+            // we already covered this range
+            return null;
+        }
+
+        Range<Long> result = new Range<>(lastUpdate, totalRange.getMax());
+        lastUpdate = totalRange.getMax();
+        return result;
+    }
+
+    protected boolean isRangeValid(Range<Long> range, Range<Long> totalRange) {
+        return totalRange != null && range != null;
+    }
+
+    protected boolean isSessionValid(SessionID session) {
+        return session != null;
+    }
+
+    /**
+     * Determine if the session in input is a new session. By default the
+     * implementation checks the sessions against the last session.
+     */
+    protected boolean isNewSession(SessionID session) {
+        boolean result = (lastSession == null || !session.get().equals(lastSession.get()));
+        lastSession = session;
+        return result;
+    }
+
+    /**
+     * Called when a new session is detected, as defined by
+     * {@link #isNewSession(SessionID)}.
+     */
     protected void onNewSession() {}
-    protected void actionPerformed(SessionID session) {}
+
+    @Override
+    public void run() {
+        SessionID session = getSessionID();
+        if (!isSessionValid(session)) {
+            return;
+        }
+
+        if (isNewSession(session)) {
+            lastUpdate = getTimeDeltaOnNewSession();
+            onNewSession();
+        }
+
+        Range<Long> totalRange = getTotalRange(session);
+        Range<Long> range = getRange(session, totalRange);
+        if (isRangeValid(range, totalRange)) {
+            actionPerformed(session, range, totalRange);
+        }
+    }
 }

@@ -41,6 +41,7 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 
 import java.util.List;
@@ -63,7 +64,40 @@ class ThreadCountController extends CommonController {
         timer.setAction(new ThreadInformationDataCollector());
     }
     
-    class ThreadInformationDataCollector implements Runnable {
+    class ThreadInformationDataCollector extends SessionCheckingAction {
+
+        @Override
+        protected boolean isSessionValid(SessionID session) {
+            return true;
+        }
+
+        @Override
+        protected boolean isNewSession(SessionID session) {
+            return false;
+        }
+
+        @Override
+        protected Range<Long> getTotalRange(SessionID session) {
+            long now = System.currentTimeMillis();
+            long lastHour = now - TimeUnit.HOURS.toMillis(1);
+            return new Range<>(lastHour, now);
+        }
+
+        @Override
+        protected SessionID getCurrentSessionID() {
+            return null;
+        }
+
+        @Override
+        protected SessionID getLastAvailableSessionID() {
+            return null;
+        }
+
+        @Override
+        protected void actionPerformed(SessionID session, Range<Long> range, Range<Long> totalRange) {
+            updateLastSession();
+            updateChart(range);
+        }
 
         private void updateLastSession() {
 
@@ -79,20 +113,16 @@ class ThreadCountController extends CommonController {
             }
         }
 
-        private void updateChart() {
-
+        private void updateChart(Range<Long> range) {
             ThreadCountView view = (ThreadCountView) ThreadCountController.this.view;
-
-            long now = System.currentTimeMillis();
-            long lastHour = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
-
-            Range<Long> range = new Range<>(lastHour, now);
-
             boolean updateModel = false;
+
             List<ThreadSummary> summaries = collector.getThreadSummary(range);
             if (summaries.size() != 0) {
                 for (ThreadSummary summary : summaries) {
-                    model.addData(summary.getTimeStamp(), summary.getCurrentLiveThreads(), summary.getCurrentDaemonThreads());
+                    model.addData(summary.getTimeStamp(),
+                                  summary.getCurrentLiveThreads(),
+                                  summary.getCurrentDaemonThreads());
                 }
                 updateModel = true;
             }
@@ -100,12 +130,6 @@ class ThreadCountController extends CommonController {
             if (updateModel) {
                 view.updateLivingDaemonTimeline(model);
             }
-        }
-
-        @Override
-        public void run() {
-            updateLastSession();
-            updateChart();
         }
     }    
 }

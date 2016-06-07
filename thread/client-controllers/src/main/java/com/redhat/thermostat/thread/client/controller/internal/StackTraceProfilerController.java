@@ -50,7 +50,6 @@ import com.redhat.thermostat.ui.swing.model.Trace;
 import com.redhat.thermostat.ui.swing.model.TraceElement;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  */
@@ -74,9 +73,6 @@ public class StackTraceProfilerController extends CommonController {
 
     private class StackTraceProfilerControllerAction extends SessionCheckingAction {
 
-        private Range<Long> range;
-        private long lastUpdate;
-
         private ThreadStateResultHandler threadStateResultHandler;
 
         public StackTraceProfilerControllerAction() {
@@ -85,7 +81,6 @@ public class StackTraceProfilerController extends CommonController {
         }
 
         private void resetState() {
-            lastUpdate = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
             stackTraceProfilerView.clear();
         }
 
@@ -100,24 +95,15 @@ public class StackTraceProfilerController extends CommonController {
         }
 
         @Override
-        protected void actionPerformed(SessionID session) {
-            // get the full range of known timelines per vm
-            Range<Long> totalRange = collector.getThreadRange(session);
-            if (totalRange == null) {
-                // this just means we don't have any data yet
-                return;
-            }
+        protected Range<Long> getTotalRange(SessionID session) {
+            return collector.getThreadRange(session);
+        }
 
-            range = new Range<>(lastUpdate, totalRange.getMax());
-            if (lastUpdate == totalRange.getMax()) {
-                return;
-            }
-            lastUpdate = totalRange.getMax();
-
-            collector.getThreadStates(session,
-                                      threadStateResultHandler,
-                                      range);
-
+        @Override
+        protected void actionPerformed(SessionID session, Range<Long> range,
+                                       Range<Long> totalRange)
+        {
+            collector.getThreadStates(session,  threadStateResultHandler, range);
             stackTraceProfilerView.rebuild();
         }
 

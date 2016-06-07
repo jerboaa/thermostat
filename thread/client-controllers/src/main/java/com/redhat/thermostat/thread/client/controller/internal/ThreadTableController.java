@@ -46,9 +46,9 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.StackTrace;
 import com.redhat.thermostat.thread.model.ThreadState;
+
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class ThreadTableController extends CommonController {
     
@@ -77,60 +77,48 @@ public class ThreadTableController extends CommonController {
         stopLooping = true;
     }
 
-    private class ThreadTableControllerAction implements Runnable {
+    private class ThreadTableControllerAction extends SessionCheckingAction {
 
         private ThreadResultHandler handler;
-        private Range<Long> range;
-        private SessionID lastSession;
-        private long lastUpdate;
 
         public ThreadTableControllerAction() {
             handler = new ThreadResultHandler();
             resetState();
         }
 
+        @Override
+        protected void onNewSession() {
+            resetState();
+        }
+
         private void resetState() {
             handler.threadStates.clear();
             threadTableView.clear();
-            range = null;
-            lastUpdate = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
         }
 
         @Override
-        public void run() {
-            SessionID session = ThreadTableController.this.session;
-            if (session == null) {
-                // no session selected, but let's try to default to the last
-                // available
-                session = collector.getLastThreadSession();
-                if (session == null) {
-                    // ok, really no data, let's skip this round
-                    return;
-                }
-            }
+        protected Range<Long> getTotalRange(SessionID session) {
+            return collector.getThreadRange(session);
+        }
 
-            if (lastSession == null ||
-                    !session.get().equals(lastSession.get())) {
-                // since we only visualise one session at a time and this is
-                // a new session, let's clear the view
-                resetState();
-            }
-            lastSession = session;
-
-            // get the full range of known timelines per vm
-            Range<Long> totalRange = collector.getThreadRange(session);
-            if (totalRange == null) {
-                // this just means we don't have any data yet
-                return;
-            }
-
-            range = new Range<>(lastUpdate, totalRange.getMax());
-            lastUpdate = totalRange.getMax();
-
+        @Override
+        protected void actionPerformed(SessionID session, Range<Long> range,
+                                       Range<Long> totalRange)
+        {
             collector.getThreadStates(session,
                                       handler,
                                       range);
             threadTableView.submitChanges();
+        }
+
+        @Override
+        protected SessionID getCurrentSessionID() {
+            return session;
+        }
+
+        @Override
+        protected SessionID getLastAvailableSessionID() {
+            return collector.getLastThreadSession();
         }
     }
 

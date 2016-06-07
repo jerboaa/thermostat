@@ -139,7 +139,7 @@ public class StackTraceProfilerControllerTest {
         SessionCheckingAction action = captor.getValue();
         assertNotNull(action);
 
-        action.actionPerformed(session);
+        action.actionPerformed(session, range, range);
 
         verify(view).rebuild();
         verify(collector).getThreadStates(any(SessionID.class), resultHandlerCaptor.capture(), any(Range.class));
