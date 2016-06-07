@@ -170,7 +170,7 @@ diff --git a/client/swing/pom.xml b/client/swing/pom.xml
 +++ b/client/swing/pom.xml
 @@ -110,14 +110,8 @@
      </dependency>
-     
+ 
      <dependency>
 -      <groupId>org.osgi</groupId>
 -      <artifactId>org.osgi.core</artifactId>
