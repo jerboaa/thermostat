@@ -79,4 +79,20 @@ public class TestHelper {
 
         return path;
     }
+
+    public static Path createJarWithPackageDependency(String jarName, String packagePath, Path base) throws Exception {
+        Manifest manifest = new Manifest();
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.EXPORT.id()), jarName + ";");
+        if (packagePath != null) {
+            manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.EXPORT.id()), packagePath + ";");
+        }
+
+        Path path = Paths.get(base.toFile().getAbsoluteFile() + "/" + jarName + ".jar");
+        FileOutputStream stream = new FileOutputStream(path.toFile());
+        JarOutputStream target = new JarOutputStream(stream, manifest);
+        target.close();
+        return path;
+    }
+
 }

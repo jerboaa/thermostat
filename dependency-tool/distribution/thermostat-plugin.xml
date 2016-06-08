@@ -51,28 +51,28 @@
 
                 <option>
                     <long>exports</long>
-                    <argument>jar</argument>
+                    <argument>jar&gt; || &lt;package</argument>
                     <required>false</required>
-                    <description>Lists only the packages that this jar file exports</description>
+                    <description>Lists only the packages that this jar file or package exports</description>
                 </option>
 
                 <option>
                     <long>imports</long>
-                    <argument>jar</argument>
+                    <argument>jar&gt; || &lt;package</argument>
                     <required>false</required>
-                    <description>Lists only the packages that this jar file imports</description>
+                    <description>Lists only the packages that this jar file or package imports</description>
                 </option>
 
                 <option>
                     <long>outbound</long>
-                    <argument>jar</argument>
+                    <argument>jar&gt; || &lt;package</argument>
                     <required>false</required>
-                    <description>Similar to "imports", but with a list of jar files rather than single packages, upon which this jar depends</description>
+                    <description>Similar to "imports", but with a list of jar files rather than single packages, upon which this jar or package depends</description>
                 </option>
 
                 <option>
                     <long>inbound</long>
-                    <argument>jar</argument>
+                    <argument>jar&gt; || &lt;package</argument>
                     <required>false</required>
                     <description>List every library that has a dependency on this one</description>
                 </option>

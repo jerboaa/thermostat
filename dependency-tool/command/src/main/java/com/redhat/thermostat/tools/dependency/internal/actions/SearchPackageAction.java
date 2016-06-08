@@ -44,18 +44,23 @@ import com.redhat.thermostat.tools.dependency.internal.Utils;
 /**
  */
 public class SearchPackageAction {
-    public static void execute(PathProcessorHandler handler, String target, CommandContext ctx) {
+
+    private static final String NO_JAR_FOUND = "";
+
+    public static String execute(PathProcessorHandler handler, String target, CommandContext ctx) {
+
         OSGiSearchProcessor search = new OSGiSearchProcessor(target);
         handler.process(search);
-
         OSGiSearchProcessor.BundleInfo result = search.getBundleInfo();
         if (result == null) {
             Utils.getInstance().print(ctx, "no library provides package \"" + target + "\"");
+            return NO_JAR_FOUND;
         } else {
             Utils.getInstance().printHeader(ctx, "package \"" + target + "\"");
             Utils.getInstance().print(ctx, "provided by: " + result.library);
             Utils.getInstance().print(ctx, "bundle symbolic name: " + result.symbolicName);
             Utils.getInstance().print(ctx, "bundle version: " + result.version);
+            return result.library.toString();
         }
     }
 }

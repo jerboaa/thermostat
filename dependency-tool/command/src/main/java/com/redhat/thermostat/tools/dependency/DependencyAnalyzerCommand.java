@@ -54,6 +54,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.redhat.thermostat.tools.dependency.DependencyAnalyzerCommand.NAME;
 
@@ -72,6 +74,10 @@ public class DependencyAnalyzerCommand implements Command {
     }
 
     public static final String NAME = "dependency-analyzer";
+
+    private static final Pattern JAR_PATTERN = Pattern.compile(".*\\.jar", Pattern.CASE_INSENSITIVE);
+
+    private static final String NO_JAR_FILE_FOR_PACKAGE = "";
 
     private PathProcessorHandler handler;
 
@@ -104,7 +110,7 @@ public class DependencyAnalyzerCommand implements Command {
     }
 
     public DependencyAnalyzerCommand() {}
-    
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
@@ -113,29 +119,45 @@ public class DependencyAnalyzerCommand implements Command {
         }
 
         if (ctx.getArguments().hasArgument(Args.EXPORTS)) {
-            String library = ctx.getArguments().getArgument(Args.EXPORTS);
-            PrintOSGIHeaderAction.execute(library, ctx, BundleProperties.EXPORT);
+            String library = findJarPath(handler, ctx.getArguments().getArgument(Args.EXPORTS), ctx);
+            if (!NO_JAR_FILE_FOR_PACKAGE.equals(library)) {
+                PrintOSGIHeaderAction.execute(library, ctx, BundleProperties.EXPORT);
+            }
         }
 
         if (ctx.getArguments().hasArgument(Args.IMPORTS)) {
-            String library = ctx.getArguments().getArgument(Args.IMPORTS);
-            PrintOSGIHeaderAction.execute(library, ctx, BundleProperties.IMPORT);
+            String library = findJarPath(handler, ctx.getArguments().getArgument(Args.IMPORTS), ctx);
+            if (!NO_JAR_FILE_FOR_PACKAGE.equals(library)) {
+                PrintOSGIHeaderAction.execute(library, ctx, BundleProperties.IMPORT);
+            }
         }
 
         if (ctx.getArguments().hasArgument(Args.OUTBOUND)) {
-            String library = ctx.getArguments().getArgument(Args.OUTBOUND);
-            ListDependenciesAction.execute(handler, library, ctx);
+            String library = findJarPath(handler, ctx.getArguments().getArgument(Args.OUTBOUND), ctx);
+            if (!NO_JAR_FILE_FOR_PACKAGE.equals(library)) {
+                ListDependenciesAction.execute(handler, library, ctx);
+            }
         }
 
         if (ctx.getArguments().hasArgument(Args.INBOUND)) {
-            String library = ctx.getArguments().getArgument(Args.INBOUND);
-            ListDependenciesAction.execute(handler, library, ctx, true);
+            String library = findJarPath(handler, ctx.getArguments().getArgument(Args.INBOUND), ctx);
+            if (!NO_JAR_FILE_FOR_PACKAGE.equals(library)) {
+                ListDependenciesAction.execute(handler, library, ctx, true);
+            }
         }
 
         if (ctx.getArguments().hasArgument(Args.PROVIDES)) {
             String target = ctx.getArguments().getArgument(Args.PROVIDES);
             SearchPackageAction.execute(handler, target, ctx);
         }
+    }
+
+    static String findJarPath(PathProcessorHandler handler, String target, CommandContext ctx) {
+        Matcher m = JAR_PATTERN.matcher(String.valueOf(target));
+        if (!m.matches()) {
+            target = SearchPackageAction.execute(handler, target, ctx);
+        }
+        return target;
     }
 
     @Override
