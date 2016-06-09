@@ -36,17 +36,21 @@
 
 package com.redhat.thermostat.client.swing.internal.views;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JTabbedPane;
 
+import com.redhat.thermostat.common.internal.test.Bug;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiQuery;
+import org.fest.swing.edt.GuiTask;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -111,5 +115,24 @@ public class HostInformationPanelTest extends FrameWithPanelTest<HostInformation
         UIComponent component = mock(UIComponent.class);
         panel.addChildView(new LocalizedString("test1"), component);
     }
+
+    @GUITest
+    @Test
+    @Bug(id = "2996",
+            summary = "Added child views should immediately (synchronously) be available, or tab state may not be" +
+                    "correctly preserved when switching VMs",
+            url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2996")
+    public void testChildViewsAreImmediatelyAvailable() {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                assertThat(panel.getNumChildren(), is(0));
+                panel.addChildView(new LocalizedString("test1"), createPanel());
+                panel.addChildView(new LocalizedString("test2"), createPanel());
+                assertThat(panel.getNumChildren(), is(2));
+            }
+        });
+    }
+
 }
 

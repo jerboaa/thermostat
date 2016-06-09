@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.internal.views;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
@@ -46,6 +47,7 @@ import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -54,6 +56,7 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 public class HostInformationPanel extends HostInformationView implements SwingComponent {
 
     private static final Logger logger = LoggingUtils.getLogger(HostInformationPanel.class);
+    private static final EdtHelper edtHelper = new EdtHelper();
 
     private JPanel visiblePanel;
     private final JTabbedPane tabPane;
@@ -70,17 +73,20 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
     public void addChildView(final LocalizedString title, final UIComponent view) {
         if (view instanceof SwingComponent) {
             final SwingComponent component = (SwingComponent)view;
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    tabPane.addTab(title.getContents(), null, component.getUiComponent(), null);
-                    if (view instanceof OverlayContainer) {
-                        OverlayContainer overlayContainer = (OverlayContainer) view;
-                        tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
+            try {
+                edtHelper.callAndWait(new Runnable() {
+                    @Override
+                    public void run() {
+                        tabPane.addTab(title.getContents(), null, component.getUiComponent(), null);
+                        if (view instanceof OverlayContainer) {
+                            OverlayContainer overlayContainer = (OverlayContainer) view;
+                            tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
+                        }
                     }
-                }
-                
-            });
+                });
+            } catch (InvocationTargetException |InterruptedException e) {
+                logger.severe(e.getLocalizedMessage());
+            }
         } else {
             String message = ""
                     + "There's a non-swing view registered: '" + view.toString()
@@ -113,5 +119,11 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
     public Component getUiComponent() {
         return visiblePanel;
     }
+
+    @Override
+    public int getNumChildren() {
+        return tabPane.getComponentCount();
+    }
+
 }
 

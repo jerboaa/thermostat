@@ -38,14 +38,15 @@ package com.redhat.thermostat.client.swing.internal.views;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.VmInformationView;
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -54,6 +55,7 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 public class VmInformationPanel extends VmInformationView implements SwingComponent {
 
     private static final Logger logger = LoggingUtils.getLogger(VmInformationPanel.class);
+    private static final EdtHelper edtHelper = new EdtHelper();
 
     private final JTabbedPane tabPane = new JTabbedPane();
     private JPanel visiblePanel;
@@ -69,17 +71,21 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     @Override
     public void addChildView(final LocalizedString title, final UIComponent view) {
         if (view instanceof SwingComponent) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    SwingComponent panel = (SwingComponent) view;
-                    tabPane.addTab(title.getContents(), null, panel.getUiComponent(), null);
-                    if (view instanceof OverlayContainer) {
-                        OverlayContainer overlayContainer = (OverlayContainer) view;
-                        tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
+            try {
+                edtHelper.callAndWait(new Runnable() {
+                    @Override
+                    public void run() {
+                        SwingComponent panel = (SwingComponent) view;
+                        tabPane.addTab(title.getContents(), null, panel.getUiComponent(), null);
+                        if (view instanceof OverlayContainer) {
+                            OverlayContainer overlayContainer = (OverlayContainer) view;
+                            tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
+                        }
                     }
-                }
-            });
+                });
+            } catch (InvocationTargetException | InterruptedException e) {
+                logger.severe(e.getLocalizedMessage());
+            }
         } else {
             String message = ""
                     + "There's a non-swing view registered: '" + view.toString()

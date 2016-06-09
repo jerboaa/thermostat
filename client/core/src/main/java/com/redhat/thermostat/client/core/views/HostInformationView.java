@@ -50,5 +50,7 @@ public abstract class HostInformationView extends BasicView implements UICompone
 
     public abstract void removeChildView(LocalizedString title);
 
+    public abstract int getNumChildren();
+
 }
 
