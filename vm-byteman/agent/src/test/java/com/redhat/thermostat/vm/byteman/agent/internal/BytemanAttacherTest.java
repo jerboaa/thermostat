@@ -88,7 +88,7 @@ public class BytemanAttacherTest {
         ArgumentCaptor<String[]> propsCaptor = ArgumentCaptor.forClass(String[].class);
         BytemanAttacher attacher = new BytemanAttacher(installer, paths);
         attacher.attach("testVmId", 9999, "fooAgent");
-        verify(installer).install(eq(Integer.toString(9999)), eq(false), eq(false), eq((String)null), any(int.class), propsCaptor.capture());
+        verify(installer).install(eq(Integer.toString(9999)), eq(true), eq(false), eq((String)null), any(int.class), propsCaptor.capture());
         Map<String, String> properties = buildMapFromStringProps(propsCaptor.getValue());
         verifyPropertiesStartWithBytemanPrefix(properties);
         assertTrue(properties.containsKey(BYTEMAN_VERBOSE_PROPERTY));

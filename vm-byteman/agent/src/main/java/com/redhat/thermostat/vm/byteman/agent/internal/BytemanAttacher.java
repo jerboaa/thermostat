@@ -87,7 +87,8 @@ class BytemanAttacher {
         try {
             VmSocketIdentifier sockIdentifier = new VmSocketIdentifier(vmId, pid, agentId);
             String[] btmInstallProps = buildBytemanInstallProps(sockIdentifier, port);
-            int actualPort = installer.install(Integer.toString(pid), false, false, null /* localhost */, port, btmInstallProps);
+            boolean agentJarToBootClassPath = true;
+            int actualPort = installer.install(Integer.toString(pid), agentJarToBootClassPath, false, null /* localhost */, port, btmInstallProps);
             // Port might have changed here if agent rebooted and targed jvm
             // stayed alive
             if (actualPort > 0) {
