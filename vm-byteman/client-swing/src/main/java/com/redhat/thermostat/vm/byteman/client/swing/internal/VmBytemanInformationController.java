@@ -149,6 +149,9 @@ public class VmBytemanInformationController implements InformationServiceControl
                 case RULES_TAB_SELECTED:
                     updateRule(getVmBytemanStatus());
                     break;
+                case GRAPH_TAB_SELECTED:
+                    updateGraph();
+                    break;
                 default:
                     throw new AssertionError("Invalid action event: " + id);
                 }
@@ -162,6 +165,9 @@ public class VmBytemanInformationController implements InformationServiceControl
                 switch(id) {
                 case GENERATE_TEMPLATE:
                     generateTemplate();
+                    break;
+                case GENERATE_GRAPH:
+                    updateGraph();
                     break;
                 default:
                     throw new AssertionError("Unknown action event: " + id);
@@ -240,6 +246,21 @@ public class VmBytemanInformationController implements InformationServiceControl
         Range<Long> timeRange = new Range<Long>(from, to);
         List<BytemanMetric> metrics = bytemanDao.findBytemanMetrics(timeRange, vmId, agentId);
         ActionEvent<TabbedPaneContentAction> event = new ActionEvent<>(this, TabbedPaneContentAction.METRICS_CHANGED);
+        event.setPayload(metrics);
+        view.contentChanged(event);
+    }
+
+    void updateGraph() {
+        // pass latest byteman metrics to grapher
+        VmId vmId = new VmId(vm.getVmId());
+        AgentId agentId = new AgentId(vm.getHostRef().getAgentId());
+        // TODO: Make this query configurable
+        long now = System.currentTimeMillis();
+        long from = now - TimeUnit.MINUTES.toMillis(5);
+        long to = now;
+        Range<Long> timeRange = new Range<Long>(from, to);
+        List<BytemanMetric> metrics = bytemanDao.findBytemanMetrics(timeRange, vmId, agentId);
+        ActionEvent<TabbedPaneContentAction> event = new ActionEvent<>(this, TabbedPaneContentAction.GRAPH_CHANGED);
         event.setPayload(metrics);
         view.contentChanged(event);
     }

@@ -52,16 +52,19 @@ public abstract class VmBytemanView extends BasicView implements UIComponent {
     
     static enum TabbedPaneAction {
         RULES_TAB_SELECTED,
-        METRICS_TAB_SELECTED
+        METRICS_TAB_SELECTED,
+        GRAPH_TAB_SELECTED,
     }
     
     static enum TabbedPaneContentAction {
         RULES_CHANGED,
-        METRICS_CHANGED
+        METRICS_CHANGED,
+        GRAPH_CHANGED,
     }
     
     static enum GenerateAction {
         GENERATE_TEMPLATE,
+        GENERATE_GRAPH,
     }
     
     static enum BytemanInjectState implements ToggleActionState {

@@ -39,14 +39,16 @@ package com.redhat.thermostat.vm.byteman.client.swing.internal;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
-    
+
     VM_BYTEMAN_TAB_NAME,
     BYTEMAN_HEADER_TITLE,
     INJECT_RULE,
     UNLOAD_RULE,
     TAB_RULES,
     TAB_METRICS,
+    TAB_GRAPH,
     GENERATE_RULE_TEMPLATE,
+    GENERATE_GRAPH,
     RULE_EMPTY,
     NO_RULES_LOADED,
     NO_METRICS_AVAILABLE,

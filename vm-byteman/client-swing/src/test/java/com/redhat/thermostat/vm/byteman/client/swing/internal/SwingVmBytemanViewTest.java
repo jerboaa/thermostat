@@ -43,12 +43,14 @@ import java.awt.Dimension;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
+import com.redhat.thermostat.common.Clock;
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.core.NameMatcher;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -173,14 +175,20 @@ public class SwingVmBytemanViewTest {
     @GUITest
     @Test
     public void testContentChangedMetrics() {
-        String content = "{ \"foo\": \"bar\" }"; 
+        String content = "{ \"foo\": \"bar\" }";
+        String marker = "marker";
+        long timestamp  = 1_440_000_000_000L;
+        String timestring = Clock.DEFAULT_DATE_FORMAT.format(new Date(timestamp));
         BytemanMetric m = new BytemanMetric();
         m.setData(content);
+        m.setMarker(marker);
+        m.setTimeStamp(timestamp);
+
         
         ActionEvent<VmBytemanView.TabbedPaneContentAction> event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.METRICS_CHANGED);
         event.setPayload(Arrays.asList(m));
         view.contentChanged(event);
-        verifyMetricsTextEquals(content + "\n");
+        verifyMetricsTextEquals(timestring + ": " + marker + " " + content + "\n");
         
         // Do the same with an empty metrics list
         event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.METRICS_CHANGED);

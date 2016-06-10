@@ -44,23 +44,32 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
@@ -74,10 +83,25 @@ import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.DefaultKeyedValues;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.data.general.PieDataset;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 public class SwingVmBytemanView extends VmBytemanView implements SwingComponent {
 
@@ -96,6 +120,9 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
     
     private final JTextArea metricsText;
     private final JTextArea rulesText;
+    private JPanel graphMainPanel;
+    private ChartPanel graphPanel;
+    private JFreeChart graph;
     private final JTabbedPane tabbedPane;
     private final HeaderPanel mainContainer;
     private final ActionToggleButton toggleButton;
@@ -103,6 +130,14 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
     private final CopyOnWriteArrayList<ActionListener<TabbedPaneAction>> tabbedPaneListeners = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<ActionListener<GenerateAction>> generateListeners = new CopyOnWriteArrayList<>();
     
+    // graph configuraion choices from user
+    // ideally these ought to be stored as
+    // fields of a separate model instance
+
+    String xkey = null;
+    String ykey = null;
+    String graphtype = null;
+
     // Mutable state
     private boolean viewControlsEnabled;
     
@@ -202,11 +237,94 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         placeholder.setPreferredSize(buttonHolder.getPreferredSize());
         metricsPanel.add(placeholder, c);
         
+        // graph tab
+        graphMainPanel = new JPanel();
+        // add a button to control display of the graph
+        buttonHolder =  new JPanel();
+        layout = new FlowLayout();
+        layout.setAlignment(FlowLayout.RIGHT);
+        layout.setHgap(5);
+        layout.setVgap(0);
+        buttonHolder.setLayout(layout);
+        buttonHolder.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        JLabel xlabel = new JLabel("x:");
+        JLabel ylabel = new JLabel("y:");
+        final JTextField xtext = new JTextField(30);
+        final JTextField ytext = new JTextField(30);
+        xtext.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e)
+            {
+                xkey = xtext.getText();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e)
+            {
+                xkey = xtext.getText();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent e)
+            {
+                xkey = xtext.getText();
+            }
+        });
+        /*
+        ytext.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                ykey = ytext.getText();
+            }
+        });
+         */
+        ytext.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                ykey = ytext.getText();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                ykey = ytext.getText();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                ykey = ytext.getText();
+            }
+        });
+        JButton generateGraphButton = new JButton(t.localize(LocaleResources.GENERATE_GRAPH).getContents());
+        generateGraphButton.addActionListener(new java.awt.event.ActionListener() {
+
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                fireGenerateEvent(GenerateAction.GENERATE_GRAPH);
+            }
+
+        });
+        buttonHolder.add(generateGraphButton);
+        buttonHolder.add(ytext);
+        buttonHolder.add(ylabel);
+        buttonHolder.add(xtext);
+        buttonHolder.add(xlabel);
+        buttonHolder.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        // don't add graph panel yet
+        graph = null;
+        graphPanel = null;
+        // layout button and graph in main graph panel
+        graphMainPanel.setLayout(new GridBagLayout());
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weighty = 0.05;
+        c.weightx = 1.0;
+        graphMainPanel.add(buttonHolder, c);
+
         tabbedPane = new ThermostatTabbedPane();
         tabbedPane.addTab(t.localize(LocaleResources.TAB_RULES).getContents(), rulesPanel);
         tabbedPane.addTab(t.localize(LocaleResources.TAB_METRICS).getContents(), metricsPanel);
+        tabbedPane.addTab(t.localize(LocaleResources.TAB_GRAPH).getContents(), graphMainPanel);
         tabbedPane.addChangeListener(new ChangeListener() {
-            
+
             @Override
             public void stateChanged(ChangeEvent e) {
                 JTabbedPane pane = (JTabbedPane)e.getSource();
@@ -215,6 +333,8 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                     fireTabSelectedEvent(TabbedPaneAction.RULES_TAB_SELECTED);
                 } else if (selectedPanel == metricsPanel) {
                     fireTabSelectedEvent(TabbedPaneAction.METRICS_TAB_SELECTED);
+                } else if (selectedPanel == graphMainPanel) {
+                    fireTabSelectedEvent(TabbedPaneAction.GRAPH_TAB_SELECTED);
                 } else {
                     throw new AssertionError("Unkown tab in tabbed pane: " + selectedPanel);
                 }
@@ -316,6 +436,10 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             String rule = (String)event.getPayload();
             updateRuleInView(rule);
             break;
+        case GRAPH_CHANGED:
+            List<BytemanMetric> graphMetrics = (List<BytemanMetric>)event.getPayload();
+            updateGraphInView(graphMetrics, xkey, ykey, graphtype);
+            break;
         default:
             throw new AssertionError("Unknown event: " + action);
         }
@@ -334,7 +458,10 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
     private void updateViewWithMetrics(List<BytemanMetric> metrics) {
         final StringBuffer buffer = new StringBuffer();
         for (BytemanMetric m: metrics) {
-            buffer.append(m.getData()).append("\n");
+            String marker = m.getMarker();
+            long timestamp = m.getTimeStamp();
+            String timestring = Clock.DEFAULT_DATE_FORMAT.format(new Date(timestamp));
+            buffer.append(timestring).append(": ").append(marker).append(" ").append(m.getData()).append("\n");
         }
         if (buffer.length() == 0) {
             buffer.append(NO_METRICS_AVAILABLE).append("\n");
@@ -345,6 +472,130 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                 metricsText.setText(buffer.toString());
             }
         });
+    }
+
+    private void updateGraphInView(List<BytemanMetric> metrics, String xkey, String ykey, String graphtype) {
+        final List<BytemanMetric> ms = metrics;
+        final String xk = xkey;
+        final String yk = ykey;
+        final String t = graphtype;
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("updateGraphInView:");
+                GraphDataset dataset = makeGraphDataset(ms, xk, yk);
+                if (dataset != null) {
+                    switchGraph(dataset, t);
+                }
+            }
+        });
+    }
+
+    private GraphDataset makeGraphDataset(List<BytemanMetric> metrics, String xkey, String ykey) {
+        GraphDataset dataset = new GraphDataset(metrics, xkey, ykey);
+        if (dataset.size() == 0) {
+            return null;
+        }
+        return dataset;
+    }
+
+    private void switchGraph(GraphDataset dataset, String graphtype)
+    {
+        String xlabel = dataset.getXLabel();
+        String ylabel = dataset.getYLabel();
+        CoordinateType xtype = dataset.getXType();
+        CoordinateType ytype = dataset.getYType();
+        switch (xtype) {
+            case CATEGORY:
+                if(ytype == CoordinateType.CATEGORY) {
+                    // use a bar chart with multiple bars per category 1 value
+                    // where each bar counts the frequency for the second category
+                    CategoryDataset categoryDataset = dataset.getCategoryDataset();
+                    graph = ChartFactory.createBarChart("Byteman Metrics", xlabel, ylabel,
+                                                        categoryDataset, PlotOrientation.VERTICAL,
+                                                        true, true, false);
+                } else {
+                    // draw as a bar chart with one bar per category where
+                    // each bar sums the associated second coordinate values
+                    CategoryDataset categoryDataset = dataset.getCategoryDataset();
+                    graph = ChartFactory.createBarChart("Byteman Metrics", xlabel, ylabel,
+                                                        categoryDataset, PlotOrientation.VERTICAL,
+                                                        true, true, false);
+                    /*
+                     * we can also draw this as a pie chart
+                    PieDataset pieDataset = dataset.getPieDataset();
+                    graph = ChartFactory.createPieChart("Byteman Metrics " + xlabel + " by " + ylabel,
+                                                        pieDataset, true, true, false);
+                    */
+                }
+                break;
+            case TIME:
+                if(ytype == CoordinateType.CATEGORY) {
+                    // we need to draw a graph of category (state) value against time
+                    // with step transitions between states
+                    //
+                    // for now just draw an empty time series plot
+                    XYDataset xydataset = dataset.getXYDataset();
+                    graph = ChartFactory.createTimeSeriesChart("empty", xlabel, ylabel,
+                                                               xydataset, true, true, false);
+
+                } else {
+                    // draw a graph of numeric value against time
+                    XYDataset xydataset = dataset.getXYDataset();
+                    graph = ChartFactory.createTimeSeriesChart("Byteman Metrics", xlabel, ylabel,
+                                                               xydataset, true, true, false);
+                }
+                break;
+            case INTEGRAL:
+            case REAL:
+                if(ytype == CoordinateType.CATEGORY) {
+                    XYDataset xydataset = dataset.getXYDataset();
+                    // we could treat the numeric values as category values (or ranges?)
+                    // and draw this as a bar chart
+                    CategoryDataset categoryDataset = dataset.getCategoryDataset();
+                    graph = ChartFactory.createBarChart("Byteman Metrics", xlabel, ylabel,
+                                                        categoryDataset, PlotOrientation.VERTICAL,
+                                                        true, true, false);
+                    // for now draw an empty graph
+
+                    /*
+                    graph = ChartFactory.createXYLineChart("empty", xlabel, ylabel,
+                                                           xydataset, PlotOrientation.VERTICAL,
+                                                           true, true, false);
+                     */
+                } else if(ytype == CoordinateType.TIME) {
+                    // we could group the time values as time ranges
+                    // and draw this as a bar chart
+                    //
+                    // for now draw an empty graph
+
+                    XYDataset xydataset = dataset.getXYDataset();
+                    graph = ChartFactory.createXYLineChart("empty", xlabel, ylabel,
+                                                           xydataset, PlotOrientation.VERTICAL,
+                                                           true, true, false);
+                } else {
+                    // draw an xy line plot of numeric value against numeric value
+                    XYDataset xydataset = dataset.getXYDataset();
+                    graph = ChartFactory.createXYLineChart("Byteman Metrics", xlabel, ylabel,
+                                                           xydataset, PlotOrientation.VERTICAL,
+                                                           true, true, false);
+                }
+                break;
+        }
+        if(graphPanel != null) {
+            graphPanel.setVisible(false);
+            graphMainPanel.remove(graphPanel);
+        }
+        graphPanel = new ChartPanel(graph, true);
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 1;
+        c.weighty = 0.95;
+        c.weightx = 1.0;
+        graphMainPanel.add(graphPanel, c);
+        graphPanel.setVisible(true);
+        graphMainPanel.revalidate();
     }
 
     @Override
@@ -382,4 +633,255 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         });
     }
 
+    public enum CoordinateType {
+        INTEGRAL,
+        REAL,
+        TIME,
+        CATEGORY
+    };
+
+    /**
+     * a special coordinate name used to identify the timestamp associated
+     * with any given Byteman metric. if it is entered as the x or y coordinate
+     * name in the graph dialogue then it will select the tiemstamp as the value
+     * to be graphed against tehthe other chosen coordinate. timestamp values
+     * are stored as longs but are displayed as time values.
+     *
+     * n.b. this text string really needs to be localised.
+     *
+     * n.b.b. it really only makes sense to use timestamp as the X axis. maybe
+     * we should reject any attempt to use it for the y axis?
+     */
+    final public static String TIMESTAMP_KEY = "timestamp";
+
+    /**
+     * a special coordinate name used to identify the frequency count
+     * of any given Byteman metric. if it is entered as the x or y coordinate
+     * name in the graph dialogue then it will count 1 for each occurence of
+     * other value. frequency values are stored as longs.
+     *
+     * n.b. this text string really needs to be localised.
+     */
+    final public static String FREQUENCY_KEY = "frequency";
+
+    /**
+     * a special coordinate name used to identify the marker string
+     * of any given Byteman metric. if it is entered as the x or y coordinate
+     * name in the graph dialogue then it will select the marker as the value
+     * to be graphed against the other chosen coordinate.
+     *
+     * n.b. this text string really needs to be localised.
+     */
+    final public static String MARKER_KEY = "marker";
+
+    public static class GraphDataset
+    {
+        private static HashMap<String, Object> emptymap = new HashMap<String, Object>();
+        private List<Pair<Object, Object>> data;
+        String xkey;
+        String ykey;
+        CoordinateType xtype;
+        CoordinateType ytype;
+        private static CategoryDataset emptyCategoryDataset = new DefaultCategoryDataset();
+        private static PieDataset emptyPieDataset = new DefaultPieDataset();
+        private static XYDataset emptyXYDataset = new XYSeriesCollection();
+        private static Number frequencyUnit = Long.valueOf(1);
+
+        public GraphDataset(List<BytemanMetric> metrics, String xkey, String ykey)
+        {
+            this.xkey = xkey;
+            this.ykey = ykey;
+            xtype = CoordinateType.INTEGRAL;
+            ytype = CoordinateType.INTEGRAL;
+            data = new ArrayList<Pair<Object,Object>>();
+            if (TIMESTAMP_KEY.equals(xkey)) {
+                xtype = CoordinateType.TIME;
+            } else if (FREQUENCY_KEY.equals(xkey)) {
+                xtype = CoordinateType.INTEGRAL;
+            } else if (MARKER_KEY.equals(xkey)) {
+                xtype = CoordinateType.CATEGORY;
+            }
+            if (TIMESTAMP_KEY.equals(ykey)) {
+                ytype = CoordinateType.TIME;
+            } else if (FREQUENCY_KEY.equals(ykey)) {
+                ytype = CoordinateType.INTEGRAL;
+            } else if (MARKER_KEY.equals(ykey)) {
+                ytype = CoordinateType.CATEGORY;
+            }
+            Gson gson = new GsonBuilder().create();
+            if (metrics != null) {
+                for (BytemanMetric m : metrics) {
+                    HashMap<String, Object> map = gson.fromJson(m.getData(), emptymap.getClass());
+                    // ensure that lookups for the timestamp key always retrieve
+                    // the Long timestamp value associated with the metric and
+                    // that lookups for the frequency key always retrieve
+                    // the Long value 1.
+                    map.put(TIMESTAMP_KEY, m.getTimeStamp());
+                    map.put(FREQUENCY_KEY, frequencyUnit);
+                    map.put(MARKER_KEY, m.getMarker());
+                    Object xval = map.get(xkey);
+                    Object yval = map.get(ykey);
+                    // only include records which contain values for both coordinates
+                    if(xval != null && yval != null) {
+                        // maybe re-present retrieved values as Numeric
+                        // and/or downgrade coordinate type from INTEGRAL
+                        // to REAL or even CATEGORY
+                        xval = newCoordinate(xkey, xval, true);
+                        yval = newCoordinate(ykey, yval, false);
+                        data.add(new Pair<Object, Object>(xval, yval));
+                    }
+                }
+            }
+        }
+
+        public int size() {
+            return data.size();
+        }
+
+        public XYDataset getXYDataset()
+        {
+            if (xtype == CoordinateType.CATEGORY ||
+                    ytype == CoordinateType.CATEGORY) {
+                return emptyXYDataset;
+            }
+
+            XYSeries xyseries = new XYSeries(ykey + " against  " + xkey);
+
+            for (Pair<Object,Object> p : data) {
+                xyseries.add((Number)p.getFirst(), (Number)p.getSecond());
+            }
+            XYSeriesCollection xycollection = new  XYSeriesCollection();
+            xycollection.addSeries(xyseries);
+            return xycollection;
+        }
+
+        public CategoryDataset getCategoryDataset()
+        {
+            if (xtype == CoordinateType.TIME) {
+                return emptyCategoryDataset;
+            }
+            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+            // treat x values as category values by calling toString
+            // where they are numeric we ought to support binning them into ranges
+            switch (ytype) {
+            case CATEGORY:
+                // graph category against category by frequency
+                for (Pair<Object, Object> p : data) {
+                    String first = p.getFirst().toString();
+                    String second = p.getSecond().toString();
+                    if(dataset.getRowKeys().contains(first) && dataset.getColumnKeys().contains(second)) {
+                        dataset.incrementValue(1.0, first, second);
+                    } else {
+                        dataset.addValue(1.0, first, second);
+                    }
+                }
+                break;
+            case TIME:
+                // bin time values into ranges and label range with start time
+                // for now just drop through to treat time value as numeric
+            default:
+                // graph category against numeric by summing numeric values
+                for (Pair<Object, Object> p : data) {
+                    String first = p.getFirst().toString();
+                    String second = "";
+                    double increment = ((Number) p.getSecond()).doubleValue();
+                    if(dataset.getRowKeys().contains(first)) {
+                        dataset.incrementValue(increment, first, second);
+                    } else {
+                        dataset.addValue(increment, first, second);
+                    }
+                }
+                break;
+            }
+            return dataset;
+        }
+
+        // alternative option for presenting category xkey with numeric ykey
+        public PieDataset getPieDataset()
+        {
+            if (xtype != CoordinateType.CATEGORY || ytype == CoordinateType.CATEGORY) {
+                return emptyPieDataset;
+            }
+
+            DefaultKeyedValues keyedValues = new DefaultKeyedValues();
+
+            for (Pair<Object,Object> p : data) {
+                String first = p.getFirst().toString();
+                double second = ((Number)p.getSecond()).doubleValue();
+                int index = keyedValues.getIndex(first);
+                if (index >= 0) {
+                    Number existing = keyedValues.getValue(first);
+                    keyedValues.addValue(first, existing.doubleValue() + second);
+                } else {
+                    keyedValues.addValue(first, second);
+                }
+            }
+            PieDataset pieDataset = new DefaultPieDataset(keyedValues);
+            return pieDataset;
+        }
+
+        public String getXLabel() {
+            return xkey;
+        }
+
+        public String getYLabel() {
+            return ykey;
+        }
+
+        public CoordinateType getXType() {
+            return xtype;
+        }
+
+        public CoordinateType getYType() {
+            return ytype;
+        }
+
+        /**
+         * process a newly read x or y coordinate value, which is either a Long timestanp or an unparsed
+         * numeric or category value String, returning a Long, parsed Numeric or String value. As a side
+         * effect of attempting to parse an input String the coordinate type for the relevant coordinate
+         * axis may be downgraded from INTEGRAL (assumed default) to DOUBLE or CATEGORY.
+         * @param key the label for the coordinate axis which may be the special value timestamp
+         * @param value the new found coordinate value which may be a Long timestamp or a String yet to be parsed
+         * @param isX  true if this is an x coordinate value false if it is a y coordinate value
+         * @return an Object repreenting
+         */
+        private Object newCoordinate(String key, Object value, boolean isX) {
+
+            CoordinateType ctype = (isX ? xtype : ytype);
+            if (ctype == CoordinateType.TIME) {
+                // guaranteed already to be a Long
+                return value;
+            }
+
+            boolean updateCType = false;
+
+            if (value instanceof String && ctype != CoordinateType.CATEGORY) {
+                String str = (String)value;
+                // see if we can parse this as a number
+                try {
+                    if (str.contains(".")) {
+                        value = Double.valueOf(str);
+                        if (ctype != CoordinateType.REAL) {
+                            ctype = CoordinateType.REAL;
+                            updateCType = true;
+                        }
+                    } else {
+                        value = Long.valueOf(str);
+                    }
+                } catch (NumberFormatException nfe) {
+                    ctype = CoordinateType.CATEGORY;
+                    updateCType = true;
+                }
+            }
+            if (updateCType) {
+                if (isX) {
+                    xtype = ctype;
+                } else {
+                    ytype = ctype;
+                }
+            }
+            return value;
+        }
+    }
 }
