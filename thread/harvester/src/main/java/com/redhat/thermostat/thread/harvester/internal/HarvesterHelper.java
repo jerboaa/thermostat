@@ -94,12 +94,14 @@ class HarvesterHelper {
 
             ThreadInfo beanInfo = threadInfos[i];
 
-            // state information
-            ThreadState state =
-                    stateHelper.createThreadState(beanInfo,
-                                                  session.getSessionID(),
-                                                  timestamp);
-            stateHelper.saveThreadState(state);
+            if (beanInfo != null) {
+                // state information
+                ThreadState state =
+                        stateHelper.createThreadState(beanInfo,
+                                session.getSessionID(),
+                                timestamp);
+                stateHelper.saveThreadState(state);
+            }
         }
     }
 
