@@ -748,7 +748,19 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             XYSeries xyseries = new XYSeries(ykey + " against  " + xkey);
 
             for (Pair<Object,Object> p : data) {
-                xyseries.add((Number)p.getFirst(), (Number)p.getSecond());
+                Number x = (Number)p.getFirst();
+                Number y = (Number)p.getSecond();
+                int idx = xyseries.indexOf(x);
+                if (idx >= 0) {
+                    Number y1 = xyseries.getY(idx);
+                    switch (ytype) {
+                    case REAL:
+                        y = y.doubleValue() + y1.doubleValue();
+                    default:
+                        y = y.longValue() + y1.longValue();
+                    }
+                }
+                xyseries.add(x, y);
             }
             XYSeriesCollection xycollection = new  XYSeriesCollection();
             xycollection.addSeries(xyseries);
