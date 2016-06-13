@@ -86,6 +86,7 @@ public class ShellCommand extends AbstractCommand {
     private CommandInfoSource commandInfoSource;
     private final ClientPreferences prefs;
     private TabCompletion tabCompletion;
+    private CompleterServiceRegistry completerServiceRegistry;
 
     static class HistoryProvider {
 
@@ -163,9 +164,10 @@ public class ShellCommand extends AbstractCommand {
         ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), ctx.getConsole().getOutput(), term);
         reader.setHandleUserInterrupt(true);
         reader.setPrompt(shellPrompt.getPrompt());
-        if (reader.getCompleters().isEmpty() && commandInfoSource != null && tabCompletion != null) {
-            tabCompletion.setupTabCompletion(reader, commandInfoSource, bundleContext, prefs);
+        if (completerServiceRegistry != null) {
+            completerServiceRegistry.start();
         }
+        tabCompletion.attachToReader(reader);
         if (history != null) {
             reader.setHistory(history);
         }
@@ -271,6 +273,13 @@ public class ShellCommand extends AbstractCommand {
 
     public void setCommandInfoSource(final CommandInfoSource source) {
         this.commandInfoSource = source;
+        if (commandInfoSource != null && tabCompletion != null) {
+            tabCompletion.setupTabCompletion(commandInfoSource);
+        }
+    }
+
+    public void setCompleterServiceRegistry(CompleterServiceRegistry completerServiceRegistry) {
+        this.completerServiceRegistry = completerServiceRegistry;
     }
 
 }

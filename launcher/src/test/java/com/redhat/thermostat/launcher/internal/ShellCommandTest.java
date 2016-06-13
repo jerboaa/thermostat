@@ -39,7 +39,9 @@ package com.redhat.thermostat.launcher.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -49,7 +51,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 
-import com.redhat.thermostat.shared.config.CommonPaths;
+import jline.console.ConsoleReader;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.junit.After;
@@ -526,6 +528,53 @@ public class ShellCommandTest {
         assertTrue(tabOutput.contains("--copy&paste"));
         assertTrue(inline.endsWith("--copy"));
         assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
+    public void testStartsCompleterRegistryWhenAvailable() throws CommandException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        ctxFactory.setInput("exit\n");
+
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        CompleterServiceRegistry registry = mock(CompleterServiceRegistry.class);
+        cmd.setCompleterServiceRegistry(registry);
+        cmd.run(ctx);
+        verify(registry).start();
+    }
+
+    @Test
+    public void testAttachesTabCompletionToConsoleReader() throws Exception {
+        TabCompletion tabCompletion = mock(TabCompletion.class);
+        cmd.setTabCompletion(tabCompletion);
+
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        ctxFactory.setInput("exit\n");
+
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+        verify(tabCompletion).attachToReader(isA(ConsoleReader.class));
+    }
+
+    @Test
+    public void testSetCommandInfoSourceTriggersTabCompletionSetup() {
+        TabCompletion tabCompletion = mock(TabCompletion.class);
+        cmd.setTabCompletion(tabCompletion);
+        verify(tabCompletion, never()).setupTabCompletion(isA(CommandInfoSource.class));
+        CommandInfoSource infoSource = mock(CommandInfoSource.class);
+        cmd.setCommandInfoSource(infoSource);
+        verify(tabCompletion).setupTabCompletion(infoSource);
     }
 
     private String getOutputWithoutIntro(final TestCommandContextFactory ctxFactory) {

@@ -39,17 +39,14 @@ package com.redhat.thermostat.launcher.internal;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.cli.TabCompleter;
-import com.redhat.thermostat.common.config.ClientPreferences;
 import jline.console.ConsoleReader;
 import jline.console.completer.Completer;
 import org.apache.commons.cli.Option;
-import org.osgi.framework.BundleContext;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,7 +66,6 @@ public class TabCompletion {
     static final Set<String> ALL_COMMANDS_COMPLETER = Collections.singleton("ALL_COMMANDS_COMPLETER");
 
     private TreeCompleter treeCompleter;
-    private Set<CompleterService> globalCompleterServices;
     private Map<String, TreeCompleter.Node> commandMap;
 
     public TabCompletion() {
@@ -83,18 +79,21 @@ public class TabCompletion {
         this.treeCompleter = treeCompleter;
         this.commandMap = commandMap;
 
-        this.globalCompleterServices = new HashSet<>();
-
         treeCompleter.setAlphabeticalCompletions(true);
     }
 
     public void addCompleterService(CompleterService service) {
-        if (ALL_COMMANDS_COMPLETER == service.getCommands()) {
-            globalCompleterServices.add(service);
-        }
-        for (String commandName : service.getCommands()) {
+        for (String commandName : getCommandsForService(service)) {
             TreeCompleter.Node command = getCommandByName(commandName);
             addCompleterServiceImpl(command, service);
+        }
+    }
+
+    private Set<String> getCommandsForService(CompleterService service) {
+        if (ALL_COMMANDS_COMPLETER == service.getCommands()) {
+            return commandMap.keySet();
+        } else {
+            return service.getCommands();
         }
     }
 
@@ -120,10 +119,7 @@ public class TabCompletion {
     }
 
     public void removeCompleterService(CompleterService service) {
-        if (ALL_COMMANDS_COMPLETER == service.getCommands()) {
-            globalCompleterServices.remove(service);
-        }
-        for (String commandName : service.getCommands()) {
+        for (String commandName : getCommandsForService(service)) {
             TreeCompleter.Node command = commandMap.get(commandName);
             if (command != null) {
                 removeCompleterServiceImpl(command, service);
@@ -159,25 +155,30 @@ public class TabCompletion {
         return matchesLongOpt && matchesShortOpt;
     }
 
-    public void setupTabCompletion(ConsoleReader reader, CommandInfoSource commandInfoSource, BundleContext context, ClientPreferences prefs) {
+    public void setupTabCompletion(CommandInfoSource commandInfoSource) {
         for (CommandInfo info : commandInfoSource.getCommandInfos()) {
-
             if (info.getEnvironments().contains(Environment.SHELL)) {
-                TreeCompleter.Node command = getCommandByName(info.getName());
+                String commandName = info.getName();
+                TreeCompleter.Node command = getCommandByName(commandName);
 
                 for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
                     setupDefaultCompletion(command, option);
                 }
 
                 treeCompleter.addBranch(command);
-
-                for (CompleterService service : globalCompleterServices) {
-                    addCompleterServiceImpl(command, service);
-                }
             }
         }
+    }
 
-        reader.addCompleter(new JLineCompleterAdapter(treeCompleter));
+    /* Testing only */
+    Set<String> getKnownCommands() {
+        return new HashSet<>(commandMap.keySet());
+    }
+
+    public void attachToReader(ConsoleReader reader) {
+        if (reader.getCompleters().isEmpty()) {
+            reader.addCompleter(new JLineCompleterAdapter(treeCompleter));
+        }
     }
 
     private TreeCompleter.Node getCommandByName(String commandName) {

@@ -39,18 +39,18 @@ package com.redhat.thermostat.launcher.internal;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.cli.TabCompleter;
-import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.launcher.BundleInformation;
 import jline.console.ConsoleReader;
+import jline.console.completer.Completer;
 import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -170,10 +170,6 @@ public class TabCompletionTest {
         when(infoSource.getCommandInfo(mockCommand.getName())).thenReturn(mockCommand);
         when(infoSource.getCommandInfo(fakeCommand.getName())).thenReturn(fakeCommand);
 
-        BundleContext context = mock(BundleContext.class);
-
-        ClientPreferences prefs = mock(ClientPreferences.class);
-
         CompleterService service = mock(CompleterService.class);
         when(service.getCommands()).thenReturn(TabCompletion.ALL_COMMANDS_COMPLETER);
         Map completerMap = new HashMap();
@@ -181,8 +177,9 @@ public class TabCompletionTest {
         completerMap.put(new CliCommandOption("a", "agentId", true, "Agent ID", false), completer);
         when(service.getOptionCompleters()).thenReturn(completerMap);
 
+        tabCompletion.setupTabCompletion(infoSource);
+        tabCompletion.attachToReader(reader);
         tabCompletion.addCompleterService(service);
-        tabCompletion.setupTabCompletion(reader, infoSource, context, prefs);
 
         TreeCompleter.Node mockNode = commandMap.get("mock-command");
         assertThat(mockNode, is(not(equalTo(null))));
@@ -205,9 +202,23 @@ public class TabCompletionTest {
         }
     }
 
-    private void doSetupTabCompletion() {
+    @Test
+    public void testAttachToReader() {
         ConsoleReader reader = mock(ConsoleReader.class);
+        when(reader.getCompleters()).thenReturn(Collections.<Completer>emptyList());
+        tabCompletion.attachToReader(reader);
+        verify(reader).getCompleters();
+        verify(reader).addCompleter(isA(Completer.class));
+    }
 
+    @Test
+    public void testSetupCorrectlyPopulatesKnownCommands() {
+        doSetupTabCompletion();
+        assertThat((HashSet<String>) tabCompletion.getKnownCommands(),
+                is(equalTo(new HashSet<>(Arrays.asList("mock-command", "fake-command")))));
+    }
+
+    private void doSetupTabCompletion() {
         Options options = new Options();
         options.addOption("s", "short", true, "short option");
         options.addOption("l", "long", true, "long option");
@@ -231,11 +242,7 @@ public class TabCompletionTest {
         when(infoSource.getCommandInfo(mockCommand.getName())).thenReturn(mockCommand);
         when(infoSource.getCommandInfo(fakeCommand.getName())).thenReturn(fakeCommand);
 
-        BundleContext context = mock(BundleContext.class);
-
-        ClientPreferences prefs = mock(ClientPreferences.class);
-
-        tabCompletion.setupTabCompletion(reader, infoSource, context, prefs);
+        tabCompletion.setupTabCompletion(infoSource);
 
         assertThat(commandMap.containsKey("mock-command"), is(true));
         assertThat(commandMap.containsKey("fake-command"), is(true));

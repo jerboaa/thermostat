@@ -191,7 +191,6 @@ public class Activator implements BundleActivator {
                 }
             }
         });
-        completerServiceRegistry.start();
 
         final HelpCommand helpCommand = new HelpCommand();
         environment.addListener(new CurrentEnvironmentChangeListener() {
@@ -213,6 +212,7 @@ public class Activator implements BundleActivator {
                 ConfigurationInfoSource config = (ConfigurationInfoSource) services.get(ConfigurationInfoSource.class.getName());
                 shellCommand = new ShellCommand(context, paths, config);
                 shellCommand.setTabCompletion(tabCompletion);
+                shellCommand.setCompleterServiceRegistry(completerServiceRegistry);
                 registry.registerCommand("shell", shellCommand);
             }
 
