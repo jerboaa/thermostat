@@ -36,13 +36,6 @@
 
 package com.redhat.thermostat.storage.populator.internal;
 
-import java.util.Hashtable;
-import java.util.Map;
-
-import com.redhat.thermostat.common.cli.CompleterService;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -52,16 +45,15 @@ import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.populator.StoragePopulatorCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+
+import java.util.Hashtable;
+import java.util.Map;
 
 public class Activator implements BundleActivator {
 
     private MultipleServiceTracker cmdDepsTracker;
-    private ServiceTracker<CommonPaths, CommonPaths> completerDepsTracker;
-    private ServiceRegistration completerRegistration;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -106,40 +98,12 @@ public class Activator implements BundleActivator {
             }
         });
         cmdDepsTracker.open();
-
-        final StoragePopulatorCompleterService completerService = new StoragePopulatorCompleterService();
-        completerDepsTracker = new ServiceTracker<>(context, CommonPaths.class, new ServiceTrackerCustomizer<CommonPaths, CommonPaths>() {
-            @Override
-            public CommonPaths addingService(ServiceReference<CommonPaths> serviceReference) {
-                CommonPaths paths = context.getService(serviceReference);
-                completerService.setCommonPaths(paths);
-                return paths;
-            }
-
-            @Override
-            public void modifiedService(ServiceReference<CommonPaths> serviceReference, CommonPaths paths) {
-            }
-
-            @Override
-            public void removedService(ServiceReference<CommonPaths> serviceReference, CommonPaths paths) {
-                completerService.setCommonPaths(null);
-            }
-        });
-        completerDepsTracker.open();
-
-        completerRegistration = context.registerService(CompleterService.class.getName(), completerService, null);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         if (cmdDepsTracker != null) {
             cmdDepsTracker.close();
-        }
-        if (completerDepsTracker != null) {
-            completerDepsTracker.close();
-        }
-        if (completerRegistration != null) {
-            completerRegistration.unregister();
         }
     }
 

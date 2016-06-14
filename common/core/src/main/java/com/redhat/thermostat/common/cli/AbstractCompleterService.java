@@ -57,4 +57,8 @@ public abstract class AbstractCompleterService implements CompleterService {
         }
     }
 
+    protected void unsetService(Class<?> klazz) {
+        setService(klazz, null);
+    }
+
 }

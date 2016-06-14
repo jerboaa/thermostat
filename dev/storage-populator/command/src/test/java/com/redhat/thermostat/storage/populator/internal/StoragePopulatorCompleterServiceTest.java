@@ -59,7 +59,7 @@ public class StoragePopulatorCompleterServiceTest {
     @Before
     public void setup() {
         service = new StoragePopulatorCompleterService();
-        service.setCommonPaths(mock(CommonPaths.class));
+        service.bindCommonPaths(mock(CommonPaths.class));
     }
 
     @Test

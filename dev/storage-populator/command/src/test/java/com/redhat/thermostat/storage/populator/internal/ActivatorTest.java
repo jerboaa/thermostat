@@ -57,7 +57,6 @@ public class ActivatorTest {
 
         activator.start(ctx);
         assertCommandIsRegistered(ctx, "storage-populator", StoragePopulatorCommand.class);
-        assertServiceIsRegistered(ctx, CompleterService.class, StoragePopulatorCompleterService.class);
         activator.stop(ctx);
 
         assertEquals(0, ctx.getServiceListeners().size());

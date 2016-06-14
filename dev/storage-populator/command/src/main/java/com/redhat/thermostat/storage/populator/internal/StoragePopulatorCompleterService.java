@@ -38,17 +38,22 @@ package com.redhat.thermostat.storage.populator.internal;
 
 import com.redhat.thermostat.common.cli.AbstractCompleterService;
 import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
-import com.redhat.thermostat.common.cli.DirectoryContentsCompletionFinder;
 import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.populator.StoragePopulatorCommand;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+@Component
+@Service(CompleterService.class)
+@Reference(name = "commonPaths", referenceInterface = CommonPaths.class)
 public class StoragePopulatorCompleterService extends AbstractCompleterService {
 
     static final CliCommandOption CONFIG_OPTION = new CliCommandOption("c", "config", true, "the json config file to use", true);
@@ -64,8 +69,12 @@ public class StoragePopulatorCompleterService extends AbstractCompleterService {
         return Collections.singletonMap(CONFIG_OPTION, completer);
     }
 
-    public void setCommonPaths(CommonPaths paths) {
-        setService(CommonPaths.class, paths);
+    public void bindCommonPaths(CommonPaths commonPaths) {
+        setService(CommonPaths.class, commonPaths);
+    }
+
+    public void unbindCommonPaths(CommonPaths commonPaths) {
+        unsetService(CommonPaths.class);
     }
 
 }
