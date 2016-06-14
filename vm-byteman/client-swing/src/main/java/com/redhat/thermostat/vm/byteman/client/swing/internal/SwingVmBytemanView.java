@@ -93,7 +93,10 @@ import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.SymbolAxis;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.DefaultKeyedValues;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -534,11 +537,16 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                     // we need to draw a graph of category (state) value against time
                     // with step transitions between states
                     //
-                    // for now just draw an empty time series plot
-                    XYDataset xydataset = dataset.getXYDataset();
-                    graph = ChartFactory.createTimeSeriesChart("empty", xlabel, ylabel,
-                                                               xydataset, true, true, false);
-
+                    // we create a numeric time series plot with a mapping
+                    // from numeric values to symbolic keys
+                    String[][] symbolsReturn = new String[1][];
+                    XYDataset xydataset = dataset.getCategoryTimePlot(symbolsReturn);
+                    graph = ChartFactory.createXYStepChart("Byteman Metrics", xlabel, ylabel,
+                                                           xydataset, PlotOrientation.VERTICAL,
+                                                           true, true, false);
+                    // now we change the range axis of the xyplot to draw symbols in
+                    // place of numeric values
+                    graph.getXYPlot().setRangeAxis(0, new SymbolAxis(ykey, symbolsReturn[0]));
                 } else {
                     // draw a graph of numeric value against time
                     XYDataset xydataset = dataset.getXYDataset();
@@ -830,6 +838,49 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             }
             PieDataset pieDataset = new DefaultPieDataset(keyedValues);
             return pieDataset;
+        }
+
+        public XYDataset getCategoryTimePlot(String[][] symbolsReturn)
+        {
+            if (xtype != CoordinateType.TIME || ytype != CoordinateType.CATEGORY) {
+                return emptyXYDataset;
+            }
+
+            // we need to display changing category state over time
+            //
+            // we can create an XYDataSet substituting numeric Y values
+            // to encode the category data. then we provide the data
+            // set with a range axis which displays the numeric
+            // values symbolically.
+
+            XYSeries xyseries = new XYSeries(ykey + " against  " + xkey);
+            int size = data.size();
+            int count = 0;
+            HashMap<String, Number> tickmap = new HashMap<String, Number>();
+
+            for (Pair<Object,Object> p : data) {
+                Number x = (Number)p.getFirst();
+                String ysym = (String)p.getSecond();
+                Number y = tickmap.get(ysym);
+                if (y == null) {
+                    y = Long.valueOf(count++);
+                    tickmap.put(ysym, y);
+                }
+                xyseries.add(x, y);
+            }
+            // populate key array
+            String[] symbols = new String[count];
+            for (String key: tickmap.keySet()) {
+                int value = tickmap.get(key).intValue();
+                symbols[value] = key;
+            }
+
+            symbolsReturn[0] = symbols;
+
+            XYSeriesCollection xycollection = new  XYSeriesCollection();
+            xycollection.addSeries(xyseries);
+
+            return xycollection;
         }
 
         public String getXLabel() {
