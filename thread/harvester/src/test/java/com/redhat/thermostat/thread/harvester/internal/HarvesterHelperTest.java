@@ -90,33 +90,13 @@ public class HarvesterHelperTest {
     }
 
     @Test
-    public void testThreadInfoRetrievedMatchThreadIDs() {
-
-        long[] ids = new long[] {0l, 1l, 2l};
-        when(collectorBean.getAllThreadIds()).thenReturn(ids);
-
-        HarvesterHelper harvester = new HarvesterHelper(clock, vmId,
-                                                        stateHelper,
-                                                        threadSessionHelper);
-        harvester.collectAndSaveThreadData(session, collectorBean);
-        verify(collectorBean).getAllThreadIds();
-
-        verify(collectorBean).getThreadInfo(ids, true, true);
-    }
-
-    @Test
     public void testThreadInfoPassedToThreadStateHelper() {
-
-        long[] ids = new long[] { 0l, 1l, 2l };
-
-        when(collectorBean.getAllThreadIds()).thenReturn(ids);
-
         ThreadInfo[] infos = new ThreadInfo[3];
         infos[0] = mock(ThreadInfo.class);
         infos[1] = mock(ThreadInfo.class);
         infos[2] = mock(ThreadInfo.class);
 
-        when(collectorBean.getThreadInfo(any(long[].class), eq(true), eq(true))).thenReturn(infos);
+        when(collectorBean.dumpAllThreads(eq(false), eq(false))).thenReturn(infos);
 
         ThreadState state1 = mock(ThreadState.class);
         ThreadState state2 = mock(ThreadState.class);

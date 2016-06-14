@@ -77,20 +77,15 @@ class HarvesterHelper {
     {
         long timestamp = clock.getRealTimeMillis();
 
-        // this two can't be null, but the check is there to allow for
-        // nicer tests
-        long [] ids = collectorBean.getAllThreadIds();
-        if (ids == null) {
-            return;
-        }
+        /**
+         * use false, false to not acquire dumps of
+         * locked monitors and locked ownable synchronizers;
+         * this information is not needed and would slow
+         * down the call significantly
+         */
+        ThreadInfo[] threadInfos = collectorBean.dumpAllThreads(false, false);
 
-        // same as above
-        ThreadInfo[] threadInfos = collectorBean.getThreadInfo(ids, true, true);
-        if (threadInfos == null) {
-            return;
-        }
-
-        for (int i = 0; i < ids.length; i++) {
+        for (int i = 0; i < threadInfos.length; i++) {
 
             ThreadInfo beanInfo = threadInfos[i];
 
