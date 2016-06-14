@@ -58,6 +58,7 @@ public class BytemanAttacherTest {
     
     private static final String DEFAULT_PROPERTY_VALUE = "<unset>";
     private static final String BYTEMAN_VERBOSE_PROPERTY = "org.jboss.byteman.verbose";
+    private static final String BYTEMAN_TRANSFORM_JAVA_LANG_PROPERTY = "org.jboss.byteman.transform.all";
     private static final String THERMOSTAT_HELPER_SOCKET_NAME_PROPERTY = "org.jboss.byteman.thermostat.socketName";
     private static final String THERMOSTAT_IPC_CONFIG_PROPERTY = "org.jboss.byteman.thermostat.ipcConfig";
     private static final String BYTEMAN_PREFIX = "org.jboss.byteman.";
@@ -92,11 +93,16 @@ public class BytemanAttacherTest {
         Map<String, String> properties = buildMapFromStringProps(propsCaptor.getValue());
         verifyPropertiesStartWithBytemanPrefix(properties);
         assertTrue(properties.containsKey(BYTEMAN_VERBOSE_PROPERTY));
+        boolean isVerbose = Boolean.parseBoolean(properties.get(BYTEMAN_VERBOSE_PROPERTY));
+        assertTrue(isVerbose);
         String socketName = properties.get(THERMOSTAT_HELPER_SOCKET_NAME_PROPERTY);
         String expectedName = new VmSocketIdentifier("testVmId", 9999, "fooAgent").getName();
         assertEquals(expectedName, socketName);
         String ipcConfig = properties.get(THERMOSTAT_IPC_CONFIG_PROPERTY);
         assertEquals(filePath, ipcConfig);
+        assertTrue(properties.containsKey(BYTEMAN_TRANSFORM_JAVA_LANG_PROPERTY));
+        boolean isTransformAll = Boolean.parseBoolean(properties.get(BYTEMAN_TRANSFORM_JAVA_LANG_PROPERTY));
+        assertTrue(isTransformAll);
     }
 
     // Setting properties via the byteman agent is only allowed if the propery

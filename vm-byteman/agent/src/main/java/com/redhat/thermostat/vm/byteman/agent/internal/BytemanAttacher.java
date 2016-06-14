@@ -66,6 +66,7 @@ class BytemanAttacher {
     static final String LOCALHOST = "localhost";
     static final String[] BYTEMAN_STATIC_INSTALL_PROPS = new String[] {
             "org.jboss.byteman.verbose=true",
+            "org.jboss.byteman.transform.all=true", // Allow for transformation of java.lang classes
             "org.jboss.byteman.thermostat.transport=localsocket", // make the helper use unix sockets
     };
     private final BtmInstallHelper installer;
