@@ -48,6 +48,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.redhat.thermostat.common.internal.test.Bug;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYDataset;
 import org.junit.Before;
@@ -167,6 +168,37 @@ public class ThreadCountControllerTest {
         actionListener.actionPerformed(new ActionEvent<>(view, BasicView.Action.HIDDEN));
 
         verify(timer).stop();        
+    }
+
+    @Bug(id  = "2037",
+         url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2037",
+         summary = " Thread count view queries all summaries for the last hour, every second")
+    @Test
+    public void testPR2037() throws InterruptedException {
+        ArgumentCaptor<Range> collectorCaptor = ArgumentCaptor.forClass(Range.class);
+        when(collector.getThreadSummary(collectorCaptor.capture())).thenReturn(new ArrayList());
+        when(collector.getLatestThreadSummary()).thenReturn(mock(ThreadSummary.class));
+
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(timer).setAction(captor.capture());
+
+        ThreadCountController controller = new ThreadCountController(view, collector, timer);
+        controller.initialize();
+
+        threadAction = captor.getValue();
+        threadAction.run();
+
+        Range<Long> range1 =  collectorCaptor.getValue();
+
+        // The code relies on the fact that it can register at least a
+        // millisecond difference between the two calls of run, otherwise the
+        // range remains the same and doesn't execute the actionPerformed
+        Thread.sleep(1);
+
+        threadAction.run();
+        Range<Long> range2 =  collectorCaptor.getValue();
+
+        assertEquals(range1.getMax(), range2.getMin());
     }
 }
 
