@@ -311,6 +311,7 @@ BuildRequires: %{?scl_prefix_maven}maven-clean-plugin
 BuildRequires: %{?scl_prefix_maven}maven-assembly-plugin
 BuildRequires: %{?scl_prefix_maven}maven-plugin-bundle
 BuildRequires: %{?scl_prefix_maven}maven-javadoc-plugin
+BuildRequires: %{?scl_prefix_maven}maven-antrun-plugin
 # Archetype maven plugins not available in SCL
 %{!?scl:
 BuildRequires: %{?scl_prefix_maven}maven-archetype-packaging
