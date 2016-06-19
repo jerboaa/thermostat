@@ -41,6 +41,7 @@ import static org.junit.Assert.assertEquals;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.lang.reflect.InvocationTargetException;
+import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -178,7 +179,8 @@ public class SwingVmBytemanViewTest {
         String content = "{ \"foo\": \"bar\" }";
         String marker = "marker";
         long timestamp  = 1_440_000_000_000L;
-        String timestring = Clock.DEFAULT_DATE_FORMAT.format(new Date(timestamp));
+        DateFormat metricsDateFormat = SwingVmBytemanView.metricsDateFormat;
+        String timestring = metricsDateFormat.format(new Date(timestamp));
         BytemanMetric m = new BytemanMetric();
         m.setData(content);
         m.setMarker(marker);

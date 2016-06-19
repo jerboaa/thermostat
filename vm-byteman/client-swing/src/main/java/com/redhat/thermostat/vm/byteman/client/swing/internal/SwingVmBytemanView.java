@@ -46,6 +46,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -142,6 +143,8 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
 
     String xkey = null;
     String ykey = null;
+    String filter = null;
+    String value = null;
     String graphtype = null;
 
     // duration over which to search for metrics
@@ -260,17 +263,21 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         graphMainPanel = new JPanel();
         // add a panel to control display of the graph
         JPanel graphControlHolder =  new JPanel();
+        JPanel subHolder1 = new JPanel();
+        JPanel subHolder2 = new JPanel();
         layout = new FlowLayout();
         layout.setAlignment(FlowLayout.RIGHT);
         layout.setHgap(5);
         layout.setVgap(0);
-        graphControlHolder.setLayout(layout);
-        graphControlHolder.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        subHolder1.setLayout(layout);
+        subHolder1.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
         // insert two labelled text fields to allow axis selection
         JLabel xlabel = new JLabel("x:");
         JLabel ylabel = new JLabel("y:");
         final JTextField xtext = new JTextField(30);
         final JTextField ytext = new JTextField(30);
+
         xtext.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
 
             @Override
@@ -289,14 +296,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                 xkey = xtext.getText();
             }
         });
-        /*
-        ytext.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                ykey = ytext.getText();
-            }
-        });
-         */
+
         ytext.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
 
             @Override
@@ -322,12 +322,77 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             }
 
         });
-        graphControlHolder.add(generateGraphButton);
-        graphControlHolder.add(ytext);
-        graphControlHolder.add(ylabel);
-        graphControlHolder.add(xtext);
-        graphControlHolder.add(xlabel);
-        graphControlHolder.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        subHolder1.add(generateGraphButton);
+        subHolder1.add(ytext);
+        subHolder1.add(ylabel);
+        subHolder1.add(xtext);
+        subHolder1.add(xlabel);
+        subHolder1.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+        JLabel filterlabel = new JLabel("filter:");
+        JLabel valuelabel = new JLabel("==");
+        final JTextField filterText = new JTextField(30);
+        final JTextField valueText = new JTextField(30);
+
+        filterText.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filter = filterText.getText();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filter = filterText.getText();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent e)
+            {
+                filter = filterText.getText();
+            }
+        });
+
+        valueText.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                value = valueText.getText();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                value = valueText.getText();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                value = valueText.getText();
+            }
+        });
+
+        layout = new FlowLayout();
+        layout.setAlignment(FlowLayout.RIGHT);
+        layout.setHgap(5);
+        layout.setVgap(0);
+        subHolder2.setLayout(layout);
+        subHolder2.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+        subHolder2.add(valueText);
+        subHolder2.add(valuelabel);
+        subHolder2.add(filterText);
+        subHolder2.add(filterlabel);
+        subHolder2.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+        graphControlHolder.setLayout(new GridBagLayout());
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weighty = 0.5;
+        c.weightx = xWeightFullWidth;
+        graphControlHolder.add(subHolder1, c);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        c.weighty = 0.5;
+        c.weightx = xWeightFullWidth;
+        graphControlHolder.add(subHolder2, c);
 
         // add controls and empty graph to main panel but don't add graph panel yet
         graphMainPanel.setLayout(new GridBagLayout());
@@ -471,7 +536,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             break;
         case GRAPH_CHANGED:
             List<BytemanMetric> graphMetrics = (List<BytemanMetric>)event.getPayload();
-            updateGraphInView(graphMetrics, xkey, ykey, graphtype);
+            updateGraphInView(graphMetrics, xkey, ykey, filter, value, graphtype);
             break;
         default:
             throw new AssertionError("Unknown event: " + action);
@@ -488,12 +553,15 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         });
     }
 
+    // package private for testing
+    static DateFormat metricsDateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.LONG);
+
     private void updateViewWithMetrics(List<BytemanMetric> metrics) {
         final StringBuffer buffer = new StringBuffer();
         for (BytemanMetric m: metrics) {
             String marker = m.getMarker();
             long timestamp = m.getTimeStamp();
-            String timestring = Clock.DEFAULT_DATE_FORMAT.format(new Date(timestamp));
+            String timestring = metricsDateFormat.format(new Date(timestamp));
             buffer.append(timestring).append(": ").append(marker).append(" ").append(m.getData()).append("\n");
         }
         if (buffer.length() == 0) {
@@ -507,16 +575,18 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         });
     }
 
-    private void updateGraphInView(List<BytemanMetric> metrics, String xkey, String ykey, String graphtype) {
+    private void updateGraphInView(List<BytemanMetric> metrics, String xkey, String ykey, String filter, String value, String graphtype) {
         final List<BytemanMetric> ms = metrics;
         final String xk = xkey;
         final String yk = ykey;
+        final String f = filter;
+        final String v = value;
         final String t = graphtype;
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 System.out.println("updateGraphInView:");
-                GraphDataset dataset = makeGraphDataset(ms, xk, yk);
+                GraphDataset dataset = makeGraphDataset(ms, xk, yk, f, v);
                 if (dataset != null) {
                     switchGraph(dataset, t);
                 }
@@ -524,8 +594,8 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         });
     }
 
-    private GraphDataset makeGraphDataset(List<BytemanMetric> metrics, String xkey, String ykey) {
-        GraphDataset dataset = new GraphDataset(metrics, xkey, ykey);
+    private GraphDataset makeGraphDataset(List<BytemanMetric> metrics, String xkey, String ykey, String filter, String value) {
+        GraphDataset dataset = new GraphDataset(metrics, xkey, ykey, filter, value);
         if (dataset.size() == 0) {
             return null;
         }
@@ -730,7 +800,22 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         private static XYDataset emptyXYDataset = new XYSeriesCollection();
         private static Number frequencyUnit = Long.valueOf(1);
 
-        public GraphDataset(List<BytemanMetric> metrics, String xkey, String ykey)
+        private Object maybeNumeric(String value) {
+            if (value == null || value.length() == 0)  {
+                return null;
+            }
+            try {
+                if(value.contains(".")) {
+                    return Double.valueOf(value);
+                } else {
+                    return Long.valueOf(value);
+                }
+            } catch (NumberFormatException nfe) {
+                return value;
+            }
+        }
+
+        public GraphDataset(List<BytemanMetric> metrics, String xkey, String ykey, String filter, String value)
         {
             this.xkey = xkey;
             this.ykey = ykey;
@@ -751,6 +836,12 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             } else if (MARKER_KEY.equals(ykey)) {
                 ytype = CoordinateType.CATEGORY;
             }
+            // if we have a filter value then convert it to a number if it is numeric
+            Object filterValue = value;
+            if (filter != null && value != null) {
+                // may need to convert String to Numeric
+                filterValue = maybeNumeric(value);
+            }
             Gson gson = new GsonBuilder().create();
             if (metrics != null) {
                 for (BytemanMetric m : metrics) {
@@ -762,6 +853,24 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                     map.put(TIMESTAMP_KEY, m.getTimeStamp());
                     map.put(FREQUENCY_KEY, frequencyUnit);
                     map.put(MARKER_KEY, m.getMarker());
+                    // if we have a filter then check for presence of filter key
+                    if (filter != null && filter.length() > 0) {
+                        Object v = map.get(filter);
+                        if (v == null) {
+                            // skip this metric
+                            continue;
+                        }
+                        if (filterValue != null) {
+                            // may need to process String value as Numeric
+                            if (v instanceof String) {
+                                v = maybeNumeric((String)v);
+                            }
+                            if (!filterValue.equals(v)) {
+                                // skip this metric
+                                continue;
+                            }
+                        }
+                    }
                     Object xval = map.get(xkey);
                     Object yval = map.get(ykey);
                     // only include records which contain values for both coordinates
