@@ -48,6 +48,7 @@ public class BytemanMetric {
     
     private final String marker;
     private final LinkedHashMap<String, Object> data;
+    private final long timestamp;
 
     /**
      * Constructor
@@ -58,6 +59,7 @@ public class BytemanMetric {
     public BytemanMetric(String marker, LinkedHashMap<String, Object> data) {
         this.marker = marker;
         this.data = data;
+        this.timestamp = System.currentTimeMillis();
     }
 
     /**
@@ -67,6 +69,15 @@ public class BytemanMetric {
      */
     public String getMarker() {
         return marker;
+    }
+
+    /**
+     * timestamp accessor
+     *
+     * @return  timestamp field
+     */
+    public long getTimestamp() {
+        return timestamp;
     }
 
     /**
@@ -87,6 +98,7 @@ public class BytemanMetric {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         sb.append("\"marker\":").append(toJsonValue(marker)).append(",");
+        sb.append("\"timestamp\":").append(toJsonValue(Long.toString(timestamp))).append(",");
         if (data == null) {
             sb.append("\"data\":null");
         } else {
@@ -128,6 +140,7 @@ public class BytemanMetric {
         final StringBuilder sb = new StringBuilder();
         sb.append("{");
         sb.append("  marker='").append(marker).append('\'');
+        sb.append(", timestamp='").append(timestamp).append('\'');
         sb.append(", data=").append(data);
         sb.append('}');
         return sb.toString();

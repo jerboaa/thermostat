@@ -80,7 +80,6 @@ class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
         for (BytemanMetric m: metrics) {
             m.setAgentId(socketId.getAgentId());
             m.setVmId(socketId.getVmId());
-            m.setTimeStamp(System.currentTimeMillis());
             listOfMetrics.add(m);
         }
         return listOfMetrics;

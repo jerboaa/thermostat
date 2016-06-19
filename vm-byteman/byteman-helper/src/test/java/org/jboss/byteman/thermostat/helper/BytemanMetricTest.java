@@ -48,8 +48,10 @@ public class BytemanMetricTest {
     @Test
     public void testToJsonMarkerNullDataNull() {
         BytemanMetric recEmptyData = new BytemanMetric(null, null);
+        long timestamp = recEmptyData.getTimestamp();
         assertEquals("{" +
                         "\"marker\":null," +
+                        "\"timestamp\":\"" + timestamp + "\"," +
                         "\"data\":null" +
                      "}", recEmptyData.toJson());
     }
@@ -57,8 +59,10 @@ public class BytemanMetricTest {
     @Test
     public void testToJsonNull() {
         BytemanMetric recEmptyData = new BytemanMetric("baz", null);
+        long timestamp = recEmptyData.getTimestamp();
         assertEquals("{" +
                         "\"marker\":\"baz\"," +
+                        "\"timestamp\":\"" + timestamp + "\"," +
                         "\"data\":null" +
                      "}", recEmptyData.toJson());
     }
@@ -73,9 +77,11 @@ public class BytemanMetricTest {
         data.put("foo5", "[]");
         data.put("key", null);
         BytemanMetric recData = new BytemanMetric("baz", data);
+        long timestamp = recData.getTimestamp();
         assertEquals(
                 "{" +
                     "\"marker\":\"baz\"," +
+                    "\"timestamp\":\"" + timestamp + "\"," +
                     "\"data\":{" +
                     "\"foo1\":\"ba\\\"r1\"," +
                     "\"foo2\":42," +
@@ -92,10 +98,12 @@ public class BytemanMetricTest {
         LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("foo1", "bar1");
         BytemanMetric recData = new BytemanMetric(null, data);
+        long timestamp = recData.getTimestamp();
         // marker will be the default string
         assertEquals(
                 "{" +
                     "\"marker\":null," +
+                    "\"timestamp\":\"" + timestamp + "\"," +
                     "\"data\":{" +
                         "\"foo1\":\"bar1\"" +
                     "}" +
@@ -113,8 +121,10 @@ public class BytemanMetricTest {
     @Test
     public void markerContainsQuotes() {
         BytemanMetric metric = new BytemanMetric("something \"quoted\"", null);
+        long timestamp = metric.getTimestamp();
         assertEquals("{" +
                     "\"marker\":\"something \\\"quoted\\\"\"," +
+                    "\"timestamp\":\"" + timestamp + "\"," +
                     "\"data\":null" +
                 "}", metric.toJson());
     }
@@ -124,9 +134,11 @@ public class BytemanMetricTest {
         LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("foo\"1", "bar1");
         BytemanMetric recData = new BytemanMetric("baz", data);
+        long timestamp = recData.getTimestamp();
         assertEquals(
                 "{" +
                     "\"marker\":\"baz\"," +
+                    "\"timestamp\":\"" + timestamp + "\"," +
                     "\"data\":{" +
                     "\"foo\\\"1\":\"bar1\"" +
                     "}" +

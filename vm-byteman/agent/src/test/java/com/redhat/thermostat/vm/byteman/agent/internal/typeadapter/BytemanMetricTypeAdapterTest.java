@@ -57,6 +57,7 @@ public class BytemanMetricTypeAdapterTest {
         assertEquals(10, metrics.length);
         for (int i = 0; i < 10; i++) {
             assertEquals("baz" + i, metrics[i].getMarker());
+            assertEquals(1234567890 + i, metrics[i].getTimeStamp());
         }
     }
 

@@ -74,9 +74,12 @@ public class BytemanMetricTypeAdapter extends TypeAdapter<BytemanMetric> {
         while (reader.hasNext()) {
             String name = reader.nextName();
             switch(name) {
-            case BytemanMetric.MARKER_NAME:
-                values.put(BytemanMetric.MARKER_NAME, reader.nextString());
-                break;
+                case BytemanMetric.MARKER_NAME:
+                    values.put(BytemanMetric.MARKER_NAME, reader.nextString());
+                    break;
+                case BytemanMetric.TIMESTAMP_NAME:
+                    values.put(BytemanMetric.TIMESTAMP_NAME, Long.valueOf(reader.nextString()));
+                    break;
             case BytemanMetric.DATA_NAME:
                 reader.setLenient(true);
                 Map<String, String> data = getDataValues(reader);
@@ -89,6 +92,7 @@ public class BytemanMetricTypeAdapter extends TypeAdapter<BytemanMetric> {
         }
         BytemanMetric metric = new BytemanMetric();
         metric.setMarker((String)values.get(BytemanMetric.MARKER_NAME));
+        metric.setTimeStamp((Long)values.get(BytemanMetric.TIMESTAMP_NAME));
         metric.setData(mapToJson((Map<String, String>)values.get(BytemanMetric.DATA_NAME)));
         return metric;
     }

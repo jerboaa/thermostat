@@ -45,6 +45,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 public class BytemanMetric extends BasePojo implements TimeStampedPojo {
 
     public static final String MARKER_NAME = "marker";
+    public static final String TIMESTAMP_NAME = "timestamp";
     public static final String DATA_NAME = "data";
     private String vmId;
     private String marker;

@@ -42,6 +42,7 @@ public class JsonHelper {
         String elemFormat = 
         "{\n" +
                 "    \"marker\": \"baz%d\",\n" +
+                "    \"timestamp\":\"%d\",\n" +
                 "    \"data\": {\n" +
                 "        \"foo1\": \"ba\\\"r1\",\n" +
                 "        \"foo2\": 42%d,\n" +
@@ -54,7 +55,7 @@ public class JsonHelper {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
         for (int i = 0; i < length; i++) {
-            builder.append(String.format(elemFormat, i, i, i));
+            builder.append(String.format(elemFormat, i, 1234567890 + i, i, i));
             builder.append(",");
         }
         if (length > 0) {
