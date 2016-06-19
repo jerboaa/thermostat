@@ -52,6 +52,7 @@ import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -92,6 +93,7 @@ public class VmBytemanInformationController implements InformationServiceControl
     private final VmBytemanView view;
     private final VmBytemanDAO bytemanDao;
     private final RequestQueue requestQueue;
+    private Duration duration;
     
     VmBytemanInformationController(final VmBytemanView view, VmRef vm,
                                    AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao,
@@ -239,9 +241,9 @@ public class VmBytemanInformationController implements InformationServiceControl
     void updateMetrics() {
         VmId vmId = new VmId(vm.getVmId());
         AgentId agentId = new AgentId(vm.getHostRef().getAgentId());
-        // TODO: Make this query configurable
         long now = System.currentTimeMillis();
-        long from = now - TimeUnit.MINUTES.toMillis(5);
+        long duration = view.getDurationMillisecs();
+        long from = now - duration;
         long to = now;
         Range<Long> timeRange = new Range<Long>(from, to);
         List<BytemanMetric> metrics = bytemanDao.findBytemanMetrics(timeRange, vmId, agentId);
@@ -254,15 +256,19 @@ public class VmBytemanInformationController implements InformationServiceControl
         // pass latest byteman metrics to grapher
         VmId vmId = new VmId(vm.getVmId());
         AgentId agentId = new AgentId(vm.getHostRef().getAgentId());
-        // TODO: Make this query configurable
         long now = System.currentTimeMillis();
-        long from = now - TimeUnit.MINUTES.toMillis(5);
+        long duration = view.getDurationMillisecs();
+        long from = now - duration;
         long to = now;
         Range<Long> timeRange = new Range<Long>(from, to);
         List<BytemanMetric> metrics = bytemanDao.findBytemanMetrics(timeRange, vmId, agentId);
         ActionEvent<TabbedPaneContentAction> event = new ActionEvent<>(this, TabbedPaneContentAction.GRAPH_CHANGED);
         event.setPayload(metrics);
         view.contentChanged(event);
+    }
+
+    void updateDuration(Duration duration) {
+        this.duration = duration;
     }
 
     // Package-private for testing

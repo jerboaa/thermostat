@@ -44,11 +44,14 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -80,10 +83,12 @@ import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
+import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -93,10 +98,8 @@ import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.SymbolAxis;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.DefaultKeyedValues;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -133,13 +136,17 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
     private final CopyOnWriteArrayList<ActionListener<TabbedPaneAction>> tabbedPaneListeners = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<ActionListener<GenerateAction>> generateListeners = new CopyOnWriteArrayList<>();
     
-    // graph configuraion choices from user
+    // graph configurtaion choices from user
     // ideally these ought to be stored as
     // fields of a separate model instance
 
     String xkey = null;
     String ykey = null;
     String graphtype = null;
+
+    // duration over which to search for metrics
+
+    Duration duration = new Duration(5, TimeUnit.MINUTES);
 
     // Mutable state
     private boolean viewControlsEnabled;
@@ -164,7 +171,8 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         mainContainer = new HeaderPanel(t.localize(LocaleResources.BYTEMAN_HEADER_TITLE));
         new ComponentVisibilityNotifier().initialize(mainContainer, notifier);
         
-        final double yWeightRow1 = 0.95;
+        final double yWeightRow0 = 0.05;
+        final double yWeightRow1 = 0.90;
         final double yWeightRow2 = 0.05;
         final double xWeightFullWidth = 1.0;
         final Insets paddingInsets = new Insets(5, 5, 5, 5);
@@ -182,7 +190,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         cRules.fill = GridBagConstraints.BOTH;
         cRules.gridx = 0;
         cRules.gridy = 0;
-        cRules.weighty = yWeightRow1;
+        cRules.weighty = yWeightRow0 + yWeightRow1;
         cRules.weightx = xWeightFullWidth;
         cRules.insets = paddingInsets;
         JScrollPane scrollPane = new ThermostatScrollPane(rulesText);
@@ -225,7 +233,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         c.fill = GridBagConstraints.BOTH;
         c.gridx = 0;
         c.gridy = 0;
-        c.weighty = yWeightRow1;
+        c.weighty = yWeightRow0 + yWeightRow1;
         c.weightx = xWeightFullWidth;
         c.insets = paddingInsets;
         JScrollPane metricsScroll = new ThermostatScrollPane(metricsText);
@@ -235,21 +243,30 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         c.gridy = 1;
         c.weighty = yWeightRow2;
         c.weightx = xWeightFullWidth;
-        JPanel placeholder = new JPanel();
-        // Set to the same size as rules button holder
-        placeholder.setPreferredSize(buttonHolder.getPreferredSize());
-        metricsPanel.add(placeholder, c);
-        
+        // add a panel to control selection of metrics time interval
+        RecentTimeControlPanel graphTimeControlPanel = new RecentTimeControlPanel(duration, RecentTimeControlPanel.UnitRange.MEDIUM);
+        graphTimeControlPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                duration = (Duration) evt.getNewValue();
+                fireTabSelectedEvent(TabbedPaneAction.METRICS_TAB_SELECTED);
+            }
+        });
+
+        graphTimeControlPanel.setPreferredSize(buttonHolder.getPreferredSize());
+        metricsPanel.add(graphTimeControlPanel, c);
+
         // graph tab
         graphMainPanel = new JPanel();
-        // add a button to control display of the graph
-        buttonHolder =  new JPanel();
+        // add a panel to control display of the graph
+        JPanel graphControlHolder =  new JPanel();
         layout = new FlowLayout();
         layout.setAlignment(FlowLayout.RIGHT);
         layout.setHgap(5);
         layout.setVgap(0);
-        buttonHolder.setLayout(layout);
-        buttonHolder.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        graphControlHolder.setLayout(layout);
+        graphControlHolder.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        // insert two labelled text fields to allow axis selection
         JLabel xlabel = new JLabel("x:");
         JLabel ylabel = new JLabel("y:");
         final JTextField xtext = new JTextField(30);
@@ -295,32 +312,45 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                 ykey = ytext.getText();
             }
         });
+        // insert button to initiate graph redraw
         JButton generateGraphButton = new JButton(t.localize(LocaleResources.GENERATE_GRAPH).getContents());
         generateGraphButton.addActionListener(new java.awt.event.ActionListener() {
 
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                fireGenerateEvent(GenerateAction.GENERATE_GRAPH);
+                fireTabSelectedEvent(TabbedPaneAction.GRAPH_TAB_SELECTED);
             }
 
         });
-        buttonHolder.add(generateGraphButton);
-        buttonHolder.add(ytext);
-        buttonHolder.add(ylabel);
-        buttonHolder.add(xtext);
-        buttonHolder.add(xlabel);
-        buttonHolder.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        // don't add graph panel yet
-        graph = null;
-        graphPanel = null;
-        // layout button and graph in main graph panel
+        graphControlHolder.add(generateGraphButton);
+        graphControlHolder.add(ytext);
+        graphControlHolder.add(ylabel);
+        graphControlHolder.add(xtext);
+        graphControlHolder.add(xlabel);
+        graphControlHolder.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+        // add controls and empty graph to main panel but don't add graph panel yet
         graphMainPanel.setLayout(new GridBagLayout());
         c.fill = GridBagConstraints.BOTH;
         c.gridx = 0;
         c.gridy = 0;
-        c.weighty = 0.05;
-        c.weightx = 1.0;
-        graphMainPanel.add(buttonHolder, c);
+        c.weighty = yWeightRow0;
+        c.weightx = xWeightFullWidth;
+        graphMainPanel.add(graphControlHolder, c);
+
+        CategoryDataset categoryDataset = new DefaultCategoryDataset();
+        graph = ChartFactory.createBarChart("empty", "", "",
+                                            categoryDataset, PlotOrientation.VERTICAL,
+                                            true, true, false);
+        graphPanel = new ChartPanel(graph, true);
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 1;
+        c.weighty = yWeightRow1 + yWeightRow2;
+        c.weightx = xWeightFullWidth;
+        graphMainPanel.add(graphPanel, c);
+
+        graphMainPanel.revalidate();
 
         tabbedPane = new ThermostatTabbedPane();
         tabbedPane.addTab(t.localize(LocaleResources.TAB_RULES).getContents(), rulesPanel);
@@ -599,7 +629,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         c.fill = GridBagConstraints.BOTH;
         c.gridx = 0;
         c.gridy = 1;
-        c.weighty = 0.95;
+        c.weighty = 0.90;
         c.weightx = 1.0;
         graphMainPanel.add(graphPanel, c);
         graphPanel.setVisible(true);
@@ -639,6 +669,11 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             }
 
         });
+    }
+    @Override
+    public long getDurationMillisecs()
+    {
+        return duration.asMilliseconds();
     }
 
     public enum CoordinateType {

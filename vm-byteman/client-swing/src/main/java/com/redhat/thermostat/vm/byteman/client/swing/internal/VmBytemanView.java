@@ -44,7 +44,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public abstract class VmBytemanView extends BasicView implements UIComponent {
-    
+
     static enum InjectAction {
         INJECT_RULE,
         UNLOAD_RULE
@@ -119,4 +119,6 @@ public abstract class VmBytemanView extends BasicView implements UIComponent {
     public abstract String getRuleContent();
     
     public abstract void handleError(LocalizedString message);
+
+    public abstract long getDurationMillisecs();
 }

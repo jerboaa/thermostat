@@ -57,20 +57,42 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public class RecentTimeControlPanel extends JPanel {
 
-    static final TimeUnit[] DEFAULT_TIMEUNITS = new TimeUnit[] { TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES };
+    static final TimeUnit[] COARSE_TIMEUNITS = new TimeUnit[] { TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES };
+    static final TimeUnit[] MEDIUM_TIMEUNITS = new TimeUnit[] { TimeUnit.HOURS, TimeUnit.MINUTES, TimeUnit.SECONDS};
+    static final TimeUnit[] FINE_TIMEUNITS = new TimeUnit[] { TimeUnit.MINUTES, TimeUnit.SECONDS, TimeUnit.MILLISECONDS};
+    static final TimeUnit[] DEFAULT_TIMEUNITS = COARSE_TIMEUNITS;
 
     public static final String PROPERTY_VISIBLE_TIME_RANGE = "visibleTimeRange";
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
+    public enum UnitRange {
+        COARSE,
+        MEDIUM,
+        FINE,
+        DEFAULT
+    };
+
+    static final private TimeUnit[][] rangeValues = {
+            COARSE_TIMEUNITS,
+            MEDIUM_TIMEUNITS,
+            FINE_TIMEUNITS,
+            DEFAULT_TIMEUNITS,
+    };
+
     private JPanel labelContainer;
 
     public RecentTimeControlPanel(Duration duration) {
+        this(duration, UnitRange.DEFAULT);
+    }
+
+    public RecentTimeControlPanel(Duration duration, UnitRange range) {
+        TimeUnit[] units = rangeValues[range.ordinal()];
         this.setOpaque(false);
 
         this.setLayout(new BorderLayout());
 
-        this.add(getChartControls(duration), BorderLayout.LINE_START);
+        this.add(getChartControls(duration, units), BorderLayout.LINE_START);
         this.add(getAdditionalDataDisplay(), BorderLayout.LINE_END);
 
     }
@@ -79,13 +101,13 @@ public class RecentTimeControlPanel extends JPanel {
         labelContainer.add(textComponent);
     }
 
-    private Component getChartControls(Duration duration) {
+    private Component getChartControls(Duration duration, TimeUnit[] timeUnits) {
         JPanel container = new JPanel();
         container.setOpaque(false);
 
         final JTextField durationSelector = new JTextField(5);
         final JComboBox<TimeUnit> unitSelector = new JComboBox<>();
-        unitSelector.setModel(new DefaultComboBoxModel<>(DEFAULT_TIMEUNITS));
+        unitSelector.setModel(new DefaultComboBoxModel<>(timeUnits));
 
         TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(new ActionListener<TimeChangeEvent>() {
             @Override
