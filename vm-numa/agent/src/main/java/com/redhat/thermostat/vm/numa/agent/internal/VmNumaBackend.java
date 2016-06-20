@@ -96,7 +96,7 @@ public class VmNumaBackend extends VmPollingBackend {
                 data.setVmId(vmId);
                 dao.putVmNumaStat(data);
             } catch (ParseException e) {
-                logger.log(Level.WARNING, "Unable to add numastat data for vm: " + vmId);
+                logger.log(Level.FINE, "Unable to read numa info for: " + pid);
             }
         }
     }

@@ -66,7 +66,7 @@ public class ProcessStatusInfoBuilder {
         try (BufferedReader reader = new BufferedReader(dataSource.getStatReader(pid))) {
             return build(reader);
         } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to read stat info for " + pid);
+            logger.log(Level.FINE, "Unable to read stat info for: " + pid);
         }
 
         return null;

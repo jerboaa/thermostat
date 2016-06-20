@@ -61,7 +61,7 @@ public class ProcIoDataReader {
         try (BufferedReader reader = new BufferedReader(dataSource.getIoReader(pid))) {
             return read(reader);
         } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to read io info for " + pid, e);
+            logger.log(Level.FINE, "Unable to read io info for: " + pid);
         }
 
         return null;
