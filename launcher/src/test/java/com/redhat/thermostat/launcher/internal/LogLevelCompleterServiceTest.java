@@ -68,7 +68,7 @@ public class LogLevelCompleterServiceTest {
         LoggingUtils.LogLevel[] levels = LoggingUtils.LogLevel.values();
         List<String> expected = new ArrayList<>();
         for (LoggingUtils.LogLevel level : levels) {
-            expected.add(level.getLevel().getName() + " ");
+            expected.add(level.getLevel().getName());
         }
         Collections.sort(expected, String.CASE_INSENSITIVE_ORDER);
 

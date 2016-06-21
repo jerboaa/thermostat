@@ -38,6 +38,7 @@ package com.redhat.thermostat.launcher.internal;
 
 import com.redhat.thermostat.common.cli.AbstractCompleterService;
 import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.StringsTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -55,7 +56,7 @@ public class LogLevelCompleterService extends AbstractCompleterService {
 
     static {
         for (LoggingUtils.LogLevel level : LoggingUtils.LogLevel.values()) {
-            LOG_LEVELS.add(level.getLevel().getName() + " ");
+            LOG_LEVELS.add(level.getLevel().getName());
         }
     }
 
@@ -66,7 +67,7 @@ public class LogLevelCompleterService extends AbstractCompleterService {
 
     @Override
     public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
-        TabCompleter logLevelCompleter = new JLineStringsCompleter(LOG_LEVELS);
+        TabCompleter logLevelCompleter = new StringsTabCompleter(LOG_LEVELS);
 
         return Collections.singletonMap(LOG_LEVEL_OPTION, logLevelCompleter);
     }

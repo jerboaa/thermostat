@@ -49,6 +49,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.redhat.thermostat.common.cli.StringsTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
 
 public class TreeCompleter implements TabCompleter {
@@ -347,14 +348,6 @@ public class TreeCompleter implements TabCompleter {
      * @return the node containing the string completer
      */
     public static Node createStringNode(String tag, List<String> strings) {
-        List<String> spaced = new ArrayList<>();
-        for (String s : strings) {
-            if (s.endsWith(" ")) {
-                spaced.add(s);
-            } else {
-                spaced.add(s + " ");
-            }
-        }
-        return new Node(tag, new JLineStringsCompleter(spaced));
+        return new Node(tag, new StringsTabCompleter(strings));
     }
 }
