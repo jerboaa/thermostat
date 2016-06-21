@@ -110,6 +110,23 @@
               <excludedGroups>com.redhat.thermostat.annotations.internal.CacioTest</excludedGroups>
             </configuration>
           </plugin>
+          <!-- Our annotations processor for platform uses google-gson which in turn
+               uses classes from java.sql. However with jigsaw the annotations processor
+               starts out with the jdk.compiler module and does not seem to have java.sql
+               in its resolution path. The result is that we get NoClassDefFoundError
+               on java.sql classes provided by the JDK when processing platform annotations.
+               See also: https://bugs.openjdk.java.net/browse/JDK-8152842
+               -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <compilerArgs>
+                <arg>-J-addmods</arg>
+                <arg>-Jjava.sql</arg>
+              </compilerArgs>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
     </profile>
@@ -341,7 +358,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.3.2</version>
+          <version>3.5.1</version>
           <configuration>
             <fork>true</fork>
             <meminitial>128m</meminitial>
