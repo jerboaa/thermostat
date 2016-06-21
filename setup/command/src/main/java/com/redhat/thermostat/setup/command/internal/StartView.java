@@ -247,12 +247,14 @@ public class StartView extends JPanel implements SetupView {
         nextBtn.setEnabled(true);
         quickSetupBtn.setEnabled(true);
         customSetupBtn.setEnabled(true);
+        cancelBtn.setEnabled(true);
     }
 
     public void disableButtons() {
         nextBtn.setEnabled(false);
         quickSetupBtn.setEnabled(false);
         customSetupBtn.setEnabled(false);
+        cancelBtn.setEnabled(false);
     }
 
 }

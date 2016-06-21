@@ -167,12 +167,14 @@ public class MongoUserSetupView extends JPanel implements SetupView {
         backBtn.setEnabled(true);
         nextBtn.setEnabled(true);
         credentialPanel.setEnabled(true);
+        cancelBtn.setEnabled(true);
     }
 
     public void disableButtons() {
         backBtn.setEnabled(false);
         nextBtn.setEnabled(false);
         credentialPanel.setEnabled(false);
+        cancelBtn.setEnabled(false);
     }
 
     @Override

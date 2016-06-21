@@ -176,6 +176,7 @@ public class UserPropertiesView extends JPanel implements SetupView {
         finishBtn.setEnabled(true);
         agentInfoPanel.setEnabled(true);
         clientInfoPanel.setEnabled(true);
+        cancelBtn.setEnabled(true);
     }
 
     public void disableButtons() {
@@ -183,6 +184,7 @@ public class UserPropertiesView extends JPanel implements SetupView {
         finishBtn.setEnabled(false);
         agentInfoPanel.setEnabled(false);
         clientInfoPanel.setEnabled(false);
+        cancelBtn.setEnabled(false);
     }
 
     @Override
