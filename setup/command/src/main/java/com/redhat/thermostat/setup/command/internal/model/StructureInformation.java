@@ -45,9 +45,11 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 class StructureInformation {
     
     private final String webApp;
+    private final String userSetupCompleteStamp;
     
     StructureInformation(CommonPaths paths) {
         webApp = paths.getSystemThermostatHome() + "/webapp";
+        userSetupCompleteStamp = paths.getUserSetupCompleteStampFile().toString();
     }
 
     boolean isWebAppInstalled() {
@@ -57,5 +59,10 @@ class StructureInformation {
         } else {
             return false;
         }
+    }
+
+    boolean isThermostatConfigured() {
+        Path userSetupCompleteStampPath = Paths.get(userSetupCompleteStamp);
+        return Files.exists(userSetupCompleteStampPath);
     }
 }

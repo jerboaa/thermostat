@@ -55,6 +55,7 @@ public class StructureInformationTest {
     
     private Path testRoot;
     private Path thermostatSysHome;
+    private Path userSetupCompleteStamp;
     private StructureInformation structureInfo;
     
     @Before
@@ -62,9 +63,11 @@ public class StructureInformationTest {
         testRoot = TestRootHelper.createTestRootDirectory(getClass().getName());
 
         thermostatSysHome = testRoot.resolve("system");
+        userSetupCompleteStamp = testRoot.resolve("setup-complete.stamp");
         Files.createDirectory(thermostatSysHome);
         CommonPaths mockPaths = mock(CommonPaths.class);
         when(mockPaths.getSystemThermostatHome()).thenReturn(thermostatSysHome.toFile());
+        when(mockPaths.getUserSetupCompleteStampFile()).thenReturn(userSetupCompleteStamp.toFile());
         structureInfo = new StructureInformation(mockPaths);
     }
     
@@ -85,5 +88,18 @@ public class StructureInformationTest {
         //Call isWebAppInstalled() without creating
         //a THERMOSTAT_SYS_HOME/webapp directory
         assertFalse(structureInfo.isWebAppInstalled());
+    }
+
+    @Test
+    public void testThermostatConfiguredSuccess() throws IOException {
+        Files.createFile(userSetupCompleteStamp);
+        assertTrue(structureInfo.isThermostatConfigured());
+    }
+
+    @Test
+    public void testThermostatConfiguredFail() throws IOException {
+        //Call isThermostatConfigured() without creating
+        //a setup-complete.stamp file
+        assertFalse(structureInfo.isThermostatConfigured());
     }
 }

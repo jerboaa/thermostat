@@ -75,6 +75,15 @@ public class ThermostatSetupTest {
         assertTrue(setup.isWebAppInstalled());
         verify(structureInfo).isWebAppInstalled();
     }
+
+    @Test
+    public void testIsThermostatConfiguredDelegates() {
+        StructureInformation structureInfo = mock(StructureInformation.class);
+        ThermostatSetup setup = new ThermostatSetup(userSetup, mongoUserSetup, structureInfo, mock(AuthFileWriter.class), mock(KeyringWriter.class));
+        when(structureInfo.isThermostatConfigured()).thenReturn(true);
+        assertTrue(setup.isThermostatConfigured());
+        verify(structureInfo).isThermostatConfigured();
+    }
     
     @Test
     public void testCreateAgentUser() {

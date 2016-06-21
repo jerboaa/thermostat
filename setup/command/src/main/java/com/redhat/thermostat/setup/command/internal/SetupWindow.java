@@ -48,6 +48,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -85,6 +86,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.setup.command.internal.model.CredentialGenerator;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatQuickSetup;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class SetupWindow {
@@ -108,6 +110,7 @@ public class SetupWindow {
     private boolean setupCancelled = false;
     private final ThermostatSetup thermostatSetup;
     private SwingWorker<IOException, Void> finishAction;
+    private final File userThermostatHome;
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(SetupWindow.class);
@@ -116,12 +119,22 @@ public class SetupWindow {
     private static final int FRAME_HEIGHT = 400;
     private static final int FRAME_LARGE_HEIGHT = 600;
 
-    public SetupWindow(ThermostatSetup thermostatSetup) {
+    public SetupWindow(ThermostatSetup thermostatSetup, CommonPaths paths) {
         this.thermostatSetup = thermostatSetup;
         this.shutdown = new CountDownLatch(1);
+        this.userThermostatHome = paths.getUserThermostatHome();
     }
 
     public void run() throws CommandException {
+        try {
+            if (thermostatSetup.isThermostatConfigured()) {
+                showThermostatAlreadyConfiguredDialog();
+                return;
+            }
+        } catch (IOException e) {
+            throw new CommandException(translator.localize(LocaleResources.SETUP_FAILED), e);
+        }
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -392,6 +405,26 @@ public class SetupWindow {
     private void shutdown() {
         shutdown.countDown();
     }
+
+    private void showThermostatAlreadyConfiguredDialog() throws IOException {
+        final String userThermostatHomePath = userThermostatHome.getCanonicalPath();
+        try {
+            doSynchronouslyOnEdt(new Runnable() {
+                @Override
+                public void run() {
+                    JOptionPane.showMessageDialog(
+                        null,
+                        translator.localize(LocaleResources.THERMOSTAT_ALREADY_CONFIGURED_MESSAGE,
+                            userThermostatHomePath).getContents(),
+                        translator.localize(LocaleResources.THERMOSTAT_ALREADY_CONFIGURED_TITLE).getContents(),
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            logger.log(Level.WARNING, "Error while waiting for user to dismiss dialog", e);
+        }
+    }
+
 
     private abstract class SetupSwingWorker extends SwingWorker<IOException, Void> {
         @Override

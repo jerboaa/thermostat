@@ -128,6 +128,10 @@ public class ThermostatSetup implements PersistableSetup {
         return structureInfo.isWebAppInstalled();
     }
 
+    public boolean isThermostatConfigured() {
+        return structureInfo.isThermostatConfigured();
+    }
+
     public String determineReasonFromException(Throwable e) {
         if (e.getCause() instanceof MongodbUserSetup.StorageAlreadyRunningException) {
             return translator.localize(LocaleResources.STORAGE_RUNNING).getContents();

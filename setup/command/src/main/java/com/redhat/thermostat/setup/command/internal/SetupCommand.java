@@ -39,6 +39,7 @@ package com.redhat.thermostat.setup.command.internal;
 import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -81,9 +82,11 @@ public class SetupCommand extends AbstractCommand {
     private Keyring keyring;
     private String[] origArgsList;
     private UNIXProcessHandler processHandler;
+    private PrintStream out;
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        out = ctx.getConsole().getOutput();
         Arguments args = ctx.getArguments();
         if (args.hasArgument(ORIG_CMD_ARGUMENT_NAME)) {
             String origArgs = args.getArgument(ORIG_CMD_ARGUMENT_NAME);
@@ -135,6 +138,16 @@ public class SetupCommand extends AbstractCommand {
 
     // package-private for testing
     void runCLISetup(ThermostatSetup setup, Console console) throws CommandException {
+        try {
+            if (setup.isThermostatConfigured()) {
+                out.println(t.localize(LocaleResources.THERMOSTAT_ALREADY_CONFIGURED_TITLE).getContents());
+                out.println(t.localize(LocaleResources.THERMOSTAT_ALREADY_CONFIGURED_MESSAGE,
+                    paths.getUserThermostatHome().getCanonicalPath()).getContents());
+                return;
+            }
+        } catch (IOException e) {
+            throw new CommandException(t.localize(LocaleResources.SETUP_FAILED), e);
+        }
         CLISetup cliSetup = new CLISetup(setup, console);
         cliSetup.run();
     }
@@ -142,6 +155,12 @@ public class SetupCommand extends AbstractCommand {
     // package-private for testing
     void runSilentSetup(ThermostatSetup setup) throws CommandException {
         try {
+            if (setup.isThermostatConfigured()) {
+                out.println(t.localize(LocaleResources.THERMOSTAT_ALREADY_CONFIGURED_TITLE).getContents());
+                out.println(t.localize(LocaleResources.THERMOSTAT_ALREADY_CONFIGURED_MESSAGE,
+                    paths.getUserThermostatHome().getCanonicalPath()).getContents());
+                return;
+            }
             new ThermostatQuickSetup(setup).run();
         } catch (IOException e) {
             throw new CommandException(t.localize(LocaleResources.SETUP_FAILED), e);
@@ -213,7 +232,7 @@ public class SetupCommand extends AbstractCommand {
 
     // package-private for testing
     void createMainWindowAndRun(ThermostatSetup setup) throws CommandException {
-        mainWindow = new SetupWindow(setup);
+        mainWindow = new SetupWindow(setup, paths);
         mainWindow.run();
     }
 

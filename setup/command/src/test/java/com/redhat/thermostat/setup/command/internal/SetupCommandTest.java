@@ -51,6 +51,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -132,6 +133,11 @@ public class SetupCommandTest {
             void createMainWindowAndRun(ThermostatSetup setup) {
                 //do nothing
             }
+
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
+            }
         };
 
         setServices();
@@ -152,6 +158,11 @@ public class SetupCommandTest {
             @Override
             void createMainWindowAndRun(ThermostatSetup setup) {
                 isSet[0] = true;
+            }
+
+            @Override
+            ThermostatSetup createSetup() {
+                return thermostatSetup;
             }
         };
 
@@ -331,7 +342,6 @@ public class SetupCommandTest {
     private void testExitStatus(Arguments setupArgs, int exitVal) {
         setServices();
 
-        CommandContext ctxt = mock(CommandContext.class);
         when(ctxt.getArguments()).thenReturn(setupArgs);
 
         try {
@@ -340,6 +350,37 @@ public class SetupCommandTest {
             // ignore
         }
         verify(exitStatus).setExitStatus(eq(exitVal));
+    }
+
+    @Test
+    public void testSilentSetupAlreadyConfigured() throws CommandException, IOException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument("silent")).thenReturn(true);
+        testSetupAlreadyConfigured(args);
+    }
+
+    @Test
+    public void testCliSetupAlreadyConfigured() throws CommandException, IOException {
+        Arguments args = mock(Arguments.class);
+        when(args.hasArgument("nonGui")).thenReturn(true);
+        testSetupAlreadyConfigured(args);
+    }
+
+    private void testSetupAlreadyConfigured(Arguments args) throws CommandException, IOException {
+        cmd = createSetupCommand();
+        setServices();
+
+        when(ctxt.getArguments()).thenReturn(args);
+        when(thermostatSetup.isThermostatConfigured()).thenReturn(true);
+        File userHome = mock(File.class);
+        when(userHome.getCanonicalPath()).thenReturn("user-home");
+        when(paths.getUserThermostatHome()).thenReturn(userHome);
+
+        cmd.run(ctxt);
+
+        String output = new String(outputBaos.toByteArray());
+        assertTrue(output.contains("Thermostat is already configured."));
+        verify(exitStatus).setExitStatus(ExitStatus.EXIT_SUCCESS);
     }
 
     @Test
@@ -362,7 +403,6 @@ public class SetupCommandTest {
         setServices();
         
         Arguments args = mock(Arguments.class);
-        CommandContext ctxt = mock(CommandContext.class);
         when(ctxt.getArguments()).thenReturn(args);
         when(args.hasArgument("origArgs")).thenReturn(true);
         when(args.getArgument("origArgs")).thenReturn("setup");
@@ -436,7 +476,6 @@ public class SetupCommandTest {
         setServices();
 
         Arguments args = mock(Arguments.class);
-        CommandContext ctxt = mock(CommandContext.class);
         when(ctxt.getArguments()).thenReturn(args);
         when(args.hasArgument("origArgs")).thenReturn(true);
         when(args.getArgument("origArgs")).thenReturn("local");
@@ -458,7 +497,6 @@ public class SetupCommandTest {
         setServices();
         
         Arguments args = mock(Arguments.class);
-        CommandContext ctxt = mock(CommandContext.class);
         when(ctxt.getArguments()).thenReturn(args);
         when(args.hasArgument("origArgs")).thenReturn(true);
         when(args.getArgument("origArgs")).thenReturn(origArgs);
