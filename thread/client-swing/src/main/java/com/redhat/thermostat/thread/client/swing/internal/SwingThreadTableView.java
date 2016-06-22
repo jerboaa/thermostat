@@ -129,9 +129,10 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                ThreadViewTableModel model = (ThreadViewTableModel) table.getModel();
-                model.setRowCount(0);
                 beans.clear();
+
+                ThreadViewTableModel model = (ThreadViewTableModel) table.getModel();
+                model.clear();
             }
         });
     }
@@ -187,6 +188,15 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         });
     }
 
+    Map<ThreadTableBean, Integer> getBeans() {
+        return beans;
+    }
+
+    List<ThreadTableBean> getInfos() {
+        ThreadViewTableModel model = (ThreadViewTableModel) table.getModel();
+        return model.infos;
+    }
+
     @Override
     public void submitChanges() {
         SwingUtilities.invokeLater(new Runnable() {
@@ -219,7 +229,12 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         public ThreadViewTableModel() {
             this.infos = new ArrayList<>();
         }
-    
+
+        void clear() {
+            infos.clear();
+            setRowCount(0);
+        }
+
         @Override
         public String getColumnName(int column) {
             return columns[column];
