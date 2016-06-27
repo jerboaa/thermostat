@@ -85,7 +85,7 @@ public class VmBytemanInformationControllerTest {
                                                   "AT ENTRY\n" +
                                                   "IF true\n" +
                                                   "DO\n" +
-                                                  "send(\"%s.main() called\");\n" +
+                                                  "send(\"foo-marker\", \"action\", \"%s.main() called\");\n" +
                                                   "ENDRULE\n";
     private static final String AGENT_ID = "some-agent-id";
     private static final String HOST_NAME = "some-host-name";
