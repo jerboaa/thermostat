@@ -130,6 +130,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
             @Override
             public void run() {
                 beans.clear();
+                currentSelection = -1;
 
                 ThreadViewTableModel model = (ThreadViewTableModel) table.getModel();
                 model.clear();
@@ -147,14 +148,18 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                
+                int selectedRow = -1;
+
+                ThreadViewTableModel model = (ThreadViewTableModel) table.getModel();
+                // just ignore the selection if the model has been cleared
+                if (!model.infos.isEmpty()) {
+                    selectedRow = table.getSelectedRow();
+                }
+
                 // reset the selection for the next iteration
                 // everything is happening in one thread, so there's no fear
                 currentSelection = -1;
-                
-                ThreadViewTableModel model = (ThreadViewTableModel) table.getModel();
-                int selectedRow = table.getSelectedRow();
-                
+
                 ThreadTableBean info = null;
                 if (selectedRow != -1) {
                     info = model.infos.get(selectedRow);
@@ -231,8 +236,10 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         }
 
         void clear() {
-            infos.clear();
             setRowCount(0);
+            infos.clear();
+
+            fireTableDataChanged();
         }
 
         @Override
@@ -271,6 +278,9 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         
         @Override
         public Object getValueAt(int row, int column) {
+            if (infos.isEmpty() || infos.size() < row) {
+                return "n/a";
+            }
 
             DecimalFormat format = new DecimalFormat("###.00");
 

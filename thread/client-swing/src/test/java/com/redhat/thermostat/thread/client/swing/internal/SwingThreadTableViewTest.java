@@ -41,22 +41,24 @@ import com.redhat.thermostat.common.internal.test.Bug;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 import org.fest.swing.annotation.GUITest;
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 
-import java.awt.Component;
-import java.awt.Toolkit;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -68,6 +70,17 @@ public class SwingThreadTableViewTest {
     private SwingThreadTableView view;
     private JFrame frame;
     private FrameFixture frameFixture;
+
+    @BeforeClass
+    public static void setUpOnce() {
+        FailOnThreadViolationRepaintManager.install();
+    }
+
+    @After
+    public void tearDown() {
+        frameFixture.cleanUp();
+        frameFixture = null;
+    }
 
     @Before
     public void setUp() {
@@ -119,5 +132,35 @@ public class SwingThreadTableViewTest {
 
         assertFalse(view.getBeans().containsKey(bean0));
         assertFalse(view.getInfos().contains(bean0));
+    }
+
+    @Category(GUITest.class)
+    @GUITest
+    @Test
+    public void clearNotifyModelChange() throws Exception {
+
+        frameFixture.show();
+
+        final boolean [] result = new boolean[1];
+
+        frameFixture.table("threadBeansTable").target.getModel().
+                addTableModelListener(new TableModelListener() {
+                    @Override
+                    public void tableChanged(TableModelEvent e) {
+                        result[0] = true;
+                    }
+                }
+        );
+
+        view.clear();
+
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                // just flush pending events
+            }
+        });
+
+        assertTrue(result[0]);
     }
 }
