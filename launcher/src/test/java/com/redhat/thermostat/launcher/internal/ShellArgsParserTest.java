@@ -38,12 +38,13 @@ package com.redhat.thermostat.launcher.internal;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -370,6 +371,42 @@ public class ShellArgsParserTest {
     }
 
     @Test
+    public void testSingleCharArgument() {
+        assertResult("some-command -f 2", "some-command", "-f", "2");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleCharArgumentAdjoined() {
+        assertResult("some-command -f2", "some-command", "-f2");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleCharArgumentWithSingleQuotes() {
+        assertResult("some-command -f '2'", "some-command", "-f", "2");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleCharArgumentWithDoubleQuotes() {
+        assertResult("some-command -f \"2\"", "some-command", "-f", "2");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleCharArgumentWithExtraWhitespace() {
+        assertResult("some-command -f  2", "some-command", "-f", "2");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleCharArgumentWithTrailingWhitespace() {
+        assertResult("some-command -f 2 ", "some-command", "-f", "2");
+        assertNoIssues();
+    }
+
+    @Test
     public void testIssueGetters() {
         ShellArgsParser.Issue issue = new ShellArgsParser.Issue(10, ShellArgsParser.Issue.Type.UNEXPECTED_QUOTE);
         int columnNumber = issue.getColumnNumber();
@@ -513,14 +550,14 @@ public class ShellArgsParserTest {
         ShellArgsParser sap = new ShellArgsParser(input);
         String[] result = sap.parse();
         issues = sap.getParseIssues();
-        assertArrayEquals(new String[]{}, result);
+        assertEquals(Collections.emptyList(), Arrays.asList(result));
     }
 
     private void assertResult(String input, String ... expecteds) {
         ShellArgsParser sap = new ShellArgsParser(input);
         String[] result = sap.parse();
         issues = sap.getParseIssues();
-        assertArrayEquals(expecteds, result);
+        assertEquals(Arrays.asList(expecteds), Arrays.asList(result));
     }
 
     private void assertNoIssues() {
@@ -528,6 +565,6 @@ public class ShellArgsParserTest {
     }
 
     private void assertIssues(ShellArgsParser.Issue ... expecteds) {
-        assertArrayEquals(expecteds, issues.getAllIssues().toArray(new ShellArgsParser.Issue[issues.getAllIssues().size()]));
+        assertEquals(Arrays.asList(expecteds), issues.getAllIssues());
     }
 }

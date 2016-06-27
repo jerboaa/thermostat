@@ -41,6 +41,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
@@ -74,14 +75,13 @@ class ShellArgsParser {
         readChar();
         List<String> result = new ArrayList<>();
         do {
-            if (isWhitespace()) {
-                whitespace();
-            } else if (isQuote()) {
+            consumeWhitespace();
+            if (isQuote()) {
                 result.add(quote());
-            } else {
+            } else if (isWord()) {
                 result.add(word());
             }
-        } while (!finished());
+        } while (ready());
         return result.toArray(new String[result.size()]);
     }
 
@@ -92,7 +92,7 @@ class ShellArgsParser {
         return issues;
     }
 
-    private void whitespace() {
+    private void consumeWhitespace() {
         while (isWhitespace() && ready()) {
             readChar();
         }
@@ -158,10 +158,6 @@ class ShellArgsParser {
         return pos < input.length() - 1;
     }
 
-    private boolean finished() {
-        return pos == (input.length() - 1);
-    }
-
     private char readChar() {
         c = input.charAt(++pos);
         return c;
@@ -181,6 +177,10 @@ class ShellArgsParser {
 
     private boolean isWhitespace() {
         return Character.isWhitespace(c);
+    }
+
+    private boolean isWord() {
+        return !(isQuote() || isWhitespace());
     }
 
     static class Issues {
@@ -232,21 +232,21 @@ class ShellArgsParser {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             Issue issue = (Issue) o;
 
-            if (columnNumber != issue.columnNumber) return false;
-            return type == issue.type;
-
+            return columnNumber == issue.columnNumber && type == issue.type;
         }
 
         @Override
         public int hashCode() {
-            int result = columnNumber;
-            result = 31 * result + type.hashCode();
-            return result;
+            return Objects.hash(columnNumber, type);
         }
 
         @Override
