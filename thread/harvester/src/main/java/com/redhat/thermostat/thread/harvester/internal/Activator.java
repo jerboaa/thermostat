@@ -43,14 +43,13 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;
@@ -59,144 +58,125 @@ import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
 public class Activator implements BundleActivator {
-    
-    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(24);
-
-    private MultipleServiceTracker connectionPoolTracker;
-    private ServiceTracker threadDaoTracker;
-    private ServiceRegistration backendRegistration;
-
-    private ReceiverRegistry registry;
-    private ThreadHarvester harvester;
-    private ThreadBackend backend;
-
+    private MultipleServiceTracker threadBackendTracker;
     private MultipleServiceTracker threadCountTracker;
-
     private MultipleServiceTracker lockInfoTracker;
-    
+
     @Override
     public void start(final BundleContext context) throws Exception {
         final Version VERSION = new Version(context.getBundle());
         final VmStatusListenerRegistrar VM_STATUS_REGISTRAR
             = new VmStatusListenerRegistrar(context);
 
-        Class<?>[] threadCountDeps = new Class<?>[] {
+        final Class<?>[] threadCountDeps = new Class<?>[] {
+                BackendService.class,
                 WriterID.class,
                 ThreadDao.class,
         };
         threadCountTracker = new MultipleServiceTracker(context, threadCountDeps, new Action() {
 
             private ServiceRegistration<Backend> registration;
+            private ThreadCountBackend threadCountBackend;
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 WriterID writerId = (WriterID) services.get(WriterID.class.getName());
                 ThreadDao dao = (ThreadDao) services.get(ThreadDao.class.getName());
                 Objects.requireNonNull(dao);
-                ThreadCountBackend threadCountBackend = new ThreadCountBackend(dao, VERSION, VM_STATUS_REGISTRAR, writerId);
+                threadCountBackend = new ThreadCountBackend(dao, VERSION, VM_STATUS_REGISTRAR, writerId);
                 registration = context.registerService(Backend.class, threadCountBackend, null);
             }
 
             @Override
             public void dependenciesUnavailable() {
+                if (threadCountBackend.isActive()) {
+                    threadCountBackend.deactivate();
+                }
                 registration.unregister();
-                registration = null;
             }
         });
         threadCountTracker.open();
 
         Class<?>[] lockInfoDeps = new Class<?>[] {
-            WriterID.class,
-            LockInfoDao.class,
+                BackendService.class,
+                WriterID.class,
+                LockInfoDao.class,
         };
         lockInfoTracker = new MultipleServiceTracker(context, lockInfoDeps, new Action() {
 
             private ServiceRegistration<Backend> registration;
+            private LockInfoBackend lockInfoBackend;
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 WriterID writerId = (WriterID) services.get(WriterID.class.getName());
                 LockInfoDao dao = (LockInfoDao) services.get(LockInfoDao.class.getName());
                 Objects.requireNonNull(dao);
-                LockInfoBackend lockInfoBackend = new LockInfoBackend(dao, VERSION, VM_STATUS_REGISTRAR, writerId);
+                lockInfoBackend = new LockInfoBackend(dao, VERSION, VM_STATUS_REGISTRAR, writerId);
                 registration = context.registerService(Backend.class, lockInfoBackend, null);
             }
 
             @Override
             public void dependenciesUnavailable() {
-                registration.unregister();
-                registration = null;
+                if (lockInfoBackend.isActive()) {
+                    lockInfoBackend.deactivate();
+                }
+                if (registration != null) {
+                    registration.unregister();
+                }
             }
         });
         lockInfoTracker.open();
 
         Class<?>[] deps = new Class<?>[] {
+                BackendService.class,
                 MXBeanConnectionPool.class,
                 WriterID.class,
+                ThreadDao.class,
         };
-        connectionPoolTracker = new MultipleServiceTracker(context, deps, new Action() {
-            
+        threadBackendTracker = new MultipleServiceTracker(context, deps, new Action() {
+
+            private ServiceRegistration<Backend> registration;
+            private ThreadBackend threadBackend;
+            private ScheduledExecutorService executor;
+
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 MXBeanConnectionPool pool = (MXBeanConnectionPool) services.get(MXBeanConnectionPool.class.getName());
                 WriterID writerId = (WriterID) services.get(WriterID.class.getName());
-                harvester = new ThreadHarvester(executor, pool, writerId);
+                ThreadDao threadDao = (ThreadDao) services.get(ThreadDao.class.getName());
+
+                executor = Executors.newScheduledThreadPool(24);
+                ThreadHarvester harvester = new ThreadHarvester(executor, pool, writerId);
+                harvester.setThreadDao(threadDao);
+
+                ReceiverRegistry registry = new ReceiverRegistry(context);
+                threadBackend = new ThreadBackend(VERSION, VM_STATUS_REGISTRAR, registry, harvester);
+                registration = context.registerService(Backend.class, threadBackend, null);
             }
 
             @Override
             public void dependenciesUnavailable() {
-                harvester = null;
+                if (executor != null) {
+                    executor.shutdown();
+                }
+
+                if (threadBackend.isActive()) {
+                    threadBackend.deactivate();
+                }
+                if (registration != null) {
+                    registration.unregister();
+                }
             }
         });
-        connectionPoolTracker.open();
-
-        registry = new ReceiverRegistry(context);
-
-        /*
-         * dont register anything just yet, let the backend handle the
-         * registration, deregistration it when it's activated or deactivated
-         */
-
-        backend = new ThreadBackend(VERSION, VM_STATUS_REGISTRAR, registry, harvester);
-        backendRegistration = context.registerService(Backend.class, backend, null);
-
-        threadDaoTracker = new ServiceTracker(context, ThreadDao.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                ThreadDao threadDao = (ThreadDao) context.getService(reference);
-                harvester.setThreadDao(threadDao);
-                return super.addingService(reference);
-            }
-
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                if (harvester != null) {
-                    harvester.setThreadDao(null);
-                }
-                context.ungetService(reference);
-                super.removedService(reference, service);
-            }
-        };
-        threadDaoTracker.open();
+        threadBackendTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (backend.isActive()) {
-            backend.deactivate();
-        }
-
         threadCountTracker.close();
         lockInfoTracker.close();
-
-        backendRegistration.unregister();
-
-        connectionPoolTracker.close();
-        threadDaoTracker.close();
-
-        if (executor != null) {
-            executor.shutdown();
-        }        
+        threadBackendTracker.close();
     }
 }
 

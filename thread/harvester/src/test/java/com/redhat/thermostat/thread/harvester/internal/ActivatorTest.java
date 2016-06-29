@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.thread.harvester.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -46,45 +47,68 @@ import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
 public class ActivatorTest {
 
-    private Bundle bundle;
-    private Version version;
-    private WriterID writerId;
-    private ThreadDao threadDao;
-
-    @Before
-    public void setUp() {
-        version = new Version("0.1.2");
-
-        bundle = mock(Bundle.class);
-        when(bundle.getVersion()).thenReturn(version);
-
-        writerId = mock(WriterID.class);
-
-        threadDao = mock(ThreadDao.class);
-    }
-
-    @Ignore("Activator assumes that Harvester is always registered and fails with NullPointerException")
     @Test
-    public void verifyThreadCountUpdaterIsRegistered() throws Exception {
-        StubBundleContext bundleContext = new StubBundleContext();
-        bundleContext.setBundle(bundle);
-
-        bundleContext.registerService(WriterID.class, writerId, null);
-        bundleContext.registerService(ThreadDao.class, threadDao, null);
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        StubBundleContext context = new StubBundleContext();
 
         Activator activator = new Activator();
 
-        activator.start(bundleContext);
+        activator.start(context);
 
-        assertTrue(bundleContext.isServiceRegistered(VmUpdateListener.class.getName(), ThreadCountBackend.class));
+        assertEquals(0, context.getAllServices().size());
+        assertEquals(10, context.getServiceListeners().size());
 
-        activator.stop(bundleContext);
+        activator.stop(context);
+    }
+
+    @Test
+    public void verifyActivatorRegistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext() {
+            @Override
+            public Bundle getBundle() {
+                Bundle result = mock(Bundle.class);
+                when(result.getVersion()).thenReturn(Version.emptyVersion);
+                return result;
+            }
+        };
+
+        BackendService backendService = mock(BackendService.class);
+        WriterID idService = mock(WriterID.class);
+        ThreadDao threadDao = mock(ThreadDao.class);
+        LockInfoDao lockInfoDao = mock(LockInfoDao.class);
+        MXBeanConnectionPool mxBeanConnectionPool = mock(MXBeanConnectionPool.class);
+
+        context.registerService(BackendService.class.getName(), backendService, null);
+        context.registerService(WriterID.class, idService, null);
+        context.registerService(ThreadDao.class, threadDao, null);
+        context.registerService(LockInfoDao.class, lockInfoDao, null);
+        context.registerService(MXBeanConnectionPool.class, mxBeanConnectionPool, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(Backend.class.getName(), ThreadCountBackend.class));
+        assertTrue(context.isServiceRegistered(Backend.class.getName(), LockInfoBackend.class));
+        assertTrue(context.isServiceRegistered(Backend.class.getName(), ThreadBackend.class));
+
+        assertEquals(8, context.getAllServices().size());
+        assertEquals(10, context.getServiceListeners().size());
+
+        activator.stop(context);
+
+        assertEquals(5, context.getAllServices().size());
+        assertEquals(0, context.getServiceListeners().size());
     }
 }
