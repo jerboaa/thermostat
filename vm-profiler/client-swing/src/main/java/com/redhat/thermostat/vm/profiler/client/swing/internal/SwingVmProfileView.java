@@ -108,7 +108,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     static final String TOGGLE_BUTTON_NAME = "TOGGLE_PROFILING_BUTTON";
 
     private static final Icon START_ICON = IconResource.SAMPLE.getIcon();
-    private static final Icon STOP_ICON = new FontAwesomeIcon('\uf04d', START_ICON.getIconHeight());
+    private static final Icon STOP_ICON = new FontAwesomeIcon('\uf28e', START_ICON.getIconHeight());
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 

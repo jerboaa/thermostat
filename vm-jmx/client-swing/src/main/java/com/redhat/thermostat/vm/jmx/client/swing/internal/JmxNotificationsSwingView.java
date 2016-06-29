@@ -92,7 +92,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
     private List<ActionListener<NotificationAction>> listeners = new CopyOnWriteArrayList<>();
 
     private static final Icon START_ICON = IconResource.SAMPLE.getIcon();
-    private static final Icon STOP_ICON = new FontAwesomeIcon('\uf04d', START_ICON.getIconHeight());
+    private static final Icon STOP_ICON = new FontAwesomeIcon('\uf28e', START_ICON.getIconHeight());
 
     private final HeaderPanel visiblePanel;
 
