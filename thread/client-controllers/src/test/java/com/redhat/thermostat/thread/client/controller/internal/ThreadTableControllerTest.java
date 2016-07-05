@@ -40,6 +40,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -58,8 +59,10 @@ public class ThreadTableControllerTest {
     private Timer timer;
     
     private ActionListener<ThreadTableView.Action> actionListener;
-    ArgumentCaptor<Runnable> timerActionCaptor;
-    
+    private ArgumentCaptor<Runnable> timerActionCaptor;
+
+    private AppCache cache;
+
     @Before
     public void setUp() {
         collector = mock(ThreadCollector.class);
@@ -67,7 +70,7 @@ public class ThreadTableControllerTest {
         timer = mock(Timer.class);
 
         view = mock(ThreadTableView.class);
-        
+        cache = mock(AppCache.class);
         setUpTimers();
     }
     
@@ -83,7 +86,7 @@ public class ThreadTableControllerTest {
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
         
-        ThreadTableController controller = new ThreadTableController(view, collector, timer);
+        ThreadTableController controller = new ThreadTableController(view, collector, timer, cache);
         controller.initialize();
 
         actionListener = viewArgumentCaptor.getValue();

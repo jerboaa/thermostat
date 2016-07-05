@@ -41,6 +41,7 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 
@@ -53,8 +54,8 @@ class ThreadCountController extends CommonController {
     private LivingDaemonThreadDifferenceChart model;
     private ThreadCollector collector;
     
-    public ThreadCountController(ThreadCountView view, ThreadCollector collector, Timer timer) {
-        super(timer, view);
+    public ThreadCountController(ThreadCountView view, ThreadCollector collector, Timer timer, AppCache cache) {
+        super(timer, view, cache);
         
         this.collector = collector;
         model = new LivingDaemonThreadDifferenceChart("Living Threads vs. Daemon Threads", "time", "threads",

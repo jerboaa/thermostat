@@ -50,6 +50,7 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.thread.cache.RangedCache;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
@@ -62,10 +63,14 @@ import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadSession;
+import com.redhat.thermostat.thread.model.ThreadState;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -108,6 +113,8 @@ public class ThreadInformationController implements InformationServiceController
         this.vmInfoDAO = vmInfoDao;
         this.lockInfoDao = lockInfoDao;
 
+        setUpAppCache();
+
         collector = collectorFactory.getCollector(ref);
 
         view = viewFactory.createView();
@@ -119,6 +126,15 @@ public class ThreadInformationController implements InformationServiceController
         view.addThreadActionListener(new ThreadActionListener());
 
         view.setEnableRecordingControl(vmInfoDao.getVmInfo(ref).isAlive());
+    }
+
+    private void setUpAppCache() {
+        this.cache = (AppCache) appService.getApplicationCache().getAttribute(ref.getVmId());
+        Map<SessionID, RangedCache<ThreadState>> threadStatesCache = cache.retrieve(CommonController.THREAD_STATE_CACHE);
+        if (threadStatesCache == null) {
+            threadStatesCache = new ConcurrentHashMap<>();
+            cache.save(CommonController.THREAD_STATE_CACHE, threadStatesCache);
+        }
     }
 
     private boolean isRecording() {
@@ -279,17 +295,18 @@ public class ThreadInformationController implements InformationServiceController
         threadTableView.addThreadSelectionActionListener(new ThreadSelectionActionListener());
         
         threadCountController =
-                new ThreadCountController(view.createThreadCountView(), collector, tf.createTimer());
+                new ThreadCountController(view.createThreadCountView(), collector, tf.createTimer(), cache);
         threadCountController.initialize();
 
         threadTableController =
-                new ThreadTableController(threadTableView, collector, tf.createTimer());
+                new ThreadTableController(threadTableView, collector, tf.createTimer(), cache);
         threadTableController.initialize();
         threadTableController.setSession(lastThreadSession);
 
         threadTimeline = new ThreadTimelineController(view.createThreadTimelineView(),
                                                       collector,
-                                                      tf.createTimer());
+                                                      tf.createTimer(),
+                                                      cache);
         threadTimeline.initialize();
         threadTimeline.setSession(lastThreadSession);
 
@@ -297,14 +314,16 @@ public class ThreadInformationController implements InformationServiceController
                 new LockController(view.createLockView(),
                                    tf.createTimer(),
                                    lockInfoDao,
-                                   ref);
+                                   ref,
+                                   cache);
         lockTableController.initialize();
 
         stackTraceProfilerController =
                 new StackTraceProfilerController(view.createStackTraceProfilerView(),
                                                  collector,
                                                  tf.createTimer(),
-                                                 ref);
+                                                 ref,
+                                                 cache);
         stackTraceProfilerController.initialize();
         stackTraceProfilerController.setSession(lastThreadSession);
     }

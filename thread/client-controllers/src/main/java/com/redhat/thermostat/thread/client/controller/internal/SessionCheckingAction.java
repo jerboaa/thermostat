@@ -98,7 +98,7 @@ public abstract class SessionCheckingAction implements Runnable {
             return null;
         }
 
-        if (lastUpdate == totalRange.getMax()) {
+        if (lastUpdate >= totalRange.getMax()) {
             // we already covered this range
             return null;
         }

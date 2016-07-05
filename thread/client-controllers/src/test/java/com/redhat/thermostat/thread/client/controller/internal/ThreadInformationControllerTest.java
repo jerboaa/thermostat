@@ -60,6 +60,7 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSel
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadSession;
@@ -67,11 +68,13 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Matchers;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+import static org.mockito.Matchers.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
@@ -103,8 +106,11 @@ public class ThreadInformationControllerTest {
     private LockView lockView;
     private StackTraceProfilerView stackTraceProfilerView;
 
+    private AppCache theCache;
+
     @Before
     public void setUp() {
+        theCache = mock(AppCache.class);
 
         appService = mock(ApplicationService.class);
         vmInfo = mock(VmInfo.class);
@@ -150,6 +156,7 @@ public class ThreadInformationControllerTest {
     private void setupCache() {
         ApplicationCache cache = mock(ApplicationCache.class);
         when(appService.getApplicationCache()).thenReturn(cache);
+        when(cache.getAttribute(anyString())).thenReturn(theCache);
     }
 
     private void setupExecutor() {

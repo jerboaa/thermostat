@@ -41,8 +41,10 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
+import com.redhat.thermostat.thread.cache.RangedCache;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.StackTraceProfilerView;
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.StackFrame;
 import com.redhat.thermostat.thread.model.StackTrace;
@@ -54,6 +56,8 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -78,9 +82,14 @@ public class StackTraceProfilerControllerTest {
     private static final String VM_ID = "42";
 
     private SessionID session;
+    private AppCache cache;
+
+    private Map<SessionID, RangedCache<ThreadState>> threadStatesCache;
 
     @Before
     public void setUp() {
+        threadStatesCache = new ConcurrentHashMap<>();
+
         timer = mock(Timer.class);
         view = mock(StackTraceProfilerView.class);
         collector = mock(ThreadCollector.class);
@@ -88,12 +97,15 @@ public class StackTraceProfilerControllerTest {
         when(ref.getName()).thenReturn(VM_ID);
 
         session = mock(SessionID.class);
+
+        cache = mock(AppCache.class);
+        when(cache.retrieve(CommonController.THREAD_STATE_CACHE)).thenReturn(threadStatesCache);
     }
 
     @Test
     public void testModelCreated() {
         StackTraceProfilerController profiler =
-                new StackTraceProfilerController(view, collector, timer, ref);
+                new StackTraceProfilerController(view, collector, timer, ref, cache);
 
         verify(view).createModel(VM_ID);
     }
@@ -127,12 +139,17 @@ public class StackTraceProfilerControllerTest {
         when(collector.getThreadRange(session)).thenReturn(range);
 
         StackTraceProfilerController profiler =
-                new StackTraceProfilerController(view, collector, timer, ref) {
+                new StackTraceProfilerController(view, collector, timer, ref, cache) {
                     @Override
                     StackTrace getStackTrace(ThreadState state) {
                         // the other are blocked or waiting
                         assertEquals(state, state0);
                         return trace0;
+                    }
+
+                    @Override
+                    long __test__getTimeDeltaOnNewSession() {
+                        return 0;
                     }
                 };
 
@@ -155,7 +172,10 @@ public class StackTraceProfilerControllerTest {
 
         ArgumentCaptor<Trace> traceCaptor = ArgumentCaptor.forClass(Trace.class);
 
-        ResultHandler handler = resultHandlerCaptor.getValue();
+        StackTraceProfilerController.ThreadStateResultHandler handler =
+                (StackTraceProfilerController.ThreadStateResultHandler) resultHandlerCaptor.getValue();
+        handler.setCacheResults(false);
+
         handler.onResult(state0);
         handler.onResult(state1);
         handler.onResult(state2);

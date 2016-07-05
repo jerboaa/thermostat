@@ -39,16 +39,22 @@ package com.redhat.thermostat.thread.client.controller.internal;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
+import com.redhat.thermostat.thread.cache.RangedCache;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.model.timeline.ThreadInfo;
 import com.redhat.thermostat.thread.client.common.model.timeline.TimelineFactory;
 import com.redhat.thermostat.thread.client.common.model.timeline.TimelineProbe;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadState;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 public class ThreadTimelineController extends CommonController {
 
@@ -61,13 +67,32 @@ public class ThreadTimelineController extends CommonController {
 
     public ThreadTimelineController(ThreadTimelineView view,
                                     ThreadCollector collector,
-                                    Timer timer)
+                                    Timer timer, AppCache cache)
     {
-        super(timer, view);
+        super(timer, view, cache);
         this.view = view;
         this.collector = collector;
 
         timer.setAction(new ThreadTimelineControllerAction());
+    }
+
+    RangedCache<ThreadState> getCache(final SessionID session) {
+
+        return executeInCriticalSection(new Callable<RangedCache<ThreadState>>() {
+            @Override
+            public RangedCache<ThreadState> call() throws Exception {
+                Map<SessionID, RangedCache<ThreadState>> threadStatesCache =
+                        cache.retrieve(CommonController.THREAD_STATE_CACHE);
+
+                RangedCache<ThreadState> rangedCache = threadStatesCache.get(session);
+                if (rangedCache == null) {
+                    rangedCache = new RangedCache<>();
+                    threadStatesCache.put(session, rangedCache);
+                }
+
+                return rangedCache;
+            }
+        });
     }
 
     private class ThreadTimelineControllerAction extends SessionCheckingAction {
@@ -105,9 +130,30 @@ public class ThreadTimelineController extends CommonController {
             }
             lastRange = totalRange;
 
-            collector.getThreadStates(session,
-                                      threadStateResultHandler,
-                                      range);
+            // let's see what do we have in the cache
+            RangedCache<ThreadState> cache = getCache(session);
+            List<ThreadState> values = cache.getValues(range);
+            if (!values.isEmpty()) {
+                // add the results we have to the view
+                threadStateResultHandler.setCacheResults(false);
+                for (ThreadState state : values) {
+                    threadStateResultHandler.onResult(state);
+                }
+                threadStateResultHandler.setCacheResults(true);
+
+                ThreadState threadState = values.get(values.size() - 1);
+
+                long lastSampled = threadState.getTimeStamp() + 1;
+                long delta = range.getMax() - lastSampled;
+                if (delta > PERIOD) {
+                    Range<Long> rangeToQuery = new Range<>(lastSampled, range.getMax());
+                    collector.getThreadStates(session,
+                                              threadStateResultHandler,
+                                              rangeToQuery);
+                }
+            } else {
+                collector.getThreadStates(session, threadStateResultHandler, range);
+            }
         }
 
         @Override
@@ -118,6 +164,15 @@ public class ThreadTimelineController extends CommonController {
         @Override
         protected SessionID getLastAvailableSessionID() {
             return collector.getLastThreadSession();
+        }
+
+        @Override
+        protected long getTimeDeltaOnNewSession() {
+            long delta = __test__getTimeDeltaOnNewSession();
+            if (delta < 0) {
+                delta = super.getTimeDeltaOnNewSession();
+            }
+            return delta;
         }
     }
 
@@ -131,17 +186,28 @@ public class ThreadTimelineController extends CommonController {
         stopLooping = true;
     }
 
-    private class ThreadStateResultHandler implements ResultHandler<ThreadState> {
+    class ThreadStateResultHandler implements ResultHandler<ThreadState> {
         private ThreadInfo key;
         private Set<ThreadInfo> knownStates;
+        private boolean cache;
 
         public ThreadStateResultHandler() {
             this.key = new ThreadInfo();
             knownStates = new HashSet<>();
+            cache = true;
+        }
+
+        public void setCacheResults(boolean cache) {
+            this.cache = cache;
         }
 
         @Override
         public boolean onResult(ThreadState state) {
+
+            if (cache) {
+                RangedCache<ThreadState> cache = getCache(new SessionID(state.getSession()));
+                cache.put(state);
+            }
 
             key.setName(state.getName());
             key.setId(state.getId());

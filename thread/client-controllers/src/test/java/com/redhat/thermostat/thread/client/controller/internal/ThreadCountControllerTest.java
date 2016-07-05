@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.redhat.thermostat.common.internal.test.Bug;
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYDataset;
 import org.junit.Before;
@@ -80,12 +81,14 @@ public class ThreadCountControllerTest {
     private ThreadCollector collector;
     
     private ActionListener<ThreadCountView.Action> actionListener;
+    private AppCache cache;
 
     @Before
     public void setUp() {
         timer = mock(Timer.class);
         view = mock(ThreadCountView.class);
         collector = mock(ThreadCollector.class);
+        cache = mock(AppCache.class);
     }
     
     @Test
@@ -98,7 +101,7 @@ public class ThreadCountControllerTest {
         ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(captor.capture());
 
-        ThreadCountController controller = new ThreadCountController(view, collector, timer);
+        ThreadCountController controller = new ThreadCountController(view, collector, timer, cache);
         controller.initialize();
 
         ThreadSummary summary = mock(ThreadSummary.class);
@@ -157,7 +160,7 @@ public class ThreadCountControllerTest {
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
 
-        ThreadCountController controller = new ThreadCountController(view, collector, timer);
+        ThreadCountController controller = new ThreadCountController(view, collector, timer, cache);
         controller.initialize();
                 
         actionListener = viewArgumentCaptor.getValue();
@@ -182,7 +185,7 @@ public class ThreadCountControllerTest {
         ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(captor.capture());
 
-        ThreadCountController controller = new ThreadCountController(view, collector, timer);
+        ThreadCountController controller = new ThreadCountController(view, collector, timer, cache);
         controller.initialize();
 
         threadAction = captor.getValue();

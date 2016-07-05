@@ -39,16 +39,20 @@ package com.redhat.thermostat.thread.client.controller.internal;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
+import com.redhat.thermostat.thread.cache.RangedCache;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.model.timeline.ThreadInfo;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.StackTrace;
 import com.redhat.thermostat.thread.model.ThreadState;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 public class ThreadTableController extends CommonController {
     
@@ -59,9 +63,9 @@ public class ThreadTableController extends CommonController {
 
     public ThreadTableController(ThreadTableView threadTableView,
                                  ThreadCollector collector,
-                                 Timer timer)
+                                 Timer timer, AppCache cache)
     {
-        super(timer, threadTableView);
+        super(timer, threadTableView, cache);
         this.threadTableView = threadTableView;
         this.collector = collector;
         timer.setAction(new ThreadTableControllerAction());
@@ -75,6 +79,25 @@ public class ThreadTableController extends CommonController {
     @Override
     protected void onViewHidden() {
         stopLooping = true;
+    }
+
+    RangedCache<ThreadState> getCache(final SessionID sessionID) {
+
+        return executeInCriticalSection(new Callable<RangedCache<ThreadState>>() {
+            @Override
+            public RangedCache<ThreadState> call() throws Exception {
+                Map<SessionID, RangedCache<ThreadState>> threadStatesCache =
+                        cache.retrieve(CommonController.THREAD_STATE_CACHE);
+
+                RangedCache<ThreadState> rangedCache = threadStatesCache.get(sessionID);
+                if (rangedCache == null) {
+                    rangedCache = new RangedCache<>();
+                    threadStatesCache.put(sessionID, rangedCache);
+                }
+
+                return rangedCache;
+            }
+        });
     }
 
     private class ThreadTableControllerAction extends SessionCheckingAction {
@@ -105,9 +128,29 @@ public class ThreadTableController extends CommonController {
         protected void actionPerformed(SessionID session, Range<Long> range,
                                        Range<Long> totalRange)
         {
-            collector.getThreadStates(session,
-                                      handler,
-                                      range);
+            // let's see what do we have in the cache
+            RangedCache<ThreadState> cache = getCache(session);
+            List<ThreadState> values = cache.getValues(range);
+            if (!values.isEmpty()) {
+                // add the results we have to the view
+                for (ThreadState state : values) {
+                    handler.onResult(state);
+                }
+
+                ThreadState threadState = values.get(values.size() - 1);
+
+                long lastSampled = threadState.getTimeStamp() + 1;
+                long delta = range.getMax() - lastSampled;
+                if (delta > PERIOD) {
+                    Range<Long> rangeToQuery = new Range<>(lastSampled, range.getMax());
+                    collector.getThreadStates(session,
+                                              handler,
+                                              rangeToQuery);
+                }
+            } else {
+                collector.getThreadStates(session, handler, range);
+            }
+
             threadTableView.submitChanges();
         }
 
@@ -124,13 +167,24 @@ public class ThreadTableController extends CommonController {
 
     private class ThreadResultHandler implements ResultHandler<ThreadState> {
         private Map<ThreadInfo, ThreadTableBean> threadStates;
+        private boolean cache;
 
         public ThreadResultHandler() {
             this.threadStates = new HashMap<>();
+            cache = true;
+        }
+
+        public void setCacheResults(boolean cache) {
+            this.cache = cache;
         }
 
         @Override
         public boolean onResult(ThreadState thread) {
+
+            if (cache) {
+                RangedCache<ThreadState> cache = getCache(new SessionID(thread.getSession()));
+                cache.put(thread);
+            }
 
             ThreadInfo key = new ThreadInfo();
             key.setName(thread.getName());

@@ -42,25 +42,48 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCacheKey;
 import com.redhat.thermostat.thread.model.SessionID;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public abstract class CommonController {
-    
+
+    public static final long PERIOD = 1_000;
+
+    private static final String __LOCK__ = new String("CommonController.lock");
+
+    public static final AppCacheKey THREAD_STATE_CACHE = new AppCacheKey("THREAD_STATE_CACHE", CommonController.class);
+
     protected Timer timer;
     protected BasicView view;
+    protected AppCache cache;
 
     protected volatile SessionID session;
 
-    public CommonController(Timer timer, BasicView view) {
+    public CommonController(Timer timer, BasicView view, AppCache cache) {
         this.view = view;
         this.timer = timer;
+        this.cache = cache;
     }
-    
+
+    protected final <V> V executeInCriticalSection(Callable<V> callable) {
+        synchronized (__LOCK__) {
+            try {
+                return callable.call();
+
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
     void initialize() {
         timer.setInitialDelay(0);
-        timer.setDelay(1000);
+        timer.setDelay(PERIOD);
         timer.setTimeUnit(TimeUnit.MILLISECONDS);
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
         
@@ -88,8 +111,18 @@ public abstract class CommonController {
     protected void onViewVisible() {}
     protected void onViewHidden() {}
 
-    public void setSession(SessionID session) {
-        this.session = session;
+    public void setSession(final SessionID session) {
+        executeInCriticalSection(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                CommonController.this.session = session;
+                return null;
+            }
+        });
+    }
+
+    long __test__getTimeDeltaOnNewSession() {
+        return -1;
     }
 }
 

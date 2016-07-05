@@ -42,6 +42,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.thread.cache.RangedCache;
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -55,6 +57,9 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadState;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class ThreadTimelineControllerTest {
 
     private ThreadTimelineView view;
@@ -62,8 +67,15 @@ public class ThreadTimelineControllerTest {
     private Timer timer;
     private SessionID session;
 
+    private AppCache cache;
+    private Map<SessionID, RangedCache<ThreadState>> threadStatesCache;
+
     @Before
     public void setup() {
+        threadStatesCache = new ConcurrentHashMap<>();
+
+        cache = mock(AppCache.class);
+        when(cache.retrieve(CommonController.THREAD_STATE_CACHE)).thenReturn(threadStatesCache);
         view = mock(ThreadTimelineView.class);
         collector = mock(ThreadCollector.class);
         timer = mock(Timer.class);
@@ -79,7 +91,7 @@ public class ThreadTimelineControllerTest {
         doNothing().when(timer).setAction(captor.capture());
 
         ThreadTimelineController controller =
-                new ThreadTimelineController(view, collector, timer);
+                new ThreadTimelineController(view, collector, timer, cache);
         Runnable timerAction = captor.getValue();
 
         timerAction.run();
@@ -98,7 +110,7 @@ public class ThreadTimelineControllerTest {
         when(newSession.get()).thenReturn("0");
 
         ThreadTimelineController controller =
-                new ThreadTimelineController(view, collector, timer);
+                new ThreadTimelineController(view, collector, timer, cache);
         Runnable timerAction = captor.getValue();
 
         timerAction.run();
@@ -122,7 +134,12 @@ public class ThreadTimelineControllerTest {
         when(collector.getThreadRange(session)).thenReturn(range);
 
         ThreadTimelineController controller =
-                new ThreadTimelineController(view, collector, timer);
+                new ThreadTimelineController(view, collector, timer, cache) {
+                    @Override
+                    long __test__getTimeDeltaOnNewSession() {
+                        return 0;
+                    }
+                };
         Runnable timerAction = captor.getValue();
 
         timerAction.run();
@@ -147,12 +164,19 @@ public class ThreadTimelineControllerTest {
         when(collector.getThreadRange(session)).thenReturn(range);
 
         ThreadTimelineController controller =
-                new ThreadTimelineController(view, collector, timer);
+                new ThreadTimelineController(view, collector, timer, cache) {
+                    @Override
+                    long __test__getTimeDeltaOnNewSession() {
+                        return 0;
+                    }
+                };
         Runnable timerAction = captor.getValue();
 
         timerAction.run();
 
-        ResultHandler handler = captor2.getValue();
+        ThreadTimelineController.ThreadStateResultHandler handler =
+                (ThreadTimelineController.ThreadStateResultHandler) captor2.getValue();
+        handler.setCacheResults(false);
 
         ThreadState state0 = mock(ThreadState.class);
         when(state0.getName()).thenReturn("state0");

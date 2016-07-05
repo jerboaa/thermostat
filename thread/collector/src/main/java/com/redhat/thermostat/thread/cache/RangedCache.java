@@ -34,34 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.controller.internal;
+package com.redhat.thermostat.thread.cache;
 
-import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.thread.client.common.view.LockView;
-import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
-import com.redhat.thermostat.thread.dao.LockInfoDao;
-import com.redhat.thermostat.thread.model.LockInfo;
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-public class LockController extends CommonController {
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TreeMap;
 
-    private LockInfoDao dao;
-    private VmRef vm;
+/**
+ */
+public class RangedCache<T extends TimeStampedPojo> {
 
-    public LockController(LockView view, Timer timer, LockInfoDao lockInfoDao, VmRef vm, AppCache cache) {
-        super(timer, view, cache);
-        this.dao = lockInfoDao;
-        this.vm = vm;
-        timer.setAction(new LockInfoUpdateAction());
+    private TreeMap<Long, List<T>> cache;
+
+    public RangedCache() {
+        this(new TreeMap<Long, List<T>>());
     }
 
-    class LockInfoUpdateAction implements Runnable {
-        @Override
-        public void run() {
-            LockInfo result = dao.getLatestLockInfo(vm);
-            if (result != null) {
-                ((LockView) view).setLatestLockData(result);
-            }
+    RangedCache(TreeMap<Long, List<T>> cache) {
+        this.cache = cache;
+    }
+
+    public synchronized void put(T value) {
+        List<T> set = cache.get(value.getTimeStamp());
+        if (set == null) {
+            set = new LinkedList<>();
         }
+        set.add(value);
+        cache.put(value.getTimeStamp(), set);
+    }
+
+    public synchronized List<T> getValues(long lowerBound, long upperBound) {
+        return getValues(new Range<>(lowerBound, upperBound));
+    }
+
+    public synchronized List<T> getValues(Range<Long> range) {
+        List<T> result = new ArrayList<>();
+
+        // the +1 is because the range upper bound is exclusive
+        for (List<T> set : cache.subMap(range.getMin(), range.getMax() + 1).values()) {
+            result.addAll(set);
+        }
+
+        return result;
+    }
+
+    public synchronized void clear() {
+        cache.clear();
     }
 }

@@ -42,6 +42,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -61,6 +62,7 @@ public class LockControllerTest {
     private Timer timer;
     private LockInfoDao dao;
     private VmRef vm;
+    private AppCache cache;
 
     @Before
     public void setup() {
@@ -68,11 +70,12 @@ public class LockControllerTest {
         timer = mock(Timer.class);
         dao = mock(LockInfoDao.class);
         vm = mock(VmRef.class);
+        cache = mock(AppCache.class);
     }
 
     @Test
     public void verifyVisibilityEnablesAndDisablesTimer() {
-        LockController controller = new LockController(view, timer, dao, vm);
+        LockController controller = new LockController(view, timer, dao, vm, cache);
         controller.initialize();
 
         ArgumentCaptor<ActionListener> actionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
@@ -92,7 +95,7 @@ public class LockControllerTest {
     public void verifyViewIsNotUpdatedOnNoData() {
         when(dao.getLatestLockInfo(vm)).thenReturn(null);
 
-        LockController controller = new LockController(view, timer, dao, vm);
+        LockController controller = new LockController(view, timer, dao, vm, cache);
         controller.initialize();
 
         ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
@@ -111,7 +114,7 @@ public class LockControllerTest {
         LockInfo lockInfo = new LockInfo();
         when(dao.getLatestLockInfo(vm)).thenReturn(lockInfo);
 
-        LockController controller = new LockController(view, timer, dao, vm);
+        LockController controller = new LockController(view, timer, dao, vm, cache);
         controller.initialize();
 
         ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
