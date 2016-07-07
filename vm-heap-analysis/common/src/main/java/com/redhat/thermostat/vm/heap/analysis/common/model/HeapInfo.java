@@ -109,7 +109,7 @@ public class HeapInfo extends BasePojo implements TimeStampedPojo {
             return false;
         }
         HeapInfo other = (HeapInfo) o;
-        return vmId == other.vmId && Objects.equals(heapDumpId, other.heapDumpId)
+        return Objects.equals(vmId, other.vmId) && Objects.equals(heapDumpId, other.heapDumpId)
                && Objects.equals(histogramId, other.histogramId) && timeStamp == other.timeStamp;
     }
 

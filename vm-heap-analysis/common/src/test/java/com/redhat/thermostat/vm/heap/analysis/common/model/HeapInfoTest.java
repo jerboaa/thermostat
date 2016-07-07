@@ -36,8 +36,14 @@
 
 package com.redhat.thermostat.vm.heap.analysis.common.model;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -74,6 +80,38 @@ public class HeapInfoTest extends DataObjectTest {
         heapInfo.setHistogramId("test");
         assertEquals("test", heapInfo.getHistogramId());
     }
+
+    @Test
+    public void testEquals() {
+        /**
+         * Use new String for distinct objects to catch
+         * equals issues
+         * "1" == "1" is true
+         * new String("1") == new String("1") is false
+         * new String("1").equals(new String "1") is true
+         */
+        HeapInfo a = new HeapInfo(new String("1"), new String("1"), 0l);
+        assertThat(a, is(equalTo(a)));
+
+        HeapInfo b = new HeapInfo(new String("1"), new String("1"), 0l);
+        assertThat(a, is(equalTo(b)));
+    }
+
+    @Test
+    public void testNotEquals() {
+        HeapInfo a = new HeapInfo(new String("1"), new String("1"), 0l);
+        HeapInfo b = new HeapInfo(new String("1"), new String("2"), 0l);
+
+        assertThat(a, is(not(equalTo(b))));
+    }
+
+    @Test
+    public void testHashEquals() {
+        HeapInfo a = new HeapInfo(new String("1"), new String("1"), 0l);
+        assertThat(a.hashCode(), is(equalTo(a.hashCode())));
+
+        HeapInfo b = new HeapInfo(new String("1"), new String("1"), 0l);
+        assertThat(a.hashCode(), is(equalTo(b.hashCode())));    }
 
     @Override
     public Class<?>[] getDataClasses() {
