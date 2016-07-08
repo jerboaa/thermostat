@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.web.endpoint.internal;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
@@ -43,36 +44,29 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.Test;
 
-import com.redhat.thermostat.web.endpoint.internal.DelegatingWebappClassLoader;
-
-public class DelegatingWebappClassLoaderTest {
+public class DelegatingClassLoaderTest {
 
     @Test
     public void verifyClassloaderDelegationFailsForNotExistingClass() throws Exception {
         ClassLoader mockLoader = mock(ClassLoader.class);
-        WebAppContext mockContext = mock(WebAppContext.class);
-        DelegatingWebappClassLoader webappLoader = new DelegatingWebappClassLoader(mockLoader, mockContext);
+        DelegatingClassLoader delegateLoader = new DelegatingClassLoader(mockLoader);
         String notExistingClassName = "com.redhat.thermostat.not.existing.FooClass";
         doThrow(ClassNotFoundException.class).when(mockLoader).loadClass(eq(notExistingClassName));
         try {
-            webappLoader.loadClass(notExistingClassName);
+            delegateLoader.loadClass(notExistingClassName);
             fail("should not have found class " + notExistingClassName);
         } catch (ClassNotFoundException e) {
             // pass
             verify(mockLoader).loadClass(eq(notExistingClassName));
-        } finally {
-            webappLoader.close();
         }
     }
     
     @Test
     public void verifyClassloaderDelegationWorksForExistingClass() throws Exception {
         ClassLoader mockLoader = mock(ClassLoader.class);
-        WebAppContext mockContext = mock(WebAppContext.class);
-        DelegatingWebappClassLoader webappLoader = new DelegatingWebappClassLoader(mockLoader, mockContext);
+        DelegatingClassLoader webappLoader = new DelegatingClassLoader(mockLoader);
         // This class is not really there, but the fake class loader does not
         // throw a CNFE
         String className = "com.redhat.thermostat.not.existing.FooClass";
@@ -81,10 +75,22 @@ public class DelegatingWebappClassLoaderTest {
             assertNull(clazz);
         } catch (ClassNotFoundException e) {
             fail("should have been able to load class since mock classloader does not throw CNFE");
-        } finally {
-            webappLoader.close();
         }
         verify(mockLoader).loadClass(eq(className));
+    }
+    
+    @Test
+    public void verifySystemClassIsResolvable() throws Exception {
+    	ClassLoader mockLoader = mock(ClassLoader.class);
+    	DelegatingClassLoader delegateLoader = new DelegatingClassLoader(mockLoader);
+    	String className = "javax.security.auth.login.LoginContext";
+    	doThrow(ClassNotFoundException.class).when(mockLoader).loadClass(eq(className));
+    	try {
+    		Class<?> clazz = delegateLoader.loadClass(className);
+    		assertNotNull(clazz);
+    	} catch (ClassNotFoundException e) {
+    		fail("should have been able to load system class " + className);
+    	}
     }
     
 }

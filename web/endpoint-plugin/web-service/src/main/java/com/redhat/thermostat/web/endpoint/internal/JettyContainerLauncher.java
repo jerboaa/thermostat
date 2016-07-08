@@ -96,7 +96,26 @@ class JettyContainerLauncher {
 
             @Override
             public void run() {
-                startContainerAndDeployWar(contextStartedLatch);
+                // Make the class loader aware of the osgi env. By default webapps use
+                // the set TCCL as parent. Note that a plain WebAppClassLoader is not sufficient. Mainly because of classes
+                // jetty itself is using (from the servlet API, other bundles etc). 
+                //
+                // It's a simple delegating class loader. If the OSGi loader (the loader of this
+                // class) doesn't find the class, we delegate to the system class loader.
+                // 
+                // Note that this also assumes proper wiring of the endpoint bundle. That should be
+                // the case by using explicit instructions for the maven-bundle-plugin
+                // and starting all required jetty bundles on boot.
+                //
+                // See also this bug for some discussion:
+                // https://github.com/eclipse/jetty.project/issues/705
+                ClassLoader osgiLoader = JettyContainerLauncher.class.getClassLoader();
+                Thread.currentThread().setContextClassLoader(new DelegatingClassLoader(osgiLoader));
+                try {
+                    startContainerAndDeployWar(contextStartedLatch);
+                } finally {
+                    Thread.currentThread().setContextClassLoader(null);
+                }
             }
             
         });
@@ -174,20 +193,6 @@ class JettyContainerLauncher {
         
         writeWebDefaults(tempWebDefaults, uri);
         ctx.setDefaultsDescriptor(tempWebDefaults.getAbsolutePath());
-        
-        // Make the class loader aware of the osgi env. By default it uses
-        // WebAppClassLoader which is not sufficient. Mainly because of classes
-        // jetty itself is using (from the servlet API, other bundles etc). 
-        // Thermostat itself should be happy with just WebAppClassLoader.
-        // 
-        // It's a simple delegating class loader. If WebappClassLoader doesn't
-        // find the class, we delegate to the class loader of this bundle (which
-        // in turn should delegate to the right loader).
-        // 
-        // Note that this also assumes proper wiring of bundles. That should be
-        // the case by using explicit instructions for the maven-bundle-plugin
-        // and starting all required jetty bundles on boot.
-        ctx.setClassLoader(new DelegatingWebappClassLoader(getClass().getClassLoader(), ctx));
         
         // Make server startup fail if context cannot be deployed.
         // Please don't change this.

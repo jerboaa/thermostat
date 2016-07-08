@@ -36,48 +36,23 @@
 
 package com.redhat.thermostat.web.endpoint.internal;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+/**
+ * Asks a delegating classloader to load classes, and if not found defer to the
+ * system class loader.
+ */
+class DelegatingClassLoader extends ClassLoader {
+    
+    private final ClassLoader delegate;
 
-import org.eclipse.jetty.webapp.WebAppClassLoader;
-import org.eclipse.jetty.webapp.WebAppContext;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
-
-public class DelegatingWebappClassLoader extends WebAppClassLoader {
-
-    private static final boolean DEBUG = false;
-    private static final Logger logger = LoggingUtils.getLogger(DelegatingWebappClassLoader.class);
-    private final ClassLoader osgiDelegate;
-
-    public DelegatingWebappClassLoader(ClassLoader osgiDelegate, WebAppContext context)
-            throws IOException {
-        super(context);
-        this.osgiDelegate = osgiDelegate;
+    DelegatingClassLoader(ClassLoader delegate) {
+        this.delegate = delegate;
     }
-
-    private void log(String s) {
-        if (DEBUG) {
-            logger.log(Level.FINEST, s);
-        }
-    }
-
-    @Override
-    public void addClassPath(String classPath) throws IOException {
-        log(String.format("Adding classpath: %s", classPath));
-        super.addClassPath(classPath);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Override
-    public Class loadClass(String name) throws ClassNotFoundException {
+    
+    public Class<?> loadClass(String className) throws ClassNotFoundException {
         try {
-            return super.loadClass(name);
+            return delegate.loadClass(className);
         } catch (ClassNotFoundException e) {
-            log(String.format("loading class using OSGi delegate: %s", name));
-            // try the osgi delegate
-            return osgiDelegate.loadClass(name);
+            return getSystemClassLoader().loadClass(className);
         }
     }
 }
