@@ -36,36 +36,26 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
-
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-
-import javax.swing.JFrame;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
-
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.UIDefaults;
+import com.redhat.thermostat.client.swing.components.ActionToggleButton;
+import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.internal.test.Bug;
+import com.redhat.thermostat.common.utils.MethodDescriptorConverter;
+import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
+import com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.PlainTextMethodDeclarationRenderer;
+import com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.ProfileItemRenderer;
+import com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.SimpleTextRenderer;
+import com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer;
+import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.ProfileAction;
+import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.ProfilingState;
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
@@ -85,19 +75,37 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.annotations.internal.CacioTest;
-import com.redhat.thermostat.client.swing.components.ActionToggleButton;
-import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.utils.MethodDescriptorConverter;
-import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
-import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.CURRENT_STATUS_LABEL_NAME;
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.OVERLAY_PANEL;
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.PROFILES_LIST_NAME;
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.PROFILE_TABLE_NAME;
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.TOGGLE_BUTTON_NAME;
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.TOGGLE_PROFILE_LIST_NAME;
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Profile;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -143,6 +151,20 @@ public class SwingVmProfileViewTest {
         view = null;
     }
 
+    @Bug(id = "3088",
+         url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3088",
+         summary = "Profiling View has duplicate button icons with no tooltips\n")
+    @GUITest
+    @Test
+    public void testSessionAndProfilingIconsNotSame() {
+        frame.show();
+
+        JToggleButtonFixture listProfiles = frame.toggleButton(TOGGLE_PROFILE_LIST_NAME);
+        JToggleButtonFixture toggleProfile = frame.toggleButton(TOGGLE_BUTTON_NAME);
+
+        assertNotSame(listProfiles.target.getIcon(), toggleProfile.target.getIcon());
+    }
+
     @GUITest
     @Test
     public void testSetProfilingState() throws InvocationTargetException, InterruptedException {
@@ -157,11 +179,11 @@ public class SwingVmProfileViewTest {
             protected void executeInEDT() throws Throwable {
                 toggleButton.toggleText(true);
                 view.setViewControlsEnabled(false);
-                view.setProfilingState(VmProfileView.ProfilingState.STARTED);
+                view.setProfilingState(ProfilingState.STARTED);
             }
         });
 
-        checkButtonState(VmProfileView.ProfilingState.DISABLED, toggleButton);
+        checkButtonState(ProfilingState.DISABLED, toggleButton);
         assertEquals(translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_DEAD).getContents(),
                 currentStatusLabelFixture.text());
         assertEquals(translator.localize(LocaleResources.START_PROFILING).getContents(),
@@ -171,30 +193,30 @@ public class SwingVmProfileViewTest {
             @Override
             protected void executeInEDT() throws Throwable {
                 view.setViewControlsEnabled(true);
-                view.setProfilingState(VmProfileView.ProfilingState.STOPPING);
+                view.setProfilingState(ProfilingState.STOPPING);
             }
         });
-        checkButtonState(VmProfileView.ProfilingState.STOPPING, toggleButton);
+        checkButtonState(ProfilingState.STOPPING, toggleButton);
         verifyActive(currentStatusLabelFixture, toggleButtonFixture);
 
-        setProfilingStateInEDT(VmProfileView.ProfilingState.STARTED);
-        checkButtonState(VmProfileView.ProfilingState.STARTED, toggleButton);
+        setProfilingStateInEDT(ProfilingState.STARTED);
+        checkButtonState(ProfilingState.STARTED, toggleButton);
         verifyActive(currentStatusLabelFixture, toggleButtonFixture);
 
-        setProfilingStateInEDT(VmProfileView.ProfilingState.STOPPED);
-        checkButtonState(VmProfileView.ProfilingState.STOPPED, toggleButton);
+        setProfilingStateInEDT(ProfilingState.STOPPED);
+        checkButtonState(ProfilingState.STOPPED, toggleButton);
         verifyInactive(currentStatusLabelFixture, toggleButtonFixture);
 
-        setProfilingStateInEDT(VmProfileView.ProfilingState.DISABLED);
-        checkButtonState(VmProfileView.ProfilingState.DISABLED, toggleButton);
+        setProfilingStateInEDT(ProfilingState.DISABLED);
+        checkButtonState(ProfilingState.DISABLED, toggleButton);
         verifyInactive(currentStatusLabelFixture, toggleButtonFixture);
 
-        setProfilingStateInEDT(VmProfileView.ProfilingState.STARTING);
-        checkButtonState(VmProfileView.ProfilingState.STARTING, toggleButton);
+        setProfilingStateInEDT(ProfilingState.STARTING);
+        checkButtonState(ProfilingState.STARTING, toggleButton);
         verifyInactive(currentStatusLabelFixture, toggleButtonFixture);
     }
 
-    private void setProfilingStateInEDT(final VmProfileView.ProfilingState state) {
+    private void setProfilingStateInEDT(final ProfilingState state) {
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
@@ -203,7 +225,7 @@ public class SwingVmProfileViewTest {
         });
     }
 
-    private void checkButtonState(final VmProfileView.ProfilingState profilingState,
+    private void checkButtonState(final ProfilingState profilingState,
                                   final ActionToggleButton toggleButton)
             throws InterruptedException, InvocationTargetException {
 
@@ -408,7 +430,7 @@ public class SwingVmProfileViewTest {
     public void testProfileItemRendererWithProfileValue() {
         final ProfileItemRenderer renderer = new ProfileItemRenderer(uiDefaults);
 
-        final VmProfileView.Profile value = new VmProfileView.Profile("profile", 1000, 100);
+        final Profile value = new Profile("profile", 1000, 100);
 
         final Component [] result = new Component[1];
         GuiActionRunner.execute(new GuiTask() {

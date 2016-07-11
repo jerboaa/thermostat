@@ -224,8 +224,8 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent {
 
         toggleButton = new ActionToggleButton(START_ICON, STOP_ICON, translator.localize(
                 LocaleResources.START_PROFILING));
+        toggleButton.setToolTipText(translator.localize(LocaleResources.PROFILING_TOGGLE_TOOLTIP).getContents());
         toggleButton.setName(TOGGLE_BUTTON_NAME);
-        toggleButton.toggleText(false);
         toggleButton.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -238,9 +238,10 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent {
             }
         });
 
-        showRecordedSessionsButton = new ActionToggleButton(START_ICON, LIST_SESSIONS_ICON,
+        showRecordedSessionsButton = new ActionToggleButton(LIST_SESSIONS_ICON,
                                                             translator.localize(LocaleResources.DISPLAY_SESSIONS));
         showRecordedSessionsButton.setName(TOGGLE_PROFILE_LIST_NAME);
+        showRecordedSessionsButton.setToolTipText(translator.localize(LocaleResources.DISPLAY_SESSIONS_TOOLTIP).getContents());
 
         mainContainer = new HeaderPanel(translator.localize(LocaleResources.PROFILER_HEADING));
         new ComponentVisibilityNotifier().initialize(mainContainer, notifier);
