@@ -40,6 +40,7 @@ import static com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileV
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.rmi.dgc.VMID;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.command.RequestQueue;
@@ -58,6 +60,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -72,6 +75,7 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -121,9 +125,9 @@ public class VmProfileController implements InformationServiceController<VmRef> 
 
     public VmProfileController(ApplicationService service, ProgressNotifier notifier,
             AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
-            RequestQueue queue, VmProfileTreeMapViewProvider treeMapViewProvider, VmRef vm) {
+            RequestQueue queue, VmProfileTreeMapViewProvider treeMapViewProvider, VmRef vm, UIDefaults uiDefaults) {
         this(service, notifier, agentInfoDao, vmInfoDao, dao, queue, new SystemClock(),
-                new SwingVmProfileView(), vm, treeMapViewProvider);
+                new SwingVmProfileView(uiDefaults), vm, treeMapViewProvider);
     }
 
     VmProfileController(final ApplicationService service, ProgressNotifier notifier,
@@ -159,7 +163,6 @@ public class VmProfileController implements InformationServiceController<VmRef> 
             @Override
             public void run() {
                 updateViewWithCurrentProfilingStatus();
-                updateViewWithProfiledRuns();
             }
 
         });
@@ -198,11 +201,13 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                         loadSelectedProfileRunData();
                         updateViewWithSelectedProfileRunData();
                         break;
+                    case DISPLAY_PROFILING_SESSIONS:
+                        updateViewWithProfiledRuns();
+                        break;
                     default:
                         throw new AssertionError("Unknown event: " + id);
                 }
             }
-
         });
 
         view.setTabbedPaneActionListener(new ActionListener<TabbedPaneAction>() {
@@ -226,7 +231,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     }
 
     private void saveState() {
-        SaveState bundle = new SaveState(previousStatus, profilingStartOrStopRequested, profilingState);
+        SaveState bundle = new SaveState(previousStatus, profilingStartOrStopRequested, profilingState, selectedResult);
         Map<VmRef, SaveState> map = ((Map<VmRef, SaveState>) service.getApplicationCache().getAttribute(STATE_MAP_KEY));
         map.put(vm, bundle);
         service.getApplicationCache().addAttribute(STATE_MAP_KEY, map);
@@ -237,10 +242,15 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         profilingStartOrStopRequested = bundle != null && bundle.isProfilingStartOrStopRequested();
         previousStatus = bundle == null ? null : bundle.getProfileStatusChange();
         profilingState = bundle == null ? ProfilingState.STOPPED : bundle.getProfilingState();
+        selectedResult = bundle == null ? null : bundle.getProfilingResult();
         if (previousStatus != null) {
             profilingState = getProfilingState(previousStatus, profilingStartOrStopRequested);
         }
         view.setProfilingState(profilingState);
+
+        if (selectedResult != null) {
+            view.setProfilingDetailData(selectedResult);
+        }
     }
 
     private void startProfiling() {
@@ -263,7 +273,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     private void sendProfilingRequest(final boolean start) {
         AgentId agentId = new AgentId(vm.getHostRef().getAgentId());
         InetSocketAddress address = agentInfoDao.getAgentInformation(agentId).getRequestQueueAddress();
-        String action = start ? ProfileRequest.START_PROFILING : ProfileRequest.STOP_PROFILING;
+        final String action = start ? ProfileRequest.START_PROFILING : ProfileRequest.STOP_PROFILING;
         Request req = ProfileRequest.create(address, vm.getVmId(), action);
         req.addListener(new RequestResponseListener() {
             @Override
@@ -271,6 +281,9 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                 switch (response.getType()) {
                     case OK:
                         updateViewWithCurrentProfilingStatus();
+                        if (action == ProfileRequest.STOP_PROFILING) {
+                            loadLatestProfileData();
+                        }
                         break;
                     default:
                         view.displayErrorMessage(translator.localize(LocaleResources.PROFILER_ERROR));
@@ -375,6 +388,27 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         selectedResult = new ProfilingResultParser().parse(in);
     }
 
+    private void loadLatestProfileData() {
+        service.getApplicationExecutor().submit(new Runnable() {
+            @Override
+            public void run() {
+                AgentId agentId = new AgentId(vm.getHostRef().getAgentId());
+                VmId vmId = new VmId(vm.getVmId());
+                InputStream in = profileDao.loadLatestProfileData(agentId, vmId);
+                if (in == null) {
+                    // this method is called after a profiling stop event,
+                    // there may be some elapsed time between the data is available in
+                    // the database for retrieval, so the method is called again if
+                    // there data is still not around, and then again
+                    loadLatestProfileData();
+                    return;
+                }
+                selectedResult = new ProfilingResultParser().parse(in);
+                updateViewWithSelectedProfileRunData();
+            }
+        });
+    }
+
     private void updateViewWithSelectedProfileRunData() {
         switch (lastTabSelection) {
             case TABLE_TAB_SELECTED:
@@ -409,11 +443,17 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         private final ProfileStatusChange profileStatusChange;
         private final boolean profilingStartOrStopRequested;
         private final ProfilingState profilingState;
+        private final ProfilingResult result;
 
-        public SaveState(ProfileStatusChange profileStatusChange, boolean profilingStartOrStopRequested, ProfilingState profilingState) {
+        public SaveState(ProfileStatusChange profileStatusChange,
+                         boolean profilingStartOrStopRequested,
+                         ProfilingState profilingState,
+                         ProfilingResult result)
+        {
             this.profileStatusChange = profileStatusChange;
             this.profilingStartOrStopRequested = profilingStartOrStopRequested;
             this.profilingState = profilingState;
+            this.result = result;
         }
 
         public ProfileStatusChange getProfileStatusChange() {
@@ -426,6 +466,10 @@ public class VmProfileController implements InformationServiceController<VmRef> 
 
         public ProfilingState getProfilingState() {
             return profilingState;
+        }
+
+        public ProfilingResult getProfilingResult() {
+            return result;
         }
     }
 }

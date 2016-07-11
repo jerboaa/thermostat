@@ -62,7 +62,10 @@ public enum LocaleResources {
 
     PROFILER_NO_RESULTS,
     PROFILER_ERROR,
-    ERROR_HEADER
+    ERROR_HEADER,
+
+    DISPLAY_SESSIONS,
+    RECORDING_LIST,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.profiler.client.swing.internal.strings";

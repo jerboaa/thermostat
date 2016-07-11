@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
+import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -46,6 +47,9 @@ import static org.mockito.Mockito.when;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -56,10 +60,12 @@ import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import com.redhat.thermostat.client.swing.UIDefaults;
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
@@ -106,6 +112,8 @@ public class SwingVmProfileViewTest {
     private SwingVmProfileView view;
     private FrameFixture frame;
 
+    private UIDefaults uiDefaults;
+
     @BeforeClass
     public static void setUpOnce() {
         FailOnThreadViolationRepaintManager.install();
@@ -113,10 +121,13 @@ public class SwingVmProfileViewTest {
 
     @Before
     public void setUp() {
+
+        uiDefaults = mock(UIDefaults.class);
+
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
-                view = new SwingVmProfileView();
+                view = new SwingVmProfileView(uiDefaults);
             }
         });
 
@@ -137,8 +148,8 @@ public class SwingVmProfileViewTest {
     public void testSetProfilingState() throws InvocationTargetException, InterruptedException {
         frame.show();
 
-        JLabelFixture currentStatusLabelFixture = frame.label(SwingVmProfileView.CURRENT_STATUS_LABEL_NAME);
-        JToggleButtonFixture toggleButtonFixture = frame.toggleButton(SwingVmProfileView.TOGGLE_BUTTON_NAME);
+        JLabelFixture currentStatusLabelFixture = frame.label(CURRENT_STATUS_LABEL_NAME);
+        JToggleButtonFixture toggleButtonFixture = frame.toggleButton(TOGGLE_BUTTON_NAME);
         final ActionToggleButton toggleButton = (ActionToggleButton) toggleButtonFixture.component();
 
         GuiActionRunner.execute(new GuiTask() {
@@ -225,36 +236,41 @@ public class SwingVmProfileViewTest {
 
     @GUITest
     @Test
-    public void testGetSelectedProfileWithoutSelection() throws InvocationTargetException,
-            InterruptedException {
+    public void testGetSelectedProfileFromList() throws InvocationTargetException,
+            InterruptedException
+    {
 
-        frame.show();
+        Profile profilingResult0 = new Profile("test0", 0, 1);
+        Profile profilingResult1 = new Profile("test1", 1, 2);
 
-        JListFixture profileJList = frame.list(SwingVmProfileView.PROFILES_LIST_NAME);
-        profileJList.clearSelection();
+        final List<Profile> profileList = new ArrayList<>();
+        profileList.add(profilingResult0);
+        profileList.add(profilingResult1);
 
-        ByteArrayOutputStream divertedErr = new ByteArrayOutputStream();
-        System.setErr(new PrintStream(divertedErr));
+        view.addProfileActionListener(new ActionListener<ProfileAction>() {
+            @Override
+            public void actionPerformed(com.redhat.thermostat.common.ActionEvent<ProfileAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
 
-        view.getSelectedProfile();
+                    case DISPLAY_PROFILING_SESSIONS:
+                        view.setAvailableProfilingRuns(profileList);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
 
-        assertTrue(divertedErr.toString().contains(InvocationTargetException.class.getSimpleName()));
-    }
+        frame.show(new Dimension(800, 800));
 
-    @GUITest
-    @Test
-    public void testGetSelectedProfileWithSelection() throws InvocationTargetException,
-            InterruptedException {
+        JToggleButtonFixture toggle = frame.toggleButton(TOGGLE_PROFILE_LIST_NAME);
+        toggle.click();
 
-        frame.show();
+        JListFixture profileJList = frame.panel(OVERLAY_PANEL).list(PROFILES_LIST_NAME);
+        profileJList.clickItem(1);
 
-        final JListFixture profileJList = frame.list(SwingVmProfileView.PROFILES_LIST_NAME);
-        final List<VmProfileView.Profile> availableRuns = new ArrayList<>();
-        availableRuns.add(new VmProfileView.Profile("profile1", 1000, 1000));
-        view.setAvailableProfilingRuns(availableRuns);
-
-        profileJList.clickItem(0);
-        assertEquals(availableRuns.get(0), view.getSelectedProfile());
+        String name = view.getSelectedProfile().name;
+        assertEquals("test1", name);
     }
 
     @GUITest
@@ -266,7 +282,7 @@ public class SwingVmProfileViewTest {
 
         view.setProfilingDetailData(new ProfilingResult(new ArrayList<MethodInfo>()));
 
-        final JTableFixture table = frame.table(SwingVmProfileView.PROFILE_TABLE_NAME);
+        final JTableFixture table = frame.table(PROFILE_TABLE_NAME);
         String[][] contents = table.contents();
 
         assertEquals(1, contents.length);
@@ -291,7 +307,7 @@ public class SwingVmProfileViewTest {
 
         view.setProfilingDetailData(result);
 
-        final JTableFixture table = frame.table(SwingVmProfileView.PROFILE_TABLE_NAME);
+        final JTableFixture table = frame.table(PROFILE_TABLE_NAME);
 
         String[][] contents = table.contents();
         assertEquals(2, contents.length);
@@ -321,7 +337,7 @@ public class SwingVmProfileViewTest {
 
         view.setProfilingDetailData(result);
 
-        final JTableFixture table = frame.table(SwingVmProfileView.PROFILE_TABLE_NAME);
+        final JTableFixture table = frame.table(PROFILE_TABLE_NAME);
 
         String[][] contents = table.contents();
         assertEquals(3, contents.length);
@@ -350,12 +366,12 @@ public class SwingVmProfileViewTest {
         tabPaneFixture.requireTabTitles(tableTabName.getContents(), testTabName.getContents());
 
         // visible by default:
-        frame.table(SwingVmProfileView.PROFILE_TABLE_NAME).requireVisible();
+        frame.table(PROFILE_TABLE_NAME).requireVisible();
 
         tabPaneFixture.selectTab(testTabName.getContents());
         final Component selected2 = tabPaneFixture.selectedComponent();
         try {
-            frame.table(SwingVmProfileView.PROFILE_TABLE_NAME);
+            frame.table(PROFILE_TABLE_NAME);
             fail();
         } catch (ComponentLookupException e) {
             // pass: not visible
@@ -370,43 +386,50 @@ public class SwingVmProfileViewTest {
         });
 
         tabPaneFixture.selectTab(tableTabName.getContents());
-        frame.table(SwingVmProfileView.PROFILE_TABLE_NAME).requireVisible();
+        frame.table(PROFILE_TABLE_NAME).requireVisible();
 
     }
 
     @Test
     public void testProfileItemRendererFailsWithNonProfileValue() {
-        SwingVmProfileView.ProfileItemRenderer renderer = new SwingVmProfileView.ProfileItemRenderer();
+        ProfileItemRenderer renderer = new ProfileItemRenderer(uiDefaults);
 
         String value = "value";
         Component result = renderer.getListCellRendererComponent(
                 mock(JList.class), value, 0, true, true);
 
-        SwingVmProfileView.ProfileItemRenderer resultRenderer =
-                (SwingVmProfileView.ProfileItemRenderer) result;
+        ProfileItemRenderer resultRenderer =
+                (ProfileItemRenderer) result;
 
         assertEquals(value, resultRenderer.getText());
     }
 
     @Test
     public void testProfileItemRendererWithProfileValue() {
-        SwingVmProfileView.ProfileItemRenderer renderer = new SwingVmProfileView.ProfileItemRenderer();
+        final ProfileItemRenderer renderer = new ProfileItemRenderer(uiDefaults);
 
-        VmProfileView.Profile value = new VmProfileView.Profile("profile", 1000, 100);
-        Component result = renderer.getListCellRendererComponent(
-                mock(JList.class), value, 0, true, true);
+        final VmProfileView.Profile value = new VmProfileView.Profile("profile", 1000, 100);
 
-        SwingVmProfileView.ProfileItemRenderer resultRenderer =
-                (SwingVmProfileView.ProfileItemRenderer) result;
+        final Component [] result = new Component[1];
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                result[0] = renderer.getListCellRendererComponent(
+                        mock(JList.class), value, 0, true, true);
+            }
+        });
+
+
+        JPanel resultRenderer = (JPanel) result[0];
 
         String expectedValue = translator.localize(LocaleResources.PROFILER_LIST_ITEM,
                 value.name, new Date(value.startTimeStamp).toString(), new Date(value.stopTimeStamp).toString()).getContents();
-        assertEquals(expectedValue, resultRenderer.getText());
+        assertEquals(expectedValue, resultRenderer.getName());
     }
 
     @Test
     public void testSimpleTextRendererFailsWithInvalidValue() {
-        SwingVmProfileView.SimpleTextRenderer renderer = new SwingVmProfileView.SimpleTextRenderer();
+        SimpleTextRenderer renderer = new SimpleTextRenderer();
 
         testRendererWithNullValue(renderer);
         testRendererWithPlainObjectAsValue(renderer);
@@ -414,8 +437,8 @@ public class SwingVmProfileViewTest {
 
     @Test
     public void testPlainTextMethodDeclarationRendererFailsWithInvalidValue() {
-        SwingVmProfileView.PlainTextMethodDeclarationRenderer renderer =
-                new SwingVmProfileView.PlainTextMethodDeclarationRenderer();
+        PlainTextMethodDeclarationRenderer renderer =
+                new PlainTextMethodDeclarationRenderer();
 
         testRendererWithNullValue(renderer);
         testRendererWithPlainObjectAsValue(renderer);
@@ -423,8 +446,8 @@ public class SwingVmProfileViewTest {
 
     @Test
     public void testSyntaxHighlightedMethodDeclarationRendererFailsWithInvalidValue() {
-        SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer renderer =
-                new SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer();
+        SyntaxHighlightedMethodDeclarationRenderer renderer =
+                new SyntaxHighlightedMethodDeclarationRenderer();
 
         testRendererWithNullValue(renderer);
         testRendererWithPlainObjectAsValue(renderer);
@@ -451,14 +474,14 @@ public class SwingVmProfileViewTest {
     @Test
     public void testSyntaxHighlightedMethodDeclarationRendererWithValidValue() {
         final Color METHOD_COLOR =
-                SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer.METHOD_COLOR;
+                SyntaxHighlightedMethodDeclarationRenderer.METHOD_COLOR;
         final Color PARAMETER_COLOR =
-                SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer.PARAMETER_COLOR;
+                SyntaxHighlightedMethodDeclarationRenderer.PARAMETER_COLOR;
         final Color RETURN_TYPE_COLOR =
-                SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer.RETURN_TYPE_COLOR;
+                SyntaxHighlightedMethodDeclarationRenderer.RETURN_TYPE_COLOR;
 
-        SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer renderer =
-                new SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer();
+        SyntaxHighlightedMethodDeclarationRenderer renderer =
+                new SyntaxHighlightedMethodDeclarationRenderer();
 
         String methodName = "foo";
         List<String> parameters = Arrays.asList("double", "String");
@@ -470,16 +493,16 @@ public class SwingVmProfileViewTest {
         Component result = renderer.getTableCellRendererComponent(mock(JTable.class), decl,
                 true, true, 0, 0);
 
-        SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer resultRenderer =
-                (SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer) result;
+        SyntaxHighlightedMethodDeclarationRenderer resultRenderer =
+                (SyntaxHighlightedMethodDeclarationRenderer) result;
 
-        String highlightedReturnType = SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer
+        String highlightedReturnType = SyntaxHighlightedMethodDeclarationRenderer
                 .htmlColorText(returnType, RETURN_TYPE_COLOR);
-        String highlightedName = SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer
+        String highlightedName = SyntaxHighlightedMethodDeclarationRenderer
                 .htmlColorText(methodName, METHOD_COLOR);
-        String highlightedFirstParam = SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer
+        String highlightedFirstParam = SyntaxHighlightedMethodDeclarationRenderer
                 .htmlColorText(parameters.get(0), PARAMETER_COLOR);
-        String highlightedSecondParam = SwingVmProfileView.SyntaxHighlightedMethodDeclarationRenderer
+        String highlightedSecondParam = SyntaxHighlightedMethodDeclarationRenderer
                 .htmlColorText(parameters.get(1), PARAMETER_COLOR);
 
         String expectedResult = "<html><pre>" + highlightedReturnType + " <b>" +
@@ -498,8 +521,10 @@ public class SwingVmProfileViewTest {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                UIDefaults uiDefaults = mock(UIDefaults.class);
+
                 JFrame window = new JFrame();
-                SwingVmProfileView view = new SwingVmProfileView();
+                SwingVmProfileView view = new SwingVmProfileView(uiDefaults);
                 window.add(view.getUiComponent());
                 window.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 window.pack();
@@ -514,9 +539,10 @@ public class SwingVmProfileViewTest {
                 view.setProfilingDetailData(results);
             }
 
-            private List<String> list(String... args) {
-                return Arrays.asList(args);
-            }
         });
+    }
+
+    private static List<String> list(String... args) {
+        return Arrays.asList(args);
     }
 }

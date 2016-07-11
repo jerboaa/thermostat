@@ -241,12 +241,6 @@ public class VmProfileControllerTest {
         Runnable runnable = runnableCaptor.getValue();
         runnable.run();
 
-        ArgumentCaptor<List> listCaptor = ArgumentCaptor.forClass(List.class);
-        verify(view).setAvailableProfilingRuns(listCaptor.capture());
-        List<Profile> resultList = listCaptor.getValue();
-        assertEquals(1, resultList.size());
-        assertEquals(PROFILE_TIMESTAMP, resultList.get(0).startTimeStamp);
-
         verify(view, atLeastOnce()).setViewControlsEnabled(true);
     }
 
@@ -419,7 +413,7 @@ public class VmProfileControllerTest {
         ProfileStatusChange psc = mock(ProfileStatusChange.class);
         when(psc.isStarted()).thenReturn(true);
         // should ignore the DISABLED argument because a previous state (psc) is available
-        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, true, VmProfileView.ProfilingState.DISABLED);
+        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, true, VmProfileView.ProfilingState.DISABLED, null);
         doRestoreTest(state);
 
         verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STARTING);
@@ -431,7 +425,7 @@ public class VmProfileControllerTest {
         ProfileStatusChange psc = mock(ProfileStatusChange.class);
         when(psc.isStarted()).thenReturn(true);
         // should ignore the DISABLED argument because a previous state (psc) is available
-        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, false, VmProfileView.ProfilingState.DISABLED);
+        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, false, VmProfileView.ProfilingState.DISABLED, null);
         doRestoreTest(state);
 
         verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STARTED);
@@ -443,7 +437,7 @@ public class VmProfileControllerTest {
         ProfileStatusChange psc = mock(ProfileStatusChange.class);
         when(psc.isStarted()).thenReturn(false);
         // should ignore the DISABLED argument because a previous state (psc) is available
-        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, true, VmProfileView.ProfilingState.DISABLED);
+        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, true, VmProfileView.ProfilingState.DISABLED, null);
         doRestoreTest(state);
 
         verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STOPPING);
@@ -455,7 +449,7 @@ public class VmProfileControllerTest {
         ProfileStatusChange psc = mock(ProfileStatusChange.class);
         when(psc.isStarted()).thenReturn(false);
         // should ignore the DISABLED argument because a previous state (psc) is available
-        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, false, VmProfileView.ProfilingState.DISABLED);
+        VmProfileController.SaveState state = new VmProfileController.SaveState(psc, false, VmProfileView.ProfilingState.DISABLED, null);
         doRestoreTest(state);
 
         verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STOPPED);
@@ -465,7 +459,7 @@ public class VmProfileControllerTest {
     @Test
     public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingDisabled() throws Exception {
         // no ProfilingStatusChange to rely on so fall back on the ProfilingState
-        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.DISABLED);
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.DISABLED, null);
         doRestoreTest(state);
 
         verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.DISABLED);
@@ -475,7 +469,7 @@ public class VmProfileControllerTest {
     @Test
     public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingStarting() throws Exception {
         // no ProfilingStatusChange to rely on so fall back on the ProfilingState
-        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STARTING);
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STARTING, null);
         doRestoreTest(state);
 
         verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STARTING);
@@ -485,7 +479,7 @@ public class VmProfileControllerTest {
     @Test
     public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingStarted() throws Exception {
         // no ProfilingStatusChange to rely on so fall back on the ProfilingState
-        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STARTED);
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STARTED, null);
         doRestoreTest(state);
 
         verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STARTED);
@@ -495,7 +489,7 @@ public class VmProfileControllerTest {
     @Test
     public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingStopping() throws Exception {
         // no ProfilingStatusChange to rely on so fall back on the ProfilingState
-        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STOPPING);
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STOPPING, null);
         doRestoreTest(state);
 
         verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STOPPING);
@@ -505,7 +499,7 @@ public class VmProfileControllerTest {
     @Test
     public void testRestoresStateCorrectlyWhenPreviousStateUnsetProfilingStopped() throws Exception {
         // no ProfilingStatusChange to rely on so fall back on the ProfilingState
-        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STOPPED);
+        VmProfileController.SaveState state = new VmProfileController.SaveState(null, false, VmProfileView.ProfilingState.STOPPED, null);
         doRestoreTest(state);
 
         verify(view, atLeastOnce()).setProfilingState(VmProfileView.ProfilingState.STOPPED);

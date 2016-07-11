@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.profiler.client.swing.internal;
 import java.util.Hashtable;
 import java.util.Map;
 
+import com.redhat.thermostat.client.swing.UIDefaults;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -73,6 +74,7 @@ public class Activator implements BundleActivator {
                 ProfileDAO.class,
                 RequestQueue.class,
                 VmProfileTreeMapViewProvider.class,
+                UIDefaults.class,
         };
 
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
@@ -87,8 +89,10 @@ public class Activator implements BundleActivator {
                 VmProfileTreeMapViewProvider treeMapViewProvider = (VmProfileTreeMapViewProvider) services
                         .get(VmProfileTreeMapViewProvider.class.getName());
 
+                UIDefaults uiDefaults = (UIDefaults) services.get(UIDefaults.class.getName());
+
                 InformationService<VmRef> profileService = new VmProfileService(service, notifier,
-                        agentInfoDao, vmInfoDao, profileDao, queue, treeMapViewProvider);
+                        agentInfoDao, vmInfoDao, profileDao, queue, treeMapViewProvider, uiDefaults);
 
                 Hashtable<String,String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());

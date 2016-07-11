@@ -40,6 +40,7 @@ import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.common.AllPassFilter;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Filter;
@@ -57,10 +58,14 @@ public class VmProfileService implements InformationService<VmRef> {
     private ProfileDAO dao;
     private RequestQueue queue;
     private VmProfileTreeMapViewProvider treeMapViewProvider;
+    private UIDefaults uiDefaults;
 
     public VmProfileService(ApplicationService service, ProgressNotifier notifier,
             AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
-            RequestQueue queue, VmProfileTreeMapViewProvider treeMapViewProvider) {
+            RequestQueue queue, VmProfileTreeMapViewProvider treeMapViewProvider,
+            UIDefaults uiDefaults)
+    {
+        this.uiDefaults = uiDefaults;
         this.service = service;
         this.notifier = notifier;
         this.agentInfoDao = agentInfoDao;
@@ -84,7 +89,7 @@ public class VmProfileService implements InformationService<VmRef> {
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
         return new VmProfileController(service, notifier, agentInfoDao, vmInfoDao, dao, queue,
-                treeMapViewProvider, ref);
+                treeMapViewProvider, ref, uiDefaults);
     }
 
 }

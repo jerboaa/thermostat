@@ -89,6 +89,7 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
         START_PROFILING,
         STOP_PROFILING,
 
+        DISPLAY_PROFILING_SESSIONS,
         PROFILE_SELECTED,
     }
 

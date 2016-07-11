@@ -60,11 +60,10 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
+import javax.swing.OverlayLayout;
 import javax.swing.RowSorter;
 import javax.swing.SingleSelectionModel;
 import javax.swing.SortOrder;
@@ -81,13 +80,18 @@ import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.ModelUtils;
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.components.OverlayPanel;
+import com.redhat.thermostat.client.swing.components.ShadowLabel;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
+import com.redhat.thermostat.client.swing.components.ThermostatThinScrollBar;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.ActionEvent;
@@ -99,20 +103,22 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
-public class SwingVmProfileView extends VmProfileView implements SwingComponent {
+class SwingVmProfileView extends VmProfileView implements SwingComponent {
 
     /** these components names are for testing only */
     static final String CURRENT_STATUS_LABEL_NAME = "CURRENT_STATUS_LABEL";
     static final String PROFILES_LIST_NAME = "PROFILES_LIST";
     static final String PROFILE_TABLE_NAME = "METHOD_TABLE";
     static final String TOGGLE_BUTTON_NAME = "TOGGLE_PROFILING_BUTTON";
+    static final String TOGGLE_PROFILE_LIST_NAME = "TOGGLE_PROFILE_LIST_NAME";
+    static final String STACK_PANE = "STACK_PANE";
+    static final String OVERLAY_PANEL = "OVERLAY_PANEL";
 
     private static final Icon START_ICON = IconResource.SAMPLE.getIcon();
     private static final Icon STOP_ICON = new FontAwesomeIcon('\uf28e', START_ICON.getIconHeight());
+    private static final Icon LIST_SESSIONS_ICON = IconResource.HISTORY.getIcon();
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-
-    private static final double SPLIT_PANE_RATIO = 0.3;
 
     private static final int COLUMN_METHOD_NAME = 0;
     private static final int COLUMN_METHOD_PERCENTAGE = 1;
@@ -121,7 +127,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     private final CopyOnWriteArrayList<ActionListener<ProfileAction>> listeners = new CopyOnWriteArrayList<>();
 
     private HeaderPanel mainContainer;
-    private JTabbedPane tabPane;
+    private ThermostatTabbedPane tabPane;
     private TabbedPaneAction lastTabSelection;
 
     private ActionToggleButton toggleButton;
@@ -137,24 +143,60 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     private ActionListener<TabbedPaneAction> tabListener;
 
+    private OverlayPanel overlay;
+    private ActionToggleButton showRecordedSessionsButton;
+
+    private UIDefaults uiDefaults;
+
     static class ProfileItemRenderer extends DefaultListCellRenderer {
+
+        private UIDefaults uiDefaults;
+
+        public ProfileItemRenderer(UIDefaults uiDefaults) {
+            this.uiDefaults = uiDefaults;
+        }
+
         @Override
         public Component getListCellRendererComponent(JList<?> list,
                 Object value, int index, boolean isSelected,
-                boolean cellHasFocus) {
+                boolean cellHasFocus)
+        {
             if (value instanceof Profile) {
                 Profile profile = (Profile) value;
                 value = translator.localize(LocaleResources.PROFILER_LIST_ITEM,
-                        profile.name, new Date(profile.startTimeStamp).toString(), new Date(profile.stopTimeStamp).toString()).getContents();
+                        profile.name, new Date(profile.startTimeStamp).toString(),
+                                      new Date(profile.stopTimeStamp).toString()).getContents();
+            } else {
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             }
-            return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            JPanel panel = new JPanel();
+            panel.setName(value.toString());
+            panel.setLayout(new BorderLayout());
+            panel.setOpaque(false);
+            ShadowLabel label = new ShadowLabel();
+            label.setText(value.toString());
+            label.setOpaque(false);
+
+            if (isSelected || cellHasFocus) {
+                panel.setOpaque(true);
+                panel.setBackground((Color) uiDefaults.getSelectedComponentBGColor());
+                label.setForeground((Color) uiDefaults.getSelectedComponentFGColor());
+
+            } else {
+                label.setForeground((Color) uiDefaults.getComponentFGColor());
+            }
+
+            panel.add(label);
+            return panel;
         }
     }
 
-    public SwingVmProfileView() {
-        listModel = new DefaultListModel<>();
+    public SwingVmProfileView(UIDefaults uiDefaults) {
 
-        tabPane = new JTabbedPane();
+        this.uiDefaults = uiDefaults;
+
+        tabPane = new ThermostatTabbedPane();
         tabPane.getModel().addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -196,18 +238,98 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             }
         });
 
+        showRecordedSessionsButton = new ActionToggleButton(START_ICON, LIST_SESSIONS_ICON,
+                                                            translator.localize(LocaleResources.DISPLAY_SESSIONS));
+        showRecordedSessionsButton.setName(TOGGLE_PROFILE_LIST_NAME);
+
         mainContainer = new HeaderPanel(translator.localize(LocaleResources.PROFILER_HEADING));
         new ComponentVisibilityNotifier().initialize(mainContainer, notifier);
 
         JPanel contentContainer = new JPanel(new BorderLayout());
-        mainContainer.setContent(contentContainer);
         mainContainer.addToolBarButton(toggleButton);
+        mainContainer.addToolBarButton(showRecordedSessionsButton);
 
         JComponent actionsPanel = createStatusPanel();
         contentContainer.add(actionsPanel, BorderLayout.PAGE_START);
 
         JComponent profilingResultsPanel = createInformationPanel();
         contentContainer.add(profilingResultsPanel, BorderLayout.CENTER);
+
+        JPanel stack = new JPanel() {
+            @Override
+            public boolean isOptimizedDrawingEnabled() {
+                return false;
+            }
+        };
+
+        stack.setName(STACK_PANE);
+        stack.setOpaque(false);
+        stack.setLayout(new OverlayLayout(stack));
+
+        createOverlay();
+
+        stack.add(overlay);
+        stack.add(contentContainer);
+        stack.setOpaque(false);
+
+        mainContainer.setContent(stack);
+    }
+
+    private void createOverlay() {
+        overlay = new OverlayPanel(translator.localize(LocaleResources.RECORDING_LIST), true, true);
+        overlay.setName(OVERLAY_PANEL);
+        overlay.setOpaque(false);
+        overlay.addCloseEventListener(new OverlayPanel.CloseEventListener() {
+            @Override
+            public void closeRequested(OverlayPanel.CloseEvent event) {
+                if (overlay.isVisible()) {
+                    showRecordedSessionsButton.getToolbarButton().doClick();
+                }
+            }
+        });
+
+        listModel = new DefaultListModel<>();
+        profileList = new JList<>(listModel);
+        profileList.setOpaque(false);
+
+        profileList.setName(PROFILES_LIST_NAME);
+        profileList.setCellRenderer(new ProfileItemRenderer(uiDefaults));
+        profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        profileList.addListSelectionListener(new ListSelectionListener() {
+
+            private Profile oldValue = null;
+
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+
+                Profile newValue = profileList.getSelectedValue();
+
+                if (oldValue == null || !oldValue.equals(newValue)) {
+                    oldValue = newValue;
+                    fireProfileAction(ProfileAction.PROFILE_SELECTED);
+                }
+
+            }
+        });
+        ThermostatScrollPane profileListPane = new ThermostatScrollPane(profileList);
+        profileListPane.setVerticalScrollBar(new ThermostatThinScrollBar(ThermostatThinScrollBar.VERTICAL));
+        profileListPane.setHorizontalScrollBar(new ThermostatThinScrollBar(ThermostatThinScrollBar.HORIZONTAL));
+
+        overlay.add(profileListPane);
+
+        showRecordedSessionsButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                if (overlay.isVisible()) {
+                    overlay.setOverlayVisible(false);
+                } else {
+                    fireProfileAction(ProfileAction.DISPLAY_PROFILING_SESSIONS);
+                }
+            }
+        });
     }
 
     private JPanel createStatusPanel() {
@@ -237,31 +359,6 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     }
 
     private JComponent createInformationPanel() {
-        profileList = new JList<>(listModel);
-        profileList.setName(PROFILES_LIST_NAME);
-        profileList.setCellRenderer(new ProfileItemRenderer());
-        profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        profileList.addListSelectionListener(new ListSelectionListener() {
-
-            private Profile oldValue = null;
-
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-
-                Profile newValue = profileList.getSelectedValue();
-
-                if (oldValue == null || !oldValue.equals(newValue)) {
-                    oldValue = newValue;
-                    fireProfileAction(ProfileAction.PROFILE_SELECTED);
-                }
-
-            }
-        });
-        ThermostatScrollPane profileListPane = new ThermostatScrollPane(profileList);
-
         Vector<String> columnNames = new Vector<>();
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_METHOD).getContents());
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_PERCENTAGE_TIME).getContents());
@@ -311,11 +408,11 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         tabPane.addTab(translator.localize(LocaleResources.PROFILER_RESULTS_TABLE).getContents(),
                 scrollPaneProfileTable);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, profileListPane, tabPane);
-        splitPane.setDividerLocation(SPLIT_PANE_RATIO);
-        splitPane.setResizeWeight(0.5);
+        JPanel pane = new JPanel();
+        pane.setLayout(new BorderLayout());
+        pane.add(tabPane);
 
-        return splitPane;
+        return pane;
     }
 
     @Override
@@ -408,8 +505,8 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             public void run() {
                 DefaultListModel<Profile> listModel = (DefaultListModel<Profile>) profileList.getModel();
                 ModelUtils.updateListModel(data, listModel);
+                overlay.setOverlayVisible(true);
             }
-
         });
     }
 
@@ -503,8 +600,9 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 throw new AssertionError("Unexpected value");
             }
 
-            String plainText = ((MethodDeclaration) value).toString();
-            return super.getTableCellRendererComponent(table, plainText, isSelected, hasFocus, row, column);
+            return super.getTableCellRendererComponent(table, value.toString(),
+                                                       isSelected, hasFocus, row,
+                                                       column);
         }
     }
 
@@ -564,5 +662,4 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                     + StringUtils.htmlEscape(unescapedText) + "</font>";
         }
     }
-
 }

@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.profiler.client.swing.internal;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import com.redhat.thermostat.client.swing.UIDefaults;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.command.RequestQueue;
@@ -73,6 +74,9 @@ public class ActivatorTest {
 
         RequestQueue requestQueue = mock(RequestQueue.class);
         bundleContext.registerService(RequestQueue.class, requestQueue, null);
+
+        UIDefaults uiDefaults = mock(UIDefaults.class);
+        bundleContext.registerService(UIDefaults.class, uiDefaults, null);
 
         Activator activator = new Activator();
 
