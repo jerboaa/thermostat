@@ -194,6 +194,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
         toolbarGCButton.setName("gcButton");
         visiblePanel.addToolBarButton(toolbarGCButton);
 
+        visiblePanel.addOverlayCloseListeners(overlayPanel);
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
     }
 
