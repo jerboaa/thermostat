@@ -46,6 +46,26 @@
   <artifactId>thermostat-vm-byteman-agent</artifactId>
   <packaging>bundle</packaging>
   <name>Thermostat VM Byteman Agent plugin</name>
+  <profiles>
+    <profile>
+      <id>skip-byteman-common-test-jar-dep-on-test-skip</id>
+      <activation>
+        <property>
+          <name>!maven.test.skip</name>
+        </property>
+      </activation>
+      <dependencies>
+        <!-- For JsonHelper test-only dependency -->
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-vm-byteman-common</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
   <build>
     <plugins>
       <plugin>
@@ -110,14 +130,6 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-byteman-common</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <!-- For JsonHelper test-only dependency -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-byteman-common</artifactId>
-      <version>${project.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
