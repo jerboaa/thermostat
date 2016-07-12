@@ -44,8 +44,6 @@ import static org.mockito.Mockito.verify;
 
 import javax.swing.UIManager;
 
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
-
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.core.matcher.JButtonMatcher;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -67,6 +65,8 @@ import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.internal.test.Bug;
+
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -128,6 +128,7 @@ public class ClientConfigurationSwingTest {
         JTextComponentFixture textBox = frameFixture.textBox("connectionUrl");
         textBox.enterText("foobar\n");
 
+        frameFixture.robot.waitForIdle(); // wait for event to get processed
         verify(l).actionPerformed(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT));
     }
 
@@ -149,6 +150,7 @@ public class ClientConfigurationSwingTest {
         JTextComponentFixture textBox = frameFixture.textBox("password");
         textBox.enterText("foobar\n");
 
+        frameFixture.robot.waitForIdle(); // wait for event to get processed
         verify(l).actionPerformed(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT));
     }
 
@@ -170,6 +172,7 @@ public class ClientConfigurationSwingTest {
         JTextComponentFixture textBox = frameFixture.textBox("username");
         textBox.enterText("foobar\n");
 
+        frameFixture.robot.waitForIdle(); // wait for event to get processed
         verify(l).actionPerformed(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT));
     }
 
@@ -194,6 +197,7 @@ public class ClientConfigurationSwingTest {
         JButtonFixture button = frameFixture.button(JButtonMatcher.withText("OK"));
         button.click();
 
+        frameFixture.robot.waitForIdle(); // wait for event to get processed
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT)));
     }
 
@@ -203,6 +207,7 @@ public class ClientConfigurationSwingTest {
         JButtonFixture button = frameFixture.button(JButtonMatcher.withText(UIManager.getString("OptionPane.cancelButtonText")));
         button.click();
 
+        frameFixture.robot.waitForIdle(); // wait for event to get processed
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
     }
 
@@ -211,6 +216,7 @@ public class ClientConfigurationSwingTest {
     public void testCloseWindow() {
         frameFixture.close();
 
+        frameFixture.robot.waitForIdle(); // wait for event to get processed
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
     }
 
