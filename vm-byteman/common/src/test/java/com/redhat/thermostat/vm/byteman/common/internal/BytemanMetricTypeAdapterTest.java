@@ -34,30 +34,57 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.agent.internal.typeadapter;
+package com.redhat.thermostat.vm.byteman.common.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Map;
 
 import org.junit.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.redhat.thermostat.vm.byteman.agent.internal.JsonHelper;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
+import com.redhat.thermostat.vm.byteman.common.BytemanMetricTypeAdapterFactory;
+import com.redhat.thermostat.vm.byteman.common.JsonHelper;
 
 public class BytemanMetricTypeAdapterTest {
+    
+    private static final double DELTA = 0.001;
 
     @Test
     public void canDeserializeArrayOfMetrics() {
         String json = JsonHelper.buildJsonArray(10);
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(BytemanMetric.class, new BytemanMetricTypeAdapter())
+                .registerTypeAdapterFactory(new BytemanMetricTypeAdapterFactory())
+                .serializeNulls()
                 .create();
         BytemanMetric[] metrics = gson.fromJson(json, BytemanMetric[].class);
         assertEquals(10, metrics.length);
         for (int i = 0; i < 10; i++) {
             assertEquals("baz" + i, metrics[i].getMarker());
             assertEquals(1234567890 + i, metrics[i].getTimeStamp());
+            Map<String, Object> dataAsMap = metrics[i].getDataAsMap();
+            assertFalse((Boolean)dataAsMap.get("foo4"));
+            assertEquals("[]", (String)dataAsMap.get("foo5"));
+            double foo3Val = (double)dataAsMap.get("foo3");
+            String foo3Str = String.format("42.%d", i);
+            double expectedFoo3Val = Double.parseDouble(foo3Str); 
+            assertEquals(expectedFoo3Val, foo3Val, DELTA);
+            double foo2Val = (double)dataAsMap.get("foo2");
+            String foo2Str = String.format("42%d.0", i);
+            double expectedFoo2Val = Double.parseDouble(foo2Str);
+            assertEquals(expectedFoo2Val, foo2Val, DELTA);
+            assertEquals("ba\"r1", (String)dataAsMap.get("foo1"));
+            assertEquals("Expected 7 key value pairs", 7, dataAsMap.keySet().size());
+            assertTrue(dataAsMap.containsKey("key"));
+            assertNull("value for \"key\" is null", dataAsMap.get("key"));
+            Double rawLong = (Double)dataAsMap.get("long");
+            long longVal = rawLong.longValue();
+            assertEquals(10_000_000_001L, longVal);
         }
     }
 

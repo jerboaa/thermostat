@@ -186,7 +186,7 @@ public class BytemanControlCommand extends AbstractCommand {
             out.println(translator.localize(LocaleResources.NO_METRICS_AVAILABLE, vmId.get()).getContents());
         } else {
             for (BytemanMetric m: metrics) {
-                output.println(m.getData());
+                output.println(m.getDataAsJson());
             }
         }
     }

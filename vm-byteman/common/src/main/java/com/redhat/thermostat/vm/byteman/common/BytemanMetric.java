@@ -36,6 +36,12 @@
 
 package com.redhat.thermostat.vm.byteman.common;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
@@ -44,6 +50,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 @Entity
 public class BytemanMetric extends BasePojo implements TimeStampedPojo {
 
+    private static final Gson GSON = new GsonBuilder().serializeNulls().create();
     public static final String MARKER_NAME = "marker";
     public static final String TIMESTAMP_NAME = "timestamp";
     public static final String DATA_NAME = "data";
@@ -70,6 +77,12 @@ public class BytemanMetric extends BasePojo implements TimeStampedPojo {
         this.vmId = vmId;
     }
 
+    /**
+     * Get the marker for this Byteman metric. A marker can be thought of a
+     * category for related metrics.
+     * 
+     * @return The marker for this metric.
+     */
     @Persist
     public String getMarker() {
         return marker;
@@ -96,9 +109,31 @@ public class BytemanMetric extends BasePojo implements TimeStampedPojo {
         this.jsonPayload = json;
     }
     
+    /**
+     * Get the metrics payload as raw JSON string. The payload is a JSON object
+     * in key, value form. Supported value types are {@code Boolean},
+     * {@code String} and {@code Double}.
+     * 
+     * @return The raw JSON string.
+     */
     @Persist
-    public String getData() {
+    public String getDataAsJson() {
         return jsonPayload;
+    }
+    
+    /**
+     * Get the metrics payload as parsed {@link Map}. Supported value types are
+     * {@code Boolean}, {@code String} and {@code Double}.
+     * 
+     * @return The parsed JSON payload as {@link Map}.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getDataAsMap() {
+        try {
+            return (Map<String, Object>)GSON.fromJson(jsonPayload, HashMap.class);
+        } catch (JsonSyntaxException e) {
+            throw new RuntimeException("Payload not in expected format. Payload was: " + jsonPayload);
+        }
     }
 
 }

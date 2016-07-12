@@ -34,13 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.agent.internal.typeadapter;
+package com.redhat.thermostat.vm.byteman.common.internal;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
+import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -48,6 +48,12 @@ import com.google.gson.stream.JsonWriter;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 
 public class BytemanMetricTypeAdapter extends TypeAdapter<BytemanMetric> {
+    
+    private final Gson gson;
+    
+    public BytemanMetricTypeAdapter(Gson gson) {
+        this.gson = gson;
+    }
 
     @Override
     public BytemanMetric read(JsonReader reader) throws IOException {
@@ -81,10 +87,8 @@ public class BytemanMetricTypeAdapter extends TypeAdapter<BytemanMetric> {
                     values.put(BytemanMetric.TIMESTAMP_NAME, Long.valueOf(reader.nextString()));
                     break;
             case BytemanMetric.DATA_NAME:
-                reader.setLenient(true);
-                Map<String, String> data = getDataValues(reader);
+                Map<String, Object> data = getDataValues(reader);
                 values.put(BytemanMetric.DATA_NAME, data);
-                reader.setLenient(false);
                 break;
             default:
                 throw new IllegalStateException("Unknown name: '" + name + "'");
@@ -93,52 +97,16 @@ public class BytemanMetricTypeAdapter extends TypeAdapter<BytemanMetric> {
         BytemanMetric metric = new BytemanMetric();
         metric.setMarker((String)values.get(BytemanMetric.MARKER_NAME));
         metric.setTimeStamp((Long)values.get(BytemanMetric.TIMESTAMP_NAME));
-        metric.setData(mapToJson((Map<String, String>)values.get(BytemanMetric.DATA_NAME)));
+        metric.setData(mapToJson((Map<String, Object>)values.get(BytemanMetric.DATA_NAME)));
         return metric;
     }
 
-    private String mapToJson(Map<String, String> map) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("{");
-        for (Entry<String, String> entry: map.entrySet()) {
-            builder.append("\"").append(entry.getKey()).append("\"");
-            builder.append(":");
-            builder.append("\"").append(entry.getValue()).append("\"");
-            builder.append(",");
-        }
-        if (map.size() > 0) {
-            builder.deleteCharAt(builder.length() - 1);
-        }
-        builder.append("}");
-        return builder.toString();
+    private String mapToJson(Map<String, Object> map) {
+        return gson.toJson(map, HashMap.class);
     }
 
-    private Map<String, String> getDataValues(JsonReader reader) throws IOException {
-        reader.beginObject();
-        Map<String, String> data = new HashMap<>();
-        while (reader.hasNext()) {
-            String name = reader.nextName();
-            JsonToken token = reader.peek();
-            String value;
-            switch (token) {
-            case BOOLEAN:
-                value = Boolean.toString(reader.nextBoolean());
-                break;
-            case NULL:
-                reader.nextNull();
-                value = null;
-                break;
-            case NUMBER: // fall-through
-            case STRING:
-                value = reader.nextString();
-                break;
-            default:
-                throw new IllegalStateException("Cannot handle token " + token);
-            }
-            data.put(name, value);
-        }
-        reader.endObject();
-        return data;
+    private Map<String, Object> getDataValues(JsonReader reader) throws IOException {
+        return gson.fromJson(reader, HashMap.class);
     }
 
 }

@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -72,9 +73,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
@@ -88,7 +86,6 @@ import com.redhat.thermostat.client.swing.components.experimental.RecentTimeCont
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -535,6 +532,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             updateRuleInView(rule);
             break;
         case GRAPH_CHANGED:
+            @SuppressWarnings("unchecked")
             List<BytemanMetric> graphMetrics = (List<BytemanMetric>)event.getPayload();
             updateGraphInView(graphMetrics, xkey, ykey, filter, value, graphtype);
             break;
@@ -562,7 +560,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             String marker = m.getMarker();
             long timestamp = m.getTimeStamp();
             String timestring = metricsDateFormat.format(new Date(timestamp));
-            buffer.append(timestring).append(": ").append(marker).append(" ").append(m.getData()).append("\n");
+            buffer.append(timestring).append(": ").append(marker).append(" ").append(m.getDataAsJson()).append("\n");
         }
         if (buffer.length() == 0) {
             buffer.append(NO_METRICS_AVAILABLE).append("\n");
@@ -657,7 +655,6 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             case INTEGRAL:
             case REAL:
                 if(ytype == CoordinateType.CATEGORY) {
-                    XYDataset xydataset = dataset.getXYDataset();
                     // we could treat the numeric values as category values (or ranges?)
                     // and draw this as a bar chart
                     CategoryDataset categoryDataset = dataset.getCategoryDataset();
@@ -665,12 +662,6 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                                                         categoryDataset, PlotOrientation.VERTICAL,
                                                         true, true, false);
                     // for now draw an empty graph
-
-                    /*
-                    graph = ChartFactory.createXYLineChart("empty", xlabel, ylabel,
-                                                           xydataset, PlotOrientation.VERTICAL,
-                                                           true, true, false);
-                     */
                 } else if(ytype == CoordinateType.TIME) {
                     // we could group the time values as time ranges
                     // and draw this as a bar chart
@@ -789,7 +780,6 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
 
     public static class GraphDataset
     {
-        private static HashMap<String, Object> emptymap = new HashMap<String, Object>();
         private List<Pair<Object, Object>> data;
         String xkey;
         String ykey;
@@ -842,10 +832,9 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                 // may need to convert String to Numeric
                 filterValue = maybeNumeric(value);
             }
-            Gson gson = new GsonBuilder().create();
             if (metrics != null) {
                 for (BytemanMetric m : metrics) {
-                    HashMap<String, Object> map = gson.fromJson(m.getData(), emptymap.getClass());
+                    Map<String, Object> map = m.getDataAsMap();
                     // ensure that lookups for the timestamp key always retrieve
                     // the Long timestamp value associated with the metric and
                     // that lookups for the frequency key always retrieve
@@ -998,7 +987,6 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             // values symbolically.
 
             XYSeries xyseries = new XYSeries(ykey + " against  " + xkey);
-            int size = data.size();
             int count = 0;
             HashMap<String, Number> tickmap = new HashMap<String, Number>();
 

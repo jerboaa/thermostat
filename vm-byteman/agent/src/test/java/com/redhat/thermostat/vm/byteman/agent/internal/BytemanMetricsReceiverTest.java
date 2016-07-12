@@ -44,11 +44,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
+import com.redhat.thermostat.vm.byteman.common.JsonHelper;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 
 public class BytemanMetricsReceiverTest {
@@ -69,7 +71,9 @@ public class BytemanMetricsReceiverTest {
         assertEquals("agent-id", metrics.get(2).getAgentId());
         assertTrue(metrics.get(1).getTimeStamp() > 0);
         assertEquals("baz0", metrics.get(0).getMarker());
-        assertNotNull(metrics.get(2).getData());
+        assertNotNull(metrics.get(2).getDataAsJson());
+        Map<String, Object> payloadAsMap = metrics.get(2).getDataAsMap();
+        assertEquals("Expected 7 keys, including one with null value", 7, payloadAsMap.keySet().size());
     }
     
 }

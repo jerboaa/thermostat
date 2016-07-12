@@ -45,8 +45,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.vm.byteman.agent.internal.typeadapter.BytemanMetricTypeAdapter;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
+import com.redhat.thermostat.vm.byteman.common.BytemanMetricTypeAdapterFactory;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 
 class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
@@ -73,7 +73,8 @@ class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
 
     private List<BytemanMetric> convertFromJson(String data) {
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(BytemanMetric.class, new BytemanMetricTypeAdapter())
+                .registerTypeAdapterFactory(new BytemanMetricTypeAdapterFactory())
+                .serializeNulls()
                 .create();
         BytemanMetric[] metrics = gson.fromJson(data, BytemanMetric[].class);
         List<BytemanMetric> listOfMetrics = new ArrayList<>();

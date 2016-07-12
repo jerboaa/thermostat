@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.agent.internal;
+package com.redhat.thermostat.vm.byteman.common;
 
 public class JsonHelper {
 
@@ -49,7 +49,8 @@ public class JsonHelper {
                 "        \"foo3\": 42.%d,\n" +
                 "        \"foo4\": false,\n" +
                 "        \"foo5\": \"[]\",\n" +
-                "        \"key\": null\n" +
+                "        \"key\": null,\n" +
+                "        \"long\": 10000000001\n" +
                 "    }\n" +
                 "}";
         StringBuilder builder = new StringBuilder();

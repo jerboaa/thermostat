@@ -136,7 +136,7 @@ public class VmBytemanDAOImpl extends AbstractDao implements VmBytemanDAO {
                 preparedStatement.setString(1, metric.getVmId());
                 preparedStatement.setLong(2, metric.getTimeStamp());
                 preparedStatement.setString(3, metric.getMarker());
-                preparedStatement.setString(4, metric.getData());
+                preparedStatement.setString(4, metric.getDataAsJson());
                 return preparedStatement;
             }
         });

@@ -80,6 +80,19 @@
           </execution>
         </executions>
       </plugin>
+      <!-- generate a test-jar since the vm-byteman-agent tests need
+           JsonHelper which is in the test-jar only -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -129,6 +142,11 @@
       <artifactId>thermostat-storage-testutils</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${gson.version}</version>
     </dependency>
     <!-- declarative services -->
     <dependency>
