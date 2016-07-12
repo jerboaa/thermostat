@@ -79,6 +79,7 @@ import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.ModelUtils;
 import com.redhat.thermostat.client.swing.NonEditableTableModel;
+import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
@@ -103,7 +104,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
-class SwingVmProfileView extends VmProfileView implements SwingComponent {
+class SwingVmProfileView extends VmProfileView implements SwingComponent, OverlayContainer {
 
     /** these components names are for testing only */
     static final String CURRENT_STATUS_LABEL_NAME = "CURRENT_STATUS_LABEL";
@@ -243,7 +244,9 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent {
         showRecordedSessionsButton.setName(TOGGLE_PROFILE_LIST_NAME);
         showRecordedSessionsButton.setToolTipText(translator.localize(LocaleResources.DISPLAY_SESSIONS_TOOLTIP).getContents());
 
+        createOverlay();
         mainContainer = new HeaderPanel(translator.localize(LocaleResources.PROFILER_HEADING));
+        mainContainer.addOverlayCloseListeners(overlay);
         new ComponentVisibilityNotifier().initialize(mainContainer, notifier);
 
         JPanel contentContainer = new JPanel(new BorderLayout());
@@ -266,8 +269,6 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent {
         stack.setName(STACK_PANE);
         stack.setOpaque(false);
         stack.setLayout(new OverlayLayout(stack));
-
-        createOverlay();
 
         stack.add(overlay);
         stack.add(contentContainer);
@@ -500,13 +501,22 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent {
     }
 
     @Override
+    public void setDisplayProfilingRuns(final boolean display) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                overlay.setOverlayVisible(display);
+            }
+        });
+    }
+
+    @Override
     public void setAvailableProfilingRuns(final List<Profile> data) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 DefaultListModel<Profile> listModel = (DefaultListModel<Profile>) profileList.getModel();
                 ModelUtils.updateListModel(data, listModel);
-                overlay.setOverlayVisible(true);
             }
         });
     }
@@ -574,6 +584,11 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent {
     @Override
     public Component getUiComponent() {
         return mainContainer;
+    }
+
+    @Override
+    public OverlayPanel getOverlay() {
+        return overlay;
     }
 
     static class SimpleTextRenderer extends ThermostatTableRenderer {

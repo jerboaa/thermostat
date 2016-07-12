@@ -276,6 +276,7 @@ public class SwingVmProfileViewTest {
 
                     case DISPLAY_PROFILING_SESSIONS:
                         view.setAvailableProfilingRuns(profileList);
+                        view.setDisplayProfilingRuns(true);
                         break;
                     default:
                         break;

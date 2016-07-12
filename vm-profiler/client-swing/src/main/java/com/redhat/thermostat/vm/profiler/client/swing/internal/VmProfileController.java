@@ -202,7 +202,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                         updateViewWithSelectedProfileRunData();
                         break;
                     case DISPLAY_PROFILING_SESSIONS:
-                        updateViewWithProfiledRuns();
+                        displayProfiledRuns();
                         break;
                     default:
                         throw new AssertionError("Unknown event: " + id);
@@ -382,6 +382,10 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         view.setAvailableProfilingRuns(profiles);
     }
 
+    private void displayProfiledRuns() {
+        view.setDisplayProfilingRuns(true);
+    }
+
     private void loadSelectedProfileRunData() {
         String profileId = view.getSelectedProfile().name;
         InputStream in = profileDao.loadProfileDataById(vm, profileId);
@@ -403,6 +407,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                     loadLatestProfileData();
                     return;
                 }
+                updateViewWithProfiledRuns();
                 selectedResult = new ProfilingResultParser().parse(in);
                 updateViewWithSelectedProfileRunData();
             }

@@ -142,6 +142,7 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
     public abstract void setProfilingState(ProfilingState profilingState);
     public abstract void setViewControlsEnabled(boolean enabled);
 
+    public abstract void setDisplayProfilingRuns(boolean display);
     public abstract void setAvailableProfilingRuns(List<Profile> data);
 
     public abstract Profile getSelectedProfile();
