@@ -97,6 +97,38 @@
           </instructions>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <!-- run tests with UTF-8 encoding, use default-test goal so
+               as to not run tests 3 times, 2 configs + default goal. -->
+          <execution>
+            <id>default-test</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <argLine>${surefire-argline} ${coverageAgent} -Dfile.encoding=UTF-8</argLine>
+              <forkMode>always</forkMode>
+            </configuration>
+          </execution>
+          <!-- run tests with US-ASCII encoding. See UsAsciiCharsetAsDefault -->
+          <execution>
+            <id>tests-in-us-ascii</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <forkMode>always</forkMode>
+              <argLine>${surefire-argline} ${coverageAgent} -Dfile.encoding=US-ASCII</argLine>
+              <groups>com.redhat.thermostat.testutils.UsAsciiCharsetAsDefault</groups>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
 
   </build>

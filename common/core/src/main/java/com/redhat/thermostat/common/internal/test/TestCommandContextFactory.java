@@ -41,6 +41,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 
 import org.osgi.framework.BundleContext;
 
@@ -52,9 +54,12 @@ import com.redhat.thermostat.common.cli.Console;
 
 public class TestCommandContextFactory extends CommandContextFactory {
 
+    private static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
+    
     private ByteArrayOutputStream out;
     private ByteArrayOutputStream err;
     private ExceptionThrowingInputStream in;
+    private final Charset consoleEncoding;
 
     public TestCommandContextFactory() {
         this(null);
@@ -62,6 +67,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
 
     public TestCommandContextFactory(BundleContext bCtx) {
         super(bCtx);
+        this.consoleEncoding = UTF8_CHARSET;
         reset();
     }
 
@@ -72,12 +78,20 @@ public class TestCommandContextFactory extends CommandContextFactory {
 
         @Override
         public PrintStream getOutput() {
-            return new PrintStream(out);
+            try {
+                return new PrintStream(out, false, consoleEncoding.name());
+            } catch (UnsupportedEncodingException e) {
+                throw new AssertionError("Illegal encoding", e);
+            }
         }
 
         @Override
         public PrintStream getError() {
-            return new PrintStream(err);
+            try {
+                return new PrintStream(err, false, consoleEncoding.name());
+            } catch (UnsupportedEncodingException e) {
+                throw new AssertionError("Illegal encoding", e);
+            }
         }
 
         @Override
@@ -120,7 +134,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
         } catch (IOException e) {
             // ignore
         }
-        return new String(out.toByteArray());
+        return new String(out.toByteArray(), consoleEncoding);
     }
 
     /**
@@ -139,7 +153,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
     }
 
     public String getError() {
-        return new String(err.toByteArray());
+        return new String(err.toByteArray(), consoleEncoding);
     }
 
     public void reset() {

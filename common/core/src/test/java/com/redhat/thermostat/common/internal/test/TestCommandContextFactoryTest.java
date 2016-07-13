@@ -39,13 +39,16 @@ package com.redhat.thermostat.common.internal.test;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.io.PrintStream;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.testutils.UsAsciiCharsetAsDefault;
 
 public class TestCommandContextFactoryTest {
 
@@ -83,5 +86,22 @@ public class TestCommandContextFactoryTest {
         assertEquals(3, numRead);
         assertEquals("foo", new String(readBytes, 0, numRead));
     }
-}
 
+    /**
+     * Test that the provided TestConsole within the TestCommandContext is able
+     * to reproduce unicode characters also when run in system with a non
+     * unicode capable default encoding. To run the test with a special default
+     * charset, we tag this test to the Category UsAsciiCharsetAsDefault
+     */
+    @Test
+    @Category(UsAsciiCharsetAsDefault.class)
+    public void testSpecialCharsInConsole() {
+        PrintStream output = cmdCtxFactory.getConsole().getOutput();
+        char unicodeChar = '\u2514';
+        output.print(unicodeChar);
+        output.flush();
+        String str = new String(new char[] { unicodeChar });
+        assertEquals(str, cmdCtxFactory.getOutput());
+    }
+
+}
