@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ProfileRecorder {
 
-    private static final ProfileRecorder profileRecorder = new ProfileRecorder();
+    private static final ProfileRecorder profileRecorder = new ProfileRecorder(new TimeSource());
 
     /** shared between threads */
     private ConcurrentHashMap<String, AtomicLong> profileData = new ConcurrentHashMap<String, AtomicLong>();
@@ -59,9 +59,23 @@ public class ProfileRecorder {
      */
     private Map<Long, Info> threads = new ConcurrentHashMap<Long, Info>();
 
+    private final TimeSource timeSource;
+
     final static class Info {
         public Deque<String> stackFrames = new ArrayDeque<String>();
         public long timeStamp = Long.MIN_VALUE;
+    }
+
+    /** for testing */
+    static class TimeSource {
+        public long nanoTime() {
+            return System.nanoTime();
+        }
+    }
+
+    /** for testing only */
+    ProfileRecorder(TimeSource timeSource) {
+        this.timeSource = timeSource;
     }
 
     public static ProfileRecorder getInstance() {
@@ -70,7 +84,7 @@ public class ProfileRecorder {
 
     /** called by instrumented code on every method enter */
     public void enterMethod(String fullyQualifiedName) {
-        long currentTime = System.nanoTime();
+        long currentTime = timeSource.nanoTime();
         long threadId = Thread.currentThread().getId();
 
         Info info = threads.get(threadId);
@@ -93,7 +107,7 @@ public class ProfileRecorder {
 
     /** called by instrumented code on every method exit */
     public void exitMethod(String fullyQualifiedName) {
-        long currentTime = System.nanoTime();
+        long currentTime = timeSource.nanoTime();
         long threadId = Thread.currentThread().getId();
 
         Info info = threads.get(threadId);
@@ -131,4 +145,5 @@ public class ProfileRecorder {
     public void clearData() {
         profileData.clear();
     }
+
 }
