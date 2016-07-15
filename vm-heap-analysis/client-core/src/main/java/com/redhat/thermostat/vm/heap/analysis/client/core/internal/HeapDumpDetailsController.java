@@ -86,7 +86,12 @@ public class HeapDumpDetailsController {
     }
 
     public void setDump(HeapDump dump) {
+        HeapDump previous = this.heapDump;
         this.heapDump = dump;
+
+        if (dump.equals(previous)) {
+            return;
+        }
 
         ObjectHistogram histogram = readHistogram();
         Objects.requireNonNull(histogram);
