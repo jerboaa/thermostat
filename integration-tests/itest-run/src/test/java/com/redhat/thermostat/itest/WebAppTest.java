@@ -550,8 +550,9 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
                 Thread.sleep(250);
             } catch (InterruptedException ignored) {}
             count = countAllData(storage, cat);
+            currCount++;
         }
-        
+        assertEquals(expectedCount, count);
     }
 
     private static <T extends Pojo> Category<AggregateCount> registerCatoriesForWrite(BackingStorage storage, Category<T> cat) {
