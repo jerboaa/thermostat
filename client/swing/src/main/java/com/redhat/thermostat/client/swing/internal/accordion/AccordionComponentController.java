@@ -60,7 +60,7 @@ class AccordionComponentController {
             selectedComponent.setSelected(true);
         }
 
-        if (oldSelected != this.selectedComponent) {
+        if (this.selectedComponent != null && oldSelected != this.selectedComponent) {
             fireItemSelectedChanged(oldSelected, selectedComponent);
         }
     }

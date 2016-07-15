@@ -108,7 +108,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
 
     // Special marker to indicate the user selected "issues", not a host or a vm
-    private static final Ref ISSUES_REF = new Ref() {
+    static final Ref ISSUES_REF = new Ref() {
         @Override
         public String getStringID() {
             return "Issues";
@@ -500,11 +500,12 @@ public class MainWindowControllerImpl implements MainWindowController {
         controller.showDialog();
     }
 
-    private void updateView(Ref ref) {
+    void updateView(Ref ref) {
         if (ref == null) {
             VersionAndInfoController controller = createSummaryController();
             view.setSubView(controller.getView());
         } else if (ref == ISSUES_REF) {
+            view.getHostTreeController().clearSelection();
             view.setSubView(issuesController.getView());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;

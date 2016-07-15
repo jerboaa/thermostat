@@ -279,6 +279,15 @@ public class HostTreeController {
         });
     }
 
+    public void clearSelection() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                accordion.setSelectedComponent(null);
+            }
+        });
+    }
+
     public synchronized void updateVMStatus(final VmRef vm) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override

@@ -36,10 +36,12 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import static com.redhat.thermostat.client.swing.internal.MainWindowControllerImpl.ISSUES_REF;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -64,6 +66,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
@@ -104,7 +107,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class MainWindowControllerImplTest {
 
     private ActionListener<MainView.Action> l;
-    
+
     private MainWindowControllerImpl controller;
 
     private MainView view;
@@ -123,10 +126,12 @@ public class MainWindowControllerImplTest {
 
     private VmInformationView vmInfoView;
     private VmInformationViewProvider vmInfoViewProvider;
-    
+
     private HostTreeController treeController;
     private DecoratorRegistryController decoratorController;
-    
+    private IssueViewController issueViewController;
+    private IssueView issueView;
+
     private ContextActionController contextController;
     private ReferenceFieldSearchFilter referenceFieldSearchFilter;
     private HostMonitor hostMonitor;
@@ -143,7 +148,7 @@ public class MainWindowControllerImplTest {
         context = new StubBundleContext();
 
         uriOpener = mock(UriOpener.class);
-                
+
         // Setup timers
         TimerFactory timerFactory = mock(TimerFactory.class);
         ApplicationService appSvc = mock(ApplicationService.class);
@@ -154,17 +159,17 @@ public class MainWindowControllerImplTest {
         CommonPaths paths = mock(CommonPaths.class);
         when(paths.getUserClientConfigurationFile()).thenReturn(mock(File.class));
         context.registerService(CommonPaths.class, paths, null);
-        
+
         mockHostsDAO = mock(HostInfoDAO.class);
         context.registerService(HostInfoDAO.class, mockHostsDAO, null);
         mockVmsDAO = mock(VmInfoDAO.class);
         context.registerService(VmInfoDAO.class, mockVmsDAO, null);
-        
+
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
         BackendInfoDAO backendInfoDAO = mock(BackendInfoDAO.class);
         context.registerService(BackendInfoDAO.class, backendInfoDAO, null);
-        
+
         VersionAndInfoViewProvider summaryViewProvider = mock(VersionAndInfoViewProvider.class);
         context.registerService(VersionAndInfoViewProvider.class, summaryViewProvider, null);
         VersionAndInfoView versionAndInfoView = mock(VersionAndInfoView.class);
@@ -172,19 +177,19 @@ public class MainWindowControllerImplTest {
 
         IssueViewProvider issueViewProvider = mock(IssueViewProvider.class);
         context.registerService(IssueViewProvider.class, issueViewProvider, null);
-        IssueView issueView = mock(IssueView.class);
+        issueView = mock(IssueView.class);
         when(issueViewProvider.createView()).thenReturn(issueView);
-        
+
         HostInformationViewProvider hostInfoViewProvider = mock(HostInformationViewProvider.class);
         context.registerService(HostInformationViewProvider.class, hostInfoViewProvider, null);
         HostInformationView hostInfoView = mock(HostInformationView.class);
         when(hostInfoViewProvider.createView()).thenReturn(hostInfoView);
-        
+
         vmInfoViewProvider = mock(VmInformationViewProvider.class);
         context.registerService(VmInformationViewProvider.class, vmInfoViewProvider, null);
         vmInfoView = mock(VmInformationView.class);
         when(vmInfoViewProvider.createView()).thenReturn(vmInfoView);
-        
+
         AgentInformationViewProvider agentInfoViewProvider = mock(AgentInformationViewProvider.class);
         context.registerService(AgentInformationViewProvider.class, agentInfoViewProvider, null);
         ClientConfigViewProvider clientConfigViewProvider = mock(ClientConfigViewProvider.class);
@@ -208,22 +213,25 @@ public class MainWindowControllerImplTest {
         view = mock(MainView.class);
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
-        
+
         contextController = mock(ContextActionController.class);
         when(view.getContextActionController()).thenReturn(contextController);
 
         referenceFieldSearchFilter = mock(ReferenceFieldSearchFilter.class);
         when(view.getSearchFilter()).thenReturn(referenceFieldSearchFilter);
-        
+
         treeController = mock(HostTreeController.class);
         ArgumentCaptor<ActionListener> hostTreeCaptor = ArgumentCaptor.forClass(ActionListener.class);
         when(view.getHostTreeController()).thenReturn(treeController);
-        
+
         doNothing().when(treeController).addReferenceSelectionChangeListener(hostTreeCaptor.capture());
+
+        issueViewController = mock(IssueViewController.class);
+        when(issueViewController.getView()).thenReturn(issueView);
 
         ProgressNotifier notifier = mock(ProgressNotifier.class);
         when(view.getNotifier()).thenReturn(notifier);
-        
+
         RegistryFactory registryFactory = mock(RegistryFactory.class);
         hostFilterRegistry = mock(ReferenceFilterRegistry.class);
 
@@ -231,16 +239,16 @@ public class MainWindowControllerImplTest {
         shutdown = mock(CountDownLatch.class);
 
         decoratorController = mock(DecoratorRegistryController.class);
-        
+
         when(registryFactory.createMenuRegistry()).thenReturn(menus);
         when(registryFactory.createFilterRegistry()).thenReturn(hostFilterRegistry);
         when(registryFactory.createDecoratorController()).thenReturn(decoratorController);
-        
+
         ArgumentCaptor<ActionListener> grabHostFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(hostFilterRegistry).addActionListener(grabHostFiltersListener.capture());
 
         controller = new MainWindowControllerImpl(context, appSvc, view, registryFactory, shutdown, uriOpener);
-        
+
         l = grabListener.getValue();
     }
 
@@ -255,7 +263,7 @@ public class MainWindowControllerImplTest {
 
     @Test
     public void verifyDecoratorsControllerRegisteredAndStarted() {
-        
+
         controller.shutdownApplication();
 
         verify(view, atLeastOnce()).getHostTreeController();
@@ -394,7 +402,7 @@ public class MainWindowControllerImplTest {
 
     @Test
     public void verifyMenuItems() {
-        
+
         ActionListener<ThermostatExtensionRegistry.Action> menuListener = controller.getMenuListener();
 
         MenuAction action = mock(MenuAction.class);
@@ -419,5 +427,14 @@ public class MainWindowControllerImplTest {
 
        verify(shutdown).countDown();
    }
+
+    @Test
+    public void testSelectionIssuesViewClearsHostTreeSelectionAndDisplaysIssuesView() {
+        controller.updateView(ISSUES_REF);
+        InOrder inOrder = inOrder(view, treeController);
+        inOrder.verify(view).getHostTreeController();
+        inOrder.verify(treeController).clearSelection();
+        inOrder.verify(view).setSubView(issueView);
+    }
 }
 

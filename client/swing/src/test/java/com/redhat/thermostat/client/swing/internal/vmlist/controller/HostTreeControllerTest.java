@@ -317,5 +317,16 @@ public class HostTreeControllerTest {
         components  = proxyModel.getComponents(host1);
         assertEquals(0, components.size());
     }
+
+    @Test
+    public void testClearSelectionSetsAccordionSelectionToNull() {
+        HostTreeController controller =
+                new HostTreeController(accordion, decoratorManager,
+                        componentFactory);
+
+        controller.clearSelection();
+        waitForSwing();
+        verify(accordion).setSelectedComponent(null);
+    }
 }
 
