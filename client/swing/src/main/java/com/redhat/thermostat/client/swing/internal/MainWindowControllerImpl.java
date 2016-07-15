@@ -232,7 +232,7 @@ public class MainWindowControllerImpl implements MainWindowController {
             public void dependenciesAvailable(Map<String, Object> services) {
                 IssueViewProvider provider = (IssueViewProvider) services.get(IssueViewProvider.class.getName());
                 IssueView issuesView = provider.createView();
-                issuesController = new IssueViewController(context, appSvc, issuesView);
+                issuesController = new IssueViewController(context, appSvc, view.getDecoratorManager(), issuesView);
             }
 
             @Override

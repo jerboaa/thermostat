@@ -46,6 +46,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
+import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.model.VmInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
@@ -132,6 +137,7 @@ public class IssueViewController {
     }
 
     private final IssueView view;
+    private final DecoratorManager decoratorManager;
 
     private IssueDiagnoserTracker issueTracker;
 
@@ -143,8 +149,9 @@ public class IssueViewController {
 
     private ExecutorService executor;
 
-    public IssueViewController(BundleContext context, ApplicationService appService, final IssueView view) {
+    public IssueViewController(BundleContext context, ApplicationService appService, DecoratorManager decoratorManager, final IssueView view) {
         this.executor = appService.getApplicationExecutor();
+        this.decoratorManager = decoratorManager;
         this.view = view;
 
         issueTracker = new IssueDiagnoserTracker(context);
@@ -219,7 +226,7 @@ public class IssueViewController {
                 IssueDescription description = new IssueDescription(
                         issue.getSeverity(),
                         prettyAgentName,
-                        createPrettyVmName(vmInfoDao, vmIssue.getAgentId(), vmIssue.getVmId()).getContents(),
+                        createPrettyVmName(hostDao, vmInfoDao, vmIssue.getAgentId(), vmIssue.getVmId()).getContents(),
                         issue.getDescription());
                 result.add(description);
             }
@@ -233,10 +240,15 @@ public class IssueViewController {
                 hostDao.getHostInfo(agentId).getHostname(), agentId.get());
     }
 
-    private LocalizedString createPrettyVmName(VmInfoDAO dao, AgentId agentId, VmId vmId) {
-        // FIXME we need a generic name here. ideally same as that in the vm tree
+    private LocalizedString createPrettyVmName(HostInfoDAO hostDao, VmInfoDAO vmDao, AgentId agentId, VmId vmId) {
+        VmInfo vmInfo = vmDao.getVmInfo(vmId);
+        String label = vmInfo.getMainClass();
+        for (ReferenceFieldLabelDecorator decorator : decoratorManager.getMainLabelDecoratorListener().getDecorators()) {
+            label = decorator.getLabel(label,
+                    new VmRef(new HostRef(agentId.get(), hostDao.getHostInfo(agentId).getHostname()), vmInfo));
+        }
         return translator.localize(LocaleResources.ISSUES_VM_FORMAT,
-                dao.getVmInfo(vmId).getMainClass(), vmId.get());
+                label, Integer.toString(vmInfo.getVmPid()));
     }
 
     public void start() {

@@ -37,6 +37,8 @@
 package com.redhat.thermostat.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -46,6 +48,10 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorListener;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
+import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
+import com.redhat.thermostat.storage.core.Ref;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -67,6 +73,8 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class IssueViewControllerTest {
 
@@ -79,12 +87,14 @@ public class IssueViewControllerTest {
 
     private IssueDiagnoser issueProvider;
 
+    private DecoratorManager decoratorManager;
     private IssueView view;
 
     private IssueViewController controller;
 
 
     @Before
+    @SuppressWarnings("unchecked")
     public void setup() {
         context = new StubBundleContext();
 
@@ -92,6 +102,17 @@ public class IssueViewControllerTest {
         executor = mock(ExecutorService.class);
         when(appService.getApplicationExecutor()).thenReturn(executor);
 
+        decoratorManager = mock(DecoratorManager.class);
+        DecoratorListener listener = mock(DecoratorListener.class);
+        ReferenceFieldLabelDecorator decorator = mock(ReferenceFieldLabelDecorator.class);
+        when(decorator.getLabel(anyString(), any(Ref.class))).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return (String) invocationOnMock.getArguments()[0];
+            }
+        });
+        when(listener.getDecorators()).thenReturn(Collections.singletonList(decorator));
+        when(decoratorManager.getMainLabelDecoratorListener()).thenReturn(listener);
         view = mock(IssueView.class);
 
         agentInfoDao = mock(AgentInfoDAO.class);
@@ -100,7 +121,7 @@ public class IssueViewControllerTest {
 
         issueProvider = mock(IssueDiagnoser.class);
 
-        controller = new IssueViewController(context, appService, view);
+        controller = new IssueViewController(context, appService, decoratorManager, view);
     }
 
     @Test
@@ -179,7 +200,7 @@ public class IssueViewControllerTest {
 
         IssueDescription issueDescription = issueCaptor.getValue();
         assertEquals(String.format("%s (%s)", hostInfo.getHostname(), agentId.get()), issueDescription.agent);
-        assertEquals(String.format("%s (%s)", vmInfo.getMainClass(), vmId.get()), issueDescription.vm);
+        assertEquals(String.format("%s (PID: %s)", vmInfo.getMainClass(), Integer.toString(vmInfo.getVmPid())), issueDescription.vm);
         assertEquals(issue.getSeverity(), issueDescription.severity);
         assertEquals(issue.getDescription(), issueDescription.description);
 

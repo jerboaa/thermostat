@@ -42,6 +42,7 @@ import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionListener;
@@ -100,6 +101,13 @@ public interface MainView {
      * object tracked by this UI Client.
      */
     HostTreeController getHostTreeController();
+
+    /**
+     * Returns the {@link DecoratorManager} that handles adding user-friendly
+     * details to the visual representations of {@link Ref}s tracked by this
+     * UI Client.
+     */
+    DecoratorManager getDecoratorManager();
 
     /**
      * Returns the {@link ContextActionController} that handles the context

@@ -127,7 +127,8 @@ public class MainWindow extends JFrame implements MainView {
     
     private ThermostatSidePanel navigationPanel;
     private Accordion<HostRef, VmRef> hostTree;
-    
+
+    private DecoratorManager decoratorManager;
     private HostTreeController hostTreeController;
     private ContextActionController contextActionController;
 
@@ -137,6 +138,7 @@ public class MainWindow extends JFrame implements MainView {
         super();
 
         setName(MAIN_WINDOW_NAME);
+        this.decoratorManager = new DecoratorManager();
 
         shutdownAction = new ShutdownClient();
 
@@ -151,19 +153,19 @@ public class MainWindow extends JFrame implements MainView {
         setupPanels(glassPane);
 
         this.setPreferredSize(new Dimension(800, 600));
-        
+
         statusBar = new StatusBar();
         setupNotificationPane(statusBar, glassPane);
-        
+
         getContentPane().add(statusBar, BorderLayout.SOUTH);
-        
+
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(shutdownAction);
 
         // Handle SIGTERM/SIGINT properly
         Signal.handle(new Signal("TERM"), shutdownAction);
         Signal.handle(new Signal("INT"), shutdownAction);
-        
+
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
@@ -296,8 +298,7 @@ public class MainWindow extends JFrame implements MainView {
         
         navigationPanel = new ThermostatSidePanel();
         splitPane.setLeftComponent(navigationPanel);
-        
-        DecoratorManager decoratorManager = new DecoratorManager();
+
         contextActionController = new ContextActionController();
         
         HostTreeComponentFactory hostFactory =
@@ -527,6 +528,11 @@ public class MainWindow extends JFrame implements MainView {
     @Override
     public HostTreeController getHostTreeController() {
         return hostTreeController;
+    }
+
+    @Override
+    public DecoratorManager getDecoratorManager() {
+        return decoratorManager;
     }
 
     @Override
