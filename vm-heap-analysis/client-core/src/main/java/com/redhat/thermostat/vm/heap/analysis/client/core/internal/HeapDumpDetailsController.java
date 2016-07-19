@@ -48,6 +48,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
@@ -58,11 +59,14 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvide
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 import com.redhat.thermostat.vm.heap.analysis.hat.hprof.model.JavaHeapObject;
 
 public class HeapDumpDetailsController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final Logger log = LoggingUtils.getLogger(HeapDumpDetailsController.class);
 
@@ -85,13 +89,15 @@ public class HeapDumpDetailsController {
         heapTreeMapView = treeMapProvider.createView();
     }
 
-    public void setDump(HeapDump dump) {
+    public void setDump(HeapDump dump, int id) {
         HeapDump previous = this.heapDump;
         this.heapDump = dump;
 
         if (dump.equals(previous)) {
             return;
         }
+
+        view.setDumpName(translator.localize(LocaleResources.HEAP_DUMP_LABEL, Integer.toString(id+1), dump.toString()));
 
         ObjectHistogram histogram = readHistogram();
         Objects.requireNonNull(histogram);
@@ -157,6 +163,10 @@ public class HeapDumpDetailsController {
 
     public BasicView getView() {
         return view;
+    }
+
+    protected HeapDump getActiveDump() {
+        return this.heapDump;
     }
 
 }

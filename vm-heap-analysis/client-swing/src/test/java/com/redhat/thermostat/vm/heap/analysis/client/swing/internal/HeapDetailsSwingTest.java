@@ -53,6 +53,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.JLabel;
 
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -111,6 +112,23 @@ public class HeapDetailsSwingTest {
     public void tearDown() {
         frameFixture.cleanUp();
         frameFixture = null;
+    }
+
+    @GUITest
+    @Test
+    public void testSetDump() throws InvocationTargetException, InterruptedException {
+        frameFixture.show();
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                final JLabel label = view.getLabel();
+                assertNotNull(label);
+                view.setDumpName(translator.localize(LocaleResources.HEAP_DUMP_LABEL, "0", "[Foo Bar]"));
+                Assert.assertEquals(label.getText(), "0 - [Foo Bar]");
+                return;
+            }
+        });
+
     }
 
     @GUITest

@@ -383,7 +383,11 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     }
 
     private void showHeapDumpDetails(HeapDump dump) {
-        heapDumpDetailsController.setDump(dump);
+        if (dump.equals(heapDumpDetailsController.getActiveDump())) {
+            return;
+        }
+        List<HeapDump> dumps = getHeapDumps();
+        heapDumpDetailsController.setDump(dump, dumps.indexOf(dump));
         view.setActiveDump(dump);
         view.setChildView(heapDumpDetailsController.getView());
         view.openDumpView();

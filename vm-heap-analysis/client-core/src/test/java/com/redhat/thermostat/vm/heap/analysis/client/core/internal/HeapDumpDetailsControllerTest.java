@@ -120,7 +120,7 @@ public class HeapDumpDetailsControllerTest {
         HeapDump emptyDump = mock(HeapDump.class);
         when(emptyDump.getHistogram()).thenReturn(null);
 
-        controller.setDump(emptyDump);
+        controller.setDump(emptyDump, 1);
     }
 
     @Test
@@ -130,7 +130,7 @@ public class HeapDumpDetailsControllerTest {
         when(dump.getHistogram()).thenReturn(histogram);
 
         try {
-            controller.setDump(dump);
+            controller.setDump(dump, 1);
         } catch (NullPointerException e) {
             fail("Did not expect null pointer exception");
         }
@@ -146,7 +146,7 @@ public class HeapDumpDetailsControllerTest {
         ObjectHistogram histogram = mock(ObjectHistogram.class);
         when(dump.getHistogram()).thenReturn(histogram);
 
-        controller.setDump(dump);
+        controller.setDump(dump, 1);
         verify(histogramView).setHistogram(histogram);
 
         ArgumentCaptor<ActionListener> captor =
@@ -175,7 +175,7 @@ public class HeapDumpDetailsControllerTest {
         when(javaHeapObject.getClazz()).thenReturn(mock(JavaClass.class));
         when(dump.findObject(anyString())).thenReturn(javaHeapObject);
 
-        controller.setDump(dump);
+        controller.setDump(dump, 1);
         verify(histogramView).setHistogram(histogram);
 
         ArgumentCaptor<ActionListener> captor =

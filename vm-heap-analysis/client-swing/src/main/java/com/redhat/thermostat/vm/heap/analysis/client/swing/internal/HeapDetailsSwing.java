@@ -40,6 +40,7 @@ import java.awt.BorderLayout;
 
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
@@ -60,13 +61,20 @@ public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingCompon
     static final String TAB_NAME = "tabs";
 
     private JPanel visiblePane;
+    private JPanel labelPane;
 
     private JTabbedPane tabPane = new ThermostatTabbedPane();
 
+    private JLabel dumpLabel;
+
     public HeapDetailsSwing() {
+        labelPane = new JPanel();
+        dumpLabel = new JLabel();
+        labelPane.add(dumpLabel);
         visiblePane = new JPanel();
         visiblePane.setLayout(new BorderLayout());
         visiblePane.add(tabPane, BorderLayout.CENTER);
+        visiblePane.add(labelPane, BorderLayout.NORTH);
 
         tabPane.setName(TAB_NAME);
         tabPane.addTab(
@@ -78,7 +86,15 @@ public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingCompon
         tabPane.setSelectedIndex(0);
     }
 
+    public void setDumpName(LocalizedString heapDump) {
+        dumpLabel.setText(heapDump.getContents());
+        visiblePane.revalidate();
+        visiblePane.repaint();
+    }
 
+    protected JLabel getLabel() {
+        return dumpLabel;
+    }
 
     @Override
     public void addSubView(final LocalizedString title, final HeapHistogramView view) {
