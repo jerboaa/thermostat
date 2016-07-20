@@ -40,6 +40,7 @@ import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -1166,11 +1167,8 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
                 loadStream = webStorage.loadFile("test");
             } catch (StorageException e) {
                 /**
-                 * Eaxceptions will occur if the load fails
-                 * ex. if file 'test' can't be found
+                 * Exceptions can occur if the load fails
                  * Ignore and retry.
-                 * See http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3097
-                 * for more info.
                  */
             }
             loadAttempts++;
@@ -1183,6 +1181,23 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
             i = loadStream.read();
         }
         assertEquals("Hello World", str.toString());
+
+        webStorage.getConnection().disconnect();
+    }
+
+    @Test
+    public void authorizedLoadNotExistingFile() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.LOAD_FILE,
+                Roles.ACCESS_REALM,
+                Roles.LOGIN,
+                Roles.GRANT_FILES_WRITE_ALL,
+                Roles.GRANT_FILES_READ_ALL
+        };
+        Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
+        InputStream loadStream = webStorage.loadFile("not-existing");
+
+        assertNull(loadStream);
 
         webStorage.getConnection().disconnect();
     }

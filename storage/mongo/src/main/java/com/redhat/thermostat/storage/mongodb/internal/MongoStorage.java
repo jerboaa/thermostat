@@ -654,7 +654,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
             GridFSDownloadStream downloadStream = gridFsBucket.openDownloadStreamByName(filename);
             return downloadStream;
         } catch (MongoException me) {
-            throw new StorageException(me);
+            return null;
         }
     }
 

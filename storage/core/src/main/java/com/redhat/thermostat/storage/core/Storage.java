@@ -119,7 +119,7 @@ public interface Storage {
      * @return the data as an {@link InputStream} or {@code null} if not found.
      *
      * @throws StorageException
-     *            If the load operation fails
+     *            May be thrown if the load operation fails
      */
     InputStream loadFile(String filename);
 
