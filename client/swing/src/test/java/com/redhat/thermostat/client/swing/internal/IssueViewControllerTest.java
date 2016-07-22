@@ -36,7 +36,11 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
@@ -52,6 +56,7 @@ import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorLi
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.storage.core.VmRef;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -203,6 +208,75 @@ public class IssueViewControllerTest {
         assertEquals(String.format("%s (PID: %s)", vmInfo.getMainClass(), Integer.toString(vmInfo.getVmPid())), issueDescription.vm);
         assertEquals(issue.getSeverity(), issueDescription.severity);
         assertEquals(issue.getDescription(), issueDescription.description);
+
+        controller.stop();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testIssueSelectionTriggersEvent() {
+        AgentId agentId = new AgentId("agent-id");
+        VmId vmId = new VmId("vm-id");
+        HostInfo hostInfo = new HostInfo(agentId.get(), "hostname", "osName", "osKernel", "cpuModel", 1, 1);
+        VmInfo vmInfo = new VmInfo(agentId.get(), vmId.get(), 1, 2, 3,
+                "javaVersion", "javaHome",
+                "mainClass", "commandLine",
+                "vmName", "vmInfo", "vmVersion", "vmArguments",
+                Collections.<String,String>emptyMap(), Collections.<String,String>emptyMap(), new String[0],
+                1, "userName");
+        VmIssue issue = new VmIssue(agentId, vmId, Severity.CRITICAL, "foobar");
+
+        when(agentInfoDao.getAgentIds()).thenReturn(Collections.singleton(agentId));
+        when(hostInfoDao.getHostInfo(agentId)).thenReturn(hostInfo);
+        when(vmInfoDao.getVmIds(agentId)).thenReturn(Collections.singleton(vmId));
+        when(vmInfoDao.getVmInfo(vmId)).thenReturn(vmInfo);
+        when(issueProvider.diagnoseIssue(agentId, vmId)).thenReturn(Collections.singleton(issue));
+
+        ArgumentCaptor<ActionListener> viewActionCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        controller.start();
+
+        context.registerService(AgentInfoDAO.class, agentInfoDao, null);
+        context.registerService(VmInfoDAO.class, vmInfoDao, null);
+        context.registerService(HostInfoDAO.class, hostInfoDao, null);
+
+        context.registerService(IssueDiagnoser.class, issueProvider, null);
+
+        ArgumentCaptor<ActionListener> captor = ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addIssueActionListener(captor.capture());
+        verify(view).setIssuesState(IssueView.IssueState.NOT_STARTED);
+
+        ActionListener<IssueAction> listener = captor.getValue();
+
+        listener.actionPerformed(new ActionEvent<>(view, IssueAction.SEARCH));
+
+        ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor).submit(runnableCaptor.capture());
+        runnableCaptor.getValue().run();
+
+        final boolean[] notified = {false};
+        final Ref[] ref = new Ref[1];
+        controller.addIssueSelectionListener(new ActionListener<IssueViewController.IssueSelectionAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<IssueViewController.IssueSelectionAction> actionEvent) {
+                notified[0] = true;
+                ref[0] = (Ref) actionEvent.getPayload();
+            }
+        });
+
+        verify(view).addIssueActionListener(viewActionCaptor.capture());
+        ActionEvent event = new ActionEvent(view, IssueAction.SELECTION_CHANGED);
+        event.setPayload(0);
+        viewActionCaptor.getValue().actionPerformed(event);
+
+        assertTrue(notified[0]);
+        assertThat(ref[0], instanceOf(VmRef.class));
+        VmRef vmRef = (VmRef) ref[0];
+        assertThat(vmRef.getName(), is(vmInfo.getMainClass()));
+        assertThat(vmRef.getPid(), is(vmInfo.getVmPid()));
+        assertThat(vmRef.getStringID(), is(vmId.get()));
+        assertThat(vmRef.getHostRef().getAgentId(), is(agentId.get()));
+        assertThat(vmRef.getHostRef().getStringID(), is(agentId.get()));
+        assertThat(vmRef.getHostRef().getHostName(), is(hostInfo.getHostname()));
 
         controller.stop();
     }

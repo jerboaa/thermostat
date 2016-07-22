@@ -233,6 +233,19 @@ public class MainWindowControllerImpl implements MainWindowController {
                 IssueViewProvider provider = (IssueViewProvider) services.get(IssueViewProvider.class.getName());
                 IssueView issuesView = provider.createView();
                 issuesController = new IssueViewController(context, appSvc, view.getDecoratorManager(), issuesView);
+                issuesController.addIssueSelectionListener(new ActionListener<IssueViewController.IssueSelectionAction>() {
+                    @Override
+                    public void actionPerformed(ActionEvent<IssueViewController.IssueSelectionAction> actionEvent) {
+                        switch (actionEvent.getActionId()) {
+                            case ISSUE_SELECTED:
+                                Ref ref = (Ref) actionEvent.getPayload();
+                                view.getHostTreeController().setSelectedComponent(ref);
+                                break;
+                            default:
+                                throw new IllegalArgumentException();
+                        }
+                    }
+                });
             }
 
             @Override

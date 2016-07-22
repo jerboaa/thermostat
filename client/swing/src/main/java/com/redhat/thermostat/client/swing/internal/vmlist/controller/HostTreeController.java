@@ -249,7 +249,7 @@ public class HostTreeController {
         return component;
     }
 
-    private void selectComponent(final Ref _selected) {
+    public void setSelectedComponent(final Ref _selected) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -359,7 +359,7 @@ public class HostTreeController {
         // now select the entry that was originally selected, or its parent...
         // ... or nothing
         if (selected != null) {
-            selectComponent(selected);
+            setSelectedComponent(selected);
         }
     }
 

@@ -58,6 +58,7 @@ public abstract class IssueView extends BasicView implements UIComponent {
 
     public enum IssueAction {
         SEARCH,
+        SELECTION_CHANGED,
     }
 
     public enum IssueState {

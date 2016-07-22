@@ -46,9 +46,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.core.Severity;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.VmInfo;
 import org.osgi.framework.BundleContext;
@@ -136,15 +139,22 @@ public class IssueViewController {
 
     }
 
+    public enum IssueSelectionAction {
+        ISSUE_SELECTED,
+        ;
+    }
+
     private final IssueView view;
     private final DecoratorManager decoratorManager;
 
     private IssueDiagnoserTracker issueTracker;
+    private final List<Issue> issueList;
 
     private DaoTracker<AgentInfoDAO> agentInfoDaoTracker;
     private DaoTracker<HostInfoDAO> hostInfoDaoTracker;
     private DaoTracker<VmInfoDAO> vmInfoDaoTracker;
 
+    private ActionNotifier<IssueSelectionAction> selectionNotifier = new ActionNotifier<>(this);
     private ActionListener<IssueAction> actionListener;
 
     private ExecutorService executor;
@@ -155,6 +165,7 @@ public class IssueViewController {
         this.view = view;
 
         issueTracker = new IssueDiagnoserTracker(context);
+        issueList = new ArrayList<>();
 
         agentInfoDaoTracker = new DaoTracker<>(context, AgentInfoDAO.class);
         hostInfoDaoTracker = new DaoTracker<>(context, HostInfoDAO.class);
@@ -163,25 +174,72 @@ public class IssueViewController {
         actionListener = new ActionListener<IssueAction>() {
             @Override
             public void actionPerformed(com.redhat.thermostat.common.ActionEvent<IssueAction> actionEvent) {
-                Runnable task = new Runnable() {
-                    @Override
-                    public void run() {
-                        Collection<Issue> issues = findIssues();
-                        Collection<IssueDescription> descriptions = makeDescriptions(issues);
-
-                        view.clearIssues();
-                        for (IssueDescription description: descriptions) {
-                            view.addIssue(description);
+                switch (actionEvent.getActionId()) {
+                    case SEARCH:
+                        performIssuesSearch();
+                        break;
+                    case SELECTION_CHANGED:
+                        int index = (int) actionEvent.getPayload();
+                        Issue selected = issueList.get(index);
+                        Ref selectedRef;
+                        if (selected instanceof AgentIssue) {
+                            AgentIssue agentIssue = (AgentIssue) selected;
+                            selectedRef = agentIdToRef(agentIssue.getAgentId(), hostInfoDaoTracker.getDao());
+                        } else if (selected instanceof VmIssue) {
+                            VmIssue vmIssue = (VmIssue) selected;
+                            selectedRef = vmInfoToRef(vmIssue.getAgentId(), hostInfoDaoTracker.getDao(),
+                                    vmInfoDaoTracker.getDao().getVmInfo(vmIssue.getVmId()));
+                        } else {
+                            throw new IllegalArgumentException();
                         }
-                        IssueView.IssueState issueState = issues.isEmpty() ? IssueView.IssueState.NONE_FOUND : IssueView.IssueState.ISSUES_FOUND;
-                        view.setIssuesState(issueState);
-                    }
-                };
-                executor.submit(task);
+                        fireIssueSelection(selectedRef);
+                        break;
+                    default:
+                        throw new IllegalArgumentException();
+                }
             }
         };
 
         view.setIssuesState(IssueView.IssueState.NOT_STARTED);
+    }
+
+    private void performIssuesSearch() {
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                issueList.clear();
+                issueList.addAll(findIssues());
+                Collection<IssueDescription> descriptions = makeDescriptions(issueList);
+
+                view.clearIssues();
+                for (IssueDescription description: descriptions) {
+                    view.addIssue(description);
+                }
+                IssueView.IssueState issueState = issueList.isEmpty() ? IssueView.IssueState.NONE_FOUND : IssueView.IssueState.ISSUES_FOUND;
+                view.setIssuesState(issueState);
+            }
+        };
+        executor.submit(task);
+    }
+
+    private void fireIssueSelection(Ref ref) {
+        selectionNotifier.fireAction(IssueSelectionAction.ISSUE_SELECTED, ref);
+    }
+
+    private VmRef vmInfoToRef(AgentId agentId, HostInfoDAO hostDao, VmInfo vmInfo) {
+        return new VmRef(agentIdToRef(agentId, hostDao), vmInfo);
+    }
+
+    private HostRef agentIdToRef(AgentId agentId, HostInfoDAO hostDao) {
+        return new HostRef(agentId.get(), hostDao.getHostInfo(agentId).getHostname());
+    }
+
+    public void addIssueSelectionListener(ActionListener<IssueSelectionAction> listener) {
+        selectionNotifier.addActionListener(listener);
+    }
+
+    public void removeIssueSelectionListener(ActionListener<IssueSelectionAction> listener) {
+        selectionNotifier.removeActionListener(listener);
     }
 
     private Collection<Issue> findIssues() {
@@ -244,8 +302,7 @@ public class IssueViewController {
         VmInfo vmInfo = vmDao.getVmInfo(vmId);
         String label = vmInfo.getMainClass();
         for (ReferenceFieldLabelDecorator decorator : decoratorManager.getMainLabelDecoratorListener().getDecorators()) {
-            label = decorator.getLabel(label,
-                    new VmRef(new HostRef(agentId.get(), hostDao.getHostInfo(agentId).getHostname()), vmInfo));
+            label = decorator.getLabel(label, vmInfoToRef(agentId, hostDao, vmInfo));
         }
         return translator.localize(LocaleResources.ISSUES_VM_FORMAT,
                 label, Integer.toString(vmInfo.getVmPid()));

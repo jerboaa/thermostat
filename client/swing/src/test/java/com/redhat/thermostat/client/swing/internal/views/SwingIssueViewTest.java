@@ -69,6 +69,14 @@ public class SwingIssueViewTest {
                     }
                 });
 
+                view.addIssueActionListener(new ActionListener<IssueAction>() {
+                    @Override
+                    public void actionPerformed(ActionEvent<IssueAction> actionEvent) {
+                        System.out.println("actionEvent.getActionId() = " + actionEvent.getActionId());
+                        System.out.println("actionEvent.getPayload() = " + actionEvent.getPayload());
+                    }
+                });
+
                 mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 mainWindow.pack();
                 mainWindow.setVisible(true);

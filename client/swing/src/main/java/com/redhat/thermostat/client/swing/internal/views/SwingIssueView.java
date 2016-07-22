@@ -38,7 +38,10 @@ package com.redhat.thermostat.client.swing.internal.views;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -46,7 +49,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JComponent;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import com.redhat.thermostat.client.core.Severity;
 import com.redhat.thermostat.client.core.views.IssueView;
@@ -148,10 +154,35 @@ public class SwingIssueView extends IssueView implements SwingComponent {
             }
         };
 
-        ThermostatTable table = new ThermostatTable(tableModel);
+        final ThermostatTable table = new ThermostatTable(tableModel);
         table.getColumnModel().getColumn(0).setMaxWidth(200);
         table.getColumnModel().getColumn(0).setPreferredWidth(100);
+
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setCellSelectionEnabled(false);
+        table.setRowSelectionAllowed(true);
+        table.setColumnSelectionAllowed(false);
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (!(e.getButton() == MouseEvent.BUTTON1
+                        && e.getClickCount() == 2)) {
+                    return;
+                }
+                Point point = e.getPoint();
+                int index = table.rowAtPoint(point);
+                if (index >= 0) {
+                    fireIssueSelectionChangedEvent(index);
+                }
+            }
+        });
+
         return table.wrap();
+    }
+
+    private void fireIssueSelectionChangedEvent(int index) {
+        notifier.fireAction(IssueAction.SELECTION_CHANGED, index);
     }
 
     @Override
