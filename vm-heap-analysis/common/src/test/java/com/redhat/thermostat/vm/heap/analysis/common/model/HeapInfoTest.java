@@ -111,7 +111,8 @@ public class HeapInfoTest extends DataObjectTest {
         assertThat(a.hashCode(), is(equalTo(a.hashCode())));
 
         HeapInfo b = new HeapInfo(new String("1"), new String("1"), 0l);
-        assertThat(a.hashCode(), is(equalTo(b.hashCode())));    }
+        assertThat(a.hashCode(), is(equalTo(b.hashCode())));
+    }
 
     @Override
     public Class<?>[] getDataClasses() {
