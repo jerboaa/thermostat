@@ -52,6 +52,8 @@ import javax.swing.SwingUtilities;
 
 public class DecoratorManager {
 
+    private static final String EMPTY_LABEL = "";
+
     private class Icons {
         Icon main;
         Icon selected;
@@ -87,8 +89,8 @@ public class DecoratorManager {
     
     public void registerAndSetIcon(ReferenceComponent component) {
         Ref ref = component.getReference();
-        component.setInfoLabelText(createComponentLabel(infoLabelDecorator, ref, ""));
-        component.setMainLabelText(createComponentLabel(mainLabelDecorator, ref, ""));
+        component.setInfoLabelText(createComponentLabel(infoLabelDecorator, ref));
+        component.setMainLabelText(createComponentLabel(mainLabelDecorator, ref));
         setIcons(component);
         
         ListenerPayload payload = new ListenerPayload();
@@ -131,9 +133,9 @@ public class DecoratorManager {
     }
 
     private <R extends Ref> String createComponentLabel(DecoratorListener<ReferenceFieldLabelDecorator> listener,
-                                                        R reference,
-                                                        String label)
-    {        
+                                                        R reference)
+    {
+        String label = EMPTY_LABEL;
         for (ReferenceFieldLabelDecorator decorator : listener.getDecorators()) {
             label = decorator.getLabel(label, reference);
         }
@@ -168,7 +170,7 @@ public class DecoratorManager {
         @Override
         public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
             Ref ref = component.getReference();
-            final String label = createComponentLabel(infoLabelDecorator, ref, "");
+            final String label = createComponentLabel(infoLabelDecorator, ref);
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
@@ -188,7 +190,7 @@ public class DecoratorManager {
         @Override
         public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
             Ref ref = component.getReference();
-            final String label = createComponentLabel(mainLabelDecorator, ref, "");
+            final String label = createComponentLabel(mainLabelDecorator, ref);
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
