@@ -49,7 +49,11 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doNothing;
 
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import org.junit.Test;
@@ -73,6 +77,7 @@ import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 
 public class DumpHeapCommandTest {
 
@@ -115,6 +120,20 @@ public class DumpHeapCommandTest {
 
         DumpHeapCommand command = new DumpHeapCommand(impl);
 
+        final boolean[] result = new boolean[1];
+        command.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case SUCCESS:
+                        result[0] = true;
+                        break;
+                    default:
+                        result[0] = false;
+                }
+            }
+        });
+
         command.setVmInfoDAO(vmInfoDao);
         command.setAgentInfoDAO(agentInfoDao);
         command.setHeapDAO(heapDao);
@@ -130,6 +149,7 @@ public class DumpHeapCommandTest {
         verify(impl).execute(eq(vmInfoDao), eq(agentInfoDao), isA(AgentId.class), isA(VmId.class), eq(queue),
                 any(Runnable.class), any(Runnable.class));
         assertThat(factory.getOutput(), is(equalTo("Heap dump ID: " + heapInfo.getHeapId() + "\n")));
+        assertTrue(result[0]);
     }
 
     @Test
@@ -382,6 +402,76 @@ public class DumpHeapCommandTest {
 
         String result = DumpHeapCommand.getLatestHeapId(heapDao, agent, vm);
         assertThat(result, is(heapInfo1.getHeapId()));
+    }
+
+    @Test(timeout = 1000L)
+    public void verifyFailsIfAgentNotAliveWhenDumpingHeap() {
+        final String AGENT_ID = "myAgent";
+        final String VM_ID = "myVm";
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        HeapDAO heapDao = mock(HeapDAO.class);
+        RequestQueue queue = mock(RequestQueue.class);
+        VmInfo vmInfo = new VmInfo(AGENT_ID, VM_ID, 123, 0, 0, null, null, null, null, null, null, null, null,
+            null, null, null, 0, null);
+        VmId vmId = new VmId(VM_ID);
+        AgentId agentId = new AgentId(AGENT_ID);
+        Set<AgentId> aliveAgentIds = (Set<AgentId>) mock(Set.class);
+
+        when(agentInfoDao.getAliveAgentIds()).thenReturn(aliveAgentIds);
+        when(aliveAgentIds.contains(agentId)).thenReturn(false);
+        when(vmInfoDao.getVmInfo(vmId)).thenReturn(vmInfo);
+
+        DumpHeapHelper impl = mock(DumpHeapHelper.class);
+        DumpHeapCommand command = new DumpHeapCommand(impl) {
+            @Override
+            long getTimeoutVal() {
+                return 50L; // short timeout value for test
+            }
+        };
+
+        final boolean[] result = new boolean[1];
+        command.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case FAIL:
+                        result[0] = true;
+                        break;
+                    default:
+                        result[0] = false;
+                }
+            }
+        });
+
+        final ArgumentCaptor<Runnable> errorHandler = ArgumentCaptor.forClass(Runnable.class);
+
+        doNothing().when(impl).execute(eq(vmInfoDao),
+            eq(agentInfoDao),
+            eq(agentId),
+            eq(vmId),
+            eq(queue),
+            any(Runnable.class),
+            errorHandler.capture());
+
+        command.setVmInfoDAO(vmInfoDao);
+        command.setAgentInfoDAO(agentInfoDao);
+        command.setHeapDAO(heapDao);
+        command.setRequestQueue(queue);
+
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
+
+        try {
+            command.run(factory.createContext(args));
+            fail("CommandException expected");
+        } catch (CommandException e) {
+            assertEquals(TRANSLATOR.localize(LocaleResources.HEAP_DUMP_ERROR_AGENT_DEAD,
+                AGENT_ID, VM_ID).getContents(), e.getMessage());
+            assertTrue(result[0]);
+        }
     }
 
 }

@@ -42,12 +42,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
@@ -59,9 +61,10 @@ import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 
-public class DumpHeapCommand extends AbstractCommand {
+public class DumpHeapCommand extends AbstractStateNotifyingCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private static final long TIMEOUT_MS = 5000L;
 
     private final DumpHeapHelper implementation;
 
@@ -119,14 +122,36 @@ public class DumpHeapCommand extends AbstractCommand {
         implementation.execute(vmInfoDAO, agentInfoDAO, agentId, vmId, queue, successHandler, errorHandler);
         
         try {
-            s.acquire();
+            // There are two reasons why s.tryAquire() could time out:
+            //
+            //   1) The agent is dead and the heap dump couldn't be completed
+            //   2) The agent is still alive, but the heap dump is so large it is
+            //       taking longer than the timeout value
+            //
+            // To account for case 2, periodically check if the agent is still alive
+            // by checking the semaphore in a while loop.
+            long timeout = getTimeoutVal();
+            while (!s.tryAcquire(timeout, TimeUnit.MILLISECONDS)) {
+                if (!agentInfoDAO.getAliveAgentIds().contains(agentId)) {
+                    ex[0] = new CommandException(translator.localize(
+                            LocaleResources.HEAP_DUMP_ERROR_AGENT_DEAD, vmInfo.getAgentId(), vmInfo.getVmId()));
+                    s.release();
+                }
+            }
         } catch (InterruptedException e) {
             // Nothing to do here, just return ASAP.
         }
-        
+
         if (ex[0] != null) {
+            getNotifier().fireAction(ApplicationState.FAIL);
             throw ex[0];
         }
+        getNotifier().fireAction(ApplicationState.SUCCESS);
+    }
+
+    // package-private for testing
+    long getTimeoutVal() {
+        return TIMEOUT_MS;
     }
 
     // FIXME: storage may actually return us outdated results which do not contain the latest

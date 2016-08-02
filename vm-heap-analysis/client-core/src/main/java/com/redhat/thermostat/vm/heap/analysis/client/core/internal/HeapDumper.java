@@ -36,6 +36,11 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -44,11 +49,16 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.storage.core.VmRef;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class HeapDumper {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final VmRef ref;
     private final BundleContext context;
-    
+
     public HeapDumper(VmRef ref) {
         this(ref, FrameworkUtil.getBundle(HeapDumper.class).getBundleContext());
     }
@@ -61,7 +71,29 @@ public class HeapDumper {
     public void dump() throws CommandException {
         ServiceReference launcherRef = context.getServiceReference(Launcher.class.getName());
         Launcher launcher = (Launcher) context.getService(launcherRef);
-        launcher.run(new String[] { "dump-heap", "--vmId", ref.getVmId() }, true);
+
+        final List<ActionListener<ApplicationState>> listeners = new CopyOnWriteArrayList<>();
+        SuccessListener successListener = new SuccessListener();
+        listeners.add(successListener);
+
+        launcher.run(new String[] { "dump-heap", "--vmId", ref.getVmId() }, listeners, true);
+
+        if (!successListener.isSuccessful) {
+            throw new CommandException(translator.localize(
+                LocaleResources.HEAP_DUMP_ERROR_AGENT_DEAD, ref.getHostRef().getAgentId(), ref.getVmId()));
+        }
+    }
+
+    private static class SuccessListener implements ActionListener<ApplicationState> {
+
+        private boolean isSuccessful = false;
+
+        @Override
+        public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+            if(actionEvent.getActionId() == ApplicationState.SUCCESS) {
+                isSuccessful = true;
+            }
+        }
     }
 
 }

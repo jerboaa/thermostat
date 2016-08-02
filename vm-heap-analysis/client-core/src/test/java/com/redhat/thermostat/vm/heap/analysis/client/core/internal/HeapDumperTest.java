@@ -37,11 +37,20 @@
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
 
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.tools.ApplicationState;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -51,6 +60,11 @@ import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import org.mockito.Matchers;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+import java.util.Collection;
 
 public class HeapDumperTest {
     private static final String TEST_HOST_ID = "1111111";
@@ -76,14 +90,55 @@ public class HeapDumperTest {
 
     @Test
     public void testDump() throws CommandException {
+        final ArgumentCaptor<Collection> captor = ArgumentCaptor.forClass(Collection.class);
+        final ActionEvent successEvent = mock(ActionEvent.class);
+        when(successEvent.getActionId()).thenReturn(ApplicationState.SUCCESS);
+
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Collection<ActionListener<ApplicationState>> listeners = captor.getValue();
+                for (ActionListener<ApplicationState> notifier : listeners) {
+                    notifier.actionPerformed(successEvent);
+                }
+                return null;
+            }
+        }).when(launcher).run(any(String[].class), captor.capture(), anyBoolean());
+
         dumper.dump();
 
-        ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
-        verify(launcher).run(captor.capture(), eq(true));
+        ArgumentCaptor<String[]> argCaptor = ArgumentCaptor.forClass(String[].class);
+        verify(launcher).run(argCaptor.capture(), Matchers.<Collection<ActionListener<ApplicationState>>>any(), eq(true));
         verifyNoMoreInteractions(launcher);
 
-        String[] args = captor.getValue();
+        String[] args = argCaptor.getValue();
         assertArrayEquals(new String[] { "dump-heap", "--vmId", String.valueOf(TEST_VM_ID) }, args);
+    }
+
+    @Test
+    public void testDumpFailureState() {
+        final ArgumentCaptor<Collection> captor = ArgumentCaptor.forClass(Collection.class);
+        final ActionEvent failEvent = mock(ActionEvent.class);
+        when(failEvent.getActionId()).thenReturn(ApplicationState.FAIL);
+
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Collection<ActionListener<ApplicationState>> listeners = captor.getValue();
+                for (ActionListener<ApplicationState> notifier : listeners) {
+                    notifier.actionPerformed(failEvent);
+                }
+                return null;
+            }
+        }).when(launcher).run(any(String[].class), captor.capture(), anyBoolean());
+
+        try {
+            dumper.dump();
+            fail("CommandException expected");
+        } catch (CommandException e) {
+            assertTrue(e.getMessage()
+                    .matches("Error dumping heap, agent is not alive \\(agent: [a-zA-Z0-9-_]+, vm: [a-zA-Z0-9-_]+\\)"));
+        }
     }
 
 }
