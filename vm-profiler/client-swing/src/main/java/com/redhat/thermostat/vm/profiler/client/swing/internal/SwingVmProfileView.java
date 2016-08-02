@@ -54,6 +54,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
+import javax.swing.JLayer;
 import javax.swing.JOptionPane;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -99,8 +100,11 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
 import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.platform.swing.components.ThermostatComponent;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.ui.swing.components.Spinner;
+import com.redhat.thermostat.ui.swing.components.SpinnerLayerUI;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
@@ -139,7 +143,6 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
     private ThermostatTable profileTable;
     private DefaultTableModel tableModel;
 
-    private JLabel currentStatusLabel;
     private boolean viewControlsEnabled = true;
 
     private ActionListener<TabbedPaneAction> tabListener;
@@ -148,6 +151,10 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
     private ActionToggleButton showRecordedSessionsButton;
 
     private UIDefaults uiDefaults;
+
+    private ThermostatComponent contentContainer;
+
+    private SpinningPanel spinner;
 
     static class ProfileItemRenderer extends DefaultListCellRenderer {
 
@@ -249,12 +256,9 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
         mainContainer.addOverlayCloseListeners(overlay);
         new ComponentVisibilityNotifier().initialize(mainContainer, notifier);
 
-        JPanel contentContainer = new JPanel(new BorderLayout());
+        contentContainer = new ThermostatComponent();
         mainContainer.addToolBarButton(toggleButton);
         mainContainer.addToolBarButton(showRecordedSessionsButton);
-
-        JComponent actionsPanel = createStatusPanel();
-        contentContainer.add(actionsPanel, BorderLayout.PAGE_START);
 
         JComponent profilingResultsPanel = createInformationPanel();
         contentContainer.add(profilingResultsPanel, BorderLayout.CENTER);
@@ -266,15 +270,22 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
             }
         };
 
+        spinner = new SpinningPanel(uiDefaults);
+
         stack.setName(STACK_PANE);
-        stack.setOpaque(false);
         stack.setLayout(new OverlayLayout(stack));
 
         stack.add(overlay);
+        stack.add(spinner);
         stack.add(contentContainer);
+
         stack.setOpaque(false);
 
         mainContainer.setContent(stack);
+    }
+
+    public SpinningPanel getSpinner() {
+        return spinner;
     }
 
     private void createOverlay() {
@@ -332,32 +343,6 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
                 }
             }
         });
-    }
-
-    private JPanel createStatusPanel() {
-        GridBagLayout layout = new GridBagLayout();
-        JPanel statusPanel = new JPanel(layout);
-
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.anchor = GridBagConstraints.PAGE_START;
-        constraints.weightx = 1.0;
-        constraints.gridy = 0;
-        constraints.gridx = 0;
-        constraints.gridwidth = 3;
-        constraints.ipady = 5;
-
-        String wrappedText = "<html>" + translator.localize(LocaleResources.PROFILER_DESCRIPTION).getContents() + "</html>";
-        JLabel descriptionLabel = new JLabel(wrappedText);
-        statusPanel.add(descriptionLabel, constraints);
-
-        constraints.gridy = 1;
-        constraints.gridx = 0;
-        constraints.gridwidth = 1;
-        currentStatusLabel = new JLabel("Current Status: {0}");
-        currentStatusLabel.setName(CURRENT_STATUS_LABEL_NAME);
-        statusPanel.add(currentStatusLabel, constraints);
-        return statusPanel;
     }
 
     private JComponent createInformationPanel() {
@@ -469,25 +454,36 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
     public void setProfilingState(final ProfilingState profilingState) {
         final String status, buttonLabel;
         if (!viewControlsEnabled) {
-            status = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_DEAD).getContents();
             buttonLabel = translator.localize(LocaleResources.START_PROFILING).getContents();
         } else if (profilingState == ProfilingState.STOPPING || profilingState == ProfilingState.STARTED) {
-            status = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_ACTIVE).getContents();
             buttonLabel = translator.localize(LocaleResources.STOP_PROFILING).getContents();
         } else {
-            status = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_INACTIVE).getContents();
             buttonLabel = translator.localize(LocaleResources.START_PROFILING).getContents();
         }
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                currentStatusLabel.setText(status);
                 if (!viewControlsEnabled) {
                     toggleButton.setToggleActionState(ProfilingState.DISABLED);
                 } else {
                     toggleButton.setToggleActionState(profilingState);
                 }
                 toggleButton.setText(buttonLabel);
+
+                boolean enabled = false;
+                switch (profilingState) {
+                    case STARTED:
+                    case STARTING:
+                    case STOPPING:
+                        enabled = true;
+                        break;
+                    default:
+                        enabled = false;
+                        break;
+                }
+
+                spinner.enableSpinner(enabled);
+                contentContainer.setEnabled(!enabled);
             }
         });
     }

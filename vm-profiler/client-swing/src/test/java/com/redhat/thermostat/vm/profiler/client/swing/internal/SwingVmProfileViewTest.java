@@ -100,11 +100,13 @@ import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmPro
 import static com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileView.TOGGLE_PROFILE_LIST_NAME;
 import static com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Profile;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @Category(CacioTest.class)
@@ -170,7 +172,6 @@ public class SwingVmProfileViewTest {
     public void testSetProfilingState() throws InvocationTargetException, InterruptedException {
         frame.show();
 
-        JLabelFixture currentStatusLabelFixture = frame.label(CURRENT_STATUS_LABEL_NAME);
         JToggleButtonFixture toggleButtonFixture = frame.toggleButton(TOGGLE_BUTTON_NAME);
         final ActionToggleButton toggleButton = (ActionToggleButton) toggleButtonFixture.component();
 
@@ -184,8 +185,6 @@ public class SwingVmProfileViewTest {
         });
 
         checkButtonState(ProfilingState.DISABLED, toggleButton);
-        assertEquals(translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_DEAD).getContents(),
-                currentStatusLabelFixture.text());
         assertEquals(translator.localize(LocaleResources.START_PROFILING).getContents(),
                 toggleButtonFixture.text());
 
@@ -197,23 +196,23 @@ public class SwingVmProfileViewTest {
             }
         });
         checkButtonState(ProfilingState.STOPPING, toggleButton);
-        verifyActive(currentStatusLabelFixture, toggleButtonFixture);
+        verifyActive(toggleButtonFixture);
 
         setProfilingStateInEDT(ProfilingState.STARTED);
         checkButtonState(ProfilingState.STARTED, toggleButton);
-        verifyActive(currentStatusLabelFixture, toggleButtonFixture);
+        verifyActive(toggleButtonFixture);
 
         setProfilingStateInEDT(ProfilingState.STOPPED);
         checkButtonState(ProfilingState.STOPPED, toggleButton);
-        verifyInactive(currentStatusLabelFixture, toggleButtonFixture);
+        verifyInactive(toggleButtonFixture);
 
         setProfilingStateInEDT(ProfilingState.DISABLED);
         checkButtonState(ProfilingState.DISABLED, toggleButton);
-        verifyInactive(currentStatusLabelFixture, toggleButtonFixture);
+        verifyInactive(toggleButtonFixture);
 
         setProfilingStateInEDT(ProfilingState.STARTING);
         checkButtonState(ProfilingState.STARTING, toggleButton);
-        verifyInactive(currentStatusLabelFixture, toggleButtonFixture);
+        verifyInactive(toggleButtonFixture);
     }
 
     private void setProfilingStateInEDT(final ProfilingState state) {
@@ -240,18 +239,12 @@ public class SwingVmProfileViewTest {
         });
     }
 
-    private void verifyActive(JLabelFixture currentStatusLabelFixture,
-                              JToggleButtonFixture toggleButtonFixture) {
-        assertEquals(translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_ACTIVE).getContents(),
-                currentStatusLabelFixture.text());
+    private void verifyActive(JToggleButtonFixture toggleButtonFixture) {
         assertEquals(translator.localize(LocaleResources.STOP_PROFILING).getContents(),
                 toggleButtonFixture.text());
     }
 
-    private void verifyInactive(JLabelFixture currentStatusLabelFixture,
-                                JToggleButtonFixture toggleButtonFixture) {
-        assertEquals(translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_INACTIVE).getContents(),
-                currentStatusLabelFixture.text());
+    private void verifyInactive(JToggleButtonFixture toggleButtonFixture) {
         assertEquals(translator.localize(LocaleResources.START_PROFILING).getContents(),
                 toggleButtonFixture.text());
     }
@@ -411,6 +404,56 @@ public class SwingVmProfileViewTest {
         tabPaneFixture.selectTab(tableTabName.getContents());
         frame.table(PROFILE_TABLE_NAME).requireVisible();
 
+    }
+
+    @Test
+    public void testSpinnerShownWhileProfiling() {
+
+        // This test seems a bit weird, but this is because of the invokeLater
+        // called inside the setProfilingState method, that means we can't
+        // check right away if the view state is updated, we must wait that
+        // the event is actually delivered to the event queue; we can, however
+        // schedule the next state change in the same event used to check the
+        // previous state
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                view.setProfilingState(ProfilingState.STARTING);
+            }
+        });
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                assertTrue(view.getSpinner().isSpinnerEnabled());
+                view.setProfilingState(ProfilingState.STARTED);
+            }
+        });
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                assertTrue(view.getSpinner().isSpinnerEnabled());
+                view.setProfilingState(ProfilingState.STOPPING);
+            }
+        });
+
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                assertTrue(view.getSpinner().isSpinnerEnabled());
+                view.setProfilingState(ProfilingState.STOPPED);
+            }
+        });
+
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                assertFalse(view.getSpinner().isSpinnerEnabled());
+            }
+        });
     }
 
     @Test
