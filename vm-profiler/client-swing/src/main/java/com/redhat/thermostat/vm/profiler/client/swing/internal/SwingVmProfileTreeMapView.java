@@ -50,12 +50,18 @@ import com.redhat.thermostat.client.swing.components.experimental.TreeMapToolbar
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 
 public class SwingVmProfileTreeMapView extends VmProfileTreeMapView implements SwingComponent {
+
+    static final String PANEL_NAME = "treeMapPanel";
+    static final String TREEMAPCOMP_NAME = "treeMapComponent";
+
     private TreeMapComponent treeMapComp;
     private final JPanel panel;
 
     public SwingVmProfileTreeMapView() {
         panel = new JPanel();
+        panel.setName(PANEL_NAME);
         treeMapComp = new TreeMapComponent();
+        treeMapComp.setName(TREEMAPCOMP_NAME);
         treeMapComp.setToolTipRenderer(new TimeToolTipRenderer());
         panel.setLayout(new BorderLayout());
     }
@@ -82,7 +88,7 @@ public class SwingVmProfileTreeMapView extends VmProfileTreeMapView implements S
         return panel;
     }
 
-    public static class TimeToolTipRenderer implements TreeMapComponent.ToolTipRenderer {
+    static class TimeToolTipRenderer implements TreeMapComponent.ToolTipRenderer {
         @Override
         public String render(TreeMapNode node) {
             return node.getLabel() + " - " + (long) node.getRealWeight() + "ms";

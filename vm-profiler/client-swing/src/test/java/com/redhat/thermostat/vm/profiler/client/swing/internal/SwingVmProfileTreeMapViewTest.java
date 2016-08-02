@@ -36,31 +36,107 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.junit.Before;
-import org.junit.Test;
+import java.awt.Component;
+import java.awt.Container;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import javax.swing.JPanel;
+
+import org.fest.swing.annotation.GUITest;
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
+import org.fest.swing.edt.GuiActionRunner;
+import org.fest.swing.edt.GuiTask;
+import org.fest.swing.fixture.Containers;
+import org.fest.swing.fixture.FrameFixture;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMap;
+import com.redhat.thermostat.client.swing.components.experimental.TreeMapComponent;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapNode;
+import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.SwingVmProfileTreeMapView.TimeToolTipRenderer;
 
-public class TimeToolTipRendererTest {
+@Category(CacioTest.class)
+@RunWith(CacioFESTRunner.class)
+public class SwingVmProfileTreeMapViewTest {
 
     private static final String ROOT_LABEL = "root";
     private static final String CHILD_LABEL = "child";
     private static final double ROOT_WEIGHT = 1024.0;
     private static final double CHILD_WEIGHT = 3.14;
 
+    private SwingVmProfileTreeMapView view;
     private TimeToolTipRenderer renderer;
     private TreeMapNode root;
 
+    private FrameFixture frame;
+
+    @BeforeClass
+    public static void setUpOnce() {
+        FailOnThreadViolationRepaintManager.install();
+    }
+
     @Before
     public void setUp() {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                view = new SwingVmProfileTreeMapView();
+            }
+        });
+        frame = Containers.frameFixtureFor((Container) view.getUiComponent());
+
         root = new TreeMapNode(ROOT_LABEL, ROOT_WEIGHT);
         root.addChild(new TreeMapNode(CHILD_LABEL, CHILD_WEIGHT));
         renderer = new TimeToolTipRenderer();
+    }
+
+    @After
+    public void tearDown() {
+        frame.cleanUp();
+        frame = null;
+        view = null;
+    }
+
+    @GUITest
+    @Test
+    public void testDisplayWithResults() {
+        frame.show();
+
+        List<MethodInfo> methodInfos = new ArrayList<MethodInfo>();
+        MethodDeclaration decl = new MethodDeclaration("foo.bar.Car", Arrays.asList("int"), "int");
+        methodInfos.add(new MethodInfo(decl, 10, 100));
+        ProfilingResult result = new ProfilingResult(methodInfos);
+        view.display(result);
+
+        JPanel panel = frame.panel(SwingVmProfileTreeMapView.PANEL_NAME).component();
+        List<Component> components = new ArrayList<>(Arrays.asList(panel.getComponents()));
+        assertEquals(2, components.size());
+
+        for (Component component : new ArrayList<>(components)) {
+            if (!SwingVmProfileTreeMapView.TREEMAPCOMP_NAME.equals(component.getName())) {
+                components.remove(component);
+            }
+        }
+
+        assertEquals(1, components.size());
+        TreeMapComponent treeMapComponent = (TreeMapComponent) components.get(0);
+        assertEquals(".foo.bar.Car", treeMapComponent.getTreeMapRoot().getLabel());
     }
 
     @Test
