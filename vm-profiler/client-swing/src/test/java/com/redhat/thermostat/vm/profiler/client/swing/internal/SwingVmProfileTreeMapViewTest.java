@@ -40,6 +40,7 @@ import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -47,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.fest.swing.annotation.GUITest;
@@ -111,6 +113,21 @@ public class SwingVmProfileTreeMapViewTest {
         frame.cleanUp();
         frame = null;
         view = null;
+    }
+
+    @GUITest
+    @Test
+    public void testDisplayWithNoResults() {
+        frame.show();
+
+        ProfilingResult result = new ProfilingResult(new ArrayList<MethodInfo>());
+        view.display(result);
+
+        JPanel panel = frame.panel(SwingVmProfileTreeMapView.PANEL_NAME).component();
+        Component[] components = panel.getComponents();
+        assertEquals(1, components.length);
+        JLabel label = (JLabel) components[0];
+        assertTrue(label.getText().contentEquals("No profiling data available"));
     }
 
     @GUITest

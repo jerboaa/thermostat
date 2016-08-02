@@ -39,7 +39,9 @@ package com.redhat.thermostat.vm.profiler.client.swing.internal;
 import java.awt.BorderLayout;
 import java.awt.Component;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
@@ -47,12 +49,15 @@ import com.redhat.thermostat.client.swing.components.experimental.TreeMap;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapComponent;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapNode;
 import com.redhat.thermostat.client.swing.components.experimental.TreeMapToolbar;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 
 public class SwingVmProfileTreeMapView extends VmProfileTreeMapView implements SwingComponent {
 
     static final String PANEL_NAME = "treeMapPanel";
     static final String TREEMAPCOMP_NAME = "treeMapComponent";
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private TreeMapComponent treeMapComp;
     private final JPanel panel;
@@ -71,6 +76,18 @@ public class SwingVmProfileTreeMapView extends VmProfileTreeMapView implements S
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                if (result.getMethodInfo().size() == 0) {
+                    String noResultsMessage = translator.localize(
+                            LocaleResources.PROFILER_NO_RESULTS).getContents();
+                    panel.removeAll();
+                    JLabel noResultsLabel = new JLabel(noResultsMessage);
+                    noResultsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                    panel.add(noResultsLabel, BorderLayout.CENTER);
+                    panel.revalidate();
+                    panel.repaint();
+                    return;
+                }
+
                 TreeMap<ProfilingResult, ProfilingResult.MethodInfo> treeMap =
                         new TreeMap<>(result, new ProfilingResultNodeDataExtractor());
                 treeMapComp.setModel(treeMap.getRoot());
