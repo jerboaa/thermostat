@@ -59,6 +59,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 public class HelpCommand extends AbstractCommand  {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    static final String COMMAND_NAME = "help";
 
     private static final int COMMANDS_COLUMNS_WIDTH = 14;
     private static final String APP_NAME = "thermostat";

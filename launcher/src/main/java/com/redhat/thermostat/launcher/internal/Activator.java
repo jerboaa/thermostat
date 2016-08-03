@@ -223,11 +223,13 @@ public class Activator implements BundleActivator {
         });
         shellTracker.open();
 
+        final HelpCommandCompleterService helpCommandCompleterService = new HelpCommandCompleterService();
         commandInfoSourceTracker = new ServiceTracker(context, CommandInfoSource.class, null) {
             @Override
             public Object addingService(ServiceReference reference) {
                 CommandInfoSource infoSource = (CommandInfoSource) super.addingService(reference);
                 helpCommand.setCommandInfoSource(infoSource);
+                helpCommandCompleterService.bindCommandInfoSource(infoSource);
                 if (shellCommand != null) {
                     shellCommand.setCommandInfoSource(infoSource);
                 }
@@ -237,6 +239,7 @@ public class Activator implements BundleActivator {
             @Override
             public void removedService(ServiceReference reference, Object service) {
                 helpCommand.setCommandInfoSource(null);
+                helpCommandCompleterService.unbindCommandInfoSource();
                 if (shellCommand != null) {
                     shellCommand.setCommandInfoSource(null);
                 }
@@ -343,6 +346,7 @@ public class Activator implements BundleActivator {
         FileNameCompleterService fileNameCompleterService = new FileNameCompleterService();
         context.registerService(CompleterService.class.getName(), fileNameCompleterService, null);
 
+        context.registerService(CompleterService.class.getName(), helpCommandCompleterService, null);
         context.registerService(CompleterService.class.getName(), vmIdCompleterService, null);
         context.registerService(CompleterService.class.getName(), agentIdCompleterService, null);
         context.registerService(CompleterService.class.getName(), pingCommandCompleterService, null);
