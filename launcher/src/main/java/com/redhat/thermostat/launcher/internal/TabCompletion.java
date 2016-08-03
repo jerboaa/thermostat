@@ -133,11 +133,15 @@ public class TabCompletion {
             if (cliCommandOption == CliCommandOption.POSITIONAL_ARG_COMPLETION) {
                 command.removeByTag(command.getTag() + " completer");
             }
+            Set<String> toRemove = new HashSet<>();
             for (TreeCompleter.Node branch : command.getBranches()) {
                 if (branch.getTag().equals("-" + cliCommandOption.getOpt())
                         || branch.getTag().equals("--" + cliCommandOption.getLongOpt())) {
-                    command.removeByTag(branch.getTag());
+                    toRemove.add(branch.getTag());
                 }
+            }
+            for (String tag : toRemove) {
+                command.removeByTag(tag);
             }
         }
     }

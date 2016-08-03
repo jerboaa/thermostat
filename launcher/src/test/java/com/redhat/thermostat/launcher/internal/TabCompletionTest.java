@@ -57,6 +57,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -105,6 +106,7 @@ public class TabCompletionTest {
         Map completerMap = new HashMap();
         TabCompleter completer = mock(TabCompleter.class);
         completerMap.put(new CliCommandOption("l", "long", true, "long option", false), completer);
+        completerMap.put(new CliCommandOption("s", "short", true, "short option", false), completer);
         when(service.getOptionCompleters()).thenReturn(completerMap);
 
         tabCompletion.addCompleterService(service);
@@ -114,6 +116,14 @@ public class TabCompletionTest {
         for (TreeCompleter.Node branch : node.getBranches()) {
             if (branch.getTag().equals("--long")) {
                 assertThat(branch.getBranches().isEmpty(), is(false));
+            } else if (branch.getTag().equals("-l")) {
+                assertThat(branch.getBranches().isEmpty(), is(false));
+            } else if (branch.getTag().equals("-s")) {
+                assertThat(branch.getBranches().isEmpty(), is(false));
+            } else if (branch.getTag().equals("--short")) {
+                assertThat(branch.getBranches().isEmpty(), is(false));
+            } else {
+                fail("should not reach here. branch tag: " + branch.getTag());
             }
         }
     }
@@ -127,6 +137,7 @@ public class TabCompletionTest {
         Map completerMap = new HashMap();
         TabCompleter completer = mock(TabCompleter.class);
         completerMap.put(new CliCommandOption("l", "long", true, "long option", false), completer);
+        completerMap.put(new CliCommandOption("s", "short", true, "short option", false), completer);
         when(service.getOptionCompleters()).thenReturn(completerMap);
 
         tabCompletion.addCompleterService(service);
@@ -137,6 +148,14 @@ public class TabCompletionTest {
         for (TreeCompleter.Node branch : node.getBranches()) {
             if (branch.getTag().equals("--long")) {
                 assertThat(branch.getBranches().isEmpty(), is(true));
+            } else if (branch.getTag().equals("-l")) {
+                assertThat(branch.getBranches().isEmpty(), is(true));
+            } else if (branch.getTag().equals("--short")) {
+                assertThat(branch.getBranches().isEmpty(), is(true));
+            } else if (branch.getTag().equals("-s")) {
+                assertThat(branch.getBranches().isEmpty(), is(true));
+            } else {
+                fail("should not reach here");
             }
         }
     }
