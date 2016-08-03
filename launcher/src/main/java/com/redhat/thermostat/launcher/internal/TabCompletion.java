@@ -97,6 +97,14 @@ public class TabCompletion {
         }
     }
 
+    private TreeCompleter.Node getCommandByName(String commandName) {
+        if (!commandMap.containsKey(commandName)) {
+            TreeCompleter.Node command = createStringNode(commandName);
+            commandMap.put(commandName, command);
+        }
+        return commandMap.get(commandName);
+    }
+
     private void addCompleterServiceImpl(TreeCompleter.Node command, CompleterService service) {
         for (Map.Entry<CliCommandOption, ? extends TabCompleter> entry : service.getOptionCompleters().entrySet()) {
             CliCommandOption cliCommandOption = entry.getKey();
@@ -116,6 +124,19 @@ public class TabCompletion {
                 }
             }
         }
+    }
+
+    private static boolean completerIsApplicable(CliCommandOption option, TreeCompleter.Node node) {
+        boolean matchesLongOpt = false;
+        boolean matchesShortOpt = false;
+        for (TreeCompleter.Node branch : node.getBranches()) {
+            if (branch.getTag().equals("--" + option.getLongOpt())) {
+                matchesLongOpt = true;
+            } else if (branch.getTag().equals("-" + option.getOpt())) {
+                matchesShortOpt = true;
+            }
+        }
+        return matchesLongOpt && matchesShortOpt;
     }
 
     public void removeCompleterService(CompleterService service) {
@@ -146,19 +167,6 @@ public class TabCompletion {
         }
     }
 
-    private static boolean completerIsApplicable(CliCommandOption option, TreeCompleter.Node node) {
-        boolean matchesLongOpt = false;
-        boolean matchesShortOpt = false;
-        for (TreeCompleter.Node branch : node.getBranches()) {
-            if (branch.getTag().equals("--" + option.getLongOpt())) {
-                matchesLongOpt = true;
-            } else if (branch.getTag().equals("-" + option.getOpt())) {
-                matchesShortOpt = true;
-            }
-        }
-        return matchesLongOpt && matchesShortOpt;
-    }
-
     public void setupTabCompletion(CommandInfoSource commandInfoSource) {
         for (CommandInfo info : commandInfoSource.getCommandInfos()) {
             if (info.getEnvironments().contains(Environment.SHELL)) {
@@ -169,28 +177,11 @@ public class TabCompletion {
                     setupDefaultCompletion(command, option);
                 }
 
+                addHelpOptionIfRequired(command);
+
                 treeCompleter.addBranch(command);
             }
         }
-    }
-
-    /* Testing only */
-    Set<String> getKnownCommands() {
-        return new HashSet<>(commandMap.keySet());
-    }
-
-    public void attachToReader(ConsoleReader reader) {
-        if (reader.getCompleters().isEmpty()) {
-            reader.addCompleter(new JLineCompleterAdapter(treeCompleter));
-        }
-    }
-
-    private TreeCompleter.Node getCommandByName(String commandName) {
-        if (!commandMap.containsKey(commandName)) {
-            TreeCompleter.Node command = createStringNode(commandName);
-            commandMap.put(commandName, command);
-        }
-        return commandMap.get(commandName);
     }
 
     private void setupDefaultCompletion(final TreeCompleter.Node command, final Option option) {
@@ -207,26 +198,24 @@ public class TabCompletion {
         }
     }
 
-    private void setupCompletion(final TreeCompleter.Node command, final Option option, TabCompleter completer) {
-        setupCompletion(command, completer, option.getLongOpt(), LONG_OPTION_PREFIX);
-        setupCompletion(command, completer, option.getOpt(), SHORT_OPTION_PREFIX);
+    private void addHelpOptionIfRequired(TreeCompleter.Node command) {
+        if (HelpCommand.COMMAND_NAME.equals(command.getTag())) {
+            return;
+        }
+        TreeCompleter.Node helpNode = TreeCompleter.createStringNode("--help");
+        helpNode.setRestartNode(command);
+        command.addBranch(helpNode);
     }
 
-    private void setupCompletion(final TreeCompleter.Node command, final TabCompleter completer, final String option, final String prefix) {
-        if (option != null) {
-            final String optionName = prefix + option;
-            TreeCompleter.Node nodeOption = setupCompletionNode(command, optionName, completer);
-            command.addBranch(nodeOption);
+    public void attachToReader(ConsoleReader reader) {
+        if (reader.getCompleters().isEmpty()) {
+            reader.addCompleter(new JLineCompleterAdapter(treeCompleter));
         }
     }
 
-    private TreeCompleter.Node setupCompletionNode(final TreeCompleter.Node command, final String optionName, TabCompleter completer) {
-        TreeCompleter.Node option = createStringNode(optionName);
-        TreeCompleter.Node choices = new TreeCompleter.Node(optionName, completer);
-        option.addBranch(choices);
-        option.setRestartNode(command);
-        choices.setRestartNode(command);
-        return option;
+    /* Testing only */
+    Set<String> getKnownCommands() {
+        return new HashSet<>(commandMap.keySet());
     }
 
     private static class JLineCompleterAdapter implements Completer {

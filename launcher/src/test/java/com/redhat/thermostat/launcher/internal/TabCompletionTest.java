@@ -122,6 +122,8 @@ public class TabCompletionTest {
                 assertThat(branch.getBranches().isEmpty(), is(false));
             } else if (branch.getTag().equals("--short")) {
                 assertThat(branch.getBranches().isEmpty(), is(false));
+            } else if (branch.getTag().equals("--help")) {
+                // pass
             } else {
                 fail("should not reach here. branch tag: " + branch.getTag());
             }
@@ -154,6 +156,8 @@ public class TabCompletionTest {
                 assertThat(branch.getBranches().isEmpty(), is(true));
             } else if (branch.getTag().equals("-s")) {
                 assertThat(branch.getBranches().isEmpty(), is(true));
+            } else if (branch.getTag().equals("--help")) {
+                // pass
             } else {
                 fail("should not reach here");
             }
