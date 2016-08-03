@@ -37,16 +37,36 @@
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
+
 public class VmBytemanBackendTest {
+    
+    private CommonPaths paths;
+    private String filePath;
+    
+    @Before
+    public void setup() {
+        filePath = "/path/to/run/data";
+        paths = mock(CommonPaths.class);
+        File mockFile = mock(File.class);
+        when(mockFile.getAbsolutePath()).thenReturn(filePath);
+        when(paths.getUserIPCConfigurationFile()).thenReturn(mockFile);
+    }
 
     @After
     public void tearDown() {
@@ -67,6 +87,26 @@ public class VmBytemanBackendTest {
         for (int i = 0; i < 7; i++) {
             assertEquals("/foo/test-file" + i + ".jar", jars.get(i));
         }
+    }
+    
+    /**
+     * Ensure that no NPE is being thrown due to a {@code null}
+     * BytemanAgentInfo being put into the agentInfos map which does
+     * not allow null values.
+     */
+    @Test
+    public void verifyAttachFailureNotCausingNPE() throws Exception {
+        BtmInstallHelper installer = mock(BtmInstallHelper.class);
+        IOException ioe = new IOException("Something not accounted for");
+        when(installer.install(any(String.class), any(Boolean.class), any(Boolean.class), any(String.class), any(Integer.class), any(String[].class))).thenThrow(ioe);
+        BytemanAttacher attacher = new BytemanAttacher(installer, paths);
+        VmBytemanBackend backend = new VmBytemanBackend(attacher, true);
+        WriterID writerId = mock(WriterID.class);
+        when(writerId.getWriterID()).thenReturn("some-writer-id");
+        backend.bindWriterId(writerId);
+        backend.attachBytemanToVm("someVmId", -1); // must not throw NPE
+        Map<String, BytemanAgentInfo> infos = backend.getAgentInfos();
+        assertEquals(0, infos.size());
     }
 
     private File getFileMockWithName(String parent, String name) {

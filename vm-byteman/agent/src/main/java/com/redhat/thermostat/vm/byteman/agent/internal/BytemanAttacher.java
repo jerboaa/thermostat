@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 
 import org.jboss.byteman.agent.install.Install;
 
+import com.redhat.thermostat.agent.utils.ProcessChecker;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.sun.tools.attach.AgentInitializationException;
@@ -93,18 +94,32 @@ class BytemanAttacher {
             // Port might have changed here if agent rebooted and targed jvm
             // stayed alive
             if (actualPort > 0) {
-                return new BytemanAgentInfo(pid, actualPort, null, vmId, agentId);
+                return new BytemanAgentInfo(pid, actualPort, null, vmId, agentId, false);
             } else {
                 return null;
             }
         } catch (IllegalArgumentException |
-                 IOException |
                  AttachNotSupportedException |
                  AgentLoadException |
                  AgentInitializationException e) {
-            logger.log(Level.INFO, "Unable to attach to byteman agent.", e);
-            logger.log(Level.WARNING, "Unable to attach byteman agent to VM '" + pid + "' on port '" + port + "'");
+            return handleAttachFailure(e, vmId, port, pid);
+        } catch (IOException e) {
+            ProcessChecker process = getProcessChecker(pid);
+            if (!process.exists()) {
+                return new BytemanAgentInfo(pid, port, null, vmId, agentId, true);
+            }
+            return handleAttachFailure(e, vmId, port, pid);
         }
+    }
+    
+    // testing-hook
+    ProcessChecker getProcessChecker(int pid) {
+        return new ProcessChecker(pid);
+    }
+    
+    private BytemanAgentInfo handleAttachFailure(Throwable cause, String vmId, int port, int pid) {
+        logger.log(Level.INFO, "Unable to attach to byteman agent.", cause);
+        logger.log(Level.WARNING, "Unable to attach byteman agent to VM '" + pid + "' on port '" + port + "'");
         return null;
     }
 

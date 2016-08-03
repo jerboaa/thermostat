@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -45,12 +46,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.agent.utils.ProcessChecker;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
 
@@ -78,13 +82,20 @@ public class BytemanAttacherTest {
         }
     }
     
-    @Test
-    public void attachSetsAppropriateProperties() throws Exception {
-        String filePath = "/path/to/run/data";
-        CommonPaths paths = mock(CommonPaths.class);
+    private CommonPaths paths;
+    private String filePath;
+    
+    @Before
+    public void setup() {
+        filePath = "/path/to/run/data";
+        paths = mock(CommonPaths.class);
         File mockFile = mock(File.class);
         when(mockFile.getAbsolutePath()).thenReturn(filePath);
         when(paths.getUserIPCConfigurationFile()).thenReturn(mockFile);
+    }
+    
+    @Test
+    public void attachSetsAppropriateProperties() throws Exception {
         BtmInstallHelper installer = mock(BtmInstallHelper.class);
         ArgumentCaptor<String[]> propsCaptor = ArgumentCaptor.forClass(String[].class);
         BytemanAttacher attacher = new BytemanAttacher(installer, paths);
@@ -104,7 +115,43 @@ public class BytemanAttacherTest {
         boolean isTransformAll = Boolean.parseBoolean(properties.get(BYTEMAN_TRANSFORM_JAVA_LANG_PROPERTY));
         assertTrue(isTransformAll);
     }
-
+    
+    /*
+     * English locale: "No such process" exception message. It shouldn't matter
+     * though. Verified by next test.
+     */
+    @Test
+    public void testNoSuchProcessException() throws Exception {
+        String exceptionMsg = "No such process";
+        basicNoSuchProcessTest(exceptionMsg);
+    }
+    
+    @Test
+    public void testNoSuchProcessException2() throws Exception {
+        String exceptionMsg = "I'm a not existing process";
+        basicNoSuchProcessTest(exceptionMsg);
+    }
+    
+    private void basicNoSuchProcessTest(String exceptionMsg) throws Exception {
+        BtmInstallHelper installer = mock(BtmInstallHelper.class);
+        IOException ioe = new IOException(exceptionMsg);
+        when(installer.install(any(String.class), any(Boolean.class), any(Boolean.class), any(String.class), any(Integer.class), any(String[].class))).thenThrow(ioe);
+        
+        // Mock process not existing logic
+        final ProcessChecker procChecker = mock(ProcessChecker.class);
+        when(procChecker.exists()).thenReturn(false);
+        
+        BytemanAttacher attacher = new BytemanAttacher(installer, paths) {
+            @Override
+            ProcessChecker getProcessChecker(int pid) {
+                return procChecker;
+            }
+        };
+        BytemanAgentInfo info = attacher.attach("someVmId", -1, "someAgent");
+        assertNotNull(info);
+        assertTrue(info.isAttachFailedNoSuchProcess());
+    }
+    
     // Setting properties via the byteman agent is only allowed if the propery
     // name starts with org.jboss.byteman. Be sure that all our props we want to
     // set actually start with that prefix.

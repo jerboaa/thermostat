@@ -98,6 +98,12 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
         // Default public constructor for DS
         this.observeNewJVMs = true;
     }
+    
+    // Package private for testing
+    VmBytemanBackend(BytemanAttacher attacher, boolean started) {
+        this.attacher = attacher;
+        this.started = true;
+    }
 
     // Services
     
@@ -130,6 +136,10 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
         synchronized (helperJars) {
             helperJars = null;
         }
+    }
+    
+    protected void bindWriterId(WriterID writerId) {
+        this.writerId = writerId;
     }
     
     protected void activate(ComponentContext context) {
@@ -207,16 +217,20 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
         }
     }
 
-    private synchronized void attachBytemanToVm(String vmId, int pid) {
+    // Package-private for testing
+    synchronized void attachBytemanToVm(String vmId, int pid) {
         if (!started) {
             logger.fine(getName() +" not active. Thus not attaching Byteman agent to VM '" + pid + "'");
             return;
         }
         logger.fine("Attaching byteman agent to VM '" + pid + "'");
         BytemanAgentInfo info = attacher.attach(vmId, pid, writerId.getWriterID());
-        agentInfos.put(vmId, info);
         if (info == null) {
             logger.warning("Failed to attach byteman agent for VM '" + pid + "'. Skipping rule updater and IPC channel.");
+            return;
+        }
+        if (info.isAttachFailedNoSuchProcess()) {
+            logger.finest("Process with pid " + pid + " went away before we could attach the byteman agent to it.");
             return;
         }
         logger.fine("Attached byteman agent to VM '" + pid + "' at port: '" + info.getAgentListenPort());
@@ -224,6 +238,7 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
             logger.warning("VM '" + pid + "': Failed to add helper jars to target VM's classpath.");
             return;
         }
+        agentInfos.put(vmId, info);
         logger.fine("Starting IPC socket for byteman helper");
         VmSocketIdentifier socketId = new VmSocketIdentifier(vmId, pid, writerId.getWriterID());
         final ThermostatIPCCallbacks callback = new BytemanMetricsReceiver(dao, socketId);
@@ -315,5 +330,10 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
             helperJars = jars;
         }
         return helperJars;
+    }
+    
+    // package private for testing
+    Map<String, BytemanAgentInfo> getAgentInfos() {
+        return agentInfos;
     }
 }
