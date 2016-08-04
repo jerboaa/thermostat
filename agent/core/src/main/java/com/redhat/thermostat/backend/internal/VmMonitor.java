@@ -48,6 +48,7 @@ import sun.jvmstat.monitor.MonitoredHost;
 import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.VmIdentifier;
 
+import com.redhat.thermostat.agent.utils.ProcessChecker;
 import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -77,9 +78,26 @@ public class VmMonitor {
 
             pidToData.put(pid, new Pair<>(vm, wrapper));
             logger.finer("Attached " + listener.getClass().getName() + " for VM: " + pid);
-        } catch (MonitorException | URISyntaxException e) {
+        } catch (MonitorException e) {
+            logMsg(pid, e);
+        } catch (URISyntaxException e) {
             logger.log(Level.WARNING, "unable to attach to vm " + pid, e);
         }
+    }
+
+    private void logMsg(int pid, MonitorException e) {
+        Throwable cause = e.getCause();
+        ProcessChecker process = getProcChecker(pid);
+        if (cause != null && cause instanceof IllegalArgumentException && !process.exists()) {
+            logger.log(Level.FINEST, "Tried to attach to a process which no longer exists. Pid was " + pid, e);
+        } else {
+            logger.log(Level.WARNING, "unable to attach to vm" + pid, e);
+        }
+    }
+    
+    // testing-hook
+    ProcessChecker getProcChecker(int pid) {
+        return new ProcessChecker(pid);
     }
 
     public void handleStoppedVm(int pid) {

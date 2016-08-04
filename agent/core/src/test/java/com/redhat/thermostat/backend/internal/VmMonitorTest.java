@@ -48,12 +48,18 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URISyntaxException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
+import com.redhat.thermostat.agent.utils.ProcessChecker;
+import com.redhat.thermostat.backend.VmUpdateListener;
 
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
@@ -62,17 +68,29 @@ import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.backend.VmUpdateListener;
-
 public class VmMonitorTest {
 
+    private static final String PROCESS_NOT_FOUND = "Process not found";
+    private static final int MONITOR_EXCEPTION_THROWING_PID = 999;
     private VmMonitor monitor;
     private HostIdentifier hostIdentifier;
     private MonitoredHost host;
     private MonitoredVm monitoredVm;
+    private TestLogHandler handler;
+    private Logger logger;
+    
+    @After
+    public void tearDown() {
+        if (handler != null) {
+            logger.removeHandler(handler);
+            handler = null;
+        }
+        logger.setLevel(Level.WARNING);
+    }
 
     @Before
     public void setUp() throws Exception {
+        setupTestLogger();
         monitor = new VmMonitor();
         
         hostIdentifier = mock(HostIdentifier.class);
@@ -87,6 +105,13 @@ public class VmMonitorTest {
         
         monitoredVm = mock(MonitoredVm.class);
         monitor.setHost(host);
+    }
+    
+    private void setupTestLogger() {
+        logger = Logger.getLogger("com.redhat.thermostat");
+        logger.setLevel(Level.FINEST);
+        handler = new TestLogHandler(MONITOR_EXCEPTION_THROWING_PID);
+        logger.addHandler(handler);
     }
 
     @Test
@@ -107,6 +132,72 @@ public class VmMonitorTest {
         // Check pid map
         assertTrue(monitor.getPidToDataMap().containsKey(VM_PID));
         assertEquals(wrapper, monitor.getPidToDataMap().get(VM_PID).getSecond());
+    }
+    
+    /*
+     * English locale "Process not found". It must not matter really for this
+     * test. See the next test which verifies this.
+     */
+    @Test
+    public void testNewVMWithProcessNotFoundDoesNotLogWarning() throws Exception {
+        String exceptionMsg = PROCESS_NOT_FOUND;
+        basicProcNotFoundTest(exceptionMsg);
+    }
+    
+    /*
+     * Random exception message as the exact message will be locale dependent.
+     */
+    @Test
+    public void testNewVMWithProcessNotFoundDoesNotLogWarning2() throws Exception {
+        String exceptionMsg = "foo but not bar";
+        basicProcNotFoundTest(exceptionMsg);
+    }
+
+    private void basicProcNotFoundTest(String exceptionMsg)
+            throws URISyntaxException, MonitorException, BackendException {
+        IllegalArgumentException iae = new IllegalArgumentException(exceptionMsg);
+        MonitorException procNotFound = new MonitorException(iae);
+        assertEquals(iae, procNotFound.getCause());
+        
+        VmIdentifier vmID = new VmIdentifier(String.valueOf(MONITOR_EXCEPTION_THROWING_PID));
+        when(host.getMonitoredVm(vmID)).thenThrow(procNotFound);
+        VmUpdateListener listener = mock(VmUpdateListener.class);
+        
+        ProcessChecker checker = mock(ProcessChecker.class);
+        when(checker.exists()).thenReturn(false);
+        
+        VmMonitor customMonitor = createMonitor(checker, MONITOR_EXCEPTION_THROWING_PID);
+        customMonitor.handleNewVm(listener, MONITOR_EXCEPTION_THROWING_PID);
+        assertFalse(handler.isUnableToAttachLoggedAsWarning());
+        assertTrue(handler.isUnableToAttachLoggedAsFinest());
+        assertFalse(handler.isUnableToAttachLoggedAsWarningUnrelated());
+    }
+    
+    private VmMonitor createMonitor(final ProcessChecker checker, final int expectedPid) throws BackendException {
+        return new VmMonitor() {
+            @Override
+            ProcessChecker getProcChecker(int pid) {
+                if (pid == expectedPid) {
+                    return checker;
+                } else {
+                    return super.getProcChecker(pid);
+                }
+            }
+        };
+    }
+
+    @Test
+    public void testNewVMUnrelatedCausedMonitorExceptionLogWarning() throws Exception {
+        MonitorException procNotFound = new MonitorException("unknown");
+        
+        VmIdentifier vmID = new VmIdentifier(String.valueOf(MONITOR_EXCEPTION_THROWING_PID));
+        when(host.getMonitoredVm(vmID)).thenThrow(procNotFound);
+        VmUpdateListener listener = mock(VmUpdateListener.class);
+        
+        monitor.handleNewVm(listener, MONITOR_EXCEPTION_THROWING_PID);
+        assertFalse(handler.isUnableToAttachLoggedAsWarning());
+        assertFalse(handler.isUnableToAttachLoggedAsFinest());
+        assertTrue(handler.isUnableToAttachLoggedAsWarningUnrelated());
     }
     
     @Test
