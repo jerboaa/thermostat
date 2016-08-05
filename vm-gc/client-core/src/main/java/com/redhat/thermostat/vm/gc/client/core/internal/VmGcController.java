@@ -192,9 +192,13 @@ public class VmGcController implements InformationServiceController<VmRef> {
          timer.stop();
     }
 
-    private LocalizedString chartName(String collectorName, String generationName) {
-        return translator.localize(LocaleResources.VM_GC_COLLECTOR_OVER_GENERATION,
+    private LocalizedString chartName(String collectorName, String generationName, boolean isGenerational) {
+        if (isGenerational) {
+            return translator.localize(LocaleResources.VM_GC_COLLECTOR_OVER_GENERATION,
                 collectorName, generationName);
+        } else {
+            return translator.localize(LocaleResources.VM_GC_COLLECTOR_NON_GENERATIONAL, collectorName);
+        }
     }
 
     private synchronized void doUpdateCollectorData() {
@@ -231,13 +235,24 @@ public class VmGcController implements InformationServiceController<VmRef> {
             }
             lastValueSeen.put(collector, stat);
         }
+        final boolean isGenerational = isGenerationalCollector(commonName);
         for (Map.Entry<String, List<IntervalTimeData<Double>>> entry : dataToAdd.entrySet()) {
             String name = entry.getKey();
             if (!addedCollectors.contains(name)) {
-                view.addChart(name, chartName(name, getCollectorGeneration(name)), "ms");
+                view.addChart(name, chartName(name, getCollectorGeneration(name), isGenerational), "ms");
                 addedCollectors.add(name);
             }
             view.addData(entry.getKey(), entry.getValue());
+        }
+    }
+    
+    private boolean isGenerationalCollector(CollectorCommonName commonName) {
+        switch (commonName) {
+        case SHENANDOAH:
+            return false;
+        default:
+            // Default to generational
+            return true;
         }
     }
 

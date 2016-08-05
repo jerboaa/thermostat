@@ -72,6 +72,12 @@ public class GcCommonNameMapperTest {
         actual = mapper.mapToCommonName(distinctSet);
         assertEquals("'MSC' + 'Copy' should map to serial collector",
                 CollectorCommonName.SERIAL_COLLECTOR, actual);
+        distinctSet = getDistinctColNames("Shenandoah concurrent phases",
+                                          "Shenandoah pauses",
+                                          "Shenandoah full GC pauses");
+        actual = mapper.mapToCommonName(distinctSet);
+        assertEquals("Should map to shenandoah GC",
+                CollectorCommonName.SHENANDOAH, actual);
     }
     
     @Test
@@ -81,6 +87,7 @@ public class GcCommonNameMapperTest {
         assertEquals("Garbage-First Collector (G1)", CollectorCommonName.G1.getHumanReadableString());
         assertEquals("Concurrent Collector (Concurrent Mark and Sweep)", CollectorCommonName.CONCURRENT_COLLECTOR.getHumanReadableString());
         assertEquals("Mark Sweep Compact Collector", CollectorCommonName.MARK_SWEEP_COMPACT.getHumanReadableString());
+        assertEquals("Shenandoah Collector", CollectorCommonName.SHENANDOAH.getHumanReadableString());
         assertEquals("Unknown Collector", CollectorCommonName.UNKNOWN_COLLECTOR.getHumanReadableString());
     }
     

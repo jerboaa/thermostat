@@ -577,4 +577,161 @@
     </gc-params>
   </collector>
 
+  <collector>
+    <collector-info>
+      <version>[1.8.0.0,]</version>
+      <common-name>Shenandoah Collector</common-name>
+      <collector-distinct-names>
+        <collector-name>Shenandoah concurrent phases</collector-name>
+        <collector-name>Shenandoah pauses</collector-name>
+        <collector-name>Shenandoah full GC pauses</collector-name>
+      </collector-distinct-names>
+      <url>http://hg.openjdk.java.net/shenandoah/jdk8u/hotspot/file/c1b5450e17dd/src/share/vm/gc_implementation/shenandoah/shenandoah_globals.hpp</url>
+    </collector-info>
+    <gc-params>
+      <gc-param>
+        <flag>UseShenandoahGC</flag>
+        <description>Use the Shenandoah garbage collector. Default is false</description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahAllocReserveRegions</flag>
+        <description>
+          How many regions should be kept as allocation reserve, before
+          Shenandoah attempts to grow the heap. Default is 10
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahAllocationThreshold</flag>
+        <description>
+          Sets the number of bytes allocated since last GC cycle before
+          a region can enter the concurrent marking 
+          phase. Applies to Shenandoah GC dynamic Heuristic mode only 
+          (ignored otherwise)
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahFreeThreshold</flag>
+        <description>
+          Set the percentage of heap free in relation to the total 
+          capacity before a region can enter the concurrent marking 
+          phase. Applies to Shenandoah GC dynamic Heuristic mode only 
+          (ignored otherwise). Default is 25
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahGCHeuristics</flag>
+        <description>
+          The heuristics to use in Shenandoah GC; possible values: 
+          statusquo, aggressive, halfway, lazy, dynamic. Default is
+          dynamic
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahGCVerbose</flag>
+        <description>
+          Verbose information about the Shenandoah garbage collector.
+          Default is false
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahGarbageThreshold</flag>
+        <description>
+          Sets the percentage of garbage a region need to contain before 
+          it can be marked for collection. Applies to 
+          Shenandoah GC dynamic Heuristic mode only (ignored otherwise).
+          Default is 60
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahHeapRegionSize</flag>
+        <description>
+         Size of the Shenandoah regions
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahInitialFreeThreshold</flag>
+        <description>
+         Set the percentage of heap free in relation to the total 
+         capacity before a region can enter the concurrent marking 
+         phase. Applies to Shenandoah GC dynamic Heuristic mode only 
+         (ignored otherwise). Default is 50
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahLogConfig</flag>
+        <description>
+          Log information about Shenandoah's configuration settings.
+          Default is false
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahOptimizeFinals</flag>
+        <description>Optimize barriers on final and stable fields/arrays.</description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahPrintCollectionSet</flag>
+        <description>
+          Print the collection set before each GC phase. Default is false
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahProcessReferences</flag>
+        <description>
+          Enable processing of (soft/weak/..) references in Shenandoah.
+          Default is true
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahReadBarrier</flag>
+        <description>
+          Turn on/off read barriers in Shenandoah. Default is true
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahReadBarrier</flag>
+        <description>
+          Turn on/off read barriers in Shenandoah. Default is true
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahTargetHeapOccupancy</flag>
+        <description>
+          Sets the target maximum percentage occupance of the heap we
+          would like to maintain.
+          Shenandoah GC newadaptive Heuristic mode only. Default is 80
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahTraceFullGC</flag>
+        <description>
+          Trace Shenandoah full GC. Defaut is false
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahTraceHumongous</flag>
+        <description>
+          Trace Shenandoah humongous objects. Default is false
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahTracePhases</flag>
+        <description>
+          Trace Shenandoah GC phases. Default is false
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahWarnings</flag>
+        <description>
+          Print Shenandoah related warnings. Useful for Shenandoah developers. Default is false
+        </description>
+      </gc-param>
+      <gc-param>
+        <flag>ShenandoahWriteBarrier</flag>
+        <description>
+          Turn on/off write barriers in Shenandoah. Default is true
+        </description>
+      </gc-param>
+    </gc-params>
+  </collector>
+
 </gc-params-mapping>

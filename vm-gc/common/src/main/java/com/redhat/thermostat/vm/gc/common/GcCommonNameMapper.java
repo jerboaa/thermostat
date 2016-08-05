@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.vm.gc.common;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -57,6 +56,8 @@ public class GcCommonNameMapper {
         CONCURRENT_COLLECTOR("Concurrent Collector (Concurrent Mark and Sweep)"),
         /** Mark Sweep Compact Collector: {@code -XX:+UseParNewGC} */
         MARK_SWEEP_COMPACT("Mark Sweep Compact Collector"),
+        /** Shenandoah Collector: {@code -XX:+UseShenandoahGC} */
+        SHENANDOAH("Shenandoah Collector"),
         UNKNOWN_COLLECTOR("Unknown Collector");
         
         private String humanReadableName;
@@ -99,6 +100,13 @@ public class GcCommonNameMapper {
         concurrentColls.add("CMS");
         concurrentColls.add("PCopy");
         commonNameMap.put(concurrentColls, CollectorCommonName.CONCURRENT_COLLECTOR);
+        // Shenandoah collector has 3 exposed sub collectors even though
+        // it's non-generational
+        Set<String> shenandoahColls = new HashSet<>(3);
+        shenandoahColls.add("Shenandoah concurrent phases");
+        shenandoahColls.add("Shenandoah pauses");
+        shenandoahColls.add("Shenandoah full GC pauses");
+        commonNameMap.put(shenandoahColls, CollectorCommonName.SHENANDOAH);
     }
 
     /**
