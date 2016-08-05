@@ -139,6 +139,12 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-web-common</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-storage-testutils</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>

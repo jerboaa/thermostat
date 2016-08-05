@@ -109,6 +109,11 @@ public class BytemanMetric extends BasePojo implements TimeStampedPojo {
         this.jsonPayload = json;
     }
     
+    @Persist
+    public String getData() {
+        return jsonPayload;
+    }
+    
     /**
      * Get the metrics payload as raw JSON string. The payload is a JSON object
      * in key, value form. Supported value types are {@code Boolean},
@@ -116,9 +121,8 @@ public class BytemanMetric extends BasePojo implements TimeStampedPojo {
      * 
      * @return The raw JSON string.
      */
-    @Persist
     public String getDataAsJson() {
-        return jsonPayload;
+        return getData();
     }
     
     /**
