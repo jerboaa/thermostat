@@ -76,23 +76,24 @@ public class VmMonitorTest {
     private HostIdentifier hostIdentifier;
     private MonitoredHost host;
     private MonitoredVm monitoredVm;
+    private ProcessChecker checker;
     private TestLogHandler handler;
     private Logger logger;
-    
+    private Level savedLoggingLevel;
+
     @After
     public void tearDown() {
         if (handler != null) {
             logger.removeHandler(handler);
             handler = null;
         }
-        logger.setLevel(Level.WARNING);
+        logger.setLevel(savedLoggingLevel);
     }
 
     @Before
     public void setUp() throws Exception {
-        setupTestLogger();
-        monitor = new VmMonitor();
-        
+        savedLoggingLevel = setupTestLoggerAndReturnOriginalLevel();
+
         hostIdentifier = mock(HostIdentifier.class);
         when(hostIdentifier.resolve(isA(VmIdentifier.class))).then(new Answer<VmIdentifier>() {
             @Override
@@ -103,15 +104,22 @@ public class VmMonitorTest {
         host = mock(MonitoredHost.class);
         when(host.getHostIdentifier()).thenReturn(hostIdentifier);
         
+        checker = mock(ProcessChecker.class);
+        when(checker.exists(isA(Integer.class))).thenReturn(false);
+
         monitoredVm = mock(MonitoredVm.class);
+
+        monitor = new VmMonitor(checker);
         monitor.setHost(host);
     }
     
-    private void setupTestLogger() {
+    private Level setupTestLoggerAndReturnOriginalLevel() {
         logger = Logger.getLogger("com.redhat.thermostat");
+        Level originalLevel = logger.getLevel();
         logger.setLevel(Level.FINEST);
         handler = new TestLogHandler(MONITOR_EXCEPTION_THROWING_PID);
         logger.addHandler(handler);
+        return originalLevel;
     }
 
     @Test
@@ -153,8 +161,7 @@ public class VmMonitorTest {
         basicProcNotFoundTest(exceptionMsg);
     }
 
-    private void basicProcNotFoundTest(String exceptionMsg)
-            throws URISyntaxException, MonitorException, BackendException {
+    private void basicProcNotFoundTest(String exceptionMsg) throws Exception {
         IllegalArgumentException iae = new IllegalArgumentException(exceptionMsg);
         MonitorException procNotFound = new MonitorException(iae);
         assertEquals(iae, procNotFound.getCause());
@@ -162,28 +169,11 @@ public class VmMonitorTest {
         VmIdentifier vmID = new VmIdentifier(String.valueOf(MONITOR_EXCEPTION_THROWING_PID));
         when(host.getMonitoredVm(vmID)).thenThrow(procNotFound);
         VmUpdateListener listener = mock(VmUpdateListener.class);
-        
-        ProcessChecker checker = mock(ProcessChecker.class);
-        when(checker.exists()).thenReturn(false);
-        
-        VmMonitor customMonitor = createMonitor(checker, MONITOR_EXCEPTION_THROWING_PID);
-        customMonitor.handleNewVm(listener, MONITOR_EXCEPTION_THROWING_PID);
+
+        monitor.handleNewVm(listener, MONITOR_EXCEPTION_THROWING_PID);
         assertFalse(handler.isUnableToAttachLoggedAsWarning());
         assertTrue(handler.isUnableToAttachLoggedAsFinest());
         assertFalse(handler.isUnableToAttachLoggedAsWarningUnrelated());
-    }
-    
-    private VmMonitor createMonitor(final ProcessChecker checker, final int expectedPid) throws BackendException {
-        return new VmMonitor() {
-            @Override
-            ProcessChecker getProcChecker(int pid) {
-                if (pid == expectedPid) {
-                    return checker;
-                } else {
-                    return super.getProcChecker(pid);
-                }
-            }
-        };
     }
 
     @Test

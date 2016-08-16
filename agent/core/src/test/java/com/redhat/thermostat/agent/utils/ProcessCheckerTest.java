@@ -61,12 +61,13 @@ public class ProcessCheckerTest {
     private void basicTest(boolean expected) {
         final File baseFile = mock(File.class);
         when(baseFile.exists()).thenReturn(expected);
-        ProcessChecker process = new ProcessChecker(SOME_PID) {
+        ProcessChecker process = new ProcessChecker() {
             @Override
-            File mapToFile() {
+            File mapToFile(int pid) {
+                assertEquals(SOME_PID, pid);
                 return baseFile;
             }
         };
-        assertEquals(expected, process.exists());
+        assertEquals(expected, process.exists(SOME_PID));
     }
 }

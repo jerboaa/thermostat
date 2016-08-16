@@ -44,20 +44,14 @@ import java.io.File;
  *
  */
 public class ProcessChecker {
-    
-    private final int pid;
-    
-    public ProcessChecker(int pid) {
-        this.pid = pid;
-    }
 
-    public boolean exists() {
-        File procFile = mapToFile();
+    public boolean exists(int pid) {
+        File procFile = mapToFile(pid);
         return procFile.exists();
     }
     
     // testing-hook
-    File mapToFile() {
+    File mapToFile(int pid) {
         return new File("/proc/" + pid);
     }
     

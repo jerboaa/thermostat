@@ -71,14 +71,16 @@ class BytemanAttacher {
             "org.jboss.byteman.thermostat.transport=localsocket", // make the helper use unix sockets
     };
     private final BtmInstallHelper installer;
+    private final ProcessChecker processChecker;
     private final CommonPaths paths;
     
     BytemanAttacher(CommonPaths paths) {
-        this(new BtmInstallHelper(), paths);
+        this(new BtmInstallHelper(), new ProcessChecker(), paths);
     }
     
-    BytemanAttacher(BtmInstallHelper installer, CommonPaths paths) {
+    BytemanAttacher(BtmInstallHelper installer, ProcessChecker processChecker, CommonPaths paths) {
         this.installer = installer;
+        this.processChecker = processChecker;
         this.paths = paths;
     }
     
@@ -104,17 +106,11 @@ class BytemanAttacher {
                  AgentInitializationException e) {
             return handleAttachFailure(e, vmId, port, pid);
         } catch (IOException e) {
-            ProcessChecker process = getProcessChecker(pid);
-            if (!process.exists()) {
+            if (!processChecker.exists(pid)) {
                 return new BytemanAgentInfo(pid, port, null, vmId, agentId, true);
             }
             return handleAttachFailure(e, vmId, port, pid);
         }
-    }
-    
-    // testing-hook
-    ProcessChecker getProcessChecker(int pid) {
-        return new ProcessChecker(pid);
     }
     
     private BytemanAgentInfo handleAttachFailure(Throwable cause, String vmId, int port, int pid) {

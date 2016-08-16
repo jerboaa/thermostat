@@ -56,10 +56,17 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 public class VmMonitor {
     
     private final Logger logger = LoggingUtils.getLogger(VmMonitor.class);
+
+    private final ProcessChecker processChecker;
     private MonitoredHost host;
     private Map<Integer, Pair<MonitoredVm, VmListenerWrapper>> pidToData = new HashMap<>();
     
     public VmMonitor() throws BackendException {
+        this(new ProcessChecker());
+    }
+
+    public VmMonitor(ProcessChecker processChecker) throws BackendException {
+        this.processChecker = processChecker;
         try {
             HostIdentifier hostId = new HostIdentifier((String) null);
             host = MonitoredHost.getMonitoredHost(hostId);
@@ -87,17 +94,11 @@ public class VmMonitor {
 
     private void logMsg(int pid, MonitorException e) {
         Throwable cause = e.getCause();
-        ProcessChecker process = getProcChecker(pid);
-        if (cause != null && cause instanceof IllegalArgumentException && !process.exists()) {
+        if (cause != null && cause instanceof IllegalArgumentException && !processChecker.exists(pid)) {
             logger.log(Level.FINEST, "Tried to attach to a process which no longer exists. Pid was " + pid, e);
         } else {
             logger.log(Level.WARNING, "unable to attach to vm" + pid, e);
         }
-    }
-    
-    // testing-hook
-    ProcessChecker getProcChecker(int pid) {
-        return new ProcessChecker(pid);
     }
 
     public void handleStoppedVm(int pid) {

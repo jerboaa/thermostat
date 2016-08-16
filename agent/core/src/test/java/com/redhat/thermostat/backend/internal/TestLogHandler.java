@@ -76,10 +76,7 @@ public class TestLogHandler extends Handler {
     private boolean diagnoseRecord(LogRecord record) {
         Throwable thrown = record.getThrown();
         if (thrown != null && thrown.getCause() instanceof IllegalArgumentException) {
-            IllegalArgumentException iae = (IllegalArgumentException)thrown.getCause();
-            if (PROCESS_NOT_FOUND.equals(iae.getMessage())) {
-                return true;
-            }
+            return true;
         }
         return false;
     }

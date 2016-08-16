@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -84,6 +85,7 @@ public class BytemanAttacherTest {
     
     private CommonPaths paths;
     private String filePath;
+    private ProcessChecker processChecker;
     
     @Before
     public void setup() {
@@ -92,13 +94,16 @@ public class BytemanAttacherTest {
         File mockFile = mock(File.class);
         when(mockFile.getAbsolutePath()).thenReturn(filePath);
         when(paths.getUserIPCConfigurationFile()).thenReturn(mockFile);
+
+        processChecker = mock(ProcessChecker.class);
+        when(processChecker.exists(anyInt())).thenReturn(false);
     }
     
     @Test
     public void attachSetsAppropriateProperties() throws Exception {
         BtmInstallHelper installer = mock(BtmInstallHelper.class);
         ArgumentCaptor<String[]> propsCaptor = ArgumentCaptor.forClass(String[].class);
-        BytemanAttacher attacher = new BytemanAttacher(installer, paths);
+        BytemanAttacher attacher = new BytemanAttacher(installer, processChecker, paths);
         attacher.attach("testVmId", 9999, "fooAgent");
         verify(installer).install(eq(Integer.toString(9999)), eq(true), eq(false), eq((String)null), any(int.class), propsCaptor.capture());
         Map<String, String> properties = buildMapFromStringProps(propsCaptor.getValue());
@@ -136,17 +141,8 @@ public class BytemanAttacherTest {
         BtmInstallHelper installer = mock(BtmInstallHelper.class);
         IOException ioe = new IOException(exceptionMsg);
         when(installer.install(any(String.class), any(Boolean.class), any(Boolean.class), any(String.class), any(Integer.class), any(String[].class))).thenThrow(ioe);
-        
-        // Mock process not existing logic
-        final ProcessChecker procChecker = mock(ProcessChecker.class);
-        when(procChecker.exists()).thenReturn(false);
-        
-        BytemanAttacher attacher = new BytemanAttacher(installer, paths) {
-            @Override
-            ProcessChecker getProcessChecker(int pid) {
-                return procChecker;
-            }
-        };
+
+        BytemanAttacher attacher = new BytemanAttacher(installer, processChecker, paths);
         BytemanAgentInfo info = attacher.attach("someVmId", -1, "someAgent");
         assertNotNull(info);
         assertTrue(info.isAttachFailedNoSuchProcess());

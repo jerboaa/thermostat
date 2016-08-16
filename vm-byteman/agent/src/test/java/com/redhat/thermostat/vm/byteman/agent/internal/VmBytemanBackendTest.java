@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.byteman.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,6 +51,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.utils.ProcessChecker;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
@@ -58,6 +60,7 @@ public class VmBytemanBackendTest {
     
     private CommonPaths paths;
     private String filePath;
+    private ProcessChecker processChecker;
     
     @Before
     public void setup() {
@@ -66,6 +69,9 @@ public class VmBytemanBackendTest {
         File mockFile = mock(File.class);
         when(mockFile.getAbsolutePath()).thenReturn(filePath);
         when(paths.getUserIPCConfigurationFile()).thenReturn(mockFile);
+
+        processChecker = mock(ProcessChecker.class);
+        when(processChecker.exists(anyInt())).thenReturn(false);
     }
 
     @After
@@ -99,7 +105,7 @@ public class VmBytemanBackendTest {
         BtmInstallHelper installer = mock(BtmInstallHelper.class);
         IOException ioe = new IOException("Something not accounted for");
         when(installer.install(any(String.class), any(Boolean.class), any(Boolean.class), any(String.class), any(Integer.class), any(String[].class))).thenThrow(ioe);
-        BytemanAttacher attacher = new BytemanAttacher(installer, paths);
+        BytemanAttacher attacher = new BytemanAttacher(installer, processChecker, paths);
         VmBytemanBackend backend = new VmBytemanBackend(attacher, true);
         WriterID writerId = mock(WriterID.class);
         when(writerId.getWriterID()).thenReturn("some-writer-id");
