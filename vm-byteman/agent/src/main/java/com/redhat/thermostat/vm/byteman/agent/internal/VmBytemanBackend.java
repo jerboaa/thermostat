@@ -36,22 +36,11 @@
 
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.byteman.agent.submit.Submit;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
@@ -59,14 +48,13 @@ import org.osgi.service.component.ComponentContext;
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
-import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 
 @Component
 @Service(value = Backend.class)
@@ -75,34 +63,26 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     private static final String NAME = "VM Byteman backend (attacher)";
     private static final String DESCRIPTION = "Attaches the byteman java agent to JVMs";
     private static final String VENDOR = "Red Hat Inc.";
-    private static final String BYTEMAN_PLUGIN_DIR = System.getProperty("thermostat.plugin", "vm-byteman");
-    private static final String BYTEMAN_PLUGIN_LIBS_DIR = BYTEMAN_PLUGIN_DIR + File.separator + "plugin-libs";
-    private static final String BYTEMAN_INSTALL_HOME = BYTEMAN_PLUGIN_LIBS_DIR + File.separator + "byteman-install";
-    private static final String BYTEMAN_HELPER_DIR = BYTEMAN_PLUGIN_LIBS_DIR + File.separator + "thermostat-helper";
-    private static final String BYTEMAN_HOME_PROPERTY = "org.jboss.byteman.home";
     private static final Logger logger = LoggingUtils.getLogger(VmBytemanBackend.class);
     
     static final int BACKEND_ORDER_VALUE = ORDER_CODE_GROUP + 3;
-    // package-private for testing
-    static List<String> helperJars;
-
-    private final Set<String> sockets = Collections.synchronizedSet(new HashSet<String>());
-    private final Map<String, BytemanAgentInfo> agentInfos = new ConcurrentHashMap<>();
+    private final BytemanAgentAttachManager attachManager;
     private boolean started;
     private boolean observeNewJVMs;
-    private BytemanAttacher attacher;
+    private IPCEndpointsManager ipcEndpointsManager;
     private VmStatusListenerRegistrar registrar;
     private Version version;
     
     public VmBytemanBackend() {
+        this(new BytemanAgentAttachManager(), false);
         // Default public constructor for DS
         this.observeNewJVMs = true;
     }
     
     // Package private for testing
-    VmBytemanBackend(BytemanAttacher attacher, boolean started) {
-        this.attacher = attacher;
-        this.started = true;
+    VmBytemanBackend(BytemanAgentAttachManager attachManager, boolean started) {
+        this.started = started;
+        this.attachManager = attachManager;
     }
 
     // Services
@@ -125,21 +105,30 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     
     protected void bindPaths(CommonPaths paths) {
         this.paths = paths;
-        this.attacher = new BytemanAttacher(paths);
-        File bytemanHelperDir = new File(paths.getSystemPluginRoot(), BYTEMAN_HELPER_DIR);
-        initListOfHelperJars(bytemanHelperDir);
+        BytemanAttacher attacher = new BytemanAttacher(paths);
+        this.attachManager.setAttacher(attacher);
+        this.attachManager.setPaths(paths);
     }
     
     protected void unBindPaths(CommonPaths paths) {
         this.paths = null;
-        this.attacher = null;
-        synchronized (helperJars) {
-            helperJars = null;
-        }
+        this.attachManager.setPaths(null);
     }
     
     protected void bindWriterId(WriterID writerId) {
         this.writerId = writerId;
+        this.attachManager.setWriterId(writerId);
+    }
+    
+    protected void bindDao(VmBytemanDAO dao) {
+        this.dao = dao;
+        this.attachManager.setVmBytemanDao(dao);
+    }
+    
+    protected void bindIpcService(AgentIPCService service) {
+        this.ipcService = service;
+        this.ipcEndpointsManager = new IPCEndpointsManager(service);
+        attachManager.setIpcManager(ipcEndpointsManager);
     }
     
     protected void activate(ComponentContext context) {
@@ -165,10 +154,6 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     @Override
     public boolean activate() {
         if (!started) {
-            String bytemanHome = paths.getSystemPluginRoot().getAbsolutePath() + File.separator + BYTEMAN_INSTALL_HOME;
-            // This will depend on BYTEMAN-303 being fixed and incorporated in a release
-            logger.fine("Setting system property " + BYTEMAN_HOME_PROPERTY + "=" + bytemanHome);
-            System.setProperty(BYTEMAN_HOME_PROPERTY, bytemanHome);
             registrar.register(this);
             started = true;
         }
@@ -196,25 +181,10 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
             break;
         case VM_STOPPED:
             // cannot unload byteman agent, thus cannot un-attach
-            stopIPCEndPoint(new VmSocketIdentifier(vmId, pid, writerId.getWriterID()));
+            ipcEndpointsManager.stopIPCEndpoint(new VmSocketIdentifier(vmId, pid, writerId.getWriterID()));
             break;
         }
         
-    }
-
-    private void stopIPCEndPoint(VmSocketIdentifier vmSocketIdentifier) {
-        String socketId = vmSocketIdentifier.getName();
-        synchronized(sockets) {
-            if (sockets.contains(socketId)) {
-                logger.fine("Destroying socket for id: " + socketId);
-                try {
-                    ipcService.destroyServer(socketId);
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to destroy socket id: " + socketId, e);
-                }
-                sockets.remove(socketId);
-            }
-        }
     }
 
     // Package-private for testing
@@ -223,65 +193,7 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
             logger.fine(getName() +" not active. Thus not attaching Byteman agent to VM '" + pid + "'");
             return;
         }
-        logger.fine("Attaching byteman agent to VM '" + pid + "'");
-        BytemanAgentInfo info = attacher.attach(vmId, pid, writerId.getWriterID());
-        if (info == null) {
-            logger.warning("Failed to attach byteman agent for VM '" + pid + "'. Skipping rule updater and IPC channel.");
-            return;
-        }
-        if (info.isAttachFailedNoSuchProcess()) {
-            logger.finest("Process with pid " + pid + " went away before we could attach the byteman agent to it.");
-            return;
-        }
-        logger.fine("Attached byteman agent to VM '" + pid + "' at port: '" + info.getAgentListenPort());
-        if (!addThermostatHelperJarsToClasspath(info)) {
-            logger.warning("VM '" + pid + "': Failed to add helper jars to target VM's classpath.");
-            return;
-        }
-        agentInfos.put(vmId, info);
-        logger.fine("Starting IPC socket for byteman helper");
-        VmSocketIdentifier socketId = new VmSocketIdentifier(vmId, pid, writerId.getWriterID());
-        final ThermostatIPCCallbacks callback = new BytemanMetricsReceiver(dao, socketId);
-        startIPCEndpoint(socketId, callback);
-        // Add a status record to storage
-        VmBytemanStatus status = new VmBytemanStatus(writerId.getWriterID());
-        status.setListenPort(info.getAgentListenPort());
-        status.setTimeStamp(System.currentTimeMillis());
-        status.setVmId(vmId);
-        dao.addOrReplaceBytemanStatus(status);
-    }
-
-    private boolean addThermostatHelperJarsToClasspath(BytemanAgentInfo info) {
-        Submit submit = new Submit(null /* localhost */, info.getAgentListenPort());
-        try {
-            String addJarsResult = submit.addJarsToSystemClassloader(helperJars);
-            logger.fine("Added jars for byteman helper with result: " + addJarsResult);
-            return true;
-        } catch (Exception e) {
-            logger.log(Level.INFO, e.getMessage(), e);
-            return false;
-        }
-    }
-
-    private void startIPCEndpoint(VmSocketIdentifier identifier, ThermostatIPCCallbacks callback) {
-        String socketId = identifier.getName();
-        synchronized(sockets) {
-            if (!sockets.contains(socketId)) {
-                try {
-                    if (ipcService.serverExists(socketId)) {
-                        // We create the sockets in a way that's unique per agent/vmId/pid. If we have
-                        // two such sockets there is a problem somewhere.
-                        logger.warning("Socket with id: " + socketId + " already exists. Bug?");
-                        return;
-                    }
-                    ipcService.createServer(socketId, callback);
-                    sockets.add(socketId);
-                    logger.fine("Created IPC endpoint for id: " + socketId);
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to start IPC entpoint for id: " + socketId);
-                }
-            }
-        }
+        attachManager.attachBytemanToVm(new VmId(vmId), pid);
     }
 
     @Override
@@ -318,22 +230,5 @@ public class VmBytemanBackend implements VmStatusListener, Backend {
     public String toString() {
         return "Backend [name=" + getName() + ", version=" + getVersion() + ", vendor=" + getVendor()
                 + ", description=" + getDescription() + "]";
-    }
-    
-    // package private for testing
-    static synchronized List<String> initListOfHelperJars(File helperDir) {
-        if (helperJars == null) {
-            List<String> jars = new ArrayList<>();
-            for (File f: helperDir.listFiles()) {
-                jars.add(f.getAbsolutePath());
-            }
-            helperJars = jars;
-        }
-        return helperJars;
-    }
-    
-    // package private for testing
-    Map<String, BytemanAgentInfo> getAgentInfos() {
-        return agentInfos;
     }
 }

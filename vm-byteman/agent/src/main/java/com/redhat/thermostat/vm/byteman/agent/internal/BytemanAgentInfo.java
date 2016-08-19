@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
+import java.util.Objects;
+
 class BytemanAgentInfo {
 
     private final int vmPid;
@@ -76,5 +78,27 @@ class BytemanAgentInfo {
     
     boolean isAttachFailedNoSuchProcess() {
         return isAttachFailedNoProc;
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (other.getClass() != BytemanAgentInfo.class) {
+            return false;
+        }
+        BytemanAgentInfo o = (BytemanAgentInfo) other;
+        return Objects.equals(agentListenPort, o.agentListenPort) &&
+                Objects.equals(listenHost, o.listenHost) &&
+                Objects.equals(vmPid, o.vmPid) &&
+                Objects.equals(vmId, o.vmId) &&
+                Objects.equals(writerId, o.writerId) &&
+                Objects.equals(isAttachFailedNoProc, o.isAttachFailedNoProc);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(agentListenPort, listenHost, vmPid, vmId, writerId, isAttachFailedNoProc);
     }
 }

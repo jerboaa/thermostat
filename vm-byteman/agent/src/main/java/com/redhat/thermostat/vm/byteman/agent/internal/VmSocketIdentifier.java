@@ -67,4 +67,23 @@ class VmSocketIdentifier {
         return agentId;
     }
     
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (other.getClass() != VmSocketIdentifier.class) {
+            return false;
+        }
+        VmSocketIdentifier o = (VmSocketIdentifier) other;
+        return Objects.equals(vmPid, o.vmPid) &&
+                Objects.equals(getAgentId(), o.getAgentId()) &&
+                Objects.equals(getVmId(), o.getVmId());
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(getVmId(), getAgentId(), vmPid);
+    }
+    
 }

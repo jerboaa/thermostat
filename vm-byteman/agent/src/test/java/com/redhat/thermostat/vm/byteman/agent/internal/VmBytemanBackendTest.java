@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -44,17 +43,16 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.utils.ProcessChecker;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAgentAttachManager.SubmitHelper;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
+import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 
 public class VmBytemanBackendTest {
     
@@ -74,31 +72,9 @@ public class VmBytemanBackendTest {
         when(processChecker.exists(anyInt())).thenReturn(false);
     }
 
-    @After
-    public void tearDown() {
-        VmBytemanBackend.helperJars = null;
-    }
-    
-    @Test
-    public void canGetListOfJarsForBytemanHelper() {
-        String parent = "/foo";
-        File file = mock(File.class);
-        File[] mockFiles = new File[7];
-        for (int i = 0; i < 7; i++) {
-            mockFiles[i] = getFileMockWithName(parent, "test-file" + i + ".jar");
-        }
-        when(file.listFiles()).thenReturn(mockFiles);
-        List<String> jars = VmBytemanBackend.initListOfHelperJars(file);
-        assertEquals(7, jars.size());
-        for (int i = 0; i < 7; i++) {
-            assertEquals("/foo/test-file" + i + ".jar", jars.get(i));
-        }
-    }
-    
     /**
-     * Ensure that no NPE is being thrown due to a {@code null}
-     * BytemanAgentInfo being put into the agentInfos map which does
-     * not allow null values.
+     * Ensure that no NPE is being thrown when attaching the byteman
+     * agent fails.
      */
     @Test
     public void verifyAttachFailureNotCausingNPE() throws Exception {
@@ -106,18 +82,11 @@ public class VmBytemanBackendTest {
         IOException ioe = new IOException("Something not accounted for");
         when(installer.install(any(String.class), any(Boolean.class), any(Boolean.class), any(String.class), any(Integer.class), any(String[].class))).thenThrow(ioe);
         BytemanAttacher attacher = new BytemanAttacher(installer, processChecker, paths);
-        VmBytemanBackend backend = new VmBytemanBackend(attacher, true);
+        BytemanAgentAttachManager attachManager = new BytemanAgentAttachManager(attacher, mock(IPCEndpointsManager.class), mock(VmBytemanDAO.class), mock(SubmitHelper.class), mock(WriterID.class));
+        VmBytemanBackend backend = new VmBytemanBackend(attachManager, true);
         WriterID writerId = mock(WriterID.class);
         when(writerId.getWriterID()).thenReturn("some-writer-id");
         backend.bindWriterId(writerId);
         backend.attachBytemanToVm("someVmId", -1); // must not throw NPE
-        Map<String, BytemanAgentInfo> infos = backend.getAgentInfos();
-        assertEquals(0, infos.size());
-    }
-
-    private File getFileMockWithName(String parent, String name) {
-        File f = mock(File.class);
-        when(f.getAbsolutePath()).thenReturn(parent + "/" + name);
-        return f;
     }
 }

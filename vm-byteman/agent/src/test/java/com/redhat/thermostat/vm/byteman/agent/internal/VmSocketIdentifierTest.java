@@ -37,6 +37,9 @@
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 
@@ -64,5 +67,27 @@ public class VmSocketIdentifierTest {
         VmSocketIdentifier id2 = new VmSocketIdentifier(vmId, 230032, UUID.randomUUID().toString());
         String actual2 = id2.getName();
         assertEquals(20, actual2.length());
+    }
+    
+    @Test
+    public void testEqualsHashCode() {
+        String vmId = "some-vm-id";
+        String agentId = "some-agent-id";
+        int vmPid = 9999;
+        VmSocketIdentifier id1 = new VmSocketIdentifier(vmId, vmPid, agentId);
+        VmSocketIdentifier id2 = new VmSocketIdentifier(vmId, vmPid, agentId);
+        assertFalse(id1.equals(null));
+        assertFalse(id2.equals(null));
+        assertFalse(id2.equals(null)); // multiple invocation
+        VmSocketIdentifier other = new VmSocketIdentifier("foo", 333, "bar");
+        assertFalse(id1.equals(other));
+        assertFalse(id2.equals(other));
+        assertTrue(id2.equals(id1));
+        assertTrue(id2.equals(id1)); // multiple invocation
+        assertTrue(id1.equals(id2)); // reflexive property
+        assertNotSame(id1, id2);
+        // be sure equal objects have equal hash code
+        assertEquals(id2.hashCode(), id1.hashCode());
+        assertEquals(id2.hashCode(), id1.hashCode()); // multiple invocation
     }
 }
