@@ -82,7 +82,9 @@ public class BytemanControlCommand extends AbstractCommand {
     static final String SHOW_ACTION = "show-metrics";
     private static final String RULES_FILE_OPTION = "rules";
     private static final String NO_RULES_LOADED = "<no-loaded-rules>";
+    private static final String UNSET_PORT = "<unset>";
     private static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");
+
     
     private final DependencyServices depServices = new DependencyServices();
 
@@ -122,10 +124,10 @@ public class BytemanControlCommand extends AbstractCommand {
 
         switch (command) {
         case INJECT_RULE_ACTION:
-            injectRules(target, vmId, ctx, bytemanDao);
+            injectRules(target, vmInfo, ctx, bytemanDao);
             break;
         case UNLOAD_RULE_ACTION:
-            unloadRules(target, vmId, ctx, bytemanDao);
+            unloadRules(target, vmInfo, ctx, bytemanDao);
             break;
         case STATUS_ACTION:
             showStatus(ctx, vmInfo, bytemanDao);
@@ -139,17 +141,19 @@ public class BytemanControlCommand extends AbstractCommand {
     }
     
     /* Unloads byteman rules */
-    private void unloadRules(InetSocketAddress target, VmId vmId, CommandContext ctx, VmBytemanDAO bytemanDao) throws CommandException {
+    private void unloadRules(InetSocketAddress target, VmInfo vmInfo, CommandContext ctx, VmBytemanDAO bytemanDao) throws CommandException {
+        VmId vmId = new VmId(vmInfo.getVmId());
         RequestQueue requestQueue = getRequestQueue();
         VmBytemanStatus status = getVmBytemanStatus(vmId, bytemanDao);
         int listenPort = status.getListenPort();
-        Request unloadRequest = BytemanRequest.create(target, vmId, RequestAction.UNLOAD_RULES, listenPort);
+        Request unloadRequest = BytemanRequest.create(target, vmInfo, RequestAction.UNLOAD_RULES, listenPort);
         submitRequest(ctx, requestQueue, unloadRequest);
     }
 
     
     /* Injects byteman rules */
-    private void injectRules(InetSocketAddress target, VmId vmId, CommandContext ctx, VmBytemanDAO bytemanDao) throws CommandException {
+    private void injectRules(InetSocketAddress target, VmInfo vmInfo, CommandContext ctx, VmBytemanDAO bytemanDao) throws CommandException {
+        VmId vmId = new VmId(vmInfo.getVmId());
         Arguments args = ctx.getArguments();
         if (!args.hasArgument(RULES_FILE_OPTION)) {
             throw new CommandException(translator.localize(LocaleResources.NO_RULE_OPTION));
@@ -165,10 +169,13 @@ public class BytemanControlCommand extends AbstractCommand {
             throw new CommandException(translator.localize(LocaleResources.ERROR_READING_RULE_FILE, ruleFile));
         }
         String rulesContent = new String(rulesBytes, UTF_8_CHARSET);
-        VmBytemanStatus status = getVmBytemanStatus(vmId, bytemanDao);
-        int listenPort = status.getListenPort();
+        VmBytemanStatus status = bytemanDao.findBytemanStatus(vmId);
+        int listenPort = BytemanRequest.NOT_ATTACHED_PORT;
+        if (status != null) {
+            listenPort = status.getListenPort();
+        }
         RequestQueue requestQueue = getRequestQueue();
-        Request request = BytemanRequest.create(target, vmId, RequestAction.LOAD_RULES, listenPort, rulesContent);
+        Request request = BytemanRequest.create(target, vmInfo, RequestAction.LOAD_RULES, listenPort, rulesContent);
         submitRequest(ctx, requestQueue, request);
     }
 
@@ -193,15 +200,25 @@ public class BytemanControlCommand extends AbstractCommand {
 
     /* Show status of loaded byteman rules */
     private void showStatus(CommandContext ctx, VmInfo vmInfo, VmBytemanDAO bytemanDao) throws CommandException {
-        VmBytemanStatus status = getVmBytemanStatus(new VmId(vmInfo.getVmId()), bytemanDao);
+        // Byteman status might be null if no agent has been attached yet. Treat
+        // this similar to no-rules loaded
+        VmBytemanStatus status = bytemanDao.findBytemanStatus(new VmId(vmInfo.getVmId()));
         PrintStream out = ctx.getConsole().getOutput();
-        String rules = status.getRule();
-        if (rules == null || rules.isEmpty()) {
+        String rules;
+        if (status == null || status.getRule() == null || status.getRule().isEmpty()) {
             rules = NO_RULES_LOADED;
+        } else {
+            rules = status.getRule();
+        }
+        String listenPort;
+        if (status == null) {
+            listenPort = UNSET_PORT;
+        } else {
+            listenPort = Integer.toString(status.getListenPort());
         }
         out.println(translator.localize(LocaleResources.BYTEMAN_STATUS_MSG,
                                         vmInfo.getMainClass(),
-                                        Integer.toString(status.getListenPort()),
+                                        listenPort,
                                         rules).getContents());
     }
 

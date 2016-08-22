@@ -113,7 +113,7 @@ public class BytemanAgentAttachManagerTest {
         WriterID writerId = mock(WriterID.class);
         when(writerId.getWriterID()).thenReturn(agentId);
         manager.setWriterId(writerId);
-        manager.attachBytemanToVm(vmId, vmPid);
+        VmBytemanStatus bytemanStatus = manager.attachBytemanToVm(vmId, vmPid);
         VmSocketIdentifier socketId = new VmSocketIdentifier(workingVmId, vmPid, agentId);
         
         // IPC endpoint must be started
@@ -122,32 +122,36 @@ public class BytemanAgentAttachManagerTest {
         // Status should have been updated/inserted
         ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
         verify(vmBytemanDao).addOrReplaceBytemanStatus(statusCaptor.capture());
-        VmBytemanStatus status = statusCaptor.getValue();
-        assertNotNull(status);
-        assertEquals(workingVmId, status.getVmId());
-        assertEquals(agentId, status.getAgentId());
-        assertEquals(listenPort, status.getListenPort());
-        assertNull(status.getRule());
-        assertTrue(status.getTimeStamp() > 0);
+        VmBytemanStatus capturedStatus = statusCaptor.getValue();
+        assertNotNull(capturedStatus);
+        assertEquals(workingVmId, capturedStatus.getVmId());
+        assertEquals(agentId, capturedStatus.getAgentId());
+        assertEquals(listenPort, capturedStatus.getListenPort());
+        assertNull(capturedStatus.getRule());
+        assertTrue(capturedStatus.getTimeStamp() > 0);
         
         // Helper jars must have been added to classpath
         verify(submit).addJarsToSystemClassLoader(eq((List)null), eq(bytemanAgentInfo));
+        
+        assertEquals(listenPort, bytemanStatus.getListenPort());
     }
     
     @Test
     public void failureToAttachDoesNotStartIPC() throws Exception {
         BytemanAttacher failAttacher = getFailureAttacher();
         manager.setAttacher(failAttacher);
-        manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
+        VmBytemanStatus status = manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
         verify(ipcManager, never()).startIPCEndpoint(any(VmSocketIdentifier.class), any(ThermostatIPCCallbacks.class));
+        assertNull(status);
     }
 
     @Test
     public void failureToAttachDoesNotInsertStatus() throws Exception {
         BytemanAttacher failAttacher = getFailureAttacher();
         manager.setAttacher(failAttacher);
-        manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
+        VmBytemanStatus status = manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
         verify(vmBytemanDao, never()).addOrReplaceBytemanStatus(any(VmBytemanStatus.class));
+        assertNull(status);
     }
     
     @SuppressWarnings("unchecked")

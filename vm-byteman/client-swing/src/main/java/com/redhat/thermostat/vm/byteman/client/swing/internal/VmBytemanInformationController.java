@@ -52,7 +52,6 @@ import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -93,7 +92,6 @@ public class VmBytemanInformationController implements InformationServiceControl
     private final VmBytemanView view;
     private final VmBytemanDAO bytemanDao;
     private final RequestQueue requestQueue;
-    private Duration duration;
     
     VmBytemanInformationController(final VmBytemanView view, VmRef vm,
                                    AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao,
@@ -228,9 +226,11 @@ public class VmBytemanInformationController implements InformationServiceControl
 
     // Package-private for testing
     void updateRule(VmBytemanStatus status) {
-        String rule = status.getRule();
-        if (rule == null || rule.isEmpty()) {
+        String rule;
+        if (status == null || status.getRule() == null || status.getRule().isEmpty()) {
             rule = NO_RULES_LOADED;
+        } else {
+            rule = status.getRule();
         }
         ActionEvent<TabbedPaneContentAction> event = new ActionEvent<>(this, TabbedPaneContentAction.RULES_CHANGED);
         event.setPayload(rule);
@@ -265,10 +265,6 @@ public class VmBytemanInformationController implements InformationServiceControl
         ActionEvent<TabbedPaneContentAction> event = new ActionEvent<>(this, TabbedPaneContentAction.GRAPH_CHANGED);
         event.setPayload(metrics);
         view.contentChanged(event);
-    }
-
-    void updateDuration(Duration duration) {
-        this.duration = duration;
     }
 
     // Package-private for testing
@@ -322,21 +318,34 @@ public class VmBytemanInformationController implements InformationServiceControl
 
     private Request createRequest(String rule, RequestAction action) {
         VmId vmId = new VmId(vm.getVmId());
+        VmInfo vmInfo = createVmInfo(vm);
         VmBytemanStatus status = bytemanDao.findBytemanStatus(vmId);
-        int listenPort = status.getListenPort();
+        int listenPort = BytemanRequest.NOT_ATTACHED_PORT;
+        if (status != null) {
+            listenPort = status.getListenPort();
+        }
         AgentInformation agentInfo = agentInfoDao.getAgentInformation(new AgentId(vm.getHostRef().getAgentId()));
         InetSocketAddress address = agentInfo.getRequestQueueAddress();
         Request request = null;
         if (action == RequestAction.LOAD_RULES) {
-            request = BytemanRequest.create(address, vmId, RequestAction.LOAD_RULES, listenPort, rule);
+            request = BytemanRequest.create(address, vmInfo, RequestAction.LOAD_RULES, listenPort, rule);
         } else if (action == RequestAction.UNLOAD_RULES) {
-            request = BytemanRequest.create(address, vmId, action, listenPort);
+            request = BytemanRequest.create(address, vmInfo, action, listenPort);
         } else {
             throw new AssertionError("Unknown action: " + action);
         }
         return request;
     }
     
+    private VmInfo createVmInfo(VmRef vmRef) {
+        // set up vmInfo with just enough data
+        VmInfo vmInfo = new VmInfo();
+        vmInfo.setAgentId(vm.getHostRef().getAgentId());
+        vmInfo.setVmId(vm.getVmId());
+        vmInfo.setVmPid(vm.getPid());
+        return vmInfo;
+    }
+
     private BytemanRequestResponseListener submitRequest(Request request) {
         CountDownLatch latch = new CountDownLatch(1);
         BytemanRequestResponseListener listener = new BytemanRequestResponseListener(latch);

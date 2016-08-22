@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.byteman.common.command;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 import java.net.InetSocketAddress;
 
@@ -44,14 +45,14 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
-import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAction;
 
 public class BytemanRequestTest {
 
     @Test
     public void testCreateRequestWithRule() {
-        Request req = BytemanRequest.create(new InetSocketAddress("127.0.0.1", 12000), new VmId("vmId"), RequestAction.LOAD_RULES, 3, "foo-bar");
+        Request req = BytemanRequest.create(new InetSocketAddress("127.0.0.1", 12000), mock(VmInfo.class), RequestAction.LOAD_RULES, 3, "foo-bar");
         assertEquals(RequestType.RESPONSE_EXPECTED, req.getType());
     }
 }

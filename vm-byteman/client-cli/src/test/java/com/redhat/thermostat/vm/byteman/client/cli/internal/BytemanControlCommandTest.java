@@ -93,6 +93,7 @@ public class BytemanControlCommandTest {
     private static final String SOME_VM_ID = "some-vm-id";
     private static final String SOME_AGENT_ID = "some-agent-id";
     private static final String EMPTY_STRING = "";
+    private static final int SOME_LISTEN_PORT = 333;
     private static final InetSocketAddress REQUEST_QUEUE_ADDRESS = mock(InetSocketAddress.class);
     private BytemanControlCommand command;
     private TestCommandContextFactory ctxFactory;
@@ -140,17 +141,23 @@ public class BytemanControlCommandTest {
     public void testStatusActionNoRule() throws CommandException {
         String rule = null;
         String expectedLoadedRuleMsg = "<no-loaded-rules>";
-        basicStatusActionTest(rule, expectedLoadedRuleMsg);
-    }
-    
-    private void basicStatusActionTest(String rule, String expectedRuleMsg) throws CommandException {
-        VmBytemanDAO dao = mock(VmBytemanDAO.class);
         VmBytemanStatus status = new VmBytemanStatus();
-        int listenPort = 333;
         status.setVmId(SOME_VM_ID);
         status.setAgentId(SOME_AGENT_ID);
-        status.setListenPort(listenPort);
+        status.setListenPort(SOME_LISTEN_PORT);
         status.setRule(rule);
+        basicStatusActionTest(rule, expectedLoadedRuleMsg, status);
+    }
+    
+    @Test
+    public void testStatusActionNotAttached() throws CommandException {
+        String rule = null;
+        String expectedLoadedRuleMsg = "<no-loaded-rules>";
+        basicStatusActionTest(rule, expectedLoadedRuleMsg, null);
+    }
+    
+    private void basicStatusActionTest(String rule, String expectedRuleMsg, VmBytemanStatus status) throws CommandException {
+        VmBytemanDAO dao = mock(VmBytemanDAO.class);
         when(dao.findBytemanStatus(eq(new VmId(SOME_VM_ID)))).thenReturn(status);
         Arguments args = getBasicArgsWithAction(STATUS_ACTION);
         CommandContext ctx = ctxFactory.createContext(args);
@@ -161,6 +168,10 @@ public class BytemanControlCommandTest {
         String stdOut = ctxFactory.getOutput();
         assertEquals(EMPTY_STRING, stdErr);
         assertTrue(stdOut.contains("Byteman status for VM:"));
+        String listenPort = "<unset>";
+        if (status != null) {
+            listenPort = Integer.toString(status.getListenPort());
+        }
         assertTrue(stdOut.contains("Byteman agent listen port: " + listenPort));
         assertTrue(stdOut.contains("Loaded rules:"));
         assertTrue(stdOut.contains(expectedRuleMsg));
@@ -169,20 +180,12 @@ public class BytemanControlCommandTest {
     @Test
     public void testStatusActionWithRule() throws CommandException {
         String rule = "some-rule-string\nsome more rule lines\nfurther more";
-        basicStatusActionTest(rule, rule);
-    }
-    
-    @Test
-    public void testStatusActionNoStatus() {
-        Arguments args = getBasicArgsWithAction(STATUS_ACTION);
-        CommandContext ctx = ctxFactory.createContext(args);
-        try {
-            command.run(ctx);
-            fail("Expected command exception due to missing status");
-        } catch (CommandException e) {
-            String msg = e.getMessage();
-            assertEquals("No status info available for VM " + SOME_VM_ID + ".", msg);
-        }
+        VmBytemanStatus status = new VmBytemanStatus();
+        status.setVmId(SOME_VM_ID);
+        status.setAgentId(SOME_AGENT_ID);
+        status.setListenPort(SOME_LISTEN_PORT);
+        status.setRule(rule);
+        basicStatusActionTest(rule, rule, status);
     }
     
     @Test
@@ -314,7 +317,7 @@ public class BytemanControlCommandTest {
     }
     
     @Test
-    public void testLoadActionSuccess() throws CommandException, FileNotFoundException, IOException {
+    public void testLoadActionSuccessAgentAttached() throws CommandException, FileNotFoundException, IOException {
         VmBytemanDAO dao = mock(VmBytemanDAO.class);
         VmBytemanStatus status = new VmBytemanStatus();
         int listenPort = 333;
@@ -347,6 +350,43 @@ public class BytemanControlCommandTest {
         RequestAction actualAction = RequestAction.fromIntString(rawAction);
         assertEquals(RequestAction.LOAD_RULES, actualAction);
         assertEquals(Integer.toString(listenPort), submittedRequest.getParameter(BytemanRequest.LISTEN_PORT_PARAM_NAME));
+        assertEquals(SOME_VM_ID, submittedRequest.getParameter(BytemanRequest.VM_ID_PARAM_NAME));
+        String expectedRule = new String(StreamUtils.readAll(new FileInputStream(new File(file))));
+        assertEquals(expectedRule, submittedRequest.getParameter(BytemanRequest.RULE_PARAM_NAME));
+        assertSame(REQUEST_QUEUE_ADDRESS, submittedRequest.getTarget());
+        String out = ctxFactory.getOutput();
+        assertEquals("Request submitted successfully.\n", out);
+    }
+    
+    @Test
+    public void testLoadActionSuccessAgentNotAttached() throws CommandException, FileNotFoundException, IOException {
+        VmBytemanDAO dao = mock(VmBytemanDAO.class);
+        // mimic no-agent-attached, by returning a null status
+        when(dao.findBytemanStatus(eq(new VmId(SOME_VM_ID)))).thenReturn(null);
+        Arguments args = getBasicArgsWithAction(LOAD_ACTION);
+        when(args.hasArgument(RULE_OPTION)).thenReturn(true);
+        String file = getClass().getResource("/testRule.btm").getFile();
+        when(args.getArgument(RULE_OPTION)).thenReturn(file);
+        CommandContext ctx = ctxFactory.createContext(args);
+        command.unsetVmBytemanDao();
+        command.setVmBytemanDao(dao);
+        RequestQueue rQueue = mock(RequestQueue.class);
+        command.setRequestQueue(rQueue);
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        command.run(ctx);
+        verify(rQueue).putRequest(requestCaptor.capture());
+        Request submittedRequest = requestCaptor.getValue();
+        assertEquals(1, submittedRequest.getListeners().size());
+        RequestResponseListener respListener = null; 
+        for (RequestResponseListener l: submittedRequest.getListeners()) {
+            respListener = l;
+            break;
+        }
+        assertTrue(respListener instanceof BytemanRequestResponseListener);
+        String rawAction = submittedRequest.getParameter(BytemanRequest.ACTION_PARAM_NAME);
+        RequestAction actualAction = RequestAction.fromIntString(rawAction);
+        assertEquals(RequestAction.LOAD_RULES, actualAction);
+        assertEquals(Integer.toString(BytemanRequest.NOT_ATTACHED_PORT), submittedRequest.getParameter(BytemanRequest.LISTEN_PORT_PARAM_NAME));
         assertEquals(SOME_VM_ID, submittedRequest.getParameter(BytemanRequest.VM_ID_PARAM_NAME));
         String expectedRule = new String(StreamUtils.readAll(new FileInputStream(new File(file))));
         assertEquals(expectedRule, submittedRequest.getParameter(BytemanRequest.RULE_PARAM_NAME));

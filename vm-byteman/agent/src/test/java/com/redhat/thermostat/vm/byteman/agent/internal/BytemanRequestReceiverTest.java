@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.byteman.agent.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -52,6 +53,7 @@ import java.util.List;
 
 import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -59,8 +61,10 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest;
@@ -68,18 +72,30 @@ import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAct
 
 public class BytemanRequestReceiverTest {
     
+    private static final String SOME_VM_ID = "some-vm-id";
+    private static final int SOME_LISTENPORT_BTM_AGENT_ATTACHED = 333;
+    private static final String SOME_WRITER_ID = "some-writer-id";
+    private static final String SOME_RULE = "some-rule";
+    private VmInfo someVmInfo;
+    
+    @Before
+    public void setup() {
+        someVmInfo = mock(VmInfo.class);
+        when(someVmInfo.getVmId()).thenReturn(SOME_VM_ID);
+    }
+    
     @Test
-    public void testLoadRules() throws Exception {
+    public void testLoadRulesAgentAttached() throws Exception {
         Submit submit = mock(Submit.class);
-        doLoadRulesTest(submit);
+        doBasicLoadRulesTestBtmAgentAttached(submit);
         verify(submit, never()).deleteAllRules();
     }
     
     @Test
-    public void testLoadRulesWithRulesExisting() throws Exception {
+    public void testLoadRulesAgentAttachedWithRulesExisting() throws Exception {
         Submit submit = mock(Submit.class);
         when(submit.getAllScripts()).thenReturn(Arrays.asList(mock(ScriptText.class)));
-        doLoadRulesTest(submit);
+        doBasicLoadRulesTestBtmAgentAttached(submit);
         verify(submit).deleteAllRules();
     }
     
@@ -88,7 +104,7 @@ public class BytemanRequestReceiverTest {
         Submit submit = mock(Submit.class);
         when(submit.getAllScripts()).thenReturn(Collections.<ScriptText>emptyList());
         BytemanRequestReceiver receiver = createReceiver(submit, null, null);
-        Response response = receiver.receive(BytemanRequest.create(mock(InetSocketAddress.class), new VmId("ignored"), RequestAction.UNLOAD_RULES, -1));
+        Response response = receiver.receive(BytemanRequest.create(mock(InetSocketAddress.class), someVmInfo, RequestAction.UNLOAD_RULES, -1));
         assertEquals(ResponseType.OK, response.getType());
         verify(submit, never()).deleteAllRules();
     }
@@ -105,7 +121,7 @@ public class BytemanRequestReceiverTest {
         when(writerId.getWriterID()).thenReturn(someAgentId);
         BytemanRequestReceiver receiver = createReceiver(submit, writerId, bytemanDao);
         ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
-        Response response = receiver.receive(BytemanRequest.create(mock(InetSocketAddress.class), new VmId(someVmId), RequestAction.UNLOAD_RULES, someListenPort));
+        Response response = receiver.receive(BytemanRequest.create(mock(InetSocketAddress.class), someVmInfo, RequestAction.UNLOAD_RULES, someListenPort));
         assertEquals(ResponseType.OK, response.getType());
         verify(submit).deleteAllRules();
         verify(bytemanDao).addOrReplaceBytemanStatus(statusCaptor.capture());
@@ -124,25 +140,100 @@ public class BytemanRequestReceiverTest {
         Response response = receiver.receive(badRequest);
         assertEquals(ResponseType.ERROR, response.getType());
     }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testLoadRuleWithBytemanAgentNotAttached() throws Exception {
+        final int listenPort = 8939;
+        final Submit submit = mock(Submit.class);
+        VmBytemanDAO bytemanDao = mock(VmBytemanDAO.class);
+        BytemanAgentAttachManager attachManager = mock(BytemanAgentAttachManager.class);
+        VmBytemanStatus status = new VmBytemanStatus();
+        status.setListenPort(listenPort);
+        when(attachManager.attachBytemanToVm(any(VmId.class), any(int.class))).thenReturn(status);
+        WriterID wid = mock(WriterID.class);
+        when(wid.getWriterID()).thenReturn(SOME_WRITER_ID);
+        BytemanRequestReceiver receiver = new BytemanRequestReceiver(attachManager) {
+            @Override 
+            protected Submit getSubmit(int port) {
+                assertEquals(listenPort, port);
+                return submit;
+            }
+        };
+        receiver.bindWriterId(wid);
+        receiver.bindVmBytemanDao(bytemanDao);
+        VmInfo vmInfo = mock(VmInfo.class);
+        when(vmInfo.getVmId()).thenReturn(SOME_VM_ID);
+        int someVmPid = 3023;
+        when(vmInfo.getVmPid()).thenReturn(someVmPid);
+        Request loadRequest = BytemanRequest.create(mock(InetSocketAddress.class), vmInfo, RequestAction.LOAD_RULES, BytemanRequest.NOT_ATTACHED_PORT, SOME_RULE);
+        receiver.receive(loadRequest);
+        VmId vmId = new VmId(SOME_VM_ID);
+        verify(attachManager).attachBytemanToVm(eq(vmId), eq(someVmPid));
+        verify(submit).addRulesFromResources(any(List.class));
+    }
+    
+    @Test
+    public void testUnloadRuleIllegalPid() {
+        VmInfo vmInfoWithBadPid = mock(VmInfo.class);
+        when(vmInfoWithBadPid.getVmPid()).thenReturn(-1); // bad value
+        Request loadRequest = BytemanRequest.create(mock(InetSocketAddress.class), vmInfoWithBadPid, RequestAction.UNLOAD_RULES, SOME_LISTENPORT_BTM_AGENT_ATTACHED);
+        BytemanRequestReceiver receiver = new BytemanRequestReceiver();
+        Response response = receiver.receive(loadRequest);
+        assertEquals(ResponseType.ERROR, response.getType());
+    }
+    
+    @Test
+    public void testUnloadRuleIllegalPort() {
+        int invalidPort = -3;
+        Request loadRequest = BytemanRequest.create(mock(InetSocketAddress.class), someVmInfo, RequestAction.UNLOAD_RULES, invalidPort);
+        BytemanRequestReceiver receiver = new BytemanRequestReceiver();
+        Response response = receiver.receive(loadRequest);
+        assertEquals(ResponseType.ERROR, response.getType());
+    }
+    
+    @Test
+    public void testBindWriterId() {
+        BytemanAgentAttachManager attachManager = mock(BytemanAgentAttachManager.class);
+        BytemanRequestReceiver receiver = new BytemanRequestReceiver(attachManager);
+        WriterID wid = mock(WriterID.class);
+        receiver.bindWriterId(wid);
+        verify(attachManager).setWriterId(wid);
+    }
+    
+    @Test
+    public void testBindVmBytemanDAO() {
+        BytemanAgentAttachManager attachManager = mock(BytemanAgentAttachManager.class);
+        BytemanRequestReceiver receiver = new BytemanRequestReceiver(attachManager);
+        VmBytemanDAO dao = mock(VmBytemanDAO.class);
+        receiver.bindVmBytemanDao(dao);
+        verify(attachManager).setVmBytemanDao(dao);
+    }
+    
+    @Test
+    public void testBindCommonPaths() {
+        BytemanAgentAttachManager attachManager = mock(BytemanAgentAttachManager.class);
+        BytemanRequestReceiver receiver = new BytemanRequestReceiver(attachManager);
+        CommonPaths paths = mock(CommonPaths.class);
+        receiver.bindCommonPaths(paths);
+        verify(attachManager).setAttacher(any(BytemanAttacher.class));
+        verify(attachManager).setPaths(paths);
+    }
 
     @SuppressWarnings("unchecked")
-    private void doLoadRulesTest(Submit submit) throws Exception {
+    private void doBasicLoadRulesTestBtmAgentAttached(Submit submit) throws Exception {
         VmBytemanDAO bytemanDao = mock(VmBytemanDAO.class);
         WriterID wid = mock(WriterID.class);
-        String writerId = "some-writer-id";
-        String someVmId = "some-id";
-        int listenPort = 333;
-        when(wid.getWriterID()).thenReturn(writerId);
+        when(wid.getWriterID()).thenReturn(SOME_WRITER_ID);
         BytemanRequestReceiver receiver = createReceiver(submit, wid, bytemanDao);
-        String rule = "some-rule";
         ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
-        Response response = receiver.receive(BytemanRequest.create(mock(InetSocketAddress.class), new VmId(someVmId), RequestAction.LOAD_RULES, listenPort, rule));
+        Response response = receiver.receive(BytemanRequest.create(mock(InetSocketAddress.class), someVmInfo, RequestAction.LOAD_RULES, SOME_LISTENPORT_BTM_AGENT_ATTACHED, SOME_RULE));
         verify(bytemanDao).addOrReplaceBytemanStatus(statusCaptor.capture());
         VmBytemanStatus capturedStatus = statusCaptor.getValue();
-        assertEquals(someVmId, capturedStatus.getVmId());
-        assertEquals(writerId, capturedStatus.getAgentId());
-        assertEquals(rule, capturedStatus.getRule());
-        assertEquals(listenPort, capturedStatus.getListenPort());
+        assertEquals(SOME_VM_ID, capturedStatus.getVmId());
+        assertEquals(SOME_WRITER_ID, capturedStatus.getAgentId());
+        assertEquals(SOME_RULE, capturedStatus.getRule());
+        assertEquals(SOME_LISTENPORT_BTM_AGENT_ATTACHED, capturedStatus.getListenPort());
         // verify no helper jars get added on rule submission
         verify(submit, times(0)).addJarsToSystemClassloader(any(List.class));
         verify(submit).addRulesFromResources(any(List.class));

@@ -40,7 +40,7 @@ import java.net.InetSocketAddress;
 
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
-import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.model.VmInfo;
 
 public class BytemanRequest {
     
@@ -78,22 +78,25 @@ public class BytemanRequest {
     private static final String RECEIVER = "com.redhat.thermostat.vm.byteman.agent.internal.BytemanRequestReceiver";
     
     public static final String VM_ID_PARAM_NAME = "vm-id";
+    public static final String VM_PID_PARAM_NAME = "vm-pid";
     public static final String ACTION_PARAM_NAME = "byteman-action";
     public static final String LISTEN_PORT_PARAM_NAME = "listen-port";
     public static final String RULE_PARAM_NAME = "byteman-rule";
+    public static final int NOT_ATTACHED_PORT = -1;
 
-    public static Request create(InetSocketAddress address, VmId vmId, RequestAction action, int listenPort) {
+    public static Request create(InetSocketAddress address, VmInfo vmInfo, RequestAction action, int listenPort) {
         Request req = new Request(RequestType.RESPONSE_EXPECTED, address);
         req.setReceiver(RECEIVER);
         req.setParameter(Request.ACTION, CMD_CHANN_ACTION_NAME);
-        req.setParameter(VM_ID_PARAM_NAME, vmId.get());
+        req.setParameter(VM_ID_PARAM_NAME, vmInfo.getVmId());
+        req.setParameter(VM_PID_PARAM_NAME, Integer.toString(vmInfo.getVmPid()));
         req.setParameter(ACTION_PARAM_NAME, action.toIntString());
         req.setParameter(LISTEN_PORT_PARAM_NAME, Integer.toString(listenPort));
         return req;
     }
     
-    public static Request create(InetSocketAddress address, VmId vmId, RequestAction action, int listenPort, String rule) {
-        Request req = create(address, vmId, action, listenPort);
+    public static Request create(InetSocketAddress address, VmInfo vmInfo, RequestAction action, int listenPort, String rule) {
+        Request req = create(address, vmInfo, action, listenPort);
         req.setParameter(RULE_PARAM_NAME, rule);
         return req;
     }

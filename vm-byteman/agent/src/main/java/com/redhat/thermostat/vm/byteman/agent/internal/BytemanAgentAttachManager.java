@@ -78,6 +78,7 @@ class BytemanAgentAttachManager {
         this.submit = new SubmitHelper();
     }
     
+    // for testing only
     BytemanAgentAttachManager(BytemanAttacher attacher, IPCEndpointsManager ipcManager, VmBytemanDAO vmBytemanDao, SubmitHelper submit, WriterID writerId) {
         this.attacher = attacher;
         this.ipcManager = ipcManager;
@@ -86,21 +87,21 @@ class BytemanAgentAttachManager {
         this.writerId = writerId;
     }
     
-    void attachBytemanToVm(VmId vmId, int vmPid) {
+    VmBytemanStatus attachBytemanToVm(VmId vmId, int vmPid) {
         logger.fine("Attaching byteman agent to VM '" + vmPid + "'");
         BytemanAgentInfo info = attacher.attach(vmId.get(), vmPid, writerId.getWriterID());
         if (info == null) {
             logger.warning("Failed to attach byteman agent for VM '" + vmPid + "'. Skipping rule updater and IPC channel.");
-            return;
+            return null;
         }
         if (info.isAttachFailedNoSuchProcess()) {
             logger.finest("Process with pid " + vmPid + " went away before we could attach the byteman agent to it.");
-            return;
+            return null;
         }
         logger.fine("Attached byteman agent to VM '" + vmPid + "' at port: '" + info.getAgentListenPort());
         if (!addThermostatHelperJarsToClasspath(info)) {
             logger.warning("VM '" + vmPid + "': Failed to add helper jars to target VM's classpath.");
-            return;
+            return null;
         }
         VmSocketIdentifier socketId = new VmSocketIdentifier(vmId.get(), vmPid, writerId.getWriterID());
         ThermostatIPCCallbacks callback = new BytemanMetricsReceiver(vmBytemanDao, socketId);
@@ -111,6 +112,7 @@ class BytemanAgentAttachManager {
         status.setTimeStamp(System.currentTimeMillis());
         status.setVmId(vmId.get());
         vmBytemanDao.addOrReplaceBytemanStatus(status);
+        return status;
     }
     
     private boolean addThermostatHelperJarsToClasspath(BytemanAgentInfo info) {
