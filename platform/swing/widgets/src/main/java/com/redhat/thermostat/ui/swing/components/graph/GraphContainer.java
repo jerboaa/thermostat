@@ -67,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.redhat.thermostat.ui.swing.model.graph.GraphModel.SAMPLE_COUNT_PROPERTY;
+import static com.redhat.thermostat.ui.swing.model.graph.GraphModel.SAMPLE_WEIGHT_PROPERTY;
 import static com.redhat.thermostat.ui.swing.model.graph.GraphModel.TRACE_REAL_ID_PROPERTY;
 
 /**
@@ -305,25 +306,27 @@ public class GraphContainer extends ThermostatComponent implements Scrollable {
 
     private Node getOrCloneNode(Node source) {
 
+        Tile component = null;
         Node node = getNodeCache().get(source.getName());
         if (node == null) {
+            component = new Tile((String) source.getProperty(TRACE_REAL_ID_PROPERTY));
+
             node = new Node(source.getName());
             node.setProperty(SAMPLE_COUNT_PROPERTY, source.getProperty(SAMPLE_COUNT_PROPERTY));
             node.setProperty(TRACE_REAL_ID_PROPERTY, source.getProperty(TRACE_REAL_ID_PROPERTY));
-            Tile component = new Tile((String) source.getProperty(TRACE_REAL_ID_PROPERTY));
-            component.setToolTipText("name: " + source.getProperty(TRACE_REAL_ID_PROPERTY) +
-                                     ", samples: " + source.getProperty(SAMPLE_COUNT_PROPERTY));
-            add(component);
-
             node.setProperty(COMPONENT_PROPERTY, component);
 
             getNodeCache().put(node.getName(), node);
+
         } else {
             node.setProperty(SAMPLE_COUNT_PROPERTY, source.getProperty(SAMPLE_COUNT_PROPERTY));
-            Tile component = node.getProperty(COMPONENT_PROPERTY);
-            component.setToolTipText("name: " + source.getProperty(TRACE_REAL_ID_PROPERTY) +
-                                     ", samples: " + source.getProperty(SAMPLE_COUNT_PROPERTY));
+            component = node.getProperty(COMPONENT_PROPERTY);
         }
+
+        component.setToolTipText("name: " + source.getProperty(TRACE_REAL_ID_PROPERTY)     +
+                                 ", samples: " + source.getProperty(SAMPLE_COUNT_PROPERTY) +
+                                 ", weight: " + source.getProperty(SAMPLE_WEIGHT_PROPERTY));
+        add(component);
 
         return node;
     }

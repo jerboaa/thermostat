@@ -34,29 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.view;
+package com.redhat.thermostat.thread.client.common;
 
 import com.redhat.thermostat.beans.property.BooleanProperty;
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.thread.client.common.Toggle;
-import com.redhat.thermostat.ui.swing.model.Trace;
 
 /**
+ * A toggeable boolean property.
  */
-public abstract class StackTraceProfilerView extends BasicView {
+public class Toggle extends BooleanProperty {
 
-    private Toggle mergeRecursiveTraces;
+    public Toggle() {}
 
-    public StackTraceProfilerView() {
-        mergeRecursiveTraces = new Toggle(false, "mergeRecursiveTraces");
+    public Toggle(boolean value) {
+        super(value);
     }
 
-    public Toggle mergeRecursiveTracesProperty() {
-        return mergeRecursiveTraces;
+    public Toggle(boolean value, String name) {
+        super(value, name);
     }
 
-    public abstract void createModel(String modelID);
-    public abstract void rebuild();
-    public abstract void addTrace(Trace expanded, Trace collapsed);
-    public abstract void clear();
+    public void toggle() {
+        set(!get());
+    }
 }

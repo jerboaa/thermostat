@@ -204,7 +204,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         comp.setName("lock");
         topPane.addTab(t.localize(LocaleResources.LOCKS).getContents(), comp);
 
-        stackTraceProfilerView = new SwingStackTraceProfilerView();
+        stackTraceProfilerView = new SwingStackTraceProfilerView(uiDefaults);
         comp = stackTraceProfilerView.getUiComponent();
         comp.setName("stackTraceProfiler");
         topPane.addTab(t.localize(LocaleResources.STACK_TRACE_PROFILER).getContents(), comp);

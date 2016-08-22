@@ -56,6 +56,11 @@ public class GraphModel extends Model<Graph> {
     public static final String SAMPLE_COUNT_PROPERTY = "sampleCount";
 
     /**
+     * Long property
+     */
+    public static final String SAMPLE_WEIGHT_PROPERTY = "weight";
+
+    /**
      * String property
      */
     public static final String TRACE_REAL_ID_PROPERTY = "traceID";
@@ -102,28 +107,32 @@ public class GraphModel extends Model<Graph> {
         return cache;
     }
 
-    private Node getOrCreateNode(String id, String realID) {
+    private Node getOrCreateNode(String id, String realID, long weight) {
         Node node = null;
         if (cache.containsKey(id)) {
             node = cache.get(id);
             long sampleCount = node.getProperty(SAMPLE_COUNT_PROPERTY);
             node.setProperty(SAMPLE_COUNT_PROPERTY, ++sampleCount);
+            long sampleWeight = node.getProperty(SAMPLE_WEIGHT_PROPERTY);
+            node.setProperty(SAMPLE_WEIGHT_PROPERTY, sampleWeight + weight);
         } else {
             node = new Node(id);
             node.setProperty(TRACE_REAL_ID_PROPERTY, realID);
             node.setProperty(SAMPLE_COUNT_PROPERTY, 1l);
+            node.setProperty(SAMPLE_WEIGHT_PROPERTY, weight);
+
             cache.put(id, node);
         }
         return node;
     }
 
     public void addTrace(final Trace trace) {
-        Node parent = getOrCreateNode(rootID, rootID);
+        Node parent = getOrCreateNode(rootID, rootID, 1l);
         int n = 0;
         for (TraceElement element : trace) {
             String id = element.getName() + "#" + n + "." + parent.getName();
             n++;
-            Node node = getOrCreateNode(id, element.getName());
+            Node node = getOrCreateNode(id, element.getName(), element.getWeight());
             graph.addRelationship(parent, "->", node);
             parent = node;
         }

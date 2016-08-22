@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.thread.client.controller.internal;
 
+import com.redhat.thermostat.beans.property.ChangeListener;
+import com.redhat.thermostat.beans.property.ObservableValue;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -61,6 +63,8 @@ public class StackTraceProfilerController extends CommonController {
 
     private ThreadCollector collector;
     private StackTraceProfilerView stackTraceProfilerView;
+    private StackTraceProfilerControllerAction action;
+
     public StackTraceProfilerController(StackTraceProfilerView view,
                                         ThreadCollector collector,
                                         Timer timer,
@@ -71,9 +75,10 @@ public class StackTraceProfilerController extends CommonController {
         this.stackTraceProfilerView = view;
         this.collector = collector;
 
-        view.createModel(ref.getName());
+        action = new StackTraceProfilerControllerAction();
 
-        timer.setAction(new StackTraceProfilerControllerAction());
+        view.createModel(ref.getName());
+        timer.setAction(action);
     }
 
     RangedCache<ThreadState> getCache(final SessionID session) {
@@ -93,6 +98,10 @@ public class StackTraceProfilerController extends CommonController {
                 return rangedCache;
             }
         });
+    }
+
+    ThreadStateResultHandler getThreadStateResultHandler() {
+        return action.threadStateResultHandler;
     }
 
     private class StackTraceProfilerControllerAction extends SessionCheckingAction {
@@ -213,25 +222,52 @@ public class StackTraceProfilerController extends CommonController {
 
             StackTrace stackTrace = getStackTrace(state);
 
-            Trace trace = new Trace(state.getName());
+            Trace expandedTrace = new Trace(state.getName());
+            Trace collapsedTrace = new Trace(state.getName());
+
             List<StackFrame> frames = stackTrace.getFrames();
             int frameID = frames.size() - 1;
+
+            TraceElement previousElement = null;
+            boolean isMerging = false;
 
             while (frameID >= 0) {
                 StackFrame frame = frames.get(frameID);
                 frameID--;
 
-                TraceElement element =
-                        new TraceElement(frame.getClassName()  + "." +
-                                         frame.getMethodName() + ":" +
-                                         frame.getLineNumber());
-                trace.add(element);
+                String name = frame.getClassName()  + "." +
+                              frame.getMethodName() + ":" +
+                              frame.getLineNumber();
+
+                TraceElement element = new TraceElement(name);
+                TraceElement elementToMerge = new TraceElement(name);
+
+                expandedTrace.add(element);
+
+                isMerging = isMergeable(previousElement, element);
+                if (previousElement != null) {
+                    if (!isMerging) {
+                        collapsedTrace.add(previousElement);
+                    } else {
+                        elementToMerge.setWeight(previousElement.getWeight() + 1l);
+                    }
+                }
+
+                previousElement = elementToMerge;
             }
 
-            stackTraceProfilerView.addTrace(trace);
+            if (previousElement != null) {
+                collapsedTrace.add(previousElement);
+            }
+
+            stackTraceProfilerView.addTrace(expandedTrace, collapsedTrace);
 
             boolean _stopLooping = stopLooping;
             return !_stopLooping;
+        }
+
+        private boolean isMergeable(TraceElement previous, TraceElement current) {
+            return (previous != null && previous.sameAs(current));
         }
     }
 }

@@ -36,10 +36,14 @@
 
 package com.redhat.thermostat.thread.client.swing.internal;
 
+import com.redhat.thermostat.beans.property.ChangeListener;
+import com.redhat.thermostat.beans.property.ObservableValue;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.thread.client.common.view.StackTraceProfilerView;
+import com.redhat.thermostat.thread.client.swing.experimental.components.StackTraceProfilerToolbar;
 import com.redhat.thermostat.ui.swing.components.graph.GraphContainer;
 import com.redhat.thermostat.ui.swing.model.Trace;
 import com.redhat.thermostat.ui.swing.model.graph.GraphModel;
@@ -55,18 +59,46 @@ public class SwingStackTraceProfilerView extends StackTraceProfilerView implemen
     private ComponentVisibilityNotifier visibilityNotifier;
 
     private ThermostatScrollPane contentPane;
-    private GraphModel graphModel;
+    private GraphModel expandedModel;
+    private GraphModel collapsedModel;
     private GraphContainer graphContainer;
 
-    public SwingStackTraceProfilerView() {
-        graphContainer = new GraphContainer();
+    private StackTraceProfilerToolbar toolbar;
+
+    private GraphModel currentModel;
+
+    public SwingStackTraceProfilerView(UIDefaults uiDefaults) {
+
+        graphContainer = new GraphContainer(new GraphModel("DefaultModel"));
+        expandedModel = new GraphModel("DefaultModel");
+        collapsedModel = new GraphModel("DefaultModel");
 
         contentPane = new ThermostatScrollPane(graphContainer);
         contentPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         contentPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
+        toolbar = new StackTraceProfilerToolbar(uiDefaults, mergeRecursiveTracesProperty());
+        contentPane.setColumnHeaderView(toolbar);
+
         visibilityNotifier = new ComponentVisibilityNotifier();
         visibilityNotifier.initialize(graphContainer, notifier);
+
+        mergeRecursiveTracesProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                setModel();
+            }
+        });
+        setModel();
+    }
+
+    private void setModel() {
+        currentModel = expandedModel;
+        if (mergeRecursiveTracesProperty().get()) {
+            currentModel = collapsedModel;
+        }
+
+        graphContainer.setModel(currentModel);
     }
 
     @Override
@@ -74,8 +106,10 @@ public class SwingStackTraceProfilerView extends StackTraceProfilerView implemen
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                graphModel = new GraphModel(modelID);
-                graphContainer.setModel(graphModel);
+                expandedModel = new GraphModel(modelID);
+                collapsedModel = new GraphModel(modelID);
+
+                setModel();
             }
         });
     }
@@ -85,17 +119,18 @@ public class SwingStackTraceProfilerView extends StackTraceProfilerView implemen
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                graphModel.rebuild();
+                currentModel.rebuild();
             }
         });
     }
 
     @Override
-    public void addTrace(final Trace trace) {
+    public void addTrace(final Trace expanded, final Trace collapsed) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                graphModel.addTrace(trace);
+                expandedModel.addTrace(expanded);
+                collapsedModel.addTrace(collapsed);
             }
         });
     }
@@ -105,7 +140,8 @@ public class SwingStackTraceProfilerView extends StackTraceProfilerView implemen
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                graphModel.clear();
+                expandedModel.clear();
+                collapsedModel.clear();
             }
         });
     }

@@ -40,12 +40,31 @@ package com.redhat.thermostat.ui.swing.model;
  */
 public class TraceElement {
     private String name;
+    private long weight;
 
     public TraceElement(String name) {
         this.name = name;
+        weight = 1l;
     }
 
     public String getName() {
+        return name;
+    }
+
+    public long getWeight() {
+        return weight;
+    }
+
+    public void setWeight(long weight) {
+        this.weight = weight;
+    }
+
+    public boolean sameAs(TraceElement other) {
+        return getName().equals(other.getName());
+    }
+
+    @Override
+    public String toString() {
         return name;
     }
 }

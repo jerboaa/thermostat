@@ -44,6 +44,7 @@ import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
 import com.redhat.thermostat.thread.cache.RangedCache;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.StackTraceProfilerView;
+import com.redhat.thermostat.thread.client.controller.internal.StackTraceProfilerController.ThreadStateResultHandler;
 import com.redhat.thermostat.thread.client.controller.internal.cache.AppCache;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.StackFrame;
@@ -108,6 +109,61 @@ public class StackTraceProfilerControllerTest {
                 new StackTraceProfilerController(view, collector, timer, ref, cache);
 
         verify(view).createModel(VM_ID);
+    }
+
+    @Test
+    public void testCompactTraces() {
+
+        final ThreadState state0 = mock(ThreadState.class);
+        when(state0.getName()).thenReturn("state0");
+        when(state0.getId()).thenReturn(0l);
+        when(state0.getState()).thenReturn("NEW");
+        final StackTrace trace0 = mock(StackTrace.class);
+
+        // resulting trace: A -> B -> C(x2) -> C -> D
+        StackFrame frame0 = new StackFrame("file", "package", "class", "methodD", 5, false);
+        StackFrame frame1 = new StackFrame("file", "package", "class", "methodC", 4, false);
+        StackFrame frame2 = new StackFrame("file", "package", "class", "methodC", 3, false);
+        StackFrame frame3 = new StackFrame("file", "package", "class", "methodC", 3, false);
+        StackFrame frame4 = new StackFrame("file", "package", "class", "methodB", 2, false);
+        StackFrame frame5 = new StackFrame("file", "package", "class", "methodA", 1, false);
+
+        List<StackFrame> frames = new ArrayList<>();
+        frames.add(frame0);
+        frames.add(frame1);
+        frames.add(frame2);
+        frames.add(frame3);
+        frames.add(frame4);
+        frames.add(frame5);
+
+        when(trace0.getFrames()).thenReturn(frames);
+
+        StackTraceProfilerController profiler =
+                new StackTraceProfilerController(view, collector, timer, ref, cache) {
+                    @Override
+                    StackTrace getStackTrace(ThreadState state) {
+                        return trace0;
+                    }
+                };
+        ThreadStateResultHandler handler = profiler.getThreadStateResultHandler();
+        handler.setCacheResults(false);
+
+        handler.onResult(state0);
+
+        ArgumentCaptor<Trace> traceCaptor = ArgumentCaptor.forClass(Trace.class);
+        verify(view).addTrace(any(Trace.class), traceCaptor.capture());
+
+        Trace trace = traceCaptor.getValue();
+        assertEquals("state0", trace.getName());
+        assertEquals(5, trace.getTrace().size());
+        assertEquals("class.methodA:1", trace.getTrace().get(0).getName());
+        assertEquals("class.methodB:2", trace.getTrace().get(1).getName());
+        assertEquals("class.methodC:3", trace.getTrace().get(2).getName());
+        assertEquals("class.methodC:4", trace.getTrace().get(3).getName());
+        assertEquals("class.methodD:5", trace.getTrace().get(4).getName());
+
+        assertEquals(2, trace.getTrace().get(2).getWeight());
+        assertEquals(1, trace.getTrace().get(3).getWeight());
     }
 
     @Test
@@ -180,7 +236,7 @@ public class StackTraceProfilerControllerTest {
         handler.onResult(state1);
         handler.onResult(state2);
 
-        verify(view).addTrace(traceCaptor.capture());
+        verify(view).addTrace(traceCaptor.capture(), any(Trace.class));
 
         Trace trace = traceCaptor.getValue();
         assertEquals("state0", trace.getName());
