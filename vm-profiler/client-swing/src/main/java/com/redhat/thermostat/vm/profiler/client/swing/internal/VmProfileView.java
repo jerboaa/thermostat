@@ -91,6 +91,7 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
 
         DISPLAY_PROFILING_SESSIONS,
         PROFILE_SELECTED,
+        PROFILE_TABLE_FILTER_CHANGED,
     }
 
     enum ProfilingState implements ToggleActionState {
@@ -148,6 +149,7 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
     public abstract Profile getSelectedProfile();
 
     public abstract void setProfilingDetailData(ProfilingResult results);
+    public abstract String getProfilingDataFilter();
 
     public abstract void addTabToTabbedPane(final LocalizedString title, final Component component);
 

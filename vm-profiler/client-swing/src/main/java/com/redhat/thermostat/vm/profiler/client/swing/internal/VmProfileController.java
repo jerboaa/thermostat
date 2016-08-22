@@ -82,6 +82,7 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo.AliveStatus;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.TabbedPaneAction;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Profile;
@@ -203,6 +204,12 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                         break;
                     case DISPLAY_PROFILING_SESSIONS:
                         displayProfiledRuns();
+                        break;
+                    case PROFILE_TABLE_FILTER_CHANGED:
+                        if (selectedResult != null) {
+                            String filterForTable = view.getProfilingDataFilter();
+                            updateViewWithSelectedProfileRunData(filterForTable);
+                        }
                         break;
                     default:
                         throw new AssertionError("Unknown event: " + id);
@@ -415,9 +422,19 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     }
 
     private void updateViewWithSelectedProfileRunData() {
+        updateViewWithSelectedProfileRunData(null);
+    }
+
+    private void updateViewWithSelectedProfileRunData(String filterForTable) {
         switch (lastTabSelection) {
             case TABLE_TAB_SELECTED:
-                view.setProfilingDetailData(selectedResult);
+                ProfilingResult result;
+                if (filterForTable == null) {
+                    result = selectedResult;
+                } else {
+                    result = filterResult(filterForTable, selectedResult);
+                }
+                view.setProfilingDetailData(result);
                 break;
             case TREEMAP_TAB_SELECTED:
                 treeMapView.display(selectedResult);
@@ -425,6 +442,17 @@ public class VmProfileController implements InformationServiceController<VmRef> 
             default:
                 throw new AssertionError("Unknown selection: " + lastTabSelection);
         }
+    }
+
+    private ProfilingResult filterResult(String filter, ProfilingResult result) {
+        List<MethodInfo> completeList = result.getMethodInfo();
+        List<MethodInfo> filteredList = new ArrayList<>();
+        for (MethodInfo method : completeList) {
+            if (method.decl.getName().contains(filter)) {
+                filteredList.add(method);
+            }
+        }
+        return new ProfilingResult(filteredList);
     }
 
     @Override

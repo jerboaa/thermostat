@@ -374,6 +374,30 @@ public class VmProfileControllerTest {
     }
 
     @Test
+    public void testFiltering() throws Exception {
+        controller = createController();
+
+        final String PROFILE_DATA = "1 method1\n2 method2";
+        Profile PROFILE = new Profile(PROFILE_ID, 10, 20);
+
+        when(view.getSelectedProfile()).thenReturn(PROFILE);
+        when(profileDao.loadProfileDataById(vm, PROFILE_ID)).thenReturn(new ByteArrayInputStream(PROFILE_DATA.getBytes(StandardCharsets.UTF_8)));
+
+        ArgumentCaptor<ActionListener> profileListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addProfileActionListener(profileListenerCaptor.capture());
+        profileListenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.PROFILE_SELECTED));
+        when(view.getProfilingDataFilter()).thenReturn("method1");
+        profileListenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.PROFILE_TABLE_FILTER_CHANGED));
+
+        ArgumentCaptor<ProfilingResult> resultCaptor = ArgumentCaptor.forClass(ProfilingResult.class);
+        verify(view, times(2)).setProfilingDetailData(resultCaptor.capture());
+
+        ProfilingResult filteredResult = resultCaptor.getValue();
+        assertEquals(1, filteredResult.getMethodInfo().size());
+        assertEquals("method1", filteredResult.getMethodInfo().get(0).decl.getName());
+    }
+
+    @Test
     public void testSavesStateOnViewHidden() throws Exception {
         Map<VmRef, VmProfileController.SaveState> map = new HashMap<>();
         when(appCache.getAttribute(any(String.class))).thenReturn(map);

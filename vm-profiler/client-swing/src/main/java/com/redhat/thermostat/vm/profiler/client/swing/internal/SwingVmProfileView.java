@@ -88,6 +88,7 @@ import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.OverlayPanel;
+import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
@@ -96,6 +97,7 @@ import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
 import com.redhat.thermostat.client.swing.components.ThermostatThinScrollBar;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.client.ui.SearchProvider.SearchAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.utils.MethodDescriptorConverter.MethodDeclaration;
@@ -155,6 +157,7 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
     private ThermostatComponent contentContainer;
 
     private SpinningPanel spinner;
+    private SearchField filter;
 
     static class ProfileItemRenderer extends DefaultListCellRenderer {
 
@@ -346,6 +349,15 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
     }
 
     private JComponent createInformationPanel() {
+        filter = new SearchField();
+        filter.setLabel(translator.localize(LocaleResources.PROFILER_RESULTS_FILTER_HINT));
+        filter.addSearchListener(new ActionListener<SearchAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<SearchAction> actionEvent) {
+                fireProfileAction(ProfileAction.PROFILE_TABLE_FILTER_CHANGED);
+            }
+        });
+
         Vector<String> columnNames = new Vector<>();
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_METHOD).getContents());
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_PERCENTAGE_TIME).getContents());
@@ -390,10 +402,13 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
         profileTable.getRowSorter().setSortKeys(sortKeys);
 
         profileTable.setName(PROFILE_TABLE_NAME);
-
         JScrollPane scrollPaneProfileTable = profileTable.wrap();
-        tabPane.addTab(translator.localize(LocaleResources.PROFILER_RESULTS_TABLE).getContents(),
-                scrollPaneProfileTable);
+
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.add(filter, BorderLayout.PAGE_START);
+        tablePanel.add(scrollPaneProfileTable, BorderLayout.CENTER);
+
+        tabPane.addTab(translator.localize(LocaleResources.PROFILER_RESULTS_TABLE).getContents(), tablePanel);
 
         JPanel pane = new JPanel();
         pane.setLayout(new BorderLayout());
@@ -527,6 +542,21 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
                         throw new AssertionError("Selection is empty");
                     }
                     return profileList.getSelectedValue();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public String getProfilingDataFilter() {
+        try {
+            return new EdtHelper().callAndWait(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    return filter.getSearchText();
                 }
             });
         } catch (InvocationTargetException | InterruptedException e) {

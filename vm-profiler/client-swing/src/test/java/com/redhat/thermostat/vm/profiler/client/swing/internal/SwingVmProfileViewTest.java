@@ -40,7 +40,9 @@ import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.swing.components.ThermostatTableRenderer;
+import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.internal.test.Bug;
 import com.redhat.thermostat.common.utils.MethodDescriptorConverter;
@@ -67,6 +69,7 @@ import org.fest.swing.fixture.JLabelFixture;
 import org.fest.swing.fixture.JListFixture;
 import org.fest.swing.fixture.JTabbedPaneFixture;
 import org.fest.swing.fixture.JTableFixture;
+import org.fest.swing.fixture.JTextComponentFixture;
 import org.fest.swing.fixture.JToggleButtonFixture;
 import org.junit.After;
 import org.junit.Before;
@@ -74,6 +77,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -108,6 +112,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.atLeastOnce;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -335,7 +340,6 @@ public class SwingVmProfileViewTest {
         assertTrue(methodNames.contains("double bar(double)"));
     }
 
-
     @GUITest
     @Test
     public void testMethodsWithLargestExecutionTimeAppearFirst() throws InvocationTargetException, InterruptedException {
@@ -361,6 +365,26 @@ public class SwingVmProfileViewTest {
         assertEquals("int foo(int)", stripHtml(contents[0][METHOD_NAME_INDEX].toString()));
         assertEquals("double bar(int)", stripHtml(contents[1][METHOD_NAME_INDEX].toString()));
         assertEquals("double baz(double)", stripHtml(contents[2][METHOD_NAME_INDEX].toString()));
+    }
+
+    @GUITest
+    @Test
+    public void testFilterEvent() throws Exception {
+        final String SOME_TEXT = "foo bar";
+
+        @SuppressWarnings("unchecked")
+        ActionListener<ProfileAction> listener = mock(ActionListener.class);
+        view.addProfileActionListener(listener);
+        frame.show();
+
+        JTextComponentFixture searchBox = frame.textBox(SearchField.VIEW_NAME);
+        searchBox.enterText(SOME_TEXT);
+
+        ArgumentCaptor<ActionEvent> captor = ArgumentCaptor.forClass(ActionEvent.class);
+        verify(listener, atLeastOnce()).actionPerformed(captor.capture());
+        assertEquals(ProfileAction.PROFILE_TABLE_FILTER_CHANGED, captor.getValue().getActionId());
+
+        assertEquals(SOME_TEXT, view.getProfilingDataFilter());
     }
 
     @GUITest
