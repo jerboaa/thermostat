@@ -76,10 +76,10 @@ public class BytemanControlCommand extends AbstractCommand {
     public static final String COMMAND_NAME = "byteman";
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    private static final String INJECT_RULE_ACTION = "load";
-    private static final String UNLOAD_RULE_ACTION = "unload";
-    private static final String STATUS_ACTION = "status";
-    private static final String SHOW_ACTION = "show-metrics";
+    static final String INJECT_RULE_ACTION = "load";
+    static final String UNLOAD_RULE_ACTION = "unload";
+    static final String STATUS_ACTION = "status";
+    static final String SHOW_ACTION = "show-metrics";
     private static final String RULES_FILE_OPTION = "rules";
     private static final String NO_RULES_LOADED = "<no-loaded-rules>";
     private static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");

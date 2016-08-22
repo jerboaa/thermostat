@@ -43,15 +43,34 @@
             <summary>instrument a target VM with Byteman rules</summary>
             <description>
             Instrument a target VM with Byteman rules.
-            This command takes a subcommand that describes what to do.
-            'load' loads rule as specified by the command option -r 
-            into a VM. 'unload' unloads all loaded Byteman rules from a VM.
-            'status' shows the currently loaded rules for a VM. 'show-metrics'
-            displays raw metrics gathered via an injected Byteman rule.
             </description>
-            <arguments>
-            	<argument>action</argument>
-            </arguments>
+            <subcommands>
+                <subcommand>
+                    <name>load</name>
+                    <description>loads rules into a vm</description>
+                    <options>
+                        <option>
+                            <long>rules</long>
+                            <short>r</short>
+                            <argument>file</argument>
+                            <required>false</required>
+                            <description>a file with rules to load into a VM</description>
+                        </option>
+                    </options>
+                </subcommand>
+                <subcommand>
+                    <name>unload</name>
+                    <description>unloads all rules from a VM</description>
+                </subcommand>
+                <subcommand>
+                    <name>status</name>
+                    <description>show the currently loaded rules for a VM</description>
+                </subcommand>
+                <subcommand>
+                    <name>show-metrics</name>
+                    <description>displays raw metrics gathered via an injected Byteman rule</description>
+                </subcommand>
+            </subcommands>
             <options>
               <option>
                 <long>vmId</long>
@@ -59,13 +78,6 @@
                 <argument>vm</argument>
                 <required>true</required>
                 <description>the ID of the VM to instrument</description>
-              </option>
-              <option>
-                <long>rules</long>
-                <short>r</short>
-                <argument>file</argument>
-                <required>false</required>
-                <description>a file with Byteman rules to load into a VM</description>
               </option>
             </options>
             <environments>

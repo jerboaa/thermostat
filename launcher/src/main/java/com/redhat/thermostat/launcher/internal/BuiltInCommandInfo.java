@@ -39,6 +39,7 @@ package com.redhat.thermostat.launcher.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -384,6 +385,11 @@ public class BuiltInCommandInfo implements CommandInfo {
     @Override
     public Options getOptions() {
         return options;
+    }
+
+    @Override
+    public List<PluginConfiguration.Subcommand> getSubcommands() {
+        return Collections.emptyList();
     }
 
     @Override

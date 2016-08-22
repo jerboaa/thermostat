@@ -36,13 +36,16 @@
 
 package com.redhat.thermostat.vm.byteman.client.cli.internal;
 
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.redhat.thermostat.vm.byteman.client.cli.internal.BytemanCompleterService.RULES_OPTION;
@@ -68,14 +71,18 @@ public class BytemanCompleterServiceTest {
     }
 
     @Test
-    public void testProvidesOnlyOneCompleter() {
-        assertThat(completerService.getOptionCompleters().size(), is(1));
+    public void testProvidesNoTopLevelOptionCompletions() {
+        assertThat(completerService.getOptionCompleters().size(), is(0));
     }
 
     @Test
-    public void testProvidesCompletionForRulesArgument() {
-        Map<CliCommandOption, ? extends TabCompleter> map = completerService.getOptionCompleters();
-        assertThat(map.keySet(), is(equalTo(Collections.singleton(RULES_OPTION))));
+    public void testProvidesLoadSubcommandCompletionForRulesArgument() {
+        Map<String, Map<CliCommandOption, ? extends TabCompleter>> map = completerService.getSubcommandCompleters();
+        assertThat(map.keySet(), is(equalTo(Collections.singleton(BytemanControlCommand.INJECT_RULE_ACTION))));
+        Collection<Map<CliCommandOption, ? extends TabCompleter>> values = map.values();
+        assertThat(values.size(), is(1));
+        Map<CliCommandOption, ? extends TabCompleter> submap = (Map<CliCommandOption, ? extends TabCompleter>) values.toArray(new Object[1])[0];
+        assertThat(submap.keySet(), is(equalTo(Collections.singleton(BytemanCompleterService.RULES_OPTION))));
         assertThat(RULES_OPTION.getLongOpt(), is("rules"));
         assertThat(RULES_OPTION.getOpt(), is("r"));
         assertThat(RULES_OPTION.isRequired(), is(false));
@@ -83,15 +90,25 @@ public class BytemanCompleterServiceTest {
     }
 
     @Test
+    public void testProvidesOnlyLoadSubcommandCompletion() {
+        Map<String, Map<CliCommandOption, ? extends TabCompleter>> map = completerService.getSubcommandCompleters();
+        assertThat(map.size(), is(1));
+        for (String key : map.keySet()) {
+            assertThat(key, is(equalTo(BytemanControlCommand.INJECT_RULE_ACTION)));
+        }
+    }
+
+    @Test
     public void testCompleterIsNotNull() {
-        Map<CliCommandOption, ? extends TabCompleter> map = completerService.getOptionCompleters();
-        assertThat(map.get(BytemanCompleterService.RULES_OPTION), is(not(equalTo(null))));
+        Map<String, Map<CliCommandOption, ? extends TabCompleter>> map = completerService.getSubcommandCompleters();
+        assertThat(map.get(BytemanControlCommand.INJECT_RULE_ACTION).get(BytemanCompleterService.RULES_OPTION),
+                is(not(equalTo(null))));
     }
 
     @Test
     public void testProvidesNoCompletionWhenFileNameTabCompleterNotAvailable() {
         completerService.setFileNameTabCompleter(null);
-        Map<CliCommandOption, ? extends TabCompleter> map = completerService.getOptionCompleters();
+        Map<String, Map<CliCommandOption, ? extends TabCompleter>> map = completerService.getSubcommandCompleters();
         assertThat(map.isEmpty(), is(true));
     }
 

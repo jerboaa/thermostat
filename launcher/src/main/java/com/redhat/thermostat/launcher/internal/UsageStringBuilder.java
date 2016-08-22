@@ -48,12 +48,18 @@ public class UsageStringBuilder {
      * options that program will accept on the command line.
      *
      * @param name the program name
+     * @param hasSubcommands indicates whether or not this command expects subcommands
      * @param options the options accepted by this program
+     * @param positionalArguments a list of positional arguments (those not immediately following an option flag) which
+     *                            this command accepts
      * @return a String representing the usage.
      */
-    public String getUsage(String name, Options options, String... positionalArguments) {
+    public String getUsage(String name, boolean hasSubcommands, Options options, String... positionalArguments) {
         StringBuilder result = new StringBuilder();
         result.append(name);
+        if (hasSubcommands) {
+            result.append(" <subcommand>");
+        }
         // commons-cli has no support for generics, so suppress this warning.
         @SuppressWarnings("unchecked")
         Collection<Option> opts = options.getOptions();

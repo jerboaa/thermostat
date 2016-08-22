@@ -36,11 +36,13 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -48,6 +50,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
@@ -171,6 +174,73 @@ public class PluginConfigurationParserTest {
                 new BundleInformation("foo", "1.0"), new BundleInformation("bar", "1.0"), new BundleInformation("baz", "1.0"),
         };
         assertEquals(Arrays.asList(expectedBundles), newCommand.getBundles());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testConfigurationWithSubcommand() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
+                " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
+                " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\">\n" +
+                "  <commands>\n" +
+                "    <command>\n" +
+                "      <name>test</name>\n" +
+                "      <summary>summary</summary>\n" +
+                "      <description>description</description>\n" +
+                "      <subcommands>" +
+                "        <subcommand>" +
+                "          <name>subcommand</name>" +
+                "          <description>subcommand description</description>" +
+                "          <options>" +
+                "            <option>" +
+                "              <long>foo</long>" +
+                "              <short>f</short>" +
+                "              <argument>bar</argument>" +
+                "              <required>true</required>" +
+                "              <description>foo argument</description>" +
+                "            </option>" +
+                "          </options>" +
+                "        </subcommand>" +
+                "      </subcommands>" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
+                "      <bundles>\n" +
+                "        <bundle><symbolic-name>foo</symbolic-name><version>1.0</version></bundle>\n" +
+                "        <bundle><symbolic-name>bar</symbolic-name><version>1.0</version></bundle>\n" +
+                "        <bundle><symbolic-name>baz</symbolic-name><version>1.0</version></bundle>\n" +
+                "      </bundles>\n" +
+                "      <dependencies>\n" +
+                "        <dependency>thermostat-foo</dependency>\n" +
+                "      </dependencies>\n" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        List<CommandExtensions> extensions = result.getExtendedCommands();
+        assertEquals(0, extensions.size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand newCommand = newCommands.get(0);
+        List<PluginConfiguration.Subcommand> subcommands = newCommand.getSubcommands();
+        assertThat(subcommands.size(), is(1));
+        PluginConfiguration.Subcommand subcommand = subcommands.get(0);
+        assertThat(subcommand.getName(), is("subcommand"));
+        assertThat(subcommand.getDescription(), is("subcommand description"));
+        assertThat(subcommand.getOptions().getOptions().size(), is(1));
+        Option option = ((Collection<Option>) subcommand.getOptions().getOptions()).iterator().next();
+        assertThat(option.getOpt(), is("f"));
+        assertThat(option.getLongOpt(), is("foo"));
+        assertThat(option.getArgName(), is("bar"));
+        assertThat(option.isRequired(), is(true));
+        assertThat(option.getDescription(), is("foo argument"));
     }
 
     @Test

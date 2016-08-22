@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.cli.Options;
@@ -102,6 +103,7 @@ public class CompoundCommandInfoSourceTest {
         String NAME = "test-command-please-ignore";
         String DESCRIPTION = "test-description";
         String USAGE = "test-usage";
+        List<PluginConfiguration.Subcommand> SUBCOMMANDS = Collections.emptyList();
         Options OPTIONS = new Options();
         List<BundleInformation> DEPS1 = Arrays.asList(new BundleInformation("1test1", "1"), new BundleInformation("1test2", "1"));
         List<BundleInformation> DEPS2 = Arrays.asList(new BundleInformation("2test1", "1"));
@@ -111,6 +113,7 @@ public class CompoundCommandInfoSourceTest {
         when(cmdInfo1.getDescription()).thenReturn(DESCRIPTION);
         when(cmdInfo1.getUsage()).thenReturn(USAGE);
         when(cmdInfo1.getOptions()).thenReturn(OPTIONS);
+        when(cmdInfo1.getSubcommands()).thenReturn(SUBCOMMANDS);
         when(cmdInfo1.getBundles()).thenReturn(DEPS1);
 
         CommandInfo cmdInfo2 = mock(CommandInfo.class);
@@ -125,6 +128,7 @@ public class CompoundCommandInfoSourceTest {
         assertEquals(DESCRIPTION, result.getDescription());
         assertEquals(USAGE, result.getUsage());
         assertEquals(OPTIONS, result.getOptions());
+        assertEquals(SUBCOMMANDS, result.getSubcommands());
 
         ArrayList<BundleInformation> combined = new ArrayList<>(DEPS1);
         combined.addAll(DEPS2);

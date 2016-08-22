@@ -92,6 +92,11 @@ public class TestCommandInfo implements CommandInfo {
     }
 
     @Override
+    public List<PluginConfiguration.Subcommand> getSubcommands() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public Options getOptions() {
         return options;
     }

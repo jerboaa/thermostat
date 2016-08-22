@@ -113,30 +113,39 @@ public class PluginConfiguration {
     public static class NewCommand {
 
         private final String commandName;
-        private final String usage;
         private final String summary;
         private final String description;
+        private final String usage;
         private final List<String> positionalArguments;
         private final Options options;
+        private final List<Subcommand> subcommands;
         private final Set<Environment> environment;
         private final List<BundleInformation> bundles;
 
-        public NewCommand(String name, String usage, String summary, String description,
-                List<String> positionalArguments, Options options,
-                Set<Environment> environment,
-                List<BundleInformation> bundles) {
+        public NewCommand(String name, String summary, String description, String usage,
+                          List<String> positionalArguments, Options options, List<Subcommand> subcommands,
+                          Set<Environment> environment, List<BundleInformation> bundles) {
             this.commandName = name;
-            this.usage = usage;
             this.summary = summary;
             this.description = description;
+            this.usage = usage;
             this.positionalArguments = positionalArguments;
             this.options = options;
+            this.subcommands = subcommands;
             this.environment = environment;
             this.bundles = bundles;
         }
 
         public String getCommandName() {
             return commandName;
+        }
+
+        public String getSummary() {
+            return summary;
+        }
+
+        public String getDescription() {
+            return description;
         }
 
         /**
@@ -148,14 +157,6 @@ public class PluginConfiguration {
             return usage;
         }
 
-        public String getSummary() {
-            return summary;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
         /** Returns a list of strings indicating positional arguments */
         public List<String> getPositionalArguments() {
             return positionalArguments;
@@ -164,6 +165,10 @@ public class PluginConfiguration {
         /** Returns options (both optional and required) */
         public Options getOptions() {
             return options;
+        }
+
+        public List<Subcommand> getSubcommands() {
+            return subcommands;
         }
 
         /** Returns the environments where this command is available to be used */
@@ -231,6 +236,30 @@ public class PluginConfiguration {
         }
         public String getFullFilePath(String fileName) {
             return fileNames.get(fileName);
+        }
+    }
+
+    public static class Subcommand {
+        private final String name;
+        private final String description;
+        private final Options options;
+
+        public Subcommand(String name, String description, Options options) {
+            this.name = name;
+            this.description = description;
+            this.options = options;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public Options getOptions() {
+            return options;
         }
     }
 }

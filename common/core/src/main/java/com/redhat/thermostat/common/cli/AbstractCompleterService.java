@@ -36,9 +36,16 @@
 
 package com.redhat.thermostat.common.cli;
 
+import java.util.Collections;
+import java.util.Map;
+
 /**
- * An abstract {@link CompleterService} implementation which simply adds facilities for easy
+ * An abstract {@link CompleterService} implementation which adds facilities for easy
  * dependency tracking.
+ *
+ * Default (empty) implementations are provided for {@link #getOptionCompleters()} and
+ * {@link #getSubcommandCompleters()} since not all implementations have reason to implement
+ * both of these.
  *
  * May be useful for CompleterServices which require access to a resource like a DAO to perform
  * their duties. In this situation, consider also passing the DependencyServices instance
@@ -47,7 +54,15 @@ package com.redhat.thermostat.common.cli;
  */
 public abstract class AbstractCompleterService implements CompleterService {
 
-    protected DependencyServices dependencyServices = new DependencyServices();
+    protected final DependencyServices dependencyServices;
+
+    public AbstractCompleterService() {
+        this(new DependencyServices());
+    }
+
+    AbstractCompleterService(DependencyServices dependencyServices) {
+        this.dependencyServices = dependencyServices;
+    }
 
     protected <T> void setService(Class<T> klazz, T t) {
         if (t != null) {
@@ -61,4 +76,13 @@ public abstract class AbstractCompleterService implements CompleterService {
         setService(klazz, null);
     }
 
+    @Override
+    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
+        return Collections.emptyMap();
+    }
 }

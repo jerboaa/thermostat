@@ -69,16 +69,21 @@ public interface CommandInfo {
     public String getUsage();
 
     /**
-     * Environments where this command is available
-     */
-    public Set<Environment> getEnvironments();
-
-    /**
      * Returns the Options that the command is prepared to handle.
      * If the user provides unknown or malformed arguments, this command will
      * not be invoked.
      */
     public Options getOptions();
+
+    /**
+     * A list of subcommands which this command accepts.
+     */
+    public List<PluginConfiguration.Subcommand> getSubcommands();
+
+    /**
+     * Environments where this command is available
+     */
+    public Set<Environment> getEnvironments();
 
     List<BundleInformation> getBundles();
 

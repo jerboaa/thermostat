@@ -42,6 +42,7 @@ import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,11 +57,15 @@ public class BytemanCompleterService extends AbstractCompleterService {
     }
 
     @Override
-    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
+    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
         if (!dependencyServices.hasService(FileNameTabCompleter.class)) {
             return Collections.emptyMap();
         }
-        return Collections.singletonMap(RULES_OPTION, dependencyServices.getService(FileNameTabCompleter.class));
+        Map<CliCommandOption, ? extends TabCompleter> loadMap =
+                Collections.singletonMap(RULES_OPTION, dependencyServices.getService(FileNameTabCompleter.class));
+        Map<String, Map<CliCommandOption, ? extends TabCompleter>> map = new HashMap<>();
+        map.put(BytemanControlCommand.INJECT_RULE_ACTION, loadMap);
+        return map;
     }
 
     public void setFileNameTabCompleter(FileNameTabCompleter tabCompleter) {

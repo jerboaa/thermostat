@@ -42,7 +42,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -355,6 +354,7 @@ public class PluginConfigurationParser {
         String usage = null;
         String summary = null;
         String description = null;
+        List<PluginConfiguration.Subcommand> subcommands = new ArrayList<>();
         List<String> arguments = new ArrayList<>();
         Options options = new Options();
         Set<Environment> availableInEnvironments = EnumSet.noneOf(Environment.class);
@@ -371,6 +371,8 @@ public class PluginConfigurationParser {
                 summary = node.getTextContent().trim();
             } else if (node.getNodeName().equals("description")) {
                 description = parseDescription(node);
+            } else if (node.getNodeName().equals("subcommands")) {
+                subcommands = parseSubcommands(node);
             } else if (node.getNodeName().equals("arguments")) {
                 arguments = parseArguments(pluginName, name, node);
             } else if (node.getNodeName().equals("options")) {
@@ -391,7 +393,7 @@ public class PluginConfigurationParser {
                     "name='" + name + "', summary='" + summary + ", description='" + description + "', options='" + options + "'");
             return null;
         } else {
-            return new NewCommand(name, usage, summary, description, arguments, options, availableInEnvironments, bundles);
+            return new NewCommand(name, summary, description, usage, arguments, options, subcommands, availableInEnvironments, bundles);
         }
     }
 
@@ -449,6 +451,39 @@ public class PluginConfigurationParser {
 
     private List<String> parseArguments(String pluginName, String commandName, Node argumentsNode) {
         return parseNodeAsList(pluginName, commandName, argumentsNode, "argument");
+    }
+
+    private List<PluginConfiguration.Subcommand> parseSubcommands(Node subcommandsNode) {
+        List<PluginConfiguration.Subcommand> list = new ArrayList<>();
+        NodeList nodes = subcommandsNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("subcommand")) {
+                PluginConfiguration.Subcommand subcommand = parseSubcommand(node);
+                if (subcommand != null) {
+                    list.add(subcommand);
+                }
+            }
+        }
+        return list;
+    }
+
+    private PluginConfiguration.Subcommand parseSubcommand(Node subcommandNode) {
+        String name = null;
+        String description = null;
+        Options options = new Options();
+        NodeList nodes = subcommandNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("name")) {
+                name = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("description")) {
+                description = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("options")) {
+                options = parseOptions(node);
+            }
+        }
+        return new PluginConfiguration.Subcommand(name, description, options);
     }
 
     private Options parseOptions(Node optionsNode) {

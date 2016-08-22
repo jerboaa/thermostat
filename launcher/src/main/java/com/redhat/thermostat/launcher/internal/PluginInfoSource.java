@@ -170,13 +170,14 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
 
             String usage = command.getUsage();
             if (usage == null) {
-                usage = usageBuilder.getUsage(commandName, command.getOptions(), command.getPositionalArguments().toArray(new String[0]));
+                usage = usageBuilder.getUsage(commandName, !command.getSubcommands().isEmpty(), command.getOptions(),
+                        command.getPositionalArguments().toArray(new String[0]));
             }
             BasicCommandInfo info = new BasicCommandInfo(commandName,
                     command.getSummary(),
                     command.getDescription(),
                     usage,
-                    command.getOptions(),
+                    command.getOptions(), command.getSubcommands(),
                     command.getEnvironments(),
                     command.getBundles()
             );
@@ -199,7 +200,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
                         old.getSummary(),
                         old.getDescription(),
                         old.getUsage(),
-                        old.getOptions(),
+                        old.getOptions(), old.getSubcommands(),
                         old.getEnvironments(),
                         updatedBundles
                 );
@@ -232,7 +233,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
     }
 
     private BasicCommandInfo createCommandInfo(String name, List<BundleInformation> bundles) {
-        return new BasicCommandInfo(name, null, null, null, null, null, bundles);
+        return new BasicCommandInfo(name, null, null, null, null, null, null, bundles);
     }
 
     public Map<String, String> getConfiguration(String pluginID, String fileName) throws IOException {

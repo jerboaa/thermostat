@@ -57,15 +57,17 @@ public class BasicCommandInfoTest {
         final String DESCRIPTION = "some-description";
         final String USAGE = "some-usage";
         final Options OPTIONS = new Options();
+        final List<PluginConfiguration.Subcommand> SUBCOMMANDS = Collections.emptyList();
         final Set<Environment> ENVIRONMENT = EnumSet.noneOf(Environment.class);
         final List<BundleInformation> BUNDLES = Collections.emptyList();
 
-        BasicCommandInfo info = new BasicCommandInfo(NAME, SUMMARY, DESCRIPTION, USAGE, OPTIONS, ENVIRONMENT, BUNDLES);
+        BasicCommandInfo info = new BasicCommandInfo(NAME, SUMMARY, DESCRIPTION, USAGE, OPTIONS, SUBCOMMANDS, ENVIRONMENT, BUNDLES);
 
         assertEquals(NAME, info.getName());
         assertEquals(SUMMARY, info.getSummary());
         assertEquals(DESCRIPTION, info.getDescription());
         assertEquals(USAGE, info.getUsage());
+        assertEquals(SUBCOMMANDS, info.getSubcommands());
         assertEquals(OPTIONS, info.getOptions());
         assertEquals(BUNDLES, info.getBundles());
 

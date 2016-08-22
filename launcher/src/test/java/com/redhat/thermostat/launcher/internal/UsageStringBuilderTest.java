@@ -58,7 +58,7 @@ public class UsageStringBuilderTest {
     @Test
     public void verifyUsageWithNoOptions() {
         Options options = new Options();
-        String usage = builder.getUsage("test", options);
+        String usage = builder.getUsage("test", false, options);
         assertEquals("test", usage);
     }
 
@@ -69,7 +69,7 @@ public class UsageStringBuilderTest {
         Options options = new Options();
         options.addOption(a);
 
-        String usage = builder.getUsage("test", options);
+        String usage = builder.getUsage("test", false, options);
         assertEquals("test [-a]", usage);
     }
 
@@ -83,7 +83,7 @@ public class UsageStringBuilderTest {
         Option b = new Option("b", "bee", false, "another thing");
         options.addOption(b);
 
-        String usage = builder.getUsage("test", options);
+        String usage = builder.getUsage("test", false, options);
         String[] parts = usage.split(" ");
         assertEquals(3, parts.length);
         assertEquals("test", parts[0]);
@@ -99,7 +99,7 @@ public class UsageStringBuilderTest {
         a.setArgName("aaah");
         options.addOption(a);
 
-        String usage = builder.getUsage("test", options);
+        String usage = builder.getUsage("test", false, options);
         assertEquals("test [-a <aaah>]", usage);
     }
 
@@ -110,7 +110,7 @@ public class UsageStringBuilderTest {
         Options options = new Options();
         options.addOption(a);
 
-        String usage = builder.getUsage("test", options);
+        String usage = builder.getUsage("test", false, options);
         assertEquals("test -a", usage);
     }
 
@@ -130,7 +130,7 @@ public class UsageStringBuilderTest {
         c.setRequired(false);
         options.addOption(c);
 
-        String usage = builder.getUsage("test", options);
+        String usage = builder.getUsage("test", false, options);
         assertEquals("test -a [-b] [-c]", usage);
     }
 
@@ -138,7 +138,7 @@ public class UsageStringBuilderTest {
     public void verifyPositionArgumentsAreIncluded() {
         Options options = new Options();
 
-        String usage = builder.getUsage("test", options, "agent-id", "vm-id");
+        String usage = builder.getUsage("test", false, options, "agent-id", "vm-id");
         assertEquals("test agent-id vm-id", usage);
     }
 
@@ -150,8 +150,38 @@ public class UsageStringBuilderTest {
         a.setRequired(true);
         options.addOption(a);
 
-        String usage = builder.getUsage("test", options, "agent-id", "vm-id");
+        String usage = builder.getUsage("test", false, options, "agent-id", "vm-id");
         assertEquals("test -a agent-id vm-id", usage);
+    }
+
+    @Test
+    public void verifySubcommandsPlaceholderIsShownIfApplicable() {
+        Options options = new Options();
+
+        String usage = builder.getUsage("test", true, options);
+        assertEquals("test <subcommand>", usage);
+    }
+
+    @Test
+    public void verifySubcommandsPlaceholderIsNotShownIfNotApplicable() {
+        Options options = new Options();
+
+        String usage = builder.getUsage("test", false, options);
+        assertEquals("test", usage);
+    }
+
+    @Test
+    public void verifySubcommandsPlaceholderIsShownBetweenCommandAndOptions() {
+        Options options = new Options();
+
+        Option a = new Option("a", "something");
+        a.setRequired(true);
+        a.setArgName("agentId");
+        a.setArgs(1);
+        options.addOption(a);
+
+        String usage = builder.getUsage("test", true, options, "fileName");
+        assertEquals("test <subcommand> -a <agentId> fileName", usage);
     }
 }
 

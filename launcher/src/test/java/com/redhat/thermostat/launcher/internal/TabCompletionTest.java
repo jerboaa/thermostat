@@ -51,7 +51,9 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -108,6 +110,13 @@ public class TabCompletionTest {
         completerMap.put(new CliCommandOption("l", "long", true, "long option", false), completer);
         completerMap.put(new CliCommandOption("s", "short", true, "short option", false), completer);
         when(service.getOptionCompleters()).thenReturn(completerMap);
+        Map subcommandMap = new HashMap();
+        String subcommand = "sub";
+        Map subcommandOptionMap = new HashMap();
+        CliCommandOption subcommandOption = new CliCommandOption("f", "foo", true, "foo option", false);
+        subcommandOptionMap.put(subcommandOption, completer);
+        subcommandMap.put(subcommand, subcommandOptionMap);
+        when(service.getSubcommandCompleters()).thenReturn(subcommandMap);
 
         tabCompletion.addCompleterService(service);
 
@@ -124,6 +133,14 @@ public class TabCompletionTest {
                 assertThat(branch.getBranches().isEmpty(), is(false));
             } else if (branch.getTag().equals("--help")) {
                 // pass
+            } else if (branch.getTag().equals("sub")) {
+                List<TreeCompleter.Node> subBranches = branch.getBranches();
+                Set<String> expected = new HashSet<>(Arrays.asList("--long", "-l", "--short", "-s"));
+                Set<String> actual = new HashSet<>();
+                for (TreeCompleter.Node n : subBranches) {
+                    actual.add(n.getTag());
+                }
+                assertThat(actual, is(equalTo(expected)));
             } else {
                 fail("should not reach here. branch tag: " + branch.getTag());
             }
@@ -158,6 +175,10 @@ public class TabCompletionTest {
                 assertThat(branch.getBranches().isEmpty(), is(true));
             } else if (branch.getTag().equals("--help")) {
                 // pass
+            } else if (branch.getTag().equals("sub")) {
+                for (TreeCompleter.Node subcommandCompletionNode : branch.getBranches()) {
+                    assertThat(subcommandCompletionNode.getBranches().isEmpty(), is(true));
+                }
             } else {
                 fail("should not reach here");
             }
@@ -246,10 +267,16 @@ public class TabCompletionTest {
         options.addOption("s", "short", true, "short option");
         options.addOption("l", "long", true, "long option");
 
+        PluginConfiguration.Subcommand subcommand = mock(PluginConfiguration.Subcommand.class);
+        when(subcommand.getName()).thenReturn("sub");
+        when(subcommand.getDescription()).thenReturn("description");
+        when(subcommand.getOptions()).thenReturn(options);
+
         CommandInfo mockCommand = mock(CommandInfo.class);
         when(mockCommand.getName()).thenReturn("mock-command");
         when(mockCommand.getBundles()).thenReturn(Collections.<BundleInformation>emptyList());
         when(mockCommand.getDescription()).thenReturn("description");
+        when(mockCommand.getSubcommands()).thenReturn(Collections.singletonList(subcommand));
         when(mockCommand.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
         when(mockCommand.getOptions()).thenReturn(options);
 

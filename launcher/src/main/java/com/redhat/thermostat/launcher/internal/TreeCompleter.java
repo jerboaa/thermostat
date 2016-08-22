@@ -327,6 +327,12 @@ public class TreeCompleter implements TabCompleter {
             return restartNode;
         }
 
+        @Override
+        public String toString() {
+            return "Node{" +
+                    "tag='" + tag + '\'' +
+                    '}';
+        }
     }
 
     /**

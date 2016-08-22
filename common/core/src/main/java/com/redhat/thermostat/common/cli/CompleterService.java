@@ -52,6 +52,8 @@ import java.util.Set;
  * -v/--vmId option in your thermostat-plugin.xml will give you automagic vmId completions in Thermostat shell.
  * Likewise, -a/--agentId, -d/--dbUrl, and -f/--filename completions are provided if you simply include these options
  * in your XML.
+ *
+ * @see AbstractCompleterService
  */
 @ExtensionPoint
 public interface CompleterService {
@@ -68,5 +70,13 @@ public interface CompleterService {
      * @return the map
      */
     Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters();
+
+    /**
+     * Provides the mapping of subcommand options to corresponding completers.
+     * The String key is the name of the subcommand; the Map value is a map of options to completers, the same as in
+     * {@link #getOptionCompleters()}.
+     * @return the map
+     */
+    Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters();
 
 }

@@ -44,8 +44,10 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
@@ -146,6 +148,14 @@ public class HelpCommandTest {
         when(testCommandInfo.getOptions()).thenReturn(new Options());
         when(testCommandInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
 
+        PluginConfiguration.Subcommand subcommand = mock(PluginConfiguration.Subcommand.class);
+        when(subcommand.getName()).thenReturn("subcommand");
+        when(subcommand.getDescription()).thenReturn("subcommand description");
+        Options subOptions = new Options();
+        subOptions.addOption(new Option("f", "foo argument"));
+        when(subcommand.getOptions()).thenReturn(subOptions);
+        when(testCommandInfo.getSubcommands()).thenReturn(Collections.singletonList(subcommand));
+
         when(infos.getCommandInfo("test1")).thenReturn(testCommandInfo);
 
         HelpCommand cmd = new HelpCommand();
@@ -159,7 +169,12 @@ public class HelpCommandTest {
                      "                  description of test command\n" +
                      "Note: this command is only supported outside the shell\n" +
                      "thermostat test1\n" +
-                     "     --help    show usage of command\n", actual);
+                     "     --help    show usage of command\n\n" +
+                     "Subcommands:\n" +
+                     "\n" +
+                     "subcommand:\n" +
+                     "subcommand description\n" +
+                     "  -f    foo argument\n\n", actual);
     }
 
     @Test

@@ -49,16 +49,19 @@ public class BasicCommandInfo implements CommandInfo {
     private final String summary;
     private final String description;
     private final String usage;
+    private final List<PluginConfiguration.Subcommand> subcommands;
     private final Options options;
     private final Set<Environment> environments;
     private final List<BundleInformation> bundles;
 
-    public BasicCommandInfo(String name, String summary, String description, String usage, Options options, Set<Environment> environments, List<BundleInformation> bundles) {
+    public BasicCommandInfo(String name, String summary, String description, String usage, Options options, List<PluginConfiguration.Subcommand> subcommands,
+                            Set<Environment> environments, List<BundleInformation> bundles) {
         this.name = name;
         this.summary = summary;
         this.description = description;
         this.usage = usage;
         this.options = options;
+        this.subcommands = subcommands;
         this.environments = environments;
         this.bundles = bundles;
     }
@@ -86,6 +89,11 @@ public class BasicCommandInfo implements CommandInfo {
     @Override
     public Options getOptions() {
         return options;
+    }
+
+    @Override
+    public List<PluginConfiguration.Subcommand> getSubcommands() {
+        return subcommands;
     }
 
     @Override

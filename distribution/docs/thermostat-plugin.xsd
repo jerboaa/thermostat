@@ -93,14 +93,34 @@
       <xs:element ref="usage" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="summary"/>
       <xs:element ref="description"/>
+      <xs:element ref="subcommands" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="arguments" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="options" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="environments"/>
       <xs:element ref="bundles"/>
     </xs:sequence>
   </xs:complexType>
-</xs:element> 
+</xs:element>
 
+
+<xs:element name="subcommands">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="subcommand" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="subcommand">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="name"/>
+      <xs:element ref="description"/>
+      <xs:element ref="options" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
 
 <xs:element name="arguments">
   <xs:complexType>

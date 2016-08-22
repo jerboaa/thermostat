@@ -42,7 +42,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
@@ -154,8 +153,9 @@ public class HelpCommand extends AbstractCommand  {
 
     private void printHelp(CommandContext ctx, CommandInfo info) {
         HelpFormatter helpFormatter = new HelpFormatter();
-        
+
         PrintWriter pw = new PrintWriter(ctx.getConsole().getOutput());
+
         Options options = info.getOptions();
         String usage = APP_NAME + " " + info.getUsage() + "\n" + info.getDescription();
         String header = "";
@@ -166,6 +166,22 @@ public class HelpCommand extends AbstractCommand  {
         Option help = CommonOptions.getHelpOption();
         options.addOption(help);
         helpFormatter.printHelp(pw, 80, usage, header, options, 2, 4, null);
+
+        if (!info.getSubcommands().isEmpty()) {
+            pw.println();
+            helpFormatter.printWrapped(pw, 80, translator.localize(LocaleResources.SUBCOMMANDS_SECTION_HEADER).getContents());
+            pw.println();
+            for (PluginConfiguration.Subcommand subcommand : info.getSubcommands()) {
+                pw.println(translator.localize(LocaleResources.SUBCOMMAND_ENTRY_HEADER, subcommand.getName()).getContents());
+                pw.println(subcommand.getDescription());
+                Options o = subcommand.getOptions();
+                helpFormatter.printOptions(pw, 80, o, 2, 4);
+                if (!o.getOptions().isEmpty()) {
+                    pw.println();
+                }
+            }
+        }
+
         pw.flush();
     }
 

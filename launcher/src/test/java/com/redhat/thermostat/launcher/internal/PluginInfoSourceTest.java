@@ -204,7 +204,7 @@ public class PluginInfoSourceTest {
         NewCommand cmd = mock(NewCommand.class);
         when(cmd.getCommandName()).thenReturn(NAME);
         when(cmd.getDescription()).thenReturn(DESCRIPTION);
-        when(usageBuilder.getUsage(NAME, OPTIONS)).thenReturn(USAGE);
+        when(usageBuilder.getUsage(NAME, false, OPTIONS)).thenReturn(USAGE);
         when(cmd.getOptions()).thenReturn(OPTIONS);
         when(cmd.getEnvironments()).thenReturn(ENVIRONMENTS);
         when(cmd.getBundles()).thenReturn(Arrays.asList(bundleInfo));
