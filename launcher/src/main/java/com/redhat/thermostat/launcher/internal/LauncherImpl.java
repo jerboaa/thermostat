@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -347,6 +348,11 @@ public class LauncherImpl implements Launcher {
             }
         }
         Options options = cmdInfo.getOptions();
+        for (PluginConfiguration.Subcommand subcommand : cmdInfo.getSubcommands()) {
+            for (Option option : (Collection<Option>) subcommand.getOptions().getOptions()) {
+                options.addOption(option);
+            }
+        }
         Arguments args = null;
         try {
             args = parseCommandArguments(cmdArgs, options);

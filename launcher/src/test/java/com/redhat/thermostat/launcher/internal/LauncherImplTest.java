@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -104,7 +105,8 @@ public class LauncherImplTest {
     private static final String name3 = "test3";
     private static final String name4 = "test4";
     private static SecurityManager secMan;
-    
+    private CommandInfo info1;
+
     @BeforeClass
     public static void beforeClassSetUp() {
         // Launcher calls System.exit(). This causes issues for unit testing.
@@ -159,7 +161,7 @@ public class LauncherImplTest {
         setupCommandContextFactory();
 
         TestCommand cmd1 = new TestCommand(new TestCmd1());
-        CommandInfo info1 = mock(CommandInfo.class);
+        info1 = mock(CommandInfo.class);
         when(info1.getName()).thenReturn(name1);
         when(info1.getUsage()).thenReturn(name1 + " <--arg1 <arg>> [--arg2 <arg>]");
         Options options1 = new Options();
@@ -385,6 +387,22 @@ public class LauncherImplTest {
             + " test3         description 3\n"
             + " test4         description 4\n";
         runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected, false);
+    }
+
+    @Test
+    public void testSubcommandOptionRecognized() {
+        PluginConfiguration.Subcommand subInfo = mock(PluginConfiguration.Subcommand.class);
+        when(subInfo.getName()).thenReturn("sub");
+        when(subInfo.getDescription()).thenReturn("subcommand description");
+
+        Options subOptions = mock(Options.class);
+        Option optOption = new Option("o", "opt", false, "mock opt option");
+        when(subOptions.getOptions()).thenReturn(Collections.singleton(optOption));
+        when(subInfo.getOptions()).thenReturn(subOptions);
+
+        when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
+        String expected = "foo, bar";
+        runAndVerifyCommand(new String[] {"test1", "sub", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected, false);
     }
 
     @Test
