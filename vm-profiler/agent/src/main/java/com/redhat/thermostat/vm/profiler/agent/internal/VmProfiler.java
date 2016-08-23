@@ -141,9 +141,11 @@ public class VmProfiler {
 
         if (!vmsWithAgentLoaded.contains((Integer)pid)) {
             String jarsToLoad = agentJarPath;
-            logger.info("Asking " + pid + " to load agent '" + agentJarPath + "' with arguments '" + jarsToLoad + "'");
+            String agentArgs = jarsToLoad;
+            logger.info("Asking " + pid + " to load java.lang.Instrument agent '" + agentJarPath + "' with arguments '" + agentArgs + "'");
 
-            remote.loadAgentIntoPid(pid, agentJarPath, jarsToLoad);
+            // agentArgs is passed as arguments to agentmain() and premain() in c.r.t.vm.profiler.agent.jvm.ProfilerAgent
+            remote.loadAgentIntoPid(pid, agentJarPath, agentArgs);
             vmsWithAgentLoaded.add(pid);
         }
 

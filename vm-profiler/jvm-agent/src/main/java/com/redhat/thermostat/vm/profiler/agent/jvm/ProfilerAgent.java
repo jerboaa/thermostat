@@ -56,10 +56,12 @@ import java.util.jar.JarFile;
  */
 public class ProfilerAgent {
 
+    // Called by the JVM
     public static void premain(String agentArgs, Instrumentation instrumentation) {
         initializeAgent(agentArgs, instrumentation);
     }
 
+    // Called by the JVM
     public static void agentmain(String agentArgs, Instrumentation instrumentation) {
         initializeAgent(agentArgs, instrumentation);
     }
