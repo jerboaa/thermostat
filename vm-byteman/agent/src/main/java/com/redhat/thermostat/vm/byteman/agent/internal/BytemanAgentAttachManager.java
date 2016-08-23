@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.byteman.agent.internal;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,7 +66,9 @@ class BytemanAgentAttachManager {
     private static final String BYTEMAN_HELPER_DIR = BYTEMAN_PLUGIN_LIBS_DIR + File.separator + "thermostat-helper";
     private static final String BYTEMAN_HOME_PROPERTY = "org.jboss.byteman.home";
     private static final Logger logger = LoggingUtils.getLogger(BytemanAgentAttachManager.class);
+    
     // package-private for testing
+    static final String THERMOSTAT_HELPER_SOCKET_NAME_PROPERTY = "org.jboss.byteman.thermostat.socketName";
     static List<String> helperJars;
     
     private final SubmitHelper submit;
@@ -94,16 +97,11 @@ class BytemanAgentAttachManager {
             logger.warning("Failed to attach byteman agent for VM '" + vmPid + "'. Skipping rule updater and IPC channel.");
             return null;
         }
-        if (info.isAttachFailedNoSuchProcess()) {
-            logger.finest("Process with pid " + vmPid + " went away before we could attach the byteman agent to it.");
-            return null;
-        }
-        logger.fine("Attached byteman agent to VM '" + vmPid + "' at port: '" + info.getAgentListenPort());
-        if (!addThermostatHelperJarsToClasspath(info)) {
-            logger.warning("VM '" + vmPid + "': Failed to add helper jars to target VM's classpath.");
-            return null;
-        }
         VmSocketIdentifier socketId = new VmSocketIdentifier(vmId.get(), vmPid, writerId.getWriterID());
+        boolean postAttachGood = performPostAttachSteps(info, socketId);
+        if (!postAttachGood) {
+            return null;
+        }
         ThermostatIPCCallbacks callback = new BytemanMetricsReceiver(vmBytemanDao, socketId);
         ipcManager.startIPCEndpoint(socketId, callback);
         // Add a status record to storage
@@ -115,6 +113,26 @@ class BytemanAgentAttachManager {
         return status;
     }
     
+    private boolean performPostAttachSteps(BytemanAgentInfo info, VmSocketIdentifier socketId) {
+        if (info.isAttachFailedNoSuchProcess()) {
+            logger.finest("Process with pid " + info.getVmPid() + " went away before we could attach the byteman agent to it.");
+            return false;
+        }
+        if (info.isOldAttach()) {
+            logger.finest("Proceeding with post-attach steps for already attached byteman agent");
+            Properties properties = new Properties();
+            properties.setProperty(THERMOSTAT_HELPER_SOCKET_NAME_PROPERTY, socketId.getName());
+            return submit.setSystemProperties(properties, info);
+        } else {
+            logger.fine("Attached byteman agent to VM '" + info.getVmPid() + "' at port: '" + info.getAgentListenPort());
+            boolean addJarsSuccess = addThermostatHelperJarsToClasspath(info);
+            if (!addJarsSuccess) {
+                logger.warning("VM '" + info.getVmPid() + "': Failed to add helper jars to target VM's classpath.");
+            }
+            return addJarsSuccess;
+        }
+    }
+
     private boolean addThermostatHelperJarsToClasspath(BytemanAgentInfo info) {
         return submit.addJarsToSystemClassLoader(helperJars, info);
     }
@@ -174,6 +192,18 @@ class BytemanAgentAttachManager {
             try {
                 String addJarsResult = submit.addJarsToSystemClassloader(jars);
                 logger.fine("Added jars for byteman helper with result: " + addJarsResult);
+                return true;
+            } catch (Exception e) {
+                logger.log(Level.INFO, e.getMessage(), e);
+                return false;
+            }
+        }
+        
+        boolean setSystemProperties(Properties properties, BytemanAgentInfo info) {
+            Submit submit = new Submit(null /* localhost */, info.getAgentListenPort());
+            try {
+                String result = submit.setSystemProperties(properties);
+                logger.fine("Re-set system properties with result: " + result);
                 return true;
             } catch (Exception e) {
                 logger.log(Level.INFO, e.getMessage(), e);

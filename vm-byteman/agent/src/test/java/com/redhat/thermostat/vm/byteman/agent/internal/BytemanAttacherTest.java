@@ -58,6 +58,7 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.agent.utils.ProcessChecker;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
+import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.InstallResult;
 
 public class BytemanAttacherTest {
     
@@ -102,6 +103,8 @@ public class BytemanAttacherTest {
     @Test
     public void attachSetsAppropriateProperties() throws Exception {
         BtmInstallHelper installer = mock(BtmInstallHelper.class);
+        when(installer.install(any(String.class), any(boolean.class), any(boolean.class), any(String.class), any(int.class), any(String[].class)))
+            .thenReturn(new InstallResult(8888, true));
         ArgumentCaptor<String[]> propsCaptor = ArgumentCaptor.forClass(String[].class);
         BytemanAttacher attacher = new BytemanAttacher(installer, processChecker, paths);
         attacher.attach("testVmId", 9999, "fooAgent");
@@ -119,6 +122,23 @@ public class BytemanAttacherTest {
         assertTrue(properties.containsKey(BYTEMAN_TRANSFORM_JAVA_LANG_PROPERTY));
         boolean isTransformAll = Boolean.parseBoolean(properties.get(BYTEMAN_TRANSFORM_JAVA_LANG_PROPERTY));
         assertTrue(isTransformAll);
+    }
+    
+    /*
+     * Tests whether an old byteman agent attached by a previous thermostat
+     * agent run can be re-used when the JVM persists
+     */
+    @Test
+    public void canReuseOldAttach() throws Exception {
+        int port = 39203;
+        BtmInstallHelper installer = mock(BtmInstallHelper.class);
+        when(installer.install(any(String.class), any(boolean.class), any(boolean.class), any(String.class), any(int.class), any(String[].class)))
+            .thenReturn(new InstallResult(port, true));
+        BytemanAttacher attacher = new BytemanAttacher(installer, mock(ProcessChecker.class), paths);
+        
+        int somePid = 3222;
+        BytemanAgentInfo info = attacher.attach("someVmId", somePid, "someAgent");
+        assertTrue(info.isOldAttach());
     }
     
     /*

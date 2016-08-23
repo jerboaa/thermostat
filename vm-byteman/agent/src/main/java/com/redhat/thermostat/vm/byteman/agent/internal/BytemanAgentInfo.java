@@ -46,14 +46,16 @@ class BytemanAgentInfo {
     private final String vmId;
     private final String writerId;
     private final boolean isAttachFailedNoProc;
+    private final boolean isOldAttach;
     
-    BytemanAgentInfo(int vmPid, int agentListenPort, String listenHost, String vmId, String writerId, boolean isAttachFailedNoProc) {
+    BytemanAgentInfo(int vmPid, int agentListenPort, String listenHost, String vmId, String writerId, boolean isAttachFailedNoProc, boolean isOldAttach) {
         this.agentListenPort = agentListenPort;
         this.listenHost = listenHost;
         this.vmPid = vmPid;
         this.vmId = vmId;
         this.writerId = writerId;
         this.isAttachFailedNoProc = isAttachFailedNoProc;
+        this.isOldAttach = isOldAttach;
     }
 
     int getVmPid() {
@@ -80,6 +82,10 @@ class BytemanAgentInfo {
         return isAttachFailedNoProc;
     }
     
+    boolean isOldAttach() {
+        return isOldAttach;
+    }
+    
     @Override
     public boolean equals(Object other) {
         if (other == null) {
@@ -94,11 +100,12 @@ class BytemanAgentInfo {
                 Objects.equals(vmPid, o.vmPid) &&
                 Objects.equals(vmId, o.vmId) &&
                 Objects.equals(writerId, o.writerId) &&
-                Objects.equals(isAttachFailedNoProc, o.isAttachFailedNoProc);
+                Objects.equals(isAttachFailedNoProc, o.isAttachFailedNoProc) &&
+                Objects.equals(isOldAttach, o.isOldAttach);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(agentListenPort, listenHost, vmPid, vmId, writerId, isAttachFailedNoProc);
+        return Objects.hash(agentListenPort, listenHost, vmPid, vmId, writerId, isAttachFailedNoProc, isOldAttach);
     }
 }

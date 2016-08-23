@@ -92,11 +92,12 @@ class BytemanAttacher {
             VmSocketIdentifier sockIdentifier = new VmSocketIdentifier(vmId, pid, agentId);
             String[] btmInstallProps = buildBytemanInstallProps(sockIdentifier, port);
             boolean agentJarToBootClassPath = true;
-            int actualPort = installer.install(Integer.toString(pid), agentJarToBootClassPath, false, null /* localhost */, port, btmInstallProps);
+            InstallResult result = installer.install(Integer.toString(pid), agentJarToBootClassPath, false, null /* localhost */, port, btmInstallProps);
+            int actualPort = result.getPort();
             // Port might have changed here if agent rebooted and targed jvm
             // stayed alive
             if (actualPort > 0) {
-                return new BytemanAgentInfo(pid, actualPort, null, vmId, agentId, false);
+                return new BytemanAgentInfo(pid, actualPort, null, vmId, agentId, false, result.isOldAttach());
             } else {
                 return null;
             }
@@ -107,7 +108,7 @@ class BytemanAttacher {
             return handleAttachFailure(e, vmId, port, pid);
         } catch (IOException e) {
             if (!processChecker.exists(pid)) {
-                return new BytemanAgentInfo(pid, port, null, vmId, agentId, true);
+                return new BytemanAgentInfo(pid, port, null, vmId, agentId, true, false);
             }
             return handleAttachFailure(e, vmId, port, pid);
         }
@@ -151,7 +152,7 @@ class BytemanAttacher {
         
         private static final int UNKNOWN_PORT = -1;
         
-        int install(String vmPid, boolean addToBoot, boolean setPolicy, String hostname, int port, String[] properties)
+        InstallResult install(String vmPid, boolean addToBoot, boolean setPolicy, String hostname, int port, String[] properties)
                 throws IllegalArgumentException, FileNotFoundException,
                        IOException, AttachNotSupportedException,
                        AgentLoadException, AgentInitializationException {
@@ -159,17 +160,36 @@ class BytemanAttacher {
             boolean loaded = Boolean.parseBoolean(propVal);
             if (!loaded) {
                 Install.install(vmPid, addToBoot, setPolicy, hostname, port, properties);
-                return port;
+                return new InstallResult(port, false);
             } else {
                 try {
                     int oldPort = Integer.parseInt(Install.getSystemProperty(vmPid, BYTEMAN_AGENT_PORT_PROPERTY));
                     logger.finest("VM (pid: " + vmPid + "): Not installing byteman agent since one is already attached on port " + oldPort);
-                    return oldPort;
+                    return new InstallResult(oldPort, true);
                 } catch (NumberFormatException e) {
                     logger.info("VM (pid: " + vmPid + "): Has a byteman agent already attached, but it wasn't thermostat that attached it");
-                    return UNKNOWN_PORT;
+                    return new InstallResult(UNKNOWN_PORT, true);
                 }
             }
+        }
+    }
+    
+    static class InstallResult {
+        
+        private final int port;
+        private final boolean isOldAttach;
+        
+        InstallResult(int port, boolean isOldAttach) {
+            this.port = port;
+            this.isOldAttach = isOldAttach;
+        }
+        
+        boolean isOldAttach() {
+            return isOldAttach;
+        }
+        
+        int getPort() {
+            return port;
         }
     }
 }

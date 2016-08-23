@@ -45,12 +45,14 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Before;
@@ -72,7 +74,7 @@ public class BytemanAgentAttachManagerTest {
     private static final VmId SOME_VM_ID = new VmId("some-vm-id");
     private static final int SOME_VM_PID = 99910;
     private static final String SOME_AGENT_ID = "some-agent-id";
-    private static final BytemanAgentInfo SOME_SUCCESS_BYTEMAN_INFO = new BytemanAgentInfo(SOME_VM_PID, 3344, null, SOME_VM_ID.get(), SOME_AGENT_ID, false);
+    private static final BytemanAgentInfo SOME_SUCCESS_BYTEMAN_INFO = new BytemanAgentInfo(SOME_VM_PID, 3344, null, SOME_VM_ID.get(), SOME_AGENT_ID, false, false);
     
     private BytemanAgentAttachManager manager;
     private IPCEndpointsManager ipcManager;
@@ -103,7 +105,7 @@ public class BytemanAgentAttachManagerTest {
         int vmPid = 1001;
         String agentId = "working-agent-id";
         int listenPort = 9881;
-        BytemanAgentInfo bytemanAgentInfo = new BytemanAgentInfo(vmPid, listenPort, null, workingVmId, agentId, false);
+        BytemanAgentInfo bytemanAgentInfo = new BytemanAgentInfo(vmPid, listenPort, null, workingVmId, agentId, false, false);
         when(bytemanAttacher.attach(workingVmId, vmPid, agentId)).thenReturn(bytemanAgentInfo);
         
         // mock that installing of helper jars works
@@ -132,6 +134,53 @@ public class BytemanAgentAttachManagerTest {
         
         // Helper jars must have been added to classpath
         verify(submit).addJarsToSystemClassLoader(eq((List)null), eq(bytemanAgentInfo));
+        
+        assertEquals(listenPort, bytemanStatus.getListenPort());
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void canUseOldAttachedAgentStartIPCandAddsStatus() {
+        String workingVmId = "working-vm-id";
+        int vmPid = 1001;
+        String agentId = "working-agent-id";
+        int listenPort = 9881;
+        BytemanAgentInfo bytemanAgentInfo = new BytemanAgentInfo(vmPid, listenPort, null, workingVmId, agentId, false, true);
+        when(bytemanAttacher.attach(workingVmId, vmPid, agentId)).thenReturn(bytemanAgentInfo);
+        
+        // mock setting system properties' success
+        when(submit.setSystemProperties(any(Properties.class), any(BytemanAgentInfo.class))).thenReturn(true);
+        
+        VmId vmId = new VmId(workingVmId);
+        WriterID writerId = mock(WriterID.class);
+        when(writerId.getWriterID()).thenReturn(agentId);
+        manager.setWriterId(writerId);
+        VmBytemanStatus bytemanStatus = manager.attachBytemanToVm(vmId, vmPid);
+        VmSocketIdentifier socketId = new VmSocketIdentifier(workingVmId, vmPid, agentId);
+        
+        // IPC endpoint must be started
+        verify(ipcManager).startIPCEndpoint(eq(socketId), isA(BytemanMetricsReceiver.class));
+        
+        // Status should have been updated/inserted
+        ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
+        verify(vmBytemanDao).addOrReplaceBytemanStatus(statusCaptor.capture());
+        VmBytemanStatus capturedStatus = statusCaptor.getValue();
+        assertNotNull(capturedStatus);
+        assertEquals(workingVmId, capturedStatus.getVmId());
+        assertEquals(agentId, capturedStatus.getAgentId());
+        assertEquals(listenPort, capturedStatus.getListenPort());
+        assertNull(capturedStatus.getRule());
+        assertTrue(capturedStatus.getTimeStamp() > 0);
+        
+        // Helper jars must not have been added again to classpath
+        verify(submit, times(0)).addJarsToSystemClassLoader(any(List.class), any(BytemanAgentInfo.class));
+        
+        // Verify properties got set appropriately
+        ArgumentCaptor<Properties> propsCaptor = ArgumentCaptor.forClass(Properties.class);
+        verify(submit).setSystemProperties(propsCaptor.capture(), eq(bytemanAgentInfo));
+        Properties props = propsCaptor.getValue();
+        String propVal = props.getProperty(BytemanAgentAttachManager.THERMOSTAT_HELPER_SOCKET_NAME_PROPERTY);
+        assertEquals(socketId.getName(), propVal);
         
         assertEquals(listenPort, bytemanStatus.getListenPort());
     }

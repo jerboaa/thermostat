@@ -45,6 +45,7 @@ import org.junit.Test;
 public class BytemanAgentInfoTest {
     
     private static final boolean SOME_ATTACH_FAILED = false;
+    private static final boolean SOME_IS_OLD_ATTACH = false;
     private static final int SOME_VM_PID = 99292;
     private static final int SOME_LISTEN_PORT = 3321;
     private static final String SOME_LISTEN_HOST = "foo-bar";
@@ -53,10 +54,22 @@ public class BytemanAgentInfoTest {
 
     @Test
     public void testEqualsHashCode() {
-        BytemanAgentInfo bytemanInfo = new BytemanAgentInfo(SOME_VM_PID, SOME_LISTEN_PORT, SOME_LISTEN_HOST, SOME_VM_ID, SOME_AGENT_ID, SOME_ATTACH_FAILED);
+        BytemanAgentInfo bytemanInfo = new BytemanAgentInfo(SOME_VM_PID,
+                                                            SOME_LISTEN_PORT,
+                                                            SOME_LISTEN_HOST,
+                                                            SOME_VM_ID,
+                                                            SOME_AGENT_ID,
+                                                            SOME_ATTACH_FAILED,
+                                                            SOME_IS_OLD_ATTACH);
         assertFalse(bytemanInfo.equals(null));
         assertFalse(bytemanInfo.equals(null)); // multiple calls
-        BytemanAgentInfo info2 = new BytemanAgentInfo(SOME_VM_PID, SOME_LISTEN_PORT, SOME_LISTEN_HOST, SOME_VM_ID, SOME_AGENT_ID, SOME_ATTACH_FAILED);
+        BytemanAgentInfo info2 = new BytemanAgentInfo(SOME_VM_PID,
+                                                      SOME_LISTEN_PORT,
+                                                      SOME_LISTEN_HOST,
+                                                      SOME_VM_ID,
+                                                      SOME_AGENT_ID,
+                                                      SOME_ATTACH_FAILED,
+                                                      SOME_IS_OLD_ATTACH);
         assertTrue(bytemanInfo.equals(info2));
         assertTrue(info2.equals(bytemanInfo)); // reflexive property
         assertTrue(bytemanInfo.equals(info2)); // multiple calls
@@ -67,35 +80,88 @@ public class BytemanAgentInfoTest {
     
     @Test
     public void testNotEquals() {
-        BytemanAgentInfo bytemanInfo = new BytemanAgentInfo(SOME_VM_PID, SOME_LISTEN_PORT, SOME_LISTEN_HOST, SOME_VM_ID, SOME_AGENT_ID, SOME_ATTACH_FAILED);
+        BytemanAgentInfo bytemanInfo = new BytemanAgentInfo(SOME_VM_PID,
+                                                            SOME_LISTEN_PORT,
+                                                            SOME_LISTEN_HOST,
+                                                            SOME_VM_ID,
+                                                            SOME_AGENT_ID,
+                                                            SOME_ATTACH_FAILED,
+                                                            SOME_IS_OLD_ATTACH);
         
         // vmPid different
-        BytemanAgentInfo other = new BytemanAgentInfo(992, SOME_LISTEN_PORT, SOME_LISTEN_HOST, SOME_VM_ID, SOME_AGENT_ID, SOME_ATTACH_FAILED);
+        BytemanAgentInfo other = new BytemanAgentInfo(992,
+                                                      SOME_LISTEN_PORT,
+                                                      SOME_LISTEN_HOST,
+                                                      SOME_VM_ID,
+                                                      SOME_AGENT_ID,
+                                                      SOME_ATTACH_FAILED,
+                                                      SOME_IS_OLD_ATTACH);
         assertFalse(bytemanInfo.equals(other));
         assertFalse(other.equals(bytemanInfo));
         
         // listen port different
-        other = new BytemanAgentInfo(SOME_VM_PID, 5554, SOME_LISTEN_HOST, SOME_VM_ID, SOME_AGENT_ID, SOME_ATTACH_FAILED);
+        other = new BytemanAgentInfo(SOME_VM_PID,
+                                     5554,
+                                     SOME_LISTEN_HOST,
+                                     SOME_VM_ID,
+                                     SOME_AGENT_ID,
+                                     SOME_ATTACH_FAILED,
+                                     SOME_IS_OLD_ATTACH);
         assertFalse(bytemanInfo.equals(other));
         assertFalse(other.equals(bytemanInfo));
         
         // listen host different
-        other = new BytemanAgentInfo(SOME_VM_PID, SOME_LISTEN_PORT, null, SOME_VM_ID, SOME_AGENT_ID, SOME_ATTACH_FAILED);
+        other = new BytemanAgentInfo(SOME_VM_PID,
+                                     SOME_LISTEN_PORT,
+                                     null,
+                                     SOME_VM_ID,
+                                     SOME_AGENT_ID,
+                                     SOME_ATTACH_FAILED,
+                                     SOME_IS_OLD_ATTACH);
         assertFalse(bytemanInfo.equals(other));
         assertFalse(other.equals(bytemanInfo));
         
         // vmId different
-        other = new BytemanAgentInfo(SOME_VM_PID, SOME_LISTEN_PORT, SOME_LISTEN_HOST, "other", SOME_AGENT_ID, SOME_ATTACH_FAILED);
+        other = new BytemanAgentInfo(SOME_VM_PID,
+                                     SOME_LISTEN_PORT,
+                                     SOME_LISTEN_HOST,
+                                     "other",
+                                     SOME_AGENT_ID,
+                                     SOME_ATTACH_FAILED,
+                                     SOME_IS_OLD_ATTACH);
         assertFalse(bytemanInfo.equals(other));
         assertFalse(other.equals(bytemanInfo));
         
         // agentId different
-        other = new BytemanAgentInfo(SOME_VM_PID, SOME_LISTEN_PORT, SOME_LISTEN_HOST, SOME_VM_ID, "foobar", SOME_ATTACH_FAILED);
+        other = new BytemanAgentInfo(SOME_VM_PID,
+                                     SOME_LISTEN_PORT,
+                                     SOME_LISTEN_HOST,
+                                     SOME_VM_ID,
+                                     "foobar",
+                                     SOME_ATTACH_FAILED,
+                                     SOME_IS_OLD_ATTACH);
         assertFalse(bytemanInfo.equals(other));
         assertFalse(other.equals(bytemanInfo));
         
         // attachFailed different
-        other = new BytemanAgentInfo(SOME_VM_PID, SOME_LISTEN_PORT, SOME_LISTEN_HOST, SOME_VM_ID, SOME_AGENT_ID, true);
+        other = new BytemanAgentInfo(SOME_VM_PID,
+                                     SOME_LISTEN_PORT,
+                                     SOME_LISTEN_HOST,
+                                     SOME_VM_ID,
+                                     SOME_AGENT_ID,
+                                     true,
+                                     SOME_IS_OLD_ATTACH);
+        assertFalse(bytemanInfo.equals(other));
+        assertFalse(other.equals(bytemanInfo));
+        
+        // old attach different
+        other = new BytemanAgentInfo(SOME_VM_PID,
+                                     SOME_LISTEN_PORT,
+                                     SOME_LISTEN_HOST,
+                                     SOME_VM_ID,
+                                     SOME_AGENT_ID,
+                                     SOME_ATTACH_FAILED,
+                                     true);
         assertFalse(bytemanInfo.equals(other));
         assertFalse(other.equals(bytemanInfo));
     }
