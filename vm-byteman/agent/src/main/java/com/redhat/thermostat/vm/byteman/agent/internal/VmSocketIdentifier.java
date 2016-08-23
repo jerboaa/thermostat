@@ -54,8 +54,10 @@ class VmSocketIdentifier {
     }
     
     String getName() {
-        String agentIdPart = agentId.substring(0, AGENT_ID_PART_LENGTH);
-        String vmIdPart = vmId.substring(0, VM_ID_PART_LENGTH);
+        int agentIdLength = Math.min(agentId.length(), AGENT_ID_PART_LENGTH);
+        int vmIdLength = Math.min(vmId.length(), VM_ID_PART_LENGTH);
+        String agentIdPart = agentId.substring(0, agentIdLength);
+        String vmIdPart = vmId.substring(0, vmIdLength);
         return String.format(SOCKET_FORMAT, agentIdPart, vmIdPart, vmPid);
     }
 

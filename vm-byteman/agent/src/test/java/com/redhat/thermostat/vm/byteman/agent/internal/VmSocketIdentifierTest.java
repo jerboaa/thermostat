@@ -47,6 +47,10 @@ import org.junit.Test;
 
 public class VmSocketIdentifierTest {
 
+    private static final String SOME_VM_ID = "some-vm-id"; // longer than 4 chars
+    private static final String SOME_AGENT_ID = "some-agent-id"; // longer than 8 chars
+    private static final int SOME_PID = 9999;
+    
     @Test(expected = NullPointerException.class)
     public void testNullNotAcceptedAgentId() {
         new VmSocketIdentifier("foo", 30, null);
@@ -70,12 +74,17 @@ public class VmSocketIdentifierTest {
     }
     
     @Test
+    public void getNameIsFixedAtXCharsKnownIDs() {
+        VmSocketIdentifier id = new VmSocketIdentifier(SOME_VM_ID, 20, SOME_AGENT_ID);
+        String actual = id.getName();
+        assertEquals("8 chars agentId + 4 chars vmId + 6 chars pid + 2 underscores", 20, actual.length());
+        assertEquals("some-age_some_000020", actual);
+    }
+    
+    @Test
     public void testEqualsHashCode() {
-        String vmId = "some-vm-id";
-        String agentId = "some-agent-id";
-        int vmPid = 9999;
-        VmSocketIdentifier id1 = new VmSocketIdentifier(vmId, vmPid, agentId);
-        VmSocketIdentifier id2 = new VmSocketIdentifier(vmId, vmPid, agentId);
+        VmSocketIdentifier id1 = new VmSocketIdentifier(SOME_VM_ID, SOME_PID, SOME_AGENT_ID);
+        VmSocketIdentifier id2 = new VmSocketIdentifier(SOME_VM_ID, SOME_PID, SOME_AGENT_ID);
         assertFalse(id1.equals(null));
         assertFalse(id2.equals(null));
         assertFalse(id2.equals(null)); // multiple invocation
@@ -89,5 +98,20 @@ public class VmSocketIdentifierTest {
         // be sure equal objects have equal hash code
         assertEquals(id2.hashCode(), id1.hashCode());
         assertEquals(id2.hashCode(), id1.hashCode()); // multiple invocation
+    }
+    
+    
+    @Test
+    public void shortAgentIdGetName() {
+        String agentId = "bar"; // less than agent part length of 8
+        String id = new VmSocketIdentifier(SOME_VM_ID, SOME_PID, agentId).getName();
+        assertEquals("bar_some_009999", id);
+    }
+    
+    @Test
+    public void shortVmIdGetName() {
+        String vmId = "foo"; // less than vmId part length of 4
+        String id = new VmSocketIdentifier(vmId, SOME_PID, SOME_AGENT_ID).getName();
+        assertEquals("some-age_foo_009999", id);
     }
 }
