@@ -68,7 +68,7 @@ public class MongoProcessRunnerTest {
     private static final String NO_LOCALHOST_EXCPTN_VERSION = "2.2.0";
 
     private static final String OLDEST_MONGODB_VERSION = "1.8.0";
-    private static final String LATEST_MONGODB_VERSION = "2.6.0";
+    private static final String LATEST_MONGODB_VERSION = "3.2.0";
 
     private static final String BIND_IP = "127.0.0.1";
     private static final long PORT = 12456;
