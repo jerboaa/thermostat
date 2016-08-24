@@ -42,8 +42,6 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.nio.channels.ByteChannel;
-
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
@@ -59,6 +57,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerContext.ServerChannelInitializer;
 import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerContext.ServerChannelPipelineInitializerCreator;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
@@ -81,7 +80,7 @@ public class CommandChannelServerContextTest {
         creator = new TestServerChannelPipelineInitializerCreator();
         mockSSLConf = mock(SSLConfiguration.class);
         when(mockSSLConf.enableForCmdChannel()).thenReturn(false);
-        ByteChannel agentChannel = mock(ByteChannel.class);
+        IPCMessageChannel agentChannel = mock(IPCMessageChannel.class);
         ctx = new CommandChannelServerContext(mockSSLConf, agentChannel, creator);
     }
 
@@ -129,7 +128,7 @@ public class CommandChannelServerContextTest {
         TestServerPipelineInitializer initializer;
         
         @Override
-        ServerChannelInitializer createInitializer(SSLConfiguration sslConf, ByteChannel agentChannel) {
+        ServerChannelInitializer createInitializer(SSLConfiguration sslConf, IPCMessageChannel agentChannel) {
             initializer = new TestServerPipelineInitializer(sslConf, agentChannel);
             return initializer;
         }
@@ -138,7 +137,7 @@ public class CommandChannelServerContextTest {
     static class TestServerPipelineInitializer extends ServerChannelInitializer {
         
         
-        TestServerPipelineInitializer(SSLConfiguration config, ByteChannel agentChannel) {
+        TestServerPipelineInitializer(SSLConfiguration config, IPCMessageChannel agentChannel) {
             super(config, agentChannel);
         }
         

@@ -34,26 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package org.jboss.byteman.thermostat.helper.transport.ipc;
+package com.redhat.thermostat.agent.ipc.unixsocket.common.internal;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
-import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
-import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
-import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
-
-public class LocalSocketChannelFactoryImpl implements LocalSocketChannelFactory {
-
-    @Override
-    public LocalSocketChannel open(File ipcConfig, String socketName) {
-        try {
-            ClientIPCService ipcService = ClientIPCServiceFactory.getIPCService(ipcConfig);
-            IPCMessageChannel channel = ipcService.connectToServer(socketName);
-            return new LocalSocketChannelImpl(channel);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to connect to server", e);
-        }
-    }
+public interface MessageListener {
+    
+    void messageRead(ByteBuffer buf);
+    
+    void writeMessage(ByteBuffer buf) throws IOException;
 
 }

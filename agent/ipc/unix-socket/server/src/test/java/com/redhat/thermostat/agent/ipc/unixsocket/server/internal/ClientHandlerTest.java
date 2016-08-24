@@ -39,7 +39,7 @@ package com.redhat.thermostat.agent.ipc.unixsocket.server.internal;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -49,25 +49,30 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.util.concurrent.ExecutorService;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
-import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.AcceptedLocalSocketChannelImpl;
-import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.ClientHandler;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.AsyncMessageReader;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.AsyncMessageWriter;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.MessageListener;
+import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.ClientHandler.MessageCreator;
 
 public class ClientHandlerTest {
-    
-    private final byte[] MESSAGE = { 'h', 'e', 'l', 'l', 'o' };
-    private final byte[] RESPONSE = { 'w', 'o', 'r', 'l', 'd' };
     
     private AcceptedLocalSocketChannelImpl client;
     private ThermostatIPCCallbacks callbacks;
     private SelectionKey key;
     private Selector selector;
+    private AsyncMessageReader reader;
+    private AsyncMessageWriter writer;
+    private ExecutorService execService;
+    private MessageCreator messageCreator;
+    private MessageImpl message;
+    private ClientHandler handler;
     
     @Before
     public void setup() throws Exception {
@@ -79,132 +84,105 @@ public class ClientHandlerTest {
         when(client.getSelectionKey()).thenReturn(key);
         
         callbacks = mock(ThermostatIPCCallbacks.class);
+        reader = mock(AsyncMessageReader.class);
+        writer = mock(AsyncMessageWriter.class);
+        execService = mock(ExecutorService.class);
+        messageCreator = mock(MessageCreator.class);
+        message = mock(MessageImpl.class);
+        when(messageCreator.createMessage(any(ByteBuffer.class), any(MessageListener.class))).thenReturn(message);
+        handler = new ClientHandler(client, execService, callbacks, reader, writer, messageCreator);
     }
     
     @Test
     public void testRead() throws Exception {
-        mockRead(client, MESSAGE);
-        when(callbacks.dataReceived(any(byte[].class))).thenReturn(RESPONSE);
-        
-        ClientHandler handler = new ClientHandler(client, callbacks);
-        handler.call();
-        
-        // Verify that callbacks are called with correct message and response is written
-        verify(client).read(any(ByteBuffer.class));
-        verify(callbacks).dataReceived(MESSAGE);
-        
-        ByteBuffer output = ByteBuffer.wrap(RESPONSE);
-        verify(client).write(eq(output));
-        
-        // Verify selector notified about interest in subsequent reads
-        verify(key).interestOps(SelectionKey.OP_READ);
-        verify(selector).wakeup();
+        handler.handleRead();
+        verify(reader).readData();
         
         // Should not close connection
         verify(client, never()).close();
     }
 
-    @Test
-    public void testReadEOF() throws Exception {
-        when(client.read(any(ByteBuffer.class))).thenReturn(-1);
-        
-        ClientHandler handler = new ClientHandler(client, callbacks);
-        handler.call();
-        
-        // Should just close channel
-        verify(client).read(any(ByteBuffer.class));
-        
-        verify(callbacks, never()).dataReceived(any(byte[].class));
-        verify(client, never()).write(any(ByteBuffer.class));
-        verify(key, never()).interestOps(anyInt());
-        verify(selector, never()).wakeup();
-        
-        verify(client).close();
-    }
-    
     @Test
     public void testReadException() throws Exception {
-        when(client.read(any(ByteBuffer.class))).thenThrow(new IOException());
-        
-        ClientHandler handler = new ClientHandler(client, callbacks);
+        doThrow(new IOException()).when(reader).readData();
         
         try {
-            handler.call();
+            handler.handleRead();
             fail("Expected IOException");
         } catch (IOException e) {
-            // Should just close channel
-            verify(client).read(any(ByteBuffer.class));
-            
-            verify(callbacks, never()).dataReceived(any(byte[].class));
-            verify(client, never()).write(any(ByteBuffer.class));
-            verify(key, never()).interestOps(anyInt());
-            verify(selector, never()).wakeup();
-            
+            // Should close channel
+            verify(reader).readData();
             verify(client).close();
         }
     }
     
     @Test
-    public void testReadNoResponse() throws Exception {
-        mockRead(client, MESSAGE);
-        when(callbacks.dataReceived(any(byte[].class))).thenReturn(null);
+    public void testWrite() throws Exception {
+        final int ops = 8000;
+        when(key.interestOps()).thenReturn(ops);
+        handler.handleWrite();
+        verify(writer).writeData();
         
-        ClientHandler handler = new ClientHandler(client, callbacks);
-        handler.call();
-        
-        // Verify that callbacks are called with correct message and no response is written
-        verify(client).read(any(ByteBuffer.class));
-        verify(callbacks).dataReceived(MESSAGE);
-        
-        verify(client, never()).write(any(ByteBuffer.class));
-        
-        // Verify selector notified about interest in subsequent reads
-        verify(key).interestOps(SelectionKey.OP_READ);
-        verify(selector).wakeup();
+        // Check write removed from interest set
+        verify(key).interestOps(ops & ~SelectionKey.OP_WRITE);
         
         // Should not close connection
         verify(client, never()).close();
     }
     
     @Test
-    public void testReadOutputTooLarge() throws Exception {
-        mockRead(client, MESSAGE);
+    public void testWriteMoreMessages() throws Exception {
+        when(writer.hasMoreMessages()).thenReturn(true);
+        handler.handleWrite();
+        verify(writer).writeData();
         
-        byte[] bigResponse = new byte[ClientHandler.MAX_BUFFER_SIZE + 1];
-        when(callbacks.dataReceived(any(byte[].class))).thenReturn(bigResponse);
+        // Check write not removed from interest set
+        verify(key, never()).interestOps(anyInt());
         
-        ClientHandler handler = new ClientHandler(client, callbacks);
+        // Should not close connection
+        verify(client, never()).close();
+    }
+
+    @Test
+    public void testWriteException() throws Exception {
+        doThrow(new IOException()).when(writer).writeData();
         
         try {
-            handler.call();
+            handler.handleWrite();
             fail("Expected IOException");
         } catch (IOException e) {
-
-            // Verify that callbacks are called with correct message and response is not written
-            verify(client).read(any(ByteBuffer.class));
-            verify(callbacks).dataReceived(MESSAGE);
-
-            verify(client, never()).write(any(ByteBuffer.class));
-
-            // Should just close the connection
-            verify(key, never()).interestOps(anyInt());
-            verify(selector, never()).wakeup();
-
+            // Should close channel
+            verify(writer).writeData();
             verify(client).close();
         }
     }
-
-    private void mockRead(AcceptedLocalSocketChannelImpl client, final byte[] message) throws IOException {
-        // Place message into ByteBuffer when read is called
-        when(client.read(any(ByteBuffer.class))).thenAnswer(new Answer<Integer>() {
-            @Override
-            public Integer answer(InvocationOnMock invocation) throws Throwable {
-                ByteBuffer buf = (ByteBuffer) invocation.getArguments()[0];
-                buf.put(message);
-                buf.flip();
-                return message.length;
-            }
-        });
+    
+    @Test
+    public void testMessageRead() throws Exception {
+        ByteBuffer buf = mock(ByteBuffer.class);
+        handler.messageRead(buf);
+        verify(messageCreator).createMessage(buf, handler);
+        
+        // Check callback notified
+        ArgumentCaptor<Runnable> runCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(execService).submit(runCaptor.capture());
+        Runnable runnable = runCaptor.getValue();
+        runnable.run();
+        verify(callbacks).messageReceived(message);
     }
-
+    
+    @Test
+    public void testWriteMessage() throws Exception {
+        final int ops = 8000;
+        when(key.interestOps()).thenReturn(ops);
+        ByteBuffer buf = mock(ByteBuffer.class);
+        handler.writeMessage(buf);
+        
+        // Check write added to interest set
+        verify(key).interestOps(ops | SelectionKey.OP_WRITE);
+        
+        verify(writer).enqueueForWriting(buf);
+        verify(selector).wakeup();
+    }
+    
 }

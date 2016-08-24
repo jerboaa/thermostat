@@ -37,10 +37,10 @@
 package com.redhat.thermostat.agent.command.server.internal;
 
 import java.io.IOException;
-import java.nio.channels.ByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.common.command.Message.MessageType;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
@@ -60,15 +60,15 @@ class ServerHandler extends SimpleChannelInboundHandler<Request> {
     private static final Logger logger = LoggingUtils.getLogger(ServerHandler.class);
     
     private final SSLConfiguration sslConf;
-    private final ByteChannel agentChannel;
+    private final IPCMessageChannel agentChannel;
     private final JsonRequestEncoder requestEncoder;
     private final JsonResponseParser responseParser;
     
-    ServerHandler(SSLConfiguration sslConf, ByteChannel agentChannel) {
+    ServerHandler(SSLConfiguration sslConf, IPCMessageChannel agentChannel) {
         this(sslConf, agentChannel, new JsonRequestEncoder(), new JsonResponseParser());
     }
     
-    ServerHandler(SSLConfiguration sslConf, ByteChannel agentChannel, JsonRequestEncoder requestEncoder, JsonResponseParser responseParser) {
+    ServerHandler(SSLConfiguration sslConf, IPCMessageChannel agentChannel, JsonRequestEncoder requestEncoder, JsonResponseParser responseParser) {
         this.sslConf = sslConf;
         this.agentChannel = agentChannel;
         this.requestEncoder = requestEncoder;
@@ -108,8 +108,8 @@ class ServerHandler extends SimpleChannelInboundHandler<Request> {
             response = new Response(ResponseType.ERROR);
         } else {
             // Reading/writing to agent should be synchronized
+            logger.info("Request received: '" + requestType + "' for '" + receiverName + "'");
             synchronized (agentChannel) {
-                logger.info("Request received: '" + requestType + "' for '" + receiverName + "'");
                 try {
                     // Ensure channel is still open
                     if (!agentChannel.isOpen()) {

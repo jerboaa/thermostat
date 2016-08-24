@@ -37,10 +37,11 @@
 package com.redhat.thermostat.agent.ipc.client.internal;
 
 import java.io.IOException;
-import java.nio.channels.ByteChannel;
+
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 
 public interface ClientTransport {
     
-    ByteChannel connect(String serverName) throws IOException;
+    IPCMessageChannel connect(String serverName) throws IOException;
 
 }

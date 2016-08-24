@@ -39,7 +39,6 @@ package com.redhat.thermostat.agent.command.server.internal;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.charset.Charset;
 
 import com.google.gson.Gson;
@@ -48,20 +47,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 class SSLConfigurationParser {
     
-    // Total size of JSON encoded SSLConfiguration should be no more than this size in bytes
-    private static final int SSL_CONF_MAX_BYTES = 8192;
-    
-    SSLConfiguration parseSSLConfiguration(ByteChannel channel) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(SSL_CONF_MAX_BYTES);
-        int read = channel.read(buf);
-        if (read < 0) {
-            throw new IOException("Failed to read SSL configuration, got EOF");
-        }
-        byte[] jsonSslConf = new byte[read];
+    SSLConfiguration parseSSLConfiguration(IPCMessageChannel channel) throws IOException {
+        ByteBuffer buf = channel.readMessage();
+        byte[] jsonSslConf = new byte[buf.remaining()];
         buf.get(jsonSslConf);
         
         GsonBuilder builder = new GsonBuilder();

@@ -38,7 +38,6 @@ package com.redhat.thermostat.agent.command.server.internal;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.charset.Charset;
 
 import com.google.gson.Gson;
@@ -47,22 +46,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 
 // Parses a Response encoded as JSON received from the agent
 class JsonResponseParser {
     
-    // Total size of JSON encoded Response should be no more than this size in bytes
-    private static final int RESPONSE_MAX_BYTES = 8192;
-    
-    Response parseResponse(ByteChannel agentChannel) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(RESPONSE_MAX_BYTES);
-        int read = agentChannel.read(buf);
-        if (read < 0) {
-            throw new IOException("Got EOF while reading response from agent");
-        }
-        byte[] jsonResponse = new byte[read];
+    Response parseResponse(IPCMessageChannel agentChannel) throws IOException {
+        ByteBuffer buf = agentChannel.readMessage();
+        byte[] jsonResponse = new byte[buf.remaining()];
         buf.get(jsonResponse);
                 
         GsonBuilder builder = new GsonBuilder();

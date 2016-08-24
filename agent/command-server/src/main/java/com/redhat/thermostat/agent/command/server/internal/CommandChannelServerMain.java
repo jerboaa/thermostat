@@ -39,10 +39,10 @@ package com.redhat.thermostat.agent.command.server.internal;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 
 import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
 import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class CommandChannelServerMain {
@@ -80,7 +80,7 @@ public class CommandChannelServerMain {
             ipcService = ClientIPCServiceFactory.getIPCService(configFile);
         }
         // Connect to IPC server
-        ByteChannel channel = ipcService.connectToServer(IPC_SERVER_NAME);
+        IPCMessageChannel channel = ipcService.connectToServer(IPC_SERVER_NAME);
         
         try {
             // Notify server has started
@@ -108,26 +108,22 @@ public class CommandChannelServerMain {
             if (impl != null) {
                 impl.stopListening();
             }
-            throw new IOException("Failed to start command channel server");
+            throw new IOException("Failed to start command channel server", e);
         } finally {
             channel.close();
         }
     }
     
-    private static void sendMessage(ByteChannel channel, byte[] message) throws IOException {
+    private static void sendMessage(IPCMessageChannel channel, byte[] message) throws IOException {
         // Don't interleave with other messages or requests
         synchronized (channel) {
             ByteBuffer buf = ByteBuffer.wrap(message);
-            int written = channel.write(buf);
-            if (written != message.length) {
-                throw new IOException("Written message length incorrect. Wrote: " + written 
-                        + ", expected: " + message.length);
-            }
+            channel.writeMessage(buf);
         }
     }
     
     static class ServerCreator {
-        CommandChannelServerImpl createServer(SSLConfiguration sslConf, ByteChannel agentChannel) {
+        CommandChannelServerImpl createServer(SSLConfiguration sslConf, IPCMessageChannel agentChannel) {
             CommandChannelServerContext ctx = new CommandChannelServerContext(sslConf, agentChannel);
             return new CommandChannelServerImpl(ctx);
         }

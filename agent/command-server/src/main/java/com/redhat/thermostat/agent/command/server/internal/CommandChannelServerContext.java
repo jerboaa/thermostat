@@ -36,13 +36,13 @@
 
 package com.redhat.thermostat.agent.command.server.internal;
 
-import java.nio.channels.ByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.common.command.noapi.ConfigurationCommandContext;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SslInitException;
@@ -69,11 +69,11 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
     private final SSLConfiguration sslConf;
 
 
-    CommandChannelServerContext(SSLConfiguration sslConf, ByteChannel agentChannel) {
+    CommandChannelServerContext(SSLConfiguration sslConf, IPCMessageChannel agentChannel) {
         this(sslConf, agentChannel, new ServerChannelPipelineInitializerCreator());
     }
     
-    CommandChannelServerContext(SSLConfiguration sslConf, ByteChannel agentChannel, ServerChannelPipelineInitializerCreator initCreator) {
+    CommandChannelServerContext(SSLConfiguration sslConf, IPCMessageChannel agentChannel, ServerChannelPipelineInitializerCreator initCreator) {
         this.sslConf = sslConf;
         bootstrap = createBootstrap(sslConf, agentChannel, initCreator);
     }
@@ -88,7 +88,7 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
         return sslConf;
     }
 
-    private ServerBootstrap createBootstrap(SSLConfiguration conf, ByteChannel agentChannel, ServerChannelPipelineInitializerCreator initCreator) {
+    private ServerBootstrap createBootstrap(SSLConfiguration conf, IPCMessageChannel agentChannel, ServerChannelPipelineInitializerCreator initCreator) {
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -105,9 +105,9 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
     static class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
         private final SSLConfiguration sslConf;
-        private final ByteChannel agentChannel;
+        private final IPCMessageChannel agentChannel;
         
-        ServerChannelInitializer(SSLConfiguration sslConf, ByteChannel agentChannel) {
+        ServerChannelInitializer(SSLConfiguration sslConf, IPCMessageChannel agentChannel) {
             this.sslConf = sslConf;
             this.agentChannel = agentChannel;
         }
@@ -138,7 +138,7 @@ class CommandChannelServerContext implements ConfigurationCommandContext {
     // Testing hook
     static class ServerChannelPipelineInitializerCreator {
         
-        ServerChannelInitializer createInitializer(SSLConfiguration sslConf, ByteChannel agentChannel) {
+        ServerChannelInitializer createInitializer(SSLConfiguration sslConf, IPCMessageChannel agentChannel) {
             return new ServerChannelInitializer(sslConf, agentChannel);
         }
     }

@@ -110,17 +110,23 @@ class AcceptThread extends Thread {
                     AcceptedLocalSocketChannelImpl client = channel.accept();
                     // Create handler for accepted client with provided callbacks
                     ThermostatIPCCallbacks callbacks = channel.getCallbacks();
-                    ClientHandler handler = handlerCreator.createHandler(client, callbacks);
+                    ClientHandler handler = handlerCreator.createHandler(client, execService, callbacks);
                     // Store handler as attachment
                     SelectionKey clientKey = client.getSelectionKey();
                     clientKey.attach(handler);
                     logger.fine("Accepted client for \"" + channel.getName() + "\"");
-                } else if (key.isReadable()) {
-                    // Block additional reads on this client, until this read is finished
-                    key.interestOps(0);
-                    ClientHandler handler = safeGetAttachment(key, ClientHandler.class);
-                    // Process reads asynchronously
-                    execService.submit(handler);
+                } else { 
+                    if (key.isReadable()) {
+                        // Call handler for client to perform read
+                        ClientHandler handler = safeGetAttachment(key, ClientHandler.class);
+                        handler.handleRead();
+                    }
+                    // Check key hasn't been cancelled by a prior read operation
+                    if (key.isWritable() && key.isValid()) {
+                        // Call handler for client to perform write
+                        ClientHandler handler = safeGetAttachment(key, ClientHandler.class);
+                        handler.handleWrite();
+                    }
                 }
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Failed to process socket event", e);
@@ -154,8 +160,9 @@ class AcceptThread extends Thread {
     }
     
     static class ClientHandlerCreator {
-        ClientHandler createHandler(AcceptedLocalSocketChannelImpl client, ThermostatIPCCallbacks callbacks) {
-            return new ClientHandler(client, callbacks);
+        ClientHandler createHandler(AcceptedLocalSocketChannelImpl client, ExecutorService execService, 
+                ThermostatIPCCallbacks callbacks) {
+            return new ClientHandler(client, execService, callbacks);
         }
     }
     

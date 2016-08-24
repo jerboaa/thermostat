@@ -34,26 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package org.jboss.byteman.thermostat.helper.transport.ipc;
+package com.redhat.thermostat.agent.ipc.unixsocket.client.internal;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
-import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
-import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
 import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.SyncMessageReader;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.SyncMessageWriter;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.ThermostatLocalSocketChannelImpl;
 
-public class LocalSocketChannelFactoryImpl implements LocalSocketChannelFactory {
+public class UnixSocketMessageChannel implements IPCMessageChannel {
+    
+    private final ThermostatLocalSocketChannelImpl socketChannel;
+    private final SyncMessageReader reader;
+    private final SyncMessageWriter writer;
+    
+    public UnixSocketMessageChannel(ThermostatLocalSocketChannelImpl socketChannel) {
+        this(socketChannel, new SyncMessageReader(socketChannel), new SyncMessageWriter(socketChannel));
+    }
+    
+    UnixSocketMessageChannel(ThermostatLocalSocketChannelImpl socketChannel, 
+            SyncMessageReader reader, SyncMessageWriter writer) {
+        this.socketChannel = socketChannel;
+        this.reader = reader;
+        this.writer = writer;
+    }
 
     @Override
-    public LocalSocketChannel open(File ipcConfig, String socketName) {
-        try {
-            ClientIPCService ipcService = ClientIPCServiceFactory.getIPCService(ipcConfig);
-            IPCMessageChannel channel = ipcService.connectToServer(socketName);
-            return new LocalSocketChannelImpl(channel);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to connect to server", e);
-        }
+    public boolean isOpen() {
+        return socketChannel.isOpen();
+    }
+
+    @Override
+    public void close() throws IOException {
+        socketChannel.close();
+    }
+
+    @Override
+    public ByteBuffer readMessage() throws IOException {
+        return reader.readData();
+    }
+
+    @Override
+    public void writeMessage(ByteBuffer message) throws IOException {
+        writer.writeData(message);
     }
 
 }

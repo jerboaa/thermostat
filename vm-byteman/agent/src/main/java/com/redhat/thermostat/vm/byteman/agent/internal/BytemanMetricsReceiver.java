@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,7 @@ import java.util.logging.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
@@ -61,14 +64,15 @@ class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
     }
 
     @Override
-    public byte[] dataReceived(byte[] data) {
-        String jsonMetric = new String(data, Charset.forName("UTF-8"));
+    public void messageReceived(IPCMessage message) {
+        ByteBuffer buf = message.get();
+        CharBuffer charBuf = Charset.forName("UTF-8").decode(buf);
+        String jsonMetric = charBuf.toString();
         logger.fine("Received metrics from byteman for socketId: " + socketId.getName() + ". Metric was: " + jsonMetric);
         List<BytemanMetric> metrics = convertFromJson(jsonMetric);
         for (BytemanMetric metric: metrics) {
             dao.addMetric(metric);
         }
-        return null; // No response to send back to the IPC endpoint
     }
 
     private List<BytemanMetric> convertFromJson(String data) {

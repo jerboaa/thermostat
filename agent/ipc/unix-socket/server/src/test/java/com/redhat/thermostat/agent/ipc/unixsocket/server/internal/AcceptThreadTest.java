@@ -74,6 +74,7 @@ public class AcceptThreadTest {
     private ClientHandler handler;
     private SelectionKey clientKey;
     private SelectionKey acceptKey;
+    private AcceptThread thread;
 
     @Before
     public void setUp() throws IOException {
@@ -89,6 +90,7 @@ public class AcceptThreadTest {
         // Mock selection keys
         clientKey = mock(SelectionKey.class);
         when(clientKey.readyOps()).thenReturn(SelectionKey.OP_READ);
+        when(clientKey.isValid()).thenReturn(true);
         when(clientSock.getSelectionKey()).thenReturn(clientKey);
         acceptKey = mock(SelectionKey.class);
         acceptKey.attach(serverSock);
@@ -98,22 +100,23 @@ public class AcceptThreadTest {
         handlerCreator = mock(ClientHandlerCreator.class);
         handler = mock(ClientHandler.class);
         clientKey.attach(handler);
-        when(handlerCreator.createHandler(clientSock, callbacks)).thenReturn(handler);
+        when(handlerCreator.createHandler(clientSock, execService, callbacks)).thenReturn(handler);
+        thread = new AcceptThread(selector, execService, handlerCreator);
     }
     
     @Test
     public void testSelectOneAccept() throws IOException {
-        AcceptThread thread = new AcceptThread(selector, execService, handlerCreator);
         mockSelectionKeys(acceptKey);
         selectAndShutdown(thread, 1);
         thread.run();
         
         verify(selector).select();
         verify(serverSock).accept();
-        verify(handlerCreator).createHandler(clientSock, callbacks);
+        verify(handlerCreator).createHandler(clientSock, execService, callbacks);
         assertEquals(handler, clientKey.attachment());
         
-        verify(execService, never()).submit(handler);
+        verify(handler, never()).handleRead();
+        verify(handler, never()).handleWrite();
     }
     
     private void selectAndShutdown(AcceptThread thread, int returnValue) throws IOException {
@@ -126,69 +129,116 @@ public class AcceptThreadTest {
     
     @Test
     public void testSelectOneRead() throws IOException {
-        AcceptThread thread = new AcceptThread(selector, execService, handlerCreator);
         mockSelectionKeys(clientKey);
         selectAndShutdown(thread, 1);
         thread.run();
         
         verify(selector).select();
-        verify(clientKey).interestOps(0);
-        verify(execService).submit(handler);
+        verify(handler).handleRead();
         
         verify(serverSock, never()).accept();
     }
     
     @Test
     public void testSelectOneAcceptAndRead() throws IOException {
-        AcceptThread thread = new AcceptThread(selector, execService, handlerCreator);
         mockSelectionKeys(acceptKey, clientKey);
         selectAndShutdown(thread, 2, new int[] { 1, 1 });
         thread.run();
         
         verify(selector, times(2)).select();
         verify(serverSock).accept();
-        verify(handlerCreator).createHandler(clientSock, callbacks);
+        verify(handlerCreator).createHandler(clientSock, execService, callbacks);
         assertEquals(handler, clientKey.attachment());
         
-        verify(clientKey).interestOps(0);
-        verify(execService).submit(handler);
+        verify(handler).handleRead();
     }
     
     @Test
     public void testSelectTwoAcceptAndRead() throws IOException {
-        AcceptThread thread = new AcceptThread(selector, execService, handlerCreator);
         mockSelectionKeys(acceptKey, clientKey);
         selectAndShutdown(thread, 2);
         thread.run();
         
         verify(selector).select();
         verify(serverSock).accept();
-        verify(handlerCreator).createHandler(clientSock, callbacks);
+        verify(handlerCreator).createHandler(clientSock, execService, callbacks);
         assertEquals(handler, clientKey.attachment());
         
-        verify(clientKey).interestOps(0);
-        verify(execService).submit(handler);
+        verify(handler).handleRead();
     }
     
     @Test
     public void testSelectOneAcceptAndReadWithZeroReturn() throws IOException {
-        AcceptThread thread = new AcceptThread(selector, execService, handlerCreator);
         mockSelectionKeys(acceptKey, clientKey);
         selectAndShutdown(thread, 3, new int[] { 1, 0, 1 });
         thread.run();
         
         verify(selector, times(3)).select();
         verify(serverSock).accept();
-        verify(handlerCreator).createHandler(clientSock, callbacks);
+        verify(handlerCreator).createHandler(clientSock, execService, callbacks);
         assertEquals(handler, clientKey.attachment());
         
-        verify(clientKey).interestOps(0);
-        verify(execService).submit(handler);
+        verify(handler).handleRead();
+    }
+    
+    @Test
+    public void testSelectOneWrite() throws IOException {
+        when(clientKey.readyOps()).thenReturn(SelectionKey.OP_WRITE);
+        mockSelectionKeys(clientKey);
+        selectAndShutdown(thread, 1);
+        thread.run();
+        
+        verify(selector).select();
+        verify(handler).handleWrite();
+        
+        verify(serverSock, never()).accept();
+        verify(handler, never()).handleRead();
+    }
+    
+    @Test
+    public void testSelectOneAcceptAndWrite() throws IOException {
+        when(clientKey.readyOps()).thenReturn(SelectionKey.OP_WRITE);
+        mockSelectionKeys(acceptKey, clientKey);
+        selectAndShutdown(thread, 2, new int[] { 1, 1 });
+        thread.run();
+        
+        verify(selector, times(2)).select();
+        verify(serverSock).accept();
+        verify(handlerCreator).createHandler(clientSock, execService, callbacks);
+        assertEquals(handler, clientKey.attachment());
+        
+        verify(handler).handleWrite();
+    }
+    
+    @Test
+    public void testSelectReadAndWrite() throws IOException {
+        when(clientKey.readyOps()).thenReturn(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+        mockSelectionKeys(clientKey);
+        selectAndShutdown(thread, 1);
+        thread.run();
+        
+        verify(selector).select();
+        verify(handler).handleRead();
+        verify(handler).handleWrite();
+        verify(serverSock, never()).accept();
+    }
+    
+    @Test
+    public void testSelectInvalidWrite() throws IOException {
+        when(clientKey.isValid()).thenReturn(false);
+        when(clientKey.readyOps()).thenReturn(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+        mockSelectionKeys(clientKey);
+        selectAndShutdown(thread, 1);
+        thread.run();
+        
+        verify(selector).select();
+        verify(handler).handleRead();
+        verify(handler, never()).handleWrite();
+        verify(serverSock, never()).accept();
     }
     
     @Test
     public void testSelectError() throws IOException {
-        AcceptThread thread = new AcceptThread(selector, execService, handlerCreator);
         mockSelectionKeys(acceptKey);
         // Use numIterations == 2 to bypass normal shutdown
         selectAndShutdown(thread, 2, new int[] { -1 });

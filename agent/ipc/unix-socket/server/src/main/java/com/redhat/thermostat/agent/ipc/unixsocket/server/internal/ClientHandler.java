@@ -39,80 +39,111 @@ package com.redhat.thermostat.agent.ipc.unixsocket.server.internal;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.AsyncMessageReader;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.AsyncMessageWriter;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.MessageListener;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-class ClientHandler implements Callable<Void> {
+class ClientHandler implements MessageListener {
     
     private static final Logger logger = LoggingUtils.getLogger(ClientHandler.class);
-    // Maximum message size we can read from the client
-    static final int MAX_BUFFER_SIZE = 8092;
+    
     // Increments for each instance made. Only for debugging purposes.
     private static final AtomicInteger handlerCount = new AtomicInteger();
     
     private final AcceptedLocalSocketChannelImpl client;
+    private final ExecutorService execService;
     private final ThermostatIPCCallbacks callbacks;
+    private final AsyncMessageReader reader;
+    private final AsyncMessageWriter writer;
+    private final MessageCreator messageCreator;
     private final int handlerNum;
     
-    ClientHandler(AcceptedLocalSocketChannelImpl client, ThermostatIPCCallbacks callbacks) {
+    ClientHandler(AcceptedLocalSocketChannelImpl client, ExecutorService execService, ThermostatIPCCallbacks callbacks) {
         this.client = client;
+        this.execService = execService;
         this.callbacks = callbacks;
+        this.reader = new AsyncMessageReader(client, this);
+        this.writer = new AsyncMessageWriter(client);
+        this.messageCreator = new MessageCreator();
         this.handlerNum = handlerCount.getAndIncrement();
     }
-
-    @Override
-    public Void call() throws IOException {
-        handleClient();
-        logger.finest("Client [" + handlerNum + "] done");
-        return null;
+    
+    ClientHandler(AcceptedLocalSocketChannelImpl client, ExecutorService execService, ThermostatIPCCallbacks callbacks, 
+            AsyncMessageReader reader, AsyncMessageWriter writer, MessageCreator messageCreator) {
+        this.client = client;
+        this.callbacks = callbacks;
+        this.execService = execService;
+        this.reader = reader;
+        this.writer = writer;
+        this.messageCreator = messageCreator;
+        this.handlerNum = handlerCount.getAndIncrement();
     }
     
-    private void handleClient() throws IOException {
+    void handleRead() throws IOException {
         try {
-            logger.fine("Got read from client for \"" + client.getName() + "\"");
+            logger.fine("Got read from client for \"" + client.getName() + "\" [" + handlerNum + "]");
             // Read message from client
-            ByteBuffer buf = ByteBuffer.allocate(MAX_BUFFER_SIZE);
-            int read;
-            read = client.read(buf);
-            if (read < 0) {
-                // Received EOF
-                logger.fine("Closing client for \"" + client.getName() + "\"");
-                client.close();
-            } else {
-                // Set limit to mark end of data
-                buf.limit(read);
-                byte[] input = new byte[buf.remaining()];
-                buf.get(input);
-                
-                // Call supplied callback
-                byte[] output = callbacks.dataReceived(input);
-                if (output != null) {
-                    // Ensure output received is smaller than MAX_BUFFER_SIZE
-                    if (output.length > MAX_BUFFER_SIZE) {
-                        throw new IOException("Output must be at most " + MAX_BUFFER_SIZE + " bytes");
-                    }
-
-                    // Write message to client
-                    buf = ByteBuffer.wrap(output);
-                    client.write(buf);
-                    logger.fine("Wrote reply to client on \"" + client.getName() + "\"");
-                }
-                
-                // Read finished, reset interest set to accept subsequent reads for this client
+            reader.readData();
+        } catch (IOException e) {
+            client.close();
+            throw new IOException("Communication error from handler " + handlerNum, e);
+        }
+    }
+    
+    void handleWrite() throws IOException {
+        try {
+            logger.fine("Got write for client for \"" + client.getName() + "\" [" + handlerNum + "]");
+            // Read message from client
+            writer.writeData();
+            
+            // If no more messages, remove write from interestOps
+            if (!writer.hasMoreMessages()) {
                 SelectionKey key = client.getSelectionKey();
-                key.interestOps(SelectionKey.OP_READ);
-                // Wakeup selector since we've changed this key's interest set from another thread
-                key.selector().wakeup();
+                int ops = key.interestOps();
+                key.interestOps(ops & ~SelectionKey.OP_WRITE);
             }
         } catch (IOException e) {
             client.close();
             throw new IOException("Communication error from handler " + handlerNum, e);
         }
-            
+    }
+
+    @Override
+    public void messageRead(ByteBuffer buf) {
+        // Create new message and notify caller
+        final MessageImpl message = messageCreator.createMessage(buf, this);
+        // Execute callback in a separate thread to ensure we don't block
+        execService.submit(new Runnable() {
+            @Override
+            public void run() {
+                callbacks.messageReceived(message);
+            }
+        });
+    }
+
+    @Override
+    public void writeMessage(ByteBuffer buf) throws IOException {
+        // Request write with selector
+        SelectionKey key = client.getSelectionKey();
+        int ops = key.interestOps();
+        key.interestOps(ops | SelectionKey.OP_WRITE);
+        
+        // Enqueue this message for writing when selected
+        writer.enqueueForWriting(buf);
+        
+        // Wakeup selector since we've changed this key's interest set from another thread
+        key.selector().wakeup();
     }
     
+    static class MessageCreator {
+        MessageImpl createMessage(ByteBuffer data, MessageListener listener) {
+            return new MessageImpl(data, listener);
+        }
+    }
 }

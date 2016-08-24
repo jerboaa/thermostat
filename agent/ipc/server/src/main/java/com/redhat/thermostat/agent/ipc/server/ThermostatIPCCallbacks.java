@@ -44,14 +44,12 @@ package com.redhat.thermostat.agent.ipc.server;
 public interface ThermostatIPCCallbacks {
     
     /**
-     * Method to be called when an IPC server created with this object receives
-     * data from a client. This method gives the agent an opportunity to perform
-     * customized processing on the received data, and return a response. The
-     * response returned by this method will be sent to the client that originally
-     * sent the provided data.
-     * @param data - input received by the IPC server from an IPC client, will not be null
-     * @return a response to send back to the IPC client, may be null
+     * Method to be called when an IPC server created with this object receives a
+     * message from a client. This method gives the agent an opportunity to perform
+     * customized processing on the received message, and send a response asynchronously
+     * to the client that originally sent the provided message.
+     * @param message - a message received by the IPC server from an IPC client, will not be null
      */
-    byte[] dataReceived(byte[] data);
+    void messageReceived(IPCMessage message);
 
 }

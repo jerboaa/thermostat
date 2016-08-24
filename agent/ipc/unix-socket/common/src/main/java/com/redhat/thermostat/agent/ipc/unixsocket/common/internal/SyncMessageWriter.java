@@ -34,25 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package org.jboss.byteman.thermostat.helper.transport.ipc;
+package com.redhat.thermostat.agent.ipc.unixsocket.common.internal;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
-import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
-import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
-import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
+public class SyncMessageWriter extends MessageWriter {
 
-public class LocalSocketChannelFactoryImpl implements LocalSocketChannelFactory {
+    private final ThermostatLocalSocketChannelImpl channel;
+    private final MessageLimits limits;
+    
+    public SyncMessageWriter(ThermostatLocalSocketChannelImpl channel) {
+        this(channel, new MessageLimits());
+    }
+    
+    SyncMessageWriter(ThermostatLocalSocketChannelImpl channel, MessageLimits limits) {
+        super(limits);
+        this.channel = channel;
+        this.limits = limits;
+    }
+    
+    public void writeData(ByteBuffer data) throws IOException {
+        if (data.remaining() > limits.getMaxMessageSize()) {
+            throw new IOException("Total message size is larger than maximum of " 
+                    + limits.getMaxMessageSize() + " bytes");
+        }
+        // Split into messages and add headers
+        ByteBuffer fullMessage = data.duplicate();
+        while (fullMessage.hasRemaining()) {
+            MessageToWrite message = getNextMessage(fullMessage);
+            writeFully(message.getHeader());
+            writeFully(message.getMessage());
+        }
+    }
 
-    @Override
-    public LocalSocketChannel open(File ipcConfig, String socketName) {
-        try {
-            ClientIPCService ipcService = ClientIPCServiceFactory.getIPCService(ipcConfig);
-            IPCMessageChannel channel = ipcService.connectToServer(socketName);
-            return new LocalSocketChannelImpl(channel);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to connect to server", e);
+    private void writeFully(ByteBuffer buf) throws IOException {
+        while (buf.hasRemaining()) {
+            channel.write(buf);
         }
     }
 

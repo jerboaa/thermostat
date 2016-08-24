@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent.ipc.client;
 
 import java.io.IOException;
-import java.nio.channels.ByteChannel;
 
 /**
  * This interface provides methods relevant to IPC clients, such as
@@ -53,6 +52,6 @@ public interface ClientIPCService {
      * @return an open channel that can be used to read and write to the server
      * @throws IOException if the server does not exist, or the attempt to connect fails in some way
      */
-    ByteChannel connectToServer(String name) throws IOException;
+    IPCMessageChannel connectToServer(String name) throws IOException;
 
 }

@@ -38,8 +38,8 @@ package com.redhat.thermostat.agent.ipc.unixsocket.client.internal;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.ByteChannel;
 
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.agent.ipc.client.internal.ClientTransport;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.ThermostatLocalSocketChannelImpl;
@@ -66,9 +66,10 @@ public class UnixSocketTransportImpl implements ClientTransport {
     }
     
     @Override
-    public ByteChannel connect(String serverName) throws IOException {
+    public IPCMessageChannel connect(String serverName) throws IOException {
         File socketFile = verifySocketFile(serverName);
-        return sockHelper.openChannel(serverName, socketFile);
+        ThermostatLocalSocketChannelImpl sockChannel = sockHelper.openSocketChannel(serverName, socketFile);
+        return sockHelper.createMessageChannel(sockChannel);
     }
     
     private File verifySocketFile(String name) throws IOException {
@@ -93,8 +94,12 @@ public class UnixSocketTransportImpl implements ClientTransport {
     
     // Helper class for testing
     static class SocketHelper {
-        ThermostatLocalSocketChannelImpl openChannel(String name, File socketFile) throws IOException {
+        ThermostatLocalSocketChannelImpl openSocketChannel(String name, File socketFile) throws IOException {
             return ThermostatLocalSocketChannelImpl.open(name, socketFile);
+        }
+        
+        UnixSocketMessageChannel createMessageChannel(ThermostatLocalSocketChannelImpl sockChannel) {
+            return new UnixSocketMessageChannel(sockChannel);
         }
         
         File getSocketFile(File socketDir, String name) {

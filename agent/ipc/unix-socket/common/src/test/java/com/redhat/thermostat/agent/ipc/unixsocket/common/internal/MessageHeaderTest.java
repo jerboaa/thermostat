@@ -46,6 +46,8 @@ import java.nio.ByteBuffer;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.MessageHeader;
+
 public class MessageHeaderTest {
     
     private static final int INT_BYTES = 4;
@@ -143,9 +145,22 @@ public class MessageHeaderTest {
     }
     
     @Test(expected=IOException.class)
+    public void testFromByteBufferZeroProtocolVersion() throws Exception {
+        ByteBuffer buf = createByteBuffer(0, 25, 20, true);
+        MessageHeader.fromByteBuffer(buf);
+    }
+    
+    @Test(expected=IOException.class)
     public void testFromByteBufferNegativeHeaderSize() throws Exception {
         ByteBuffer buf = ByteBuffer.allocate(MessageHeader.getDefaultHeaderSize());
         fillByteBuffer(buf, 5, -22, 20, true);
+        MessageHeader.fromByteBuffer(buf);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testFromByteBufferZeroHeaderSize() throws Exception {
+        ByteBuffer buf = ByteBuffer.allocate(MessageHeader.getDefaultHeaderSize());
+        fillByteBuffer(buf, 5, 0, 20, true);
         MessageHeader.fromByteBuffer(buf);
     }
     
@@ -184,6 +199,13 @@ public class MessageHeaderTest {
     @Test(expected=IOException.class)
     public void testSetRemainingFieldsV1NegativeMessageSize() throws Exception {
         ByteBuffer buf = createByteBuffer(1, MessageHeader.getDefaultHeaderSize(), -20, true);
+        MessageHeader header = MessageHeader.fromByteBuffer(buf);
+        header.setRemainingFields(buf);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testSetRemainingFieldsV1ZeroMessageSize() throws Exception {
+        ByteBuffer buf = createByteBuffer(1, MessageHeader.getDefaultHeaderSize(), 0, true);
         MessageHeader header = MessageHeader.fromByteBuffer(buf);
         header.setRemainingFields(buf);
     }

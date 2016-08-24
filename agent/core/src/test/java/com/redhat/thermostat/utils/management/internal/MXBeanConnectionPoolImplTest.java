@@ -49,6 +49,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import org.junit.Before;
@@ -60,6 +61,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.ConnectorCreator;
@@ -163,7 +165,9 @@ public class MXBeanConnectionPoolImplTest {
             @Override
             public AgentProxyClient answer(InvocationOnMock invocation) throws Throwable {
                 // Invoke callback
-                pool.dataReceived(data);
+                IPCMessage message = mock(IPCMessage.class);
+                when(message.get()).thenReturn(ByteBuffer.wrap(data));
+                pool.messageReceived(message);
                 return proxy;
             }
         });

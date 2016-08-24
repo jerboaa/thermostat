@@ -48,7 +48,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -58,6 +57,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.agent.proxy.server.AgentProxy.ControlCreator;
 
 public class AgentProxyTest {
@@ -66,7 +66,7 @@ public class AgentProxyTest {
     
     private AgentProxyControlImpl control;
     private ClientIPCService ipcService;
-    private ByteChannel channel;
+    private IPCMessageChannel channel;
 
     @Before
     public void setup() throws Exception {
@@ -79,7 +79,7 @@ public class AgentProxyTest {
         AgentProxy.setControlCreator(creator);
         
         ipcService = mock(ClientIPCService.class);
-        channel = mock(ByteChannel.class);
+        channel = mock(IPCMessageChannel.class);
         when(ipcService.connectToServer(AgentProxy.IPC_SERVER_NAME)).thenReturn(channel);
         AgentProxy.setIPCService(ipcService);
     }
@@ -108,7 +108,7 @@ public class AgentProxyTest {
         String jsonData = gson.toJson(data);
         ByteBuffer jsonBuf = ByteBuffer.wrap(jsonData.getBytes("UTF-8"));
         
-        verify(channel).write(eq(jsonBuf));
+        verify(channel).writeMessage(eq(jsonBuf));
         verify(channel).close();
         verify(control).detach();
     }
@@ -128,7 +128,7 @@ public class AgentProxyTest {
             verify(control).attach();
             verify(control, never()).getConnectorAddress();
             
-            verify(channel, never()).write(any(ByteBuffer.class));
+            verify(channel, never()).writeMessage(any(ByteBuffer.class));
             verify(channel).close();
             
             verify(control, never()).detach();
@@ -149,7 +149,7 @@ public class AgentProxyTest {
             verify(control).getConnectorAddress();
 
             // Should detach and close channel, but not send URL
-            verify(channel, never()).write(any(ByteBuffer.class));
+            verify(channel, never()).writeMessage(any(ByteBuffer.class));
             verify(channel).close();
             
             verify(control).detach();
@@ -159,7 +159,7 @@ public class AgentProxyTest {
     @Test
     public void testMainSendAddressFails() throws Exception {
         // Simulate failure binding the login object
-        doThrow(new IOException()).when(channel).write(any(ByteBuffer.class));
+        doThrow(new IOException()).when(channel).writeMessage(any(ByteBuffer.class));
         
         try {
             // Invoke main with PID of 0
@@ -170,7 +170,7 @@ public class AgentProxyTest {
             verify(control).getConnectorAddress();
             
             // Should still detach and close channel
-            verify(channel).write(any(ByteBuffer.class));
+            verify(channel).writeMessage(any(ByteBuffer.class));
             verify(channel).close();
             
             verify(control).detach();
@@ -189,7 +189,7 @@ public class AgentProxyTest {
         verify(control).attach();
         verify(control).getConnectorAddress();
 
-        verify(channel).write(any(ByteBuffer.class));
+        verify(channel).writeMessage(any(ByteBuffer.class));
         verify(channel).close();
 
         verify(control).detach();
@@ -207,7 +207,7 @@ public class AgentProxyTest {
         verify(control).attach();
         verify(control).getConnectorAddress();
 
-        verify(channel).write(any(ByteBuffer.class));
+        verify(channel).writeMessage(any(ByteBuffer.class));
         verify(channel).close();
 
         verify(control).detach();

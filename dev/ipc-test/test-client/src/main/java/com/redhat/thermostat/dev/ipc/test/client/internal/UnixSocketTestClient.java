@@ -40,7 +40,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,13 +47,12 @@ import java.util.Random;
 
 import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
 import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 
 public class UnixSocketTestClient {
     
     // Filename prefix for socket file
     private static final String SOCKET_NAME = "test";
-    // Maximum size, in bytes, of ByteBuffers used by clients/server to read/write data
-    private static final int MAX_BUFFER_SIZE = 8092;
     // Number of iterations of this test program
     private static final int NUM_ITERATIONS = 20;
     // Number of messages for this client to send, not taking into account messages automatically
@@ -114,7 +112,7 @@ public class UnixSocketTestClient {
     }
     
     private static void communicateWithServer(String serverName) throws IOException {
-        ByteChannel channel = ipcService.connectToServer(serverName);
+        IPCMessageChannel channel = ipcService.connectToServer(serverName);
         System.out.println("Connected to server \"" + serverName + "\"");
         
         String[] questions = new DummyReceiver().getQuestions();
@@ -133,15 +131,12 @@ public class UnixSocketTestClient {
                 throw new IOException("Received null response from server");
             }
             ByteBuffer buf = ByteBuffer.wrap(questionAsBytes);
-            channel.write(buf);
+            channel.writeMessage(buf);
             System.out.println("Wrote message: " + question);
             
             // Read reply from server
-            buf = ByteBuffer.allocate(MAX_BUFFER_SIZE);
-            int read = channel.read(buf);
-            // Set limit to mark end of string
-            buf.limit(read);
-            CharBuffer charBuf = Charset.forName("UTF-8").decode(buf);
+            ByteBuffer result = channel.readMessage();
+            CharBuffer charBuf = Charset.forName("UTF-8").decode(result);
             String receivedMsg = charBuf.toString();
             System.out.println("Client received message: \"" + receivedMsg + "\"");
             

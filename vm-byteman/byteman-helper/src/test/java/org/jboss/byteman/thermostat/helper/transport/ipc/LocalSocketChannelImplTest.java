@@ -41,19 +41,19 @@ import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 
-import org.jboss.byteman.thermostat.helper.transport.ipc.LocalSocketChannelImpl;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
+
 public class LocalSocketChannelImplTest {
 
-    private ByteChannel channel;
+    private IPCMessageChannel channel;
     
     @Before
     public void setup() {
-        channel = mock(ByteChannel.class);
+        channel = mock(IPCMessageChannel.class);
     }
     
     @Test
@@ -68,6 +68,6 @@ public class LocalSocketChannelImplTest {
         LocalSocketChannelImpl local = new LocalSocketChannelImpl(channel);
         ByteBuffer buffer = mock(ByteBuffer.class);
         local.write(buffer);
-        verify(channel).write(buffer);
+        verify(channel).writeMessage(buffer);
     }
 }

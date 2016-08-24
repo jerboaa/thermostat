@@ -45,13 +45,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
-import java.nio.channels.ByteChannel;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.command.server.internal.ServerHandler.SSLHandshakeDoneListener;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.Response;
@@ -70,7 +70,7 @@ public class ServerHandlerTest {
     private ChannelPipeline pipeline;
     private ChannelHandlerContext ctx;
     private ServerHandler handler;
-    private ByteChannel agentChannel;
+    private IPCMessageChannel agentChannel;
     private JsonResponseParser responseParser;
     private JsonRequestEncoder requestEncoder;
 
@@ -87,7 +87,7 @@ public class ServerHandlerTest {
         
         SSLConfiguration mockSSLConf = mock(SSLConfiguration.class);
         when(mockSSLConf.enableForCmdChannel()).thenReturn(true);
-        agentChannel = mock(ByteChannel.class);
+        agentChannel = mock(IPCMessageChannel.class);
         when(agentChannel.isOpen()).thenReturn(true);
         
         requestEncoder = mock(JsonRequestEncoder.class);

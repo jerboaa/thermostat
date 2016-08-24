@@ -34,26 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package org.jboss.byteman.thermostat.helper.transport.ipc;
+package com.redhat.thermostat.agent.ipc.unixsocket.server.internal;
 
-import java.io.File;
-import java.io.IOException;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
-import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
-import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
+import java.nio.ByteBuffer;
 
-public class LocalSocketChannelFactoryImpl implements LocalSocketChannelFactory {
+import org.junit.Before;
+import org.junit.Test;
 
-    @Override
-    public LocalSocketChannel open(File ipcConfig, String socketName) {
-        try {
-            ClientIPCService ipcService = ClientIPCServiceFactory.getIPCService(ipcConfig);
-            IPCMessageChannel channel = ipcService.connectToServer(socketName);
-            return new LocalSocketChannelImpl(channel);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to connect to server", e);
-        }
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.MessageListener;
+
+public class MessageImplTest {
+    
+    private ByteBuffer data;
+    private MessageListener listener;
+    private MessageImpl message;
+
+    @Before
+    public void setUp() {
+        data = mock(ByteBuffer.class);
+        listener = mock(MessageListener.class);
+        message = new MessageImpl(data, listener);
+    }
+    
+    @Test
+    public void testGetData() {
+        assertEquals(data, message.get());
+    }
+    
+    @Test
+    public void testSendReply() throws Exception {
+        ByteBuffer reply = mock(ByteBuffer.class);
+        message.reply(reply);
+        verify(listener).writeMessage(reply);
     }
 
 }

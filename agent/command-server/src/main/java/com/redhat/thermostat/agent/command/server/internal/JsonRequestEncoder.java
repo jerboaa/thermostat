@@ -39,19 +39,19 @@ package com.redhat.thermostat.agent.command.server.internal;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.charset.Charset;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 
 // Encodes a Request as JSON and sends the result to the agent
 class JsonRequestEncoder {
 
-    void encodeRequestAndSend(ByteChannel agentChannel, Request request) throws IOException {
+    void encodeRequestAndSend(IPCMessageChannel agentChannel, Request request) throws IOException {
         GsonBuilder builder = new GsonBuilder();
         builder.serializeNulls(); // In case null parameter values are permitted
         Gson gson = builder.create();
@@ -83,10 +83,7 @@ class JsonRequestEncoder {
         
         // Write request
         ByteBuffer buf = ByteBuffer.wrap(jsonRequestBytes);
-        int written = agentChannel.write(buf);
-        if (written != jsonRequestBytes.length) {
-            throw new IOException("Failed to write complete message, wrote " + written + " of " + jsonRequestBytes.length);
-        }
+        agentChannel.writeMessage(buf);
     }
 }
 

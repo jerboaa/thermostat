@@ -34,26 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package org.jboss.byteman.thermostat.helper.transport.ipc;
+package com.redhat.thermostat.agent.ipc.unixsocket.common.internal;
 
-import java.io.File;
-import java.io.IOException;
+class MessageLimits {
+    
+    private static final int DEFAULT_MAX_MESSAGE_PART_SIZE = 0x800; // 2 KiB
+    private static final int DEFAULT_MAX_MESSAGE_SIZE = 0x20000; // 128 KiB
+    private static final int DEFAULT_MAX_HEADER_SIZE = 0x80; // 128 B
+    private static final int DEFAULT_BUFFER_SIZE = DEFAULT_MAX_MESSAGE_PART_SIZE;
+    
+    /* 
+     * Values below should adhere to the following:
+     * 0 <= MinHdr <= MaxHdr <= MaxMsgPart <= Buffer <= MaxMsg
+     */
+    // Maximum value for a single part of a message
+    private final int maxMessagePartSize;
+    // Maximum value for the combined payload of a multi-part message
+    private final int maxMessageSize;
+    // Maximum value for a message header
+    private final int maxHeaderSize;
+    // Size used for read/write buffers
+    private final int bufferSize;
+    
+    MessageLimits() {
+        this.maxMessagePartSize = DEFAULT_MAX_MESSAGE_PART_SIZE;
+        this.maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE;
+        this.maxHeaderSize = DEFAULT_MAX_HEADER_SIZE;
+        this.bufferSize = DEFAULT_BUFFER_SIZE;
+    }
+    
+    int getMaxMessagePartSize() {
+        return maxMessagePartSize;
+    }
 
-import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
-import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
-import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
-
-public class LocalSocketChannelFactoryImpl implements LocalSocketChannelFactory {
-
-    @Override
-    public LocalSocketChannel open(File ipcConfig, String socketName) {
-        try {
-            ClientIPCService ipcService = ClientIPCServiceFactory.getIPCService(ipcConfig);
-            IPCMessageChannel channel = ipcService.connectToServer(socketName);
-            return new LocalSocketChannelImpl(channel);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to connect to server", e);
-        }
+    int getMaxMessageSize() {
+        return maxMessageSize;
+    }
+    
+    int getMaxHeaderSize() {
+        return maxHeaderSize;
+    }
+    
+    int getBufferSize() {
+        return bufferSize;
     }
 
 }

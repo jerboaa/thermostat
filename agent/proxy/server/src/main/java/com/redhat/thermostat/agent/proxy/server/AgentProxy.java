@@ -39,7 +39,6 @@ package com.redhat.thermostat.agent.proxy.server;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,6 +47,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
 import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.sun.tools.attach.AttachNotSupportedException;
 
@@ -86,7 +86,7 @@ public class AgentProxy {
         }
         
         // Connect to IPC server
-        ByteChannel channel = ipcService.connectToServer(IPC_SERVER_NAME);
+        IPCMessageChannel channel = ipcService.connectToServer(IPC_SERVER_NAME);
         
         // Start proxy agent
         AgentProxyControlImpl agent = creator.create(pid);
@@ -116,7 +116,7 @@ public class AgentProxy {
         }
     }
 
-    private static void sendConnectionInfo(ByteChannel channel, int pid, String connectorAddress) throws IOException {
+    private static void sendConnectionInfo(IPCMessageChannel channel, int pid, String connectorAddress) throws IOException {
         try {
             // As JSON, write pid first, followed by JMX service URL
             GsonBuilder builder = new GsonBuilder();
@@ -127,13 +127,13 @@ public class AgentProxy {
             
             String jsonData = gson.toJson(data);
             ByteBuffer buf = ByteBuffer.wrap(jsonData.getBytes("UTF-8"));
-            channel.write(buf);
+            channel.writeMessage(buf);
         } catch (IOException e) {
             throw new IOException("Failed to send JMX connection information to agent", e);
         }
     }
 
-    private static void cleanup(AgentProxyControlImpl agent, ByteChannel channel, int pid) {
+    private static void cleanup(AgentProxyControlImpl agent, IPCMessageChannel channel, int pid) {
         try {
             channel.close();
         } catch (IOException e) {

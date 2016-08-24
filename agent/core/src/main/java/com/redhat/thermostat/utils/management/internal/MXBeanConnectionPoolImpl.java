@@ -38,6 +38,8 @@ package com.redhat.thermostat.utils.management.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +52,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
@@ -74,9 +77,9 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, Th
     
     /**
      * Current {@link MXBeanConnectionPoolEntry} being created by {@link #acquire(int)} for use
-     * by {@link #dataReceived(byte[])}. 
+     * by {@link #messageReceived(IPCMessage)}. 
      * Since {@link #acquire(int)} is a synchronized method and blocks until
-     * {@link #dataReceived(byte[])} is invoked, only one entry can be processed at a time.
+     * {@link #messageReceived(IPCMessage)} is invoked, only one entry can be processed at a time.
      * Access/modification must be synchronized using {@link #CURRENT_ENTRY_LOCK}.
      */
     private MXBeanConnectionPoolEntry currentNewEntry;
@@ -131,12 +134,14 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, Th
     }
     
     @Override
-    public byte[] dataReceived(byte[] data) {
+    public void messageReceived(IPCMessage message) {
         synchronized (CURRENT_ENTRY_LOCK) {
             MXBeanConnectionPoolEntry entry = currentNewEntry;
             Objects.requireNonNull(entry, "currentNewEntry was null, should never happen");
             
-            String dataString = new String(data, Charset.forName("UTF-8"));
+            ByteBuffer buf = message.get();
+            CharBuffer charBuf = Charset.forName("UTF-8").decode(buf);
+            String dataString = charBuf.toString();
             try {
                 // Deserialize JSON data
                 GsonBuilder builder = new GsonBuilder();
@@ -163,8 +168,6 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, Th
             } catch (JsonParseException | IOException e) {
                 entry.setException(e);
             }
-            // No response needed
-            return null;
         }
     }
     

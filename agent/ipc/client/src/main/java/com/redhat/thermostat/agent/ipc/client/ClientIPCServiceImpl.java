@@ -38,7 +38,6 @@ package com.redhat.thermostat.agent.ipc.client;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.ByteChannel;
 import java.util.ServiceLoader;
 
 import com.redhat.thermostat.agent.ipc.client.internal.ClientIPCPropertiesBuilder;
@@ -62,7 +61,7 @@ class ClientIPCServiceImpl implements ClientIPCService {
     }
     
     @Override
-    public ByteChannel connectToServer(String name) throws IOException {
+    public IPCMessageChannel connectToServer(String name) throws IOException {
         return transport.connect(name);
     }
 

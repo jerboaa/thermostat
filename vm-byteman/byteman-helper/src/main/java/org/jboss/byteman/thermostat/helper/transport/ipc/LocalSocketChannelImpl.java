@@ -38,13 +38,14 @@ package org.jboss.byteman.thermostat.helper.transport.ipc;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
+
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 
 public class LocalSocketChannelImpl implements LocalSocketChannel {
     
-    private final ByteChannel channel;
+    private final IPCMessageChannel channel;
     
-    LocalSocketChannelImpl(ByteChannel channel) {
+    LocalSocketChannelImpl(IPCMessageChannel channel) {
         this.channel = channel;
     }
 
@@ -55,7 +56,7 @@ public class LocalSocketChannelImpl implements LocalSocketChannel {
 
     @Override
     public void write(ByteBuffer buffer) throws IOException {
-        channel.write(buffer);
+        channel.writeMessage(buffer);
     }
 
 }

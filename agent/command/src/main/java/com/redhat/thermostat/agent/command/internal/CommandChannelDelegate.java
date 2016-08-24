@@ -38,6 +38,7 @@ package com.redhat.thermostat.agent.command.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
@@ -54,6 +55,7 @@ import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.command.Message.MessageType;
 import com.redhat.thermostat.common.command.Request;
@@ -141,8 +143,11 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     }
     
     @Override
-    public byte[] dataReceived(byte[] data) {
+    public void messageReceived(IPCMessage message) {
         byte[] result = null;
+        ByteBuffer buf = message.get();
+        byte[] data = new byte[buf.limit()];
+        buf.get(data);
         
         switch (state.get()) {
         case STATE_NOT_STARTED:
@@ -182,7 +187,21 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
         default: // STATE_ERROR
             // Do nothing
         }
-        return result;
+        
+        if (state.get() == STATE_ERROR && readyLatch.getCount() > 0) {
+            // Will never become ready, so throw exception
+            readyLatch.countDown();
+        }
+        
+        // Send reply using IPC service
+        if (result != null) {
+            ByteBuffer reply = ByteBuffer.wrap(result);
+            try {
+                message.reply(reply);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Failed to send reply via command channel", e);
+            }
+        }
     }
     
     private void startServer(String hostname, int port) throws IOException {

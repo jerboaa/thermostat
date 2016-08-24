@@ -37,12 +37,15 @@
 package com.redhat.thermostat.dev.ipc.test.server.internal;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
@@ -126,19 +129,21 @@ class UnixSocketTestServer {
         final ThermostatIPCCallbacks callbacks = new ThermostatIPCCallbacks() {
             
             @Override
-            public byte[] dataReceived(byte[] data) {
-                byte[] result = null;
+            public void messageReceived(IPCMessage message) {
                 try {
-                    String question = new String(data, "UTF-8");
+                    ByteBuffer data = message.get();
+                    CharBuffer charBuf = Charset.forName("UTF-8").decode(data);
+                    String question = charBuf.toString();
                     System.out.print(question + " -> ");
                     DummyReceiver receiver = new DummyReceiver();
                     String answer = receiver.answer(question);
                     System.out.println(answer);
-                    result = answer.getBytes("UTF-8");
-                } catch (UnsupportedEncodingException e) {
+                    
+                    ByteBuffer response = ByteBuffer.wrap(answer.getBytes(Charset.forName("UTF-8")));
+                    message.reply(response);
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
-                return result;
             }
         };
         

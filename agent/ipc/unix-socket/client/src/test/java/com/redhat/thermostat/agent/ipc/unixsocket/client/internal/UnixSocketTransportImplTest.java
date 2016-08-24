@@ -46,11 +46,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.ByteChannel;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.unixsocket.client.internal.UnixSocketTransportImpl.SocketHelper;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.ThermostatLocalSocketChannelImpl;
@@ -62,7 +62,7 @@ public class UnixSocketTransportImplTest {
     private File socketDir;
     private File socketFile;
     private SocketHelper sockHelper;
-    private ThermostatLocalSocketChannelImpl sockChannel;
+    private UnixSocketMessageChannel messageChannel;
     private UnixSocketIPCProperties props;
 
     @Before
@@ -73,8 +73,9 @@ public class UnixSocketTransportImplTest {
         when(socketFile.exists()).thenReturn(true);
         
         sockHelper = mock(SocketHelper.class);
-        sockChannel = mock(ThermostatLocalSocketChannelImpl.class);
-        when(sockHelper.openChannel(eq(SERVER_NAME), eq(socketFile))).thenReturn(sockChannel);
+        ThermostatLocalSocketChannelImpl sockChannel = mock(ThermostatLocalSocketChannelImpl.class);
+        when(sockHelper.openSocketChannel(eq(SERVER_NAME), eq(socketFile))).thenReturn(sockChannel);
+        when(sockHelper.createMessageChannel(sockChannel)).thenReturn(messageChannel);
         when(sockHelper.getSocketFile(socketDir, UnixSocketTransportImpl.SOCKET_PREFIX + SERVER_NAME)).thenReturn(socketFile);
         
         props = mock(UnixSocketIPCProperties.class);
@@ -84,8 +85,8 @@ public class UnixSocketTransportImplTest {
     @Test
     public void testConnectToServer() throws Exception {
         UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper);
-        ByteChannel result = service.connect(SERVER_NAME);
-        assertEquals(sockChannel, result);
+        IPCMessageChannel result = service.connect(SERVER_NAME);
+        assertEquals(messageChannel, result);
         verify(socketDir).exists();
         verify(socketFile).exists();
     }
@@ -108,7 +109,7 @@ public class UnixSocketTransportImplTest {
         } catch (IOException ignored) {
             verify(socketDir).exists();
             verify(socketFile, never()).exists();
-            verify(sockHelper, never()).openChannel(SERVER_NAME, socketFile);
+            verify(sockHelper, never()).openSocketChannel(SERVER_NAME, socketFile);
         }
     }
     
@@ -123,13 +124,13 @@ public class UnixSocketTransportImplTest {
         } catch (IOException ignored) {
             verify(socketDir).exists();
             verify(socketFile).exists();
-            verify(sockHelper, never()).openChannel(SERVER_NAME, socketFile);
+            verify(sockHelper, never()).openSocketChannel(SERVER_NAME, socketFile);
         }
     }
     
     @Test
     public void testConnectToServerBadSocket() throws Exception {
-        when(sockHelper.openChannel(SERVER_NAME, socketFile)).thenThrow(new IOException());
+        when(sockHelper.openSocketChannel(SERVER_NAME, socketFile)).thenThrow(new IOException());
         UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper);
         
         try {
@@ -138,7 +139,7 @@ public class UnixSocketTransportImplTest {
         } catch (IOException ignored) {
             verify(socketDir).exists();
             verify(socketFile).exists();
-            verify(sockHelper).openChannel(SERVER_NAME, socketFile);
+            verify(sockHelper).openSocketChannel(SERVER_NAME, socketFile);
         }
     }
 

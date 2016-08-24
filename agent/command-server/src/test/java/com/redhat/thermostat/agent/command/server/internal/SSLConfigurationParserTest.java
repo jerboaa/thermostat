@@ -38,36 +38,33 @@ package com.redhat.thermostat.agent.command.server.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.charset.Charset;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class SSLConfigurationParserTest {
     
     private SSLConfigurationParser parser;
-    private ByteChannel agentChannel;
+    private IPCMessageChannel agentChannel;
     
     @Before
     public void setUp() throws Exception {
         parser = new SSLConfigurationParser();
-        agentChannel = mock(ByteChannel.class);
+        agentChannel = mock(IPCMessageChannel.class);
     }
     
     @Test
@@ -327,14 +324,6 @@ public class SSLConfigurationParserTest {
     }
 
     private void mockByteChannel(final byte[] encoded) throws IOException {
-        when(agentChannel.read(any(ByteBuffer.class))).thenAnswer(new Answer<Integer>() {
-            @Override
-            public Integer answer(InvocationOnMock invocation) throws Throwable {
-                ByteBuffer buf = (ByteBuffer) invocation.getArguments()[0];
-                buf.put(encoded);
-                buf.flip();
-                return encoded.length;
-            }
-        });
+        when(agentChannel.readMessage()).thenReturn(ByteBuffer.wrap(encoded));
     }
 }

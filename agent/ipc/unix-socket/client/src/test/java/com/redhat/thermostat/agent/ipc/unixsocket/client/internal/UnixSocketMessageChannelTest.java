@@ -34,53 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.agent.internal;
+package com.redhat.thermostat.agent.ipc.unixsocket.client.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.agent.ipc.server.IPCMessage;
-import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
-import com.redhat.thermostat.vm.byteman.common.JsonHelper;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.SyncMessageReader;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.SyncMessageWriter;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.ThermostatLocalSocketChannelImpl;
 
-public class BytemanMetricsReceiverTest {
+public class UnixSocketMessageChannelTest {
+    
+    private SyncMessageReader reader;
+    private SyncMessageWriter writer;
+    private UnixSocketMessageChannel channel;
+    private ThermostatLocalSocketChannelImpl sock;
 
-    private static final int SOME_PID = 23;
-
-    @Test
-    public void canSendDataToStorage() {
-        VmBytemanDAO dao = mock(VmBytemanDAO.class);
-        ArgumentCaptor<BytemanMetric> metricsCaptor = ArgumentCaptor.forClass(BytemanMetric.class);
-        VmSocketIdentifier sockId = new VmSocketIdentifier("vm-id", SOME_PID, "agent-id");
-        BytemanMetricsReceiver receiver = new BytemanMetricsReceiver(dao, sockId);
-        String jsonString = JsonHelper.buildJsonArray(3);
-        ByteBuffer data = Charset.forName("UTF-8").encode(jsonString);
-        IPCMessage message = mock(IPCMessage.class);
-        when(message.get()).thenReturn(data);
-        receiver.messageReceived(message);
-        verify(dao, times(3)).addMetric(metricsCaptor.capture());
-        List<BytemanMetric> metrics = metricsCaptor.getAllValues();
-        assertEquals("vm-id", metrics.get(0).getVmId());
-        assertEquals("agent-id", metrics.get(2).getAgentId());
-        assertTrue(metrics.get(1).getTimeStamp() > 0);
-        assertEquals("baz0", metrics.get(0).getMarker());
-        assertNotNull(metrics.get(2).getDataAsJson());
-        Map<String, Object> payloadAsMap = metrics.get(2).getDataAsMap();
-        assertEquals("Expected 7 keys, including one with null value", 7, payloadAsMap.keySet().size());
+    @Before
+    public void setUp() {
+        sock = mock(ThermostatLocalSocketChannelImpl.class);
+        reader = mock(SyncMessageReader.class);
+        writer = mock(SyncMessageWriter.class);
+        channel = new UnixSocketMessageChannel(sock, reader, writer);
     }
     
+    @Test
+    public void testReadMessage() throws Exception {
+        ByteBuffer buf = mock(ByteBuffer.class);
+        when(reader.readData()).thenReturn(buf);
+        ByteBuffer result = channel.readMessage();
+        assertEquals(buf, result);
+    }
+    
+    @Test
+    public void testWriteMessage() throws Exception {
+        ByteBuffer buf = mock(ByteBuffer.class);
+        channel.writeMessage(buf);
+        verify(writer).writeData(buf);
+    }
+    
+    @Test
+    public void testIsOpen() throws Exception {
+        when(sock.isOpen()).thenReturn(true);
+        assertTrue(channel.isOpen());
+        verify(sock).isOpen();
+    }
+    
+    @Test
+    public void testClose() throws Exception {
+        channel.close();
+        verify(sock).close();
+    }
+
 }

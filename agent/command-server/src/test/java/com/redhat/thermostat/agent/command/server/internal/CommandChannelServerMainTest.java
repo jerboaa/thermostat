@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.command.server.internal;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -47,7 +48,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -58,13 +58,14 @@ import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerM
 import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain.ShutdownHookHandler;
 import com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain.Sleeper;
 import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
+import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class CommandChannelServerMainTest {
     
     private CommandChannelServerImpl server;
     private ClientIPCService ipcService;
-    private ByteChannel agentChannel;
+    private IPCMessageChannel agentChannel;
     private SSLConfigurationParser parser;
     private ShutdownHookHandler shutdownHandler;
     private Sleeper sleeper;
@@ -73,9 +74,7 @@ public class CommandChannelServerMainTest {
     public void setUpOnce() throws IOException {
         System.setProperty(CommandChannelServerMain.CONFIG_FILE_PROP, "/path/to/ipc/config");
         ipcService = mock(ClientIPCService.class);
-        agentChannel = mock(ByteChannel.class);
-        when(agentChannel.write(any(ByteBuffer.class))).thenReturn(CommandChannelConstants.SERVER_STARTED_TOKEN.length)
-                .thenReturn(CommandChannelConstants.SERVER_READY_TOKEN.length);
+        agentChannel = mock(IPCMessageChannel.class);
         when(ipcService.connectToServer(CommandChannelServerMain.IPC_SERVER_NAME)).thenReturn(agentChannel);
         
         SSLConfiguration config = mock(SSLConfiguration.class);
@@ -154,8 +153,8 @@ public class CommandChannelServerMainTest {
     }
     
     @Test
-    public void testShortStartedMessage() throws IOException {
-        when(agentChannel.write(any(ByteBuffer.class))).thenReturn(CommandChannelConstants.SERVER_STARTED_TOKEN.length - 1);
+    public void testStartedMessageException() throws IOException {
+        doThrow(new IOException("TEST")).when(agentChannel).writeMessage(any(ByteBuffer.class));
         try {
             CommandChannelServerMain.main(new String[] { "hello", "123" });
             fail("Expected IOException");
@@ -166,9 +165,8 @@ public class CommandChannelServerMainTest {
     }
     
     @Test
-    public void testShortReadyMessage() throws IOException {
-        when(agentChannel.write(any(ByteBuffer.class))).thenReturn(CommandChannelConstants.SERVER_STARTED_TOKEN.length)
-                .thenReturn(CommandChannelConstants.SERVER_READY_TOKEN.length - 1);
+    public void testReadyMessageException() throws IOException {
+        doNothing().doThrow(new IOException("TEST")).when(agentChannel).writeMessage(any(ByteBuffer.class));
         try {
             CommandChannelServerMain.main(new String[] { "hello", "123" });
             fail("Expected IOException");

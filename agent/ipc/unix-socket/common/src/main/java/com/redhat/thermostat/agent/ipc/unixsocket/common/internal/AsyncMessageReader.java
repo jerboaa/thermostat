@@ -34,26 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package org.jboss.byteman.thermostat.helper.transport.ipc;
+package com.redhat.thermostat.agent.ipc.unixsocket.common.internal;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
-import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
-import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
-import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
+public class AsyncMessageReader extends MessageReader {
+    
+    private final ByteBuffer readBuffer;
+    private final ThermostatLocalSocketChannelImpl channel;
+    private final MessageListener listener;
 
-public class LocalSocketChannelFactoryImpl implements LocalSocketChannelFactory {
+    public AsyncMessageReader(ThermostatLocalSocketChannelImpl channel, MessageListener listener) {
+        this(channel, listener, new MessageLimits());
+    }
+    
+    public AsyncMessageReader(ThermostatLocalSocketChannelImpl channel, MessageListener listener, MessageLimits limits) {
+        super(limits);
+        this.readBuffer = ByteBuffer.allocate(limits.getBufferSize());
+        this.channel = channel;
+        this.listener = listener;
+    }
+
+    public void readData() throws IOException {
+        // Read message from client
+        readBuffer.clear();
+        int read = channel.read(readBuffer);
+        if (read < 0) {
+            // Received EOF
+            channel.close();
+        } else {
+            readBuffer.flip();
+            processData(readBuffer);
+        }
+    }
 
     @Override
-    public LocalSocketChannel open(File ipcConfig, String socketName) {
-        try {
-            ClientIPCService ipcService = ClientIPCServiceFactory.getIPCService(ipcConfig);
-            IPCMessageChannel channel = ipcService.connectToServer(socketName);
-            return new LocalSocketChannelImpl(channel);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to connect to server", e);
-        }
+    protected void readFullMessage(ByteBuffer fullMessage) {
+        listener.messageRead(fullMessage);
     }
 
 }

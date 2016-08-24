@@ -124,8 +124,8 @@ class MessageHeader {
     private static int getPositiveIntOrThrow(ByteBuffer buf, String errorMsgPrefix) throws IOException {
         checkBytesRemaining(buf, INTEGER_BYTES);
         int result = buf.getInt();
-        if (result < 0) {
-            throw new IOException(errorMsgPrefix + " cannot be negative");
+        if (result <= 0) {
+            throw new IOException(errorMsgPrefix + " must be greater than zero");
         }
         return result;
     }
