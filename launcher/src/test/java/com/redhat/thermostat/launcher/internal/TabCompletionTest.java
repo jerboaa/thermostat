@@ -46,6 +46,7 @@ import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -72,13 +73,15 @@ public class TabCompletionTest {
     private TabCompletion tabCompletion;
     private TreeCompleter treeCompleter;
     private Map<String, TreeCompleter.Node> commandMap;
+    private Map<TreeCompleter.Node, Set<TreeCompleter.Node>> subcommandMap;
 
     @Before
     @SuppressWarnings("unchecked")
     public void setup() {
         treeCompleter = mock(TreeCompleter.class);
         commandMap = new HashMap<>();
-        tabCompletion = new TabCompletion(treeCompleter, commandMap);
+        subcommandMap = new HashMap<>();
+        tabCompletion = new TabCompletion(treeCompleter, commandMap, subcommandMap);
     }
 
     @Test
@@ -298,6 +301,48 @@ public class TabCompletionTest {
         assertThat(commandMap.containsKey("fake-command"), is(true));
         assertThat(commandMap.size(), is(2));
         verify(treeCompleter, times(2)).addBranch(isA(TreeCompleter.Node.class));
+    }
+
+    @Test
+    public void testSubcommandsReceiveParentOptionCompletions() {
+        Options parentOptions = new Options();
+        parentOptions.addOption("p", "parent", true, "parent option");
+
+        Options subcommandOptions = new Options();
+        subcommandOptions.addOption("s", "subcommand", true, "subcommand option");
+
+        PluginConfiguration.Subcommand subcommand = mock(PluginConfiguration.Subcommand.class);
+        when(subcommand.getName()).thenReturn("sub");
+        when(subcommand.getDescription()).thenReturn("sub desc");
+        when(subcommand.getOptions()).thenReturn(subcommandOptions);
+
+        CommandInfo parent = mock(CommandInfo.class);
+        when(parent.getName()).thenReturn("parent");
+        when(parent.getBundles()).thenReturn(Collections.<BundleInformation>emptyList());
+        when(parent.getDescription()).thenReturn("parent desc");
+        when(parent.getSubcommands()).thenReturn(Collections.singletonList(subcommand));
+        when(parent.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+        when(parent.getOptions()).thenReturn(parentOptions);
+
+        CommandInfoSource infoSource = mock(CommandInfoSource.class);
+        when(infoSource.getCommandInfos()).thenReturn(Collections.singletonList(parent));
+        when(infoSource.getCommandInfo(parent.getName())).thenReturn(parent);
+
+        tabCompletion.setupTabCompletion(infoSource);
+
+        assertThat(commandMap.keySet(), is(equalTo(Collections.singleton(parent.getName()))));
+        assertThat(subcommandMap.size(), is(1));
+        TreeCompleter.Node parentNode = new ArrayList<>(subcommandMap.keySet()).get(0);
+        assertThat(parentNode.getTag(), is("parent"));
+        TreeCompleter.Node subcommandNode = new ArrayList<>(new ArrayList<>(subcommandMap.values()).get(0)).get(0);
+        assertThat(subcommandNode.getTag(), is("sub"));
+
+        List<TreeCompleter.Node> subcommandChildren = subcommandNode.getBranches();
+        HashSet<String> childTags = new HashSet<>();
+        for (TreeCompleter.Node node : subcommandChildren) {
+            childTags.add(node.getTag());
+        }
+        assertThat(childTags, is(equalTo(new HashSet<>(Arrays.asList("-s", "--subcommand", "-p", "--parent")))));
     }
 
 }

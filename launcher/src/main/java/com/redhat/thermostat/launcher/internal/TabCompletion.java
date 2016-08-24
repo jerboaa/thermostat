@@ -67,17 +67,21 @@ public class TabCompletion {
 
     private TreeCompleter treeCompleter;
     private Map<String, TreeCompleter.Node> commandMap;
+    private Map<TreeCompleter.Node, Set<TreeCompleter.Node>> subcommandMap;
 
     public TabCompletion() {
-        this(new TreeCompleter(), new HashMap<String, TreeCompleter.Node>());
+        this(new TreeCompleter(), new HashMap<String, TreeCompleter.Node>(),
+                new HashMap<TreeCompleter.Node, Set<TreeCompleter.Node>>());
     }
 
     /*
      * Testing only
      */
-    TabCompletion(TreeCompleter treeCompleter, Map<String, TreeCompleter.Node> commandMap) {
+    TabCompletion(TreeCompleter treeCompleter, Map<String, TreeCompleter.Node> commandMap,
+                  Map<TreeCompleter.Node, Set<TreeCompleter.Node>> subcommandMap) {
         this.treeCompleter = treeCompleter;
         this.commandMap = commandMap;
+        this.subcommandMap = subcommandMap;
 
         treeCompleter.setAlphabeticalCompletions(true);
     }
@@ -160,6 +164,9 @@ public class TabCompletion {
     }
 
     private void addSubCommandCompletionsIfRequired(TreeCompleter.Node commandNode, CompleterService service) {
+        for (TreeCompleter.Node subcommand : getSubcommands(commandNode)) {
+            addTopLevelCommandOptionCompletions(subcommand, service);
+        }
         Map<String, Map<CliCommandOption, ? extends TabCompleter>> subcommandCompleters = service.getSubcommandCompleters();
         if (subcommandCompleters == null || subcommandCompleters.isEmpty()) {
             return;
@@ -175,9 +182,15 @@ public class TabCompletion {
                 TreeCompleter.Node completionNode = new TreeCompleter.Node(subcommand + " completer", completer);
                 completionNode.setRestartNode(commandNode);
                 addNodeByOption(subcommandNode, cliCommandOption, completionNode);
-                addTopLevelCommandOptionCompletions(subcommandNode, service);
             }
         }
+    }
+
+    private Set<TreeCompleter.Node> getSubcommands(TreeCompleter.Node commandNode) {
+        if (!subcommandMap.containsKey(commandNode)) {
+            return Collections.emptySet();
+        }
+        return subcommandMap.get(commandNode);
     }
 
     public void removeCompleterService(CompleterService service) {
@@ -213,6 +226,9 @@ public class TabCompletion {
     }
 
     private void removeSubCommandCompletionsIfRequired(TreeCompleter.Node commandNode, CompleterService service) {
+        for (TreeCompleter.Node subcommand : getSubcommands(commandNode)) {
+            removeTopLevelCommandOptionCompletions(subcommand, service);
+        }
         Map<String, Map<CliCommandOption, ? extends TabCompleter>> subcommandCompleters = service.getSubcommandCompleters();
         if (subcommandCompleters == null || subcommandCompleters.isEmpty()) {
             return;
@@ -244,7 +260,7 @@ public class TabCompletion {
                 String commandName = info.getName();
                 TreeCompleter.Node command = getCommandByName(commandName);
 
-                setupSubcommandCompletion(command, info.getSubcommands());
+                setupSubcommandCompletion(command, info);
 
                 for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
                     setupDefaultCompletion(command, option);
@@ -257,16 +273,21 @@ public class TabCompletion {
         }
     }
 
-    private void setupSubcommandCompletion(TreeCompleter.Node commandNode, List<PluginConfiguration.Subcommand> subcommands) {
+    private void setupSubcommandCompletion(TreeCompleter.Node commandNode, CommandInfo commandInfo) {
+        List<PluginConfiguration.Subcommand> subcommands = commandInfo.getSubcommands();
         for (PluginConfiguration.Subcommand subcommand : subcommands) {
-            TreeCompleter.Node node = createStringNode(subcommand.getName());
-            node.setRestartNode(commandNode);
+            TreeCompleter.Node subcommandNode = createStringNode(subcommand.getName());
+            subcommandNode.setRestartNode(commandNode);
+            for (Option option : (Collection<Option>) commandInfo.getOptions().getOptions()) {
+                setupDefaultCompletion(subcommandNode, option);
+            }
             if (subcommand.getOptions() != null) {
                 for (Option option : (Collection<Option>) subcommand.getOptions().getOptions()) {
-                    setupDefaultCompletion(node, option);
+                    setupDefaultCompletion(subcommandNode, option);
                 }
             }
-            commandNode.addBranch(node);
+            commandNode.addBranch(subcommandNode);
+            registerSubcommand(commandNode, subcommandNode);
         }
     }
 
@@ -282,6 +303,13 @@ public class TabCompletion {
             defaultNode.setRestartNode(command);
             command.addBranch(defaultNode);
         }
+    }
+
+    private void registerSubcommand(TreeCompleter.Node commandNode, TreeCompleter.Node subcommandNode) {
+        if (!subcommandMap.containsKey(commandNode)) {
+            subcommandMap.put(commandNode, new HashSet<TreeCompleter.Node>());
+        }
+        subcommandMap.get(commandNode).add(subcommandNode);
     }
 
     private void addHelpOptionIfRequired(TreeCompleter.Node command) {
