@@ -38,10 +38,13 @@ package org.jboss.byteman.thermostat.helper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -177,6 +180,33 @@ public class ThermostatHelperTest {
         } finally {
             System.setOut(oldOut);
         }
+    }
+    
+    @Test
+    public void testActivatedNonNull() {
+        Transport t = mock(Transport.class);
+        ThermostatHelper.setTransport(t);
+        ThermostatHelper.activated();
+        assertSame(t, ThermostatHelper.getTransport());
+    }
+    
+    @Test
+    public void testConstructorDoesNotSetTransport() {
+        ThermostatHelper.setTransport(null);
+        new ThermostatHelper(mock(Rule.class));
+        assertNull(ThermostatHelper.getTransport());
+    }
+    
+    @Test
+    public void testDeactivated() {
+        Transport t = mock(Transport.class);
+        ThermostatHelper.setTransport(t);
+        assertSame(t, ThermostatHelper.getTransport());
+        
+        ThermostatHelper.deactivated();
+        verify(t).close();
+        verifyNoMoreInteractions(t);
+        assertNull(ThermostatHelper.getTransport());
     }
 
     private Object getValue(boolean stringValue, int i) {

@@ -53,26 +53,28 @@ public class ThermostatHelper extends Helper {
     // Lock to synchronize initialization of transport between instances
     private static final Object transportLock = new Object();
     private static Transport transport = null;
-    
-    static void initTransport() {
-        transport = new TransportFactory().create();
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                transport.close();
-            }
-        }));
-    }
 
     /**
      * Constructor
      */
     protected ThermostatHelper(Rule rule) {
         super(rule);
-        // Initialize transport if not yet done
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (transportLock) {
+                    if (transport != null) {
+                        transport.close();
+                    }
+                }
+            }
+        }));
+    }
+
+    private static void initTransport() {
         synchronized (transportLock) {
             if (transport == null) {
-                initTransport();
+                transport = new TransportFactory().create();
             }
         }
     }
@@ -109,14 +111,33 @@ public class ThermostatHelper extends Helper {
     public void send(String marker, Object... dataArray) {
         LinkedHashMap<String, Object> data = toMap(dataArray);
         BytemanMetric rec = new BytemanMetric(marker, data);
-        transport.send(rec);
+        synchronized (transportLock) {
+            transport.send(rec);
+        }
     }
     
-    // For testing purposes
     static void setTransport(Transport transport) {
         synchronized (transportLock) {
             ThermostatHelper.transport = transport;
         }
+    }
+    
+    // package-private for testing
+    static Transport getTransport() {
+        return transport;
+    }
+    
+    // Called by Byteman on helper de-activation
+    public static void deactivated() {
+        synchronized (transportLock) {
+            transport.close();
+        }
+        setTransport(null);
+    }
+    
+    // Called by Byteman on helper activation
+    public static void activated() {
+        initTransport();
     }
 
 }

@@ -37,6 +37,7 @@
 package org.jboss.byteman.thermostat.helper.transport.ipc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -78,6 +79,18 @@ public class LocalSocketTransportTest {
         t = new LocalSocketTransport(0, 0, mock(File.class), "foo-name", 10, 1, 100, factory);
         t.close();
         verify(factory).open(any(File.class), eq("foo-name"));
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void instantiationFailureOfChannelOpeningUsesNoopChannelInstead() {
+        LocalSocketTransport t = null;
+        LocalSocketChannelFactory failFactory = mock(LocalSocketChannelFactory.class);
+        when(failFactory.open(any(File.class), any(String.class))).thenThrow(RuntimeException.class);
+        t = new LocalSocketTransport(0, 0, mock(File.class), "foo-name", 10, 1, 100, failFactory);
+        LocalSocketChannel channel = t.getChannel();
+        assertTrue(channel instanceof NoopLocalSocketChannel);
+        t.close();
     }
 
     @Test

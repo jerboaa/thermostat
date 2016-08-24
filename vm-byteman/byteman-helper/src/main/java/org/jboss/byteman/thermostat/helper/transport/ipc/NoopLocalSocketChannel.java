@@ -34,11 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package org.jboss.byteman.thermostat;
+package org.jboss.byteman.thermostat.helper.transport.ipc;
 
-public interface Properties {
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
-    String PREFIX = "org.jboss.byteman.thermostat.";
-    String BYTEMAN_VERBOSE_PROP = "org.jboss.byteman.verbose";
+import org.jboss.byteman.thermostat.Properties;
+
+public class NoopLocalSocketChannel implements LocalSocketChannel {
+    
+    private static final boolean IS_VERBOSE = Boolean.getBoolean(Properties.BYTEMAN_VERBOSE_PROP);
+    private final String reason;
+
+    public NoopLocalSocketChannel(String reason) {
+        this.reason = reason;
+    }
+    
+    @Override
+    public void close() throws IOException {
+        // nothing
+    }
+
+    @Override
+    public void write(ByteBuffer buffer) throws IOException {
+        if (IS_VERBOSE) {
+            System.out.println("[" + NoopLocalSocketChannel.class.getSimpleName() + "] Discarding message received via send(). Reason: " + reason);
+        }
+    }
 
 }

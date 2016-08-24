@@ -45,7 +45,6 @@ import java.util.List;
 
 import org.jboss.byteman.thermostat.helper.BytemanMetric;
 import org.jboss.byteman.thermostat.helper.Transport;
-import org.jboss.byteman.thermostat.helper.TransportException;
 import org.jboss.byteman.thermostat.helper.Utils;
 
 /**
@@ -79,11 +78,17 @@ class LocalSocketTransport extends Transport {
         this.attempts = attempts;
         this.breakIntervalMillis = breakIntervalMillis;
         this.socketName = socketName;
+        LocalSocketChannel ch;
         try {
-            this.channel = channelFactory.open(ipcConfig, socketName);
+            ch = channelFactory.open(ipcConfig, socketName);
         } catch (Exception e) {
-            throw new TransportException("Error opening Thermostat socket: [" + socketName + "]", e);
+            // Cannot write to thermostat endpoint for some reason.
+            // Use a no-op channel so that we keep things reasonable in the
+            // target JVM
+            String reason = "Error opening Thermostat socket: [" + socketName + "]";
+            ch = new NoopLocalSocketChannel(reason);
         }
+        this.channel = ch;
     }
 
     /**
