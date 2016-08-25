@@ -145,6 +145,8 @@ public class SpinningPanel extends JPanel {
         createHelpMessage();
 
         content.add(spinnerLayer, BorderLayout.CENTER);
+
+        setVisible(false);
     }
 
     private void createHelpMessage() {
@@ -174,6 +176,7 @@ public class SpinningPanel extends JPanel {
             spinnerLayerUI.stop();
             removeAll();
         }
+        setVisible(enable);
 
         revalidate();
         repaint();
