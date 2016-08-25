@@ -61,12 +61,17 @@ public class FrameworkOptionsProcessor {
     }
 
     private void initializeDefaultGlobalOptions() {
-        // set up default boot delegation to allow the vm-profiler to work
-        // correctly by default
+        // Set up default boot delegation to allow the vm-profiler and
+        // byteman to work correctly by default.
         globalOptions.put(FrameworkOptions.BOOT_DELEGATION,
+                // vm-profiler
                 "com.redhat.thermostat.vm.profiler.agent.jvm," +
                 "com.redhat.thermostat.vm.profiler.agent.asm," +
-                "com.redhat.thermostat.vm.profiler.agent.asm.commons");
+                "com.redhat.thermostat.vm.profiler.agent.asm.commons," +
+                // byteman instrumentation
+                "org.jboss.byteman.rule," +
+                "org.jboss.byteman.rule.exception"
+                );
     }
 
     private String[] processGlobalOptions(String[] args) {

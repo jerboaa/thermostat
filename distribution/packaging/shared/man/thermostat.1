@@ -55,7 +55,11 @@ The tool should be usable in a production environment, with minimal overhead.
                         available.
   --boot-delegation     Boot delegation string passed on to the OSGi framework.
                         Defaults to
-                        "com.redhat.thermostat.vm.profiler.agent.jvm,com.redhat.thermostat.vm.profiler.agent.asm,com.redhat.thermostat.vm.profiler.agent.asm.commons"
+                        "com.redhat.thermostat.vm.profiler.agent.jvm,
+                         com.redhat.thermostat.vm.profiler.agent.asm,
+                         com.redhat.thermostat.vm.profiler.agent.asm.commons,
+                         org.jboss.byteman.rule,
+                         org.jboss.byteman.rule.exception"
 
 .SS "Command Options and Command Arguments"
 Please see 
