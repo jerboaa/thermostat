@@ -38,14 +38,12 @@ package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import expectj.Spawn;
@@ -65,14 +63,15 @@ public class CliTest extends IntegrationTest {
             "                  system shell-prompt.conf file for instructions on how to write\n" +
             "                  the config file.\n";
     
-    @Before
-    public void setup() {
+    @BeforeClass
+    public static void setupOnce() {
+        setupIntegrationTest(CliTest.class);
+
+        /**
+         * If thermostat runs without setup complete it will run the setup;
+         * skip this by creating the stamp beforehand
+         */
         createFakeSetupCompleteFile();
-    }
-    
-    @After
-    public void tearDown() throws IOException {
-        removeSetupCompleteStampFiles();
     }
 
     @Test

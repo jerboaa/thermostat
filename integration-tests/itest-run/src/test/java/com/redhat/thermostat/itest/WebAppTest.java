@@ -252,12 +252,11 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        clearStorageDataDirectory();
+        setupIntegrationTest(WebAppTest.class);
 
         backupOriginalCredentialsFiles();
 
         createFakeSetupCompleteFile();
-        createFakeUserSetupDoneFile();
 
         addUserToStorage(getMongodbUsername(), getMongodbPassword());
 
@@ -315,10 +314,8 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
                     e.printStackTrace();
                     throw e;
                 } finally {
-                    removeSetupCompleteStampFiles();
                     restoreBackedUpCredentialsFiles();
                     System.out.println("RESTORED backed-up files!");
-                    clearStorageDataDirectory();
                 }
             }
         }
@@ -494,7 +491,7 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
         String version = appInfo.getMavenVersion();
         String warfile = "target/libs/thermostat-web-war-" + version + ".war";
         WebAppContext ctx = new WebAppContext(warfile, "/thermostat");
-        
+
         // We need to set this to true in order for WebStorageEndPoint to pick
         // up the descriptor registrations from WebAppTestStatementDescriptorRegistration
         // which would result in 

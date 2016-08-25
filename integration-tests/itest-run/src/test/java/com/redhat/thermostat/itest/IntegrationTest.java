@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,30 +76,12 @@ public class IntegrationTest {
     private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
     private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
     
-    public static final Map<String, String> DEFAULT_ENVIRONMENT;
-    public static final Map<String, String> DEFAULT_ENV_WITH_LANG_C;
-    
-    /**
-     * Configure the log level to FINEST, and configure a file handler so as for
-     * log messages to go to USER_THERMOSTAT_HOME/integration-tests.log rather
-     * than stdout. This is to ensure integration tests pass without dependency
-     * on log levels. See:
-     *   http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1594
-     */
-    static {
-        createUserThermostatHomeAndEtc();
-        File loggingProperties = new File(getUserThermostatHome() + File.separator + "etc" + File.separator + "logging.properties");
-        File logFile = new File(getUserThermostatHome() + File.separator + "integration-tests.log");
-        LogConfigurator configurator = new LogConfigurator(Level.FINEST, loggingProperties, logFile);
-        configurator.writeConfiguration();
-        
-        // Set up environment maps.
-        DEFAULT_ENVIRONMENT = new HashMap<>();
-        DEFAULT_ENVIRONMENT.put(THERMOSTAT_HOME, getThermostatHome());
-        DEFAULT_ENVIRONMENT.put(USER_THERMOSTAT_HOME, getUserThermostatHome());
-        DEFAULT_ENV_WITH_LANG_C = new HashMap<>(DEFAULT_ENVIRONMENT);
-        DEFAULT_ENV_WITH_LANG_C.put("LANG", "C");
-    }
+    public static Map<String, String> DEFAULT_ENVIRONMENT;
+    public static Map<String, String> DEFAULT_ENV_WITH_LANG_C;
+
+    private static String testName;
+    private static String thermostatHome;
+    private static String userThermostatHome;
     
     public static class SpawnResult {
         final Process process;
@@ -118,6 +99,57 @@ public class IntegrationTest {
     public static final String SHELL_CONNECT_PROMPT = "Thermostat + >";
 
     private static final String THERMOSTAT_SCRIPT = "thermostat";
+
+    public static void setupIntegrationTest(Class testClass) {
+        setupIntegrationTest(testClass.getName());
+    }
+
+    /**
+     * Call this with the name of the test e.g. Test.class.getName()
+     * to setup the testing environment. It is expected that integration
+     * tests call this in an @BeforeClass first before using other
+     * methods provided by this class. Otherwise behaviour is
+     * undefined
+     * @param testName
+     */
+    public static void setupIntegrationTest(String testName) {
+        /**
+         * Configure the log level to FINEST, and configure a file handler so as for
+         * log messages to go to USER_THERMOSTAT_HOME/integration-tests.log rather
+         * than stdout. This is to ensure integration tests pass without dependency
+         * on log levels. See:
+         *   http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1594
+         */
+        IntegrationTest.testName = testName;
+        setUserThermostatHome();
+        setThermostatHome();
+
+        /**
+         * Clean up the directory if it already exists for the new test run
+         * Older test runs may not have removed the directory or subdirectories
+         */
+        File f = new File(userThermostatHome);
+        if (f.exists()) {
+            try {
+                deleteFilesRecursivelyUnder(f);
+            } catch (IOException e) {
+            }
+        }
+
+        createUserThermostatHomeAndEtc();
+        File loggingProperties = new File(getUserThermostatHome() + File.separator + "etc" + File.separator + "logging.properties");
+        File logFile = new File(getUserThermostatHome() + File.separator + "integration-tests.log");
+        LogConfigurator configurator = new LogConfigurator(Level.FINEST, loggingProperties, logFile);
+        configurator.writeConfiguration();
+
+        // Set up environment maps.
+        DEFAULT_ENVIRONMENT = new HashMap<>();
+        DEFAULT_ENVIRONMENT.put(THERMOSTAT_HOME, getThermostatHome());
+        DEFAULT_ENVIRONMENT.put(USER_THERMOSTAT_HOME, getUserThermostatHome());
+
+        DEFAULT_ENV_WITH_LANG_C = new HashMap<>(DEFAULT_ENVIRONMENT);
+        DEFAULT_ENV_WITH_LANG_C.put("LANG", "C");
+    }
     
     private static File createUserThermostatHomeAndEtc() {
         File userThHome = new File(getUserThermostatHome());
@@ -150,52 +182,7 @@ public class IntegrationTest {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    
-    protected static void createFakeUserSetupDoneFile() {
-        String userHome = getUserThermostatHome();
-        File fUserHome = new File(userHome);
-        fUserHome.mkdir();
-        File dataDir = new File(fUserHome, "data");
-        dataDir.mkdir();
 
-        File mongodbUserDoneFile = new File(dataDir, "mongodb-user-done.stamp");
-        try {
-            // creates the file only if not yet existing
-            mongodbUserDoneFile.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Utility method for removing stamp files which may get created by certain
-     * integration test runs. For example a test which runs the "service"
-     * command now depends on a proper mongodb user to be set up. Setting it up
-     * may create the mongodb-user-done.stamp file. Similar with running
-     * the thermostat-setup script and setup-complete.stamp.
-     * 
-     * Be sure to call this in @After/@AfterClass as appropriate. There is no
-     * simple way for the base class to know when to erase those files.
-     * 
-     * @throws IOException
-     */
-    protected static void removeSetupCompleteStampFiles() throws IOException {
-        String mongodbUserDoneFile = getUserThermostatHome() + "/data/mongodb-user-done.stamp";
-        String setupStampFile = getUserThermostatHome() + "/data/setup-complete.stamp";
-        File mongodbFileStamp = new File(mongodbUserDoneFile);
-        File setupFileStamp = new File(setupStampFile);
-        removeFileIgnoreMissing(mongodbFileStamp);
-        removeFileIgnoreMissing(setupFileStamp);
-    }
-    
-    private static void removeFileIgnoreMissing(File file) throws IOException {
-        try {
-            Files.delete(file.toPath());
-        } catch (NoSuchFileException e) {
-            // wanted to delete that file, so that should be fine.
-        }
-    }
-    
     protected static Map<String, String> getVerboseModeProperties() {
         Map<String, String> testProperties = new HashMap<>();
         // See AgentApplication.VERBOSE_MODE_PROPERTY
@@ -213,8 +200,20 @@ public class IntegrationTest {
                 StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    protected void deleteAgentAuthFile() throws IOException {
-        Files.delete(new File(new File(getUserThermostatHome(), "etc"), "agent.auth").toPath());
+    private static void setThermostatHome() {
+        String propHome = System.getProperty(ITEST_THERMOSTAT_HOME_PROP);
+        if (propHome == null) {
+            String relPath = "../../distribution/target/image";
+            try {
+                IntegrationTest.thermostatHome = new File(relPath).getCanonicalPath();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            IntegrationTest.thermostatHome = propHome;
+        }
+
+        System.setProperty(THERMOSTAT_HOME, IntegrationTest.thermostatHome);
     }
 
     /* This is a mirror of paths from c.r.t.shared.Configuration */
@@ -245,33 +244,24 @@ public class IntegrationTest {
         return getThermostatHome() + "/bin";
     }
 
-    public static String getUserThermostatHome() {
+    private static void setUserThermostatHome() {
         String userHomeProp = System.getProperty(ITEST_USER_HOME_PROP);
         if (userHomeProp == null) {
-        	String relPath = "../../distribution/target/user-home";
-        	try {
-                return new File(relPath).getCanonicalPath();
+            String relPath = "target/user-home-" + testName;
+            try {
+                IntegrationTest.userThermostatHome = new File(relPath).getCanonicalPath();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            return userHomeProp;
+            IntegrationTest.userThermostatHome = userHomeProp;
         }
+
+        System.setProperty(USER_THERMOSTAT_HOME, IntegrationTest.userThermostatHome);
     }
 
-    public static String getStorageDataDirectory() {
-        return getUserThermostatHome() + "/data/db";
-    }
-
-    public static void clearStorageDataDirectory() throws IOException {
-        File storageDir = new File(getStorageDataDirectory());
-        if (storageDir.exists()) {
-            if (storageDir.isDirectory()) {
-                deleteFilesRecursivelyUnder(storageDir);
-            } else {
-                throw new IllegalStateException(storageDir + " exists but is not a directory");
-            }
-        }
+    public static String getUserThermostatHome() {
+        return IntegrationTest.userThermostatHome;
     }
 
     /** pre-conditions:
@@ -330,6 +320,7 @@ public class IntegrationTest {
         storage.expectClose();
 
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+
         return storage;
     }
     
@@ -338,6 +329,7 @@ public class IntegrationTest {
         storage.expect("server shutdown complete");
         storage.expectClose();
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+
         return storage;
     }
     

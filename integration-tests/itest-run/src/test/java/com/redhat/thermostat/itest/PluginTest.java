@@ -41,10 +41,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class PluginTest extends IntegrationTest {
-
     protected static final String SYSTEM_PLUGIN_HOME = getSystemPluginHome();
-    protected static final String USER_PLUGIN_HOME = getUserThermostatHome() + File.separator + "data" + File.separator + "plugins";
-    protected static final String USER_PLUGIN_INSTALL_LOCATION = USER_PLUGIN_HOME + File.separator + "user";
     protected static final String SYSTEM_PLUGIN_INSTALL_LOCATION = SYSTEM_PLUGIN_HOME + File.separator + "new";
 
     protected abstract static class BasicPlugin {

@@ -38,8 +38,7 @@ package com.redhat.thermostat.itest;
 
 import java.io.IOException;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -49,25 +48,15 @@ import expectj.TimeoutException;
 
 public class StorageConnectionTest extends IntegrationTest {
 
-    // @BeforeClass // reinstate once we actually need storage running (see ignored tests)
+    @BeforeClass
     public static void setUpOnce() throws Exception {
-        clearStorageDataDirectory();
-        startStorage();
-    }
+        setupIntegrationTest(StorageConnectionTest.class);
 
-    // @AfterClass // reinstate once we actually need storage running
-    public static void tearDownOnce() throws Exception {
-        stopStorage();
-    }
-    
-    @Before
-    public void setup() {
+        /**
+         * If thermostat runs without setup complete it will run the setup;
+         * skip this by creating the stamp beforehand
+         */
         createFakeSetupCompleteFile();
-    }
-    
-    @After
-    public void tearDown() throws IOException {
-        removeSetupCompleteStampFiles();
     }
 
     @Ignore //FIXME when keyring/preferences improvements have been made, un-Ignore

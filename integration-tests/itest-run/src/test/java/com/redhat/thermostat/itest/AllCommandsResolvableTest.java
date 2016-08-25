@@ -37,11 +37,9 @@
 package com.redhat.thermostat.itest;
 
 import expectj.Spawn;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,15 +57,21 @@ import static org.junit.Assert.assertTrue;
 public class AllCommandsResolvableTest extends IntegrationTest {
     
     private static final String UNKNOWN_CMD_OPTION = "--unknownOption";
-    
-    @Before
-    public void setup() {
+
+    /**
+     * Setup in @BeforeClass rather than @Before since the
+     * user-thermostat-home directories are per-class
+     * rather than per-test. The setup-complete stamp is
+     * placed in this directory.
+     */
+    @BeforeClass
+    public static void setupOnce() {
+        setupIntegrationTest(AllCommandsResolvableTest.class);
+        /**
+         * If thermostat runs without setup complete it will run the setup;
+         * skip this by creating the stamp beforehand
+         */
         createFakeSetupCompleteFile();
-    }
-    
-    @After
-    public void tearDown() throws IOException {
-        removeSetupCompleteStampFiles();
     }
     
     @Test

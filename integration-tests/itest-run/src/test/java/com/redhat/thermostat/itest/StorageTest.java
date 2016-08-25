@@ -36,42 +36,37 @@
 
 package com.redhat.thermostat.itest;
 
-import java.io.IOException;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import expectj.Spawn;
 
 public class StorageTest extends IntegrationTest {
     
-    @Before
-    public void setup() {
+    @BeforeClass
+    public static void setupOnce() throws Exception {
+        setupIntegrationTest(StorageTest.class);
+
         createFakeSetupCompleteFile();
-    }
-    
-    @After
-    public void tearDown() throws IOException {
-        removeSetupCompleteStampFiles();
+
+        addUserToStorage("foo", "bar");
+        createAgentAuthFile("foo", "bar");
     }
 
     @Test
     public void startAndStopStorage() throws Exception {
-        clearStorageDataDirectory();
-
         Spawn storage;
-        storage = startStorage();
+        startStorage();
 
         storage = spawnThermostat("storage", "--status");
         storage.expect("Storage is running");
         storage.expectClose();
         
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
-        
-        storage = stopStorage();
-        
+
+        stopStorage();
         storage = spawnThermostat("storage", "--status");
         storage.expect("Storage is not running");
         storage.expectClose();
@@ -81,10 +76,6 @@ public class StorageTest extends IntegrationTest {
 
     @Test
     public void testServiceStartAndKilling() throws Exception {
-        clearStorageDataDirectory();
-        addUserToStorage("foo", "bar");
-        createAgentAuthFile("foo", "bar");
-
         Map<String, String> testProperties = getVerboseModeProperties();
         SpawnResult spawnResult = spawnThermostatWithPropertiesSetAndGetProcess(testProperties, "service");
         Spawn service = spawnResult.spawn;
@@ -105,7 +96,9 @@ public class StorageTest extends IntegrationTest {
         service.stop();
         service.expectClose();
 
-        deleteAgentAuthFile();
+        service = spawnThermostat("storage", "--status");
+        service.expect("Storage is not running");
+        service.expectClose();
     }
 
 }

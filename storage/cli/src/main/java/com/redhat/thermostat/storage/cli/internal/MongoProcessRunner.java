@@ -46,6 +46,13 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,6 +88,8 @@ public class MongoProcessRunner {
     private static final String [] MONGO_SHUTDOWN_ARGS = {
         "kill", "-s", "TERM"
     };
+
+    private static final String EMPTY_STRING = "";
 
     private static final String NO_JOURNAL_ARGUMENT = "--nojournal";
     static final String NO_JOURNAL_FIRST_VERSION = "1.9.2";
@@ -170,7 +179,7 @@ public class MongoProcessRunner {
             throw new StorageAlreadyRunningException(pid, message.getContents());
         }
         
-        String dbVersion;
+        final String dbVersion;
         try {
             dbVersion = getDBVersion();
         } catch (IOException e) {
@@ -179,15 +188,14 @@ public class MongoProcessRunner {
             throw new ApplicationException(message.getContents(), e);
 
         }
-        List<String> commands = null;
-        commands = getStartupCommand(dbVersion);
+        List<String> commands = getStartupCommand(dbVersion);
         
         logger.log(Level.FINEST, "Executing mongo: " + StringUtils.join(" ", commands));
 
         display(translator.localize(LocaleResources.STARTING_STORAGE_SERVER));
         
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
-        int status = -1;
+        int status;
         try {
             status = process.runAndReturnResult();
         } catch (ApplicationException ae) {
@@ -195,19 +203,12 @@ public class MongoProcessRunner {
             throw new ApplicationException(message.getContents(), ae);
         }
 
-        Thread.sleep(500);
-
-        if (status == 0) {
-            if (!isStorageRunning()) {
-                status = -1;
-            }
-        }
+        waitForLogFile(getStartString(dbVersion));
 
         if (status == 0) {
             display(translator.localize(LocaleResources.SERVER_LISTENING_ON, configuration.getDBConnectionString()));
             display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
             display(translator.localize(LocaleResources.PID_IS, String.valueOf(pid)));
-            
         } else {
             // don't display anything when throwing an exception; whatever catches the exception will do so.
             LocalizedString message = translator.localize(LocaleResources.CANNOT_START_SERVER,
@@ -233,6 +234,19 @@ public class MongoProcessRunner {
 
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
         int status = process.runAndReturnResult();
+
+        final String dbVersion;
+        try {
+            dbVersion = getDBVersion();
+        } catch (IOException e) {
+            LocalizedString message = translator.localize(
+                    LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
+            throw new ApplicationException(message.getContents(), e);
+
+        }
+
+        waitForLogFile(getStopString(dbVersion));
+
         if (status == 0) {
             display(translator.localize(LocaleResources.SERVER_SHUTDOWN_COMPLETE, configuration.getDBPath().toString()));
             display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
@@ -311,6 +325,57 @@ public class MongoProcessRunner {
         Process process = new ProcessBuilder(Arrays.asList("mongod", "--version")).start();
         InputStream out = process.getInputStream();
         return doGetDBVersion(out);
+    }
+
+    private void waitForLogFile(final String toWaitFor) throws InterruptedException, IOException {
+        final File logFile = configuration.getLogFile();
+        /**
+         * Initialize with empty string so first check does not NPE
+         */
+        final String[] s = new String[]{EMPTY_STRING};
+
+        /**
+         * Try for approximately 5 seconds
+         */
+        for (int i = 0; i < 50; i++) {
+            if (logFile.exists() && !s[0].contains(toWaitFor)) {
+                s[0] = new String(Files.readAllBytes(logFile.toPath()));
+                Thread.sleep(100l);
+            } else {
+                return;
+            }
+        }
+    }
+
+    private String getStartString(String dbVersion) {
+        /**
+         * Valid for mongodb >= 2.0.6
+         */
+        if (dbVersion.compareTo("2.0.6") >= 0) {
+            return "waiting for connections on port";
+        }
+        /**
+         * For other versions return empty.
+         */
+        return EMPTY_STRING;
+    }
+
+    private String getStopString(String dbVersion) {
+        /**
+         * Valid for mongodb >= 3.2.0
+         */
+        if (dbVersion.compareTo("3.2.0") >= 0) {
+            return "dbexit:  rc: 0";
+        } else if (dbVersion.compareTo("2.0.6") >= 0) {
+            /**
+             * Valid for mongodb >= 2.0.6 and < 3.2.0
+             */
+            return "dbexit: really exiting now";
+        }
+        /**
+         * For other versions return empty.
+         */
+        return EMPTY_STRING;
     }
     
     // package private for testing

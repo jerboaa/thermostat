@@ -37,11 +37,9 @@
 package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.util.Map;
 
 import org.junit.AfterClass;
@@ -56,33 +54,21 @@ public class DevWebStorageTest extends WebStorageUsingIntegrationTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
-        clearStorageDataDirectory();
+        setupIntegrationTest(DevWebStorageTest.class);
         backupOriginalCredentialsFiles();
+
         try {
             runThermostatDevSetup();
         } catch (Exception e) {
             e.printStackTrace();
             restoreBackedUpCredentialsFiles();
+            fail();
         }
     }
 
-    
     @AfterClass
     public static void tearDown() throws IOException {
-        removeSetupCompleteStampFiles();
-        removeAgentAuthFile();
-
         restoreBackedUpCredentialsFiles();
-        clearStorageDataDirectory();
-    }
-    
-    private static void removeAgentAuthFile() throws IOException {
-        File agentAuth = new File(getUserThermostatHome() , "etc/agent.auth");
-        try {
-            Files.delete(agentAuth.toPath());
-        } catch (NoSuchFileException e) {
-            // this is what we wanted, so ignore it.
-        }
     }
 
     /**

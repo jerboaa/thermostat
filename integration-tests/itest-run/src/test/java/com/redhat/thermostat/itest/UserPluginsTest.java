@@ -40,11 +40,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -56,35 +52,30 @@ import expectj.Spawn;
  */
 public class UserPluginsTest extends PluginTest {
 
-    private static NewCommandPlugin userPlugin = new NewCommandPlugin(
-            "user",
-            "a plugin that is provided by the user",
-            "a plugin that is provided by the user",
-            USER_PLUGIN_INSTALL_LOCATION);
-    private static UnknownExtendsPlugin unknownExtension = new UnknownExtendsPlugin(USER_PLUGIN_HOME + File.separator + "unknown");
+    private static NewCommandPlugin userPlugin;
+    private static UnknownExtendsPlugin unknownExtension;
 
     @BeforeClass
     public static void setUpOnce() {
+        setupIntegrationTest(UserPluginsTest.class);
+
+        createFakeSetupCompleteFile();
+
+        String USER_PLUGIN_HOME = getUserThermostatHome() + File.separator + "data" + File.separator + "plugins";
+        String USER_PLUGIN_INSTALL_LOCATION = USER_PLUGIN_HOME + File.separator + "user";
+
+
+        userPlugin = new NewCommandPlugin(
+                "user",
+                "a plugin that is provided by the user",
+                "a plugin that is provided by the user",
+                USER_PLUGIN_INSTALL_LOCATION);
         userPlugin.install();
+
+        unknownExtension = new UnknownExtendsPlugin(USER_PLUGIN_HOME + File.separator + "unknown");
         unknownExtension.install();
     }
     
-    @Before
-    public void setup() {
-        createFakeSetupCompleteFile();
-    }
-
-    @AfterClass
-    public static void tearDownOnce() {
-        unknownExtension.uninstall();
-        userPlugin.uninstall();
-    }
-    
-    @After
-    public void tearDown() throws IOException {
-        removeSetupCompleteStampFiles();
-    }
-
     @Test
     public void testHelpIsOkay() throws Exception {
         Spawn shell = spawnThermostat("help");

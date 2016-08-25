@@ -79,8 +79,10 @@ public class NotesCommandsTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
+        setupIntegrationTest(NotesCommandsTest.class);
+
         createFakeSetupCompleteFile();
-        clearStorageDataDirectory();
+
         addUserToStorage(USERNAME, PASSWORD);
         createAgentAuthFile(USERNAME, PASSWORD);
 
@@ -92,7 +94,6 @@ public class NotesCommandsTest extends IntegrationTest {
     @AfterClass
     public static void tearDownOnce() throws Exception {
         stopStorage();
-        removeSetupCompleteStampFiles();
     }
 
     private static void addAgentToStorage() throws InterruptedException {

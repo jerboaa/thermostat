@@ -56,8 +56,10 @@ public class VmCommandsTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
+        setupIntegrationTest(VmCommandsTest.class);
+
         createFakeSetupCompleteFile();
-        clearStorageDataDirectory();
+
         addUserToStorage(USERNAME, PASSWORD);
         createAgentAuthFile(USERNAME, PASSWORD);
 
@@ -69,7 +71,6 @@ public class VmCommandsTest extends IntegrationTest {
     @AfterClass
     public static void tearDownOnce() throws Exception {
         stopStorage();
-        removeSetupCompleteStampFiles();
     }
 
     @Ignore //FIXME when keyring/preferences improvements have been made, un-Ignore

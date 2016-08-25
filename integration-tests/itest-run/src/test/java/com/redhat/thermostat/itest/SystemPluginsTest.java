@@ -38,11 +38,7 @@ package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -58,25 +54,19 @@ public class SystemPluginsTest extends PluginTest {
             "provides foo command", "provides foo command", SYSTEM_PLUGIN_INSTALL_LOCATION);
     
     @BeforeClass
-    public static void setUpOnce() {
+    public static void setUpOnce()
+    {
+        setupIntegrationTest(SystemPluginsTest.class);
+        createFakeSetupCompleteFile();
+
         fooPlugin.install();
     }
     
-    @Before
-    public void setup() {
-        createFakeSetupCompleteFile();
-    }
-
     @AfterClass
     public static void tearDownOnce() {
         fooPlugin.uninstall();
     }
     
-    @After
-    public void tearDown() throws IOException {
-        removeSetupCompleteStampFiles();
-    }
-
     @Test
     public void helpOutputContainsSystemPluginName() throws Exception {
         Spawn shell = spawnThermostat("help");
@@ -90,7 +80,6 @@ public class SystemPluginsTest extends PluginTest {
         assertTrue(stdOut.contains("gui"));
         assertTrue(stdOut.contains("ping"));
         assertTrue(stdOut.contains("shell"));
-
 
         assertTrue(stdOut.contains(fooPlugin.getCommandName()));
     }

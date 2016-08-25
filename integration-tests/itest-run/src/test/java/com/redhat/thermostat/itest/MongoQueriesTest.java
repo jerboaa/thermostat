@@ -125,7 +125,8 @@ public class MongoQueriesTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        clearStorageDataDirectory();
+        setupIntegrationTest(MongoQueriesTest.class);
+
         createFakeSetupCompleteFile();
         addUserToStorage(USERNAME, PASSWORD);
 
@@ -136,11 +137,7 @@ public class MongoQueriesTest extends IntegrationTest {
 
     @AfterClass
     public static void tearDownOnce() throws Exception {
-        deleteCpuData();
-
         stopStorage();
-        removeSetupCompleteStampFiles();
-        clearStorageDataDirectory();
     }
 
     /*
