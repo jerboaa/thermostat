@@ -84,6 +84,7 @@ public class VmBytemanInformationController implements InformationServiceControl
     private static final Logger logger = LoggingUtils.getLogger(VmBytemanInformationController.class);
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");
+    private static final String EMPTY_STR = "";
     static final String NO_RULES_LOADED = t.localize(LocaleResources.NO_RULES_LOADED).getContents();
     
     private final VmRef vm;
@@ -365,7 +366,7 @@ public class VmBytemanInformationController implements InformationServiceControl
     }
 
     private boolean isEmpty(String rule) {
-        if (rule == null) {
+        if (EMPTY_STR.equals(rule.trim())) {
             return true;
         }
         return NO_RULES_LOADED.equals(rule);

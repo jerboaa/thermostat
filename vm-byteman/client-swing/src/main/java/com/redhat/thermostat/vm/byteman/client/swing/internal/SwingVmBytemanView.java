@@ -41,11 +41,18 @@ import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Cursor;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -58,6 +65,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -66,12 +74,15 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
+import javax.swing.plaf.basic.BasicSplitPaneDivider;
+import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
@@ -113,17 +124,26 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final Icon START_ICON = IconResource.SAMPLE.getIcon();
     private static final Icon STOP_ICON = new FontAwesomeIcon('\uf28e', START_ICON.getIconHeight());
+    private static final Icon ARROW_LEFT = IconResource.ARROW_LEFT.getIcon();
+    private static final Icon ARROW_RIGHT = IconResource.ARROW_RIGHT.getIcon();
     private static final String EMPTY_STR = "";
     
     static final String NO_METRICS_AVAILABLE = t.localize(LocaleResources.NO_METRICS_AVAILABLE).getContents();
     
     // Names for buttons used in testing
     static final String TOGGLE_BUTTON_NAME = "TOGGLE_RULE_BUTTON";
-    static final String RULES_TEXT_NAME = "RULES_TEXT";
+    static final String RULES_INJECTED_TEXT_NAME = "RULES_INJECTED_TEXT";
+    static final String RULES_UNLOADED_TEXT_NAME = "RULES_UNLOADED_TEXT";
     static final String METRICS_TEXT_NAME = "METRICS_TEXT";
     
+    private String injectedRuleContent;
+    private String unloadedRuleContent;
+    private boolean generateRuleToggle;
     private final JTextArea metricsText;
-    private final JTextArea rulesText;
+    private final JTextArea unloadedRulesText;
+    private final JTextArea injectedRulesText;
+    private final JButton injectRuleButton;
+    private final JButton unloadRuleButton;
     private JPanel graphMainPanel;
     private ChartPanel graphPanel;
     private JFreeChart graph;
@@ -175,29 +195,119 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         final double yWeightRow1 = 0.90;
         final double yWeightRow2 = 0.05;
         final double xWeightFullWidth = 1.0;
+        final double halfWeight = 0.5;
         final Insets paddingInsets = new Insets(5, 5, 5, 5);
 
         // Rules tab
         final JPanel rulesPanel = new JPanel();
         rulesPanel.setLayout(new GridBagLayout());
-        rulesText = new ThermostatTextArea(EMPTY_STR);
-        rulesText.setName(RULES_TEXT_NAME);
-        rulesText.setMargin(paddingInsets);
-        rulesText.setBackground(Color.WHITE);
-        rulesText.setCursor(new Cursor(Cursor.TEXT_CURSOR));
-        rulesText.setBorder(new LineBorder(Color.BLACK));
+
+        // Label Descriptors
+        JLabel localLabel = new JLabel(t.localize(LocaleResources.LABEL_LOCAL_RULE).getContents());
         GridBagConstraints cRules = new GridBagConstraints();
-        cRules.fill = GridBagConstraints.BOTH;
         cRules.gridx = 0;
         cRules.gridy = 0;
-        cRules.weighty = yWeightRow0 + yWeightRow1;
-        cRules.weightx = xWeightFullWidth;
+        cRules.anchor = GridBagConstraints.LINE_START;
         cRules.insets = paddingInsets;
-        JScrollPane scrollPane = new ThermostatScrollPane(rulesText);
-        rulesPanel.add(scrollPane, cRules);
+        rulesPanel.add(localLabel, cRules);
+        JLabel injectLabel = new JLabel(t.localize(LocaleResources.LABEL_INJECTED_RULE).getContents());
+        cRules = new GridBagConstraints();
+        cRules.gridx = 1;
+        cRules.gridy = 0;
+        cRules.anchor = GridBagConstraints.LINE_END;
+        cRules.insets = paddingInsets;
+        rulesPanel.add(injectLabel, cRules);
+
+        // Unloaded Rules TextArea
+        unloadedRulesText = new ThermostatTextArea(EMPTY_STR);
+        unloadedRulesText.setName(RULES_UNLOADED_TEXT_NAME);
+        unloadedRulesText.setMargin(paddingInsets);
+        unloadedRulesText.setBackground(Color.WHITE);
+        unloadedRulesText.setCursor(new Cursor(Cursor.TEXT_CURSOR));
+        unloadedRulesText.setBorder(new LineBorder(Color.BLACK));
+        unloadedRulesText.setText(t.localize(LocaleResources.NO_RULES_LOADED).getContents());
+        JScrollPane unloadedPane = new ThermostatScrollPane(unloadedRulesText);
+        unloadedPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
+        // Injected Rules TextArea
+        injectedRulesText = new ThermostatTextArea(EMPTY_STR);
+        injectedRulesText.setName(RULES_INJECTED_TEXT_NAME);
+        injectedRulesText.setMargin(paddingInsets);
+        injectedRulesText.setBackground(Color.WHITE);
+        injectedRulesText.setCursor(new Cursor(Cursor.TEXT_CURSOR));
+        injectedRulesText.setBorder(new LineBorder(Color.BLACK));
+        injectedRulesText.setEditable(false);
+        injectedRulesText.setText(t.localize(LocaleResources.NO_RULES_LOADED).getContents());
+        JScrollPane injectedPane = new ThermostatScrollPane(injectedRulesText);
+        injectedPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
+        // Inject & Unload Buttons
+        injectRuleButton = new JButton(ARROW_RIGHT);
+        injectRuleButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                fireInjectAction(InjectAction.INJECT_RULE);
+            }
+        });
+        unloadRuleButton = new JButton(ARROW_LEFT);
+        unloadRuleButton.setEnabled(false);
+        unloadRuleButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                fireInjectAction(InjectAction.UNLOAD_RULE);
+            }
+        });
+
+        // Split Pane and Divider
+        JSplitPane splitPane = new JSplitPane();
+        splitPane.setLeftComponent(unloadedPane);
+        splitPane.setRightComponent(injectedPane);
+        splitPane.setResizeWeight(halfWeight);
+        BasicSplitPaneUI ui = new BasicSplitPaneUI() {
+            public BasicSplitPaneDivider createDefaultDivider() {
+                return new BasicSplitPaneDivider(this) {
+                    @Override
+                    public void paint(Graphics g) {
+                        g.setColor(rulesPanel.getBackground());
+                        g.fillRect(0, 0, getSize().width, getSize().height);
+                        super.paint(g);
+                    }
+                };
+            }
+        };
+        splitPane.setUI(ui);
+        BasicSplitPaneDivider divider = ui.getDivider();
+        divider.setCursor(Cursor.getDefaultCursor());
+        divider.setLayout(new GridBagLayout());
+        divider.setDividerSize((int)(injectRuleButton.getPreferredSize().getWidth())*2);
+        cRules = new GridBagConstraints();
         cRules.fill = GridBagConstraints.BOTH;
         cRules.gridx = 0;
         cRules.gridy = 1;
+        divider.add(unloadRuleButton, cRules);
+        cRules = new GridBagConstraints();
+        cRules.fill = GridBagConstraints.BOTH;
+        cRules.gridx = 1;
+        cRules.gridy = 1;
+        divider.add(injectRuleButton, cRules);
+        cRules = new GridBagConstraints();
+        cRules.weighty = halfWeight;
+        cRules = new GridBagConstraints();
+        cRules.fill = GridBagConstraints.BOTH;
+        cRules.gridx = 0;
+        cRules.gridwidth = 2;
+        cRules.gridy = 1;
+        cRules.weighty = yWeightRow0 + yWeightRow1;
+        cRules.weightx = xWeightFullWidth;
+        cRules.insets = paddingInsets;
+        rulesPanel.add(splitPane, cRules);
+
+        // Import & Generate Rule Buttons
+        cRules = new GridBagConstraints();
+        cRules.fill = GridBagConstraints.BOTH;
+        cRules.gridx = 0;
+        cRules.gridy = 2;
+        cRules.gridwidth = 2;
         cRules.weighty = yWeightRow2;
         cRules.weightx = xWeightFullWidth;
         cRules.insets = paddingInsets;
@@ -213,11 +323,36 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
+                generateRuleToggle = true;
                 fireGenerateEvent(GenerateAction.GENERATE_TEMPLATE);
             }
             
         });
         buttonHolder.add(generateRuleButton);
+        JButton importRuleButton = new JButton(t.localize(LocaleResources.IMPORT_RULE).getContents());
+        importRuleButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                JFileChooser chooser = new JFileChooser();
+                int result = chooser.showOpenDialog(rulesPanel);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File file = chooser.getSelectedFile();
+                    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                        unloadedRulesText.setText(EMPTY_STR);
+                        String line = reader.readLine();
+                        while(line != null) {
+                            unloadedRulesText.append(line + "\n");
+                            line = reader.readLine();
+                        }
+                    } catch (FileNotFoundException fnfe) {
+                        fnfe.printStackTrace();
+                    } catch (IOException ioe) {
+                        ioe.printStackTrace();
+                    }
+                }
+            }
+        });
+        buttonHolder.add(importRuleButton);
         buttonHolder.setAlignmentX(Component.RIGHT_ALIGNMENT);
         rulesPanel.add(buttonHolder, cRules);
         
@@ -488,23 +623,37 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
 
     @Override
     public void setInjectState(final BytemanInjectState state) {
-        final String buttonLabel;
-        if (!viewControlsEnabled) {
-            buttonLabel = t.localize(LocaleResources.INJECT_RULE).getContents();
-        } else if (state == BytemanInjectState.UNLOADING || state == BytemanInjectState.INJECTED) {
-            buttonLabel = t.localize(LocaleResources.UNLOAD_RULE).getContents();
-        } else {
-            buttonLabel = t.localize(LocaleResources.INJECT_RULE).getContents();
-        }
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                final String buttonLabel;
+                if (!viewControlsEnabled) {
+                    buttonLabel = t.localize(LocaleResources.INJECT_RULE).getContents();
+                } else if (state == BytemanInjectState.UNLOADING || state == BytemanInjectState.INJECTED) {
+                    buttonLabel = t.localize(LocaleResources.UNLOAD_RULE).getContents();
+                } else {
+                    buttonLabel = t.localize(LocaleResources.INJECT_RULE).getContents();
+                }
+
                 if (!viewControlsEnabled) {
                     toggleButton.setToggleActionState(BytemanInjectState.DISABLED);
                 } else {
                     toggleButton.setToggleActionState(state);
                 }
                 toggleButton.setText(buttonLabel);
+
+                if (state == BytemanInjectState.INJECTED) {
+                    injectedRulesText.setText(unloadedRulesText.getText());
+                    injectRuleButton.setEnabled(false);
+                    unloadRuleButton.setEnabled(true);
+                } else if (state == BytemanInjectState.UNLOADING) {
+                    if (EMPTY_STR.equals(unloadedRulesText.getText().trim())) {
+                        unloadedRulesText.setText(injectedRulesText.getText());
+                    }
+                } else if (state == BytemanInjectState.UNLOADED){
+                    injectRuleButton.setEnabled(true);
+                    unloadRuleButton.setEnabled(false);
+                }
             }
         });
         
@@ -546,7 +695,12 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                rulesText.setText(rule);
+                if (generateRuleToggle) {
+                    unloadedRulesText.setText(rule);
+                    generateRuleToggle = false;
+                } else {
+                    injectedRulesText.setText(rule);
+                }
             }
         });
     }
@@ -571,6 +725,55 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                 metricsText.setText(buffer.toString());
             }
         });
+    }
+
+    // Package private for testing
+    String getInjectedRuleContent() throws InvocationTargetException, InterruptedException {
+        injectedRuleContent = "";
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                injectedRuleContent = injectedRulesText.getText();
+            }
+        });
+        return injectedRuleContent;
+    }
+
+    // Package private for testing
+    void setUnloadedRuleContent(final String rule) throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                unloadedRulesText.setText(rule);
+            }
+        });
+    }
+
+    // Package private for testing
+    String getUnloadedRuleContent() throws InvocationTargetException, InterruptedException {
+        unloadedRuleContent = "";
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                unloadedRuleContent = unloadedRulesText.getText();
+            }
+        });
+        return unloadedRuleContent;
+    }
+
+    // Package private for testing
+    boolean isInjectButtonEnabled() {
+        return injectRuleButton.isEnabled();
+    }
+
+    // Package private for testing
+    boolean isUnloadButtonEnabled() {
+        return unloadRuleButton.isEnabled();
+    }
+
+    // Package private for testing
+    void enableGenerateRuleToggle() {
+        generateRuleToggle = true;
     }
 
     private void updateGraphInView(List<BytemanMetric> metrics, String xkey, String ykey, String filter, String value, String graphtype) {
@@ -710,7 +913,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
 
                 @Override
                 public void run() {
-                    content[0] = rulesText.getText();
+                    content[0] = unloadedRulesText.getText();
                 }
                 
             });

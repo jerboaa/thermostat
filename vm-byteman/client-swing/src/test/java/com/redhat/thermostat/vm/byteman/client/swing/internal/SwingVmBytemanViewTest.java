@@ -37,6 +37,9 @@
 package com.redhat.thermostat.vm.byteman.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.awt.Container;
 import java.awt.Dimension;
@@ -45,13 +48,26 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
+import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.vm.byteman.client.swing.internal.VmBytemanView.GenerateAction;
+import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.core.NameMatcher;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -109,7 +125,66 @@ public class SwingVmBytemanViewTest {
         frame = null;
         view = null;
     }
-    
+
+    @GUITest
+    @Test
+    public void testShifterInjectAndUnloadButtons() throws InvocationTargetException, InterruptedException {
+        String content = "RULE foo bar baz";
+        String newContent = "RULE new rule";
+        String mainClass = "foo-main-class";
+
+        // Initial set-up
+        assertEquals(true, view.isInjectButtonEnabled());
+        assertEquals(false, view.isUnloadButtonEnabled());
+        assertEquals(t.localize(LocaleResources.NO_RULES_LOADED).getContents(), view.getInjectedRuleContent());
+        assertEquals(t.localize(LocaleResources.NO_RULES_LOADED).getContents(), view.getUnloadedRuleContent());
+
+        testInjectRule(content);
+        testPreservingRuleDuringActionEvent(content, newContent);
+        testUnloadRule(newContent);
+        testGenerateRule(mainClass);
+    }
+
+    private void testInjectRule(String content) throws InvocationTargetException, InterruptedException {
+        view.setUnloadedRuleContent(content);
+        assertEquals(content, view.getUnloadedRuleContent());
+        setInjectStateInEDT(VmBytemanView.BytemanInjectState.INJECTED);
+        assertEquals(content, view.getInjectedRuleContent());
+        assertEquals(false, view.isInjectButtonEnabled());
+        assertEquals(true, view.isUnloadButtonEnabled());
+    }
+
+    private void testPreservingRuleDuringActionEvent(String oldContent, String newContent) throws InvocationTargetException, InterruptedException {
+        view.setUnloadedRuleContent(newContent);
+        ActionEvent<VmBytemanView.TabbedPaneContentAction> event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.RULES_CHANGED);
+        event.setPayload(oldContent);
+        view.contentChanged(event);
+        assertEquals(newContent, view.getUnloadedRuleContent());
+        assertEquals(oldContent, view.getInjectedRuleContent());
+    }
+
+    private void testUnloadRule(String content) throws InvocationTargetException, InterruptedException {
+        setInjectStateInEDT(VmBytemanView.BytemanInjectState.UNLOADED);
+        ActionEvent event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.RULES_CHANGED);
+        event.setPayload(t.localize(LocaleResources.NO_RULES_LOADED).getContents());
+        view.contentChanged(event);
+        assertEquals(t.localize(LocaleResources.NO_RULES_LOADED).getContents(), view.getInjectedRuleContent());
+        assertEquals(content, view.getUnloadedRuleContent());
+        assertEquals(true, view.isInjectButtonEnabled());
+        assertEquals(false, view.isUnloadButtonEnabled());
+    }
+
+    private void testGenerateRule(String mainClass) throws InvocationTargetException, InterruptedException {
+        VmBytemanInformationController controller = createController();
+        String template = controller.generateTemplateForVM(mainClass);
+        ActionEvent event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.RULES_CHANGED);
+        event.setPayload(template);
+        view.enableGenerateRuleToggle();
+        view.contentChanged(event);
+        assertEquals(template, view.getUnloadedRuleContent());
+    }
+
+
     @GUITest
     @Test
     public void testInjectButton() throws InvocationTargetException, InterruptedException {
@@ -140,13 +215,19 @@ public class SwingVmBytemanViewTest {
         });
         checkButtonState(VmBytemanView.BytemanInjectState.UNLOADING, toggleButton);
         assertEquals(t.localize(LocaleResources.UNLOAD_RULE).getContents(), toggleButtonFixture.text());
+        assertEquals(view.isInjectButtonEnabled(), false);
+        assertEquals(view.isUnloadButtonEnabled(), true);
 
         setInjectStateInEDT(VmBytemanView.BytemanInjectState.INJECTED);
         checkButtonState(VmBytemanView.BytemanInjectState.INJECTED, toggleButton);
+        assertEquals(view.isInjectButtonEnabled(), false);
+        assertEquals(view.isUnloadButtonEnabled(), true);
         assertEquals(t.localize(LocaleResources.UNLOAD_RULE).getContents(), toggleButtonFixture.text());
 
         setInjectStateInEDT(VmBytemanView.BytemanInjectState.UNLOADED);
         checkButtonState(VmBytemanView.BytemanInjectState.UNLOADED, toggleButton);
+        assertEquals(view.isInjectButtonEnabled(), true);
+        assertEquals(view.isUnloadButtonEnabled(), false);
         assertEquals(t.localize(LocaleResources.INJECT_RULE).getContents(), toggleButtonFixture.text());
 
         setInjectStateInEDT(VmBytemanView.BytemanInjectState.DISABLED);
@@ -156,29 +237,31 @@ public class SwingVmBytemanViewTest {
         setInjectStateInEDT(VmBytemanView.BytemanInjectState.INJECTING);
         checkButtonState(VmBytemanView.BytemanInjectState.INJECTING, toggleButton);
         assertEquals(t.localize(LocaleResources.INJECT_RULE).getContents(), toggleButtonFixture.text());
+        assertEquals(view.isInjectButtonEnabled(), true);
+        assertEquals(view.isUnloadButtonEnabled(), false);
     }
-    
+
     @GUITest
     @Test
-    public void testGetRuleContent() {
+    public void testGetRuleContent() throws InvocationTargetException, InterruptedException {
         String ruleContent = "";
         setRuleContentInEDT(ruleContent);
-        
-        String actual = view.getRuleContent();
+
+        String actual = view.getUnloadedRuleContent();
         assertEquals(ruleContent, actual);
-        
+
         ruleContent = "foo\nbar\nbaz";
         setRuleContentInEDT(ruleContent);
-        actual = view.getRuleContent();
+        actual = view.getUnloadedRuleContent();
         assertEquals(ruleContent, actual);
     }
-    
+
     @GUITest
     @Test
     public void testContentChangedMetrics() {
         String content = "{ \"foo\": \"bar\" }";
         String marker = "marker";
-        long timestamp  = 1_440_000_000_000L;
+        long timestamp = 1_440_000_000_000L;
         DateFormat metricsDateFormat = SwingVmBytemanView.metricsDateFormat;
         String timestring = metricsDateFormat.format(new Date(timestamp));
         BytemanMetric m = new BytemanMetric();
@@ -186,39 +269,44 @@ public class SwingVmBytemanViewTest {
         m.setMarker(marker);
         m.setTimeStamp(timestamp);
 
-        
         ActionEvent<VmBytemanView.TabbedPaneContentAction> event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.METRICS_CHANGED);
         event.setPayload(Arrays.asList(m));
         view.contentChanged(event);
         verifyMetricsTextEquals(timestring + ": " + marker + " " + content + "\n");
-        
+
         // Do the same with an empty metrics list
         event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.METRICS_CHANGED);
         event.setPayload(Collections.emptyList());
         view.contentChanged(event);
         verifyMetricsTextEquals(SwingVmBytemanView.NO_METRICS_AVAILABLE + "\n");
     }
-    
+
     @GUITest
     @Test
-    public void testContentChangedRules() {
-        String content = "RULE foo bar baz"; 
-        
+    public void testContentChangedRules() throws InvocationTargetException, InterruptedException {
+
+        String content = "RULE foo bar baz";
+
+        // Unloaded rules shouldn't be overwritten if they already have content in them
+        String unloadedRule = "RULE baz bar foo";
+        view.setUnloadedRuleContent(unloadedRule);
+        assertEquals(view.getUnloadedRuleContent(), unloadedRule);
         ActionEvent<VmBytemanView.TabbedPaneContentAction> event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.RULES_CHANGED);
         event.setPayload(content);
         view.contentChanged(event);
-        verifyRulesTextEquals(content);
-        
+        verifyUnloadedRulesTextEquals(unloadedRule);
+
         // Do the same, now setting empty
         content = "";
+        view.setUnloadedRuleContent(content);
         event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.RULES_CHANGED);
         event.setPayload(content);
         view.contentChanged(event);
-        verifyRulesTextEquals(content);
+        verifyUnloadedRulesTextEquals(content);
     }
 
-    private void verifyRulesTextEquals(String expected) {
-        final JTextComponent text = getJTextAreaWithName(SwingVmBytemanView.RULES_TEXT_NAME);
+    private void verifyUnloadedRulesTextEquals(String expected) {
+        final JTextComponent text = getJTextAreaWithName(SwingVmBytemanView.RULES_UNLOADED_TEXT_NAME);
         verifyEquals(text, expected);
     }
 
@@ -226,7 +314,7 @@ public class SwingVmBytemanViewTest {
         final JTextComponent text = getJTextAreaWithName(SwingVmBytemanView.METRICS_TEXT_NAME);
         verifyEquals(text, expected);
     }
-    
+
     private void verifyEquals(final JTextComponent text, final String expected) {
         GuiActionRunner.execute(new GuiTask() {
             @Override
@@ -237,7 +325,7 @@ public class SwingVmBytemanViewTest {
     }
 
     private void setRuleContentInEDT(final String ruleContent) {
-        final JTextComponent text = getJTextAreaWithName(SwingVmBytemanView.RULES_TEXT_NAME);
+        final JTextComponent text = getJTextAreaWithName(SwingVmBytemanView.RULES_UNLOADED_TEXT_NAME);
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
@@ -264,9 +352,9 @@ public class SwingVmBytemanViewTest {
                 assertEquals(reference.isSelected(), toggleButton.isSelected());
             }
         });
-        
+
     }
-    
+
     private void setInjectStateInEDT(final VmBytemanView.BytemanInjectState state) {
         GuiActionRunner.execute(new GuiTask() {
             @Override
@@ -289,7 +377,7 @@ public class SwingVmBytemanViewTest {
         frame.pack();
         frame.setVisible(true);
     }
-    
+
     // For basic, quick and dirty UI testing
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -297,6 +385,30 @@ public class SwingVmBytemanViewTest {
                 createAndShowGUI();
             }
         });
+    }
+
+    private VmBytemanInformationController createController() {
+        VmRef ref = mock(VmRef.class);
+        when(ref.getVmId()).thenReturn("some-vm-id");
+        when(ref.getHostRef()).thenReturn(new HostRef("some-agent-id", "some-host-name"));
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        AgentInformation agentInfo = mock(AgentInformation.class);
+        when(agentInfo.isAlive()).thenReturn(true);
+        when(agentInfoDao.getAgentInformation(any(AgentId.class))).thenReturn(agentInfo);
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
+        VmInfo vmInfo = mock(VmInfo.class);
+        when(vmInfo.isAlive(agentInfo)).thenReturn(VmInfo.AliveStatus.RUNNING);
+        when(vmInfoDao.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
+        when(vmInfoDao.getVmInfo(any(VmRef.class))).thenReturn(vmInfo);
+        VmBytemanDAO vmBytemanDao = mock(VmBytemanDAO.class);
+        RequestQueue requestQueue = mock(RequestQueue.class);
+        return new VmBytemanInformationController(view, ref, agentInfoDao, vmInfoDao, vmBytemanDao, requestQueue) {
+
+            @Override
+            void waitWithTimeOut(CountDownLatch latch) {
+                // nothing, return immediately for tests
+            }
+        };
     }
 
 }

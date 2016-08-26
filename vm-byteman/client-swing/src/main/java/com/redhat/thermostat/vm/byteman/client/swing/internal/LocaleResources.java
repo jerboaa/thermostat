@@ -52,6 +52,9 @@ public enum LocaleResources {
     RULE_EMPTY,
     NO_RULES_LOADED,
     NO_METRICS_AVAILABLE,
+    LABEL_LOCAL_RULE,
+    LABEL_INJECTED_RULE,
+    IMPORT_RULE,
     ;
     
     static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";
