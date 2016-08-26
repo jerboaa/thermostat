@@ -46,13 +46,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -203,9 +196,13 @@ public class MongoProcessRunner {
             throw new ApplicationException(message.getContents(), ae);
         }
 
-        waitForLogFile(getStartString(dbVersion));
-
         if (status == 0) {
+            waitForLogFile(getStartString(dbVersion));
+            /**
+             * This checkPid() call will also set the variable pid used in the following display(...) call
+             */
+            checkPid();
+
             display(translator.localize(LocaleResources.SERVER_LISTENING_ON, configuration.getDBConnectionString()));
             display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
             display(translator.localize(LocaleResources.PID_IS, String.valueOf(pid)));
