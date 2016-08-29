@@ -83,4 +83,42 @@ public class BytemanMetricsReceiverTest {
         assertEquals("Expected 7 keys, including one with null value", 7, payloadAsMap.keySet().size());
     }
     
+    /*
+     * There was an issue where the metric data json became HTML escaped:
+     * 
+     * before JSON convert: 'count = foo'
+     * after JSON convert:  'count \u003d foo'
+     * 
+     * This test is supposed to catch that data won't get HTML escaped.
+     */
+    @Test
+    public void canSendDataToStorageUtf8() {
+        VmBytemanDAO dao = mock(VmBytemanDAO.class);
+        String jsonMetric = 
+                "[ {\n" +
+                        "    \"marker\": \"marker\",\n" +
+                        "    \"timestamp\":\"30\",\n" +
+                        "    \"data\": {\n" +
+                        "        \"key\": \"value = foo\"\n" +
+                        "    }\n" +
+                        "} ]";
+        ByteBuffer data = Charset.forName("UTF-8").encode(jsonMetric);
+        IPCMessage message = mock(IPCMessage.class);
+        when(message.get()).thenReturn(data);
+        ArgumentCaptor<BytemanMetric> metricsCaptor = ArgumentCaptor.forClass(BytemanMetric.class);
+        
+        
+        BytemanMetricsReceiver receiver = new BytemanMetricsReceiver(dao, mock(VmSocketIdentifier.class));
+        receiver.messageReceived(message);
+        
+        verify(dao, times(1)).addMetric(metricsCaptor.capture());
+        
+        List<BytemanMetric> metrics = metricsCaptor.getAllValues();
+        BytemanMetric metric = metrics.get(0);
+        // make sure HTML chars are not escaped
+        assertEquals("{\"key\":\"value = foo\"}", metric.getData());
+        Map<String, Object> dataVals = metric.getDataAsMap();
+        assertEquals("value = foo", dataVals.get("key"));
+    }
+    
 }

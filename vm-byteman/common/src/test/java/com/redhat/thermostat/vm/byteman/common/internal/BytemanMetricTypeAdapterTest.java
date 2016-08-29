@@ -43,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.gson.Gson;
@@ -54,14 +55,21 @@ import com.redhat.thermostat.vm.byteman.common.JsonHelper;
 public class BytemanMetricTypeAdapterTest {
     
     private static final double DELTA = 0.001;
+    
+    private Gson gson;
+    
+    @Before
+    public void setup() {
+        gson = new GsonBuilder()
+                .registerTypeAdapterFactory(new BytemanMetricTypeAdapterFactory())
+                .disableHtmlEscaping()
+                .serializeNulls()
+                .create();
+    }
 
     @Test
     public void canDeserializeArrayOfMetrics() {
         String json = JsonHelper.buildJsonArray(10);
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapterFactory(new BytemanMetricTypeAdapterFactory())
-                .serializeNulls()
-                .create();
         BytemanMetric[] metrics = gson.fromJson(json, BytemanMetric[].class);
         assertEquals(10, metrics.length);
         for (int i = 0; i < 10; i++) {
@@ -86,6 +94,29 @@ public class BytemanMetricTypeAdapterTest {
             long longVal = rawLong.longValue();
             assertEquals(10_000_000_001L, longVal);
         }
+    }
+    
+    /*
+     * This is a test which makes sure that html characters don't get
+     * escaped. We were seeing instances where the following happened which this
+     * test is trying to catch:
+     * 
+     * before JSON deserialization: {"key": "value = 'foo', 'bar', 'baz'"}
+     * after JSON deserialization: {"key"; "value \u003d \u0027foo\u0027, \u0027bar\u0027, \u0027baz\u0027"}
+     */
+    @Test
+    public void canDeserializeMetricWithSpecialChar() {
+        String json = "{\n" +
+                "    \"marker\": \"marker\",\n" +
+                "    \"timestamp\":\"30\",\n" +
+                "    \"data\": {\n" +
+                "        \"key\": \"value = 'foo', 'bar', 'baz'\"\n" +
+                "    }\n" +
+                "}";
+        BytemanMetric metric = gson.fromJson(json, BytemanMetric.class);
+        assertEquals("{\"key\":\"value = 'foo', 'bar', 'baz'\"}", metric.getData());
+        Map<String, Object> dataAsMap = metric.getDataAsMap();
+        assertEquals("value = 'foo', 'bar', 'baz'", dataAsMap.get("key"));
     }
 
 }

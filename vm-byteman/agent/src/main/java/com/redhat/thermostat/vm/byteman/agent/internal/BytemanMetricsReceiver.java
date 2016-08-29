@@ -57,10 +57,16 @@ class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
     private static final Logger logger = LoggingUtils.getLogger(BytemanMetricsReceiver.class);
     private final VmBytemanDAO dao;
     private final VmSocketIdentifier socketId;
+    private final Gson gson;
     
     BytemanMetricsReceiver(VmBytemanDAO dao, VmSocketIdentifier socketId) {
         this.dao = dao;
         this.socketId = socketId;
+        this.gson = new GsonBuilder()
+                .registerTypeAdapterFactory(new BytemanMetricTypeAdapterFactory())
+                .serializeNulls()
+                .disableHtmlEscaping()
+                .create();
     }
 
     @Override
@@ -76,10 +82,6 @@ class BytemanMetricsReceiver implements ThermostatIPCCallbacks {
     }
 
     private List<BytemanMetric> convertFromJson(String data) {
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapterFactory(new BytemanMetricTypeAdapterFactory())
-                .serializeNulls()
-                .create();
         BytemanMetric[] metrics = gson.fromJson(data, BytemanMetric[].class);
         List<BytemanMetric> listOfMetrics = new ArrayList<>();
         for (BytemanMetric m: metrics) {
