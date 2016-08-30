@@ -39,6 +39,7 @@ package com.redhat.thermostat.dev.ipc.test.launcher.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,19 +123,33 @@ public class TestLauncher {
         
         // Start bundles
         for (Bundle bundle : installed) {
-            bundle.start();
-            System.out.println("BundleLoader: starting bundle: \"" + bundle.getSymbolicName() + "\"");
+            if (isFragment(bundle)) {
+                System.out.println("BundleLoader: not starting fragment bundle: \"" + bundle.getSymbolicName() + "\"");
+            } else {
+                bundle.start();
+                System.out.println("BundleLoader: starting bundle: \"" + bundle.getSymbolicName() + "\"");
+            }
         }
         
         // Okay to shutdown now
         started.countDown();
     }
     
+    private static boolean isFragment(Bundle bundle) {
+        Dictionary<String, String> headers = bundle.getHeaders();
+        String fragHost = headers.get(Constants.FRAGMENT_HOST);
+        return fragHost != null;
+    }
+
     private static void shutdown(Framework framework, List<Bundle> bundles) throws BundleException {
         try {
             for (Bundle bundle : bundles) {
-                printStoppingBundle(bundle);
-                bundle.stop();
+                if (isFragment(bundle)) {
+                    System.out.println("BundleLoader: not stopping fragment bundle: \"" + bundle.getSymbolicName() + "\"");
+                } else {
+                    printStoppingBundle(bundle);
+                    bundle.stop();
+                }
             }
         } finally {
             // Shut down the framework

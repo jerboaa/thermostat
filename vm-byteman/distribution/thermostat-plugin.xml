@@ -129,6 +129,7 @@
                 <bundle><symbolic-name>${jnr-ffi.bundle.symbolic.name}</symbolic-name><version>${jnr-ffi.version}</version></bundle>
                 <bundle><symbolic-name>${jnr-x86asm.bundle.symbolic.name}</symbolic-name><version>${jnr-x86asm.version}</version></bundle>
                 <bundle><symbolic-name>${jffi.bundle.symbolic.name}</symbolic-name><version>${jffi.version}</version></bundle>
+                <bundle><symbolic-name>${jffi-native.bundle.symbolic.name}</symbolic-name><version>${jffi.version}</version></bundle>
                 <bundle><symbolic-name>org.objectweb.asm</symbolic-name><version>${asm.version}</version></bundle>
             </bundles>
         </extension>
