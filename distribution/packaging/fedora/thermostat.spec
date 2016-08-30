@@ -59,21 +59,13 @@ __DEFAULT_RELEASE__ 7
   %global javax_servlet_bsn            javax.servlet-api
   # jnr-unixsocket and deps
   %global jnr_unixsocket_version     0.12.0
-  %global jnr_unixsocket_symbolic_name   com.github.jnr.unixsocket
   %global jnr_enxio_version          0.12.0
-  %global jnr_enxio_symbolic_name    com.github.jnr.enxio
   %global jnr_constants_version      0.9.2
-  %global jnr_constants_symbolic_name  com.github.jnr.constants
+  %global jnr_x86asm_symbolic_name   jnr.x86asm
   %global jnr_x86asm_version         1.0.2
   %global jffi_version               1.2.12
-  %global jffi_symbolic_name         com.github.jnr.jffi
-  # OSGi metadata added to upstream jnr-posix in version 3.0.17 and
-  # upstream jnr-ffi in version 2.0.4, which use different 
-  # Bundle-SymbolicNames than previous RPMs.
   %global jnr_posix_version          3.0.29
-  %global jnr_posix_symbolic_name    com.github.jnr.posix
   %global jnr_ffi_version            2.0.9
-  %global jnr_ffi_symbolic_name      com.github.jnr.ffi
   %global osgi_compendium_maven_version 1.4.0
 
 %else
@@ -100,22 +92,14 @@ __DEFAULT_RELEASE__ 7
   %global javax_servlet_bundle_version 3.0.0
   %global javax_servlet_bsn            javax.servlet
   # jnr-unixsocket and deps
-  %global jnr_unixsocket_version     0.8.0
-  %global jnr_enxio_version          0.9.0
-  %global jnr_constants_version      0.8.8
-  %global jnr_constants_symbolic_name  jnr.constants
+  %global jnr_unixsocket_version     0.12.0
+  %global jnr_enxio_version          0.12.0
+  %global jnr_constants_version      0.9.2
+  %global jnr_x86asm_symbolic_name   jnr.x86asm
   %global jnr_x86asm_version         1.0.2
-  %global jffi_version               1.2.9
-  %global jffi_symbolic_name         com.kenai.jffi
-  # OSGi metadata added to upstream jnr-posix in version 3.0.17 and
-  # upstream jnr-ffi in version 2.0.4, which use different 
-  # Bundle-SymbolicNames than previous RPMs.
-  %global jnr_posix_version          3.0.14
-  %global jnr_posix_symbolic_name    jnr.posix
-  %global jnr_ffi_version            2.0.3
-  %global jnr_ffi_symbolic_name      jnr.ffi
-  %global jnr_unixsocket_symbolic_name   jnr.unixsocket
-  %global jnr_enxio_symbolic_name    jnr.enxio
+  %global jffi_version               1.2.12
+  %global jnr_posix_version          3.0.29
+  %global jnr_ffi_version            2.0.9
   # Use compat version of 1 which is provided by the SCL-ized version
   # in our collection.
   %global osgi_compendium_maven_version 1
@@ -286,8 +270,8 @@ Patch2:     0002_shared_osgi_spec_fixes.patch
 # http://icedtea.classpath.org/hg/thermostat/rev/79df35f1ff13
 # Note: SCL-ized stack uses lucene 4.8 vs 5 in HEAD
 Patch3:     0003_rhel_lucene_4.patch
-# This patch can be pushed upstream when upstream JNR adds OSGi metadata to their
-# manifests. (e.g. https://github.com/jnr/jnr-unixsocket/pull/15 for jnr-unixsocket)
+# This patch can be removed when upstream jnr-x86asm adds OSGi metadata to its
+# manifest. See https://github.com/jnr/jnr-x86asm/pull/1
 Patch4:     0004_shared-remove-jnr-assembly-exclusion.patch
 
 %if 0%{?non_bootstrap_build}
@@ -418,13 +402,14 @@ BuildRequires: %{?scl_prefix}osgi(com.mxgraph) = %{jgraphx_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}osgi(%{javax_servlet_bsn}) = %{javax_servlet_bundle_version}
 BuildRequires: %{?scl_prefix_java_common}mvn(%{object_web_asm_maven_coords}) >= 5
 # jnr-unixsocket and deps
-BuildRequires: %{?scl_prefix}osgi(%{jnr_unixsocket_symbolic_name}) = %{jnr_unixsocket_version}
-BuildRequires: %{?scl_prefix}osgi(%{jnr_enxio_symbolic_name}) = %{jnr_enxio_version}
-BuildRequires: %{?scl_prefix}osgi(%{jnr_constants_symbolic_name}) = %{jnr_constants_version}
-BuildRequires: %{?scl_prefix}osgi(jnr.x86asm) = %{jnr_x86asm_version}
-BuildRequires: %{?scl_prefix}osgi(%{jnr_posix_symbolic_name}) = %{jnr_posix_version}
-BuildRequires: %{?scl_prefix}osgi(%{jnr_ffi_symbolic_name}) = %{jnr_ffi_version}
-BuildRequires: %{?scl_prefix}osgi(%{jffi_symbolic_name}) = %{jffi_version}
+BuildRequires: %{?scl_prefix}osgi(com.github.jnr.unixsocket) = %{jnr_unixsocket_version}
+BuildRequires: %{?scl_prefix}osgi(com.github.jnr.enxio) = %{jnr_enxio_version}
+BuildRequires: %{?scl_prefix}osgi(com.github.jnr.constants) = %{jnr_constants_version}
+BuildRequires: %{?scl_prefix}osgi(%{jnr_x86asm_symbolic_name}) = %{jnr_x86asm_version}
+BuildRequires: %{?scl_prefix}osgi(com.github.jnr.posix) = %{jnr_posix_version}
+BuildRequires: %{?scl_prefix}osgi(com.github.jnr.ffi) = %{jnr_ffi_version}
+BuildRequires: %{?scl_prefix}osgi(com.github.jnr.jffi) = %{jffi_version}
+BuildRequires: %{?scl_prefix}osgi(com.github.jnr.jffi.native) = %{jffi_version}
 
 %{?!scl:
 Requires: javapackages-tools
@@ -577,12 +562,7 @@ cp %{SOURCE4} distribution/config/thermostatrc
 %pom_xpath_inject "pom:properties" "<jline.version>%{jline_version}</jline.version>"
 # Don't use bundle-wrapped jnr-unixsocket and deps
 %pom_disable_module jnr-wrapped agent/ipc/unix-socket
-%pom_remove_dep com.redhat.thermostat:jnr-unixsocket agent/ipc/unix-socket/server
-%pom_remove_dep com.redhat.thermostat:jnr-unixsocket agent/ipc/unix-socket/client
-%pom_remove_dep com.redhat.thermostat:jnr-unixsocket agent/ipc/unix-socket/common
-%pom_add_dep com.github.jnr:jnr-unixsocket agent/ipc/unix-socket/server
-%pom_add_dep com.github.jnr:jnr-unixsocket agent/ipc/unix-socket/client
-%pom_add_dep com.github.jnr:jnr-unixsocket agent/ipc/unix-socket/common
+%pom_remove_dep com.redhat.thermostat:jnr-x86asm distribution
 
 # Don't use maven-exec-plugin. We do things manually in order to avoid this
 # additional dep. It's used in agent/core/pom.xml et.al.
@@ -755,17 +735,13 @@ popd
                  -Dkxml2.version=%{kxml2_version} \
                  -Dosgi.compendium.version=%{osgi_compendium_maven_version} \
                  -Djnr-unixsocket.version=%{jnr_unixsocket_version} \
-                 -Djnr-unixsocket.bundle.symbolic.name=%{jnr_unixsocket_symbolic_name} \
                  -Djnr-enxio.version=%{jnr_enxio_version} \
-                 -Djnr-enxio.bundle.symbolic.name=%{jnr_enxio_symbolic_name} \
                  -Djnr-constants.version=%{jnr_constants_version} \
+                 -Djnr-x86asm.bundle.symbolic.name=%{jnr_x86asm_symbolic_name} \
                  -Djnr-x86asm.version=%{jnr_x86asm_version} \
-                 -Djnr-posix.bundle.symbolic.name=%{jnr_posix_symbolic_name} \
                  -Djnr-posix.version=%{jnr_posix_version} \
-                 -Djnr-ffi.bundle.symbolic.name=%{jnr_ffi_symbolic_name} \
                  -Djnr-ffi.version=%{jnr_ffi_version} \
-                 -Djffi.version=%{jffi_version} \
-                 -Djffi.bundle.symbolic.name=%{jffi_symbolic_name}
+                 -Djffi.version=%{jffi_version}
         
 
 %{?scl:EOF}

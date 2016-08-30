@@ -67,7 +67,7 @@ diff --git a/agent/ipc/unix-socket/server/pom.xml b/agent/ipc/unix-socket/server
 +      <artifactId>org.apache.felix.framework</artifactId>
      </dependency>
      <dependency>
-       <groupId>com.redhat.thermostat</groupId>
+       <groupId>com.github.jnr</groupId>
 diff --git a/client/cli/pom.xml b/client/cli/pom.xml
 --- a/client/cli/pom.xml
 +++ b/client/cli/pom.xml
