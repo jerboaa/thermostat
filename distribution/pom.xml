@@ -410,6 +410,11 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>jnr-x86asm</artifactId>
+      <version>${jnr-x86asm.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-killvm-agent</artifactId>
       <version>${project.version}</version>
     </dependency>

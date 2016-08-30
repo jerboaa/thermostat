@@ -233,20 +233,22 @@
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
     
     <!-- jnr-unixsocket and dependencies -->
-    <jnr-unixsocket.bundle.symbolic.name>jnr.unixsocket</jnr-unixsocket.bundle.symbolic.name>
-    <jnr-unixsocket.version>0.8</jnr-unixsocket.version>
-    <jnr-enxio.bundle.symbolic.name>jnr.enxio</jnr-enxio.bundle.symbolic.name>
-    <jnr-enxio.version>0.9</jnr-enxio.version>
-    <jnr-constants.bundle.symbolic.name>jnr.constants</jnr-constants.bundle.symbolic.name>
-    <jnr-constants.version>0.8.7</jnr-constants.version>
-    <jnr-posix.bundle.symbolic.name>jnr.posix</jnr-posix.bundle.symbolic.name>
-    <jnr-posix.version>3.0.12</jnr-posix.version>
-    <jnr-ffi.bundle.symbolic.name>jnr.ffi</jnr-ffi.bundle.symbolic.name>
-    <jnr-ffi.version>2.0.3</jnr-ffi.version>
-    <jnr-x86asm.bundle.symbolic.name>jnr.x86asm</jnr-x86asm.bundle.symbolic.name>
+    <jnr-unixsocket.bundle.symbolic.name>com.github.jnr.unixsocket</jnr-unixsocket.bundle.symbolic.name>
+    <jnr-unixsocket.version>0.12</jnr-unixsocket.version>
+    <jnr-unixsocket.bundle.version>0.12.0</jnr-unixsocket.bundle.version>
+    <jnr-enxio.bundle.symbolic.name>com.github.jnr.enxio</jnr-enxio.bundle.symbolic.name>
+    <jnr-enxio.version>0.12</jnr-enxio.version>
+    <jnr-enxio.bundle.version>0.12.0</jnr-enxio.bundle.version>
+    <jnr-constants.bundle.symbolic.name>com.github.jnr.constants</jnr-constants.bundle.symbolic.name>
+    <jnr-constants.version>0.9.2</jnr-constants.version>
+    <jnr-posix.bundle.symbolic.name>com.github.jnr.posix</jnr-posix.bundle.symbolic.name>
+    <jnr-posix.version>3.0.29</jnr-posix.version>
+    <jnr-ffi.bundle.symbolic.name>com.github.jnr.ffi</jnr-ffi.bundle.symbolic.name>
+    <jnr-ffi.version>2.0.9</jnr-ffi.version>
+    <jnr-x86asm.bundle.symbolic.name>com.github.jnr.x86asm</jnr-x86asm.bundle.symbolic.name>
     <jnr-x86asm.version>1.0.2</jnr-x86asm.version>
-    <jffi.bundle.symbolic.name>com.kenai.jffi</jffi.bundle.symbolic.name>
-    <jffi.version>1.2.9</jffi.version>
+    <jffi.bundle.symbolic.name>com.github.jnr.jffi</jffi.bundle.symbolic.name>
+    <jffi.version>1.2.12</jffi.version>
 
     <jline.version>2.13</jline.version>
     <lucene.version>5.1.0_1</lucene.version>
@@ -709,27 +711,27 @@
     
       <!-- jnr-unixsocket and dependencies -->
       <dependency>
-        <groupId>com.redhat.thermostat</groupId>
+        <groupId>com.github.jnr</groupId>
         <artifactId>jnr-unixsocket</artifactId>
         <version>${jnr-unixsocket.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.redhat.thermostat</groupId>
+        <groupId>com.github.jnr</groupId>
         <artifactId>jnr-enxio</artifactId>
         <version>${jnr-enxio.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.redhat.thermostat</groupId>
+        <groupId>com.github.jnr</groupId>
         <artifactId>jnr-constants</artifactId>
         <version>${jnr-constants.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.redhat.thermostat</groupId>
+        <groupId>com.github.jnr</groupId>
         <artifactId>jnr-posix</artifactId>
         <version>${jnr-posix.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.redhat.thermostat</groupId>
+        <groupId>com.github.jnr</groupId>
         <artifactId>jnr-ffi</artifactId>
         <version>${jnr-ffi.version}</version>
       </dependency>
@@ -739,9 +741,15 @@
         <version>${jnr-x86asm.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.redhat.thermostat</groupId>
+        <groupId>com.github.jnr</groupId>
         <artifactId>jffi</artifactId>
         <version>${jffi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.jnr</groupId>
+        <artifactId>jffi</artifactId>
+        <version>${jffi.version}</version>
+        <classifier>native</classifier>
       </dependency>
 
     </dependencies>

@@ -122,8 +122,8 @@
                 <bundle><symbolic-name>com.redhat.thermostat.vm.byteman.agent</symbolic-name><version>${project.version}</version></bundle>
                 <bundle><symbolic-name>org.jboss.byteman.agent.install</symbolic-name><version>${byteman.osgi-version}</version></bundle>
                 <bundle><symbolic-name>org.jboss.byteman.agent.submit</symbolic-name><version>${byteman.osgi-version}</version></bundle>
-                <bundle><symbolic-name>${jnr-unixsocket.bundle.symbolic.name}</symbolic-name><version>${jnr-unixsocket.version}</version></bundle>
-                <bundle><symbolic-name>${jnr-enxio.bundle.symbolic.name}</symbolic-name><version>${jnr-enxio.version}</version></bundle>
+                <bundle><symbolic-name>${jnr-unixsocket.bundle.symbolic.name}</symbolic-name><version>${jnr-unixsocket.bundle.version}</version></bundle>
+                <bundle><symbolic-name>${jnr-enxio.bundle.symbolic.name}</symbolic-name><version>${jnr-enxio.bundle.version}</version></bundle>
                 <bundle><symbolic-name>${jnr-constants.bundle.symbolic.name}</symbolic-name><version>${jnr-constants.version}</version></bundle>
                 <bundle><symbolic-name>${jnr-posix.bundle.symbolic.name}</symbolic-name><version>${jnr-posix.version}</version></bundle>
                 <bundle><symbolic-name>${jnr-ffi.bundle.symbolic.name}</symbolic-name><version>${jnr-ffi.version}</version></bundle>

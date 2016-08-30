@@ -66,7 +66,7 @@
       <artifactId>org.osgi.core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.redhat.thermostat</groupId>
+      <groupId>com.github.jnr</groupId>
       <artifactId>jnr-unixsocket</artifactId>
     </dependency>
     <dependency>

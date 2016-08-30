@@ -51,13 +51,7 @@
   <name>OSGi-wrapped JNR bundles</name>
 
   <modules>
-    <module>jnr-unixsocket</module>
-    <module>jnr-enxio</module>
-    <module>jnr-posix</module>
-    <module>jnr-constants</module>
-    <module>jnr-ffi</module>
     <module>jnr-x86asm</module>
-    <module>jffi</module>
   </modules>
 
   <build>

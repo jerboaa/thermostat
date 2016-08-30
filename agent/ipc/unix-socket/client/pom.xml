@@ -62,7 +62,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.redhat.thermostat</groupId>
+      <groupId>com.github.jnr</groupId>
       <artifactId>jnr-unixsocket</artifactId>
     </dependency>
     <dependency>
