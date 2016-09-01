@@ -635,6 +635,11 @@ cp %{SOURCE4} distribution/config/thermostatrc
 %mvn_package com.redhat.thermostat:thermostat-distribution __noinstall
 %mvn_package com.redhat.thermostat:thermostat-assembly __noinstall
 
+# Install shaded classified artifact. The byteman-helper-distribution
+# build-only artifact has it as a dependency. Without this the xmvn
+# build fails.
+%mvn_package :thermostat-vm-byteman-helper::shaded:
+
 # thermostat-web-server and thermostat-web-endpoint should be part of
 # the webapp sub-package
 %mvn_package com.redhat.thermostat:thermostat-web-server webapp
