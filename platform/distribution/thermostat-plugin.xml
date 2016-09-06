@@ -70,15 +70,6 @@
                     <symbolic-name>com.redhat.thermostat.platform</symbolic-name>
                     <version>${project.version}</version>
                 </bundle>
-                <!-- deps -->
-                <bundle>
-                    <symbolic-name>com.redhat.thermostat.common.core</symbolic-name>
-                    <version>${project.version}</version>
-                </bundle>
-                <bundle>
-                    <symbolic-name>com.google.gson</symbolic-name>
-                    <version>${gson.version}</version>
-                </bundle>
             </bundles>
         </command>
     </commands>

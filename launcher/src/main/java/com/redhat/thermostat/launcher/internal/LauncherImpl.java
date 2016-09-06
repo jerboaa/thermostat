@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -69,6 +70,7 @@ import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.InteractiveStorageCredentials;
 import com.redhat.thermostat.launcher.Launcher;
@@ -112,6 +114,7 @@ public class LauncherImpl implements Launcher {
     private final CommandInfoSource commandInfoSource;
     private final CurrentEnvironment currentEnvironment;
     private final CommonPaths paths;
+    private final DependencyManager manager;
 
     private final ClientPreferences prefs;
     private final Keyring keyring;
@@ -140,6 +143,7 @@ public class LauncherImpl implements Launcher {
         this.keyring = keyring;
         this.paths = Objects.requireNonNull(paths);
         this.sslConf = sslConf;
+        this.manager = new DependencyManager(paths);
 
         // We log this in the constructor so as to not log it multiple times when a command invokes
         // run() multiple times. This works since it is a singleton service.
@@ -320,7 +324,17 @@ public class LauncherImpl implements Launcher {
         }
 
         try {
-            registry.loadBundlesByName(cmdInfo.getBundles());
+            Set<BundleInformation> bundlesToLoad = new HashSet<>(cmdInfo.getBundles());
+            logger.log(Level.FINE, "Beginning dependency analysis of " + cmdInfo.getName());
+            for (BundleInformation b : cmdInfo.getBundles()) {
+                bundlesToLoad.addAll(manager.getDependencies(b));
+            }
+            if (logger.isLoggable(Level.FINE)) {
+                for (BundleInformation b : bundlesToLoad) {
+                    logger.log(Level.FINE, "Loading Bundle: " + b);
+                }
+            }
+            registry.loadBundlesByName(new ArrayList<>(bundlesToLoad));
         } catch (BundleException | IOException e) {
             // If this happens we definitely need to do something about it, and the
             // trace will be immeasurably helpful in figuring out what is wrong.

@@ -61,6 +61,8 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
 
+
+
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
@@ -70,6 +72,7 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 public class BundleManagerImpl extends BundleManager {
 
     private static final Logger logger = LoggingUtils.getLogger(BundleManagerImpl.class);
+    private final String SYSTEM_BSN = getFramework(BundleManagerImpl.class).getSymbolicName();
 
     // Bundle Name and version -> path (with symlinks resolved)
     // Match FrameworkProvider which uses canonical/symlink-resolved paths. If
@@ -173,12 +176,13 @@ public class BundleManagerImpl extends BundleManager {
             } else {
                 bundlePath = known.get(info);
             }
-
             if (bundlePath == null) {
                 logger.warning("no known bundle matching " + info.toString());
                 continue;
             }
-            paths.add(bundlePath.toFile().getCanonicalFile().toURI().toString());
+            if (!(info.getName().equals(SYSTEM_BSN))) {
+                paths.add(bundlePath.toFile().getCanonicalFile().toURI().toString());
+            }
         }
         loadBundlesByPath(paths);
     }
@@ -211,7 +215,6 @@ public class BundleManagerImpl extends BundleManager {
     void loadBundlesByPath(List<String> requiredBundles) throws BundleException, IOException {
         Framework framework = getFramework(this.getClass());
         BundleContext context = framework.getBundleContext();
-
         List<String> bundlesToLoad = new ArrayList<>();
         if (requiredBundles != null) {
             for (String resource : requiredBundles) {
@@ -228,7 +231,7 @@ public class BundleManagerImpl extends BundleManager {
         return (bundle != null) && (bundle.getState() == Bundle.ACTIVE);
     }
 
-    private Framework getFramework(Class<?> cls) {
+    private static Framework getFramework(Class<?> cls) {
         return (Framework) FrameworkUtil.getBundle(cls).getBundleContext().getBundle(0);
     }
 

@@ -60,27 +60,9 @@
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.killvm.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.killvm.common</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
-        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.common</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.buffer</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.codec</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.transport</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.handler</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
     </command>
   </commands>

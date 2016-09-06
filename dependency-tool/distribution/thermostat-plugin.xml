@@ -93,10 +93,6 @@
                     <symbolic-name>com.redhat.thermostat.tools.dependency</symbolic-name>
                     <version>${project.version}</version>
                 </bundle>
-                <bundle>
-                    <symbolic-name>com.redhat.thermostat.collections</symbolic-name>
-                    <version>${project.version}</version>
-                </bundle>
             </bundles>
         </command>
     </commands>

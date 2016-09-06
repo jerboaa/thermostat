@@ -52,63 +52,13 @@
         <environment>cli</environment>
       </environments>
       <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.common.core</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.configuration</symbolic-name><version>${project.version}</version></bundle>
         <!-- Dependencies of the jetty-based web endpoint plugin -->
         <bundle><symbolic-name>com.redhat.thermostat.web.endpoint</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.server</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.http</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.util</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.io</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.webapp</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.security</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.servlet</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.xml</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.jaas</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>${javax.servlet.bsn}</symbolic-name><version>${jetty.javax.servlet.osgi.version}</version></bundle>
         <!-- Required for running agent on top of http.
              It should be the equivalent of $THERMOSTAT_HOME/etc/commands/agent.properties -->
-        <bundle><symbolic-name>com.redhat.thermostat.agent.core</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
-        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.process</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.agent.cli</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.agent.command</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.agent.ipc.server</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.agent.ipc.unixsocket.server</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.agent.ipc.common</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.agent.ipc.unixsocket.common</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>${jnr-unixsocket.bundle.symbolic.name}</symbolic-name><version>${jnr-unixsocket.bundle.version}</version></bundle>
-        <bundle><symbolic-name>${jnr-enxio.bundle.symbolic.name}</symbolic-name><version>${jnr-enxio.bundle.version}</version></bundle>
-        <bundle><symbolic-name>${jnr-constants.bundle.symbolic.name}</symbolic-name><version>${jnr-constants.version}</version></bundle>
-        <bundle><symbolic-name>${jnr-posix.bundle.symbolic.name}</symbolic-name><version>${jnr-posix.version}</version></bundle>
-        <bundle><symbolic-name>${jnr-ffi.bundle.symbolic.name}</symbolic-name><version>${jnr-ffi.version}</version></bundle>
-        <bundle><symbolic-name>${jnr-x86asm.bundle.symbolic.name}</symbolic-name><version>${jnr-x86asm.version}</version></bundle>
-        <bundle><symbolic-name>${jffi.bundle.symbolic.name}</symbolic-name><version>${jffi.version}</version></bundle>
-        <bundle><symbolic-name>${jffi-native.bundle.symbolic.name}</symbolic-name><version>${jffi.version}</version></bundle>
-        <bundle><symbolic-name>org.objectweb.asm</symbolic-name><version>${asm.version}</version></bundle>
-        <bundle><symbolic-name>org.objectweb.asm.commons</symbolic-name><version>${asm.version}</version></bundle>
-        <bundle><symbolic-name>org.objectweb.asm.util</symbolic-name><version>${asm.version}</version></bundle>
-        <bundle><symbolic-name>org.objectweb.asm.analysis</symbolic-name><version>${asm.version}</version></bundle>
-        <bundle><symbolic-name>org.objectweb.asm.tree</symbolic-name><version>${asm.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.killvm.agent</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.backend.system</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.common</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.buffer</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.codec</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.transport</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>io.netty.handler</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
     </command>
     <command>
@@ -122,20 +72,7 @@
         <environment>cli</environment>
       </environments>
       <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.common.core</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.configuration</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.endpoint</symbolic-name><version>${project.version}</version></bundle>
-
-        <bundle><symbolic-name>org.eclipse.jetty.server</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.http</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.util</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.io</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.webapp</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.security</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.servlet</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.xml</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>org.eclipse.jetty.jaas</symbolic-name><version>${jetty.version}</version></bundle>
-        <bundle><symbolic-name>${javax.servlet.bsn}</symbolic-name><version>${jetty.javax.servlet.osgi.version}</version></bundle>
      </bundles>
     </command>
   </commands>

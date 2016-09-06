@@ -49,6 +49,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,6 +67,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -106,6 +112,9 @@ public class LauncherImplTest {
     private static final String name4 = "test4";
     private static SecurityManager secMan;
     private CommandInfo info1;
+    private File systemPluginRoot;
+    private File systemLibRoot;
+    private File userPluginRoot;
 
     @BeforeClass
     public static void beforeClassSetUp() {
@@ -284,11 +293,29 @@ public class LauncherImplTest {
         when(paths.getUserSetupCompleteStampFile()).thenReturn(setupFile);
         ClientPreferences prefs = new ClientPreferences(paths);
 
+        userPluginRoot = Files.createTempDirectory("userPluginRoot").toFile();
+        systemPluginRoot = Files.createTempDirectory("systemPluginRoot").toFile();
+        systemLibRoot = Files.createTempDirectory("systemLibRoot").toFile();
+        when(paths.getUserPluginRoot()).thenReturn(userPluginRoot);
+        when(paths.getSystemPluginRoot()).thenReturn(systemPluginRoot);
+        when(paths.getSystemLibRoot()).thenReturn(systemLibRoot);
+
         when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
         when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
         sslConf = mock(SSLConfiguration.class);
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
                 environment, dbServiceFactory, version, prefs, keyring, paths, sslConf);
+    }
+
+    @After
+    public void tearDown() {
+        try {
+            deleteDirectory(systemLibRoot.toPath());
+            deleteDirectory(systemPluginRoot.toPath());
+            deleteDirectory(userPluginRoot.toPath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void setupCommandContextFactory() {
@@ -608,6 +635,9 @@ public class LauncherImplTest {
         CommonPaths logPaths = mock(CommonPaths.class);
         when(logPaths.getUserThermostatHome()).thenReturn(mock(File.class));
         when(logPaths.getSystemThermostatHome()).thenReturn(mock(File.class));
+        when(logPaths.getUserPluginRoot()).thenReturn(userPluginRoot);
+        when(logPaths.getSystemLibRoot()).thenReturn(systemLibRoot);
+        when(logPaths.getSystemPluginRoot()).thenReturn(systemPluginRoot);
         
         try {
             assertFalse(handler.loggedThermostatHome);
@@ -761,6 +791,9 @@ public class LauncherImplTest {
         File fileWithAbsPath = mock(File.class);
         when(setupPaths.getSystemThermostatHome()).thenReturn(fileWithAbsPath);
         when(setupPaths.getUserThermostatHome()).thenReturn(fileWithAbsPath);
+        when(setupPaths.getSystemPluginRoot()).thenReturn(systemPluginRoot);
+        when(setupPaths.getSystemLibRoot()).thenReturn(systemLibRoot);
+        when(setupPaths.getUserPluginRoot()).thenReturn(userPluginRoot);
         final List<Pair<String[], Boolean>> runList = new ArrayList<>();
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos,
                                     new CommandSource(bundleContext), environment,
@@ -805,6 +838,38 @@ public class LauncherImplTest {
             }
         }
         
+    }
+
+    void deleteDirectory(Path dir) throws IOException {
+        Files.walkFileTree(dir, new FileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir,
+                                                     BasicFileAttributes attrs) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file,
+                                             BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc)
+                    throws IOException {
+                exc.printStackTrace();
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                    throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
 }

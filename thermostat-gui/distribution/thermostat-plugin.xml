@@ -44,30 +44,6 @@
                     <symbolic-name>com.redhat.thermostat.application.gui</symbolic-name>
                     <version>${project.version}</version>
                 </bundle>
-                <bundle>
-                    <symbolic-name>com.redhat.thermostat.ui.swing.components</symbolic-name>
-                    <version>${project.version}</version>
-                </bundle>
-                <bundle>
-                    <symbolic-name>com.redhat.thermostat.platform</symbolic-name>
-                    <version>${project.version}</version>
-                </bundle>
-                <bundle>
-                    <symbolic-name>com.redhat.thermostat.platform.swing.core</symbolic-name>
-                    <version>${project.version}</version>
-                </bundle>
-                <bundle>
-                    <symbolic-name>com.redhat.thermostat.internal.utils.laf</symbolic-name>
-                    <version>${project.version}</version>
-                </bundle>
-                <bundle>
-                    <symbolic-name>com.redhat.thermostat.client.core</symbolic-name>
-                    <version>${project.version}</version>
-                </bundle>
-                <bundle>
-                    <symbolic-name>com.redhat.thermostat.client.swing</symbolic-name>
-                    <version>${project.version}</version>
-                </bundle>
             </bundles>
         </extension>
     </extensions>
