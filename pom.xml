@@ -709,6 +709,11 @@
         <artifactId>org.apache.felix.scr.annotations</artifactId>
         <version>${felix.scr.annotations.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>${gson.version}</version>
+      </dependency>
     
       <!-- jnr-unixsocket and dependencies -->
       <dependency>
