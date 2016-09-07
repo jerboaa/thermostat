@@ -560,9 +560,12 @@ cp %{SOURCE4} distribution/config/thermostatrc
 # need jline 2.13 (otherwise this resolves to jline 1)
 %pom_xpath_remove "pom:properties/pom:jline.version"
 %pom_xpath_inject "pom:properties" "<jline.version>%{jline_version}</jline.version>"
-# Don't use bundle-wrapped jnr-unixsocket and deps
+# Don't use bundle-wrapped jnr-x86asm
 %pom_disable_module jnr-wrapped agent/ipc/unix-socket
 %pom_remove_dep com.redhat.thermostat:jnr-x86asm distribution
+# Replace our groupId for jnr-x86asm with upstream groupId
+%pom_xpath_replace "pom:project/pom:dependencyManagement/pom:dependencies/pom:dependency[pom:artifactId[text()='jnr-x86asm']]/pom:groupId" \
+    "<groupId>com.github.jnr</groupId>"
 
 # Don't use maven-exec-plugin. We do things manually in order to avoid this
 # additional dep. It's used in agent/core/pom.xml et.al.
