@@ -34,21 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.killvm.command.internal;
+package com.redhat.thermostat.killvm.common;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
-import java.io.PrintStream;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -56,33 +54,35 @@ import org.mockito.stubbing.Answer;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.killvm.common.VMKilledListener;
 
-public class ShellVMKilledListenerTest {
+public class VMKilledListenerTest {
 
-    private final ShellVMKilledListener listener = new ShellVMKilledListener();
-    private final PrintStream printStream = mock(PrintStream.class);
+    private final VMKilledListener listener = new VMKilledListener();
     private final Request request = mock(Request.class);
+    private static final Handler handler = mock(Handler.class);
+    private static final Logger logger = LoggingUtils
+            .getLogger(VMKilledListener.class);
 
-    @Before
-    public void setup() {
-        listener.setErr(printStream);
-        listener.setOut(printStream);
+    @BeforeClass
+    public static void setupClass() {
+        logger.addHandler(handler);
     }
 
     @Test
-    public void testOkayResponse() {
+    public void testSuccessfulKillResponse() {
         Response resp = new Response(Response.ResponseType.OK);
 
         final boolean[] complete = {false};
-
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                complete[0] = true;
+                LogRecord log = (LogRecord)invocation.getArguments()[0];
+                if (log.getLevel().equals(Level.INFO)) {
+                    complete[0] = true;
+                }
                 return null;
             }
-        }).when(printStream).println(new String("VM with id null killed successfully."));
+        }).when(handler).publish(any(LogRecord.class));
 
         listener.fireComplete(request, resp);
 
@@ -94,14 +94,16 @@ public class ShellVMKilledListenerTest {
         Response resp = new Response(Response.ResponseType.ERROR);
 
         final boolean[] complete = {false};
-
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                complete[0] = true;
+                LogRecord log = (LogRecord)invocation.getArguments()[0];
+                if (log.getLevel().equals(Level.SEVERE)) {
+                    complete[0] = true;
+                }
                 return null;
             }
-        }).when(printStream).println(new String("Kill request error for VM ID null"));
+        }).when(handler).publish(any(LogRecord.class));
 
         listener.fireComplete(request, resp);
 
@@ -113,14 +115,16 @@ public class ShellVMKilledListenerTest {
         Response resp = new Response(Response.ResponseType.NOK);
 
         final boolean[] complete = {false};
-
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                complete[0] = true;
+                LogRecord log = (LogRecord)invocation.getArguments()[0];
+                if (log.getLevel().equals(Level.WARNING)) {
+                    complete[0] = true;
+                }
                 return null;
             }
-        }).when(printStream).println(new String("Kill request acknowledged and refused."));
+        }).when(handler).publish(any(LogRecord.class));
 
         listener.fireComplete(request, resp);
 
@@ -128,18 +132,20 @@ public class ShellVMKilledListenerTest {
     }
 
     @Test
-    public void testNoOpResponse() {
+    public void testNoOpResfonse() {
         Response resp = new Response(Response.ResponseType.NOOP);
 
         final boolean[] complete = {false};
-
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                complete[0] = true;
+                LogRecord log = (LogRecord)invocation.getArguments()[0];
+                if (log.getLevel().equals(Level.WARNING)) {
+                    complete[0] = true;
+                }
                 return null;
             }
-        }).when(printStream).println(new String("Kill request acknowledged and no action taken."));
+        }).when(handler).publish(any(LogRecord.class));
 
         listener.fireComplete(request, resp);
 
@@ -148,18 +154,19 @@ public class ShellVMKilledListenerTest {
 
     @Test
     public void testAuthFailedResponse() {
-
         Response resp = new Response(Response.ResponseType.AUTH_FAILED);
 
         final boolean[] complete = {false};
-
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                complete[0] = true;
+                LogRecord log = (LogRecord)invocation.getArguments()[0];
+                if (log.getLevel().equals(Level.WARNING)) {
+                    complete[0] = true;
+                }
                 return null;
             }
-        }).when(printStream).println(new String("Unauthorized kill request ignored."));
+        }).when(handler).publish(any(LogRecord.class));
 
         listener.fireComplete(request, resp);
 

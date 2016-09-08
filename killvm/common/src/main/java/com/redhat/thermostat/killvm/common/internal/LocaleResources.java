@@ -34,34 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.killvm.client.internal;
+package com.redhat.thermostat.killvm.common.internal;
 
+import com.redhat.thermostat.shared.locale.Translate;
 
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+public enum LocaleResources {
 
-import com.redhat.thermostat.killvm.common.VMKilledListener;
+    ERROR_RESPONSE,
+    OK_RESPONSE,
+    NOK_RESPONSE,
+    NOOP_RESPONSE,
+    AUTH_FAILED_RESPONSE,
+    DEFAULT_RESPONSE
+    ;
 
-public class SwingVMKilledListener extends VMKilledListener {
+    public static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.killvm.common.locale.strings";
 
-
-    @Override
-    protected void onError(String message) {
-        showErrorMessage(message);
-    }
-    
-    /* 
-     * protected for testing
-     * 
-     */
-    protected void showErrorMessage(final String message) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                JOptionPane.showMessageDialog(null, message, "",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        });
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 }
-

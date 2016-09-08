@@ -39,60 +39,57 @@ package com.redhat.thermostat.killvm.command.internal;
 import java.io.PrintStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.killvm.common.VMKilledListener;
 
-public class ShellVMKilledListener implements RequestResponseListener {
-
-    private static final Logger logger = LoggingUtils
-            .getLogger(ShellVMKilledListener.class);
+public class ShellVMKilledListener extends VMKilledListener {
 
     private PrintStream out;
     private PrintStream err;
 
     private CountDownLatch latch = new CountDownLatch(1);
 
-    @Override
-    public void fireComplete(Request request, Response response) {
-        String message;
-        switch (response.getType()) {
-            case ERROR:
-                String pid = request.getParameter("vm-pid");
-                message = "Kill request error for VM ID " + pid;
-                printMessage(err, Level.SEVERE, message);
-                break;
-            case OK:
-                message = "VM with id " + request.getParameter("vm-pid") + " killed.";
-                printMessage(out, Level.INFO, message);
-                break;
-            case NOK:
-            case NOOP:
-                message = "Request to kill VM was ignored.";
-                printMessage(out, Level.WARNING, message);
-                break;
-            case AUTH_FAILED:
-                message = "Unauthorized request was ignored.";
-                printMessage(out, Level.WARNING, message);
-                break;
-            default:
-                message = "Unknown result from KILL VM command.";
-                printMessage(err, Level.WARNING, message);
-                break;
-        }
-        latch.countDown();
-    }
-
-    private void printMessage(PrintStream printStream, Level level, String message) {
-        logger.log(level, message);
+    private void printMessage(PrintStream printStream, String message) {
         if (printStream != null) {
             printStream.println(message);
         }
     }
+
+    @Override
+    protected void onError(String message) {
+        printMessage(err, message);
+    }
+
+    @Override
+    protected void onOk(String message) {
+        printMessage(out, message);
+    }
+
+    @Override
+    protected void onNotOk(String message) {
+        printMessage(out, message);
+    }
+
+    @Override
+    protected void onNoOp(String message) {
+        printMessage(out, message);
+    }
+
+    @Override
+    protected void onAuthFail(String message) {
+        printMessage(out, message);
+    }
+
+    @Override
+    protected void onDefault(String message) {
+        printMessage(out, message);
+    }
+
+    @Override
+    protected void onComplete() {
+        latch.countDown();
+    }
+
 
     public void setOut(PrintStream out) {
         this.out = out;
