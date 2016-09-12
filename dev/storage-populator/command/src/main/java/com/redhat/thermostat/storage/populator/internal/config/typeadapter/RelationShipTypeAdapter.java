@@ -44,9 +44,14 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import com.redhat.thermostat.storage.populator.internal.dependencies.Relationship;
+import com.redhat.thermostat.collections.graph.Relationship;
+import com.redhat.thermostat.collections.graph.Node;
 
 public class RelationShipTypeAdapter extends TypeAdapter<Relationship> {
+
+    private static final String TO = "to";
+    private static final String FROM = "from";
+    private static final String KEY = "key";
 
     @Override
     public Relationship read(JsonReader in) throws IOException {
@@ -68,20 +73,22 @@ public class RelationShipTypeAdapter extends TypeAdapter<Relationship> {
         while (in.hasNext()) {
             String name = in.nextName();
             switch(name) {
-            case Relationship.FROM:
-                values.put(Relationship.FROM, in.nextString());
+            case FROM:
+                values.put(FROM, in.nextString());
                 break;
-            case Relationship.TO:
-                values.put(Relationship.TO, in.nextString());
+            case TO:
+                values.put(TO, in.nextString());
                 break;
-            case Relationship.KEY:
-                values.put(Relationship.KEY, in.nextString());
+            case KEY:
+                values.put(KEY, in.nextString());
                 break;
             default:
                 throw new IllegalStateException("Unknown relationship value: '" + name + "'");
             }
         }
-        return new Relationship(values.get(Relationship.FROM), values.get(Relationship.TO), values.get(Relationship.KEY));
+        Relationship r = new Relationship(new Node(values.get(FROM)), "->", new Node(values.get(TO)));
+        r.setProperty(KEY, values.get(KEY));
+        return r;
     }
 
     @Override

@@ -34,55 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.populator.internal.dependencies;
+package com.redhat.thermostat.collections.graph;
 
-import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Stack;
 
-public class Relationship {
+/**
+ * A {@link DefaultTraversalListener} used by {@link DepthFirstSearch} to construct a
+ * topological ordering of a {@link Graph}.
+ */
+public class TopologicalSort extends DefaultTraversalListener {
+    private Stack<Node> ordered;
+    private Set<Node> discovered;
 
-    public static final String TO = "to";
-    public static final String FROM = "from";
-    public static final String KEY = "key";
-    private final String from;
-    private final String to;
-    private final String key;
-    
-    public Relationship(String from, String to, String key) {
-        this.from = from;
-        this.to = to;
-        this.key = key;
+    public TopologicalSort(Stack<Node> ordered, Set<Node> discovered) {
+        this.ordered = ordered;
+        this.discovered = discovered;
     }
 
-    public String getFrom() {
-        return from;
+    public TopologicalSort() {
+        this.ordered = new Stack<>();
+        this.discovered = new HashSet<>();
     }
 
-    public String getTo() {
-        return to;
+    public void reset() {
+        ordered.clear();
+        discovered.clear();
     }
 
-    public String getKey() {
-        return key;
+    public Stack<Node> getOrdered() {
+        return ordered;
     }
-    
+
+    public Set<Node> getDiscovered() {
+        return discovered;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (o == null || o.getClass() != Relationship.class) {
-            return false;
+    protected void preProcessNodeImpl(Node node) {
+        discovered.add(node);
+    }
+
+    @Override
+    protected void postProcessNodeImpl(Node node) {
+        ordered.add(node);
+    }
+
+    @Override
+    public Status processRelationship(Relationship relationship,
+                                      SearchPayload payload)
+    {
+        RelationshipType type =
+                DepthFirstSearch.classify(relationship, (DFSPayload) payload);
+
+        if (type.equals(RelationshipType.BACK)) {
+            throw new IllegalStateException("back node! " + relationship);
         }
-        Relationship other = (Relationship)o;
-        return Objects.equals(to, other.to) &&
-                Objects.equals(from, other.from) &&
-                Objects.equals(key, other.key);
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(to, from, key);
-    }
-    
-    @Override
-    public String toString() {
-        return from + " -> " + to + "(" + key + ")";
+
+        return Status.CONTINUE;
     }
 }

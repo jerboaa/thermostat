@@ -37,156 +37,118 @@
 package com.redhat.thermostat.storage.populator.internal.config;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.ArrayList;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.redhat.thermostat.collections.graph.DepthFirstSearch;
+import com.redhat.thermostat.collections.graph.HashGraph;
 import com.redhat.thermostat.storage.populator.internal.config.typeadapter.ConfigItemTypeAdapter;
 import com.redhat.thermostat.storage.populator.internal.config.typeadapter.PopulationConfigTypeAdapterFactory;
 import com.redhat.thermostat.storage.populator.internal.config.typeadapter.RelationShipTypeAdapter;
-import com.redhat.thermostat.storage.populator.internal.dependencies.Relationship;
+import com.redhat.thermostat.collections.graph.Relationship;
+import com.redhat.thermostat.collections.graph.TopologicalSort;
+import com.redhat.thermostat.collections.graph.Graph;
+import com.redhat.thermostat.collections.graph.Node;
 
 public class PopulationConfig {
     
     public static final String RECORDS = "records";
     public static final String RELATIONSHIPS = "relationships";
-    private final Map<String, ConfigItem> configs;
-    private final List<ConfigItem> allConfigs;
-    private final Map<String, List<Relationship>> incomingRelationShips;
-    private final Map<String, List<Relationship>> outgoingRelationShips;
+    public static final String ITEM = "item";
+    private final Map<String, Node> configs;
+    private final Map<Node, Set<Relationship>> relationshipMap;
+    private final Graph graph;
     
     private PopulationConfig() {
         configs = new HashMap<>();
-        allConfigs = new ArrayList<>();
-        incomingRelationShips = new HashMap<>();
-        outgoingRelationShips = new HashMap<>();
+        graph = new HashGraph();
+        relationshipMap = new HashMap<>();
     }
 
-    public ConfigItem getConfig(String name) {
-        return configs.get(name);
+    public Node getConfig(String configItem) {
+        Node cfg = configs.get(configItem);
+        if (cfg == null) {
+            throw new InvalidConfigurationException("Config is missing from collection!");
+        }
+        return cfg;
     }
     
     public List<ConfigItem> getConfigsTopologicallySorted() {
-        return topologicallySort(allConfigs);
+        return topologicallySort();
     }
-    
+
     /**
      * Sort config items topologically. That is, get them in an order so as
      * to process collections with no incoming links to other collections.
-     * 
-     * It uses Kahn's algorithm to do so.
-     * 
-     * @param configs unsorted configs.
+     *
+     * It uses the standard DFS algorithm to do so.
+     *
      * @return A topologically sorted list.
      */
-    private List<ConfigItem> topologicallySort(List<ConfigItem> configs) {
-        LinkedList<ConfigItem> sortedList = new LinkedList<>();
-        LinkedList<ConfigItem> queue = getConfigItemsWithNoIncomingEdge(configs);
-        while (!queue.isEmpty()) {
-            ConfigItem n = queue.remove(0);
-            sortedList.addLast(n);
-            List<Relationship> source = getOutgoingRelationShipsForConfig(n);
-            List<Relationship> outgoingRels = new LinkedList<>(source);
-            for (Relationship edge: outgoingRels) {
-                ConfigItem m = getConfig(edge.getTo());
-                removeEdge(edge, n, m);
-                if (hasNoIncomingEdge(m)) {
-                    queue.addLast(m);
-                }
+    private List<ConfigItem> topologicallySort() {
+        DepthFirstSearch dfs = new DepthFirstSearch(graph);
+        TopologicalSort tsort = new TopologicalSort();
+        List<Node> roots = getRoots();
+        Set<ConfigItem> cfgs = new LinkedHashSet<>();
+        // If no roots were found to start from, the graph must be cyclic or empty.
+        if (roots.size() == 0) {
+            throw new InvalidConfigurationException("Relationships form cycle!");
+        }
+
+        for (Node root : roots) {
+            dfs.search(getConfig(root.getName()), tsort);
+            for (Node n : tsort.getOrdered()) {
+                Node cfg = getConfig(n.getName());
+                cfgs.add((ConfigItem) cfg.getProperty(ITEM));
+            }
+            // Isolated nodes will return empty from DFS
+            if (tsort.getOrdered().size() == 0) {
+                cfgs.add((ConfigItem) root.getProperty(ITEM));
+            }
+            dfs.reset();
+            tsort.reset();
+        }
+
+        List<ConfigItem> ordered = new ArrayList<>(cfgs);
+        Collections.reverse(ordered);
+        return ordered;
+    }
+
+    private List<Node> getRoots() {
+        List<Node> roots = new ArrayList<>();
+        for (Node n : relationshipMap.keySet()) {
+            if (relationshipMap.get(n).size() == 0) {
+                roots.add(n);
             }
         }
-        if (hasRelationShips(configs)) {
-            throw new AssertionError("Relationships form at least one cycle! Excpected an acyclic directed graph.");
-        }
-        return sortedList;
+        return roots;
     }
 
-    private boolean hasRelationShips(List<ConfigItem> configs) {
-        for (ConfigItem i: configs) {
-            List<Relationship> incoming = getIncomingRelationShipsForConfig(i);
-            List<Relationship> outgoing = getOutgoingRelationShipsForConfig(i);
-            if (!incoming.isEmpty() ||
-                    !outgoing.isEmpty()) {
-                // We are going to bomb, print some debug info.
-                System.err.println("outgoings for " + i.getName() + " " + outgoing);
-                System.err.println("incomings for " + i.getName() + " " + incoming);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void removeEdge(Relationship toRemove, ConfigItem from, ConfigItem to) {
-        if (from == null || to == null) {
-            throw new InvalidConfigurationException("Found relationship [" +
-                                                    toRemove +
-                    "] but either incoming or outgoing records config is missing");
-        }
-        List<Relationship> incoming = getIncomingRelationShipsForConfig(to);
-        List<Relationship> outgoing = getOutgoingRelationShipsForConfig(from);
-        incoming.remove(toRemove);
-        outgoing.remove(toRemove);
-    }
-
-    private LinkedList<ConfigItem> getConfigItemsWithNoIncomingEdge(List<ConfigItem> allConfigs) {
-        LinkedList<ConfigItem> startNodes = new LinkedList<>();
-        for (ConfigItem item: allConfigs) {
-            if (hasNoIncomingEdge(item)) {
-                startNodes.add(item);
-            }
-        }
-        return startNodes;
-    }
-
-    private boolean hasNoIncomingEdge(ConfigItem item) {
-        List<Relationship> rels = getIncomingRelationShipsForConfig(item);
-        if (rels == null || rels.isEmpty()) {
-            return true;
-        }
-        return false;
-    }
-
-    private List<Relationship> getIncomingRelationShipsForConfig(ConfigItem item) {
-        List<Relationship> result = incomingRelationShips.get(item.getName());
-        if (result == null) {
-            return Collections.emptyList();
-        }
-        return result;
-    }
-    
-    private List<Relationship> getOutgoingRelationShipsForConfig(ConfigItem item) {
-        List<Relationship> result = outgoingRelationShips.get(item.getName());
-        if (result == null) {
-            return Collections.emptyList();
-        }
-        return result;
-    }
-    
-    private void addConfig(ConfigItem item) {
+    private void addConfig(ConfigItem configItem) {
+        Node item = new Node(configItem.getName());
+        item.setProperty(ITEM, configItem);
         configs.put(item.getName(), item);
-        allConfigs.add(item);
+        relationshipMap.put(item, new HashSet<Relationship>());
     }
     
-    private void addIncomingRelationShipForConfig(ConfigItem item, Relationship relationship) {
-        addRelationShip(item, relationship, incomingRelationShips);
-    }
-    
-    private void addOutgoingRelationShipForConfig(ConfigItem item, Relationship relationship) {
-        addRelationShip(item, relationship, outgoingRelationShips);
-    }
-    
-    private void addRelationShip(ConfigItem item, Relationship relationship, Map<String, List<Relationship>> map) {
-        List<Relationship> existingRels = map.get(item.getName());
-        if (existingRels == null) {
-            existingRels = new LinkedList<>();
-            map.put(item.getName(), existingRels);
+    private void addRelationShip(Relationship relationship) {
+        graph.addRelationship(relationship);
+        if (relationshipMap.get(relationship.getTo()) == null) {
+            Set<Relationship> rels = new HashSet<>();
+            rels.add(relationship);
+            relationshipMap.put(relationship.getTo(), rels);
         }
-        existingRels.add(relationship);
+        else {
+            relationshipMap.get(relationship.getTo()).add(relationship);
+        }
     }
     
     public static PopulationConfig parseFromJsonString(String json) throws IOException {
@@ -204,14 +166,7 @@ public class PopulationConfig {
         for (ConfigItem item: items) {
             pc.addConfig(item);
             for (Relationship r: rels) {
-                // keep track of incoming relationships (incoming edge)
-                if (r.getTo().equals(item.getName())) {
-                    pc.addIncomingRelationShipForConfig(item, r);
-                }
-                // keep track of outgoing relationships (outgoing edge)
-                if (r.getFrom().equals(item.getName())) {
-                    pc.addOutgoingRelationShipForConfig(item, r);
-                }
+                pc.addRelationShip(r);
             }
         }
         return pc;

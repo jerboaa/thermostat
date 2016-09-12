@@ -50,7 +50,7 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import com.redhat.thermostat.storage.populator.internal.config.ConfigItem;
 import com.redhat.thermostat.storage.populator.internal.config.PopulationConfig;
-import com.redhat.thermostat.storage.populator.internal.dependencies.Relationship;
+import com.redhat.thermostat.collections.graph.Relationship;
 
 public class PopulationConfigTypeAdapter extends TypeAdapter<PopulationConfig> {
     

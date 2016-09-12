@@ -47,7 +47,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.populator.internal.config.ConfigItem;
 import com.redhat.thermostat.storage.populator.internal.config.PopulationConfig;
-import com.redhat.thermostat.storage.populator.internal.dependencies.Relationship;
+import com.redhat.thermostat.collections.graph.Relationship;
 import com.redhat.thermostat.storage.populator.internal.config.typeadapter.ConfigItemTypeAdapter;
 import com.redhat.thermostat.storage.populator.internal.config.typeadapter.PopulationConfigTypeAdapterFactory;
 import com.redhat.thermostat.storage.populator.internal.config.typeadapter.RelationShipTypeAdapter;
@@ -72,11 +72,11 @@ public class PopulationConfigTypeAdapterTest {
                 "{ \"name\": \"agent-config\", \"number\": 10, \"alive\": 3 }]" +
                 "}";
         PopulationConfig config = gson.fromJson(json, PopulationConfig.class);
-        ConfigItem item = config.getConfig("config-item");
+        ConfigItem item = config.getConfig("config-item").getProperty("item");
         assertEquals(3, item.getNumber());
         assertEquals(1, item.getAliveItems());
         assertEquals("config-item", item.getName());
-        item = config.getConfig("agent-config");
+        item = config.getConfig("agent-config").getProperty("item");
         assertEquals(10, item.getNumber());
         assertEquals(3, item.getAliveItems());
         assertEquals("agent-config", item.getName());
@@ -91,11 +91,11 @@ public class PopulationConfigTypeAdapterTest {
                 "[{ \"from\": \"config-item\", \"to\": \"agent-config\", \"key\": \"foo\"}]" +
                 "}";
         PopulationConfig config = gson.fromJson(json, PopulationConfig.class);
-        ConfigItem item = config.getConfig("config-item");
+        ConfigItem item = config.getConfig("config-item").getProperty("item");
         assertEquals(3, item.getNumber());
         assertEquals(1, item.getAliveItems());
         assertEquals("config-item", item.getName());
-        item = config.getConfig("agent-config");
+        item = config.getConfig("agent-config").getProperty("item");
         assertEquals(10, item.getNumber());
         assertEquals(3, item.getAliveItems());
         assertEquals("agent-config", item.getName());

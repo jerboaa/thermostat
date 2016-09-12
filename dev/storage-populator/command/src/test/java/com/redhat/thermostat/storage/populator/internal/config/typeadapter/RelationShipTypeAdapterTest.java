@@ -43,7 +43,7 @@ import org.junit.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.redhat.thermostat.storage.populator.internal.dependencies.Relationship;
+import com.redhat.thermostat.collections.graph.Relationship;
 import com.redhat.thermostat.storage.populator.internal.config.typeadapter.RelationShipTypeAdapter;
 
 public class RelationShipTypeAdapterTest {
@@ -60,8 +60,8 @@ public class RelationShipTypeAdapterTest {
     @Test
     public void testBasicNonNull() {
         Relationship rel = gson.fromJson("{ \"from\": \"foo\", \"to\": \"bar\", \"key\": \"baz\"}", Relationship.class);
-        assertEquals("foo", rel.getFrom());
-        assertEquals("bar", rel.getTo());
-        assertEquals("baz", rel.getKey());
+        assertEquals("foo", rel.getFrom().getName());
+        assertEquals("bar", rel.getTo().getName());
+        assertEquals("baz", rel.getProperty("key"));
     }
 }

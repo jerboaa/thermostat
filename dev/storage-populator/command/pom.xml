@@ -131,6 +131,11 @@
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-platform-collections</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
 </project>

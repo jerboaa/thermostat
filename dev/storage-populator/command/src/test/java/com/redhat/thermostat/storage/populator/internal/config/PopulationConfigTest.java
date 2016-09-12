@@ -49,7 +49,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.populator.internal.dependencies.Relationship;
+import com.redhat.thermostat.collections.graph.Relationship;
+import com.redhat.thermostat.collections.graph.Node;
 import com.redhat.thermostat.storage.populator.internal.config.ConfigItem;
 import com.redhat.thermostat.storage.populator.internal.config.PopulationConfig;
 
@@ -67,16 +68,16 @@ public class PopulationConfigTest {
     public void canParseFromFile() throws IOException {
         String json = new String(Files.readAllBytes(new File(getClass().getResource("/testconfig").getFile()).toPath()));
         PopulationConfig config = PopulationConfig.parseFromJsonString(json);
-        ConfigItem item = config.getConfig("agent-config");
+        ConfigItem item = config.getConfig("agent-config").getProperty("item");
         assertNotNull(item);
         assertEquals(100, item.getNumber());
         assertEquals(20, item.getAliveItems());
         List<ConfigItem> items = config.getConfigsTopologicallySorted();
         assertEquals(7, items.size());
-        item = config.getConfig("vm-info");
+        item = config.getConfig("vm-info").getProperty("item");
         assertEquals(50, item.getNumber());
         assertEquals(40, item.getAliveItems());
-        item = config.getConfig("vm-gc-stats");
+        item = config.getConfig("vm-gc-stats").getProperty("item");
         assertNotNull(item);
     }
     
@@ -149,15 +150,20 @@ public class PopulationConfigTest {
 
     private List<Relationship> buildGoodRels() {
         List<Relationship> relationships = new LinkedList<>();
-        Relationship agentConfigToNetworkInfo = new Relationship(AGENT_CONFIG_NAME, NETWORK_INFO_NAME, AGENT_KEY);
+        Relationship agentConfigToNetworkInfo = new Relationship(new Node(AGENT_CONFIG_NAME), "->", new Node(NETWORK_INFO_NAME));
+        agentConfigToNetworkInfo.setProperty("key", AGENT_KEY);
         relationships.add(agentConfigToNetworkInfo);
-        Relationship agentConfigToVmGcStat = new Relationship(AGENT_CONFIG_NAME, VM_GC_STAT_NAME, AGENT_KEY);
+        Relationship agentConfigToVmGcStat = new Relationship(new Node(AGENT_CONFIG_NAME), "->", new Node(VM_GC_STAT_NAME));
+        agentConfigToVmGcStat.setProperty("key", AGENT_KEY);
         relationships.add(agentConfigToVmGcStat);
-        Relationship agentConfigToHostInfo = new Relationship(AGENT_CONFIG_NAME, HOST_INFO_NAME, AGENT_KEY);
+        Relationship agentConfigToHostInfo = new Relationship(new Node(AGENT_CONFIG_NAME), "->", new Node(HOST_INFO_NAME));
+        agentConfigToHostInfo.setProperty("key", AGENT_KEY);
         relationships.add(agentConfigToHostInfo);
-        Relationship agentConfigToVmInfo = new Relationship(AGENT_CONFIG_NAME, VM_INFO_NAME, AGENT_KEY);
+        Relationship agentConfigToVmInfo = new Relationship(new Node(AGENT_CONFIG_NAME), "->", new Node(VM_INFO_NAME));
+        agentConfigToVmInfo.setProperty("key", AGENT_KEY);
         relationships.add(agentConfigToVmInfo);
-        Relationship vmInfoToVmGcStat = new Relationship(VM_INFO_NAME, VM_GC_STAT_NAME, VM_KEY);
+        Relationship vmInfoToVmGcStat = new Relationship(new Node(VM_INFO_NAME), "->", new Node(VM_GC_STAT_NAME));
+        vmInfoToVmGcStat.setProperty("key", VM_KEY);
         relationships.add(vmInfoToVmGcStat);
         return relationships;
     }
@@ -180,14 +186,16 @@ public class PopulationConfigTest {
     /**
      * Tests topological sorting with a cycle. Expected to fail.
      */
-    @Test(expected = AssertionError.class)
+    @Test(expected = PopulationConfig.InvalidConfigurationException.class)
     public void testTopogicalSortCycle() throws IOException {
         List<ConfigItem> records = buildGoodRecords();
         List<Relationship> rels = buildGoodRels();
         // add a cycle between vm-info -> host-info -> agent-config
-        Relationship cyclePartOne = new Relationship(VM_INFO_NAME, HOST_INFO_NAME, VM_KEY);
+        Relationship cyclePartOne = new Relationship(new Node(VM_INFO_NAME), "->", new Node(HOST_INFO_NAME));
+        cyclePartOne.setProperty("key", VM_KEY);
         rels.add(cyclePartOne);
-        Relationship cyclePartTwo = new Relationship(HOST_INFO_NAME, AGENT_CONFIG_NAME, AGENT_KEY);
+        Relationship cyclePartTwo = new Relationship(new Node(HOST_INFO_NAME), "->", new Node(AGENT_CONFIG_NAME));
+        cyclePartTwo.setProperty("key", AGENT_KEY);
         rels.add(cyclePartTwo);
         PopulationConfig pc = PopulationConfig.createFromLists(records, rels);
         // This is expected to fail

@@ -42,7 +42,7 @@ import com.redhat.thermostat.collections.graph.Node;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.tools.dependency.internal.DependencyGraphBuilder;
 import com.redhat.thermostat.tools.dependency.internal.PathProcessorHandler;
-import com.redhat.thermostat.tools.dependency.internal.TopologicalSort;
+import com.redhat.thermostat.collections.graph.TopologicalSort;
 import com.redhat.thermostat.tools.dependency.internal.Utils;
 
 import java.nio.file.Path;
