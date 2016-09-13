@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CountDownLatch;
 
+import com.redhat.thermostat.common.internal.test.Bug;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.junit.After;
@@ -292,6 +293,39 @@ public class MongoStorageTest {
         when(mockCursor.hasNext()).thenReturn(true).thenReturn(false);
         when(mockCursor.next()).thenReturn("foo-bar-collection");
         when(mockIterable.iterator()).thenReturn(mockCursor);
+        listener.changed(ConnectionStatus.CONNECTED);
+        verify(mockConnection).getDatabase();
+        verify(db).createCollection(eq("schema-info"), any(CreateCollectionOptions.class));
+    }
+
+    @Bug(id="PR2941",
+            url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2941",
+            summary="Multiple clients rapidly connecting to webstorage produces exceptions")
+    @Test
+    public void verifyConnectionOnlyInitializesDbOnce() {
+        MongoConnection mockConnection = mock(MongoConnection.class);
+
+        // This adds a listener which we capture
+        new MongoStorage(mockConnection);
+        ArgumentCaptor<ConnectionListener> captor = ArgumentCaptor.forClass(ConnectionListener.class);
+        verify(mockConnection).addListener(captor.capture());
+        ConnectionListener listener = captor.getValue();
+        assertNotNull(listener);
+        when(mockConnection.getDatabase()).thenReturn(db);
+        @SuppressWarnings("unchecked")
+        MongoIterable<String> mockIterable = mock(MongoIterable.class);
+        when(db.listCollectionNames()).thenReturn(mockIterable);
+        @SuppressWarnings("unchecked")
+        com.mongodb.client.MongoCursor<String> mockCursor = mock(com.mongodb.client.MongoCursor.class);
+        when(mockCursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(mockCursor.next()).thenReturn("foo-bar-collection");
+        when(mockIterable.iterator()).thenReturn(mockCursor);
+
+        listener.changed(ConnectionStatus.CONNECTED);
+        verify(mockConnection).getDatabase();
+        verify(db).createCollection(eq("schema-info"), any(CreateCollectionOptions.class));
+
+        // verify the MongoStorage isn't reinitializing on the second connection success
         listener.changed(ConnectionStatus.CONNECTED);
         verify(mockConnection).getDatabase();
         verify(db).createCollection(eq("schema-info"), any(CreateCollectionOptions.class));

@@ -328,7 +328,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     private final MongoConnection conn;
     private final Map<String, MongoCollection<Document>> collectionCache = new HashMap<>();
     private final CountDownLatch connectedLatch;
-    private MongoDatabase db = null;
+    private volatile MongoDatabase db = null;
 
     // For testing only
     MongoStorage(MongoDatabase db, CountDownLatch latch) {
@@ -349,11 +349,13 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
             public void changed(ConnectionStatus newStatus) {
                 switch (newStatus) {
                 case CONNECTED:
-                    // Main success entry point
-                    db = conn.getDatabase();
-                    createSchemaInfo();
-                    // This is important. See comment in registerCategory().
-                    connectedLatch.countDown();
+                    if (db == null) {
+                        // Main success entry point
+                        db = conn.getDatabase();
+                        createSchemaInfo();
+                        // This is important. See comment in registerCategory().
+                        connectedLatch.countDown();
+                    }
                     break;
                 case FAILED_TO_CONNECT:
                     // Main connection-failure entry-point
