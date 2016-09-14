@@ -34,32 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.populator.internal;
+package com.redhat.thermostat.common.cli;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static com.redhat.thermostat.testutils.Asserts.assertServiceIsNotRegistered;
-import static com.redhat.thermostat.testutils.Asserts.assertServiceIsRegistered;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.shared.config.CommonPaths;
-import org.junit.Test;
+public enum LocaleResources {
+    MISSING_COMMAND_NAME,
+    ;
 
-import com.redhat.thermostat.storage.populator.StoragePopulatorCommand;
-import com.redhat.thermostat.testutils.StubBundleContext;
+    public static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.common.cli.locale.strings";
 
-public class ActivatorTest {
-    @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext ctx = new StubBundleContext();
-        Activator activator = new Activator();
-
-        activator.start(ctx);
-        assertCommandIsRegistered(ctx, "storage-populator", StoragePopulatorCommand.class);
-        activator.stop(ctx);
-
-        assertEquals(0, ctx.getServiceListeners().size());
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
-
 }

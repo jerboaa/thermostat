@@ -34,11 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.client.cli.internal;
+package com.redhat.thermostat.vm.byteman.client.cli;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -55,8 +60,13 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
+import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.vm.byteman.client.cli.BytemanControlCommand;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -111,14 +121,14 @@ public class BytemanControlCommandTest {
         vmInfo.setAgentId(SOME_AGENT_ID);
         vmInfo.setVmId(SOME_VM_ID);
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
-        command.setVmInfoDao(vmInfoDAO);
+        command.bindVmInfoDao(vmInfoDAO);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         AgentInformation agentInfo = mock(AgentInformation.class);
         when(agentInfo.isAlive()).thenReturn(true);
         when(agentInfo.getRequestQueueAddress()).thenReturn(REQUEST_QUEUE_ADDRESS);
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(agentInfo);
-        command.setAgentInfoDao(agentInfoDAO);
-        command.setVmBytemanDao(mock(VmBytemanDAO.class));
+        command.bindAgentInfoDao(agentInfoDAO);
+        command.bindVmBytemanDao(mock(VmBytemanDAO.class));
         ctxFactory = new TestCommandContextFactory();
     }
     
@@ -161,8 +171,8 @@ public class BytemanControlCommandTest {
         when(dao.findBytemanStatus(eq(new VmId(SOME_VM_ID)))).thenReturn(status);
         Arguments args = getBasicArgsWithAction(STATUS_ACTION);
         CommandContext ctx = ctxFactory.createContext(args);
-        command.unsetVmBytemanDao();
-        command.setVmBytemanDao(dao);
+        command.unbindVmBytemanDao(dao);
+        command.bindVmBytemanDao(dao);
         command.run(ctx);
         String stdErr = ctxFactory.getError();
         String stdOut = ctxFactory.getOutput();
@@ -194,8 +204,8 @@ public class BytemanControlCommandTest {
         AgentInformation agentInfo = mock(AgentInformation.class);
         when(agentInfo.isAlive()).thenReturn(false);
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(agentInfo);
-        command.unsetAgentInfoDao();
-        command.setAgentInfoDao(agentInfoDAO);
+        command.unbindAgentInfoDao(agentInfoDAO);
+        command.bindAgentInfoDao(agentInfoDAO);
         Arguments args = getBasicArgsWithAction("no-matter");
         CommandContext ctx = ctxFactory.createContext(args);
         try {
@@ -239,11 +249,11 @@ public class BytemanControlCommandTest {
         when(dao.findBytemanStatus(eq(new VmId(SOME_VM_ID)))).thenReturn(status);
         Arguments args = getBasicArgsWithAction(UNLOAD_ACTION);
         CommandContext ctx = ctxFactory.createContext(args);
-        command.unsetVmBytemanDao();
-        command.setVmBytemanDao(dao);
+        command.unbindVmBytemanDao(dao);
+        command.bindVmBytemanDao(dao);
         RequestQueue rQueue = mock(RequestQueue.class);
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
-        command.setRequestQueue(rQueue);
+        command.bindRequestQueue(rQueue);
         command.run(ctx);
         verify(rQueue).putRequest(requestCaptor.capture());
         Request submittedRequest = requestCaptor.getValue();
@@ -275,10 +285,10 @@ public class BytemanControlCommandTest {
         when(dao.findBytemanStatus(eq(new VmId(SOME_VM_ID)))).thenReturn(status);
         Arguments args = getBasicArgsWithAction(LOAD_ACTION); // rule file arg missing
         CommandContext ctx = ctxFactory.createContext(args);
-        command.unsetVmBytemanDao();
-        command.setVmBytemanDao(dao);
+        command.unbindVmBytemanDao(dao);
+        command.bindVmBytemanDao(dao);
         RequestQueue rQueue = mock(RequestQueue.class);
-        command.setRequestQueue(rQueue);
+        command.bindRequestQueue(rQueue);
         try {
             command.run(ctx);
             fail("Expected cmd exception due to missing rule argument");
@@ -303,10 +313,10 @@ public class BytemanControlCommandTest {
         String file = "i-do-not-exist";
         when(args.getArgument(RULE_OPTION)).thenReturn(file);
         CommandContext ctx = ctxFactory.createContext(args);
-        command.unsetVmBytemanDao();
-        command.setVmBytemanDao(dao);
+        command.unbindVmBytemanDao(dao);
+        command.bindVmBytemanDao(dao);
         RequestQueue rQueue = mock(RequestQueue.class);
-        command.setRequestQueue(rQueue);
+        command.bindRequestQueue(rQueue);
         try {
             command.run(ctx);
             fail("Expected cmd exception due to rule file not existing");
@@ -331,10 +341,10 @@ public class BytemanControlCommandTest {
         String file = getClass().getResource("/testRule.btm").getFile();
         when(args.getArgument(RULE_OPTION)).thenReturn(file);
         CommandContext ctx = ctxFactory.createContext(args);
-        command.unsetVmBytemanDao();
-        command.setVmBytemanDao(dao);
+        command.unbindVmBytemanDao(dao);
+        command.bindVmBytemanDao(dao);
         RequestQueue rQueue = mock(RequestQueue.class);
-        command.setRequestQueue(rQueue);
+        command.bindRequestQueue(rQueue);
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         command.run(ctx);
         verify(rQueue).putRequest(requestCaptor.capture());
@@ -368,10 +378,10 @@ public class BytemanControlCommandTest {
         String file = getClass().getResource("/testRule.btm").getFile();
         when(args.getArgument(RULE_OPTION)).thenReturn(file);
         CommandContext ctx = ctxFactory.createContext(args);
-        command.unsetVmBytemanDao();
-        command.setVmBytemanDao(dao);
+        command.unbindVmBytemanDao(dao);
+        command.bindVmBytemanDao(dao);
         RequestQueue rQueue = mock(RequestQueue.class);
-        command.setRequestQueue(rQueue);
+        command.bindRequestQueue(rQueue);
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         command.run(ctx);
         verify(rQueue).putRequest(requestCaptor.capture());
@@ -394,6 +404,27 @@ public class BytemanControlCommandTest {
         String out = ctxFactory.getOutput();
         assertEquals("Request submitted successfully.\n", out);
     }
+
+    @Test
+    public void testProvidesRulesFileCompletion() {
+        FileNameTabCompleter fileNameTabCompleter = mock(FileNameTabCompleter.class);
+        command.bindFileNameTabCompleter(fileNameTabCompleter);
+        Map<CliCommandOption, ? extends TabCompleter> completerMap = command.getOptionCompleters();
+        assertThat(completerMap.size(), is(1));
+        assertThat(completerMap.keySet(), is(equalTo(Collections.singleton(BytemanControlCommand.RULES_OPTION))));
+        assertThat(BytemanControlCommand.RULES_OPTION.getLongOpt(), is("rules"));
+        assertThat(BytemanControlCommand.RULES_OPTION.getOpt(), is("r"));
+        assertThat(completerMap.get(BytemanControlCommand.RULES_OPTION), is(not(equalTo(null))));
+        assertThat(completerMap.get(BytemanControlCommand.RULES_OPTION), is(instanceOf(FileNameTabCompleter.class)));
+    }
+
+    @Test
+    public void testProvidesNoCompletionsIfFileNameTabCompleterIsUnavailable() {
+        FileNameTabCompleter fileNameTabCompleter = mock(FileNameTabCompleter.class);
+        command.unbindFileNameTabCompleter(fileNameTabCompleter);
+        Map<CliCommandOption, ? extends TabCompleter> completerMap = command.getOptionCompleters();
+        assertThat(completerMap.size(), is(0));
+    }
     
     @SuppressWarnings("unchecked")
     private void doShowMetricsTest(List<BytemanMetric> metricsToReturn, String stdOutExpected) throws CommandException {
@@ -408,8 +439,8 @@ public class BytemanControlCommandTest {
         when(dao.findBytemanMetrics(any(Range.class), any(VmId.class), any(AgentId.class))).thenReturn(metricsToReturn);
         Arguments args = getBasicArgsWithAction(SHOW_METRICS_ACTION);
         CommandContext ctx = ctxFactory.createContext(args);
-        command.unsetVmBytemanDao();
-        command.setVmBytemanDao(dao);
+        command.unbindVmBytemanDao(dao);
+        command.bindVmBytemanDao(dao);
         command.run(ctx);
         String stdErr = ctxFactory.getError();
         String stdOut = ctxFactory.getOutput();

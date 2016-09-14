@@ -36,7 +36,11 @@
 
 package com.redhat.thermostat.storage.populator;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -49,7 +53,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collections;
+import java.util.Map;
 
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.TabCompleter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -110,7 +118,6 @@ public class StoragePopulatorCommandTest {
     @Test
     public void testCommandFailsWhenDependenciesUnavailable() {
         command = new StoragePopulatorCommand();
-        command.setServicesUnavailable();
 
         try {
             command.run(ctx);
@@ -210,18 +217,37 @@ public class StoragePopulatorCommandTest {
         verify(vmInfoDAO, times(vmCount)).putVmInfo(any(VmInfo.class));
     }
 
+    @Test
+    public void testProvidesConfigFileCompletions() {
+        command = new StoragePopulatorCommand();
+        setUpServices();
+        Map<CliCommandOption, ? extends TabCompleter> map = command.getOptionCompleters();
+        assertThat(map.keySet(), is(equalTo(Collections.singleton(StoragePopulatorCommand.CONFIG_OPTION))));
+        assertThat(map.get(StoragePopulatorCommand.CONFIG_OPTION), is(not(equalTo(null))));
+    }
+
+    @Test
+    public void testProvidesTabCompletionsEvenWhenCommonPathsUnavailable() {
+        command = new StoragePopulatorCommand();
+        setUpServices();
+        command.unbindPaths(mock(CommonPaths.class));
+        Map<CliCommandOption, ? extends TabCompleter> map = command.getOptionCompleters();
+        assertThat(map.keySet(), is(equalTo(Collections.singleton(StoragePopulatorCommand.CONFIG_OPTION))));
+        assertThat(map.get(StoragePopulatorCommand.CONFIG_OPTION), is(not(equalTo(null))));
+    }
+
     private void setUpServices () {
         paths = mock(CommonPaths.class);
-        command.setPaths(paths);
+        command.bindPaths(paths);
         hostInfoDAO = mock(HostInfoDAO.class);
-        command.setHostInfoDAO(hostInfoDAO);
+        command.bindHostInfoDAO(hostInfoDAO);
         agentInfoDAO = mock(AgentInfoDAO.class);
-        command.setAgentInfoDAO(agentInfoDAO);
+        command.bindAgentInfoDAO(agentInfoDAO);
         vmInfoDAO = mock(VmInfoDAO.class);
-        command.setVmInfoDAO(vmInfoDAO);
+        command.bindVmInfoDAO(vmInfoDAO);
         networkInfoDAO = mock(NetworkInterfaceInfoDAO.class);
-        command.setNetworkInfoDAO(networkInfoDAO);
+        command.bindNetworkInfoDAO(networkInfoDAO);
         threadDao = mock(ThreadDao.class);
-        command.setThreadDao(threadDao);
+        command.bindThreadDAO(threadDao);
     }
 }

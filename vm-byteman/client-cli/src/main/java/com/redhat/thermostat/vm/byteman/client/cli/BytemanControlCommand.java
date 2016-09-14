@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.client.cli.internal;
+package com.redhat.thermostat.vm.byteman.client.cli;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,17 +43,23 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.AbstractCompleterCommand;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
+import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.StreamUtils;
@@ -64,16 +70,35 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.vm.byteman.client.cli.internal.LocaleResources;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequestResponseListener;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAction;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
+import org.apache.felix.scr.annotations.Service;
 
-public class BytemanControlCommand extends AbstractCommand {
-    
-    public static final String COMMAND_NAME = "byteman";
+@Component
+@Service
+@Property(name = Command.NAME, value = "byteman")
+@References({
+        @Reference(name = "agentInfoDao", referenceInterface = AgentInfoDAO.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY),
+        @Reference(name = "vmInfoDao", referenceInterface = VmInfoDAO.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY),
+        @Reference(name = "vmBytemanDao", referenceInterface = VmBytemanDAO.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY),
+        @Reference(name = "requestQueue", referenceInterface = RequestQueue.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY),
+        @Reference(name = "fileNameTabCompleter", referenceInterface = FileNameTabCompleter.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+})
+public class BytemanControlCommand extends AbstractCompleterCommand {
+
+    static final CliCommandOption RULES_OPTION = new CliCommandOption("r", "rules", true,
+            "a file with Byteman rules to load into a VM", false);
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     static final String INJECT_RULE_ACTION = "load";
@@ -87,6 +112,19 @@ public class BytemanControlCommand extends AbstractCommand {
 
     
     private final DependencyServices depServices = new DependencyServices();
+
+    @Override
+    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
+        if (!depServices.hasService(FileNameTabCompleter.class)) {
+            return Collections.emptyMap();
+        }
+        return Collections.singletonMap(RULES_OPTION, depServices.getService(FileNameTabCompleter.class));
+    }
+
+    @Override
+    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
+        return Collections.emptyMap();
+    }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
@@ -265,36 +303,44 @@ public class BytemanControlCommand extends AbstractCommand {
         return status;
     }
     
-    void setAgentInfoDao(AgentInfoDAO agentDao) {
+    void bindAgentInfoDao(AgentInfoDAO agentDao) {
         depServices.addService(AgentInfoDAO.class, agentDao);
     }
     
-    void unsetAgentInfoDao() {
+    void unbindAgentInfoDao(AgentInfoDAO agentDao) {
         depServices.removeService(AgentInfoDAO.class);
     }
     
-    void setVmInfoDao(VmInfoDAO vmDao) {
+    void bindVmInfoDao(VmInfoDAO vmDao) {
         depServices.addService(VmInfoDAO.class, vmDao);
     }
     
-    void unsetVmInfoDao() {
+    void unbindVmInfoDao(VmInfoDAO vmDao) {
         depServices.removeService(VmInfoDAO.class);
     }
     
-    void setVmBytemanDao(VmBytemanDAO metricDao) {
+    void bindVmBytemanDao(VmBytemanDAO metricDao) {
         depServices.addService(VmBytemanDAO.class, metricDao);
     }
     
-    void unsetVmBytemanDao() {
+    void unbindVmBytemanDao(VmBytemanDAO metricDao) {
         depServices.removeService(VmBytemanDAO.class);
     }
     
-    void setRequestQueue(RequestQueue queue) {
+    void bindRequestQueue(RequestQueue queue) {
         depServices.addService(RequestQueue.class, queue);
     }
     
-    void unsetRequestQueue() {
+    void unbindRequestQueue(RequestQueue queue) {
         depServices.removeService(RequestQueue.class);
+    }
+
+    void bindFileNameTabCompleter(FileNameTabCompleter fileNameTabCompleter) {
+        depServices.addService(FileNameTabCompleter.class, fileNameTabCompleter);
+    }
+
+    void unbindFileNameTabCompleter(FileNameTabCompleter fileNameTabCompleter) {
+        depServices.removeService(FileNameTabCompleter.class);
     }
 
 }

@@ -54,10 +54,11 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Activator>com.redhat.thermostat.vm.byteman.client.cli.internal.Activator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.byteman.client.cli</Bundle-SymbolicName>
-            <Export-Package />
+            <Export-Package>
+              com.redhat.thermostat.vm.byteman.client.cli
+            </Export-Package>
             <Private-Package>
               com.redhat.thermostat.vm.byteman.client.cli.internal
             </Private-Package>

@@ -39,23 +39,27 @@ package com.redhat.thermostat.storage.populator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.AbstractCompleterCommand;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.cli.DependencyServices;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.populator.internal.StoragePopulatorConfigFinder;
 import com.redhat.thermostat.storage.populator.internal.config.ConfigItem;
 import com.redhat.thermostat.storage.populator.internal.config.PopulationConfig;
 import com.redhat.thermostat.storage.populator.internal.dependencies.SharedState;
@@ -67,59 +71,102 @@ import com.redhat.thermostat.storage.populator.internal.ThreadPopulator;
 import com.redhat.thermostat.storage.populator.internal.VmInfoPopulator;
 import com.redhat.thermostat.storage.populator.internal.LocaleResources;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 
-public class StoragePopulatorCommand extends AbstractCommand {
-
-    public static final String COMMAND_NAME = "storage-populator";
+@Component
+@Service // Command and CompleterService
+@Property(name = Command.NAME, value = "storage-populator")
+public class StoragePopulatorCommand extends AbstractCompleterCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    private static final Logger logger = LoggingUtils.getLogger(StoragePopulatorCommand.class);
 
-    private static final String CONFIG_FILE_NAME = "config";
+    static final CliCommandOption CONFIG_OPTION = new CliCommandOption("c", "config", true, "the json config file to use", true);
 
     private final Map<String, CollectionPopulator> populators = new HashMap<>();
     private final DependencyServices dependencyServices = new DependencyServices();
 
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private CommonPaths paths;
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private HostInfoDAO hostInfoDAO;
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private AgentInfoDAO agentInfoDAO;
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private VmInfoDAO vmInfoDAO;
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private NetworkInterfaceInfoDAO networkInfoDAO;
-    private ThreadDao threadDao;
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    private ThreadDao threadDAO;
 
     private Console console;
 
-    public void setPaths(CommonPaths paths) {
+    public void bindPaths(CommonPaths paths) {
         dependencyServices.addService(CommonPaths.class, paths);
     }
 
-    public void setHostInfoDAO(HostInfoDAO dao) {
+    public void unbindPaths(CommonPaths paths) {
+        dependencyServices.removeService(CommonPaths.class);
+    }
+
+    public void bindHostInfoDAO(HostInfoDAO dao) {
         dependencyServices.addService(HostInfoDAO.class, dao);
     }
 
-    public void setAgentInfoDAO(AgentInfoDAO dao) {
+    public void unbindHostInfoDAO(HostInfoDAO dao) {
+        dependencyServices.removeService(HostInfoDAO.class);
+    }
+
+    public void bindAgentInfoDAO(AgentInfoDAO dao) {
         dependencyServices.addService(AgentInfoDAO.class, dao);
     }
 
-    public void setVmInfoDAO(VmInfoDAO dao) {
+    public void unbindAgentInfoDAO(AgentInfoDAO dao) {
+        dependencyServices.removeService(AgentInfoDAO.class);
+    }
+
+    public void bindVmInfoDAO(VmInfoDAO dao) {
         dependencyServices.addService(VmInfoDAO.class, dao);
     }
 
-    public void setNetworkInfoDAO(NetworkInterfaceInfoDAO dao) {
+    public void unbindVmInfoDAO(VmInfoDAO dao) {
+        dependencyServices.removeService(VmInfoDAO.class);
+    }
+
+    public void bindNetworkInfoDAO(NetworkInterfaceInfoDAO dao) {
         dependencyServices.addService(NetworkInterfaceInfoDAO.class, dao);
     }
 
-    public void setThreadDao(ThreadDao dao) {
+    public void unbindNetworkInfoDAO(NetworkInterfaceInfoDAO dao) {
+        dependencyServices.removeService(NetworkInterfaceInfoDAO.class);
+    }
+
+    public void bindThreadDAO(ThreadDao dao) {
         dependencyServices.addService(ThreadDao.class, dao);
     }
 
-    public void setServicesUnavailable() {
-        dependencyServices.removeService(CommonPaths.class);
-        dependencyServices.removeService(HostInfoDAO.class);
-        dependencyServices.removeService(AgentInfoDAO.class);
-        dependencyServices.removeService(VmInfoDAO.class);
-        dependencyServices.removeService(NetworkInterfaceInfoDAO.class);
+    public void unbindThreadDAO(ThreadDao dao) {
         dependencyServices.removeService(ThreadDao.class);
+    }
+
+    @Override
+    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
+        CompletionFinderTabCompleter completer = new CompletionFinderTabCompleter(new StoragePopulatorConfigFinder(dependencyServices));
+        return Collections.singletonMap(CONFIG_OPTION, completer);
+    }
+
+    @Override
+    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
+        return Collections.emptyMap();
     }
 
     @Override
@@ -144,8 +191,8 @@ public class StoragePopulatorCommand extends AbstractCommand {
         requireNonNull(networkInfoDAO,
                 translator.localize(LocaleResources.NETWORK_SERVICE_UNAVAILABLE));
 
-        threadDao = dependencyServices.getService(ThreadDao.class);
-        requireNonNull(threadDao, translator.localize(LocaleResources.THREAD_SERVICE_UNAVAILABLE));
+        threadDAO = dependencyServices.getService(ThreadDao.class);
+        requireNonNull(threadDAO, translator.localize(LocaleResources.THREAD_SERVICE_UNAVAILABLE));
 
         HostInfoPopulator hostInfoPopulator = new HostInfoPopulator(hostInfoDAO);
         populators.put(hostInfoPopulator.getHandledCollection(), hostInfoPopulator);
@@ -159,7 +206,7 @@ public class StoragePopulatorCommand extends AbstractCommand {
         NetworkInfoPopulator networkInfoPopulator = new NetworkInfoPopulator(networkInfoDAO);
         populators.put(networkInfoPopulator.getHandledCollection(), networkInfoPopulator);
 
-        ThreadPopulator threadPopulator = new ThreadPopulator(threadDao);
+        ThreadPopulator threadPopulator = new ThreadPopulator(threadDAO);
         populators.put(threadPopulator.getHandledCollection(), threadPopulator);
 
         try {
@@ -193,7 +240,7 @@ public class StoragePopulatorCommand extends AbstractCommand {
      * Package-private to allow overriding for testing.
      */
     File getConfigFile(Arguments args) {
-        return new File(getConfigFileDirectoryPath(paths) + args.getArgument(CONFIG_FILE_NAME));
+        return new File(getConfigFileDirectoryPath(paths) + args.getArgument(CONFIG_OPTION.getLongOpt()));
     }
 
     public static String getConfigFileDirectoryPath(CommonPaths paths) {

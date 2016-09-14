@@ -61,7 +61,6 @@
           <instructions>
             <Bundle-SymbolicName>com.redhat.thermostat.storage.populator</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.storage.populator.internal.Activator</Bundle-Activator>
             <Export-Package>
                 com.redhat.thermostat.storage.populator,
             </Export-Package>
