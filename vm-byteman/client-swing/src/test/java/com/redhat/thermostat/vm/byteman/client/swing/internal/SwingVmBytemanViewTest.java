@@ -55,19 +55,6 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
-import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.vm.byteman.client.swing.internal.VmBytemanView.GenerateAction;
-import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.core.NameMatcher;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -85,12 +72,22 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.annotations.internal.CacioTest;
+import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.byteman.client.swing.internal.VmBytemanView.BytemanInjectState;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
+import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
