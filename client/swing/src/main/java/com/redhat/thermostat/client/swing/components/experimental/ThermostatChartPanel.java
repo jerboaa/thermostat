@@ -61,6 +61,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.ui.RectangleEdge;
 
 import com.redhat.thermostat.client.swing.components.ValueField;
+import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel.UnitRange;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.Duration;
 
@@ -82,33 +83,28 @@ public class ThermostatChartPanel extends JPanel {
 
     private static final int MINIMUM_DRAW_SIZE = 100;
 
-    private JPanel chartsPanel;
-    private List<ChartPanel> charts;
+    private final JPanel chartsPanel;
+    private final List<ChartPanel> charts;
+    private final RecentTimeControlPanel recentTimeControlPanel;
+    private final boolean isFixedXYPlotAutoScale;
+    private final Duration initialDuration;
 
-    private RecentTimeControlPanel recentTimeControlPanel;
     private JTextComponent label;
-
-    private Duration initialDuration;
-
     private ChartPanel chartPanel;
     private Crosshair xCrosshair;
-
-    public ThermostatChartPanel(JFreeChart chart, Duration initialDuration) {
-        this(initialDuration);
-
-        addChart(chart);
-    }
-
-    public ThermostatChartPanel(Duration initialDuration) {
+    
+    // Used by ThermostatChartPanelBuilder
+    ThermostatChartPanel(JFreeChart chart, Duration initialDuration, boolean isFixedXYPlotAutoScale, UnitRange unitRange) {
+        this.isFixedXYPlotAutoScale = isFixedXYPlotAutoScale;
         this.initialDuration = initialDuration;
         this.chartsPanel = new JPanel();
         this.charts = new ArrayList<>();
-
+        
         chartsPanel.setLayout(new BoxLayout(chartsPanel, BoxLayout.Y_AXIS));
-
+        
         this.setLayout(new BorderLayout());
-
-        recentTimeControlPanel = new RecentTimeControlPanel(initialDuration);
+        
+        recentTimeControlPanel = new RecentTimeControlPanel(initialDuration, unitRange);
         recentTimeControlPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
@@ -116,23 +112,35 @@ public class ThermostatChartPanel extends JPanel {
                 ThermostatChartPanel.this.firePropertyChange(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, null, d);
             }
         });
-
+        
         add(chartsPanel, BorderLayout.CENTER);
         add(recentTimeControlPanel, BorderLayout.SOUTH);
-
+        
+        if (chart != null) {
+            addChart(chart);
+        }
         revalidate();
+    }
+
+    public ThermostatChartPanel(JFreeChart chart, Duration initialDuration) {
+        this(chart, initialDuration, true, UnitRange.DEFAULT);
+    }
+
+    public ThermostatChartPanel(Duration initialDuration) {
+        this(null, initialDuration, true, UnitRange.DEFAULT);
     }
 
     public void addChart(JFreeChart chart) {
         // jfreechart still generates tooltips when disabled, prevent generation as well
         if (chart.getPlot() instanceof XYPlot) {
             chart.getXYPlot().getRenderer().setBaseToolTipGenerator(null);
+            chart.getXYPlot().getRangeAxis().setAutoRange(true);
+            
+            chart.getXYPlot().getDomainAxis().setAutoRange(true);
+            if (isFixedXYPlotAutoScale) {
+                chart.getXYPlot().getDomainAxis().setFixedAutoRange(initialDuration.asMilliseconds());
+            }
         }
-
-        chart.getXYPlot().getRangeAxis().setAutoRange(true);
-
-        chart.getXYPlot().getDomainAxis().setAutoRange(true);
-        chart.getXYPlot().getDomainAxis().setFixedAutoRange(initialDuration.asMilliseconds());
 
         chart.getPlot().setBackgroundPaint(WHITE);
         chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);
@@ -163,12 +171,16 @@ public class ThermostatChartPanel extends JPanel {
     }
 
     public void setTimeRangeToShow(Duration duration) {
+        // only suitable for XY Plots with fixed auto range
+        if (!isFixedXYPlotAutoScale) {
+            return;
+        }
         for (ChartPanel cp : charts) {
-            XYPlot plot = cp.getChart().getXYPlot();
+            XYPlot xyPlot = cp.getChart().getXYPlot();
 
             // Don't drop old data; just dont' show it.
-            plot.getDomainAxis().setAutoRange(true);
-            plot.getDomainAxis().setFixedAutoRange(duration.asMilliseconds());
+            xyPlot.getDomainAxis().setAutoRange(true);
+            xyPlot.getDomainAxis().setFixedAutoRange(duration.asMilliseconds());
         }
     }
 

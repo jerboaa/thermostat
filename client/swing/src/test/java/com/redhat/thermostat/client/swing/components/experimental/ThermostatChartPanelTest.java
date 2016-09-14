@@ -52,6 +52,9 @@ import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.junit.After;
 import org.junit.Before;
@@ -61,6 +64,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.annotations.internal.CacioTest;
+import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel.UnitRange;
 import com.redhat.thermostat.common.Duration;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
@@ -165,6 +169,27 @@ public class ThermostatChartPanelTest {
         Duration time = new Duration(20, TimeUnit.MINUTES);
         thermostatChartPanel.setTimeRangeToShow(time);
         assertEquals(time.asMilliseconds(), (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
+    }
+    
+    @GUITest
+    @Test
+    public void testTimeRangeToShowNoExceptionsNonXYPlot() {
+        CategoryDataset defDataSet = new DefaultCategoryDataset();
+        final JFreeChart myChart = ChartFactory.createBarChart(
+                null,
+                "Time Label",
+                "Value Label",
+                defDataSet,
+                PlotOrientation.VERTICAL, false, false, false);
+        final ThermostatChartPanel[] panel = new ThermostatChartPanel[1];
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                panel[0] = new ThermostatChartPanel(myChart, ThermostatChartPanel.DEFAULT_DATA_DISPLAY, false, UnitRange.COARSE);
+            }
+        });
+        Duration time = new Duration(32, TimeUnit.MINUTES);
+        panel[0].setTimeRangeToShow(time); // must not throw exceptions
     }
 
     @GUITest
