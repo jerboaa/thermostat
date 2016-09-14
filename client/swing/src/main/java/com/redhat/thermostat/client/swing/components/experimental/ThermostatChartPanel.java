@@ -43,6 +43,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
@@ -66,6 +67,13 @@ import com.redhat.thermostat.common.Duration;
 
 public class ThermostatChartPanel extends JPanel {
 
+    private static final long DEFAULT_VALUE = 10;
+    private static final TimeUnit DEFAULT_TIMEUNIT = TimeUnit.MINUTES;
+    
+    /**
+     * Default range of time for charts to display data for. Set to 10 minutes.
+     */
+    public static final Duration DEFAULT_DATA_DISPLAY = new Duration(DEFAULT_VALUE, DEFAULT_TIMEUNIT);
     public static final String PROPERTY_VISIBLE_TIME_RANGE = "visibleTimeRange";
 
     private static final Color WHITE = new Color(255,255,255,0);
