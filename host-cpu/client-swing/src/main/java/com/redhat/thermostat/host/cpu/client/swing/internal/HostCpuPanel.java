@@ -45,7 +45,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.Box;
 import javax.swing.JLabel;
@@ -67,6 +66,7 @@ import com.redhat.thermostat.client.swing.components.LegendLabel;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
+import com.redhat.thermostat.client.swing.components.experimental.ThermostatChartPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
@@ -171,7 +171,7 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
     @Override
     public Duration getUserDesiredDuration() {
         if (chartController == null) {
-            return new Duration(10, TimeUnit.MINUTES);
+            return ThermostatChartPanel.DEFAULT_DATA_DISPLAY;
         }
         return new Duration(chartController.getTimeValue(), chartController.getTimeUnit());
     }

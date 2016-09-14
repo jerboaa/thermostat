@@ -41,7 +41,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingUtilities;
 
@@ -71,9 +70,6 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final int DEFAULT_VALUE = 10;
-    private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
-
     private Duration duration;
 
     private HeaderPanel visiblePanel;
@@ -89,7 +85,7 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
         super();
         data.addSeries(cpuTimeSeries);
 
-        duration = new Duration(DEFAULT_VALUE, DEFAULT_UNIT);
+        duration = ThermostatChartPanel.DEFAULT_DATA_DISPLAY;
 
         initializePanel();
 

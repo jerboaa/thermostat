@@ -46,7 +46,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
@@ -116,7 +115,7 @@ public class NumaPanel extends NumaView implements SwingComponent {
         detailsPanel.setLayout(new BorderLayout());
 
 
-        duration = new Duration(10, TimeUnit.MINUTES);
+        duration = ThermostatChartPanel.DEFAULT_DATA_DISPLAY;
         chartPanel = new ThermostatChartPanel(duration);
 
         chartPanel.addPropertyChangeListener(ThermostatChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {

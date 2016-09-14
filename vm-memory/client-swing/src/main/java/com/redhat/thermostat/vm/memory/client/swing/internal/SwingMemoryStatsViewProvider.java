@@ -36,9 +36,7 @@
 
 package com.redhat.thermostat.vm.memory.client.swing.internal;
 
-import java.util.concurrent.TimeUnit;
-
-import com.redhat.thermostat.common.Duration;
+import com.redhat.thermostat.client.swing.components.experimental.ThermostatChartPanel;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 
@@ -46,7 +44,7 @@ public class SwingMemoryStatsViewProvider implements MemoryStatsViewProvider {
 
     @Override
     public MemoryStatsView createView() {
-        return new MemoryStatsViewImpl(new Duration(10, TimeUnit.MINUTES));
+        return new MemoryStatsViewImpl(ThermostatChartPanel.DEFAULT_DATA_DISPLAY);
     }
 
 }

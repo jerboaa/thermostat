@@ -43,7 +43,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -77,9 +76,6 @@ public class VmNumaPanel extends VmNumaView implements SwingComponent {
 
     private HeaderPanel visiblePanel;
 
-    private static final int DEFAULT_VALUE = 10;
-    private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
-
     private Duration duration;
 
     private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<>(this);
@@ -104,7 +100,7 @@ public class VmNumaPanel extends VmNumaView implements SwingComponent {
     }
 
     private JPanel initializeChartsPanel() {
-        duration = new Duration(DEFAULT_VALUE, DEFAULT_UNIT);
+        duration = ThermostatChartPanel.DEFAULT_DATA_DISPLAY;
         chartPanel = new ThermostatChartPanel(duration);
 
         chartPanel.addPropertyChangeListener(ThermostatChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {

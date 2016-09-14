@@ -125,9 +125,6 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
     private static final Color BLACK = new Color(0,0,0,0);
     private static final float TRANSPARENT = 0.0f;
 
-    private static final int DEFAULT_VALUE = 10;
-    private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
-
     private JLayeredPane stack = new JLayeredPane();
     private OverlayPanel overlayPanel = new OverlayPanel(translator.localize(LocaleResources.VM_GC_PARAMETERS_TITLE), true, true);
     private HeaderPanel visiblePanel = new HeaderPanel();
@@ -307,10 +304,9 @@ public class VmGcPanel extends VmGcView implements SwingComponent, OverlayContai
         chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);
         chart.getPlot().setOutlinePaint(BLACK);
 
-        Duration defaultDuration = new Duration(DEFAULT_VALUE, DEFAULT_UNIT);
         final RecentTimeSeriesChartController chartController = new RecentTimeSeriesChartController(chart);
-        final ThermostatChartPanel chartPanel = new ThermostatChartPanel(chart, defaultDuration);
-        subPanelDurations.put(tag, defaultDuration);
+        final ThermostatChartPanel chartPanel = new ThermostatChartPanel(chart, ThermostatChartPanel.DEFAULT_DATA_DISPLAY);
+        subPanelDurations.put(tag, ThermostatChartPanel.DEFAULT_DATA_DISPLAY);
         chartPanel.enableDynamicCrosshairs();
 
         chartPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
