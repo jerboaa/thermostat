@@ -95,6 +95,7 @@ public class AcceptThreadTest {
         acceptKey = mock(SelectionKey.class);
         acceptKey.attach(serverSock);
         when(acceptKey.readyOps()).thenReturn(SelectionKey.OP_ACCEPT);
+        when(acceptKey.isValid()).thenReturn(true);
         
         execService = mock(ExecutorService.class);
         handlerCreator = mock(ClientHandlerCreator.class);
@@ -113,6 +114,21 @@ public class AcceptThreadTest {
         verify(selector).select();
         verify(serverSock).accept();
         verify(handlerCreator).createHandler(clientSock, execService, callbacks);
+        assertEquals(handler, clientKey.attachment());
+        
+        verify(handler, never()).handleRead();
+        verify(handler, never()).handleWrite();
+    }
+    
+    @Test
+    public void testSelectOneAcceptInvalid() throws IOException {
+        when(acceptKey.isValid()).thenReturn(false);
+        mockSelectionKeys(acceptKey);
+        selectAndShutdown(thread, 1);
+        thread.run();
+        
+        verify(selector).select();
+        verify(serverSock, never()).accept();
         assertEquals(handler, clientKey.attachment());
         
         verify(handler, never()).handleRead();
@@ -225,7 +241,7 @@ public class AcceptThreadTest {
     
     @Test
     public void testSelectInvalidWrite() throws IOException {
-        when(clientKey.isValid()).thenReturn(false);
+        when(clientKey.isValid()).thenReturn(true).thenReturn(false);
         when(clientKey.readyOps()).thenReturn(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
         mockSelectionKeys(clientKey);
         selectAndShutdown(thread, 1);

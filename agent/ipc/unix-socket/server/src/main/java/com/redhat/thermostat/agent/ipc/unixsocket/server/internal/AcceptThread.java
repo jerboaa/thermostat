@@ -99,7 +99,8 @@ class AcceptThread extends Thread {
     }
 
     private void processKey(SelectionKey key) {
-        if (key.readyOps() > 0) {
+        // Ensure this key is still valid and hasn't been cancelled (e.g. by closing the socket)
+        if (key.readyOps() > 0 && key.isValid()) {
             logger.finest("Got selection operation: " + key.readyOps());
             try {
                 if (key.isAcceptable()) {
