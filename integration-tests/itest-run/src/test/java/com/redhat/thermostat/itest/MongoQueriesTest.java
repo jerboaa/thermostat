@@ -95,6 +95,9 @@ import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
  * 
  */
 public class MongoQueriesTest extends IntegrationTest {
+    
+    // Be sure to use this ID for adding and deleting DB data
+    private static final String TEST_AGENT_ID = "test-agent-id";
 
     static final String USERNAME = "foobar";
     static final String PASSWORD = "baz";
@@ -135,8 +138,10 @@ public class MongoQueriesTest extends IntegrationTest {
         addCpuData(4);
     }
 
+
     @AfterClass
     public static void tearDownOnce() throws Exception {
+        deleteCpuData();
         stopStorage();
     }
 
@@ -170,39 +175,51 @@ public class MongoQueriesTest extends IntegrationTest {
         return storage;
     }
 
-    private static void addCpuData(int numberOfItems) throws InterruptedException {
+    private static void addCpuData(final int numberOfItems) throws InterruptedException {
+        ConnectedStorageAction addCpuDataAction = new ConnectedStorageAction() {
+
+            @Override
+            public void doStorageOp(BackingStorage storage) {
+                storage.registerCategory(CpuStatDAO.cpuStatCategory);
+                
+                for (int i = 0; i < numberOfItems; i++) {
+                    CpuStat pojo = new CpuStat(TEST_AGENT_ID, i, new double[] {i, i*2});
+                    Add<CpuStat> add = storage.createAdd(CpuStatDAO.cpuStatCategory);
+                    add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
+                    add.set(CpuStatDAO.cpuLoadKey.getName(), pojo.getPerProcessorUsage());
+                    add.set(Key.TIMESTAMP.getName(), pojo.getTimeStamp());
+                    add.apply();
+                }
+            }
+            
+        };
+        doConnectedStorageAction(addCpuDataAction);
+    }
+    
+    private static void doConnectedStorageAction(final ConnectedStorageAction action) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
         BackingStorage storage = getAndConnectStorage(listener);
         latch.await();
         storage.getConnection().removeListener(listener);
         
-        storage.registerCategory(CpuStatDAO.cpuStatCategory);
-
-        for (int i = 0; i < numberOfItems; i++) {
-            CpuStat pojo = new CpuStat("test-agent-id", i, new double[] {i, i*2});
-            Add<CpuStat> add = storage.createAdd(CpuStatDAO.cpuStatCategory);
-            add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
-            add.set(CpuStatDAO.cpuLoadKey.getName(), pojo.getPerProcessorUsage());
-            add.set(Key.TIMESTAMP.getName(), pojo.getTimeStamp());
-            add.apply();
-        }
+        action.doStorageOp(storage);
 
         storage.getConnection().disconnect();
     }
 
     private static void deleteCpuData() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage storage = getAndConnectStorage(listener);
-        latch.await();
-        storage.getConnection().removeListener(listener);
-        storage.registerCategory(CpuStatDAO.cpuStatCategory);
-
-        storage.purge("test-agent-id");
-
-        storage.getConnection().disconnect();
-    }
+        ConnectedStorageAction deleteAction = new ConnectedStorageAction() {
+            
+            @Override
+            public void doStorageOp(BackingStorage storage) {
+                storage.registerCategory(CpuStatDAO.cpuStatCategory);
+                
+                storage.purge(TEST_AGENT_ID);
+            }
+        };
+        doConnectedStorageAction(deleteAction);
+     }
 
     private void executeAndVerifyQuery(Query<CpuStat> query, List<Long> expectedTimestamps) {
         Cursor<CpuStat> cursor = query.execute();
@@ -210,7 +227,7 @@ public class MongoQueriesTest extends IntegrationTest {
         for (Long time : expectedTimestamps) {
             assertTrue(cursor.hasNext());
             CpuStat pojo = cursor.next();
-            assertEquals("test-agent-id", pojo.getAgentId());
+            assertEquals(TEST_AGENT_ID, pojo.getAgentId());
             assertEquals(time.longValue(), pojo.getTimeStamp());
             double[] data = pojo.getPerProcessorUsage();
             assertEquals(time, data[0], EQUALS_DELTA);
@@ -263,7 +280,7 @@ public class MongoQueriesTest extends IntegrationTest {
         add.set(VmClassStatDAO.loadedClassesKey.getName(), pojo.getLoadedClasses());
         add.apply();
     }
-
+    
     @Test
     public void canQueryNoWhere() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
@@ -559,6 +576,12 @@ public class MongoQueriesTest extends IntegrationTest {
         assertEquals(uuid.toString(), pojo.getAgentId());
 
         mongoStorage.purge(uuid.toString());
+    }
+    
+    static interface ConnectedStorageAction {
+        
+        void doStorageOp(BackingStorage storage);
+        
     }
 }
 
