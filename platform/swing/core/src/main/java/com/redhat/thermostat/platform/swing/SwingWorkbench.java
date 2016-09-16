@@ -57,16 +57,9 @@ public class SwingWorkbench implements Workbench {
     private WorkbenchView view;
     private WorkbenchController controller;
 
-    @Reference(bind = "bindPlatformShutdown", unbind = "unbindPlatformShutdown")
+    @Reference()
     private PlatformShutdown shutdown;
 
-    private void bindPlatformShutdown(PlatformShutdown shutdown) {
-        this.shutdown = shutdown;
-    }
-
-    private void unbindPlatformShutdown(PlatformShutdown shutdown) {
-        this.shutdown = shutdown;
-    }
 
     @Activate
     private void activate() {

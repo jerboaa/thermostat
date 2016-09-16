@@ -108,15 +108,7 @@ public class VmBytemanDAOImpl extends AbstractDao implements VmBytemanDAO {
     }
     
     VmBytemanDAOImpl(Storage storage) {
-        bindStorage(storage);
-    }
-    
-    protected void bindStorage(Storage storage) {
         this.storage = storage;
-    }
-    
-    protected void unbindStorage(Storage storage) {
-        this.storage = null;
     }
     
     @Activate

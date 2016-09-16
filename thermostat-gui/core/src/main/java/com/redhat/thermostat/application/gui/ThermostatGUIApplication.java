@@ -53,27 +53,11 @@ import javax.swing.SwingUtilities;
 @Service(ThermostatGUIApplication.class)
 public class ThermostatGUIApplication extends SwingApplication {
 
-    @Reference(bind = "bindWorkbench", unbind = "unbindWorkbench")
+    @Reference
     private SwingWorkbench workbench;
 
-    protected void bindWorkbench(SwingWorkbench workbench) {
-        this.workbench = workbench;
-    }
-
-    protected void unbindWorkbench(SwingWorkbench workbench) {
-        this.workbench = null;
-    }
-
-    @Reference(bind = "bindApplicationService", unbind = "unbindApplicationService")
+    @Reference
     private ApplicationService applicationService;
-
-    protected void bindApplicationService(ApplicationService applicationService) {
-        this.applicationService = applicationService;
-    }
-
-    protected void unbindApplicationService(ApplicationService applicationService) {
-        this.applicationService = null;
-    }
 
     @Activate
     private void activate() {

@@ -63,10 +63,10 @@ public class PlatformCommand extends AbstractCommand {
     
     static final String NAME = "platform";
 
-    @Reference(bind = "bindCommonPaths", unbind = "unbindCommonPaths")
+    @Reference
     private CommonPaths paths;
 
-    @Reference(bind = "bindApplicationService", unbind = "unbindApplicationService")
+    @Reference
     private ApplicationService appService;
     
     private ConfigurationManager manager;
@@ -76,22 +76,6 @@ public class PlatformCommand extends AbstractCommand {
     
     public PlatformCommand() {}
 
-    protected void bindCommonPaths(CommonPaths paths) {
-        this.paths = paths;
-    }
-    
-    protected void unbindCommonPaths(CommonPaths paths) {
-        this.paths = null;
-    }
-
-    protected void bindApplicationService(ApplicationService service) {
-        this.appService = service;
-    }
-    
-    protected void unbindApplicationService(ApplicationService service) {
-        this.appService = null;
-    }
-    
     @Activate
     protected void activate() throws CommandException {
 

@@ -58,22 +58,6 @@ public class SwingApplicationProvider implements ApplicationProvider {
     @Reference
     private SwingWorkbench workbench;
 
-    protected void bindWorkbench(SwingWorkbench workbench) {
-        this.workbench = workbench;
-    }
-
-    protected void unbindWorkbench(SwingWorkbench workbench) {
-        this.workbench = null;
-    }
-
-    protected void bindApplication(SwingApplication application) {
-        this.application = application;
-    }
-
-    protected void unbindApplication(SwingApplication application) {
-        this.application = null;
-    }
-
     @Override
     public Application getApplication() {
         return application;

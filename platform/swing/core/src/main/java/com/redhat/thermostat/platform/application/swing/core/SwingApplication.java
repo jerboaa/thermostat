@@ -54,14 +54,6 @@ public class SwingApplication extends Application {
     @Reference()
     private ApplicationService applicationService;
 
-    protected void bindApplicationService(ApplicationService applicationService) {
-        this.applicationService = applicationService;
-    }
-
-    protected void unbindApplicationService(ApplicationService applicationService) {
-        this.applicationService = null;
-    }
-    
     private SwingPlatform platform;
     
     @Activate

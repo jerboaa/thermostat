@@ -55,38 +55,14 @@ import org.apache.felix.scr.annotations.Service;
 @Service({ ThermostatWorkbenchProvider.class, MVCProvider.class })
 public class ThermostatWorkbenchProvider implements MVCProvider {
 
-    @Reference(bind = "bindCommonPaths", unbind = "unbindCommonPaths")
+    @Reference
     private CommonPaths paths;
 
-    @Reference(bind = "bindWorkbench", unbind = "unbindWorkbench")
+    @Reference
     private SwingWorkbench workbench;
 
-    @Reference(bind = "bindThermostatGUI", unbind = "unbindThermostatGUI")
+    @Reference
     private ThermostatGUI thermostatGUI;
-
-    protected void bindCommonPaths(CommonPaths paths) {
-        this.paths = paths;
-    }
-
-    protected void unbindCommonPaths(CommonPaths paths) {
-        this.paths = null;
-    }
-
-    protected void bindWorkbench(SwingWorkbench workbench) {
-        this.workbench = workbench;
-    }
-
-    protected void unbindWorkbench(SwingWorkbench workbench) {
-        this.workbench = null;
-    }
-
-    protected void bindThermostatGUI(ThermostatGUI thermostatGUI) {
-        this.thermostatGUI = thermostatGUI;
-    }
-
-    protected void unbindThermostatGUI(ThermostatGUI thermostatGUI) {
-        this.thermostatGUI = null;
-    }
 
     private Model model;
     private ThermostatWorkbenchView view;

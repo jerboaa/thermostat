@@ -54,27 +54,11 @@ import org.apache.felix.scr.annotations.Service;
 @Service(ApplicationProvider.class)
 public class ThermostatGUIApplicationProvider extends SwingApplicationProvider {
 
-    @Reference(bind = "bindApplication", unbind = "unbindApplication")
+    @Reference
     private ThermostatGUIApplication application;
 
-    @Reference(bind = "bindWorkbench", unbind = "unbindWorkbench")
+    @Reference
     private SwingWorkbench workbench;
-
-    protected void bindWorkbench(SwingWorkbench workbench) {
-        this.workbench = workbench;
-    }
-
-    protected void unbindWorkbench(SwingWorkbench workbench) {
-        this.workbench = null;
-    }
-
-    protected void bindApplication(ThermostatGUIApplication application) {
-        this.application = application;
-    }
-
-    protected void unbindApplication(ThermostatGUIApplication application) {
-        this.application = null;
-    }
 
     @Override
     public Application getApplication() {

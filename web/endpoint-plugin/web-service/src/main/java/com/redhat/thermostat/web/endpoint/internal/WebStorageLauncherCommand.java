@@ -96,38 +96,6 @@ public class WebStorageLauncherCommand extends AbstractStateNotifyingCommand {
         this.shutdownLatch = shutdownLatch;
     }
 
-    protected void bindCommonPaths(CommonPaths commonPaths) {
-        this.commonPaths = commonPaths;
-    }
-
-    protected void unbindCommonPaths(CommonPaths commonPaths) {
-        this.commonPaths = null;
-    }
-
-    protected void bindLauncher(Launcher launcher) {
-        this.launcher = launcher;
-    }
-
-    protected void unbindLauncher(Launcher launcher) {
-        this.launcher = null;
-    }
-
-    protected void bindSslConfig(SSLConfiguration sslConfig) {
-        this.sslConfig = sslConfig;
-    }
-
-    protected void unbindSslConfig(SSLConfiguration sslConfig) {
-        this.sslConfig = null;
-    }
-
-    protected void bindExitStatus(ExitStatus exitStatus) {
-        this.exitStatus = exitStatus;
-    }
-
-    protected void unbindExitStatus(ExitStatus exitStatus) {
-        this.exitStatus = null;
-    }
-
     @Override
     public void run(CommandContext ctx) throws CommandException {
         // start storage

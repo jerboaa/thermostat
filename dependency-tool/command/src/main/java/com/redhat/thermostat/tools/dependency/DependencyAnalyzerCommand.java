@@ -81,16 +81,8 @@ public class DependencyAnalyzerCommand implements Command {
 
     private PathProcessorHandler handler;
 
-    @Reference(bind = "bindCommonPaths", unbind = "unbindCommonPaths")
+    @Reference
     private CommonPaths paths;
-
-    protected void bindCommonPaths(CommonPaths paths) {
-        this.paths = paths;
-    }
-
-    protected void unbindCommonPaths(CommonPaths paths) {
-        this.paths = null;
-    }
 
     @Activate
     public void activate() {
