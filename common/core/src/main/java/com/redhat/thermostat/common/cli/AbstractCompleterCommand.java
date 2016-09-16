@@ -37,8 +37,8 @@
 package com.redhat.thermostat.common.cli;
 
 import com.redhat.thermostat.shared.locale.Translate;
+import org.apache.felix.scr.annotations.Activate;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
 
 import java.util.Collections;
 import java.util.Objects;
