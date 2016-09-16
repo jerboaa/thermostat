@@ -111,7 +111,6 @@
             </goals>
             <configuration>
               <argLine>${surefire-argline} ${coverageAgent} -Dfile.encoding=UTF-8</argLine>
-              <forkMode>always</forkMode>
             </configuration>
           </execution>
           <!-- run tests with US-ASCII encoding. See UsAsciiCharsetAsDefault -->
@@ -122,7 +121,6 @@
               <goal>test</goal>
             </goals>
             <configuration>
-              <forkMode>always</forkMode>
               <argLine>${surefire-argline} ${coverageAgent} -Dfile.encoding=US-ASCII</argLine>
               <groups>com.redhat.thermostat.testutils.UsAsciiCharsetAsDefault</groups>
             </configuration>
