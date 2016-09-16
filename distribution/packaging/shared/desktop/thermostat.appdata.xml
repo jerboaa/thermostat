@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ Copyright 2012-2016 Red Hat, Inc.
+
+ This file is part of Thermostat.
+
+ Thermostat is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published
+ by the Free Software Foundation; either version 2, or (at your
+ option) any later version.
+
+ Thermostat is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Thermostat; see the file COPYING.  If not see
+ <http://www.gnu.org/licenses/>.
+
+ Linking this code with other modules is making a combined work
+ based on this code.  Thus, the terms and conditions of the GNU
+ General Public License cover the whole combination.
+
+ As a special exception, the copyright holders of this code give
+ you permission to link this code with independent modules to
+ produce an executable, regardless of the license terms of these
+ independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also
+ meet, for each linked independent module, the terms and conditions
+ of the license of that module.  An independent module is a module
+ which is not derived from or based on this code.  If you modify
+ this code, you may extend this exception to your version of the
+ library, but you are not obligated to do so.  If you do not wish
+ to do so, delete this exception statement from your version.
+
+-->
+<application>
+ <id type="desktop">${pkg_name}.desktop</id>
+ <metadata_license>CC-BY-SA-3.0</metadata_license>
+ <project_license>GPL-2.0-with-classpath-exception</project_license>
+ <name>Thermostat</name>
+ <translation type="gettext">${pkg_name}</translation>
+ <summary>Serviceability and Monitoring for OpenJDK</summary>
+ <description>
+  <p>Thermostat is an instrumentation tool for the Hotspot JVM,
+     with support for monitoring multiple JVM instances on multiple hosts,
+     optionally in a cloud environment.
+  </p>
+  <p>
+     The name Thermostat is intended as a play on words: Thermostat is to Hotspot much as IcedTea is to Java.</p>
+ </description>
+ <screenshots>
+  <screenshot type="default">
+   <image>http://icedtea.classpath.org/thermostat/img/screenshot1.png</image>
+   <caption>Examine memory regions and their sizes</caption>
+  </screenshot>
+  <screenshot type="default">
+   <image>http://icedtea.classpath.org/thermostat/img/screenshot2.png</image>
+   <caption>Visualize thread states</caption>
+  </screenshot>
+  <screenshot type="default">
+   <image>http://icedtea.classpath.org/thermostat/img/screenshot3.png</image>
+   <caption>Dump, browse and search the Java heap</caption>
+  </screenshot>
+ </screenshots>
+ <url type="homepage">http://icedtea.classpath.org/thermostat</url>
+ <updatecontact>sgehwolf@redhat.com</updatecontact>
+ <kudos>
+  <kudo>HiDpiIcon</kudo>
+ </kudos>
+</application>

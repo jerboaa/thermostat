@@ -67,6 +67,11 @@ __DEFAULT_RELEASE__ 7
   %global jnr_posix_version          3.0.29
   %global jnr_ffi_version            2.0.9
   %global osgi_compendium_maven_version 1.4.0
+  # xmvn-subst in rawhide and later fedoras support
+  # in reactor symlinking. See RHBZ#1226251
+  %global xmvn_subst_args            -R %{buildroot} .
+  %global jetty_version              9.4.0.M0
+  %global tomcat_version             8
 
 %else
 
@@ -103,6 +108,9 @@ __DEFAULT_RELEASE__ 7
   # Use compat version of 1 which is provided by the SCL-ized version
   # in our collection.
   %global osgi_compendium_maven_version 1
+  %global xmvn_subst_args            .
+  %global jetty_version              9.0.3.v20130506
+  %global tomcat_version             7
 
 %endif
 
@@ -125,7 +133,7 @@ __DEFAULT_RELEASE__ 7
 # thread plugin needs jgraphx. See gui.properties hunk in
 # 0001_shared_fix_bundle_loading.patch We pass in
 # jgraphx.osgi.version via the command line.
-%global jgraphx_bundle_version     3.5.0
+%global jgraphx_bundle_version     3.6.0
 
 # Base path to the JDK which will be used in boot scripts
 %if 0%{?fedora} >= 22
@@ -154,6 +162,7 @@ __DEFAULT_RELEASE__ 7
   %global system_logdir %{_root_localstatedir}/log/%{pkg_name}
   %global system_statedir %{_root_localstatedir}/run/%{pkg_name}
   %global system_sbindir %{_root_sbindir}
+  %global thermostat_desktop_app_name "'Thermostat (from SCL)'"
 %if 0%{?is_rhel_6}
   %global system_initrddir %{_root_sysconfdir}/rc.d/init.d/
 %endif
@@ -167,6 +176,7 @@ __DEFAULT_RELEASE__ 7
   %global system_cachedir %{_localstatedir}/cache/%{pkg_name}
   %global system_logdir %{_localstatedir}/log/%{pkg_name}
   %global system_statedir %{_localstatedir}/run/%{pkg_name}
+  %global thermostat_desktop_app_name Thermostat
 }
 # system java dir definition (non-scl)
 %global system_javadir %{system_root_datadir}/java
@@ -274,10 +284,12 @@ Patch3:     0003_rhel_lucene_4.patch
 # manifest. See https://github.com/jnr/jnr-x86asm/pull/1
 Patch4:     0004_shared-remove-jnr-assembly-exclusion.patch
 
+%{?scl:
 %if 0%{?non_bootstrap_build}
 # Work-around xmvn-subst limitation
 BuildRequires: %{?scl_prefix}thermostat-webapp = %{version}
 %endif
+}
 
 # RHEL 6 does not have virtual provides java-devel >= 1.7
 %if 0%{?is_rhel_6}
@@ -544,9 +556,9 @@ cp %{SOURCE4} distribution/config/thermostatrc
 %pom_add_dep "org.apache.lucene:lucene-core:5.2.0" vm-heap-analysis/distribution
 # Fix up artifact names for jgraphx
 %pom_remove_dep "org.tinyjee.jgraphx:jgraphx"
-%pom_add_dep "com.mxgraph:jgraphx:3.1.2.0"
+%pom_add_dep "com.mxgraph:jgraphx:%{jgraphx_bundle_version}.0"
 %pom_remove_dep "org.tinyjee.jgraphx:jgraphx" thread/client-swing
-%pom_add_dep "com.mxgraph:jgraphx:3.1.2.0" thread/client-swing
+%pom_add_dep "com.mxgraph:jgraphx:%{jgraphx_bundle_version}.0" thread/client-swing
 #  httpclient
 %pom_remove_dep org.apache.httpcomponents:httpclient-osgi web/client
 %pom_add_dep org.apache.httpcomponents:httpclient:4.4.0 web/client
@@ -717,9 +729,12 @@ popd
 #    install javadoc:aggregate
 # Everything after '--' is passed to plain xmvn/mvn
 %mvn_build -f -- -Dthermostat.home=%{thermostat_home} \
+                 -Dthermostat.desktop.app.name=%{thermostat_desktop_app_name} \
                  -Dthermostat.jdk.home=%{jdk_base} \
                  -Dthermostat.system.user=thermostat \
                  -Dthermostat.system.group=thermostat \
+                 -Dtomcat=%{tomcat_version} \
+                 -Dpkg_name=%{pkg_name} \
                  -Dnetty.version=%{netty_bundle_version}.Final \
                  -Dcommons-logging.version=%{logging_bundle_version} \
                  -Dcommons-collections.version=%{collections_bundle_version} \
@@ -737,7 +752,7 @@ popd
                  -Dlucene-analysis.bundle.symbolic-name=%{lucene_analysis_core_bsn} \
                  -Dosgi.compendium.bundle.symbolic-name=org.osgi.compendium \
                  -Dosgi.compendium.osgi-version=4.1.0 \
-                 -Djgraphx.osgi.version=%{jgraphx_bundle_version} \
+                 -Djgraphx.osgi.version=%{jgraphx_bundle_version}.0 \
                  -Djetty.javax.servlet.osgi.version=%{javax_servlet_bundle_version} \
                  -Djavax.servlet.bsn=%{javax_servlet_bsn} \
                  -Dkxml2.version=%{kxml2_version} \
@@ -749,7 +764,8 @@ popd
                  -Djnr-x86asm.version=%{jnr_x86asm_version} \
                  -Djnr-posix.version=%{jnr_posix_version} \
                  -Djnr-ffi.version=%{jnr_ffi_version} \
-                 -Djffi.version=%{jffi_version}
+                 -Djffi.version=%{jffi_version} \
+                 -Djetty.version=%{jetty_version}
         
 
 %{?scl:EOF}
@@ -773,9 +789,11 @@ mkdir -p %{buildroot}%{system_initrddir}
 mkdir -p %{buildroot}%{_unitdir}
 %endif
 # Thermostat icon lives there
-mkdir -p %{buildroot}%{_datarootdir}/icons/hicolor/scalable/apps
-# Thermostat desktop lives there
-mkdir -p %{buildroot}%{_datarootdir}/applications
+mkdir -p %{buildroot}%{system_root_datadir}/icons/hicolor/scalable/apps
+# Thermostat desktop file lives there
+mkdir -p %{buildroot}%{system_root_datadir}/applications
+# Thermostat app data file lives there
+mkdir -p %{buildroot}%{system_root_datadir}/appdata
 # Example config files are in docdir
 mkdir -p %{buildroot}%{_docdir}/%{pkg_name}
 # Man page
@@ -839,6 +857,11 @@ install -m 0644 distribution/packaging/shared/man/%{pkg_name}.1 %{buildroot}%{_m
 mkdir -p %{buildroot}%{system_root_datadir}/bash-completion/completions
 install -pm 644 distribution/target/packaging/bash-completion/thermostat-completion %{buildroot}%{system_root_datadir}/bash-completion/completions/%{pkg_name}
 
+# install files needed for proper desktop integration
+install -m 0644 distribution/target/packaging/desktop/%{pkg_name}.desktop %{buildroot}%{system_root_datadir}/applications/%{name}.desktop
+install -m 0644 distribution/target/packaging/icons/256px.svg %{buildroot}%{system_root_datadir}/icons/hicolor/scalable/apps/%{name}.svg
+install -m 0644 distribution/target/packaging/desktop/%{pkg_name}.appdata.xml %{buildroot}%{system_root_datadir}/appdata/%{name}.appdata.xml
+
 rm -rf distribution/target/image/bin/%{pkg_name}.orig
 # Remove developer setup things.
 rm distribution/target/image/bin/thermostat-devsetup
@@ -851,23 +874,23 @@ cp -a distribution/target/image %{buildroot}%{thermostat_home}
 
 # Replace jars with symlinks to installed libs
 pushd %{buildroot}%{thermostat_home}/libs
-  xmvn-subst .
+  xmvn-subst %{xmvn_subst_args}
 popd
 # Do the same for thermostat plugin dirs
 pushd %{buildroot}%{thermostat_home}/plugins
 for plugin_name in $(ls); do
   pushd $plugin_name
-    xmvn-subst .
+    xmvn-subst %{xmvn_subst_args}
   popd
 done
 popd
 # Byteman agent plugin needs byteman and the helper. Replace
 # deps with symlinks
 pushd %{buildroot}%{thermostat_home}/plugins/vm-byteman/plugin-libs/byteman-install/lib
-  xmvn-subst .
+  xmvn-subst %{xmvn_subst_args}
 popd
 pushd %{buildroot}%{thermostat_home}/plugins/vm-byteman/plugin-libs/thermostat-helper
-  xmvn-subst .
+  xmvn-subst %{xmvn_subst_args}
 popd
 
 # For some reason the osgi-compendium symlink gets created with a
@@ -957,7 +980,7 @@ ln -s %{thermostat_catalina_base}/webapps/%{pkg_name} %{buildroot}%{thermostat_h
  
 # Replace jars with symlinks
 pushd %{buildroot}%{thermostat_catalina_base}/webapps/%{pkg_name}/WEB-INF/lib
-  xmvn-subst .
+  xmvn-subst %{xmvn_subst_args}
 popd
 
 # Remove tools.jar (coming from the JVM). We also don't need jzlib.jars.
@@ -1049,7 +1072,7 @@ ${__bin_dir}/useradd -c "Thermostat system user" -g thermostat \
 # Install but don't activate
 %systemd_post %{?scl_prefix}%{pkg_name}-storage.service
 # Required for icon cache (i.e. Thermostat icon)
-/bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
+/bin/touch --no-create %{system_root_datadir}/icons/hicolor &>/dev/null || :
 
 %post webapp
 # install but don't activate
@@ -1063,14 +1086,14 @@ ${__bin_dir}/useradd -c "Thermostat system user" -g thermostat \
 %postun
 # Required for icon cache (i.e. Thermostat icon)
 if [ $1 -eq 0 ] ; then
-    /bin/touch --no-create %{_datadir}/icons/hicolor &> /dev/null
-    /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+    /bin/touch --no-create %{system_root_datadir}/icons/hicolor &> /dev/null
+    /usr/bin/gtk-update-icon-cache %{system_root_datadir}/icons/hicolor &>/dev/null || :
 fi
 %systemd_postun %{?scl_prefix}%{pkg_name}-storage.service
 
 %posttrans
 # Required for icon cache (i.e. Thermostat icon)
-/usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+/usr/bin/gtk-update-icon-cache %{system_root_datadir}/icons/hicolor &>/dev/null || :
 
 %files -f .mfiles
 %doc LICENSE
@@ -1099,6 +1122,10 @@ fi
 # be installed
 %dir %{system_root_datadir}/bash-completion/completions
 %dir %{system_root_datadir}/bash-completion
+# Own desktop related files
+%{system_root_datadir}/applications/%{name}.desktop
+%{system_root_datadir}/icons/hicolor/scalable/apps/%{name}.svg
+%{system_root_datadir}/appdata/%{name}.appdata.xml
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/plugins.d
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/ssl.properties
 %config %{_sysconfdir}/%{pkg_name}/commands

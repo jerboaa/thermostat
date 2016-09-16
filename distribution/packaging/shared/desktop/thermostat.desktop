@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=Thermostat
+Name=${thermostat.desktop.app.name}
 Comment=A monitoring and serviceability tool for OpenJDK
-Exec=${thermostat.home}/bin/thermostat gui
-Icon=thermostat
+Exec=${thermostat.home}/bin/thermostat local
+Icon=${pkg_name}
