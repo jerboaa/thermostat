@@ -51,9 +51,12 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 
 class GraphDataset {
+    
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     enum CoordinateType {
         INTEGRAL,
@@ -192,11 +195,14 @@ class GraphDataset {
                 switch (ytype) {
                 case REAL:
                     y = y.doubleValue() + y1.doubleValue();
+                    break;
                 default:
                     y = y.longValue() + y1.longValue();
                 }
+                xyseries.updateByIndex(idx, y);
+            } else {
+                xyseries.add(x, y);
             }
-            xyseries.add(x, y);
         }
         XYSeriesCollection xycollection = new  XYSeriesCollection();
         xycollection.addSeries(xyseries);
@@ -233,7 +239,7 @@ class GraphDataset {
                 String first = p.getFirst().toString();
                 String second = "";
                 double increment = ((Number) p.getSecond()).doubleValue();
-                if(dataset.getRowKeys().contains(first)) {
+                if (dataset.getRowKeys().contains(first)) {
                     dataset.incrementValue(increment, first, second);
                 } else {
                     dataset.addValue(increment, first, second);
@@ -281,7 +287,7 @@ class GraphDataset {
         // set with a range axis which displays the numeric
         // values symbolically.
 
-        XYSeries xyseries = new XYSeries(ykey + " against  " + xkey);
+        XYSeries xyseries = new XYSeries(t.localize(LocaleResources.X_AGAINST_Y, xkey, ykey).getContents());
         int count = 0;
         HashMap<String, Number> tickmap = new HashMap<String, Number>();
 
@@ -378,6 +384,10 @@ class GraphDataset {
                 ctype = CoordinateType.CATEGORY;
                 updateCType = true;
             }
+        }
+        if (value instanceof Double || value.getClass() == double.class) {
+            ctype = CoordinateType.REAL;
+            updateCType = true;
         }
         if (updateCType) {
             if (isX) {

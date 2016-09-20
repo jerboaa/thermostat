@@ -59,7 +59,8 @@ public enum LocaleResources {
     FILTER_VALUE_LABEL,
     NO_FILTER_NAME,
     X_COORD,
-    Y_COORD
+    Y_COORD,
+    X_AGAINST_Y,
     ;
     
     static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";

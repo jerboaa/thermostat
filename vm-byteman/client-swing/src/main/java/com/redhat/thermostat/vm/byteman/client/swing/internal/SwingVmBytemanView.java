@@ -928,7 +928,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         JFreeChart graph = null;
         switch (xtype) {
             case CATEGORY:
-                if(ytype == CoordinateType.CATEGORY) {
+                if (ytype == CoordinateType.CATEGORY) {
                     // use a bar chart with multiple bars per category 1 value
                     // where each bar counts the frequency for the second category
                     CategoryDataset categoryDataset = dataset.getCategoryDataset();
@@ -951,7 +951,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                 }
                 break;
             case TIME:
-                if(ytype == CoordinateType.CATEGORY) {
+                if (ytype == CoordinateType.CATEGORY) {
                     // we need to draw a graph of category (state) value against time
                     // with step transitions between states
                     //
@@ -974,7 +974,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                 break;
             case INTEGRAL:
             case REAL:
-                if(ytype == CoordinateType.CATEGORY) {
+                if (ytype == CoordinateType.CATEGORY) {
                     // we could treat the numeric values as category values (or ranges?)
                     // and draw this as a bar chart
                     CategoryDataset categoryDataset = dataset.getCategoryDataset();
@@ -982,7 +982,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                                                         categoryDataset, PlotOrientation.VERTICAL,
                                                         true, true, false);
                     // for now draw an empty graph
-                } else if(ytype == CoordinateType.TIME) {
+                } else if (ytype == CoordinateType.TIME) {
                     // we could group the time values as time ranges
                     // and draw this as a bar chart
                     //
