@@ -50,6 +50,37 @@
 
   <name>Thermostat Web WAR package</name>
 
+  <!-- context.xml config syntax changed from Tomcat 7 to Tomcat 8.
+       See: https://tomcat.apache.org/migration-8.html#Web_application_resources
+       Work around this problem by choosing the correct context.xml file at build
+       time:
+            Default        => tomcat 6, 7 compatible
+            -Dtomcat=8     => tomcat 8 compatible
+   -->
+  <profiles>
+    <profile>
+      <id>tomcat8</id>
+      <activation>
+        <property>
+          <name>tomcat</name>
+          <value>8</value>
+        </property>
+      </activation>
+      <properties>
+        <tomcat-context-xml-dir>src/main/webapp-tomcat8</tomcat-context-xml-dir>
+      </properties>
+    </profile>
+    <profile>
+      <id>tomcat-lower-8</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <tomcat-context-xml-dir>src/main/webapp-tomcat7</tomcat-context-xml-dir>
+      </properties>
+    </profile>
+  </profiles>
+
   <!-- The set of dependencies of the web archive should be
        as minimal as possible. -->
   <dependencies>
@@ -216,6 +247,46 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>move-web-resources</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/webapp-resources</outputDirectory>
+              <resources>          
+                <resource>
+                  <directory>src/main/webapp</directory>
+                  <!-- web.xml contains properties, which we'd like to have interpolated -->
+                  <filtering>true</filtering>
+                </resource>
+              </resources>              
+            </configuration>            
+          </execution>
+          <execution>
+            <id>move-context-xml</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/webapp-resources</outputDirectory>
+              <resources>          
+                <resource>
+                  <directory>${tomcat-context-xml-dir}</directory>
+                  <includes>
+                    <include>**/context.xml</include>
+                  </includes>
+                </resource>
+              </resources>              
+            </configuration>            
+          </execution>
+        </executions>
+      </plugin>
 
       <!--
 	   Package the web archive (WAR) as an exploded WAR *and WAR. Downstream
@@ -234,17 +305,8 @@
               <goal>exploded</goal>
             </goals>
             <configuration>
-              <webResources>
-                <resource>
-                  <filtering>true</filtering>
-                  <directory>src/main/webapp</directory>
-                  <includes>
-                    <include>**/web.xml</include>
-                  </includes>
-                </resource>
-              </webResources>
-              <warSourceDirectory>src/main/webapp</warSourceDirectory>
-              <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+              <warSourceDirectory>${project.build.directory}/webapp-resources</warSourceDirectory>
+              <webXml>${project.build.directory}/webapp-resources/WEB-INF/web.xml</webXml>
               <webappDirectory>${thermostat.web.deploy.dir}</webappDirectory>
             </configuration>
           </execution>
@@ -255,18 +317,8 @@
               <goal>war</goal>
             </goals>
             <configuration>
-              <!-- web.xml contains properties, which we'd like to have interpolated -->
-              <webResources>
-                <resource>
-                  <filtering>true</filtering>
-                  <directory>src/main/webapp</directory>
-                  <includes>
-                    <include>**/web.xml</include>
-                  </includes>
-                </resource>
-              </webResources>
-              <warSourceDirectory>src/main/webapp</warSourceDirectory>
-              <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+              <warSourceDirectory>${project.build.directory}/webapp-resources</warSourceDirectory>
+              <webXml>${project.build.directory}/webapp-resources/WEB-INF/web.xml</webXml>
               <!-- Required for the embedded servlet endpoint plugin. -->
               <attachClasses>true</attachClasses>
             </configuration>
