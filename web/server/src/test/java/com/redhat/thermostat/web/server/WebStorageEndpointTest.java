@@ -223,7 +223,7 @@ public class WebStorageEndpointTest {
     public void setUp() throws Exception {
         
         mockStorage = mock(BackingStorage.class);
-        StorageFactory.setStorage(mockStorage);
+        StorageFactoryImpl.setStorage(mockStorage);
     }
 
     private void startServer(int port, LoginService loginService) throws Exception {

@@ -34,14 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
+
 package com.redhat.thermostat.web.server;
 
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
+import com.redhat.thermostat.storage.core.StorageProvider;
+import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 
-interface StorageFactory {
+class StorageFactoryImpl {
 
-    Storage getStorage(String storageClass, String storageEndpoint, CommonPaths paths, StorageCredentials creds);
+    private static Storage storage;
 
+    // Web server is not OSGi, this factory method is workaround.
+    static Storage getStorage(String storageClass, final String storageEndpoint, final CommonPaths paths,
+            final StorageCredentials creds) {
+        if (storage != null) {
+            return storage;
+        }
+        SSLConfiguration sslConf = new SSLConfigurationImpl(paths);
+        try {
+            StorageProvider provider = (StorageProvider) Class.forName(storageClass).newInstance();
+            provider.setConfig(storageEndpoint, creds, sslConf);
+            storage = provider.createStorage();
+            storage.getConnection().connect();
+            return storage;
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            // This fallback should infact not be used. But it gives us an automatic
+            // Import-Package in the OSGi descriptor, which actually *prevents* this same
+            // exception from happening (a recursive self-defeating catch-block) :-)
+            System.err.println("could not instantiate provider: " + storageClass + ", falling back to MongoStorage");
+            e.printStackTrace();
+            StorageProvider provider = new MongoStorageProvider();
+            provider.setConfig(storageEndpoint, creds, sslConf);
+            storage = provider.createStorage();
+            return storage;
+        }
+    }
+
+    // Testing hook used in WebStorageEndpointTest
+    static void setStorage(Storage storage) {
+        StorageFactoryImpl.storage = storage;
+    }
 }
+

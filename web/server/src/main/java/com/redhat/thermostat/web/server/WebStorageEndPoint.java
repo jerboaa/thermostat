@@ -145,6 +145,8 @@ public class WebStorageEndPoint extends HttpServlet {
 
     private static final Logger logger = LoggingUtils.getLogger(WebStorageEndPoint.class);
 
+    private final Object storageLock = new Object();
+    private StorageFactoryProvider storageFactoryProvider;
     private Storage storage;
     private Gson gson;
     private CommonPaths paths;
@@ -164,14 +166,27 @@ public class WebStorageEndPoint extends HttpServlet {
     private TimerRegistry timerRegistry;
     
     public WebStorageEndPoint() {
-        // default constructor
+        // this ugliness allows for both unit tests to inject mocks and "integration" tests to inject fake values
+        this.storageFactoryProvider = new StorageFactoryProvider() {
+            @Override
+            public StorageFactory createStorageFactory() {
+                return new StorageFactory() {
+                    @Override
+                    public Storage getStorage(String storageClass, String storageEndpoint, CommonPaths paths, StorageCredentials creds) {
+                        return StorageFactoryImpl.getStorage(storageClass, storageEndpoint, paths, creds);
+                    }
+                };
+            }
+        };
     }
     
     // Package private for testing
-    WebStorageEndPoint(TimerRegistry timerRegistry, CommonPaths paths, ConfigurationFinder finder) {
+    WebStorageEndPoint(TimerRegistry timerRegistry, CommonPaths paths, ConfigurationFinder finder,
+                       StorageFactoryProvider storageFactoryProvider) {
         this.timerRegistry = timerRegistry;
         this.paths = paths;
         this.finder = finder;
+        this.storageFactoryProvider = storageFactoryProvider;
     }
 
     @Override
@@ -222,41 +237,52 @@ public class WebStorageEndPoint extends HttpServlet {
             servletContext.setAttribute(PREPARED_STMT_MANAGER_KEY, new PreparedStatementManager());
             servletContext.setAttribute(SERVER_TOKEN_KEY, UUID.randomUUID());
         }
+
+        synchronized (storageLock) {
+            if (storage == null) {
+                StorageCredentials creds;
+                try {
+                    creds = getStorageCredentials();
+                } catch (IOException e) {
+                    String errorMsg = "Unable to retrieve backing storage credentials from file " + CREDENTIALS_FILE;
+                    throw new InvalidConfigurationException(errorMsg);
+                }
+                // if creds are null there is no point to continue, fail prominently.
+                if (creds == null) {
+                    String errorMsg = "No backing storage credentials file (" + CREDENTIALS_FILE + ") available";
+                    throw new InvalidConfigurationException(errorMsg);
+                }
+                String storageClass = getServletConfig().getInitParameter(STORAGE_CLASS);
+                String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
+                storage = storageFactoryProvider.createStorageFactory().getStorage(storageClass, storageEndpoint, paths, creds);
+            }
+        }
     }
     
     @Override
     public void destroy() {
         timerRegistry.shutDown();
-        logger.log(Level.INFO, "Going to shut down web service");
-        if (storage != null) {
-            // See IcedTea BZ#1315. Shut down storage in order
-            // to avoid further memory leaks.
-            Connection connection = storage.getConnection();
-            try {
-                // Tests have null connections
-                if (connection != null) {
-                    connection.disconnect();
+        synchronized (storageLock) {
+            logger.log(Level.INFO, "Going to shut down web service");
+            if (storage != null) {
+                // See IcedTea BZ#1315. Shut down storage in order
+                // to avoid further memory leaks.
+                Connection connection = storage.getConnection();
+                try {
+                    // Tests have null connections
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                } finally {
+                    storage.shutdown();
                 }
-            } finally {
-                storage.shutdown();
             }
+            logger.log(Level.INFO, "Web service shut down finished");
         }
-        logger.log(Level.INFO, "Web service shut down finished");
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-        if (storage == null) {
-            StorageCredentials creds = getStorageCredentials();
-            // if creds are null there is no point to continue, fail prominently.
-            if (creds == null) {
-                String errorMsg = "No backing storage credentials file (" + CREDENTIALS_FILE + ") available";
-                throw new InvalidConfigurationException(errorMsg);
-            }
-            String storageClass = getServletConfig().getInitParameter(STORAGE_CLASS);
-            String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
-            storage = StorageFactory.getStorage(storageClass, storageEndpoint, paths, creds);
-        }
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");
         String cmd = uri.substring(lastPartIdx + 1);
@@ -413,8 +439,9 @@ public class WebStorageEndPoint extends HttpServlet {
                 // PreparedStatementManager
                 PreparedStatement<T> targetPreparedStatement;
                 try {
-                    targetPreparedStatement = (PreparedStatement<T>) storage
-                            .prepareStatement(desc);
+                    synchronized (storageLock) {
+                        targetPreparedStatement = storage.prepareStatement(desc);
+                    }
                 } catch (DescriptorParsingException e) {
                     logger.log(Level.WARNING, "Descriptor parse error!", e);
                     SharedStateId id = new SharedStateId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, serverToken);
@@ -452,7 +479,9 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         
         String agentId = req.getParameter("agentId");
-        storage.purge(agentId);
+        synchronized (storageLock) {
+            storage.purge(agentId);
+        }
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
@@ -466,21 +495,23 @@ public class WebStorageEndPoint extends HttpServlet {
         if (! isAllowedToLoadFile(req, resp, name)) {
             return;
         }
-        try (InputStream data = storage.loadFile(name)) {
-            if (data == null) {
-                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                return;
-            }
-            OutputStream out = resp.getOutputStream();
-            byte[] buffer = new byte[512];
-            int read = 0;
-            while (read >= 0) {
-                read = data.read(buffer);
-                if (read > 0) {
-                    out.write(buffer, 0, read);
+        synchronized (storageLock) {
+            try (InputStream data = storage.loadFile(name)) {
+                if (data == null) {
+                    resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                    return;
                 }
+                OutputStream out = resp.getOutputStream();
+                byte[] buffer = new byte[512];
+                int read = 0;
+                while (read >= 0) {
+                    read = data.read(buffer);
+                    if (read > 0) {
+                        out.write(buffer, 0, read);
+                    }
+                }
+                resp.setStatus(HttpServletResponse.SC_OK);
             }
-            resp.setStatus(HttpServletResponse.SC_OK);
         }
     }
 
@@ -507,7 +538,9 @@ public class WebStorageEndPoint extends HttpServlet {
                         return;
                     }
                     InputStream in = item.getInputStream();
-                    storage.saveFile(name, in, new CloseOnSave(in));
+                    synchronized (storageLock) {
+                        storage.saveFile(name, in, new CloseOnSave(in));
+                    }
                 }
             }
         } catch (FileUploadException ex) {
@@ -591,7 +624,9 @@ public class WebStorageEndPoint extends HttpServlet {
                 // The following has the side effect of registering the newly
                 // deserialized Category in the Categories class.
                 category = gson.fromJson(categoryParam, Category.class);
-                storage.registerCategory(category);
+                synchronized (storageLock) {
+                    storage.registerCategory(category);
+                }
             }
             id = catManager.putCategory(getServerToken(), category, catIdentifier);
             if (isAggregateCat) {

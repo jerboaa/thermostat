@@ -36,12 +36,8 @@
 
 package com.redhat.thermostat.web.server;
 
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.StorageCredentials;
+interface StorageFactoryProvider {
 
-interface StorageFactory {
-
-    Storage getStorage(String storageClass, String storageEndpoint, CommonPaths paths, StorageCredentials creds);
+    StorageFactory createStorageFactory();
 
 }

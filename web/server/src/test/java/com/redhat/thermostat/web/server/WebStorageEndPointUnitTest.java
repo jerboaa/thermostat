@@ -42,7 +42,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Matchers.eq;
@@ -61,7 +64,10 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
+import com.redhat.thermostat.common.internal.test.Bug;
+import com.redhat.thermostat.storage.core.Storage;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -78,6 +84,22 @@ import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
 public class WebStorageEndPointUnitTest {
 
     private static final String TH_HOME_PROP_NAME = "THERMOSTAT_HOME";
+
+    private StorageFactoryProvider storageFactoryProvider;
+    private StorageFactory storageFactory;
+    private Storage storage;
+
+    @Before
+    public void setup() {
+        storage = mock(Storage.class);
+        storageFactory = mock(StorageFactory.class);
+        storageFactoryProvider = mock(StorageFactoryProvider.class);
+
+        when(storageFactoryProvider.createStorageFactory()).thenReturn(storageFactory);
+        when(storageFactory.getStorage(anyString(), anyString(), any(CommonPaths.class), any(StorageCredentials.class)))
+                .thenReturn(storage);
+    }
+
     @After
     public void tearDown() {
         System.clearProperty(TH_HOME_PROP_NAME);
@@ -220,14 +242,18 @@ public class WebStorageEndPointUnitTest {
     public void testSetServletAttribute() throws ServletException, IOException {
         final ServletContext mockContext = mock(ServletContext.class);
         when(mockContext.getServerInfo()).thenReturn("jetty/9.1.0.v20131115");
+        ConfigurationFinder finder = mock(ConfigurationFinder.class);
+        when(finder.getConfiguration(anyString())).thenReturn(mock(File.class));
         @SuppressWarnings("serial")
-        WebStorageEndPoint endpoint = new WebStorageEndPoint() {
+        WebStorageEndPoint endpoint = new WebStorageEndPoint(null, null, finder, storageFactoryProvider) {
             @Override
             public ServletContext getServletContext() {
                 return mockContext;
             }
         };
         ServletConfig config = mock(ServletConfig.class);
+        when(config.getInitParameter(WebStorageEndPoint.STORAGE_CLASS)).thenReturn("fooKlazz"); // let it fail through
+        when(config.getInitParameter(WebStorageEndPoint.STORAGE_ENDPOINT)).thenReturn("fooEndPoint");
         ThCreatorResult result = creatWorkingThermostatHome();
         System.setProperty(TH_HOME_PROP_NAME, result.thermostatHome.toFile().getAbsolutePath());
         endpoint.init(config);
@@ -248,7 +274,7 @@ public class WebStorageEndPointUnitTest {
     @Test
     public void testShutDownCancelsTimers() {
         TimerRegistry registry = mock(TimerRegistry.class);
-        WebStorageEndPoint endpoint = new WebStorageEndPoint(registry, null, null);
+        WebStorageEndPoint endpoint = new WebStorageEndPoint(registry, null, null, storageFactoryProvider);
         endpoint.destroy();
         verify(registry).shutDown();
     }
@@ -263,12 +289,51 @@ public class WebStorageEndPointUnitTest {
         ConfigurationFinder finder = mock(ConfigurationFinder.class);
         when(finder.getConfiguration("web.auth")).thenReturn(null);
 
-        WebStorageEndPoint endpoint = new WebStorageEndPoint(registry, paths, finder);
+        WebStorageEndPoint endpoint = new WebStorageEndPoint(registry, paths, finder, storageFactoryProvider);
         StorageCredentials creds = endpoint.getStorageCredentials();
 
         assertNull(creds);
     }
-    
+
+    @Test
+    @Bug(id = "PR2941",
+            url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2941",
+            summary = "Concurrent webstorage connections may cause storage exceptions")
+    public void testStorageIsCreatedOnceOnInit() throws Exception {
+        final ServletContext mockContext = mock(ServletContext.class);
+        when(mockContext.getServerInfo()).thenReturn("jetty/9.1.0.v20131115");
+        ConfigurationFinder finder = mock(ConfigurationFinder.class);
+        when(finder.getConfiguration(anyString())).thenReturn(mock(File.class));
+        @SuppressWarnings("serial")
+        WebStorageEndPoint endpoint = new WebStorageEndPoint(null, null, finder, storageFactoryProvider) {
+            @Override
+            public ServletContext getServletContext() {
+                return mockContext;
+            }
+        };
+        ServletConfig config = mock(ServletConfig.class);
+        when(config.getInitParameter(WebStorageEndPoint.STORAGE_CLASS)).thenReturn("fooKlazz"); // let it fail through
+        when(config.getInitParameter(WebStorageEndPoint.STORAGE_ENDPOINT)).thenReturn("fooEndPoint");
+        ThCreatorResult result = creatWorkingThermostatHome();
+        System.setProperty(TH_HOME_PROP_NAME, result.thermostatHome.toFile().getAbsolutePath());
+
+        // not created yet
+        verifyZeroInteractions(storageFactoryProvider);
+        verifyZeroInteractions(storageFactory);
+
+        endpoint.init(mock(ServletConfig.class));
+
+        // created once
+        verify(storageFactoryProvider).createStorageFactory();
+        verify(storageFactory).getStorage(anyString(), anyString(), any(CommonPaths.class), any(StorageCredentials.class));
+
+        endpoint.init(mock(ServletConfig.class));
+
+        // still only once
+        verify(storageFactoryProvider).createStorageFactory();
+        verify(storageFactory).getStorage(anyString(), anyString(), any(CommonPaths.class), any(StorageCredentials.class));
+    }
+
     private ThCreatorResult creatWorkingThermostatHome() throws IOException {
         Path testThermostatHome = Files.createTempDirectory(
                 "foo-thermostat-home-", new FileAttribute[] {});
