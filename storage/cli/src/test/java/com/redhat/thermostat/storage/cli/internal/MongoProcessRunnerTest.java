@@ -111,9 +111,9 @@ public class MongoProcessRunnerTest {
 
     @Test
     public void testCommandArgumentsWithLatestMongodbVersion() throws Exception {
-        String[] expected = { "mongod", "--nojournal", "--quiet", "--fork",
+        String[] expected = { "mongod", "--quiet", "--fork",
                 "--auth", "--nohttpinterface", "--bind_ip", config.getBindIP(),
-                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
+                "--nojournal", "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
                 config.getLogFile().getCanonicalPath(), "--pidfilepath",
                 config.getPidFile().getCanonicalPath(), "--port",
                 Long.toString(config.getPort()), "--setParameter", "enableLocalhostAuthBypass=0"};

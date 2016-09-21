@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Red Hat, Inc.
+ * Copyright 2012-2016 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,32 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-#include "com_redhat_thermostat_agent_utils_hostname_HostName.h"
+package com.redhat.thermostat.storage.cli.internal;
 
-#include <jni.h>
-#include <unistd.h>
-#include <string.h>
+import org.junit.Assert;
+import org.junit.Test;
 
-#if !defined(_WIN32)
-# include <netdb.h>
-#else // windows
-# include <winsock2.h>
-#endif
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-#ifndef NI_MAXHOST
-#define NI_MAXHOST 1025
-#endif /* NI_MAXHOST */
+public class MongoOSUtilFactoryTest {
 
-JNIEXPORT jstring JNICALL
-Java_com_redhat_thermostat_agent_utils_hostname_HostName_getHostName
-  (JNIEnv *env, jclass HostNameClass)
-{
-    char hostname[NI_MAXHOST];
-    memset(hostname, 0, sizeof(hostname));
+    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
 
-    if (gethostname(hostname,  sizeof(hostname)) == 0) {
-        return (*env)->NewStringUTF(env, hostname);
+    @Test
+    public void instanceIsntNullTest() {
+        assertNotNull(MongoOSUtilFactory.instance());
     }
-    return NULL;
-}
 
+    @Test
+    public void testCorrectOs() {
+        assertNotNull(MongoOSUtilFactory.instance());
+
+        MongoOSUtilInterface thing = MongoOSUtilFactory.instance().createMongoOSUtil();
+        assertNotNull(thing);
+
+        if (IS_UNIX)
+            assertTrue("createMongoOSUtil() must return an instance of MongoUnixUtil on unix", thing instanceof MongoUnixUtil);
+        else
+            assertTrue("createMongoOSUtil() must return an instance of MongoWindowsUtil on Windows", thing instanceof MongoWindowsUtil);
+    }
+}

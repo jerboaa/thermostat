@@ -440,7 +440,7 @@ public class PluginConfigurationParser {
 
     private String parseDescription(Node descriptionNode) {
         String text = descriptionNode.getTextContent().trim();
-        String[] lines = text.split("(" + System.lineSeparator() + ")+");
+        String[] lines = text.split("(\r\n|\r|\n)+");
         StringBuilder result = new StringBuilder();
         for (String line : lines) {
             result.append(line.trim());

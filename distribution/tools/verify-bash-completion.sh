@@ -98,6 +98,8 @@ function __check_completion {
     input=$1
     expected=$2
     expected_pretty=$(echo $expected | __prettify)
+    # clean up (cygwin doesn't seem to delete redirect files if no output)
+    rm -f ${TARGET}/completion.actual
     # save completions and any other output separately and check both
     __find_completion $input >${TARGET}/completion.actual 2>${TARGET}/completion.output
     actual=$(<${TARGET}/completion.actual)

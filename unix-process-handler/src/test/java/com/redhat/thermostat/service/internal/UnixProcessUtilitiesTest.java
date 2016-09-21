@@ -42,6 +42,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,37 +52,60 @@ import com.redhat.thermostat.service.process.UNIXSignal;
 
 public class UnixProcessUtilitiesTest {
 
+    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
+
     private BufferedReader reader;
     private BufferedReader emptyReader;
     
     private List<String> processArguments = new ArrayList<>();
-    private UnixProcessUtilities process;
+    private UNIXProcessHandler process;
     
     @Before
     public void setUp() {
-        
-        String data = "123 fluff";
+
+        String data = IS_UNIX ? "123 fluff" : "headerline\r\n\"fluff.exe\",\"1868\",\"Console\",\"1\",\"25,952 K\"";
         reader = new BufferedReader(new StringReader(data));
         emptyReader = new BufferedReader(new StringReader(""));
-        
+
         processArguments.clear();
-        process = new UnixProcessUtilities() {
-            @Override
-            public Process createAndRunProcess(List<String> args)
-                    throws IOException {
-                processArguments.addAll(args);
-                return null;
-            }
-            
-            @Override
-            void exec(String command) {
-                processArguments.add(command);
-            }
-            
-            public java.io.BufferedReader getProcessOutput(Process process) {
-                return reader;
+
+        if (IS_UNIX) {
+            process = new UnixProcessUtilities() {
+                @Override
+                public Process createAndRunProcess(List<String> args)
+                        throws IOException {
+                    processArguments.addAll(args);
+                    return null;
+                }
+
+                @Override
+                void exec(String command) {
+                    processArguments.add(command);
+                }
+
+                public java.io.BufferedReader getProcessOutput(Process process) {
+                    return reader;
+                }
             };
-        };
+        } else {
+            process = new UnixProcessUtilities.WindowsProcessUtilities() {
+                @Override
+                public Process createAndRunProcess(List<String> args)
+                        throws IOException {
+                    processArguments.addAll(args);
+                    return null;
+                }
+
+                @Override
+                void exec(String command) {
+                    processArguments.add(command);
+                }
+
+                public java.io.BufferedReader getProcessOutput(Process process) {
+                    return reader;
+                }
+            };
+        }
     }
     
     @Test
@@ -107,29 +131,52 @@ public class UnixProcessUtilitiesTest {
 
         String result = process.getProcessName(12345);
         Assert.assertEquals("fluff", result);
-        Assert.assertTrue(processArguments.contains("12345"));
-        
-        Assert.assertTrue(processArguments.contains("ps"));
-        Assert.assertTrue(processArguments.contains("--no-heading"));
-        Assert.assertTrue(processArguments.contains("-p"));
+
+        if (IS_UNIX) {
+            Assert.assertTrue(processArguments.contains("12345"));
+            Assert.assertTrue(processArguments.contains("ps"));
+            Assert.assertTrue(processArguments.contains("--no-heading"));
+            Assert.assertTrue(processArguments.contains("-p"));
+        }
+        else {
+            Assert.assertTrue(processArguments.contains("\"PID eq 12345\""));
+            Assert.assertTrue(processArguments.contains("tasklist"));
+        }
     }
     
     @Test
     public void getProcessNameNoOutput() {
 
         // redefine, since we need an empty reader
-        UnixProcessUtilities process = new UnixProcessUtilities() {
-            @Override
-            public Process createAndRunProcess(List<String> args)
-                    throws IOException {
-                processArguments.addAll(args);
-                return null;
-            }
-            
-            public java.io.BufferedReader getProcessOutput(Process process) {
-                return emptyReader;
+        final UNIXProcessHandler process;
+        if (IS_UNIX) {
+            process = new UnixProcessUtilities() {
+                @Override
+                public Process createAndRunProcess(List<String> args)
+                        throws IOException {
+                    processArguments.addAll(args);
+                    return null;
+                }
+
+                public java.io.BufferedReader getProcessOutput(Process process) {
+                    return emptyReader;
+                }
             };
-        };
+        }
+        else {
+            process = new UnixProcessUtilities.WindowsProcessUtilities() {
+                @Override
+                public Process createAndRunProcess(List<String> args)
+                        throws IOException {
+                    processArguments.addAll(args);
+                    return null;
+                }
+
+                public java.io.BufferedReader getProcessOutput(Process process) {
+                    return emptyReader;
+                }
+            };
+        }
         
         String result = process.getProcessName(12345);
         Assert.assertNull(result);

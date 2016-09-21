@@ -59,6 +59,132 @@
     <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
   
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <assemblyfile.suffix></assemblyfile.suffix>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>linux</id>
+      <activation>
+        <os><family>Unix</family></os>
+      </activation>
+      <properties>
+        <assemblyfile.suffix></assemblyfile.suffix>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-keyring</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <!--linux only files -->
+              <execution>
+                <id>directory-structure-linux</id>
+                <phase>prepare-package</phase>
+                <configuration>
+                  <target>
+                    <copy file="${main.basedir}/keyring/target/libGnomeKeyringWrapper.so"
+                          todir="${project.build.directory}/image/libs/native" />
+                    <copy file="${main.basedir}/agent/core/target/libHostNameWrapper.so"
+                          todir="${project.build.directory}/image/libs/native" />
+                    <copy file="${main.basedir}/agent/core/target/libUserNameUtilWrapper.so"
+                          todir="${project.build.directory}/image/libs/native" />
+                    <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils.so"
+                          todir="${project.build.directory}/image/libs/native" />
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>integration-test</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <executable>${project.basedir}/tools/verify-bash-completion.sh</executable>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>windows</id>
+      <activation>
+        <os><family>Windows</family></os>
+      </activation>
+      <properties>
+        <assemblyfile.suffix>-windows</assemblyfile.suffix>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <!-- windows-only files-->
+              <execution>
+                <id>directory-structure-windows</id>
+                <phase>prepare-package</phase>
+                <configuration>
+                  <target>
+                    <!--  copy and rename the native libraries -->
+                    <copy file="${main.basedir}/agent/core/target/HostNameWrapper.dll"
+                          todir="${project.build.directory}/image/libs/native" />
+                    <copy file="${main.basedir}/agent/core/target/UserNameUtilWrapper.dll"
+                          todir="${project.build.directory}/image/libs/native" />
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>integration-test</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <executable>${project.basedir}/tools/verify-bash-completion.cmd</executable>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+    
   <build>
     <plugins>
       <!-- skip unit test run-->
@@ -106,7 +232,7 @@
             <id>assemble-core</id>
             <configuration>
               <descriptors>
-                <descriptor>assembly/core-assembly.xml</descriptor>
+                <descriptor>assembly/core-assembly${assemblyfile.suffix}.xml</descriptor>
               </descriptors>
               <finalName>image/libs</finalName>
               <attach>false</attach>
@@ -286,19 +412,10 @@
             </goals>
           </execution>
           <execution>
-            <id>directory-structure</id>
+            <id>directory-structure-common</id>
             <phase>prepare-package</phase>
             <configuration>
               <target>
-                <!--  copy the native libraries -->
-                <copy file="${main.basedir}/keyring/target/libGnomeKeyringWrapper.so"
-                      todir="${project.build.directory}/image/libs/native" />
-                <copy file="${main.basedir}/agent/core/target/libHostNameWrapper.so"
-                      todir="${project.build.directory}/image/libs/native" />
-                <copy file="${main.basedir}/agent/core/target/libUserNameUtilWrapper.so"
-                      todir="${project.build.directory}/image/libs/native" />
-                <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils.so"
-                      todir="${project.build.directory}/image/libs/native" />
                 <copy file="${main.basedir}/platform/swing/core/target/generated-sources/annotations/template.json"
                       todir="${project.build.directory}/image/etc/plugins.d/platform" />
                 <copy file="${main.basedir}/thermostat-gui/core/target/generated-sources/annotations/gui.json"
@@ -310,22 +427,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <!-- test bash completions -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>integration-test</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <executable>${project.basedir}/tools/verify-bash-completion.sh</executable>
-        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -436,11 +537,6 @@
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-osgi-process-handler</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-keyring</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>

@@ -57,6 +57,42 @@
         <license.skip>false</license.skip>
       </properties>
     </profile>
+
+    <profile>
+      <id>linux</id>
+      <activation>
+        <os><family>Unix</family></os>
+      </activation>
+      <properties>
+        <script.extension>.sh</script.extension>
+        <c.compiler>gcc</c.compiler>
+        <cflags></cflags>
+        <jni.platform>linux</jni.platform>
+        <sharedlib.prefix>lib</sharedlib.prefix>
+        <sharedlib.suffix>.so</sharedlib.suffix>
+      </properties>
+      <modules>
+        <module>keyring</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>windows</id>
+      <activation>
+        <os><family>Windows</family></os>
+      </activation>
+      <properties>
+        <script.extension>.cmd</script.extension>
+        <c.compiler>x86_64-w64-mingw32-gcc -std=c99</c.compiler>
+        <cflags>-std=c99</cflags>
+        <cygwin.dir>c:/cygwin64</cygwin.dir>
+        <jni.platform>win32</jni.platform>
+        <sharedlib.prefix></sharedlib.prefix>
+        <sharedlib.suffix>.dll</sharedlib.suffix>
+      </properties>
+    </profile>
+
+
     <profile>
       <!-- Some thermostat code uses sun.jvmstat and com.sun.tools.attach.
            These are only available via tools.jar prior to JDK 9 -->
@@ -312,7 +348,6 @@
     <module>agent</module>
     <module>client</module>
     <module>unix-process-handler</module>
-    <module>keyring</module>
     <module>thread</module>
     <module>killvm</module>
     <module>web</module>

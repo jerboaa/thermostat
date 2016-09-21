@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Red Hat, Inc.
+ * Copyright 2012-2016 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,32 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-#include "com_redhat_thermostat_agent_utils_hostname_HostName.h"
+package com.redhat.thermostat.storage.cli.internal;
 
-#include <jni.h>
-#include <unistd.h>
-#include <string.h>
-
-#if !defined(_WIN32)
-# include <netdb.h>
-#else // windows
-# include <winsock2.h>
-#endif
-
-#ifndef NI_MAXHOST
-#define NI_MAXHOST 1025
-#endif /* NI_MAXHOST */
-
-JNIEXPORT jstring JNICALL
-Java_com_redhat_thermostat_agent_utils_hostname_HostName_getHostName
-  (JNIEnv *env, jclass HostNameClass)
-{
-    char hostname[NI_MAXHOST];
-    memset(hostname, 0, sizeof(hostname));
-
-    if (gethostname(hostname,  sizeof(hostname)) == 0) {
-        return (*env)->NewStringUTF(env, hostname);
-    }
-    return NULL;
+/**
+ * abstract out all the OS-specific chunks from MongoProcessRunner
+ */
+interface MongoOSUtilInterface {
+    String[] getMongoStartCmd();
+    String[] getMongoStopCmd();
 }
-

@@ -57,6 +57,33 @@ public class FileStorageCredentialsTest {
     }
 
     @Test
+    public void testAuthConfigCanReadWindows() {
+        Reader reader = new StringReader("username=user\r\npassword=pass");
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals(4, creds.getPassword().length);
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testAuthConfigCanReadReversed() {
+        Reader reader = new StringReader("username=user\n\rpassword=pass\n");
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals(4, creds.getPassword().length);
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testAuthConfigCanReadOldschoolMac() {
+        Reader reader = new StringReader("username=user\r\rpassword=pass\r");
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals(4, creds.getPassword().length);
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
     public void testAuthConfig() {
         Reader reader = new StringReader("username=user\npassword=pass\n");
         FileStorageCredentials creds = new FileStorageCredentials(reader);
@@ -123,7 +150,7 @@ public class FileStorageCredentialsTest {
     @Test
     public void testAlternateNewLine() {
         Reader reader = new StringReader("username=user\r\npassword=pass\r\n");
-        FileStorageCredentials creds = new FileStorageCredentials(reader, "\r\n");
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }

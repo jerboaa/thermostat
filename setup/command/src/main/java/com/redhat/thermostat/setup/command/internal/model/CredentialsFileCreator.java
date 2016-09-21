@@ -45,7 +45,9 @@ import java.util.EnumSet;
 import java.util.Set;
 
 class CredentialsFileCreator {
-    
+
+    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
+
     private static final Set<PosixFilePermission> CREDS_FILE_PERMISSIONS = EnumSet.of(
             PosixFilePermission.OWNER_READ,
             PosixFilePermission.OWNER_WRITE
@@ -53,8 +55,15 @@ class CredentialsFileCreator {
 
     void create(File file) throws IOException {
         if (!file.exists()) {
-            //create file and set file permissions to 600
-            Files.createFile(file.toPath(), PosixFilePermissions.asFileAttribute(CREDS_FILE_PERMISSIONS));
+            // create file and set file permissions to 600
+            if ( IS_UNIX )
+                Files.createFile(file.toPath(), PosixFilePermissions.asFileAttribute(CREDS_FILE_PERMISSIONS));
+            else {
+                // on windows, credentials may be globally visible.
+                // PosixFilePermissions don't work on windows (throws exception even!)
+                // the code below doesn't enforce this (but should)
+                final boolean success = file.createNewFile() && file.setReadable(true, true) && file.setWritable(true, true);
+            }
         }
     }
 }

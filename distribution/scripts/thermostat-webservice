@@ -171,7 +171,11 @@ process_args() {
 do_start() {
   rm -rf webapps/thermostat
   cp -r "$TH/web/war/target/thermostat-web-war-@project.version@" webapps/thermostat
-  JAVA_OPTS="-Djava.security.auth.login.config=${TH}/distribution/target/image/etc/thermostat_jaas.conf" ./bin/startup.sh
+  if [ $CYGWIN_MODE -eq 1 ]; then
+    JAVA_OPTS="-Djava.security.auth.login.config=`cygpath -w ${TH}/distribution/target/image/etc/thermostat_jaas.conf`" ./bin/startup.sh
+  else
+    JAVA_OPTS="-Djava.security.auth.login.config=${TH}/distribution/target/image/etc/thermostat_jaas.conf" ./bin/startup.sh
+  fi
 }
 
 do_stop() {

@@ -63,7 +63,7 @@ public class MongoProcessRunner {
     
     private static final boolean profile;
     private static final int profileLevel;
-    
+
     static {
         profile = Boolean.getBoolean("thermostat.storage.mongo.profile");
         profileLevel = Integer.getInteger("thermostat.storage.mongo.profile.slowms", 100);
@@ -73,14 +73,6 @@ public class MongoProcessRunner {
     private static final Logger logger = LoggingUtils.getLogger(MongoProcessRunner.class);
 
     private static final String MONGO_PROCESS = "mongod";
-
-    private static final String [] MONGO_BASIC_ARGS = {
-        "mongod", "--quiet", "--fork", "--auth", "--nohttpinterface", "--bind_ip"
-    };
-
-    private static final String [] MONGO_SHUTDOWN_ARGS = {
-        "kill", "-s", "TERM"
-    };
 
     private static final String EMPTY_STRING = "";
 
@@ -93,7 +85,9 @@ public class MongoProcessRunner {
     private Integer pid;
     private final boolean isQuiet;
     private final boolean permitLocalhostExpn;
-    
+
+    private final static MongoOSUtilInterface util = MongoOSUtilFactory.instance().createMongoOSUtil();
+
     public MongoProcessRunner(UNIXProcessHandler processHandler, DBStartupConfiguration configuration, boolean quiet, boolean permitLocalhostException) {
         this.processHandler = processHandler;
         this.configuration = configuration;
@@ -226,7 +220,7 @@ public class MongoProcessRunner {
             LocalizedString message = translator.localize(LocaleResources.STORAGE_NOT_RUNNING);
             throw new StorageNotRunningException(message.getContents());
         }
-        List<String> commands = new ArrayList<>(Arrays.asList(MONGO_SHUTDOWN_ARGS));
+        List<String> commands = new ArrayList<>(Arrays.asList(util.getMongoStopCmd()));
         commands.add(String.valueOf(pid));
 
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
@@ -263,12 +257,12 @@ public class MongoProcessRunner {
     }
     
     List<String> getStartupCommand(String dbVersion) throws IOException, InvalidConfigurationException {
-        List<String> commands = new ArrayList<>(Arrays.asList(MONGO_BASIC_ARGS));
+        List<String> commands = new ArrayList<>(Arrays.asList(util.getMongoStartCmd()));
         
         commands.add(configuration.getBindIP());
 
         if (dbVersion.compareTo(NO_JOURNAL_FIRST_VERSION) >= 0) {
-            commands.add(1, NO_JOURNAL_ARGUMENT);
+            commands.add(NO_JOURNAL_ARGUMENT);
         }
 
         commands.add("--dbpath");

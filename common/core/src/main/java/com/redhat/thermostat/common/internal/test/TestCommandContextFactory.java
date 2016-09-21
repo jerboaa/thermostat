@@ -134,7 +134,8 @@ public class TestCommandContextFactory extends CommandContextFactory {
         } catch (IOException e) {
             // ignore
         }
-        return new String(out.toByteArray(), consoleEncoding);
+        // get rid of <CR> in case we're on Windows
+        return new String(out.toByteArray(), consoleEncoding).replace("\r","");
     }
 
     /**
@@ -152,8 +153,9 @@ public class TestCommandContextFactory extends CommandContextFactory {
         }
     }
 
+    // get rid of <CR> in case we're on Windows
     public String getError() {
-        return new String(err.toByteArray(), consoleEncoding);
+        return new String(err.toByteArray(), consoleEncoding).replace("\r","");
     }
 
     public void reset() {

@@ -109,7 +109,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             try {
                 FileObject filer = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT,
                         "",
-                        "META-INF" + File.separator + "thermostat" + File.separator + "plugin-docs.xml",
+                        "META-INF" + "/" + "thermostat" + "/" + "plugin-docs.xml",
                         sourceElements);
                 try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(filer.openOutputStream(), "UTF-8"))) {
                     writeXml(writer, points);

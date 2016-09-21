@@ -57,8 +57,6 @@ public class FileStorageCredentials implements StorageCredentials {
     private static final char[] user = {'u', 's', 'e', 'r', 'n', 'a', 'm', 'e'};
     private static final char comment = '#';
 
-    private final String newLine;
-
     private final File authFile;
     private final Reader testingAuthReader;
     private final int authDataLength;
@@ -70,7 +68,6 @@ public class FileStorageCredentials implements StorageCredentials {
         }
         this.testingAuthReader = null;
         this.authFile = authFile;
-        newLine = System.lineSeparator();
         long length = this.authFile.length();
         if (length > Integer.MAX_VALUE || length < 0L) {
             // Unlikely issue with authFile, try to get path to share with user via exception message
@@ -89,12 +86,11 @@ public class FileStorageCredentials implements StorageCredentials {
     }
 
     // Testing constructor
-    FileStorageCredentials(Reader authReader, String lineSeparator) {
+    FileStorageCredentials(Reader authReader) {
         if (authReader == null) {
             throw new IllegalArgumentException("authReader must not be null");
         }
         this.testingAuthReader = authReader;
-        newLine = lineSeparator;
         long length = -1;
         try {
             length = testingAuthReader.skip(Long.MAX_VALUE);
@@ -108,11 +104,6 @@ public class FileStorageCredentials implements StorageCredentials {
         authDataLength = (int) length;
         this.authFile = null;
         initUsername();
-    }
-
-    // Testing constructor
-    FileStorageCredentials(Reader agentAuthReader) {
-        this(agentAuthReader, System.lineSeparator());
     }
 
     @Override
@@ -252,20 +243,34 @@ public class FileStorageCredentials implements StorageCredentials {
 
     private int nextLine(char[] data, int current) {
         int nextNewLine = getPositionOfNextNewline(data, current);
-        return nextNewLine + newLine.length();
+
+        int nlLength = 1;
+        if ((nextNewLine+1) < data.length) {
+            final char n0 = data[nextNewLine];
+            final char n1 = data[nextNewLine+1];
+            if (n0 == '\r' && n1 == '\n') {
+                nlLength = 2;
+            }
+            else if (n0 == '\n' && n1 == '\r') {
+                nlLength = 2;
+            }
+        }
+        return nextNewLine + nlLength;
     }
 
+    // a newline is defined as '\n', optionally preceded with a '\r' (for windows compatiblity)
+    // using System.lineSeparator() means a file editted on one platform may be unreadable on another.
     private int getPositionOfNextNewline(char[] data, int current) {
         assert( current <= data.length );
         int next = current;
         while (next < data.length) {
+            final char c = data[next];
             boolean newLineFound = false;
-            for (int i = 0; i < newLine.length(); i++) {
-                if (data[next + i] == newLine.charAt(i)) {
-                    newLineFound = true;
-                } else {
-                    newLineFound = false;
-                }
+
+            if (c == '\n' || c == '\r') {
+                newLineFound = true;
+            } else {
+                newLineFound = false;
             }
             if (newLineFound) {
                 break;

@@ -37,11 +37,15 @@
 #include "com_redhat_thermostat_utils_username_internal_UserNameUtilImpl.h"
 
 #include <jni.h>
-#include <pwd.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#if !defined(_WIN32)
+# include <pwd.h>
+#else // windows
+#endif
 
 static jint throw_IOException(JNIEnv *env, const char *message) {
     const char *class_name = "java/io/IOException";
@@ -51,6 +55,8 @@ static jint throw_IOException(JNIEnv *env, const char *message) {
     }
     return (*env)->ThrowNew(env, class, message);
 }
+
+#if !defined(_WIN32)
 
 JNIEXPORT jstring JNICALL
 Java_com_redhat_thermostat_utils_username_internal_UserNameUtilImpl_getUserName0
@@ -90,4 +96,17 @@ Java_com_redhat_thermostat_utils_username_internal_UserNameUtilImpl_getUserName0
     free(buf);
     return name;
 }
+
+#else // Windows
+JNIEXPORT jstring JNICALL
+Java_com_redhat_thermostat_utils_username_internal_UserNameUtilImpl_getUserName0
+    (JNIEnv *env, jclass ProcessUserInfoBuilderClass, jlong uid) {
+
+    // TODO
+    throw_IOException(env, "UserNameUtilImpl.getUserName() no yet implemented on Windows");
+    jstring name = (*env)->NewStringUTF(env, "xxxuserxxx");
+    return name;
+}
+#endif
+
 

@@ -54,7 +54,7 @@ BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-main-@project.ve
 BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
 
 # Append extra class path entries coming from the profiles
-if [ ! -z ${THERMOSTAT_EXT_BOOT_CLASSPATH} ]; then
+if [ ! -z "${THERMOSTAT_EXT_BOOT_CLASSPATH}" ]; then
   BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_EXT_BOOT_CLASSPATH}"
 fi
 
@@ -96,22 +96,38 @@ do
     esac
 done
 
+# if running on cygwin, modify THERMOSTAT_HOME and BOOT_CLASSPATH to windows for the JDK
+if [ $CYGWIN_MODE -eq 1 ]; then
+  export THERMOSTAT_HOME="`cygpath -w $THERMOSTAT_HOME`"
+  export USER_THERMOSTAT_HOME="`cygpath -w $USER_THERMOSTAT_HOME`"
+  BOOT_CLASSPATH=$(cygpath -w -p "$BOOT_CLASSPATH")
+  ##env
+  # in a VM, jline can cause 100% CPU usage on Windows without this
+  THERMOSTAT_EXT_JAVA_OPTS="$THERMOSTAT_EXT_JAVA_OPTS -Djline.terminal=jline.UnsupportedTerminal"
+  # in cygwin, the openJDK uses c:\home\user as java.home. which is unhelpful.
+  # pass the cygwin home directory instead
+  THERMOSTAT_EXT_JAVA_OPTS="$THERMOSTAT_EXT_JAVA_OPTS -Duser.home=`cygpath -w $HOME`"
+else
+  export THERMOSTAT_HOME
+  export USER_THERMOSTAT_HOME
+fi
+
 # Finally run thermostat (optionally in the background)
 if [ ${RUN_IN_BG} -eq 1 ]; then
     # The thermostat-agent-sysd script uses this.
     if [ x"${PID_FILE}" = "x" ]; then
         usage 
     else
-        ${JAVA} ${THERMOSTAT_EXT_JAVA_OPTS} ${LOGGING_ARGS} "${JAVA_ARGS[@]}" \
-                -cp ${BOOT_CLASSPATH} \
+        "${JAVA}" ${THERMOSTAT_EXT_JAVA_OPTS} ${LOGGING_ARGS} "${JAVA_ARGS[@]}" \
+                -cp "${BOOT_CLASSPATH}" \
                 ${THERMOSTAT_MAIN} ${THERMOSTAT_EXT_OPTS} "${ARGS[@]}" &
         retval=$?
         echo $! > ${PID_FILE}
         retval=$(( ${retval} + $? ))
     fi
 else
-    ${JAVA} ${THERMOSTAT_EXT_JAVA_OPTS} ${LOGGING_ARGS} "${JAVA_ARGS[@]}" \
-            -cp ${BOOT_CLASSPATH} \
+    "${JAVA}" ${THERMOSTAT_EXT_JAVA_OPTS} ${LOGGING_ARGS} "${JAVA_ARGS[@]}" \
+            -cp "${BOOT_CLASSPATH}" \
             ${THERMOSTAT_MAIN} ${THERMOSTAT_EXT_OPTS} "${ARGS[@]}"
     retval=$?
 fi

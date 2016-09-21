@@ -48,6 +48,51 @@
   <packaging>bundle</packaging>
   <name>Thermostat Look And Feel Utils</name>
 
+  <!-- only build the native code on Linux et. al. -->
+  <profiles>
+    <profile>
+      <id>linux</id>
+      <activation>
+        <os><family>unix</family></os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>compile</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <executable>make</executable>
+              <arguments>
+                <argument>all</argument>
+                <argument>CC=${c.compiler}</argument>
+                <argument>SO_PREFIX=${sharedlib.prefix}</argument>
+                <argument>SO_SUFFIX=${sharedlib.suffix}</argument>
+                <argument>EXTRA_CFLAGS=${cflags}</argument>
+                <argument>JNI_PLATFORM=${jni.platform}</argument>
+                <argument>PLATFORM_LIBS=${platform.libs}</argument>
+              </arguments>
+              <systemProperties>
+                <systemProperty>
+                  <key>JAVA_HOME</key>
+                  <value>${java.home}</value>
+                </systemProperty>
+              </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+  </profiles>
+
   <build>
     <plugins>
       <plugin>
@@ -67,31 +112,6 @@
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>
-        </configuration>
-      </plugin>
-    
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <executions>  
-          <execution>
-            <phase>compile</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-          </execution>  
-        </executions>
-        <configuration>
-          <executable>make</executable>
-          <arguments>
-            <argument>all</argument>
-          </arguments>
-          <systemProperties>
-            <systemProperty>
-              <key>JAVA_HOME</key>
-              <value>${java.home}</value>
-            </systemProperty>
-          </systemProperties>
         </configuration>
       </plugin>
      

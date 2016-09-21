@@ -1,18 +1,20 @@
 CC         = gcc
 JAVAH      = javah
-MYCFLAGS   = -c -Wall -fPIC
-MYLDFLAGS  = -fPIC -shared
+MYCFLAGS   = -c -Wall -fPIC $(EXTRA_CFLAGS)
+MYLDFLAGS  = -fPIC -shared $(EXTRA_CFLAGS)
 COPY       = cp -a
 
 CLASSPATH  = target/classes/
 TARGET_DIR = target
+SO_PREFIX  = lib
+SO_SUFFIX  = .so
 
-INCLUDE    = -I $(TARGET_DIR) -I $(JAVA_HOME)/include/ -I $(JAVA_HOME)/include/linux
+INCLUDE    = -I $(TARGET_DIR) -I "$(JAVA_HOME)/include/" -I "$(JAVA_HOME)/include/$(JNI_PLATFORM)"
 SOURCES    = src/main/native/GTKThemeUtils.c
 TARGET     = $(TARGET_DIR)/GTKThemeUtils.c
 OBJECTS    = $(TARGET:.c=.o)
 
-EXECUTABLE = libGTKThemeUtils.so
+EXECUTABLE = $(SO_PREFIX)GTKThemeUtils$(SO_SUFFIX)
 
 MYCFLAGS   += `pkg-config --cflags gtk+-2.0`
 MYCFLAGS   += `pkg-config gthread-2.0 --cflags`

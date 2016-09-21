@@ -54,14 +54,39 @@ import com.redhat.thermostat.service.process.UNIXSignal;
 class UnixProcessUtilities implements UNIXProcessHandler {
 
     private static final Logger logger = LoggingUtils.getLogger(UnixProcessUtilities.class);
-    
-    private static final UNIXProcessHandler instance = new UnixProcessUtilities();
+
+    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
+
+    private static final UNIXProcessHandler instance = IS_UNIX ? new UnixProcessUtilities() : new WindowsProcessUtilities();
     public static UNIXProcessHandler getInstance() {
         return instance;
     }
     
     UnixProcessUtilities() {}
-    
+
+    static class WindowsProcessUtilities extends UnixProcessUtilities {
+        public WindowsProcessUtilities() {}
+
+        List<String> buildCommandLine(Integer pid) {
+            final List<String> commandLine = new ArrayList<>();
+            commandLine.add("tasklist");
+            commandLine.add("/FO");
+            commandLine.add("csv");
+            commandLine.add("/FI");
+            commandLine.add("\"PID eq " + String.valueOf(pid) + "\"");
+            return commandLine;
+        }
+
+        String processStdout(final String outStr) {
+            final String [] output = outStr.split(",");
+            String result = output[0];
+            if (result.length() >= 2 && result.charAt(0) == '"')
+                result = result.replace("\"","");
+            result = result.replace(".exe","");
+            return result;
+        }
+    }
+
     @Override
     public void sendSignal(Integer pid, UNIXSignal signal) {
         exec("kill -s " + signal.signalName() + " " + pid);
@@ -75,29 +100,38 @@ class UnixProcessUtilities implements UNIXProcessHandler {
             logger.log(Level.WARNING, "can't run kill!", e);
         }
     }
-    
+
+    List<String> buildCommandLine(Integer pid) {
+        final List<String> commandLine = new ArrayList<>();
+        commandLine.add("ps");
+        commandLine.add("--no-heading");
+        commandLine.add("-p");
+        commandLine.add(String.valueOf(pid));
+        return commandLine;
+    }
+
+    String processStdout(final String outStr) {
+        final String [] output = outStr.split(" ");
+        return output[output.length - 1];
+    }
+
     @Override
     public String getProcessName(Integer pid) {
         
         String result = null;
         
-        List<String> commandLine = new ArrayList<>();
-        commandLine.add("ps");
-        commandLine.add("--no-heading");
-        commandLine.add("-p");
-        commandLine.add(String.valueOf(pid));
+        final List<String> commandLine = buildCommandLine(pid);
         
         try {
             Process process = createAndRunProcess(commandLine);
             BufferedReader reader = getProcessOutput(process);
+            if (!IS_UNIX) reader.readLine(); // skip header line
             result = reader.readLine();
-            if (result != null) {
-                String [] output = result.split(" ");
-                result = output[output.length - 1];
-            }
+            if (result != null)
+                result = processStdout(result);
             
         } catch (IOException | ApplicationException e) {
-            logger.log(Level.WARNING, "can't run ps!", e);
+            logger.log(Level.WARNING, "can't run '" + commandLine.get(0) + "'!", e);
         }
         
         return result;

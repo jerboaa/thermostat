@@ -192,7 +192,8 @@ class JettyContainerLauncher {
         tempWebDefaults.deleteOnExit();
         
         writeWebDefaults(tempWebDefaults, uri);
-        ctx.setDefaultsDescriptor(tempWebDefaults.getAbsolutePath());
+        // Jetty/OpenJDK requires this string to be a forward-slash separated path, even on windows
+        ctx.setDefaultsDescriptor("file://"+tempWebDefaults.getAbsolutePath().replace('\\','/'));
         
         // Make server startup fail if context cannot be deployed.
         // Please don't change this.

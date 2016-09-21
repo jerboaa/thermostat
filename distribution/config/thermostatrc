@@ -48,11 +48,24 @@
 #
 #JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
 
+if [ "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ]; then
+  ##echo "Running under Cygwin"
+  export CYGWIN_MODE=1
+else
+  ##echo "Running under Linux"
+  export CYGWIN_MODE=0
+fi
+
 #
 # Extra jar files which need to be on the classpath when
 # Thermostat boots.
-# 
-THERMOSTAT_EXT_BOOT_CLASSPATH="${JAVA_HOME}/lib/tools.jar"
+#
+if [ $CYGWIN_MODE -eq 1 ]; then
+  THERMOSTAT_EXT_BOOT_CLASSPATH="`cygpath -u ${JAVA_HOME}/lib/tools.jar`"
+else
+  THERMOSTAT_EXT_BOOT_CLASSPATH="${JAVA_HOME}/lib/tools.jar"
+fi
+
 # FIXME: Remove once jfreechart is a real OSGi bundle upstream
 THERMOSTAT_EXT_BOOT_CLASSPATH="${THERMOSTAT_EXT_BOOT_CLASSPATH}:${THERMOSTAT_HOME}/libs/jfreechart-@jfreechart.version@.jar"
 THERMOSTAT_EXT_BOOT_CLASSPATH="${THERMOSTAT_EXT_BOOT_CLASSPATH}:${THERMOSTAT_HOME}/libs/jcommon-@jcommon.version@.jar"
