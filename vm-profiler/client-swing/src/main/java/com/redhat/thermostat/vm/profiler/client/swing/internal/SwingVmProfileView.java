@@ -384,7 +384,8 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
 
         profileTable = new ThermostatTable(tableModel) {
             public javax.swing.table.TableCellRenderer getCellRenderer(int row, int column) {
-                if (column == COLUMN_METHOD_NAME) {
+                int methodColumnIndex = tableHeader.getColumnModel().getColumnIndex(translator.localize(LocaleResources.PROFILER_RESULTS_METHOD).getContents());
+                if (column == methodColumnIndex) {
                     if(tableModel.getRowCount() == 1 && tableModel.getValueAt(0,0).equals(
                             translator.localize(LocaleResources.PROFILER_NO_RESULTS).getContents())) {
                         return simpleRenderer;
@@ -397,6 +398,7 @@ class SwingVmProfileView extends VmProfileView implements SwingComponent, Overla
                 return super.getCellRenderer(row, column);
             }
         };
+
         List <RowSorter.SortKey> sortKeys = new ArrayList<>();
         sortKeys.add(new RowSorter.SortKey(COLUMN_METHOD_TIME, SortOrder.DESCENDING));
         profileTable.getRowSorter().setSortKeys(sortKeys);
