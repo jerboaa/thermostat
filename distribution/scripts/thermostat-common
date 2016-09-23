@@ -87,11 +87,7 @@ THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
 
 if [[ "${JAVA_HOME}" = "" ]]; then
-  if [[ "${JDK_HOME}" != "" ]]; then
-    jdk_home_candidate="${JDK_HOME}"
-  else
-    jdk_home_candidate="@thermostat.jdk.home@"
-  fi
+  jdk_home_candidate="@thermostat.jdk.home@"
   if [[ -e "${jdk_home_candidate}/bin/javac" ]]; then
     JAVA_HOME="${jdk_home_candidate}"
   else

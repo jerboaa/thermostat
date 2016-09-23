@@ -4,6 +4,7 @@ MYCFLAGS   = -c -Wall -fPIC $(EXTRA_CFLAGS)
 MYLDFLAGS  = -fPIC -shared $(EXTRA_CFLAGS)
 COPY       = cp -a
 
+JNI_PLATFORM = linux
 CLASSPATH  = target/classes/
 TARGET_DIR = target
 SO_PREFIX  = lib
@@ -41,10 +42,10 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(MYCFLAGS) $(CFLAGS) $(INCLUDE) $< -o $@
 
 clean-lib:
-	rm $(TARGET_DIR)/$(EXECUTABLE)
+	rm -f $(TARGET_DIR)/$(EXECUTABLE)
 	
 clean-obj:
-	rm $(OBJECTS) $(TARGET)
+	rm -f $(OBJECTS) $(TARGET)
 	
 clean: clean-obj clean-lib
 	
