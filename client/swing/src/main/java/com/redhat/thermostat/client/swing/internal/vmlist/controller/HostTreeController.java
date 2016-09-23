@@ -237,7 +237,12 @@ public class HostTreeController {
     }
 
     public synchronized void registerVM(final VmRef vm) {
-        addVMImpl(vm);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                addVMImpl(vm);
+            }
+        });
     }
 
     private AccordionComponent getHostComponent(HostRef reference) {
@@ -394,18 +399,28 @@ public class HostTreeController {
         return decoratorManager;
     }
 
-    public void addFilter(ReferenceFilter filter) {
-        filterMap.clear();
-        filters.add(filter);
-        filter.addFilterEventListener(filterListener);
-        rebuildTree();
+    public void addFilter(final ReferenceFilter filter) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                filterMap.clear();
+                filters.add(filter);
+                filter.addFilterEventListener(filterListener);
+                rebuildTree();
+            }
+        });
     }
 
-    public void removeFilter(ReferenceFilter filter) {
-        filterMap.clear();
-        filters.remove(filter);
-        filter.removeFilterEventListener(filterListener);
-        rebuildTree();
+    public void removeFilter(final ReferenceFilter filter) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                filterMap.clear();
+                filters.remove(filter);
+                filter.removeFilterEventListener(filterListener);
+                rebuildTree();
+            }
+        });
     }
 
     public void expandNode(final HostRef reference) {

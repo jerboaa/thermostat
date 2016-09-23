@@ -160,8 +160,9 @@ public class HostTreeControllerTest {
         HostRef host1 = new HostRef("1", "1");
         
         controller.registerHost(host0);
+        waitForSwing();
+
         controller.registerHost(host1);
-        
         waitForSwing();
         
         // check if our model contains everything it's supposed to
@@ -184,6 +185,7 @@ public class HostTreeControllerTest {
         controller.addFilter(filter1);
         
         waitForSwing();
+        waitForSwing();
         
         // we need to check that the model is rebuild with the appropriate
         // hosts, the filter should only let one host in
@@ -195,6 +197,7 @@ public class HostTreeControllerTest {
         // this should cause the tree to rebuild with all hosts in place again
         filter1.toggle();
         
+        waitForSwing();
         waitForSwing();
         waitForSwing();
 
@@ -214,7 +217,8 @@ public class HostTreeControllerTest {
         controller.addFilter(filter2);
         
         waitForSwing();
-        
+        waitForSwing();
+
         headers = proxyModel.getHeaders();
         assertEquals(2, headers.size());
         
@@ -227,7 +231,8 @@ public class HostTreeControllerTest {
         controller.registerVM(vm2);
         
         waitForSwing();
-        
+        waitForSwing();
+
         List<VmRef> components  = proxyModel.getComponents(host0);
         assertEquals(2, components.size());
         assertTrue(components.contains(vm0));
@@ -308,6 +313,7 @@ public class HostTreeControllerTest {
         controller.registerVM(vm1);
         controller.registerVM(vm2);
         
+        waitForSwing();
         waitForSwing();
 
         List<VmRef> components  = proxyModel.getComponents(host0);
