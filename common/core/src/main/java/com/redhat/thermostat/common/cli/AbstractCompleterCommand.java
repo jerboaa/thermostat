@@ -41,13 +41,14 @@ import org.apache.felix.scr.annotations.Activate;
 import org.osgi.service.component.ComponentContext;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * An abstract class to help with implementing commands which also provide tab completions for arguments within
- * Thermostat shell. This is most useful in cases where an argument and its completions are unique to a single
- * command; if your plugin provides multiple commands which have shared options and shared arguments/completions,
+ * An abstract class to help with implementing commands which also provide tab completions for arguments and sub-
+ * commands within Thermostat shell. This is most useful in cases where an argument and its completions are unique to a
+ * single command; if your plugin provides multiple commands which have shared options and shared arguments/completions,
  * more flexibility in the implementation can be had by implementing a {@link CompleterService} directly and separately
  * from the Command implementations.
  *
@@ -85,4 +86,13 @@ public abstract class AbstractCompleterCommand extends AbstractCommand implement
         return Objects.requireNonNull(name, t.localize(LocaleResources.MISSING_COMMAND_NAME, getClass().getName()).getContents());
     }
 
+    @Override
+    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
+        return Collections.emptyMap();
+    }
 }

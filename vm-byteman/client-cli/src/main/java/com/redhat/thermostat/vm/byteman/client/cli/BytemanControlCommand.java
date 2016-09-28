@@ -122,11 +122,6 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
     }
 
     @Override
-    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
-        return Collections.emptyMap();
-    }
-
-    @Override
     public void run(CommandContext ctx) throws CommandException {
         VmArgument vmArgument = VmArgument.required(ctx.getArguments());
         VmId vmId = vmArgument.getVmId();

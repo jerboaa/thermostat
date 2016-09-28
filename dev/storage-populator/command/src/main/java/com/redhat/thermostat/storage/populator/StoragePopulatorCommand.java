@@ -165,11 +165,6 @@ public class StoragePopulatorCommand extends AbstractCompleterCommand {
     }
 
     @Override
-    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
-        return Collections.emptyMap();
-    }
-
-    @Override
     public void run(CommandContext ctx) throws CommandException {
         console = ctx.getConsole();
 
