@@ -74,7 +74,7 @@ import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.setup.command.internal.cli.CharArrayMatcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.config.FileStorageCredentials;
@@ -83,7 +83,7 @@ public class MongodbUserSetupTest {
 
     private MongodbUserSetup mongoSetup;
     private StampFiles stampFiles;
-    private UNIXProcessHandler processHandler;
+    private ProcessHandler processHandler;
     private Launcher mockLauncher;
     private CredentialFinder finder;
     private CredentialsFileCreator fileCreator;

@@ -34,7 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.service.internal;
+package com.redhat.thermostat.service.internal.windows;
+
+import com.redhat.thermostat.service.process.ProcessHandler;
+import com.redhat.thermostat.service.process.UNIXSignal;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,81 +48,52 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.redhat.thermostat.service.internal.UnixProcessUtilities;
-import com.redhat.thermostat.service.process.UNIXSignal;
-
-public class UnixProcessUtilitiesTest {
-
-    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
+public class WindowsProcessUtilitiesTest {
 
     private BufferedReader reader;
     private BufferedReader emptyReader;
-    
+
     private List<String> processArguments = new ArrayList<>();
-    private UNIXProcessHandler process;
-    
+    private ProcessHandler process;
+
     @Before
     public void setUp() {
 
-        String data = IS_UNIX ? "123 fluff" : "headerline\r\n\"fluff.exe\",\"1868\",\"Console\",\"1\",\"25,952 K\"";
+        String data = "headerline\r\n\"fluff.exe\",\"1868\",\"Console\",\"1\",\"25,952 K\"";
         reader = new BufferedReader(new StringReader(data));
         emptyReader = new BufferedReader(new StringReader(""));
 
         processArguments.clear();
 
-        if (IS_UNIX) {
-            process = new UnixProcessUtilities() {
-                @Override
-                public Process createAndRunProcess(List<String> args)
-                        throws IOException {
-                    processArguments.addAll(args);
-                    return null;
-                }
+        process = new WindowsProcessUtilities() {
+            @Override
+            protected Process createAndRunProcess(List<String> args)
+                    throws IOException {
+                processArguments.addAll(args);
+                return null;
+            }
 
-                @Override
-                void exec(String command) {
-                    processArguments.add(command);
-                }
+            @Override
+            protected void exec(String command) {
+                processArguments.add(command);
+            }
 
-                public java.io.BufferedReader getProcessOutput(Process process) {
-                    return reader;
-                }
-            };
-        } else {
-            process = new UnixProcessUtilities.WindowsProcessUtilities() {
-                @Override
-                public Process createAndRunProcess(List<String> args)
-                        throws IOException {
-                    processArguments.addAll(args);
-                    return null;
-                }
-
-                @Override
-                void exec(String command) {
-                    processArguments.add(command);
-                }
-
-                public java.io.BufferedReader getProcessOutput(Process process) {
-                    return reader;
-                }
-            };
-        }
+            @Override
+            public BufferedReader getProcessOutput(Process process) {
+                return reader;
+            }
+        };
     }
-    
+
     @Test
     public void sendKillSignalTest() {
-        
+
         process.sendSignal(12345, UNIXSignal.KILL);
-        
+
         Assert.assertTrue(processArguments.contains("kill -s kill 12345"));
         Assert.assertEquals(1, processArguments.size());
     }
-    
+
     @Test
     public void sendTermSignalTest() {
 
@@ -131,52 +108,28 @@ public class UnixProcessUtilitiesTest {
 
         String result = process.getProcessName(12345);
         Assert.assertEquals("fluff", result);
-
-        if (IS_UNIX) {
-            Assert.assertTrue(processArguments.contains("12345"));
-            Assert.assertTrue(processArguments.contains("ps"));
-            Assert.assertTrue(processArguments.contains("--no-heading"));
-            Assert.assertTrue(processArguments.contains("-p"));
-        }
-        else {
-            Assert.assertTrue(processArguments.contains("\"PID eq 12345\""));
-            Assert.assertTrue(processArguments.contains("tasklist"));
-        }
+        Assert.assertTrue(processArguments.contains("\"PID eq 12345\""));
+        Assert.assertTrue(processArguments.contains("tasklist"));
     }
-    
+
     @Test
     public void getProcessNameNoOutput() {
 
         // redefine, since we need an empty reader
-        final UNIXProcessHandler process;
-        if (IS_UNIX) {
-            process = new UnixProcessUtilities() {
+        final ProcessHandler process = new WindowsProcessUtilities() {
                 @Override
-                public Process createAndRunProcess(List<String> args)
+                protected Process createAndRunProcess(List<String> args)
                         throws IOException {
                     processArguments.addAll(args);
                     return null;
                 }
 
-                public java.io.BufferedReader getProcessOutput(Process process) {
-                    return emptyReader;
-                }
-            };
-        }
-        else {
-            process = new UnixProcessUtilities.WindowsProcessUtilities() {
                 @Override
-                public Process createAndRunProcess(List<String> args)
-                        throws IOException {
-                    processArguments.addAll(args);
-                    return null;
-                }
-
-                public java.io.BufferedReader getProcessOutput(Process process) {
+                public BufferedReader getProcessOutput(Process process) {
                     return emptyReader;
                 }
             };
-        }
+
         
         String result = process.getProcessName(12345);
         Assert.assertNull(result);

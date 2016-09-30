@@ -34,46 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.cli.internal;
+package com.redhat.thermostat.service.process;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
+import com.redhat.thermostat.annotations.Service;
 
-import org.junit.Test;
+@Service
+public interface ProcessHandler {
+    
+    public static String ID = "com.redhat.thermostat.service.process.ProcessHandler";
 
-import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.service.process.ProcessHandler;
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.testutils.StubBundleContext;
-
-public class ActivatorTest {
-
-    @Test
-    public void verifyActivatorRegistersCommands() throws Exception {        
-        StubBundleContext bundleContext = new StubBundleContext();
-
-        ExitStatus exitStatus = mock(ExitStatus.class);
-        CommonPaths paths = mock(CommonPaths.class);
-        ProcessHandler processHandler = mock(ProcessHandler.class);
-        bundleContext.registerService(ExitStatus.class, exitStatus, null);
-        bundleContext.registerService(CommonPaths.class, paths, null);
-        bundleContext.registerService(ProcessHandler.class, processHandler, null);
-        
-        Activator activator = new Activator();
-
-        assertEquals(0, bundleContext.getServiceListeners().size());
-        
-        activator.start(bundleContext);
-        
-        assertEquals(3, bundleContext.getServiceListeners().size());
-        
-        assertCommandIsRegistered(bundleContext, "storage", StorageCommand.class);
-
-        activator.stop(bundleContext);
-
-        assertEquals(0, bundleContext.getServiceListeners().size());
-        assertEquals(3, bundleContext.getAllServices().size());
-    }
+    /**
+     * Sends the given {@link UNIXSignal} to the process indicated by
+     * {@code pid}.
+     */
+    void sendSignal(Integer pid, UNIXSignal signal);
+    
+    /**
+     * Gets the process name given its {@code pid}.
+     */
+    String getProcessName(Integer pid);
 }
 

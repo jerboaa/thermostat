@@ -34,46 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.cli.internal;
+package com.redhat.thermostat.service.internal;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
+import java.util.Hashtable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.junit.Test;
-
-import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.service.process.ProcessHandler;
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.testutils.StubBundleContext;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
-public class ActivatorTest {
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-    @Test
-    public void verifyActivatorRegistersCommands() throws Exception {        
-        StubBundleContext bundleContext = new StubBundleContext();
+public class Activator implements BundleActivator {
 
-        ExitStatus exitStatus = mock(ExitStatus.class);
-        CommonPaths paths = mock(CommonPaths.class);
-        ProcessHandler processHandler = mock(ProcessHandler.class);
-        bundleContext.registerService(ExitStatus.class, exitStatus, null);
-        bundleContext.registerService(CommonPaths.class, paths, null);
-        bundleContext.registerService(ProcessHandler.class, processHandler, null);
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
+    
+    @Override
+    public void start(BundleContext context) throws Exception {        
+        logger.log(Level.INFO, "activating thermostat-process bundles");
         
-        Activator activator = new Activator();
-
-        assertEquals(0, bundleContext.getServiceListeners().size());
-        
-        activator.start(bundleContext);
-        
-        assertEquals(3, bundleContext.getServiceListeners().size());
-        
-        assertCommandIsRegistered(bundleContext, "storage", StorageCommand.class);
-
-        activator.stop(bundleContext);
-
-        assertEquals(0, bundleContext.getServiceListeners().size());
-        assertEquals(3, bundleContext.getAllServices().size());
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put(ProcessHandler.ID, ProcessHandler.ID);
+        context.registerService(ProcessHandler.class.getName(), ProcessHandlerImpl.getInstance(), props);
+    }
+    
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        /* nothing to do here */
     }
 }
 

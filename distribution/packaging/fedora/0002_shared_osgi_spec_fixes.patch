@@ -1046,9 +1046,9 @@ diff --git a/thread/harvester/pom.xml b/thread/harvester/pom.xml
      </dependency>
  
      <dependency>
-diff --git a/unix-process-handler/pom.xml b/unix-process-handler/pom.xml
---- a/unix-process-handler/pom.xml
-+++ b/unix-process-handler/pom.xml
+diff --git a/process-handler/pom.xml b/process-handler/pom.xml
+--- a/process-handler/pom.xml
++++ b/process-handler/pom.xml
 @@ -77,14 +77,8 @@
      </dependency>
  

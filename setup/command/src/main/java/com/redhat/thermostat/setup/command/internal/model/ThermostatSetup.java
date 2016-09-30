@@ -42,7 +42,7 @@ import java.text.SimpleDateFormat;
 
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.setup.command.internal.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -140,7 +140,7 @@ public class ThermostatSetup implements PersistableSetup {
         }
     }
     
-    public static ThermostatSetup create(Launcher launcher, CommonPaths paths, UNIXProcessHandler processHandler, Keyring keyring) {
+    public static ThermostatSetup create(Launcher launcher, CommonPaths paths, ProcessHandler processHandler, Keyring keyring) {
         CredentialFinder finder = new CredentialFinder(paths);
         CredentialsFileCreator creator = new CredentialsFileCreator();
         StampFiles stampFiles = new StampFiles(paths);

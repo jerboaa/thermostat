@@ -44,7 +44,7 @@
     <version>1.99.12-SNAPSHOT</version>
   </parent>
   
-  <artifactId>thermostat-osgi-process-handler</artifactId>
+  <artifactId>thermostat-process-handler</artifactId>
   <packaging>bundle</packaging>
   <name>Thermostat Process handler plugin</name>
   
@@ -56,7 +56,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Private-Package>com.redhat.thermostat.service.internal</Private-Package>
+            <Private-Package>com.redhat.thermostat.service.internal,com.redhat.thermostat.service.internal.unix,com.redhat.thermostat.service.internal.windows</Private-Package>
             <Export-Package>com.redhat.thermostat.service.process</Export-Package>
             <Bundle-Activator>com.redhat.thermostat.service.internal.Activator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>

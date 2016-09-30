@@ -49,7 +49,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -63,12 +63,12 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
     private final ExitStatus exitStatus;
-    private final UNIXProcessHandler processHandler;
+    private final ProcessHandler processHandler;
     private final CommonPaths paths;
     
     private MongoProcessRunner runner;
     
-    public StorageCommand(ExitStatus exitStatus, UNIXProcessHandler processHandler, CommonPaths paths) {
+    public StorageCommand(ExitStatus exitStatus, ProcessHandler processHandler, CommonPaths paths) {
         this.exitStatus = exitStatus;
         this.processHandler = processHandler;
         this.paths = paths;

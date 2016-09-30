@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Objects;
 
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -71,8 +72,6 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
-import com.redhat.thermostat.setup.command.internal.SetupCommand;
 import com.redhat.thermostat.setup.command.internal.cli.CharArrayMatcher;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -88,7 +87,7 @@ public class SetupCommandTest {
     private ByteArrayOutputStream outputBaos, errorBaos;
     private PrintStream output, error;
     private CommonPaths paths;
-    private UNIXProcessHandler processHandler;
+    private ProcessHandler processHandler;
     private Launcher launcher;
     private Keyring keyring;
     private ExitStatus exitStatus;
@@ -96,7 +95,7 @@ public class SetupCommandTest {
 
     @Before
     public void setUp() {
-        processHandler = mock(UNIXProcessHandler.class);
+        processHandler = mock(ProcessHandler.class);
         paths = mock(CommonPaths.class);
         when(paths.getUserClientConfigurationFile()).thenReturn(mock(File.class));
         ctxt = mock(CommandContext.class);

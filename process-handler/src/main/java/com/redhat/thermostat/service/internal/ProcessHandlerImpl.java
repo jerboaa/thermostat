@@ -34,46 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.cli.internal;
+package com.redhat.thermostat.service.internal;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-
-import org.junit.Test;
-
-import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.service.internal.unix.UnixProcessUtilities;
+import com.redhat.thermostat.service.internal.windows.WindowsProcessUtilities;
 import com.redhat.thermostat.service.process.ProcessHandler;
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.service.process.UNIXSignal;
 
-public class ActivatorTest {
+public class ProcessHandlerImpl implements ProcessHandler {
 
-    @Test
-    public void verifyActivatorRegistersCommands() throws Exception {        
-        StubBundleContext bundleContext = new StubBundleContext();
+    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
 
-        ExitStatus exitStatus = mock(ExitStatus.class);
-        CommonPaths paths = mock(CommonPaths.class);
-        ProcessHandler processHandler = mock(ProcessHandler.class);
-        bundleContext.registerService(ExitStatus.class, exitStatus, null);
-        bundleContext.registerService(CommonPaths.class, paths, null);
-        bundleContext.registerService(ProcessHandler.class, processHandler, null);
-        
-        Activator activator = new Activator();
+    private static final ProcessUtilitiesBase proxy = IS_UNIX ? new UnixProcessUtilities() : new WindowsProcessUtilities();
 
-        assertEquals(0, bundleContext.getServiceListeners().size());
-        
-        activator.start(bundleContext);
-        
-        assertEquals(3, bundleContext.getServiceListeners().size());
-        
-        assertCommandIsRegistered(bundleContext, "storage", StorageCommand.class);
+    public static ProcessHandler getInstance() {
+        return proxy;
+    }
+    
+    protected ProcessHandlerImpl() {}
 
-        activator.stop(bundleContext);
+    @Override
+    public void sendSignal(Integer pid, UNIXSignal signal) {
+        proxy.sendSignal(pid, signal);
+    }
 
-        assertEquals(0, bundleContext.getServiceListeners().size());
-        assertEquals(3, bundleContext.getAllServices().size());
+    @Override
+    public String getProcessName(Integer pid) {
+        return proxy.getProcessName(pid);
     }
 }
 

@@ -34,46 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.cli.internal;
+package com.redhat.thermostat.service.internal.unix;
 
-import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
+import com.redhat.thermostat.service.internal.ProcessUtilitiesBase;
+import com.redhat.thermostat.service.process.UNIXSignal;
 
-import org.junit.Test;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.service.process.ProcessHandler;
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.testutils.StubBundleContext;
+public class UnixProcessUtilities extends ProcessUtilitiesBase {
 
-public class ActivatorTest {
-
-    @Test
-    public void verifyActivatorRegistersCommands() throws Exception {        
-        StubBundleContext bundleContext = new StubBundleContext();
-
-        ExitStatus exitStatus = mock(ExitStatus.class);
-        CommonPaths paths = mock(CommonPaths.class);
-        ProcessHandler processHandler = mock(ProcessHandler.class);
-        bundleContext.registerService(ExitStatus.class, exitStatus, null);
-        bundleContext.registerService(CommonPaths.class, paths, null);
-        bundleContext.registerService(ProcessHandler.class, processHandler, null);
-        
-        Activator activator = new Activator();
-
-        assertEquals(0, bundleContext.getServiceListeners().size());
-        
-        activator.start(bundleContext);
-        
-        assertEquals(3, bundleContext.getServiceListeners().size());
-        
-        assertCommandIsRegistered(bundleContext, "storage", StorageCommand.class);
-
-        activator.stop(bundleContext);
-
-        assertEquals(0, bundleContext.getServiceListeners().size());
-        assertEquals(3, bundleContext.getAllServices().size());
+    @Override
+    public void sendSignal(Integer pid, UNIXSignal signal) {
+        exec("kill -s " + signal.signalName() + " " + pid);
     }
+
+    @Override
+    protected List<String> buildCommandLine(Integer pid) {
+        final List<String> commandLine = new ArrayList<>();
+        commandLine.add("ps");
+        commandLine.add("--no-heading");
+        commandLine.add("-p");
+        commandLine.add(String.valueOf(pid));
+        return commandLine;
+    }
+
+    @Override
+    protected String processStdout(final BufferedReader out) throws IOException {
+        final String outStr = out.readLine();
+        if (outStr == null)
+            return null;
+        final String [] output = outStr.split(" ");
+        return output[output.length - 1];
+    }
+
 }
 

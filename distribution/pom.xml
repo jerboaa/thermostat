@@ -536,7 +536,7 @@
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-osgi-process-handler</artifactId>
+        <artifactId>thermostat-process-handler</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>

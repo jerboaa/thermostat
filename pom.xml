@@ -71,9 +71,6 @@
         <sharedlib.prefix>lib</sharedlib.prefix>
         <sharedlib.suffix>.so</sharedlib.suffix>
       </properties>
-      <modules>
-        <module>keyring</module>
-      </modules>
     </profile>
 
     <profile>
@@ -91,7 +88,6 @@
         <sharedlib.suffix>.dll</sharedlib.suffix>
       </properties>
     </profile>
-
 
     <profile>
       <!-- Some thermostat code uses sun.jvmstat and com.sun.tools.attach.
@@ -347,7 +343,8 @@
     <module>common</module>
     <module>agent</module>
     <module>client</module>
-    <module>unix-process-handler</module>
+    <module>keyring</module>
+    <module>process-handler</module>
     <module>thread</module>
     <module>killvm</module>
     <module>web</module>

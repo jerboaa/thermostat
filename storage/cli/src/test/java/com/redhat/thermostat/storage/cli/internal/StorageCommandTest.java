@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
+import com.redhat.thermostat.service.process.ProcessHandler;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -60,14 +61,9 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
-import com.redhat.thermostat.storage.cli.internal.DBConfig;
-import com.redhat.thermostat.storage.cli.internal.DBStartupConfiguration;
-import com.redhat.thermostat.storage.cli.internal.MongoProcessRunner;
-import com.redhat.thermostat.storage.cli.internal.StorageCommand;
 import com.redhat.thermostat.testutils.TestUtils;
 
 public class StorageCommandTest {
@@ -78,7 +74,7 @@ public class StorageCommandTest {
 
     private String tmpDir;
     private ExitStatus exitStatus;
-    private UNIXProcessHandler processHandler;
+    private ProcessHandler processHandler;
     private CommonPaths paths;
     
     @Before
@@ -96,7 +92,7 @@ public class StorageCommandTest {
             Assert.fail("cannot setup tests: " + e);
         }
 
-        processHandler = mock(UNIXProcessHandler.class);
+        processHandler = mock(ProcessHandler.class);
 
         paths = mock(CommonPathsImpl.class);
         File baseDir = new File(tmpDir);

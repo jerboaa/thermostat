@@ -50,18 +50,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.redhat.thermostat.service.process.ProcessHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class MongoProcessRunnerTest {
 
     private MongoProcessRunner runner;
     private DBStartupConfiguration config;
-    private UNIXProcessHandler processHandler;
+    private ProcessHandler processHandler;
 
     private static final String NO_JOURNAL_MONGODB_VERSION = "2.0.0";
     private static final String JOURNAL_MONGODB_VERSION = "1.8.0";
@@ -85,7 +85,7 @@ public class MongoProcessRunnerTest {
         when(config.getLogFile()).thenReturn(logPath);
         when(config.getPidFile()).thenReturn(pidFile);
 
-        processHandler = mock(UNIXProcessHandler.class);
+        processHandler = mock(ProcessHandler.class);
 
         runner = new MongoProcessRunner(processHandler, config, false, false);
     }

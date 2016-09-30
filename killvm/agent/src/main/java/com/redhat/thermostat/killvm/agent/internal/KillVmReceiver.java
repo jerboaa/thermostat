@@ -44,29 +44,29 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.service.process.UNIXSignal;
 
 public class KillVmReceiver implements RequestReceiver {
 
-    private final UNIXProcessHandler unixService;
+    private final ProcessHandler processService;
     private static final Logger log = LoggingUtils.getLogger(KillVmReceiver.class);
     
-    public KillVmReceiver(UNIXProcessHandler unixService) {
-        this.unixService = unixService;
+    public KillVmReceiver(ProcessHandler theService) {
+        this.processService = theService;
     }
     
     @Override
     public Response receive(Request request) {
-        if (unixService == null) {
+        if (processService == null) {
             // no dice, should have service by now
-            log.severe("Unix service null!");
+            log.severe("Process service is null!");
             return new Response(ResponseType.ERROR);
         }
         String strPid = request.getParameter("vm-pid");
         try {
             Integer pid = Integer.parseInt(strPid);
-            unixService.sendSignal(pid, UNIXSignal.TERM);
+            processService.sendSignal(pid, UNIXSignal.TERM);
             log.fine("Killed VM with PID " + pid);
             return new Response(ResponseType.OK);
         } catch (NumberFormatException e) {

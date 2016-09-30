@@ -53,7 +53,7 @@ import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -80,7 +80,7 @@ public class MongoProcessRunner {
     static final String NO_JOURNAL_FIRST_VERSION = "1.9.2";
     static final String LOCALHOST_EXPTN_FIRST_VERSION = "2.4.0";
 
-    private final UNIXProcessHandler processHandler;
+    private final ProcessHandler processHandler;
     private DBStartupConfiguration configuration;
     private Integer pid;
     private final boolean isQuiet;
@@ -88,7 +88,7 @@ public class MongoProcessRunner {
 
     private final static MongoOSUtilInterface util = MongoOSUtilFactory.instance().createMongoOSUtil();
 
-    public MongoProcessRunner(UNIXProcessHandler processHandler, DBStartupConfiguration configuration, boolean quiet, boolean permitLocalhostException) {
+    public MongoProcessRunner(ProcessHandler processHandler, DBStartupConfiguration configuration, boolean quiet, boolean permitLocalhostException) {
         this.processHandler = processHandler;
         this.configuration = configuration;
         this.isQuiet = quiet;

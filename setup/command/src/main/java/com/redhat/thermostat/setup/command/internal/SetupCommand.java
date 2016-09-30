@@ -59,7 +59,7 @@ import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.setup.command.internal.cli.CLISetup;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatQuickSetup;
 import com.redhat.thermostat.setup.command.internal.model.ThermostatSetup;
@@ -81,7 +81,7 @@ public class SetupCommand extends AbstractCommand {
     private Launcher launcher;
     private Keyring keyring;
     private String[] origArgsList;
-    private UNIXProcessHandler processHandler;
+    private ProcessHandler processHandler;
     private PrintStream out;
 
     @Override
@@ -107,7 +107,7 @@ public class SetupCommand extends AbstractCommand {
             requireNonNull(launcher, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Launcher"));
             this.keyring = dependentServices.getService(Keyring.class);
             requireNonNull(keyring, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Keyring"));
-            this.processHandler = dependentServices.getService(UNIXProcessHandler.class);
+            this.processHandler = dependentServices.getService(ProcessHandler.class);
             requireNonNull(processHandler, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "UnixProcessHandler"));
             ThermostatSetup setup = createSetup();
 
@@ -215,15 +215,15 @@ public class SetupCommand extends AbstractCommand {
         dependentServices.addService(Keyring.class, keyring);
     }
 
-    public void setProcessHandler(UNIXProcessHandler processHandler) {
-        dependentServices.addService(UNIXProcessHandler.class, processHandler);
+    public void setProcessHandler(ProcessHandler processHandler) {
+        dependentServices.addService(ProcessHandler.class, processHandler);
     }
     
     public void setServicesUnavailable() {
         dependentServices.removeService(Launcher.class);
         dependentServices.removeService(CommonPaths.class);
         dependentServices.removeService(Keyring.class);
-        dependentServices.removeService(UNIXProcessHandler.class);
+        dependentServices.removeService(ProcessHandler.class);
     }
 
     public boolean isStorageRequired() {

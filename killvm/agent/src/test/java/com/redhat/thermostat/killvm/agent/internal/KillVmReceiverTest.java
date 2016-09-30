@@ -44,19 +44,18 @@ import static org.mockito.Mockito.when;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import com.redhat.thermostat.service.process.ProcessHandler;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.killvm.agent.internal.KillVmReceiver;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
 
 public class KillVmReceiverTest {
 
     @Test
     public void receiverReturnsOk() {
-        UNIXProcessHandler proc = mock(UNIXProcessHandler.class);
+        ProcessHandler proc = mock(ProcessHandler.class);
         KillVmReceiver receiver = new KillVmReceiver(proc);
         Request req = mock(Request.class);
         when(req.getParameter("vm-pid")).thenReturn("12345");
@@ -66,7 +65,7 @@ public class KillVmReceiverTest {
     
     @Test
     public void receiverReturnsErrorNoPid() {
-        UNIXProcessHandler proc = mock(UNIXProcessHandler.class);
+        ProcessHandler proc = mock(ProcessHandler.class);
         KillVmReceiver receiver = new KillVmReceiver(proc);
         Request req = mock(Request.class);
         Response response = receiver.receive(req);
@@ -75,7 +74,7 @@ public class KillVmReceiverTest {
     
     @Test
     public void receiverReturnsErrorBadPid() {
-        UNIXProcessHandler proc = mock(UNIXProcessHandler.class);
+        ProcessHandler proc = mock(ProcessHandler.class);
         KillVmReceiver receiver = new KillVmReceiver(proc);
         Request req = mock(Request.class);
         when(req.getParameter("vm-pid")).thenReturn("hi");
@@ -110,8 +109,8 @@ public class KillVmReceiverTest {
             fail("com.redhat.thermostat.agent.killvm.internal.KillVmReceiver class not found, but used by some request!");
         }
         try {
-            Constructor<?> constructor = receiver.getConstructor(UNIXProcessHandler.class);
-            UNIXProcessHandler service = mock(UNIXProcessHandler.class);
+            Constructor<?> constructor = receiver.getConstructor(ProcessHandler.class);
+            ProcessHandler service = mock(ProcessHandler.class);
             Object instance = constructor.newInstance(service);
             Method m = receiver.getMethod("receive", Request.class);
             Request req = mock(Request.class);

@@ -36,13 +36,13 @@
 
 package com.redhat.thermostat.killvm.agent.internal;
 
+import com.redhat.thermostat.service.process.ProcessHandler;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
 
 public class Activator implements BundleActivator {
 
@@ -53,10 +53,10 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) {
         registry = new ReceiverRegistry(context);
 
-        killActionTracker = new ServiceTracker(context, UNIXProcessHandler.class, null) {
+        killActionTracker = new ServiceTracker(context, ProcessHandler.class, null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                UNIXProcessHandler processHandler = (UNIXProcessHandler) super.addingService(reference);
+                ProcessHandler processHandler = (ProcessHandler) super.addingService(reference);
                 registry.registerReceiver(new KillVmReceiver(processHandler));
                 return processHandler;
             }

@@ -34,24 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.service.process;
+package com.redhat.thermostat.service.internal.windows;
 
-import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.service.internal.ProcessUtilitiesBase;
+import com.redhat.thermostat.service.process.UNIXSignal;
 
-@Service
-public interface UNIXProcessHandler {
-    
-    public static String ID = "com.redhat.thermostat.service.process.UNIXProcessHandler";
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-    /**
-     * Sends the given {@link UNIXSignal} to the process indicated by
-     * {@code pid}.
-     */
-    public void sendSignal(Integer pid, UNIXSignal signal);
-    
-    /**
-     * Gets the process name given its {@code pid}.
-     */
-    public String getProcessName(Integer pid);
+public class WindowsProcessUtilities extends ProcessUtilitiesBase  {
+
+    @Override
+    protected List<String> buildCommandLine(Integer pid) {
+        final List<String> commandLine = new ArrayList<>();
+        commandLine.add("tasklist");
+        commandLine.add("/FO");
+        commandLine.add("csv");
+        commandLine.add("/FI");
+        commandLine.add("\"PID eq " + String.valueOf(pid) + "\"");
+        return commandLine;
+    }
+
+    @Override
+    protected String processStdout(final BufferedReader out) throws IOException {
+        out.readLine(); // skip header line
+        final String outStr = out.readLine();
+        if (outStr == null)
+            return null;
+        final String [] output = outStr.split(",");
+        String result = output[0];
+        if (result.length() >= 2 && result.charAt(0) == '"')
+            result = result.replace("\"","");
+        result = result.replace(".exe","");
+        return result;
+    }
+
+    @Override
+    public void sendSignal(Integer pid, UNIXSignal signal) {
+        // TODO - port to Windows
+        exec("kill -s " + signal.signalName() + " " + pid);
+    }
+
 }
 

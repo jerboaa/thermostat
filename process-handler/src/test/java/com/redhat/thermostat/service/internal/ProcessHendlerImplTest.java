@@ -36,32 +36,29 @@
 
 package com.redhat.thermostat.service.internal;
 
-import java.util.Hashtable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.redhat.thermostat.service.internal.unix.UnixProcessUtilities;
+import com.redhat.thermostat.service.internal.windows.WindowsProcessUtilities;
+import com.redhat.thermostat.service.process.ProcessHandler;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import org.junit.Test;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import static org.junit.Assert.assertNotNull;
 
-public class Activator implements BundleActivator {
+public class ProcessHendlerImplTest {
 
-    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
-    
-    @Override
-    public void start(BundleContext context) throws Exception {        
-        logger.log(Level.INFO, "activating thermostat-process bundles");
-        
-        Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put(UNIXProcessHandler.ID, UNIXProcessHandler.ID);
-        context.registerService(UNIXProcessHandler.class.getName(), UnixProcessUtilities.getInstance(), props);
-    }
-    
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        /* nothing to do here */
+    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
+
+    @Test
+    public void testCorrectImplementation() {
+
+        final ProcessHandler hnd = ProcessHandlerImpl.getInstance();
+        assertNotNull(hnd);
+
+        if (IS_UNIX) {
+            assert(hnd instanceof UnixProcessUtilities);
+        } else {
+            assert(hnd instanceof WindowsProcessUtilities);
+        }
     }
 }
 

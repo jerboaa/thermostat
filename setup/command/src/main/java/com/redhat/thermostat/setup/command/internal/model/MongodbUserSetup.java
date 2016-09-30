@@ -64,7 +64,7 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
 class MongodbUserSetup implements UserSetup {
@@ -75,7 +75,7 @@ class MongodbUserSetup implements UserSetup {
     private static final String MONGO_PROCESS = "mongod";
     private static final Logger logger = LoggingUtils.getLogger(MongodbUserSetup.class);
     private final UserCredsValidator validator;
-    private final UNIXProcessHandler processHandler;
+    private final ProcessHandler processHandler;
     private final Launcher launcher;
     private final CredentialFinder finder;
     private final CredentialsFileCreator fileCreator;
@@ -89,7 +89,7 @@ class MongodbUserSetup implements UserSetup {
     private String userComment;
     private Integer pid;
     
-    MongodbUserSetup(UserCredsValidator validator, Launcher launcher, UNIXProcessHandler processHandler, CredentialFinder finder, CredentialsFileCreator fileCreator, CommonPaths paths, StampFiles stampFiles, StructureInformation structureInfo, AuthFileWriter authWriter, KeyringWriter keyringWriter) {
+    MongodbUserSetup(UserCredsValidator validator, Launcher launcher, ProcessHandler processHandler, CredentialFinder finder, CredentialsFileCreator fileCreator, CommonPaths paths, StampFiles stampFiles, StructureInformation structureInfo, AuthFileWriter authWriter, KeyringWriter keyringWriter) {
         this.validator = validator;
         this.processHandler = processHandler;
         this.launcher = launcher;

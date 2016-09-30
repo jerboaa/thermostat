@@ -43,7 +43,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
@@ -66,7 +66,7 @@ public class ActivatorTest {
     public void verifyKillReciverIsRegistered() {
         StubBundleContext ctx = new StubBundleContext();
 
-        ctx.registerService(UNIXProcessHandler.class, mock(UNIXProcessHandler.class), null);
+        ctx.registerService(ProcessHandler.class, mock(ProcessHandler.class), null);
 
         Activator activator = new Activator();
         activator.start(ctx);
