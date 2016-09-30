@@ -43,6 +43,7 @@ import java.util.Map;
 public enum IPCType {
     
     UNIX_SOCKET("unixsocket"),
+    TCP_SOCKET("tcpsocket"),
     UNKNOWN(null); // Used for testing
     
     // Reverse lookup

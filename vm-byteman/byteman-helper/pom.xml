@@ -68,6 +68,8 @@
               <include>com.redhat.thermostat:thermostat-agent-ipc-common</include>
               <include>com.redhat.thermostat:thermostat-agent-ipc-unixsocket-client</include>
               <include>com.redhat.thermostat:thermostat-agent-ipc-unixsocket-common</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-tcpsocket-client</include>
+              <include>com.redhat.thermostat:thermostat-agent-ipc-tcpsocket-common</include>
               <include>com.github.jnr:jnr-ffi</include>
               <include>com.github.jnr:jnr-enxio</include>
               <include>com.github.jnr:jnr-constants</include>
@@ -201,6 +203,11 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-ipc-unixsocket-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-ipc-tcpsocket-client</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

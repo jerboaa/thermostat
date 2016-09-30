@@ -68,7 +68,7 @@ public abstract class IPCPropertiesBuilder {
             }
             IPCType type = IPCType.fromConfigValue(typeString);
             if (type == null) {
-                throw new IOException("Unable to determine IPC type from property file");
+                throw new IOException("Unable to determine IPC type from property file ('"+typeString+"' not recognized)");
             }
             return getPropertiesForType(type, props, ipcProperties);
         } finally {

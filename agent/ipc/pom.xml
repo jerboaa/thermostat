@@ -63,6 +63,7 @@
     <module>client</module>
     <module>server</module>
     <module>unix-socket</module>
+    <module>tcp-socket</module>
   </modules>
 
 </project>

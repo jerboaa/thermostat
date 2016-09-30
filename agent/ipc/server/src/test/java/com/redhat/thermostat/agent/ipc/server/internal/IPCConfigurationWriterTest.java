@@ -59,7 +59,9 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 import com.redhat.thermostat.agent.ipc.server.internal.IPCConfigurationWriter.PropertiesHelper;
 
 public class IPCConfigurationWriterTest {
-    
+
+    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
+
     private IPCConfigurationWriter writer;
     private Properties props;
     private FileOutputStream fos;
@@ -81,8 +83,9 @@ public class IPCConfigurationWriterTest {
     @Test
     public void testWrite() throws Exception {
         writer.write();
-        
-        verify(props).setProperty(IPCConfigurationWriter.PROP_IPC_TYPE, IPCType.UNIX_SOCKET.getConfigValue());
+
+        final IPCType expectedType = IS_UNIX ? IPCType.UNIX_SOCKET : IPCType.TCP_SOCKET;
+        verify(props).setProperty(IPCConfigurationWriter.PROP_IPC_TYPE, expectedType.getConfigValue());
         verify(props).store(eq(fos), anyString());
         verify(fos).close();
     }

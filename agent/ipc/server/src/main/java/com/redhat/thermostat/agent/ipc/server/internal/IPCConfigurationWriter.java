@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.ipc.server.internal;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.Properties;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
@@ -46,12 +47,34 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 class IPCConfigurationWriter {
 
     static final String PROP_IPC_TYPE = "type";
-    static final String PROP_UNIX_SOCKET_DIR = "unixsocket.dir";
-    private static final String COMMENTS = "Configuration for Inter-process Communication (IPC) used in the Thermostat agent.\n"
-    + "The agent is configured to use Unix sockets for IPC by default.\n"
-    + "The options below can be set to modify the defaults used by the agent:\n\n" 
-    + "Directory where Unix sockets are created, which may be deleted if it already exists.\n"
-    + PROP_UNIX_SOCKET_DIR + "=/path/to/unix/sockets\n";
+    private static final String PROP_UNIX_SOCKET_DIR = "unixsocket.dir";
+
+
+    private static final String PROP_TCP_SOCKET_SUFFIX= ".tcpsocket.port";
+    //private static final String TCP_SOCKET_JUMBO_FRAMES = "tcpsocket.jumboframes";
+
+    // suggest some default vaules for TCP sockets - test this range for unused sockets
+    private static int TEST_SOCKET_LOW = 51200;
+    private static int TEST_SOCKET_HIGH = 55000;
+
+    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
+
+    private static final String COMMENTS =
+        "Configuration for Inter-process Communication (IPC) used in the Thermostat agent.\n"
+        + "The agent is configured to use Unix sockets for IPC by default on Linux,\n"
+        + "or TCP sockets on Windows.\n"
+        + "The options below can be set to modify the defaults used by the agent:\n\n"
+
+        + "Directory where Unix sockets are created, which may be deleted if it already exists.\n"
+        + PROP_UNIX_SOCKET_DIR + "=/path/to/unix/sockets\n\n"
+
+        + "TCP socket port numbers for various services.\n"
+        + "command-channel" + PROP_TCP_SOCKET_SUFFIX + "=NNNN\n"
+        + "agent-proxy" + PROP_TCP_SOCKET_SUFFIX + "=MMMM\n\n";
+
+        //in the future, will allow jumbo frames for performance
+        //+ "TCP parameters\n"
+        //+ TCP_SOCKET_JUMBO_FRAMES + "=false\n\n";
     
     private final File configFile;
     private final PropertiesHelper helper;
@@ -70,12 +93,47 @@ class IPCConfigurationWriter {
         configFile.createNewFile();
         
         Properties props = helper.createProperties();
-        // Leave remainder of properties as defaults
-        props.setProperty(PROP_IPC_TYPE, IPCType.UNIX_SOCKET.getConfigValue());
-        
+
+        props.setProperty(PROP_IPC_TYPE, IS_UNIX ? IPCType.UNIX_SOCKET.getConfigValue() : IPCType.TCP_SOCKET.getConfigValue());
+
+        // unix socket will work without configuration (creates sockets in tmp directory
+        // but tcpsocket always needs ports (in the future, should support service discovery)
+
+        // this implementation is flawed;
+        //    the unused ports might be in used by a process that simply wasn't running at thermostat setup time.
+
+        {
+            int cmdPort = findUnusedTCPSocket(TEST_SOCKET_LOW,TEST_SOCKET_HIGH);
+            int aport = cmdPort == 0 ? 0 : findUnusedTCPSocket(cmdPort+1,TEST_SOCKET_HIGH);
+
+            props.setProperty("command-channel" + PROP_TCP_SOCKET_SUFFIX, Integer.toString(cmdPort));
+            props.setProperty("agent-proxy" + PROP_TCP_SOCKET_SUFFIX, Integer.toString(aport));
+        }
+
         try (FileOutputStream fos = helper.createStream(configFile)) {
             props.store(fos, COMMENTS);
         }
+    }
+
+    private static int findUnusedTCPSocket(int lowPort, int highPort) {
+        for (int port=lowPort; port<=highPort; port++) {
+            if (isTCPPortAvailable(port)) {
+                return port;
+            }
+        }
+        return 0;
+    }
+
+    private static boolean isTCPPortAvailable(int tcpport) {
+        try {
+            final ServerSocket socket = new ServerSocket(tcpport);
+            socket.close();
+            return true;
+        }
+        catch (IOException e) {
+            // socket already in use
+        }
+        return false;
     }
     
     // For testing purposes

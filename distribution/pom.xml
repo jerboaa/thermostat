@@ -84,6 +84,16 @@
           <artifactId>thermostat-keyring</artifactId>
           <version>${project.version}</version>
         </dependency>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-unixsocket-server</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-unixsocket-client</artifactId>
+          <version>${project.version}</version>
+        </dependency>
       </dependencies>
       <build>
         <plugins>
@@ -501,12 +511,12 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-ipc-unixsocket-server</artifactId>
+      <artifactId>thermostat-agent-ipc-tcpsocket-server</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-ipc-unixsocket-client</artifactId>
+      <artifactId>thermostat-agent-ipc-tcpsocket-client</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
