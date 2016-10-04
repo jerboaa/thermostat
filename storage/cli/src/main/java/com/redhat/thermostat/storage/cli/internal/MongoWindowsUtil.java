@@ -44,9 +44,15 @@ class MongoWindowsUtil implements MongoOSUtilInterface {
     private static final String[] WIN_MONGO_START_CMD = {
             "cmd", "/c", "start", "/b", "mongod", "--quiet", "--auth", "--nohttpinterface", "--bind_ip"
     };
+
     private static final String[] WIN_MONGO_STOP_CMD = {
             "cmd", "/c", "taskkill", "/F", "/PID"
     };
+
+    private static final String[] WIN_MONGO_DBVERSION_CMD = {
+            "cmd", "/c", "mongod", "--version"
+    };
+
 
     @Override
     public String[] getMongoStartCmd() {
@@ -56,5 +62,10 @@ class MongoWindowsUtil implements MongoOSUtilInterface {
     @Override
     public String[] getMongoStopCmd() {
         return WIN_MONGO_STOP_CMD;
+    }
+
+    @Override
+    public String[] getDbVersionCmd() {
+        return WIN_MONGO_DBVERSION_CMD;
     }
 }

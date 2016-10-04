@@ -44,9 +44,15 @@ class MongoUnixUtil implements MongoOSUtilInterface {
     private static final String[] UNIX_MONGO_START_CMD = {
             "mongod", "--quiet", "--fork", "--auth", "--nohttpinterface", "--bind_ip"
     };
+
     private static final String[] UNIX_MONGO_STOP_CMD = {
             "kill", "-s", "TERM"
     };
+
+    private static final String[] UNIX_MONGO_DBVERSION_CMD = {
+            "mongod", "--version"
+    };
+
 
     @Override
     public String[] getMongoStartCmd() {
@@ -56,5 +62,10 @@ class MongoUnixUtil implements MongoOSUtilInterface {
     @Override
     public String[] getMongoStopCmd() {
         return UNIX_MONGO_STOP_CMD;
+    }
+
+    @Override
+    public String[] getDbVersionCmd() {
+        return UNIX_MONGO_DBVERSION_CMD;
     }
 }

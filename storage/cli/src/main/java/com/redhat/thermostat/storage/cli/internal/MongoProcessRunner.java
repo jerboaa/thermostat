@@ -313,7 +313,7 @@ public class MongoProcessRunner {
     }
     
     private String getDBVersion() throws IOException {
-        Process process = new ProcessBuilder(Arrays.asList("mongod", "--version")).start();
+        Process process = new ProcessBuilder(util.getDbVersionCmd()).start();
         InputStream out = process.getInputStream();
         return doGetDBVersion(out);
     }

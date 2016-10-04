@@ -42,4 +42,5 @@ package com.redhat.thermostat.storage.cli.internal;
 interface MongoOSUtilInterface {
     String[] getMongoStartCmd();
     String[] getMongoStopCmd();
+    String[] getDbVersionCmd();
 }

@@ -175,7 +175,31 @@
               </execution>
             </executions>
           </plugin>
+
           <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-windows-scripts</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>windows/scripts</directory>
+                      <targetPath>image/bin</targetPath>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+         <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <executions>
@@ -184,11 +208,16 @@
                 <goals>
                   <goal>exec</goal>
                 </goals>
+                <configuration>
+                  <!-- the script itself has the wrong permissions, but using cmd.exe works properly -->
+                  <executable>cmd.exe</executable>
+                  <arguments>
+                    <argument>/c</argument>
+                    <argument>${project.basedir}/tools/verify-bash-completion.cmd</argument>
+                  </arguments>
+                </configuration>
               </execution>
             </executions>
-            <configuration>
-              <executable>${project.basedir}/tools/verify-bash-completion.cmd</executable>
-            </configuration>
           </plugin>
         </plugins>
       </build>
