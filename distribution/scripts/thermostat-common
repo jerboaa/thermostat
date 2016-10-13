@@ -71,12 +71,16 @@ fi
 # on cygwin, convert to Unix format
 if [ $CYGWIN_MODE -eq 1 ]; then
   THERMOSTAT_HOME="`cygpath -u $THERMOSTAT_HOME`"
-  export THERMOSTAT_HOME
 fi
+export THERMOSTAT_HOME
 
 # Thermostat user home
 if [[ "${USER_THERMOSTAT_HOME}" = "" ]]; then
-  USER_THERMOSTAT_HOME="${HOME}/.thermostat"
+  if [ $CYGWIN_MODE -eq 1 ]; then
+    USER_THERMOSTAT_HOME="`cygpath -u ${USERPROFILE}`/.thermostat"
+  else
+    USER_THERMOSTAT_HOME="${HOME}/.thermostat"
+  fi
 fi
 export USER_THERMOSTAT_HOME
 

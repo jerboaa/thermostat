@@ -199,6 +199,11 @@
                       <targetPath>image/bin</targetPath>
                       <filtering>true</filtering>
                     </resource>
+                    <resource>
+                      <directory>windows/config</directory>
+                      <targetPath>image/etc</targetPath>
+                      <filtering>true</filtering>
+                    </resource>
                   </resources>
                 </configuration>
               </execution>

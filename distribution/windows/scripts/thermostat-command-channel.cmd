@@ -64,17 +64,17 @@ if not defined IPC_CLASSPATH (
 )
 
 :: Additional JARs necessary for the server
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-common-core-@project.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-shared-config-@project.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-agent-command-@project.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-common-command-@project.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-agent-command-server-@project.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\netty-buffer-@netty.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\netty-common-@netty.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\netty-transport-@netty.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\netty-codec-@netty.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\netty-handler-@netty.version@.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\gson-@gson.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-common-core-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-shared-config-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-agent-command-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-common-command-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-agent-command-server-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\netty-buffer-@netty.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\netty-common-@netty.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\netty-transport-@netty.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\netty-codec-@netty.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\netty-handler-@netty.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\gson-@gson.version@.jar
 
 set CMD_CHANNEL_CLASS=com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain
 

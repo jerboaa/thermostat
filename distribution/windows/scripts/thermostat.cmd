@@ -57,36 +57,6 @@ set BOOT_CLASSPATH=%BOOT_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-launcher-@proje
 set BOOT_CLASSPATH=%BOOT_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-main-@project.version@.jar
 set BOOT_CLASSPATH=%BOOT_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-shared-config-@project.version@.jar
 
-goto skip_setclasspath
-set BOOT_CLASSPATH=
-for %%f in (%THERMOSTAT_LIBS%\*.jar) do (
-  rem echo jar file %%f
-  set BOOT_CLASSPATH=!BOOT_CLASSPATH!;%f
-)
-:skip_setclasspath
-
-goto foo
-echo on
-set WANTED_JARS=org.apache.felix.framework- thermostat-launcher- thermostat-main- thermostat-shared-config-
-set BOOT_CLASSPATH=
-for %%j in (%WANTED_JARS%) do (
-  rem echo jar file %%j
-  for %%f in (%THERMOSTAT_LIBS%\%%j*.jar) do (
-    rem echo found file %f
-    set BOOT_CLASSPATH=!BOOT_CLASSPATH!;%f
-  )
-)
-echo off
-:foo
-
-echo off
-set WANTED_JARS=org.apache.felix.framework-4.2.0.jar thermostat-launcher-1.99.12-SNAPSHOT.jar thermostat-main-1.99.12-SNAPSHOT.jar thermostat-shared-config-1.99.12-SNAPSHOT.jar
-set BOOT_CLASSPATH=.
-for %%j in (%WANTED_JARS%) do (
-  rem echo jar file %%j
-  set BOOT_CLASSPATH=!BOOT_CLASSPATH!;%THERMOSTAT_LIBS%\%%j
-)
-
 :: Append extra class path entries coming from the profiles
 if defined THERMOSTAT_EXT_BOOT_CLASSPATH (
   set BOOT_CLASSPATH=%BOOT_CLASSPATH%;%THERMOSTAT_EXT_BOOT_CLASSPATH%

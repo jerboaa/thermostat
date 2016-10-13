@@ -42,28 +42,25 @@ rem endlocal & ( set THERMOSTAT_LIBS=%THERMOSTAT_LIBS% )
 
 rem Build classpath shared by all IPC clients
 
-set IPC_CLASSPATH=%THERMOSTAT_LIBS%\thermostat-agent-ipc-client-%project.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-agent-ipc-common-%project.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-agent-ipc-unixsocket-client-%project.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-agent-ipc-unixsocket-common-%project.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-agent-ipc-tcpsocket-client-%project.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\thermostat-agent-ipc-tcpsocket-common-%project.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\jnr-unixsocket-%jnr-unixsocket.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\jnr-enxio-%jnr-enxio.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\jnr-constants-%jnr-constants.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\jnr-posix-%jnr-posix.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\jnr-ffi-%jnr-ffi.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\jnr-x86asm-%jnr-x86asm.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\jffi-%jffi.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\jffi-%jffi.version%-native.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\asm-%asm.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\asm-commons-%asm.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\asm-util-%asm.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\asm-analysis-%asm.version%.jar
-set IPC_CLASSPATH=%IPC_CLASSPATH%:%THERMOSTAT_LIBS%\asm-tree-%asm.version%.jar
+set IPC_CLASSPATH=%THERMOSTAT_LIBS%\thermostat-agent-ipc-client-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-agent-ipc-common-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-agent-ipc-tcpsocket-client-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-agent-ipc-tcpsocket-common-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\jnr-enxio-@jnr-enxio.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\jnr-constants-@jnr-constants.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\jnr-posix-@jnr-posix.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\jnr-ffi-@jnr-ffi.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\jnr-x86asm-@jnr-x86asm.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\jffi-@jffi.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\jffi-@jffi.version%-native.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\asm-@asm.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\asm-commons-@asm.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\asm-util-@asm.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\asm-analysis-@asm.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\asm-tree-@asm.version@.jar
 
 rem set THERMOSTAT_LIBS=
 
-echo %IPC_CLASSPATH%
+rem echo %IPC_CLASSPATH%
 
 exit /b 0
