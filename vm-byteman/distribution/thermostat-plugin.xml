@@ -53,7 +53,7 @@
                             <long>rules</long>
                             <short>r</short>
                             <argument>file</argument>
-                            <required>false</required>
+                            <required>true</required>
                             <description>a file with rules to load into a VM</description>
                         </option>
                     </options>
