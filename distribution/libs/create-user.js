@@ -14,10 +14,15 @@ try {
         db.createUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
     } else if ( majorVersion == 3 ) {
         db = db.getSiblingDB("admin")
-        db.createUser({ user: "thermostat-admin", pwd: "$PASSWORD", roles: [ "dbOwner", "userAdminAnyDatabase" ] })
+        // role 'hostManager' is required to permit the fsync operation after creating the users
+        db.createUser({ user: "thermostat-admin", pwd: "$PASSWORD", roles: [ "dbOwner", "userAdminAnyDatabase", "hostManager" ] })
         db.auth("thermostat-admin", "$PASSWORD")
         db = db.getSiblingDB("thermostat")
         db.createUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
+        // on Windows (which is mongodb 3 and up only), ensure the new users are written to disk
+        // (Windows has a hard shutdown sometimes)
+        db = db.getSiblingDB("admin")
+        db.runCommand({ fsync: 1, async: false })
     } else {
         throw "Unknown mongo version: " + v
     }
