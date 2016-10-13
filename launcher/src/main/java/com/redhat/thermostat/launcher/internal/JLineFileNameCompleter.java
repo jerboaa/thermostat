@@ -39,10 +39,30 @@ package com.redhat.thermostat.launcher.internal;
 import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import jline.console.completer.FileNameCompleter;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 public class JLineFileNameCompleter extends JLineCompleterWrapper implements FileNameTabCompleter {
 
     public JLineFileNameCompleter() {
-        super(new FileNameCompleter());
+        super(new ThermostatFileNameCompleter());
     }
 
+    static class ThermostatFileNameCompleter extends FileNameCompleter {
+        @Override
+        protected int matchFiles(final String buffer, final String translated, final File[] files, final List<CharSequence> candidates) {
+            // overridden for test access only
+            return super.matchFiles(buffer, translated, files, candidates);
+        }
+
+        @Override
+        protected CharSequence render(File file, CharSequence name) {
+            // when super.matchFiles calls this method, the 'name' parameter passed is equal to
+            // file.getName() + ' '. For directories, we want to include the File.separator character
+            // after the directory name, to indicate that this is a directory, and remove the whitespace
+            // to allow for more fluid completion of file paths.
+            return file.isDirectory() ? file.getName() + File.separator : name;
+        }
+    }
 }
