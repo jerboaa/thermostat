@@ -424,12 +424,127 @@ public class LauncherImplTest {
 
         Options subOptions = mock(Options.class);
         Option optOption = new Option("o", "opt", false, "mock opt option");
+        optOption.setRequired(false);
         when(subOptions.getOptions()).thenReturn(Collections.singleton(optOption));
         when(subInfo.getOptions()).thenReturn(subOptions);
 
         when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
         String expected = "foo, bar";
         runAndVerifyCommand(new String[] {"test1", "sub", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+    }
+
+    @Test
+    public void testSubcommandOptionRequiredAndNotProvided() {
+        PluginConfiguration.Subcommand subInfo = mock(PluginConfiguration.Subcommand.class);
+        when(subInfo.getName()).thenReturn("sub");
+        when(subInfo.getDescription()).thenReturn("subcommand description");
+
+        Options subOptions = mock(Options.class);
+        Option optOption = new Option("o", "opt", false, "mock opt option");
+        optOption.setRequired(true);
+        when(subOptions.getOptions()).thenReturn(Collections.singleton(optOption));
+        when(subInfo.getOptions()).thenReturn(subOptions);
+
+        when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
+        String expected = "Missing required option: -o\n" +
+                "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n" +
+                "                  description 1\n" +
+                "\n" +
+                "thermostat test1\n" +
+                "     --arg1 <arg>\n" +
+                "     --arg2 <arg>\n" +
+                "     --help              show usage of command\n" +
+                "  -l,--logLevel <arg>\n" +
+                "  -o,--opt               mock opt option\n" +
+                "\n" +
+                "Subcommands:\n" +
+                "\n" +
+                "sub:\n" +
+                "subcommand description\n\n\n";
+        runAndVerifyCommand(new String[] {"test1", "sub", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+    }
+
+    @Test
+    public void testSubcommandOptionRequired() {
+        PluginConfiguration.Subcommand subInfo = mock(PluginConfiguration.Subcommand.class);
+        when(subInfo.getName()).thenReturn("sub");
+        when(subInfo.getDescription()).thenReturn("subcommand description");
+
+        Options subOptions = mock(Options.class);
+        Option optOption = new Option("o", "opt", false, "mock opt option");
+        optOption.setRequired(true);
+        when(subOptions.getOptions()).thenReturn(Collections.singleton(optOption));
+        when(subInfo.getOptions()).thenReturn(subOptions);
+
+        when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
+        String expected = "foo, bar";
+        runAndVerifyCommand(new String[] {"test1", "sub", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+    }
+
+    @Test
+    public void testSubcommandOptionNotRequiredIfSubcommandNotInvoked() {
+        PluginConfiguration.Subcommand subInfo = mock(PluginConfiguration.Subcommand.class);
+        when(subInfo.getName()).thenReturn("sub");
+        when(subInfo.getDescription()).thenReturn("subcommand description");
+
+        Options subOptions = mock(Options.class);
+        Option optOption = new Option("o", "opt", false, "mock opt option");
+        optOption.setRequired(true);
+        when(subOptions.getOptions()).thenReturn(Collections.singleton(optOption));
+        when(subInfo.getOptions()).thenReturn(subOptions);
+
+        when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
+        String expected = "foo, bar";
+        runAndVerifyCommand(new String[] {"test1", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+    }
+
+    // This tests the case where we have a parent command "test1" with subcommand "sub",
+    // which has a subcommand-specific option -o/--opt which is not required. "sub" is not
+    // invoked, but --opt is passed anyway.
+    // Due to limitations in our options processing, this case cannot be easily rejected as
+    // invalid. It is accepted instead and the option passed on to the parent command, which
+    // must on its own decide to reject or ignore the errant --opt.
+    // See http://icedtea.classpath.org/pipermail/thermostat/2016-October/021198.html
+    @Test
+    public void testSubcommandOptionStillRecognizedWhenSubcommandNotInvoked() {
+        PluginConfiguration.Subcommand subInfo = mock(PluginConfiguration.Subcommand.class);
+        when(subInfo.getName()).thenReturn("sub");
+        when(subInfo.getDescription()).thenReturn("subcommand description");
+
+        Options subOptions = mock(Options.class);
+        Option optOption = new Option("o", "opt", false, "mock opt option");
+        optOption.setRequired(true);
+        when(subOptions.getOptions()).thenReturn(Collections.singleton(optOption));
+        when(subInfo.getOptions()).thenReturn(subOptions);
+
+        when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
+        String expected = "foo, bar";
+        runAndVerifyCommand(new String[] {"test1", "--opt", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+    }
+
+    // This tests the case where we have a parent command "test1" with subcommand "sub",
+    // which has a subcommand-specific option -o/--opt which is not required. "sub" is not
+    // invoked, but --opt is passed anyway.
+    // Due to limitations in our options processing, this case cannot be easily rejected as
+    // invalid. It is accepted instead and the option passed on to the parent command, which
+    // must on its own decide to reject or ignore the errant --opt.
+    // See http://icedtea.classpath.org/pipermail/thermostat/2016-October/021198.html
+    @Test
+    public void testSubcommandOptionOverridesParentOption() {
+        PluginConfiguration.Subcommand subInfo = mock(PluginConfiguration.Subcommand.class);
+        when(subInfo.getName()).thenReturn("sub");
+        when(subInfo.getDescription()).thenReturn("subcommand description");
+
+        Options subOptions = mock(Options.class);
+        // parent command also has a --arg1 option which *does* take an argument
+        Option optOption = new Option(null, "arg1", false, null);
+        optOption.setRequired(true);
+        when(subOptions.getOptions()).thenReturn(Collections.singleton(optOption));
+        when(subInfo.getOptions()).thenReturn(subOptions);
+
+        when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
+        String expected = "null, bar";
+        runAndVerifyCommand(new String[] {"test1", "sub", "--arg1", "foo", "--arg2", "bar"}, expected, false);
     }
 
     @Test

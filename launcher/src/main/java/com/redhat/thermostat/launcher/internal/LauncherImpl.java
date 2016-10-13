@@ -361,22 +361,15 @@ public class LauncherImpl implements Launcher {
                 notifier.addActionListener(listener);
             }
         }
-        Options options = cmdInfo.getOptions();
-        for (PluginConfiguration.Subcommand subcommand : cmdInfo.getSubcommands()) {
-            for (Option option : (Collection<Option>) subcommand.getOptions().getOptions()) {
-                options.addOption(option);
-            }
-        }
-        Arguments args = null;
         try {
-            args = parseCommandArguments(cmdArgs, options);
+            Options options = mergeSubcommandOptionsWithParent(cmdInfo, cmdArgs);
+            Arguments args = parseCommandArguments(cmdArgs, options);
             setupLogLevel(args);
             CommandContext ctx = setupCommandContext(cmd, args);
             cmd.run(ctx);
         } catch (CommandLineArgumentParseException e) {
             out.println(e.getMessage());
             runHelpCommandFor(cmdName);
-            return;
         }
     }
 
@@ -388,6 +381,42 @@ public class LauncherImpl implements Launcher {
             message = t.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL_ONLY, cmd);
     	}
     	out.println(message.getContents());
+    }
+
+    // Note: this has the side-effect of adding subcommands' options to the parent command's Options.
+    // An Options copy-constructor or Options.remove(Option) method could help us here. The problem with this side-effect
+    // is that the subcommand options cannot be removed, only overridden again later, which prevents us from "resetting"
+    // the state to cause the Options parser to reject options for subcommands which have not been invoked in the current
+    // command line. This means that subcommand-specific non-required options are always accepted when passed to the parent
+    // command or any "sibling" subcommand and it is left up to the command implementation to reject or ignore the errant
+    // option.
+    // See http://icedtea.classpath.org/pipermail/thermostat/2016-October/021198.html
+    private Options mergeSubcommandOptionsWithParent(CommandInfo cmdInfo, String[] cmdArgs) {
+        Options options = cmdInfo.getOptions();
+        PluginConfiguration.Subcommand selectedSubcommand = getSelectedSubcommand(cmdInfo, cmdArgs);
+        String selectedName = selectedSubcommand == null ? "" : selectedSubcommand.getName();
+
+        for (PluginConfiguration.Subcommand subcommand : cmdInfo.getSubcommands()) {
+            for (Option option : (Collection<Option>) subcommand.getOptions().getOptions()) {
+                Option copy = new Option(option.getOpt(), option.getLongOpt(), option.hasArg(), option.getDescription());
+                boolean required = selectedName.equals(subcommand.getName()) && option.isRequired();
+                copy.setRequired(required);
+                options.addOption(copy);
+            }
+        }
+
+        return options;
+    }
+
+    private PluginConfiguration.Subcommand getSelectedSubcommand(CommandInfo cmdInfo, String[] cmdArgs) {
+        for (PluginConfiguration.Subcommand subcommand : cmdInfo.getSubcommands()) {
+            for (String arg : cmdArgs) {
+                if (subcommand.getName().equals(arg)) {
+                    return subcommand;
+                }
+            }
+        }
+        return null;
     }
 
     private void setupLogLevel(Arguments args) {
