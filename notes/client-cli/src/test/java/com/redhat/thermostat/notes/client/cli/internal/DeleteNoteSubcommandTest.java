@@ -41,34 +41,29 @@ import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.notes.common.HostNote;
-import com.redhat.thermostat.notes.common.VmNote;
 import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.UUID;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class AddNoteCommandTest extends AbstractNotesCommandTest<AddNoteCommand> {
+public class DeleteNoteSubcommandTest extends AbstractNotesCommandTest<DeleteNoteSubcommand> {
 
     @Override
-    public AddNoteCommand createCommand() {
-        return new AddNoteCommand();
+    public DeleteNoteSubcommand createCommand() {
+        return new DeleteNoteSubcommand();
     }
 
     @Test(expected = CommandException.class)
@@ -91,11 +86,12 @@ public class AddNoteCommandTest extends AbstractNotesCommandTest<AddNoteCommand>
         command.run(ctx);
     }
 
+
     @Test
     public void testRunWithInvalidAgentId() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(null);
@@ -106,8 +102,8 @@ public class AddNoteCommandTest extends AbstractNotesCommandTest<AddNoteCommand>
     @Test
     public void testRunWithInvalidVmId() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(null);
@@ -118,8 +114,8 @@ public class AddNoteCommandTest extends AbstractNotesCommandTest<AddNoteCommand>
     @Test
     public void testRunWithValidVmIdYieldingInvalidAgentId() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
 
@@ -136,25 +132,21 @@ public class AddNoteCommandTest extends AbstractNotesCommandTest<AddNoteCommand>
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
-
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        HostInfo hostInfo = new HostInfo();
+        hostInfo.setHostname("foo-hostname");
+        hostInfo.setAgentId("foo-agentid");
+        when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
-
         CommandContext ctx = contextFactory.createContext(args);
-        ArgumentCaptor<HostNote> noteCaptor = ArgumentCaptor.forClass(HostNote.class);
         command.run(ctx);
         verifyZeroInteractions(vmNoteDAO);
-        verify(hostNoteDAO).add(noteCaptor.capture());
-        HostNote note = noteCaptor.getValue();
-        assertThat(note.getContent(), is("note content"));
-        assertThat(note.getAgentId(), is("foo-agentid"));
-        assertThat(note.getTimeStamp(), is(atLeast(0l)));
-        try {
-            UUID.fromString(note.getId());
-        } catch (Exception e) {
-            fail("Note ID should be a UUID, got: " + note.getId());
-        }
+        ArgumentCaptor<HostRef> refCaptor = ArgumentCaptor.forClass(HostRef.class);
+        ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+        verify(hostNoteDAO).removeById(refCaptor.capture(), idCaptor.capture());
+        assertThat(refCaptor.getValue().getAgentId(), is("foo-agentid"));
+        assertThat(idCaptor.getValue(), is("foo-noteid"));
     }
 
     @Test
@@ -162,42 +154,27 @@ public class AddNoteCommandTest extends AbstractNotesCommandTest<AddNoteCommand>
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        HostInfo hostInfo = new HostInfo();
+        hostInfo.setHostname("foo-hostname");
+        hostInfo.setAgentId("foo-agentid");
+        when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
         VmInfo vmInfo = new VmInfo();
         vmInfo.setAgentId("foo-agentid");
+        vmInfo.setVmPid(100);
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
         CommandContext ctx = contextFactory.createContext(args);
-        ArgumentCaptor<VmNote> noteCaptor = ArgumentCaptor.forClass(VmNote.class);
         command.run(ctx);
         verifyZeroInteractions(hostNoteDAO);
-        verify(vmNoteDAO).add(noteCaptor.capture());
-        VmNote note = noteCaptor.getValue();
-        assertThat(note.getContent(), is("note content"));
-        assertThat(note.getAgentId(), is("foo-agentid"));
-        assertThat(note.getVmId(), is("foo-vmid"));
-        assertThat(note.getTimeStamp(), is(atLeast(0l)));
-        try {
-            UUID.fromString(note.getId());
-        } catch (Exception e) {
-            fail("Note ID should be a UUID, got: " + note.getId());
-        }
-    }
-
-    private static Matcher<Long> atLeast(final Long l) {
-        return new BaseMatcher<Long>() {
-            @Override
-            public boolean matches(Object o) {
-                return o instanceof Long && ((long) o) >= l;
-            }
-
-            @Override
-            public void describeTo(Description description) {
-                description.appendText("long greater than or equal to ")
-                        .appendValue(l);
-            }
-        };
+        ArgumentCaptor<VmRef> refCaptor = ArgumentCaptor.forClass(VmRef.class);
+        ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+        verify(vmNoteDAO).removeById(refCaptor.capture(), idCaptor.capture());
+        assertThat(refCaptor.getValue().getHostRef().getAgentId(), is("foo-agentid"));
+        assertThat(refCaptor.getValue().getVmId(), is("foo-vmid"));
+        assertThat(refCaptor.getValue().getPid(), is(100));
+        assertThat(idCaptor.getValue(), is("foo-noteid"));
     }
 
 }

@@ -37,7 +37,6 @@
 package com.redhat.thermostat.notes.client.cli.internal;
 
 import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.notes.common.HostNote;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.Note;
@@ -62,7 +61,6 @@ import static org.mockito.Mockito.when;
 
 public class NoteIdsFinderTest {
 
-    private DependencyServices dependencyServices;
     private HostNoteDAO hostDao;
     private VmNoteDAO vmDao;
     private NoteIdsFinder finder;
@@ -73,13 +71,8 @@ public class NoteIdsFinderTest {
 
     @Before
     public void setup() {
-        dependencyServices = mock(DependencyServices.class);
         hostDao = mock(HostNoteDAO.class);
         vmDao = mock(VmNoteDAO.class);
-        when(dependencyServices.hasService(HostNoteDAO.class)).thenReturn(true);
-        when(dependencyServices.getService(HostNoteDAO.class)).thenReturn(hostDao);
-        when(dependencyServices.hasService(VmNoteDAO.class)).thenReturn(true);
-        when(dependencyServices.getService(VmNoteDAO.class)).thenReturn(vmDao);
 
         hostNote1 = new HostNote();
         hostNote1.setId("host-note-id-01");
@@ -111,7 +104,9 @@ public class NoteIdsFinderTest {
 
         when(vmDao.getAll()).thenReturn(Arrays.asList(vmNote1, vmNote2));
 
-        finder = new NoteIdsFinder(dependencyServices);
+        finder = new NoteIdsFinder();
+        finder.bindVmNoteDao(vmDao);
+        finder.bindHostNoteDao(hostDao);
     }
 
     @Test
@@ -228,11 +223,6 @@ public class NoteIdsFinderTest {
             result.add(NoteIdsFinder.toCompletionInfo(note));
         }
         return result;
-    }
-
-    @Test
-    public void testListDependencies() {
-        assertThat(finder.getRequiredDependencies(), is(equalTo(new Class[]{ HostNoteDAO.class, VmNoteDAO.class })));
     }
 
 }

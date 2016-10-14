@@ -56,14 +56,11 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.notes.client.cli</Bundle-SymbolicName>
-            <Export-Package>
-               com.redhat.thermostat.notes.client.cli,
-               com.redhat.thermostat.notes.client.cli.locale
-            </Export-Package>
-            <Private-Package>
-               com.redhat.thermostat.notes.client.cli.internal
-            </Private-Package>
             <Bundle-Activator>com.redhat.thermostat.notes.client.cli.internal.Activator</Bundle-Activator>
+            <Private-Package>
+              com.redhat.thermostat.notes.client.cli.internal,
+              com.redhat.thermostat.notes.client.cli.locale
+            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

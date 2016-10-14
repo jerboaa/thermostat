@@ -36,9 +36,8 @@
 
 package com.redhat.thermostat.notes.client.cli.internal;
 
-import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
+import com.redhat.thermostat.common.cli.CompletionFinder;
 import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.notes.client.cli.locale.LocaleResources;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.Note;
@@ -49,31 +48,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class NoteIdsFinder extends AbstractCompletionFinder {
+public class NoteIdsFinder implements CompletionFinder {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    public NoteIdsFinder(DependencyServices dependencyServices) {
-        super(dependencyServices);
-    }
-
-    @Override
-    protected Class<?>[] getRequiredDependencies() {
-        return new Class<?>[]{ HostNoteDAO.class, VmNoteDAO.class };
-    }
+    private HostNoteDAO hostNoteDao;
+    private VmNoteDAO vmNoteDao;
 
     @Override
     public List<CompletionInfo> findCompletions() {
-        if (!allDependenciesAvailable()) {
+        if (hostNoteDao == null || vmNoteDao == null) {
             return Collections.emptyList();
         }
 
-        HostNoteDAO host = getService(HostNoteDAO.class);
-        VmNoteDAO vm = getService(VmNoteDAO.class);
-
         List<Note> notes = new ArrayList<>();
-        notes.addAll(host.getAll());
-        notes.addAll(vm.getAll());
+        notes.addAll(hostNoteDao.getAll());
+        notes.addAll(vmNoteDao.getAll());
 
         List<CompletionInfo> result = new ArrayList<>();
         for (Note note : notes) {
@@ -91,6 +81,27 @@ public class NoteIdsFinder extends AbstractCompletionFinder {
             return content;
         }
         return t.localize(LocaleResources.TRIMMED_NOTE_CONTENT, content.substring(0, 27)).getContents();
+    }
+
+    public void bindHostNoteDao(HostNoteDAO hostNoteDao) {
+        this.hostNoteDao = hostNoteDao;
+    }
+
+    public void unbindHostNoteDao(HostNoteDAO hostNoteDao) {
+        this.hostNoteDao = null;
+    }
+
+    public void bindVmNoteDao(VmNoteDAO vmNoteDao) {
+        this.vmNoteDao = vmNoteDao;
+    }
+
+    public void unbindVmNoteDao(VmNoteDAO vmNoteDao) {
+        this.vmNoteDao = null;
+    }
+
+    public void servicesUnavailable() {
+        this.hostNoteDao = null;
+        this.vmNoteDao = null;
     }
 
 }

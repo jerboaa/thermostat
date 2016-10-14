@@ -40,10 +40,15 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
 
+    SUBCOMMAND_EXPECTED,
+    UNKNOWN_SUBCOMMAND,
+
     HOST_AND_VM_ARGS_PROVIDED,
     NO_ARGS_PROVIDED,
     NOTE_ID_ARG_REQUIRED,
 
+    NULL_VMID,
+    NULL_AGENTID,
     INVALID_VMID,
     INVALID_AGENTID,
 

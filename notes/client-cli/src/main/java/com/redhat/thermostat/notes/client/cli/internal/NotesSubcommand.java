@@ -38,13 +38,14 @@ package com.redhat.thermostat.notes.client.cli.internal;
 
 import com.redhat.thermostat.client.cli.AgentArgument;
 import com.redhat.thermostat.client.cli.VmArgument;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.notes.client.cli.locale.LocaleResources;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -56,33 +57,18 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 
-import java.util.Objects;
+public abstract class NotesSubcommand {
 
-public abstract class AbstractNotesCommand extends AbstractCommand implements NotesCommand {
+    static final String NOTE_ID_ARGUMENT = "noteId";
+    static final String NOTE_CONTENT_ARGUMENT = "content";
 
-    protected static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    protected DependencyServices dependencyServices;
+    DependencyServices services = new DependencyServices();
 
-    protected VmInfoDAO vmInfoDAO;
-    protected HostInfoDAO hostInfoDAO;
-    protected AgentInfoDAO agentInfoDAO;
-    protected VmNoteDAO vmNoteDAO;
-    protected HostNoteDAO hostNoteDAO;
+    public abstract void run(CommandContext ctx) throws CommandException;
 
-    public AbstractNotesCommand() {
-        this.dependencyServices = new DependencyServices();
-    }
-
-    protected void setupServices() throws CommandException {
-        vmInfoDAO = dependencyServices.getRequiredService(VmInfoDAO.class);
-        hostInfoDAO = dependencyServices.getRequiredService(HostInfoDAO.class);
-        agentInfoDAO = dependencyServices.getRequiredService(AgentInfoDAO.class);
-        vmNoteDAO = dependencyServices.getRequiredService(VmNoteDAO.class);
-        hostNoteDAO = dependencyServices.getRequiredService(HostNoteDAO.class);
-    }
-
-    protected static void assertExpectedAgentAndVmArgsProvided(Arguments args) throws CommandException {
+    static void assertExpectedAgentAndVmArgsProvided(Arguments args) throws CommandException {
         boolean hasVmArg = args.hasArgument(VmArgument.ARGUMENT_NAME);
         boolean hasAgentArg = args.hasArgument(AgentArgument.ARGUMENT_NAME);
         if (hasVmArg && hasAgentArg) {
@@ -92,87 +78,95 @@ public abstract class AbstractNotesCommand extends AbstractCommand implements No
         }
     }
 
-    protected void checkVmExists(VmId vmId) throws CommandException {
-        Objects.requireNonNull(vmId);
-        VmInfo info = vmInfoDAO.getVmInfo(vmId);
+    void checkVmExists(VmId vmId) throws CommandException {
+        requireNonNull(vmId, translator.localize(LocaleResources.NULL_VMID));
+        VmInfo info = services.getRequiredService(VmInfoDAO.class).getVmInfo(vmId);
         requireNonNull(info, translator.localize(LocaleResources.INVALID_VMID, vmId.get()));
     }
 
-    protected void checkAgentExists(AgentId agentId) throws CommandException {
-        Objects.requireNonNull(agentId);
-        AgentInformation info = agentInfoDAO.getAgentInformation(agentId);
+    void checkAgentExists(AgentId agentId) throws CommandException {
+        requireNonNull(agentId, translator.localize(LocaleResources.NULL_AGENTID));
+        AgentInformation info = services.getRequiredService(AgentInfoDAO.class).getAgentInformation(agentId);
         requireNonNull(info, translator.localize(LocaleResources.INVALID_AGENTID, agentId.get()));
     }
 
-    protected VmRef getVmRefFromVmId(VmId vmId) {
-        VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
+    VmRef getVmRefFromVmId(VmId vmId) throws CommandException {
+        requireNonNull(vmId, translator.localize(LocaleResources.NULL_VMID));
+        VmInfo vmInfo = services.getRequiredService(VmInfoDAO.class).getVmInfo(vmId);
         return new VmRef(getHostRefFromAgentId(new AgentId(vmInfo.getAgentId())), vmId.get(), vmInfo.getVmPid(), vmInfo.getVmName());
     }
 
-    protected HostRef getHostRefFromAgentId(AgentId agentId) {
-        String hostName = hostInfoDAO.getHostInfo(agentId).getHostname();
+    HostRef getHostRefFromAgentId(AgentId agentId) throws CommandException {
+        String hostName = services.getRequiredService(HostInfoDAO.class).getHostInfo(agentId).getHostname();
         return new HostRef(agentId.get(), hostName);
     }
 
-    protected static String getNoteId(Arguments args) throws CommandException {
+    static String getNoteId(Arguments args) throws CommandException {
         if (!args.hasArgument(NOTE_ID_ARGUMENT)) {
             throw new CommandException(translator.localize(LocaleResources.NOTE_ID_ARG_REQUIRED));
         }
         return args.getArgument(NOTE_ID_ARGUMENT);
     }
 
-    protected static String getNoteContent(Arguments args) throws CommandException {
-        if (args.hasArgument(NOTE_CONTENT_ARGUMENT)) {
-            String content = args.getArgument(NOTE_CONTENT_ARGUMENT);
-            if (content == null) {
-                content = "";
-            }
-            return content;
-        } else { // assume all non-option arguments are together meant to be the note content
-            StringBuilder sb = new StringBuilder();
-            for (String word : args.getNonOptionArguments()) {
-                sb.append(word).append(' ');
-            }
-            String content = sb.toString().trim();
-            if (content.isEmpty()) {
-                throw new CommandException(translator.localize(LocaleResources.NOTE_CONTENT_ARG_REQUIRED));
-            }
-            return content;
+    static String getNoteContent(Arguments args) throws CommandException {
+        if (!args.hasArgument(NOTE_CONTENT_ARGUMENT)) {
+            throw new CommandException(translator.localize(LocaleResources.NOTE_CONTENT_ARG_REQUIRED));
+        }
+        return args.getArgument(NOTE_CONTENT_ARGUMENT);
+    }
+
+    static void requireNonNull(Object obj, LocalizedString message) throws CommandException {
+        if (obj == null) {
+            throw new CommandException(message);
         }
     }
 
-    @Override
-    public void setVmInfoDao(VmInfoDAO vmInfoDao) {
-        dependencyServices.addService(VmInfoDAO.class, vmInfoDao);
+    public void bindVmInfoDao(VmInfoDAO vmInfoDao) {
+        services.addService(VmInfoDAO.class, vmInfoDao);
     }
 
-    @Override
-    public void setHostInfoDao(HostInfoDAO hostInfoDao) {
-        dependencyServices.addService(HostInfoDAO.class, hostInfoDao);
+    public void unbindVmInfoDao(VmInfoDAO vmInfoDao) {
+        services.removeService(VmInfoDAO.class);
     }
 
-    @Override
-    public void setAgentInfoDao(AgentInfoDAO agentInfoDao) {
-        dependencyServices.addService(AgentInfoDAO.class, agentInfoDao);
+    public void bindHostInfoDao(HostInfoDAO hostInfoDao) {
+        services.addService(HostInfoDAO.class, hostInfoDao);
     }
 
-    @Override
-    public void setVmNoteDao(VmNoteDAO vmNoteDAO) {
-        dependencyServices.addService(VmNoteDAO.class, vmNoteDAO);
+    public void unbindHostInfoDao(HostInfoDAO hostInfoDao) {
+        services.removeService(HostInfoDAO.class);
     }
 
-    @Override
-    public void setHostNoteDao(HostNoteDAO hostNoteDAO) {
-        dependencyServices.addService(HostNoteDAO.class, hostNoteDAO);
+    public void bindAgentInfoDao(AgentInfoDAO agentInfoDao) {
+        services.addService(AgentInfoDAO.class, agentInfoDao);
     }
 
-    @Override
+    public void unbindAgentInfoDao(AgentInfoDAO agentInfoDao) {
+        services.removeService(AgentInfoDAO.class);
+    }
+
+    public void bindVmNoteDao(VmNoteDAO vmNoteDAO) {
+        services.addService(VmNoteDAO.class, vmNoteDAO);
+    }
+
+    public void unbindVmNoteDao(VmNoteDAO vmNoteDao) {
+        services.removeService(VmNoteDAO.class);
+    }
+
+    public void bindHostNoteDao(HostNoteDAO hostNoteDAO) {
+        services.addService(HostNoteDAO.class, hostNoteDAO);
+    }
+
+    public void unbindHostNoteDao(HostNoteDAO hostNoteDao) {
+        services.removeService(HostNoteDAO.class);
+    }
+
     public void servicesUnavailable() {
-        dependencyServices.removeService(VmInfoDAO.class);
-        dependencyServices.removeService(HostInfoDAO.class);
-        dependencyServices.removeService(AgentInfoDAO.class);
-        dependencyServices.removeService(VmNoteDAO.class);
-        dependencyServices.removeService(HostNoteDAO.class);
+        services.removeService(VmInfoDAO.class);
+        services.removeService(HostInfoDAO.class);
+        services.removeService(AgentInfoDAO.class);
+        services.removeService(VmNoteDAO.class);
+        services.removeService(HostNoteDAO.class);
     }
 
 }

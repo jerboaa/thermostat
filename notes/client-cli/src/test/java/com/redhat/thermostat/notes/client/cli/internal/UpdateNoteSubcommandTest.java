@@ -66,11 +66,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCommand> {
+public class UpdateNoteSubcommandTest extends AbstractNotesCommandTest<UpdateNoteSubcommand> {
 
     @Override
-    public UpdateNoteCommand createCommand() {
-        return new UpdateNoteCommand();
+    public UpdateNoteSubcommand createCommand() {
+        return new UpdateNoteSubcommand();
     }
 
     @Test(expected = CommandException.class)
@@ -96,10 +96,10 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
     @Test
     public void testRunWithInvalidAgentId() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
-        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(null);
@@ -110,10 +110,10 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
     @Test
     public void testRunWithInvalidVmId() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
-        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(null);
@@ -124,10 +124,10 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
     @Test
     public void testRunWithNoMatchingHostNoteFromStorage() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
-        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(mock(HostInfo.class));
@@ -146,10 +146,10 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
     @Test
     public void testRunWithNoMatchingVmNoteFromStorage() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
-        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
         VmInfo vmInfo = new VmInfo();
@@ -169,10 +169,10 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
     @Test
     public void testRunWithValidVmIdYieldingInvalidAgentId() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
-        when(args.hasArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(AbstractNotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn("note content");
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
 
@@ -189,14 +189,14 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
-        when(args.hasArgument(NotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("new note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn("new note content");
         HostNote oldNote = new HostNote();
         oldNote.setId("foo-noteid");
         oldNote.setAgentId("foo-agentid");
-        oldNote.setTimeStamp(100l);
+        oldNote.setTimeStamp(100L);
         oldNote.setContent("old note content");
         when(hostNoteDAO.getById(any(HostRef.class), eq("foo-noteid"))).thenReturn(oldNote);
         HostInfo hostInfo = new HostInfo();
@@ -221,14 +221,14 @@ public class UpdateNoteCommandTest extends AbstractNotesCommandTest<UpdateNoteCo
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(VmArgument.ARGUMENT_NAME)).thenReturn("foo-vmid");
-        when(args.hasArgument(NotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("new note content");
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        when(args.hasArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn("new note content");
         VmNote oldNote = new VmNote();
         oldNote.setId("foo-noteid");
         oldNote.setAgentId("foo-agentid");
-        oldNote.setTimeStamp(100l);
+        oldNote.setTimeStamp(100L);
         oldNote.setContent("old note content");
         when(vmNoteDAO.getById(any(VmRef.class), eq("foo-noteid"))).thenReturn(oldNote);
         HostInfo hostInfo = new HostInfo();

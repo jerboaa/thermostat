@@ -56,7 +56,6 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -73,20 +72,20 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
+public abstract class AbstractNotesCommandTest<T extends NotesSubcommand> {
 
-    protected static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    protected static final String INVALID_AGENTID_MSG = translator.localize(LocaleResources.INVALID_AGENTID).getContents().replaceAll("\\{0\\}", "");
-    protected static final String INVALID_VMID_MSG = translator.localize(LocaleResources.INVALID_VMID).getContents().replaceAll("\\{0\\}", "");
+    private static final String INVALID_AGENTID_MSG = translator.localize(LocaleResources.INVALID_AGENTID).getContents().replaceAll("\\{0\\}", "");
+    private static final String INVALID_VMID_MSG = translator.localize(LocaleResources.INVALID_VMID).getContents().replaceAll("\\{0\\}", "");
 
-    protected VmInfoDAO vmInfoDAO;
-    protected HostInfoDAO hostInfoDAO;
-    protected AgentInfoDAO agentInfoDAO;
-    protected VmNoteDAO vmNoteDAO;
-    protected HostNoteDAO hostNoteDAO;
+    VmInfoDAO vmInfoDAO;
+    HostInfoDAO hostInfoDAO;
+    AgentInfoDAO agentInfoDAO;
+    VmNoteDAO vmNoteDAO;
+    HostNoteDAO hostNoteDAO;
 
-    protected TestCommandContextFactory contextFactory;
+    TestCommandContextFactory contextFactory;
 
     protected T command;
 
@@ -101,75 +100,11 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
         contextFactory = new TestCommandContextFactory();
 
         command = createCommand();
-        setAllServices();
-    }
-
-    protected void setAllServices() {
-        command.setVmInfoDao(vmInfoDAO);
-        command.setHostInfoDao(hostInfoDAO);
-        command.setAgentInfoDao(agentInfoDAO);
-        command.setVmNoteDao(vmNoteDAO);
-        command.setHostNoteDao(hostNoteDAO);
-        try {
-            command.setupServices();
-        } catch (CommandException e) {
-            fail("Service setup should not fail here!");
-        }
-    }
-
-    @Test
-    public void testSetupServicesSucceedsWhenAllPresent() throws CommandException {
-        command.setupServices();
-    }
-
-    @Test(expected = CommandException.class)
-    public void testSetupServicesFailsWhenVmInfoMissing() throws CommandException {
-        command.servicesUnavailable();
-        command.setHostInfoDao(hostInfoDAO);
-        command.setAgentInfoDao(agentInfoDAO);
-        command.setVmNoteDao(vmNoteDAO);
-        command.setHostNoteDao(hostNoteDAO);
-        command.setupServices();
-    }
-
-    @Test(expected = CommandException.class)
-    public void testSetupServicesFailsWhenHostInfoMissing() throws CommandException {
-        command.servicesUnavailable();
-        command.setVmInfoDao(vmInfoDAO);
-        command.setAgentInfoDao(agentInfoDAO);
-        command.setVmNoteDao(vmNoteDAO);
-        command.setHostNoteDao(hostNoteDAO);
-        command.setupServices();
-    }
-
-    @Test(expected = CommandException.class)
-    public void testSetupServicesFailsWhenAgentInfoMissing() throws CommandException {
-        command.servicesUnavailable();
-        command.setVmInfoDao(vmInfoDAO);
-        command.setHostInfoDao(hostInfoDAO);
-        command.setVmNoteDao(vmNoteDAO);
-        command.setHostNoteDao(hostNoteDAO);
-        command.setupServices();
-    }
-
-    @Test(expected = CommandException.class)
-    public void testSetupServicesFailsWhenVmNoteMissing() throws CommandException {
-        command.servicesUnavailable();
-        command.setVmInfoDao(vmInfoDAO);
-        command.setHostInfoDao(hostInfoDAO);
-        command.setAgentInfoDao(agentInfoDAO);
-        command.setHostNoteDao(hostNoteDAO);
-        command.setupServices();
-    }
-
-    @Test(expected = CommandException.class)
-    public void testSetupServicesFailsWhenHostNoteMissing() throws CommandException {
-        command.servicesUnavailable();
-        command.setVmInfoDao(vmInfoDAO);
-        command.setHostInfoDao(hostInfoDAO);
-        command.setAgentInfoDao(agentInfoDAO);
-        command.setVmNoteDao(vmNoteDAO);
-        command.setupServices();
+        command.bindVmInfoDao(vmInfoDAO);
+        command.bindHostInfoDao(hostInfoDAO);
+        command.bindAgentInfoDao(agentInfoDAO);
+        command.bindVmNoteDao(vmNoteDAO);
+        command.bindHostNoteDao(hostNoteDAO);
     }
 
     @Test
@@ -177,7 +112,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(false);
-        AbstractNotesCommand.assertExpectedAgentAndVmArgsProvided(args);
+        NotesSubcommand.assertExpectedAgentAndVmArgsProvided(args);
     }
 
     @Test
@@ -185,7 +120,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(false);
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
-        AbstractNotesCommand.assertExpectedAgentAndVmArgsProvided(args);
+        NotesSubcommand.assertExpectedAgentAndVmArgsProvided(args);
     }
 
     @Test(expected = CommandException.class)
@@ -193,7 +128,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(false);
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(false);
-        AbstractNotesCommand.assertExpectedAgentAndVmArgsProvided(args);
+        NotesSubcommand.assertExpectedAgentAndVmArgsProvided(args);
     }
 
     @Test(expected = CommandException.class)
@@ -201,7 +136,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(VmArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
-        AbstractNotesCommand.assertExpectedAgentAndVmArgsProvided(args);
+        NotesSubcommand.assertExpectedAgentAndVmArgsProvided(args);
     }
 
     @Test
@@ -219,7 +154,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
         }
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = CommandException.class)
     public void testAssertVmExistsWithNullVmId() throws CommandException {
         command.checkVmExists(null);
     }
@@ -246,7 +181,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
         }
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = CommandException.class)
     public void testAssertAgentExistsWithNullAgentId() throws CommandException {
         command.checkAgentExists(null);
     }
@@ -258,7 +193,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
     }
 
     @Test
-    public void testGetVmRefFromVmId() {
+    public void testGetVmRefFromVmId() throws CommandException {
         VmInfo vmInfo = new VmInfo();
         vmInfo.setAgentId("foo-agentid");
         vmInfo.setVmId("foo-vmid");
@@ -277,7 +212,7 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
     }
 
     @Test
-    public void testGetHostRefFromAgentId() {
+    public void testGetHostRefFromAgentId() throws CommandException {
         HostInfo hostInfo = mock(HostInfo.class);
         when(hostInfo.getHostname()).thenReturn("foo-hostname");
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
@@ -292,84 +227,43 @@ public abstract class AbstractNotesCommandTest<T extends AbstractNotesCommand> {
     @Test(expected = CommandException.class)
     public void testGetNoteIdFailsWhenArgNotProvided() throws CommandException {
         Arguments args = mock(Arguments.class);
-        AbstractNotesCommand.getNoteId(args);
+        NotesSubcommand.getNoteId(args);
     }
 
     @Test
     public void testGetNoteId() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(NotesCommand.NOTE_ID_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
-        String result = AbstractNotesCommand.getNoteId(args);
+        when(args.hasArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_ID_ARGUMENT)).thenReturn("foo-noteid");
+        String result = NotesSubcommand.getNoteId(args);
         assertThat(result, is("foo-noteid"));
     }
 
     @Test
-    public void testGetNoteContentWithNoFlagAndNoNonOptionArgs() throws CommandException {
+    public void testGetNoteContent() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(false);
+        when(args.hasArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn("this is a note");
         when(args.getNonOptionArguments()).thenReturn(Collections.<String>emptyList());
-        try {
-            AbstractNotesCommand.getNoteContent(args);
-            fail();
-        } catch (CommandException ex) {
-            // pass
-        }
-    }
-
-    @Test
-    public void testGetNoteContentWithNonOptionArgs() throws CommandException {
-        Arguments args = mock(Arguments.class);
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(false);
-        when(args.getNonOptionArguments()).thenReturn(Arrays.asList("this", "is", "a", "note"));
-        String result = AbstractNotesCommand.getNoteContent(args);
-        assertThat(result, is("this is a note"));
-    }
-
-    @Test
-    public void testGetNoteContentWithFlag() throws CommandException {
-        Arguments args = mock(Arguments.class);
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("this is a note");
-        when(args.getNonOptionArguments()).thenReturn(Collections.<String>emptyList());
-        String result = AbstractNotesCommand.getNoteContent(args);
-        assertThat(result, is("this is a note"));
-    }
-
-    @Test
-    public void testGetNoteContentWithFlagAndNonOptionArgs() throws CommandException {
-        Arguments args = mock(Arguments.class);
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("this is a note");
-        when(args.getNonOptionArguments()).thenReturn(Arrays.asList("here", "is", "another"));
-        String result = AbstractNotesCommand.getNoteContent(args);
+        String result = NotesSubcommand.getNoteContent(args);
         assertThat(result, is("this is a note"));
     }
 
     @Test
     public void testGetNoteContentWithStrangeInput() throws CommandException {
         Arguments args = mock(Arguments.class);
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn("this is a note");
+        when(args.hasArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
+        when(args.getArgument(NotesSubcommand.NOTE_CONTENT_ARGUMENT)).thenReturn("this is a note");
         when(args.getNonOptionArguments()).thenReturn(Arrays.asList("here", "is", "another", "--noteContent", "strange", "--noteContent", "--input"));
-        String result = AbstractNotesCommand.getNoteContent(args);
+        String result = NotesSubcommand.getNoteContent(args);
         assertThat(result, is("this is a note"));
     }
 
-    @Test
-    public void testGetNoteContentDoesNotReturnNull() throws CommandException {
-        Arguments args = mock(Arguments.class);
-        when(args.hasArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(true);
-        when(args.getArgument(NotesCommand.NOTE_CONTENT_ARGUMENT)).thenReturn(null);
-        String result = AbstractNotesCommand.getNoteContent(args);
-        assertThat(result, is(""));
-    }
-
-    public void doInvalidAgentIdTest(Arguments args) {
+    void doInvalidAgentIdTest(Arguments args) {
         doInvalidIdTest(args, INVALID_AGENTID_MSG);
     }
 
-    public void doInvalidVmIdTest(Arguments args) {
+    void doInvalidVmIdTest(Arguments args) {
         doInvalidIdTest(args, INVALID_VMID_MSG);
     }
 

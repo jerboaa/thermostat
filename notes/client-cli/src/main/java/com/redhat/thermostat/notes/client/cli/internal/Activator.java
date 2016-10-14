@@ -39,8 +39,6 @@ package com.redhat.thermostat.notes.client.cli.internal;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
@@ -49,31 +47,30 @@ import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
-import java.util.Objects;
 
 public class Activator implements BundleActivator {
 
-    private CommandRegistry reg;
+    private ServiceRegistration commandRegistration;
+    private ServiceRegistration completerServiceRegistration;
     private MultipleServiceTracker serviceTracker;
-    private MultipleServiceTracker noteIdCompleterDepsTracker;
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        reg = new CommandRegistryImpl(context);
+        final ListNotesSubcommand listNotesSubcommand = new ListNotesSubcommand();
+        final AddNoteSubcommand addNoteSubcommand = new AddNoteSubcommand();
+        final DeleteNoteSubcommand deleteNoteSubcommand = new DeleteNoteSubcommand();
+        final UpdateNoteSubcommand updateNoteSubcommand = new UpdateNoteSubcommand();
 
-        ListNotesCommand listNotesCommand = new ListNotesCommand();
-        registerCommand(ListNotesCommand.NAME, listNotesCommand);
-        AddNoteCommand addNoteCommand = new AddNoteCommand();
-        registerCommand(AddNoteCommand.NAME, addNoteCommand);
-        DeleteNoteCommand deleteNoteCommand = new DeleteNoteCommand();
-        registerCommand(DeleteNoteCommand.NAME, deleteNoteCommand);
-        UpdateNoteCommand updateNoteCommand = new UpdateNoteCommand();
-        registerCommand(UpdateNoteCommand.NAME, updateNoteCommand);
+        final NoteIdsFinder noteIdsFinder = new NoteIdsFinder();
 
-        final List<AbstractNotesCommand> commands = Arrays.asList(listNotesCommand, addNoteCommand, deleteNoteCommand, updateNoteCommand);
+        final NotesControlCommand controlCommand = new NotesControlCommand(noteIdsFinder, addNoteSubcommand,
+                deleteNoteSubcommand, updateNoteSubcommand, listNotesSubcommand);
 
         Class<?>[] serviceDeps = new Class<?>[]{
                 VmInfoDAO.class,
@@ -84,6 +81,10 @@ public class Activator implements BundleActivator {
         };
 
         serviceTracker = new MultipleServiceTracker(context, serviceDeps, new MultipleServiceTracker.Action() {
+
+            private final List<NotesSubcommand> subcommands =
+                    Arrays.asList(listNotesSubcommand, addNoteSubcommand, deleteNoteSubcommand, updateNoteSubcommand);
+
             @Override
             public void dependenciesAvailable(DependencyProvider services) {
                 VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
@@ -92,49 +93,32 @@ public class Activator implements BundleActivator {
                 VmNoteDAO vmNoteDAO = services.get(VmNoteDAO.class);
                 HostNoteDAO hostNoteDAO = services.get(HostNoteDAO.class);
 
-                for (NotesCommand command : commands) {
-                    command.setVmInfoDao(vmInfoDAO);
-                    command.setHostInfoDao(hostInfoDAO);
-                    command.setAgentInfoDao(agentInfoDAO);
-                    command.setVmNoteDao(vmNoteDAO);
-                    command.setHostNoteDao(hostNoteDAO);
+                for (NotesSubcommand subcommand : subcommands) {
+                    subcommand.bindVmInfoDao(vmInfoDAO);
+                    subcommand.bindHostInfoDao(hostInfoDAO);
+                    subcommand.bindAgentInfoDao(agentInfoDAO);
+                    subcommand.bindVmNoteDao(vmNoteDAO);
+                    subcommand.bindHostNoteDao(hostNoteDAO);
                 }
+
+                noteIdsFinder.bindVmNoteDao(vmNoteDAO);
+                noteIdsFinder.bindHostNoteDao(hostNoteDAO);
             }
 
             @Override
             public void dependenciesUnavailable() {
-                for (NotesCommand command : commands) {
+                noteIdsFinder.servicesUnavailable();
+                for (NotesSubcommand command : subcommands) {
                     command.servicesUnavailable();
                 }
             }
         });
-
         serviceTracker.open();
 
-        final NoteIdCompleterService noteIdCompleterService = new NoteIdCompleterService();
-        final Class<?>[] noteIdCompleterDeps = new Class<?>[] { HostNoteDAO.class, VmNoteDAO.class };
-        noteIdCompleterDepsTracker = new MultipleServiceTracker(context, noteIdCompleterDeps, new MultipleServiceTracker.Action() {
-            @Override
-            public void dependenciesAvailable(DependencyProvider services) {
-                HostNoteDAO hostNoteDAO = services.get(HostNoteDAO.class);
-                VmNoteDAO vmNoteDAO = services.get(VmNoteDAO.class);
-                noteIdCompleterService.setHostNoteDao(hostNoteDAO);
-                noteIdCompleterService.setVmNoteDao(vmNoteDAO);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                noteIdCompleterService.setHostNoteDao(null);
-                noteIdCompleterService.setVmNoteDao(null);
-            }
-        });
-        noteIdCompleterDepsTracker.open();
-
-        context.registerService(CompleterService.class, noteIdCompleterService, null);
-    }
-
-    private void registerCommand(String name, Command command) {
-        reg.registerCommand(name, command);
+        Dictionary<String, String> properties = new Hashtable<>();
+        properties.put(Command.NAME, NotesControlCommand.COMMAND_NAME);
+        commandRegistration = context.registerService(Command.class.getName(), controlCommand, properties);
+        completerServiceRegistration = context.registerService(CompleterService.class, controlCommand, properties);
     }
 
     @Override
@@ -142,11 +126,11 @@ public class Activator implements BundleActivator {
         if (serviceTracker != null) {
             serviceTracker.close();
         }
-        if (noteIdCompleterDepsTracker != null) {
-            noteIdCompleterDepsTracker.close();
+        if (commandRegistration != null) {
+            commandRegistration.unregister();
         }
-        if (reg != null) {
-            reg.unregisterCommands();
+        if (completerServiceRegistration != null) {
+            completerServiceRegistration.unregister();
         }
     }
 

@@ -69,6 +69,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -115,19 +116,18 @@ public class NotesCommandsTest extends IntegrationTest {
         mongoStorage.getConnection().disconnect();
     }
 
+    private static void addAgentInfo(Add<AgentInformation> add, AgentInformation pojo) {
+        add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
+        add.set(AgentInfoDAO.ALIVE_KEY.getName(), pojo.isAlive());
+        add.set(AgentInfoDAO.START_TIME_KEY.getName(), pojo.getStartTime());
+        add.set(AgentInfoDAO.STOP_TIME_KEY.getName(), pojo.getStopTime());
+        add.set(AgentInfoDAO.CONFIG_LISTEN_ADDRESS.getName(), pojo.getConfigListenAddress());
+        add.apply();
+    }
+
     @Test
     public void testAddNoteWithStandardOptions() throws Exception {
         doAddNoteTest(Arrays.asList("-c", "this is the note content"), "this is the note content");
-    }
-
-    @Test
-    public void testAddNoteWithNoContentFlag() throws Exception {
-        doAddNoteTest(Arrays.asList("this", "is", "content"), "this is content");
-    }
-
-    @Test
-    public void testAddNoteWithDoubleDashArgDelimiter() throws Exception {
-        doAddNoteTest(Arrays.asList("--", "--fakeArg", "more"), "--fakeArg more");
     }
 
     @Test
@@ -147,15 +147,16 @@ public class NotesCommandsTest extends IntegrationTest {
         List<String> args = new ArrayList<>();
         args.add("-a");
         args.add("foo-agentid");
+        args.add("add");
         args.addAll(contentArgs);
-        Spawn cmd = commandAgainstMongo("add-note", args.toArray(new String[args.size()]));
+        Spawn cmd = commandAgainstMongo("notes", args.toArray(new String[args.size()]));
         handleAuthPrompt(cmd, "mongodb://127.0.0.1:27518", USERNAME, PASSWORD);
         cmd.expectClose();
 
-        assertCommandIsFound(cmd.getCurrentStandardOutContents(), cmd.getCurrentStandardErrContents());
-        assertNoExceptions(cmd.getCurrentStandardOutContents(), cmd.getCurrentStandardErrContents());
+        assertCommandIsFound(cmd);
+        assertNoExceptions(cmd);
         if (expectedResult == null) {
-            assertCouldNotParseUnrecognizedOptions(cmd.getCurrentStandardOutContents(), cmd.getCurrentStandardErrContents());
+            assertCouldNotParseUnrecognizedOptions(cmd);
             return;
         }
 
@@ -175,6 +176,18 @@ public class NotesCommandsTest extends IntegrationTest {
         assertThat(note.getContent(), is(expectedResult));
 
         mongoStorage2.getConnection().disconnect();
+    }
+
+    private static void assertCouldNotParseUnrecognizedOptions(Spawn spawn) {
+        assertCouldNotParseUnrecognizedOptions(spawn.getCurrentStandardOutContents(), spawn.getCurrentStandardErrContents());
+    }
+
+    private static void assertCouldNotParseUnrecognizedOptions(String stdout, String stderr) {
+        String message = "Could not parse options: Unrecognized option:";
+        boolean outContainsMessage = stdout.contains(message);
+        boolean errContainsMessage = stderr.contains(message);
+        assertTrue("stdout or stderr should have contained \"" + message + "\"",
+                outContainsMessage || errContainsMessage);
     }
 
     private static BackingStorage getAndConnectStorage(Connection.ConnectionListener listener) {
@@ -203,13 +216,59 @@ public class NotesCommandsTest extends IntegrationTest {
         return storage;
     }
 
-    private static void addAgentInfo(Add<AgentInformation> add, AgentInformation pojo) {
-        add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
-        add.set(AgentInfoDAO.ALIVE_KEY.getName(), pojo.isAlive());
-        add.set(AgentInfoDAO.START_TIME_KEY.getName(), pojo.getStartTime());
-        add.set(AgentInfoDAO.STOP_TIME_KEY.getName(), pojo.getStopTime());
-        add.set(AgentInfoDAO.CONFIG_LISTEN_ADDRESS.getName(), pojo.getConfigListenAddress());
-        add.apply();
+    @Test
+    public void testFailsForUnknownSubcommand() throws Exception {
+        Spawn cmd = runSubcommand("lsit", "-a", "foo-agentid"); // intentional typo: lsit, rather than list
+
+        assertCommandIsFound(cmd);
+        assertNoExceptions(cmd);
+        assertThat(cmd.getCurrentStandardErrContents(), containsString("The subcommand \"lsit\" is not recognized"));
+    }
+
+    @Test
+    public void testAddNoteSubcommandRegistered() throws Exception {
+        Spawn cmd = runSubcommand("add");
+
+        assertCommandIsFound(cmd);
+        assertNoExceptions(cmd);
+        assertThat(cmd.getCurrentStandardOutContents(), containsString("Missing required option: -c"));
+    }
+
+    @Test
+    public void testDeleteNoteSubcommandRegistered() throws Exception {
+        Spawn cmd = runSubcommand("delete");
+
+        assertCommandIsFound(cmd);
+        assertNoExceptions(cmd);
+        assertThat(cmd.getCurrentStandardOutContents(), containsString("Missing required option: -n"));
+    }
+
+    @Test
+    public void testListNotesSubcommandRegistered() throws Exception {
+        Spawn cmd = runSubcommand("list");
+
+        assertCommandIsFound(cmd);
+        assertNoExceptions(cmd);
+        assertThat(cmd.getCurrentStandardErrContents(), containsString("A Host or VM ID must be provided"));
+    }
+
+    @Test
+    public void testUpdateNoteSubcommandRegistered() throws Exception {
+        Spawn cmd = runSubcommand("update");
+
+        assertCommandIsFound(cmd);
+        assertNoExceptions(cmd);
+        assertThat(cmd.getCurrentStandardOutContents(), containsString("Missing required options: -c, -n"));
+    }
+
+    private static Spawn runSubcommand(String subcommand, String... extraArgs) throws Exception {
+        List<String> args = new ArrayList<>();
+        args.add(subcommand);
+        args.addAll(Arrays.asList(extraArgs));
+        Spawn cmd = commandAgainstMongo("notes", args.toArray(new String[args.size()]));
+        handleAuthPrompt(cmd, "mongodb://127.0.0.1:27518", USERNAME, PASSWORD);
+        cmd.expectClose();
+        return cmd;
     }
 
     private static Spawn commandAgainstMongo(String cmd, String... args) throws IOException {
@@ -222,14 +281,6 @@ public class NotesCommandsTest extends IntegrationTest {
         completeArgs.add("mongodb://127.0.0.1:27518");
         completeArgs.addAll(Arrays.asList(args));
         return spawnThermostat(true, completeArgs.toArray(new String[0]));
-    }
-
-    private static void assertCouldNotParseUnrecognizedOptions(String stdout, String stderr) {
-        String message = "Could not parse options: Unrecognized option:";
-        boolean outContainsMessage = stdout.contains(message);
-        boolean errContainsMessage = stderr.contains(message);
-        assertTrue("stdout or stderr should have contained \"" + message + "\"",
-                outContainsMessage || errContainsMessage);
     }
 
     private static class CountdownConnectionListener implements Connection.ConnectionListener {

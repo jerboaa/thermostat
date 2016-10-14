@@ -36,43 +36,44 @@
 
 package com.redhat.thermostat.notes.client.cli.internal;
 
-import com.redhat.thermostat.common.cli.AbstractCompleterService;
-import com.redhat.thermostat.common.cli.CliCommandOption;
-import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
-import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.client.cli.AgentArgument;
+import com.redhat.thermostat.client.cli.VmArgument;
+import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+public class DeleteNoteSubcommand extends NotesSubcommand {
 
-public class NoteIdCompleterService extends AbstractCompleterService {
-
-    public static final CliCommandOption NOTE_ID_OPTION = new CliCommandOption("n", "noteId", true, "Note ID", false);
+    static final String SUBCOMMAND_NAME = "delete";
 
     @Override
-    public Set<String> getCommands() {
-        return new HashSet<>(Arrays.asList(
-            DeleteNoteCommand.NAME,
-            UpdateNoteCommand.NAME
-        ));
-    }
+    public void run(CommandContext ctx) throws CommandException {
+        Arguments args = ctx.getArguments();
+        assertExpectedAgentAndVmArgsProvided(args);
 
-    @Override
-    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
-        TabCompleter completer = new CompletionFinderTabCompleter(new NoteIdsFinder(dependencyServices));
-        return Collections.singletonMap(NOTE_ID_OPTION, completer);
-    }
+        String noteId = getNoteId(args);
 
-    public void setHostNoteDao(HostNoteDAO hostNoteDao) {
-        setService(HostNoteDAO.class, hostNoteDao);
-    }
+        if (args.hasArgument(VmArgument.ARGUMENT_NAME)) {
+            VmNoteDAO vmNoteDao = services.getRequiredService(VmNoteDAO.class);
+            VmInfoDAO vmInfoDao = services.getRequiredService(VmInfoDAO.class);
 
-    public void setVmNoteDao(VmNoteDAO vmNoteDao) {
-        setService(VmNoteDAO.class, vmNoteDao);
+            VmId vmId = VmArgument.required(args).getVmId();
+            checkVmExists(vmId);
+            AgentId agentId = new AgentId(vmInfoDao.getVmInfo(vmId).getAgentId());
+            checkAgentExists(agentId);
+            vmNoteDao.removeById(getVmRefFromVmId(vmId), noteId);
+        } else {
+            HostNoteDAO hostNoteDao = services.getRequiredService(HostNoteDAO.class);
+
+            AgentId agentId = AgentArgument.required(args).getAgentId();
+            checkAgentExists(agentId);
+            hostNoteDao.removeById(getHostRefFromAgentId(agentId), noteId);
+        }
     }
 
 }

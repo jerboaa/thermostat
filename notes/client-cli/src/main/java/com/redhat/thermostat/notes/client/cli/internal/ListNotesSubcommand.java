@@ -45,13 +45,16 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.notes.client.cli.locale.LocaleResources;
 import com.redhat.thermostat.notes.common.HostNote;
+import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.notes.common.VmNote;
+import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -62,16 +65,14 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 
-public class ListNotesCommand extends AbstractNotesCommand {
+public class ListNotesSubcommand extends NotesSubcommand {
 
-    static final String NAME = "list-notes";
+    static final String SUBCOMMAND_NAME = "list";
     static final String SHOW_NOTE_ID_ARGUMENT = "show-note-id";
     static final String QUIET_ARGUMENT = "quiet";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        setupServices();
-
         Arguments args = ctx.getArguments();
         assertExpectedAgentAndVmArgsProvided(args);
 
@@ -88,9 +89,11 @@ public class ListNotesCommand extends AbstractNotesCommand {
 
         List<? extends Note> notes;
         if (args.hasArgument(VmArgument.ARGUMENT_NAME)) {
+            VmInfoDAO vmInfoDao = services.getRequiredService(VmInfoDAO.class);
+
             VmId vmId = VmArgument.required(args).getVmId();
             checkVmExists(vmId);
-            AgentId agentId = new AgentId(vmInfoDAO.getVmInfo(vmId).getAgentId());
+            AgentId agentId = new AgentId(vmInfoDao.getVmInfo(vmId).getAgentId());
             checkAgentExists(agentId);
             notes = getVmNotes(getVmRefFromVmId(vmId));
         } else {
@@ -108,12 +111,12 @@ public class ListNotesCommand extends AbstractNotesCommand {
         printTable(ctx.getConsole().getOutput(), enabledFields, notes);
     }
 
-    private List<VmNote> getVmNotes(VmRef vmRef) {
-        return vmNoteDAO.getFor(vmRef);
+    private List<VmNote> getVmNotes(VmRef vmRef) throws CommandException {
+        return services.getRequiredService(VmNoteDAO.class).getFor(vmRef);
     }
 
-    private List<HostNote> getHostNotes(HostRef hostRef) {
-        return hostNoteDAO.getFor(hostRef);
+    private List<HostNote> getHostNotes(HostRef hostRef) throws CommandException {
+        return services.getRequiredService(HostNoteDAO.class).getFor(hostRef);
     }
 
     private void printTable(PrintStream printStream, Collection<Field> enabledFields, List<? extends Note> notes) {
@@ -139,7 +142,7 @@ public class ListNotesCommand extends AbstractNotesCommand {
         renderer.render(printStream);
     }
 
-    enum Field {
+    private enum Field {
         NOTE_ID(translator.localize(LocaleResources.NOTE_ID_COLUMN), new NoteIdMapper()),
         TIMESTAMP(translator.localize(LocaleResources.TIMESTAMP_COLUMN), new TimestampMapper()),
         CONTENT(translator.localize(LocaleResources.CONTENT_COLUMN), new ContentMapper()),;
@@ -165,21 +168,21 @@ public class ListNotesCommand extends AbstractNotesCommand {
         O apply(I i);
     }
 
-    static class NoteIdMapper implements Function<Note, String> {
+    private static class NoteIdMapper implements Function<Note, String> {
         @Override
         public String apply(Note note) {
             return note.getId();
         }
     }
 
-    static class TimestampMapper implements Function<Note, String> {
+    private static class TimestampMapper implements Function<Note, String> {
         @Override
         public String apply(Note note) {
             return Clock.DEFAULT_DATE_FORMAT.format(new Date(note.getTimeStamp()));
         }
     }
 
-    static class ContentMapper implements Function<Note, String> {
+    private static class ContentMapper implements Function<Note, String> {
         @Override
         public String apply(Note note) {
             return note.getContent();

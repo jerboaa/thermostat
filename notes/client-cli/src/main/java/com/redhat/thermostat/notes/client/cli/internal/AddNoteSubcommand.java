@@ -41,50 +41,55 @@ import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.notes.client.cli.locale.LocaleResources;
 import com.redhat.thermostat.notes.common.HostNote;
+import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.VmNote;
+import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
-public class UpdateNoteCommand extends AbstractNotesCommand {
+import java.util.UUID;
 
-    static final String NAME = "update-note";
+public class AddNoteSubcommand extends NotesSubcommand {
+
+    static final String SUBCOMMAND_NAME = "add";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        setupServices();
-
         Arguments args = ctx.getArguments();
         assertExpectedAgentAndVmArgsProvided(args);
 
-        String noteId = getNoteId(args);
         String noteContent = getNoteContent(args);
 
         if (args.hasArgument(VmArgument.ARGUMENT_NAME)) {
+            VmInfoDAO vmInfoDAO = services.getRequiredService(VmInfoDAO.class);
+            VmNoteDAO vmNoteDAO = services.getRequiredService(VmNoteDAO.class);
+
             VmId vmId = VmArgument.required(args).getVmId();
             checkVmExists(vmId);
-            AgentId agentId = new AgentId(vmInfoDAO.getVmInfo(vmId).getAgentId());
-            checkAgentExists(agentId);
-
-            VmNote note = vmNoteDAO.getById(getVmRefFromVmId(vmId), noteId);
-            if (note == null) {
-                throw new CommandException(translator.localize(LocaleResources.NO_SUCH_VM_NOTE, vmId.get(), noteId));
-            }
+            String agentId = vmInfoDAO.getVmInfo(vmId).getAgentId();
+            checkAgentExists(new AgentId(agentId));
+            VmNote note = new VmNote();
+            note.setId(UUID.randomUUID().toString());
+            note.setVmId(vmId.get());
+            note.setAgentId(agentId);
             note.setContent(noteContent);
             note.setTimeStamp(System.currentTimeMillis());
-            vmNoteDAO.update(note);
+
+            vmNoteDAO.add(note);
         } else {
+            HostNoteDAO hostNoteDAO = services.getRequiredService(HostNoteDAO.class);
+
             AgentId agentId = AgentArgument.required(args).getAgentId();
             checkAgentExists(agentId);
-
-            HostNote note = hostNoteDAO.getById(getHostRefFromAgentId(agentId), noteId);
-            if (note == null) {
-                throw new CommandException(translator.localize(LocaleResources.NO_SUCH_AGENT_NOTE, agentId.get(), noteId));
-            }
+            HostNote note = new HostNote();
+            note.setId(UUID.randomUUID().toString());
+            note.setAgentId(agentId.get());
             note.setContent(noteContent);
             note.setTimeStamp(System.currentTimeMillis());
-            hostNoteDAO.update(note);
+
+            hostNoteDAO.add(note);
         }
     }
 

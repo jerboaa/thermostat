@@ -68,11 +68,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesCommand> {
+public class ListNotesSubcommandTest extends AbstractNotesCommandTest<ListNotesSubcommand> {
 
     @Override
-    public ListNotesCommand createCommand() {
-        return new ListNotesCommand();
+    public ListNotesSubcommand createCommand() {
+        return new ListNotesSubcommand();
     }
 
     @Test(expected = CommandException.class)
@@ -160,11 +160,11 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
         HostNote note1 = mock(HostNote.class);
         when(note1.getContent()).thenReturn("note 1");
-        when(note1.getTimeStamp()).thenReturn(100l);
+        when(note1.getTimeStamp()).thenReturn(100L);
         when(note1.getId()).thenReturn(UUID.randomUUID().toString());
         HostNote note2 = mock(HostNote.class);
         when(note2.getContent()).thenReturn("note 2");
-        when(note2.getTimeStamp()).thenReturn(100l);
+        when(note2.getTimeStamp()).thenReturn(100L);
         when(note2.getId()).thenReturn(UUID.randomUUID().toString());
         when(hostNoteDAO.getFor(any(HostRef.class))).thenReturn(Arrays.asList(note1, note2));
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
@@ -188,18 +188,18 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
-        when(args.hasArgument(ListNotesCommand.SHOW_NOTE_ID_ARGUMENT)).thenReturn(true);
+        when(args.hasArgument(ListNotesSubcommand.SHOW_NOTE_ID_ARGUMENT)).thenReturn(true);
         HostInfo hostInfo = new HostInfo();
         hostInfo.setHostname("foo-hostname");
         hostInfo.setAgentId("foo-agentid");
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
         HostNote note1 = mock(HostNote.class);
         when(note1.getContent()).thenReturn("note 1");
-        when(note1.getTimeStamp()).thenReturn(100l);
+        when(note1.getTimeStamp()).thenReturn(100L);
         when(note1.getId()).thenReturn(UUID.randomUUID().toString());
         HostNote note2 = mock(HostNote.class);
         when(note2.getContent()).thenReturn("note 2");
-        when(note2.getTimeStamp()).thenReturn(100l);
+        when(note2.getTimeStamp()).thenReturn(100L);
         when(note2.getId()).thenReturn(UUID.randomUUID().toString());
         when(hostNoteDAO.getFor(any(HostRef.class))).thenReturn(Arrays.asList(note1, note2));
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
@@ -223,18 +223,18 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         Arguments args = mock(Arguments.class);
         when(args.hasArgument(AgentArgument.ARGUMENT_NAME)).thenReturn(true);
         when(args.getArgument(AgentArgument.ARGUMENT_NAME)).thenReturn("foo-agentid");
-        when(args.hasArgument(ListNotesCommand.QUIET_ARGUMENT)).thenReturn(true);
+        when(args.hasArgument(ListNotesSubcommand.QUIET_ARGUMENT)).thenReturn(true);
         HostInfo hostInfo = new HostInfo();
         hostInfo.setHostname("foo-hostname");
         hostInfo.setAgentId("foo-agentid");
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
         HostNote note1 = mock(HostNote.class);
         when(note1.getContent()).thenReturn("note 1");
-        when(note1.getTimeStamp()).thenReturn(100l);
+        when(note1.getTimeStamp()).thenReturn(100L);
         when(note1.getId()).thenReturn(UUID.randomUUID().toString());
         HostNote note2 = mock(HostNote.class);
         when(note2.getContent()).thenReturn("note 2");
-        when(note2.getTimeStamp()).thenReturn(100l);
+        when(note2.getTimeStamp()).thenReturn(100L);
         when(note2.getId()).thenReturn(UUID.randomUUID().toString());
         when(hostNoteDAO.getFor(any(HostRef.class))).thenReturn(Arrays.asList(note1, note2));
         when(agentInfoDAO.getAgentInformation(any(AgentId.class))).thenReturn(new AgentInformation());
@@ -288,11 +288,11 @@ public class ListNotesCommandTest extends AbstractNotesCommandTest<ListNotesComm
         when(hostInfoDAO.getHostInfo(any(AgentId.class))).thenReturn(hostInfo);
         VmNote note1 = mock(VmNote.class);
         when(note1.getContent()).thenReturn("note 1");
-        when(note1.getTimeStamp()).thenReturn(100l);
+        when(note1.getTimeStamp()).thenReturn(100L);
         when(note1.getId()).thenReturn(UUID.randomUUID().toString());
         VmNote note2 = mock(VmNote.class);
         when(note2.getContent()).thenReturn("note 2");
-        when(note2.getTimeStamp()).thenReturn(100l);
+        when(note2.getTimeStamp()).thenReturn(100L);
         when(note2.getId()).thenReturn(UUID.randomUUID().toString());
         when(vmNoteDAO.getFor(any(VmRef.class))).thenReturn(Arrays.asList(note1, note2));
         VmInfo vmInfo = new VmInfo();
