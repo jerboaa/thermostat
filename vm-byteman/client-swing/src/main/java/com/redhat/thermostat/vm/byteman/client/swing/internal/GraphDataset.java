@@ -98,10 +98,11 @@ class GraphDataset {
     String ykey;
     CoordinateType xtype;
     CoordinateType ytype;
-    private static CategoryDataset emptyCategoryDataset = new DefaultCategoryDataset();
-    private static PieDataset emptyPieDataset = new DefaultPieDataset();
-    private static XYDataset emptyXYDataset = new XYSeriesCollection();
-    private static Number frequencyUnit = Long.valueOf(1);
+    private static final CategoryDataset emptyCategoryDataset = new DefaultCategoryDataset();
+    private static final PieDataset emptyPieDataset = new DefaultPieDataset();
+    private static final XYDataset emptyXYDataset = new XYSeriesCollection();
+    private static final CategoryTimePlotData emptyCategoryTimePlotData = new CategoryTimePlotData(emptyXYDataset, new String[] {});
+    private static final Number frequencyUnit = Long.valueOf(1);
 
     public GraphDataset(List<BytemanMetric> metrics, String xkey, String ykey, String filter, String value)
     {
@@ -274,10 +275,10 @@ class GraphDataset {
         return pieDataset;
     }
 
-    public XYDataset getCategoryTimePlot(String[][] symbolsReturn)
+    public CategoryTimePlotData getCategoryTimePlot()
     {
         if (xtype != CoordinateType.TIME || ytype != CoordinateType.CATEGORY) {
-            return emptyXYDataset;
+            return emptyCategoryTimePlotData;
         }
 
         // we need to display changing category state over time
@@ -308,12 +309,10 @@ class GraphDataset {
             symbols[value] = key;
         }
 
-        symbolsReturn[0] = symbols;
-
         XYSeriesCollection xycollection = new  XYSeriesCollection();
         xycollection.addSeries(xyseries);
 
-        return xycollection;
+        return new CategoryTimePlotData(xycollection, symbols);
     }
 
     public String getXLabel() {
@@ -397,5 +396,24 @@ class GraphDataset {
             }
         }
         return value;
+    }
+    
+    static class CategoryTimePlotData {
+        
+        private final XYDataset dataSet;
+        private final String[] symbols;
+        
+        private CategoryTimePlotData(XYDataset dataSet, String[] yLegend) {
+            this.dataSet = dataSet;
+            this.symbols = yLegend;
+        }
+        
+        XYDataset getXYDataSet() {
+            return dataSet;
+        }
+        
+        String[] getSymbols() {
+            return symbols;
+        }
     }
 }

@@ -113,6 +113,7 @@ import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.byteman.client.swing.internal.GraphDataset.CategoryTimePlotData;
 import com.redhat.thermostat.vm.byteman.client.swing.internal.GraphDataset.CoordinateType;
 import com.redhat.thermostat.vm.byteman.client.swing.internal.PredefinedKeysMapper.MapDirection;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
@@ -957,14 +958,14 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                     //
                     // we create a numeric time series plot with a mapping
                     // from numeric values to symbolic keys
-                    String[][] symbolsReturn = new String[1][];
-                    XYDataset xydataset = dataset.getCategoryTimePlot(symbolsReturn);
+                    CategoryTimePlotData categoryData = dataset.getCategoryTimePlot(); 
+                    XYDataset xydataset = categoryData.getXYDataSet();
                     graph = ChartFactory.createXYStepChart(BYTEMAN_CHART_LABEL, xlabel, ylabel,
                                                            xydataset, PlotOrientation.VERTICAL,
                                                            true, true, false);
                     // now we change the range axis of the xyplot to draw symbols in
                     // place of numeric values
-                    graph.getXYPlot().setRangeAxis(0, new SymbolAxis(ykey, symbolsReturn[0]));
+                    graph.getXYPlot().setRangeAxis(0, new SymbolAxis(ykey, categoryData.getSymbols()));
                 } else {
                     // draw a graph of numeric value against time
                     XYDataset xydataset = dataset.getXYDataset();

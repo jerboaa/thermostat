@@ -48,6 +48,7 @@ import org.jfree.data.xy.XYDataset;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.vm.byteman.client.swing.internal.GraphDataset.CategoryTimePlotData;
 import com.redhat.thermostat.vm.byteman.client.swing.internal.GraphDataset.CoordinateType;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 
@@ -373,18 +374,17 @@ public class GraphDatasetTest {
         final List<BytemanMetric> empty = Collections.emptyList();
         // x => marker
         GraphDataset dataset = new GraphDataset(empty, GraphDataset.MARKER_KEY, GraphDataset.TIMESTAMP_KEY, null, null);
-        XYDataset actualDataset = dataset.getCategoryTimePlot(new String[][] { {""} });
-        assertEquals(0, actualDataset.getSeriesCount());
+        CategoryTimePlotData actualDataset = dataset.getCategoryTimePlot();
+        assertEquals(0, actualDataset.getXYDataSet().getSeriesCount());
         
         // y => timestamp
         dataset = new GraphDataset(empty, GraphDataset.TIMESTAMP_KEY, GraphDataset.TIMESTAMP_KEY, null, null);
-        actualDataset = dataset.getCategoryTimePlot(new String[][] { {""} });
-        assertEquals(0, actualDataset.getSeriesCount());
+        actualDataset = dataset.getCategoryTimePlot();
+        assertEquals(0, actualDataset.getXYDataSet().getSeriesCount());
     }
     
     @Test
     public void testCategoryTimePlotBasic() {
-        final String[][] retvals = new String[][] { {""} };
         final String evenMarker = "even_marker";
         final String oddMarker = "odd_marker";
         final int numMetrics = 5;
@@ -413,7 +413,8 @@ public class GraphDatasetTest {
             
         });
         GraphDataset dataset = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null, null);
-        XYDataset actualDataset = dataset.getCategoryTimePlot(retvals);
+        CategoryTimePlotData actualData = dataset.getCategoryTimePlot();
+        XYDataset actualDataset = actualData.getXYDataSet();
         assertEquals("Expected one series, exactly", 1, actualDataset.getSeriesCount());
         assertEquals(5, actualDataset.getItemCount(0));
         for (int i = 0; i < numMetrics; i++) {
@@ -434,7 +435,7 @@ public class GraphDatasetTest {
         }
         
         // verify correct return values have been set
-        List<String> retvalList = Arrays.asList(retvals[0]);
+        List<String> retvalList = Arrays.asList(actualData.getSymbols());
         Collections.sort(retvalList);
         assertEquals(evenMarker, retvalList.get(0));
         assertEquals(oddMarker, retvalList.get(1));
