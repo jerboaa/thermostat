@@ -36,35 +36,33 @@
 
 package com.redhat.thermostat.vm.byteman.client.swing.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.ArrayList;
+import java.util.List;
 
-public enum LocaleResources {
+import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
+import com.redhat.thermostat.vm.byteman.common.BytemanMetricDataExtractor;
 
-    VM_BYTEMAN_TAB_NAME,
-    BYTEMAN_HEADER_TITLE,
-    INJECT_RULE,
-    UNLOAD_RULE,
-    TAB_RULES,
-    TAB_METRICS,
-    TAB_GRAPH,
-    GENERATE_RULE_TEMPLATE,
-    GENERATE_GRAPH,
-    RULE_EMPTY,
-    NO_RULES_LOADED,
-    NO_METRICS_AVAILABLE,
-    LABEL_LOCAL_RULE,
-    LABEL_INJECTED_RULE,
-    IMPORT_RULE,
-    FILTER,
-    FILTER_VALUE_LABEL,
-    NO_FILTER_NAME,
-    X_COORD,
-    Y_COORD
-    ;
+class MetricsKeysAggregator {
     
-    static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";
-    
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    static List<String> aggregate(List<BytemanMetric> metrics) {
+        BytemanMetricDataExtractor extractor = new BytemanMetricDataExtractor();
+        for (BytemanMetric m: metrics) {
+            extractor.mineMetric(m);
+        }
+        List<String> predefinedKeys = buildPredefinedKeys();
+        List<String> userDefinedKeys = extractor.getSortedKeySet();
+        // merge lists: predefined keys first, then user-defined keys
+        List<String> merged = new ArrayList<>(predefinedKeys.size() + userDefinedKeys.size());
+        merged.addAll(predefinedKeys);
+        merged.addAll(userDefinedKeys);
+        return merged;
+    }
+
+    private static List<String> buildPredefinedKeys() {
+        List<String> predefined = new ArrayList<>(PredefinedKeysMapper.PREDEFINED_KEYS.size());
+        for (String key: PredefinedKeysMapper.PREDEFINED_KEYS) {
+            predefined.add(PredefinedKeysMapper.PREDEFINED_PREFIX + key + PredefinedKeysMapper.PREDEFINED_SUFFIX);
+        }
+        return predefined;
     }
 }

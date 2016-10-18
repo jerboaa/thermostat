@@ -34,37 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.byteman.client.swing.internal;
+package com.redhat.thermostat.vm.byteman.common;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
-public enum LocaleResources {
-
-    VM_BYTEMAN_TAB_NAME,
-    BYTEMAN_HEADER_TITLE,
-    INJECT_RULE,
-    UNLOAD_RULE,
-    TAB_RULES,
-    TAB_METRICS,
-    TAB_GRAPH,
-    GENERATE_RULE_TEMPLATE,
-    GENERATE_GRAPH,
-    RULE_EMPTY,
-    NO_RULES_LOADED,
-    NO_METRICS_AVAILABLE,
-    LABEL_LOCAL_RULE,
-    LABEL_INJECTED_RULE,
-    IMPORT_RULE,
-    FILTER,
-    FILTER_VALUE_LABEL,
-    NO_FILTER_NAME,
-    X_COORD,
-    Y_COORD
-    ;
+public class BytemanMetricDataExtractor {
     
-    static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";
-    
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    private final Set<String> keySet;
+
+    public BytemanMetricDataExtractor() {
+        this.keySet = new HashSet<>();
     }
+    
+    public void mineMetric(BytemanMetric m) {
+        Objects.requireNonNull(m);
+        Map<String, Object> dataMap = m.getDataAsMap();
+        if (dataMap != null) {
+            for (String key: dataMap.keySet()) {
+                keySet.add(key);
+            }
+        }
+    }
+    
+    /**
+     * 
+     * @return A sorted list of the set of keys.
+     */
+    public List<String> getSortedKeySet() {
+        List<String> returnedList = new ArrayList<>(keySet);
+        Collections.sort(returnedList);
+        return returnedList;
+    }
+
 }

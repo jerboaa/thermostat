@@ -54,23 +54,28 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.LineBorder;
@@ -79,6 +84,14 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.SymbolAxis;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.xy.XYDataset;
 
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
@@ -101,15 +114,8 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.byteman.client.swing.internal.GraphDataset.CoordinateType;
+import com.redhat.thermostat.vm.byteman.client.swing.internal.PredefinedKeysMapper.MapDirection;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.SymbolAxis;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.category.CategoryDataset;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.xy.XYDataset;
 
 public class SwingVmBytemanView extends VmBytemanView implements SwingComponent {
 
@@ -121,6 +127,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
     private static final Icon ARROW_RIGHT = IconResource.ARROW_RIGHT.getIcon();
     private static final String EMPTY_STR = "";
     private static final String BYTEMAN_CHART_LABEL = EMPTY_STR;
+    private static final PredefinedKeysMapper KEYS_MAPPER = new PredefinedKeysMapper();
     
     static final String NO_METRICS_AVAILABLE = t.localize(LocaleResources.NO_METRICS_AVAILABLE).getContents();
     
@@ -158,6 +165,12 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
     private String filter = null;
     private String value = null;
     private String graphtype = null;
+    
+    // Graph widgets
+    private final JComboBox<String> xCombo;
+    private final JComboBox<String> yCombo;
+    private final JComboBox<String> filterCombo;
+    private final JTextField filterText;
 
     // duration over which to search for metrics
     private Duration duration = ThermostatChartPanel.DEFAULT_DATA_DISPLAY;
@@ -380,41 +393,28 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         // insert two labelled text fields to allow axis selection
         JLabel xlabel = new JLabel(t.localize(LocaleResources.X_COORD).getContents());
         JLabel ylabel = new JLabel(t.localize(LocaleResources.Y_COORD).getContents());
-        final JTextField xtext = new JTextField(30);
-        final JTextField ytext = new JTextField(30);
-
-        xtext.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-
+        final List<BytemanMetric> emptyBytemanMetrics = Collections.emptyList();
+        String[] keyItems = MetricsKeysAggregator.aggregate(emptyBytemanMetrics).toArray(new String[0]);
+        xCombo = new JComboBox<>(keyItems);
+        xCombo.addActionListener(new java.awt.event.ActionListener() {
+            
             @Override
-            public void insertUpdate(DocumentEvent e)
-            {
-                xkey = xtext.getText();
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e)
-            {
-                xkey = xtext.getText();
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e)
-            {
-                xkey = xtext.getText();
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                @SuppressWarnings("unchecked")
+                JComboBox<String> combo = (JComboBox<String>)e.getSource();
+                String candidate = (String)combo.getSelectedItem();
+                xkey = KEYS_MAPPER.mapPredefinedKey(candidate, MapDirection.VIEW_TO_MODEL);
             }
         });
-
-        ytext.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-
+        yCombo = new JComboBox<>(keyItems);
+        yCombo.addActionListener(new java.awt.event.ActionListener() {
+            
             @Override
-            public void insertUpdate(DocumentEvent e) {
-                ykey = ytext.getText();
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                ykey = ytext.getText();
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                ykey = ytext.getText();
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                @SuppressWarnings("unchecked")
+                JComboBox<String> combo = (JComboBox<String>)e.getSource();
+                String candidate = (String)combo.getSelectedItem();
+                ykey = KEYS_MAPPER.mapPredefinedKey(candidate, MapDirection.VIEW_TO_MODEL);
             }
         });
         // insert button to initiate graph redraw
@@ -430,39 +430,32 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
 
         JLabel filterlabel = new JLabel(t.localize(LocaleResources.FILTER).getContents());
         JLabel valuelabel = new JLabel(t.localize(LocaleResources.FILTER_VALUE_LABEL).getContents());
-        final JTextField filterText = new JTextField(30);
-        final JTextField valueText = new JTextField(30);
-
-        filterText.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-
+        String[] filterKeyVals = buildFilterKeyVals(keyItems);
+        filterCombo = new JComboBox<>(filterKeyVals);
+        filterCombo.addActionListener(new java.awt.event.ActionListener() {
+            
             @Override
-            public void insertUpdate(DocumentEvent e) {
-                filter = filterText.getText();
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                filter = filterText.getText();
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e)
-            {
-                filter = filterText.getText();
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                @SuppressWarnings("unchecked")
+                JComboBox<String> combo = (JComboBox<String>)e.getSource();
+                String candidate = (String)combo.getSelectedItem();
+                filter = mapFilter(candidate, MapDirection.VIEW_TO_MODEL);
+                updateFilterText(filter);
             }
         });
-
-        valueText.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-
+        filterText = new JTextField(30);
+        filterText.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
-                value = valueText.getText();
+                value = filterText.getText();
             }
             @Override
             public void removeUpdate(DocumentEvent e) {
-                value = valueText.getText();
+                value = filterText.getText();
             }
             @Override
             public void changedUpdate(DocumentEvent e) {
-                value = valueText.getText();
+                value = filterText.getText();
             }
         });
 
@@ -484,7 +477,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         graphConstraints.weighty = 0.5;
         graphConstraints.weightx = weightTextBox;
         graphConstraints.insets = spacerLeftInsets;
-        graphControlHolder.add(xtext, graphConstraints);
+        graphControlHolder.add(xCombo, graphConstraints);
         graphConstraints.fill = GridBagConstraints.HORIZONTAL;
         graphConstraints.gridx = 2;
         graphConstraints.gridy = 0;
@@ -498,7 +491,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         graphConstraints.weighty = 0.5;
         graphConstraints.weightx = weightTextBox;
         graphConstraints.insets = spacerLeftInsets;
-        graphControlHolder.add(ytext, graphConstraints);
+        graphControlHolder.add(yCombo, graphConstraints);
         graphConstraints.fill = GridBagConstraints.HORIZONTAL;
         graphConstraints.gridx = 0;
         graphConstraints.gridy = 1;
@@ -512,7 +505,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         graphConstraints.weighty = 0.5;
         graphConstraints.weightx = weightTextBox;
         graphConstraints.insets = spacerLeftInsets;
-        graphControlHolder.add(filterText, graphConstraints);
+        graphControlHolder.add(filterCombo, graphConstraints);
         graphConstraints.fill = GridBagConstraints.HORIZONTAL;
         graphConstraints.gridx = 2;
         graphConstraints.gridy = 1;
@@ -526,7 +519,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         graphConstraints.weighty = 0.5;
         graphConstraints.weightx = weightTextBox;
         graphConstraints.insets = spacerLeftInsets;
-        graphControlHolder.add(valueText, graphConstraints);
+        graphControlHolder.add(filterText, graphConstraints);
         graphConstraints.fill = GridBagConstraints.HORIZONTAL;
         graphConstraints.gridx = 4;
         graphConstraints.gridy = 1;
@@ -577,6 +570,25 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         
         mainContainer.setContent(tabbedPane);
         mainContainer.addToolBarButton(toggleButton);
+    }
+
+    /*
+     * When there is no key selected to filter by, don't enable the value
+     * input text box as this doesn't make sense.
+     */
+    private void updateFilterText(String filterValue) {
+        if (filterValue != null && !filterValue.isEmpty()) {
+            filterText.setEnabled(true);
+        } else {
+            filterText.setEnabled(false);
+        }
+    }
+
+    private String[] buildFilterKeyVals(String[] keyItems) {
+        List<String> filterKeys = new ArrayList<>(keyItems.length + 1);
+        filterKeys.add(PredefinedKeysMapper.NO_FILTER_ITEM); // default to no filter
+        filterKeys.addAll(Arrays.asList(keyItems));
+        return filterKeys.toArray(new String[] {});
     }
 
     private void updateGraphControlPanel(double weightx, double weighty) {
@@ -853,15 +865,50 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         final String f = filter;
         final String v = value;
         final String t = graphtype;
+        final String[] keyItems = MetricsKeysAggregator.aggregate(metrics).toArray(new String[] {});
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                updateComboKeyItems(keyItems, xk, yk, f);
                 GraphDataset dataset = makeGraphDataset(ms, xk, yk, f, v);
                 if (dataset != null) {
                     switchGraph(dataset, t);
                 }
             }
+
         });
+    }
+    
+    private void updateComboKeyItems(String[] keyItems, String xkey, String ykey, String filter) {
+        xCombo.removeAllItems();
+        yCombo.removeAllItems();
+        filterCombo.removeAllItems();
+        filterCombo.addItem(PredefinedKeysMapper.NO_FILTER_ITEM); // allow for no filter
+        for (String key: keyItems) {
+            xCombo.addItem(key);
+            yCombo.addItem(key);
+            filterCombo.addItem(key);
+        }
+        String xSelection = KEYS_MAPPER.mapPredefinedKey(xkey, MapDirection.MODEL_TO_VIEW);
+        selectItem(xCombo, xSelection);
+        String ySelection = KEYS_MAPPER.mapPredefinedKey(ykey, MapDirection.MODEL_TO_VIEW);
+        selectItem(yCombo, ySelection);
+        String filterSelection = mapFilter(filter, MapDirection.MODEL_TO_VIEW);
+        selectItem(filterCombo, filterSelection);
+    }
+
+    private String mapFilter(String filter, MapDirection direction) {
+        String mapped = KEYS_MAPPER.mapPredefinedKey(filter, direction);
+        if (!Objects.equals(filter, mapped)) {
+            return mapped;
+        }
+        return KEYS_MAPPER.mapNoFilter(filter, direction);
+    }
+
+    private void selectItem(final JComboBox<String> combo, String selection) {
+        if (selection != null) {
+            combo.setSelectedItem(selection);
+        }
     }
 
     private GraphDataset makeGraphDataset(List<BytemanMetric> metrics, String xkey, String ykey, String filter, String value) {
