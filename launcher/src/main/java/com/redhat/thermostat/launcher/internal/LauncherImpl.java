@@ -391,16 +391,23 @@ public class LauncherImpl implements Launcher {
     // command or any "sibling" subcommand and it is left up to the command implementation to reject or ignore the errant
     // option.
     // See http://icedtea.classpath.org/pipermail/thermostat/2016-October/021198.html
-    private Options mergeSubcommandOptionsWithParent(CommandInfo cmdInfo, String[] cmdArgs) {
+    // package-private for testing only
+    Options mergeSubcommandOptionsWithParent(CommandInfo cmdInfo, String[] cmdArgs) {
         Options options = cmdInfo.getOptions();
         PluginConfiguration.Subcommand selectedSubcommand = getSelectedSubcommand(cmdInfo, cmdArgs);
-        String selectedName = selectedSubcommand == null ? "" : selectedSubcommand.getName();
 
         for (PluginConfiguration.Subcommand subcommand : cmdInfo.getSubcommands()) {
             for (Option option : (Collection<Option>) subcommand.getOptions().getOptions()) {
                 Option copy = new Option(option.getOpt(), option.getLongOpt(), option.hasArg(), option.getDescription());
-                boolean required = selectedName.equals(subcommand.getName()) && option.isRequired();
-                copy.setRequired(required);
+                copy.setRequired(false);
+                options.addOption(copy);
+            }
+        }
+
+        if (selectedSubcommand != null) {
+            for (Option option : (Collection<Option>) selectedSubcommand.getOptions().getOptions()) {
+                Option copy = new Option(option.getOpt(), option.getLongOpt(), option.hasArg(), option.getDescription());
+                copy.setRequired(option.isRequired());
                 options.addOption(copy);
             }
         }

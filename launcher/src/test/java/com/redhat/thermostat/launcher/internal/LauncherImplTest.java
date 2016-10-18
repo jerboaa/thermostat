@@ -55,6 +55,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -545,6 +546,33 @@ public class LauncherImplTest {
         when(info1.getSubcommands()).thenReturn(Collections.singletonList(subInfo));
         String expected = "null, bar";
         runAndVerifyCommand(new String[] {"test1", "sub", "--arg1", "foo", "--arg2", "bar"}, expected, false);
+    }
+
+    @Test
+    public void testSelectedSubcommandOptionsNotOverriddenByOtherSubcommands() {
+        PluginConfiguration.Subcommand subInfo1 = mock(PluginConfiguration.Subcommand.class);
+        when(subInfo1.getName()).thenReturn("sub1");
+        when(subInfo1.getDescription()).thenReturn("subcommand description");
+
+        PluginConfiguration.Subcommand subInfo2 = mock(PluginConfiguration.Subcommand.class);
+        when(subInfo2.getName()).thenReturn("sub2");
+        when(subInfo2.getDescription()).thenReturn("subcommand description");
+
+        Options subOptions1 = mock(Options.class);
+        Options subOptions2 = mock(Options.class);
+        Option requiredOption = new Option(null, "option", false, null);
+        requiredOption.setRequired(true);
+        Option nonRequiredOption = new Option(null, "option", false, null);
+        nonRequiredOption.setRequired(false);
+        when(subOptions1.getOptions()).thenReturn(Collections.singletonList(requiredOption));
+        when(subOptions2.getOptions()).thenReturn(Collections.singletonList(nonRequiredOption));
+        when(subInfo1.getOptions()).thenReturn(subOptions1);
+        when(subInfo2.getOptions()).thenReturn(subOptions2);
+
+        when(info1.getSubcommands()).thenReturn(Arrays.asList(subInfo1, subInfo2));
+
+        Options options = launcher.mergeSubcommandOptionsWithParent(info1, new String[] { "sub1" });
+        assertTrue(options.getOption("option").isRequired());
     }
 
     @Test
