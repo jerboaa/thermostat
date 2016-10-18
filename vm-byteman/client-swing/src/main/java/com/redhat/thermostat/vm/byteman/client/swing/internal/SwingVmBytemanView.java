@@ -115,6 +115,7 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.byteman.client.swing.internal.GraphDataset.CategoryTimePlotData;
 import com.redhat.thermostat.vm.byteman.client.swing.internal.GraphDataset.CoordinateType;
+import com.redhat.thermostat.vm.byteman.client.swing.internal.GraphDataset.Filter;
 import com.redhat.thermostat.vm.byteman.client.swing.internal.PredefinedKeysMapper.MapDirection;
 import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 
@@ -863,15 +864,20 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         final List<BytemanMetric> ms = metrics;
         final String xk = xkey;
         final String yk = ykey;
-        final String f = filter;
-        final String v = value;
+        final Filter dataFilter;
+        if (filter != null && value != null) {
+            dataFilter = new Filter(filter, value);
+        } else {
+            dataFilter = null;
+        }
         final String t = graphtype;
         final String[] keyItems = MetricsKeysAggregator.aggregate(metrics).toArray(new String[] {});
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                String f = dataFilter == null ? null : dataFilter.getFilterKey();
                 updateComboKeyItems(keyItems, xk, yk, f);
-                GraphDataset dataset = makeGraphDataset(ms, xk, yk, f, v);
+                GraphDataset dataset = makeGraphDataset(ms, xk, yk, dataFilter);
                 if (dataset != null) {
                     switchGraph(dataset, t);
                 }
@@ -912,8 +918,8 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         }
     }
 
-    private GraphDataset makeGraphDataset(List<BytemanMetric> metrics, String xkey, String ykey, String filter, String value) {
-        GraphDataset dataset = new GraphDataset(metrics, xkey, ykey, filter, value);
+    private GraphDataset makeGraphDataset(List<BytemanMetric> metrics, String xkey, String ykey, Filter filter) {
+        GraphDataset dataset = new GraphDataset(metrics, xkey, ykey, filter);
         if (dataset.size() == 0) {
             return null;
         }

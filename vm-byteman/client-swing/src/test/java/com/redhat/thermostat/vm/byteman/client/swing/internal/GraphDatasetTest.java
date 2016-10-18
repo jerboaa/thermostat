@@ -76,12 +76,12 @@ public class GraphDatasetTest {
     public void testEmptyXYDataSet() {
         final List<BytemanMetric> empty = Collections.emptyList();
         // x => marker
-        GraphDataset dataset = new GraphDataset(empty, GraphDataset.MARKER_KEY, GraphDataset.TIMESTAMP_KEY, null, null);
+        GraphDataset dataset = new GraphDataset(empty, GraphDataset.MARKER_KEY, GraphDataset.TIMESTAMP_KEY, null);
         XYDataset actualDataset = dataset.getXYDataset();
         assertEquals(0, actualDataset.getSeriesCount());
         
         // y => marker
-        dataset = new GraphDataset(empty, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null, null);
+        dataset = new GraphDataset(empty, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null);
         actualDataset = dataset.getXYDataset();
         assertEquals(0, actualDataset.getSeriesCount());
     }
@@ -98,7 +98,7 @@ public class GraphDatasetTest {
            }
         });
         // plots (x, y) where (x_i, y_i) == (i, i)
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null);
         XYDataset xyDataSet = dataSet.getXYDataset();
         assertEquals(1, xyDataSet.getSeriesCount());
         assertEquals(DefaultMetricConfig.DEFAULT_NUM, xyDataSet.getItemCount(0));
@@ -132,7 +132,8 @@ public class GraphDatasetTest {
                }
            }
         });
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, filterKey, filterValue);
+        GraphDataset.Filter filter = new GraphDataset.Filter(filterKey, filterValue);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, filter);
         XYDataset xyDataSet = dataSet.getXYDataset();
         assertEquals(1, xyDataSet.getSeriesCount());
         assertEquals(DefaultMetricConfig.DEFAULT_NUM/2, xyDataSet.getItemCount(0));
@@ -175,7 +176,7 @@ public class GraphDatasetTest {
                return timeStamp; // same timestamp for all metrics
            }
         });
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null);
         XYDataset xyDataSet = dataSet.getXYDataset();
         assertEquals(1, xyDataSet.getSeriesCount());
         assertEquals(1, xyDataSet.getItemCount(0));
@@ -210,7 +211,7 @@ public class GraphDatasetTest {
                return timestamps[idx]; // same timestamp every repeatAmount times
            }
         });
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null);
         XYDataset xyDataSet = dataSet.getXYDataset();
         assertEquals(1, xyDataSet.getSeriesCount());
         assertEquals(repeatAmount, xyDataSet.getItemCount(0));
@@ -254,7 +255,7 @@ public class GraphDatasetTest {
                return timestamps[idx]; // same timestamp every repeatAmount times
            }
         });
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null);
         XYDataset xyDataSet = dataSet.getXYDataset();
         assertEquals(1, xyDataSet.getSeriesCount());
         assertEquals(repeatAmount, xyDataSet.getItemCount(0));
@@ -270,7 +271,7 @@ public class GraphDatasetTest {
     @Test
     public void testCategoryDatasetEmpty() {
         final List<BytemanMetric> empty = Collections.emptyList();
-        GraphDataset dataSet = new GraphDataset(empty /* no matter */, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null, null);
+        GraphDataset dataSet = new GraphDataset(empty /* no matter */, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null);
         CategoryDataset actualSet = dataSet.getCategoryDataset();
         assertEquals(0, actualSet.getColumnCount());
         assertEquals(0, actualSet.getRowCount());
@@ -311,7 +312,7 @@ public class GraphDatasetTest {
                 return 12;
             }
         });
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.MARKER_KEY, COUNT_FIELD, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.MARKER_KEY, COUNT_FIELD, null);
         CategoryDataset actualSet = dataSet.getCategoryDataset();
         assertEquals("two different markers", 2, actualSet.getRowCount());
         assertEquals("one value per marker", 1, actualSet.getColumnCount());
@@ -353,7 +354,7 @@ public class GraphDatasetTest {
                 return 100 - 1;
             }
         });
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.MARKER_KEY, GraphDataset.MARKER_KEY, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.MARKER_KEY, GraphDataset.MARKER_KEY, null);
         CategoryDataset actualSet = dataSet.getCategoryDataset();
         assertEquals("two different markers", 2, actualSet.getRowCount());
         assertEquals(2, actualSet.getColumnCount());
@@ -373,12 +374,12 @@ public class GraphDatasetTest {
     public void testEmptyCategoryTimePlot() {
         final List<BytemanMetric> empty = Collections.emptyList();
         // x => marker
-        GraphDataset dataset = new GraphDataset(empty, GraphDataset.MARKER_KEY, GraphDataset.TIMESTAMP_KEY, null, null);
+        GraphDataset dataset = new GraphDataset(empty, GraphDataset.MARKER_KEY, GraphDataset.TIMESTAMP_KEY, null);
         CategoryTimePlotData actualDataset = dataset.getCategoryTimePlot();
         assertEquals(0, actualDataset.getXYDataSet().getSeriesCount());
         
         // y => timestamp
-        dataset = new GraphDataset(empty, GraphDataset.TIMESTAMP_KEY, GraphDataset.TIMESTAMP_KEY, null, null);
+        dataset = new GraphDataset(empty, GraphDataset.TIMESTAMP_KEY, GraphDataset.TIMESTAMP_KEY, null);
         actualDataset = dataset.getCategoryTimePlot();
         assertEquals(0, actualDataset.getXYDataSet().getSeriesCount());
     }
@@ -412,7 +413,7 @@ public class GraphDatasetTest {
             }
             
         });
-        GraphDataset dataset = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null, null);
+        GraphDataset dataset = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null);
         CategoryTimePlotData actualData = dataset.getCategoryTimePlot();
         XYDataset actualDataset = actualData.getXYDataSet();
         assertEquals("Expected one series, exactly", 1, actualDataset.getSeriesCount());
@@ -444,11 +445,11 @@ public class GraphDatasetTest {
     @Test
     public void testXType() {
         List<BytemanMetric> mList = buildMetrics(new DefaultMetricConfig());
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.MARKER_KEY, GraphDataset.TIMESTAMP_KEY, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.MARKER_KEY, GraphDataset.TIMESTAMP_KEY, null);
         assertEquals(CoordinateType.CATEGORY, dataSet.getXType());
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null);
         assertEquals(CoordinateType.TIME, dataSet.getXType());
-        dataSet = new GraphDataset(mList, GraphDataset.FREQUENCY_KEY, GraphDataset.MARKER_KEY, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.FREQUENCY_KEY, GraphDataset.MARKER_KEY, null);
         assertEquals(CoordinateType.INTEGRAL, dataSet.getXType());
         mList = buildMetrics(new DefaultMetricConfig() {
             @Override
@@ -459,18 +460,18 @@ public class GraphDatasetTest {
                         .build();
             }
         });
-        dataSet = new GraphDataset(mList, COUNT_FIELD, GraphDataset.MARKER_KEY, null, null);
+        dataSet = new GraphDataset(mList, COUNT_FIELD, GraphDataset.MARKER_KEY, null);
         assertEquals(CoordinateType.REAL, dataSet.getXType());
     }
     
     @Test
     public void testXLabel() {
         List<BytemanMetric> mList = buildMetrics(new DefaultMetricConfig());
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.MARKER_KEY, GraphDataset.TIMESTAMP_KEY, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.MARKER_KEY, GraphDataset.TIMESTAMP_KEY, null);
         assertEquals(GraphDataset.MARKER_KEY, dataSet.getXLabel());
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null);
         assertEquals(GraphDataset.TIMESTAMP_KEY, dataSet.getXLabel());
-        dataSet = new GraphDataset(mList, GraphDataset.FREQUENCY_KEY, GraphDataset.MARKER_KEY, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.FREQUENCY_KEY, GraphDataset.MARKER_KEY, null);
         assertEquals(GraphDataset.FREQUENCY_KEY, dataSet.getXLabel());
         
         mList = buildMetrics(new DefaultMetricConfig() {
@@ -482,18 +483,18 @@ public class GraphDatasetTest {
                         .build();
             }
         });
-        dataSet = new GraphDataset(mList, COUNT_FIELD, GraphDataset.MARKER_KEY, null, null);
+        dataSet = new GraphDataset(mList, COUNT_FIELD, GraphDataset.MARKER_KEY, null);
         assertEquals(COUNT_FIELD, dataSet.getXLabel());
     }
     
     @Test
     public void testYType() {
         List<BytemanMetric> mList = buildMetrics(new DefaultMetricConfig());
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null);
         assertEquals(CoordinateType.CATEGORY, dataSet.getYType());
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.TIMESTAMP_KEY, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.TIMESTAMP_KEY, null);
         assertEquals(CoordinateType.TIME, dataSet.getYType());
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.FREQUENCY_KEY, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.FREQUENCY_KEY, null);
         assertEquals(CoordinateType.INTEGRAL, dataSet.getYType());
         mList = buildMetrics(new DefaultMetricConfig() {
             @Override
@@ -504,18 +505,18 @@ public class GraphDatasetTest {
                         .build();
             }
         });
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null);
         assertEquals(CoordinateType.REAL, dataSet.getYType());
     }
     
     @Test
     public void testYLabel() {
         List<BytemanMetric> mList = buildMetrics(new DefaultMetricConfig());
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null);
         assertEquals(GraphDataset.MARKER_KEY, dataSet.getYLabel());
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.TIMESTAMP_KEY, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.TIMESTAMP_KEY, null);
         assertEquals(GraphDataset.TIMESTAMP_KEY, dataSet.getYLabel());
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.FREQUENCY_KEY, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.FREQUENCY_KEY, null);
         assertEquals(GraphDataset.FREQUENCY_KEY, dataSet.getYLabel());
         mList = buildMetrics(new DefaultMetricConfig() {
             @Override
@@ -526,14 +527,14 @@ public class GraphDatasetTest {
                         .build();
             }
         });
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null);
         assertEquals(COUNT_FIELD, dataSet.getYLabel());
     }
     
     @Test
     public void testSize() {
         List<BytemanMetric> mList = buildMetrics(new DefaultMetricConfig());
-        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null, null);
+        GraphDataset dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, GraphDataset.MARKER_KEY, null);
         assertEquals(DefaultMetricConfig.DEFAULT_NUM, dataSet.size());
         final int numMetrics = 10;
         mList = buildMetrics(new DefaultMetricConfig() {
@@ -550,7 +551,7 @@ public class GraphDatasetTest {
                     .build();
             }
         });
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null);
         assertEquals(numMetrics, dataSet.size());
         
         // some metrics are filtered (implicitly) so should not add to the data
@@ -568,7 +569,7 @@ public class GraphDatasetTest {
                 }
             }
         });
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null, null);
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, null);
         assertEquals(DefaultMetricConfig.DEFAULT_NUM/2, dataSet.size());
         
         // explicit filtering
@@ -591,7 +592,8 @@ public class GraphDatasetTest {
                 }
             }
         });
-        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, fooKey, String.valueOf(fooValue));
+        GraphDataset.Filter filter = new GraphDataset.Filter(fooKey, String.valueOf(fooValue));
+        dataSet = new GraphDataset(mList, GraphDataset.TIMESTAMP_KEY, COUNT_FIELD, filter);
         assertEquals("0, 30, 60, 90 => 4", 4, dataSet.size());
     }
 

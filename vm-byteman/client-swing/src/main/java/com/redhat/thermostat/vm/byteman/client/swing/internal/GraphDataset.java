@@ -104,8 +104,7 @@ class GraphDataset {
     private static final CategoryTimePlotData emptyCategoryTimePlotData = new CategoryTimePlotData(emptyXYDataset, new String[] {});
     private static final Number frequencyUnit = Long.valueOf(1);
 
-    public GraphDataset(List<BytemanMetric> metrics, String xkey, String ykey, String filter, String value)
-    {
+    public GraphDataset(List<BytemanMetric> metrics, String xkey, String ykey, Filter dataFilter) {
         this.xkey = xkey;
         this.ykey = ykey;
         xtype = CoordinateType.INTEGRAL;
@@ -126,6 +125,8 @@ class GraphDataset {
             ytype = CoordinateType.CATEGORY;
         }
         // if we have a filter value then convert it to a number if it is numeric
+        String value = dataFilter != null ? dataFilter.getFilterValue() : null;
+        String filter = dataFilter != null ? dataFilter.getFilterKey() : null;
         Object filterValue = value;
         if (filter != null && value != null) {
             // may need to convert String to Numeric
@@ -178,8 +179,7 @@ class GraphDataset {
         return data.size();
     }
 
-    public XYDataset getXYDataset()
-    {
+    public XYDataset getXYDataset() {
         if (xtype == CoordinateType.CATEGORY ||
                 ytype == CoordinateType.CATEGORY) {
             return emptyXYDataset;
@@ -210,8 +210,7 @@ class GraphDataset {
         return xycollection;
     }
 
-    public CategoryDataset getCategoryDataset()
-    {
+    public CategoryDataset getCategoryDataset() {
         if (xtype == CoordinateType.TIME) {
             return emptyCategoryDataset;
         }
@@ -252,8 +251,7 @@ class GraphDataset {
     }
 
     // alternative option for presenting category xkey with numeric ykey
-    public PieDataset getPieDataset()
-    {
+    public PieDataset getPieDataset() {
         if (xtype != CoordinateType.CATEGORY || ytype == CoordinateType.CATEGORY) {
             return emptyPieDataset;
         }
@@ -275,8 +273,7 @@ class GraphDataset {
         return pieDataset;
     }
 
-    public CategoryTimePlotData getCategoryTimePlot()
-    {
+    public CategoryTimePlotData getCategoryTimePlot() {
         if (xtype != CoordinateType.TIME || ytype != CoordinateType.CATEGORY) {
             return emptyCategoryTimePlotData;
         }
@@ -414,6 +411,30 @@ class GraphDataset {
         
         String[] getSymbols() {
             return symbols;
+        }
+    }
+    
+    /**
+     * A filter which has to match for each metric in order for it
+     * to get included in the data set.
+     *
+     */
+    static class Filter {
+        
+        private final String filterKey;
+        private final String filterValue;
+        
+        Filter(String filterKey, String filterValue) {
+            this.filterKey = filterKey;
+            this.filterValue = filterValue;
+        }
+        
+        String getFilterKey() {
+            return filterKey;
+        }
+        
+        String getFilterValue() {
+            return filterValue;
         }
     }
 }
