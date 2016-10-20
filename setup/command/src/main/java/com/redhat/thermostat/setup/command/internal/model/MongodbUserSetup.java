@@ -66,13 +66,13 @@ import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.service.process.ProcessHandler;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.OS;
 
 class MongodbUserSetup implements UserSetup {
 
     static final String[] STORAGE_START_ARGS = {"storage", "--start", "--permitLocalhostException"};
     static final String[] STORAGE_STOP_ARGS = {"storage", "--stop"};
 
-    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
     private static final String WEB_AUTH_FILE = "web.auth";
     private static final String MONGO_PROCESS = "mongod";
     private static final Logger logger = LoggingUtils.getLogger(MongodbUserSetup.class);
@@ -250,7 +250,7 @@ class MongodbUserSetup implements UserSetup {
     }
 
     String[] getMongoRunnerCmdline( final String arg ) {
-        return IS_UNIX ? new String[] { "mongo", arg} : new String[] { "cmd", "/C", "mongo.exe", arg };
+        return OS.IS_UNIX ? new String[] { "mongo", arg } : new String[] { "cmd", "/C", "mongo.exe", arg };
     }
 
     //package-private for testing

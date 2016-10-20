@@ -40,13 +40,12 @@ import com.redhat.thermostat.service.internal.unix.UnixProcessUtilities;
 import com.redhat.thermostat.service.internal.windows.WindowsProcessUtilities;
 import com.redhat.thermostat.service.process.ProcessHandler;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 
 public class ProcessHendlerImplTest {
-
-    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
 
     @Test
     public void testCorrectImplementation() {
@@ -54,7 +53,7 @@ public class ProcessHendlerImplTest {
         final ProcessHandler hnd = ProcessHandlerImpl.getInstance();
         assertNotNull(hnd);
 
-        if (IS_UNIX) {
+        if (OS.IS_UNIX) {
             assert(hnd instanceof UnixProcessUtilities);
         } else {
             assert(hnd instanceof WindowsProcessUtilities);

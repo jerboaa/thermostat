@@ -36,18 +36,18 @@
 
 package com.redhat.thermostat.storage.cli.internal;
 
+import com.redhat.thermostat.shared.config.OS;
+
 /**
  * factory class to create OS-specific implementations of MongoOSUtil
  */
 class MongoOSUtilFactory {
-
-    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
 
     private static final MongoOSUtilFactory theInstance = new MongoOSUtilFactory();
 
     static MongoOSUtilFactory instance() { return theInstance; }
 
     MongoOSUtilInterface createMongoOSUtil() {
-        return IS_UNIX ? new MongoUnixUtil() : new MongoWindowsUtil();
+        return OS.IS_UNIX ? new MongoUnixUtil() : new MongoWindowsUtil();
     }
 }

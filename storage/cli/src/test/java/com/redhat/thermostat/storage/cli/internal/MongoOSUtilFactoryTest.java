@@ -36,15 +36,13 @@
 
 package com.redhat.thermostat.storage.cli.internal;
 
-import org.junit.Assert;
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class MongoOSUtilFactoryTest {
-
-    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
 
     @Test
     public void instanceIsntNullTest() {
@@ -58,7 +56,7 @@ public class MongoOSUtilFactoryTest {
         MongoOSUtilInterface thing = MongoOSUtilFactory.instance().createMongoOSUtil();
         assertNotNull(thing);
 
-        if (IS_UNIX)
+        if (OS.IS_UNIX)
             assertTrue("createMongoOSUtil() must return an instance of MongoUnixUtil on unix", thing instanceof MongoUnixUtil);
         else
             assertTrue("createMongoOSUtil() must return an instance of MongoWindowsUtil on Windows", thing instanceof MongoWindowsUtil);

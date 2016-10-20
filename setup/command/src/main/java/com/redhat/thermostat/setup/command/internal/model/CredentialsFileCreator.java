@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.setup.command.internal.model;
 
+import com.redhat.thermostat.shared.config.OS;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,8 +48,6 @@ import java.util.Set;
 
 class CredentialsFileCreator {
 
-    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
-
     private static final Set<PosixFilePermission> CREDS_FILE_PERMISSIONS = EnumSet.of(
             PosixFilePermission.OWNER_READ,
             PosixFilePermission.OWNER_WRITE
@@ -56,7 +56,7 @@ class CredentialsFileCreator {
     void create(File file) throws IOException {
         if (!file.exists()) {
             // create file and set file permissions to 600
-            if ( IS_UNIX )
+            if ( OS.IS_UNIX )
                 Files.createFile(file.toPath(), PosixFilePermissions.asFileAttribute(CREDS_FILE_PERMISSIONS));
             else {
                 // on windows, credentials may be globally visible.

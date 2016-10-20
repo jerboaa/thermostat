@@ -34,32 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.service.internal;
+package com.redhat.thermostat.shared.config;
 
-import com.redhat.thermostat.service.internal.unix.UnixProcessUtilities;
-import com.redhat.thermostat.service.internal.windows.WindowsProcessUtilities;
-import com.redhat.thermostat.service.process.ProcessHandler;
-import com.redhat.thermostat.service.process.UNIXSignal;
-import com.redhat.thermostat.shared.config.OS;
+/**
+ * Utility class for OS-specific behaviour
+ */
+public class OS {
 
-public class ProcessHandlerImpl implements ProcessHandler {
+    /**
+     * The current OS is Linux, BSD, Darwin, AIX, Solaris (etc.)
+      */
+    public static final boolean IS_UNIX;
 
-    private static final ProcessUtilitiesBase proxy = OS.IS_UNIX ? new UnixProcessUtilities() : new WindowsProcessUtilities();
+    /**
+     * The current OS is Windows of any flavour (implies IS_UNIX is false)
+     */
 
-    public static ProcessHandler getInstance() {
-        return proxy;
-    }
-    
-    protected ProcessHandlerImpl() {}
+    public static final boolean IS_WINDOWS;
 
-    @Override
-    public void sendSignal(Integer pid, UNIXSignal signal) {
-        proxy.sendSignal(pid, signal);
-    }
+    /**
+     * The current OS is Linux (implies IS_UNIX is also true)
+     */
+    public static final boolean IS_LINUX;
 
-    @Override
-    public String getProcessName(Integer pid) {
-        return proxy.getProcessName(pid);
+    /**
+     * The current OS is MacOS (implies IS_UNIX is also true)
+     */
+    public static final boolean IS_MACOS;
+
+    static {
+        final String osname = System.getProperty("os.name").toLowerCase();
+
+        IS_UNIX = !osname.contains("win");
+        IS_WINDOWS = !IS_UNIX;
+
+        IS_MACOS = osname.contains("os x") || osname.contains("mac") || osname.contains("darwin");
+        IS_LINUX = osname.contains("linux");
     }
 }
-

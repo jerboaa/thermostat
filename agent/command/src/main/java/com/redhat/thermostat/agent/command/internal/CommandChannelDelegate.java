@@ -51,6 +51,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
+
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
@@ -63,6 +64,7 @@ import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
@@ -72,7 +74,6 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     private static final Logger logger = LoggingUtils.getLogger(CommandChannelDelegate.class);
     private static final String CMD_NAME = "thermostat-command-channel";
     private static final String IPC_SERVER_NAME = "command-channel";
-    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
 
     // States for 'state' field
     private static final int STATE_NOT_STARTED = 0;
@@ -207,7 +208,7 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     }
     
     private void startServer(String hostname, int port) throws IOException {
-        String[] processArgs = IS_UNIX
+        String[] processArgs = OS.IS_UNIX
                 ? new String[]{ binPath.getAbsolutePath() + File.separator + CMD_NAME, hostname,
                                 String.valueOf(port), ipcConfig.getAbsolutePath() }
                 : new String[] { "cmd", "/c", binPath.getAbsolutePath() + File.separator + CMD_NAME + ".cmd", hostname,

@@ -43,6 +43,7 @@ import java.net.ServerSocket;
 import java.util.Properties;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
+import com.redhat.thermostat.shared.config.OS;
 
 class IPCConfigurationWriter {
 
@@ -56,8 +57,6 @@ class IPCConfigurationWriter {
     // suggest some default vaules for TCP sockets - test this range for unused sockets
     private static int TEST_SOCKET_LOW = 51200;
     private static int TEST_SOCKET_HIGH = 55000;
-
-    private static final boolean IS_UNIX = !System.getProperty("os.name").contains("Windows");
 
     private static final String COMMENTS =
         "Configuration for Inter-process Communication (IPC) used in the Thermostat agent.\n"
@@ -94,7 +93,7 @@ class IPCConfigurationWriter {
         
         Properties props = helper.createProperties();
 
-        props.setProperty(PROP_IPC_TYPE, IS_UNIX ? IPCType.UNIX_SOCKET.getConfigValue() : IPCType.TCP_SOCKET.getConfigValue());
+        props.setProperty(PROP_IPC_TYPE, OS.IS_UNIX ? IPCType.UNIX_SOCKET.getConfigValue() : IPCType.TCP_SOCKET.getConfigValue());
 
         // unix socket will work without configuration (creates sockets in tmp directory
         // but tcpsocket always needs ports (in the future, should support service discovery)

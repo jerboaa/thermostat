@@ -37,6 +37,7 @@
 package com.redhat.thermostat.utils.keyring.internal;
 
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.OS;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -46,8 +47,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator {
-
-    private static final boolean IS_UNIX = !System.getProperty("os.name").toLowerCase().contains("win");
 
     private ServiceRegistration reg;
 
@@ -80,20 +79,20 @@ public class Activator implements BundleActivator {
         try {
             theKeyring = new KeyringImpl();
         } catch (UnsatisfiedLinkError e) {
-            if (IS_UNIX) {
+            if (OS.IS_UNIX) {
                 theKeyring = new DummyKeyringImpl();
             }
             else {
-                ServiceTracker<CommonPaths,CommonPaths> pathTracker = new ServiceTracker(context,CommonPaths.class.getName(), null) {
+                ServiceTracker<CommonPaths,CommonPaths> pathTracker = new ServiceTracker<CommonPaths,CommonPaths>(context,CommonPaths.class.getName(), null) {
                     @Override
-                    public Object addingService(ServiceReference reference) {
-                        CommonPaths paths = (CommonPaths) super.addingService(reference);
+                    public CommonPaths addingService(ServiceReference<CommonPaths> reference) {
+                        CommonPaths paths = super.addingService(reference);
                         final Keyring theKeyring = new InsecureFileBasedKeyringImpl(paths);
                         reg = context.registerService(Keyring.class.getName(), theKeyring, null);
                         return paths;
                     }
                     @Override
-                    public void removedService(ServiceReference reference, Object service) {
+                    public void removedService(ServiceReference<CommonPaths> reference, CommonPaths service) {
                         if (reg != null) {
                             reg.unregister();
                             reg = null;
@@ -107,10 +106,9 @@ public class Activator implements BundleActivator {
         if (theKeyring != null)
             context.registerService(Keyring.class.getName(), theKeyring, null);
     }
-    
+
     @Override
     public void stop(BundleContext context) throws Exception {
         // Nothing to do
     }
 }
-
