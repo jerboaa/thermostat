@@ -36,12 +36,43 @@
 
 package com.redhat.thermostat.utils.keyring.internal;
 
+import com.redhat.thermostat.shared.config.CommonPaths;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.utils.keyring.Keyring;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator {
+
+    private static final boolean IS_UNIX = !System.getProperty("os.name").toLowerCase().contains("win");
+
+    private ServiceRegistration reg;
+
+    private static class DummyKeyringImpl implements Keyring {
+
+        /* Trivial implementation just to keep the world from blowing up.
+         * Everything noop.
+         */
+
+        @Override
+        public void savePassword(String url, String username, char[] password) {
+            // NOOP
+        }
+
+        @Override
+        public char[] getPassword(String url, String username) {
+            // NOOP
+            return new char[]{};
+        }
+
+        @Override
+        public void clearPassword(String url, String username) {
+            // NOOP
+        }
+    }
 
     @Override
     public void start(BundleContext context) throws Exception {
@@ -49,32 +80,32 @@ public class Activator implements BundleActivator {
         try {
             theKeyring = new KeyringImpl();
         } catch (UnsatisfiedLinkError e) {
-            theKeyring = new Keyring() {
-                /* Trivial implementation just to keep the world from blowing up.
-                 * Everything noop.
-                 */
-
-                @Override
-                public void savePassword(String url, String username,
-                        char[] password) {
-                    // NOOP
-                }
-
-                @Override
-                public char[] getPassword(String url, String username) {
-                    // NOOP
-                    return new char[]{};
-                }
-
-                @Override
-                public void clearPassword(String url, String username) {
-                    // NOOP
-                }
-                
-            };
+            if (IS_UNIX) {
+                theKeyring = new DummyKeyringImpl();
+            }
+            else {
+                ServiceTracker<CommonPaths,CommonPaths> pathTracker = new ServiceTracker(context,CommonPaths.class.getName(), null) {
+                    @Override
+                    public Object addingService(ServiceReference reference) {
+                        CommonPaths paths = (CommonPaths) super.addingService(reference);
+                        final Keyring theKeyring = new InsecureFileBasedKeyringImpl(paths);
+                        reg = context.registerService(Keyring.class.getName(), theKeyring, null);
+                        return paths;
+                    }
+                    @Override
+                    public void removedService(ServiceReference reference, Object service) {
+                        if (reg != null) {
+                            reg.unregister();
+                            reg = null;
+                        }
+                        super.removedService(reference, service);
+                    }
+                };
+                pathTracker.open();
+            }
         }
-        context.registerService(Keyring.class.getName(), theKeyring, null);
-        
+        if (theKeyring != null)
+            context.registerService(Keyring.class.getName(), theKeyring, null);
     }
     
     @Override
