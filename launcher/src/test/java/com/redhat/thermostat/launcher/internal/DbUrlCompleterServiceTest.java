@@ -36,55 +36,63 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
-import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.TabCompleter;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.Map;
 
-import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-public class DbUrlFinderTest {
+public class DbUrlCompleterServiceTest {
 
-    private DependencyServices dependencyServices;
-    private DbUrlFinder finder;
+    private DbUrlCompleterService service;
+    private DbUrlCompleterService.DbUrlFinder finder;
 
     @Before
     public void setup() {
-        dependencyServices = mock(DependencyServices.class);
-        finder = new DbUrlFinder(dependencyServices);
+        service = new DbUrlCompleterService();
+        finder = mock(DbUrlCompleterService.DbUrlFinder.class);
+        service.bindDbUrlFinder(finder);
     }
 
     @Test
-    public void testDbUrlCompleter() {
-        CommonPaths paths = mock(CommonPaths.class);
-        ClientPreferences prefs = mock(ClientPreferences.class);
-        when(dependencyServices.hasService(CommonPaths.class)).thenReturn(true);
-        when(dependencyServices.getService(CommonPaths.class)).thenReturn(paths);
-        finder.setPaths(paths);
-        finder.setPrefs(prefs);
-
-        String partialUrl = "https://ip.addr";
-        String fullUrl = partialUrl + "ess.example.com:25813/thermostat/storage";
-        when(prefs.getConnectionUrl()).thenReturn(fullUrl);
-
-        List<CompletionInfo> completions = finder.findCompletions();
-
-        assertEquals(1, completions.size());
-        assertEquals(fullUrl, completions.get(0).getCompletionWithUserVisibleText().trim());
+    public void testGetCommandsReturnsAllCommands() {
+        assertThat(service.getCommands(), is(equalTo(TabCompletion.ALL_COMMANDS_COMPLETER)));
     }
 
     @Test
-    public void testListDependencies() {
-        assertThat(finder.getRequiredDependencies(), is(equalTo(new Class[]{CommonPaths.class})));
+    @SuppressWarnings("unchecked")
+    public void testGetSubcommandCompletionsIsEmpty() {
+        assertThat((Map) service.getSubcommandCompleters(), is(equalTo(Collections.emptyMap())));
+    }
+
+    @Test
+    public void testGetOptionCompleters() {
+        Map<CliCommandOption, ? extends TabCompleter> completerMap = service.getOptionCompleters();
+        assertThat(completerMap.size(), is(1));
+        assertThat(completerMap.keySet(), is(equalTo(Collections.singleton(DbUrlCompleterService.DB_URL_OPTION))));
+        assertNotNull(completerMap.get(DbUrlCompleterService.DB_URL_OPTION));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testReturnsNoOptionCompletersIfDbUrlFinderNotBound() {
+        service.unbindDbUrlFinder(finder);
+        Map completerMap = service.getOptionCompleters();
+        assertThat(completerMap, is(equalTo(Collections.emptyMap())));
+    }
+
+    @Test
+    public void testDbUrlOption() {
+        assertThat(DbUrlCompleterService.DB_URL_OPTION.getOpt(), is(equalTo("d")));
+        assertThat(DbUrlCompleterService.DB_URL_OPTION.getLongOpt(), is(equalTo("dbUrl")));
     }
 
 }

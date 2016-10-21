@@ -36,54 +36,51 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
 import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.shared.config.CommonPaths;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
 
-public class DbUrlFinder extends AbstractCompletionFinder {
+import static junit.framework.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-    private ClientPreferences prefs;
+public class DbUrlFinderImplTest {
 
-    public DbUrlFinder(DependencyServices dependencyServices) {
-        super(dependencyServices);
+    private DbUrlFinderImpl finder;
+
+    @Before
+    public void setup() {
+        finder = new DbUrlFinderImpl();
     }
 
-    /* Testing only */
-    void setPaths(CommonPaths paths) {
-        dependencyServices.addService(CommonPaths.class, paths);
+    @Test
+    public void testDbUrlCompleter() {
+        ClientPreferences prefs = mock(ClientPreferences.class);
+        finder.setClientPreferences(prefs);
+
+        String partialUrl = "https://ip.addr";
+        String fullUrl = partialUrl + "ess.example.com:25813/thermostat/storage";
+        when(prefs.getConnectionUrl()).thenReturn(fullUrl);
+
+        List<CompletionInfo> completions = finder.findCompletions();
+
+        assertEquals(1, completions.size());
+        assertEquals(fullUrl, completions.get(0).getCompletionWithUserVisibleText().trim());
     }
 
-    /* Testing only */
-    void setPrefs(ClientPreferences prefs) {
-        this.prefs = prefs;
-    }
-
-    @Override
-    protected Class<?>[] getRequiredDependencies() {
-        return new Class<?>[] { CommonPaths.class };
-    }
-
-    @Override
-    public List<CompletionInfo> findCompletions() {
-        if (!allDependenciesAvailable()) {
-            return Collections.emptyList();
-        }
-
-        if (this.prefs == null) {
-            CommonPaths paths = getService(CommonPaths.class);
-            this.prefs = new ClientPreferences(paths);
-        }
-
-        String dbUrl = prefs.getConnectionUrl();
-        if (dbUrl == null) {
-            dbUrl = "";
-        }
-        return Collections.singletonList(new CompletionInfo(dbUrl));
+    @Test
+    public void testReturnsNoResultsIfClientPreferencesAreNull() {
+        finder.unbindCommonPaths(null);
+        finder.setClientPreferences(null);
+        List<CompletionInfo> completions = finder.findCompletions();
+        assertThat(completions, is(equalTo(Collections.<CompletionInfo>emptyList())));
     }
 
 }

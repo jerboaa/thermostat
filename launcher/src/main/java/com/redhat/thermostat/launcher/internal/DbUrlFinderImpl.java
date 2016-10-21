@@ -36,55 +36,48 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.CliCommandOption;
-import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.common.cli.CompletionFinder;
-import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
-import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
 @Component
 @Service
-public class DbUrlCompleterService implements CompleterService {
+@Reference(name = "commonPaths", referenceInterface = CommonPaths.class)
+public class DbUrlFinderImpl implements DbUrlCompleterService.DbUrlFinder {
 
-    public static final CliCommandOption DB_URL_OPTION = new CliCommandOption("d", "dbUrl", true, "Database URL", false);
-
-    @Reference
-    private DbUrlFinder dbUrlFinder;
+    private ClientPreferences clientPreferences;
 
     @Override
-    public Set<String> getCommands() {
-        return TabCompletion.ALL_COMMANDS_COMPLETER;
-    }
-
-    @Override
-    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
-        if (dbUrlFinder == null) {
-            return Collections.emptyMap();
+    public List<CompletionInfo> findCompletions() {
+        if (clientPreferences == null) {
+            return Collections.emptyList();
         }
-        TabCompleter completer = new CompletionFinderTabCompleter(dbUrlFinder);
-        return Collections.singletonMap(DB_URL_OPTION, completer);
+
+        String dbUrl = clientPreferences.getConnectionUrl();
+        if (dbUrl == null) {
+            dbUrl = "";
+        }
+
+        return Collections.singletonList(new CompletionInfo(dbUrl));
     }
 
-    @Override
-    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
-        return Collections.emptyMap();
+    public void bindCommonPaths(CommonPaths commonPaths) {
+        clientPreferences = new ClientPreferences(commonPaths);
     }
 
-    public void bindDbUrlFinder(DbUrlFinder dbUrlFinder) {
-        this.dbUrlFinder = dbUrlFinder;
+    public void unbindCommonPaths(CommonPaths commonPaths) {
+        clientPreferences = null;
     }
 
-    public void unbindDbUrlFinder(DbUrlFinder dbUrlFinder) {
-        this.dbUrlFinder = null;
+    /* Testing only */
+    void setClientPreferences(ClientPreferences clientPreferences) {
+        this.clientPreferences = clientPreferences;
     }
-
-    interface DbUrlFinder extends CompletionFinder {}
 
 }

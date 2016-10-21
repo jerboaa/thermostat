@@ -155,12 +155,12 @@ public class ActivatorTest {
 
         assertCommandIsRegistered(context, "help", HelpCommand.class);
 
-        verify(mockTracker, times(6)).open();
+        verify(mockTracker, times(5)).open();
 
         Action action = actionCaptor.getValue();
         assertNotNull(action);
         activator.stop(context);
-        verify(mockTracker, times(6)).close();
+        verify(mockTracker, times(5)).close();
     }
     
     @Test
@@ -194,11 +194,6 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(agentIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] dbUrlCompleterDeps = new Class[] {
-                CommonPaths.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(dbUrlCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
         Class<?>[] pingCompleterDeps = new Class[] {
                 AgentInfoDAO.class
         };
@@ -284,11 +279,6 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(agentIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] dbUrlCompleterDeps = new Class[] {
-                CommonPaths.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(dbUrlCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
         Class<?>[] pingCompleterDeps = new Class[] {
                 AgentInfoDAO.class
         };
@@ -359,11 +349,6 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(agentIdCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] dbUrlCompleterDeps = new Class[] {
-                CommonPaths.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(dbUrlCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
         Class<?>[] pingCompleterDeps = new Class[] {
                 AgentInfoDAO.class
         };
@@ -407,11 +392,6 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(agentIdCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] dbUrlCompleterDeps = new Class[] {
-                CommonPaths.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(dbUrlCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
         Class<?>[] pingCompleterDeps = new Class[] {
                 AgentInfoDAO.class
         };
@@ -462,11 +442,6 @@ public class ActivatorTest {
         Class<?>[] agentIdCompleterDeps = new Class[] {
                 AgentInfoDAO.class
         };
-        Class<?>[] dbUrlCompleterDeps = new Class[] {
-                CommonPaths.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(dbUrlCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(agentIdCompleterDeps), agentCaptor.capture()).thenReturn(unusedTracker);
         Class<?>[] pingCompleterDeps = new Class[] {
@@ -521,11 +496,6 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(agentIdCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] dbUrlCompleterDeps = new Class[] {
-                CommonPaths.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(dbUrlCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
         Class<?>[] pingCompleterDeps = new Class[] {
                 AgentInfoDAO.class
         };
@@ -545,63 +515,6 @@ public class ActivatorTest {
         action.dependenciesUnavailable();
 
         assertTrue(context.isServiceRegistered(CompleterService.class.getName(), PingCommandCompleterService.class));
-    }
-
-    @Test
-    public void testDbUrlCompleterServiceAvailability() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
-        ArgumentCaptor<Action> unusedCaptor = ArgumentCaptor.forClass(Action.class);
-        ArgumentCaptor<Action> dbCaptor = ArgumentCaptor.forClass(Action.class);
-        Class<?>[] launcherDeps = new Class[] {
-                Keyring.class,
-                CommonPaths.class,
-                SSLConfiguration.class,
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(launcherDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-
-        Class<?>[] shellDeps = new Class[] {
-                CommonPaths.class,
-                ConfigurationInfoSource.class,
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(shellDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] vmIdCompleterDeps = new Class[] {
-                VmInfoDAO.class,
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(vmIdCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] agentIdCompleterDeps = new Class[] {
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(agentIdCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] dbUrlCompleterDeps = new Class[] {
-                CommonPaths.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(dbUrlCompleterDeps), dbCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] pingCompleterDeps = new Class[] {
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(pingCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-
-        Activator activator = new Activator();
-        activator.start(context);
-
-        Action action = dbCaptor.getValue();
-
-        Map<String, Object> services = new HashMap<>();
-        action.dependenciesAvailable(services);
-
-        assertTrue(context.isServiceRegistered(CompleterService.class.getName(), AgentIdCompleterService.class));
-
-        action.dependenciesUnavailable();
-
-        assertTrue(context.isServiceRegistered(CompleterService.class.getName(), AgentIdCompleterService.class));
     }
 
     private Path createStubThermostatHome() throws Exception {

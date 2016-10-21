@@ -146,7 +146,6 @@ public class Activator implements BundleActivator {
     private MultipleServiceTracker vmIdCompleterDepsTracker;
     private MultipleServiceTracker agentIdCompleterDepsTracker;
     private MultipleServiceTracker pingCommandCompleterDepsTracker;
-    private MultipleServiceTracker dbUrlCompleterDepsTracker;
 
     private CommandRegistry registry;
 
@@ -325,22 +324,6 @@ public class Activator implements BundleActivator {
         });
         pingCommandCompleterDepsTracker.open();
 
-        final DbUrlCompleterService dbUrlCompleterService = new DbUrlCompleterService();
-        final Class<?> [] dbUrlCompleterDeps = new Class<?>[] { CommonPaths.class };
-        dbUrlCompleterDepsTracker = new MultipleServiceTracker(context, dbUrlCompleterDeps, new Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
-                dbUrlCompleterService.setCommonPaths(paths);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                dbUrlCompleterService.setCommonPaths(null);
-            }
-        });
-        dbUrlCompleterDepsTracker.open();
-
         LogLevelCompleterService logLevelCompleterService = new LogLevelCompleterService();
         context.registerService(CompleterService.class.getName(), logLevelCompleterService, null);
         FileNameCompleterService fileNameCompleterService = new FileNameCompleterService();
@@ -350,7 +333,6 @@ public class Activator implements BundleActivator {
         context.registerService(CompleterService.class.getName(), vmIdCompleterService, null);
         context.registerService(CompleterService.class.getName(), agentIdCompleterService, null);
         context.registerService(CompleterService.class.getName(), pingCommandCompleterService, null);
-        context.registerService(CompleterService.class.getName(), dbUrlCompleterService, null);
 
         context.registerService(FileNameTabCompleter.class.getName(), new JLineFileNameCompleter(), null);
     }
@@ -377,9 +359,6 @@ public class Activator implements BundleActivator {
         }
         if (pingCommandCompleterDepsTracker != null) {
             pingCommandCompleterDepsTracker.close();
-        }
-        if (dbUrlCompleterDepsTracker != null) {
-            dbUrlCompleterDepsTracker.close();
         }
         registry.unregisterCommands();
     }
