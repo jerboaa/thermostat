@@ -140,6 +140,22 @@ public class CliTest extends IntegrationTest {
     }
 
     @Test
+    public void testInfoArgument() throws  Exception {
+        Spawn shell = spawnThermostat("--info");
+        shell.expectClose();
+
+        String stdOut = shell.getCurrentStandardOutContents();
+        String stdErr = shell.getCurrentStandardErrContents();
+
+        String thHomeLineMatch = "THERMOSTAT_HOME=.*\n";
+        String thUserHomeLineMatch = "USER_THERMOSTAT_HOME=.*\n";
+        String matchString = thHomeLineMatch + thUserHomeLineMatch;
+
+        assertTrue("Incorrect match " + stdOut + "\n\n", stdOut.matches(matchString));
+        assertEquals(stdErr, "");
+    }
+
+    @Test
     public void testShell() throws Exception {
         Spawn shell = spawnThermostat("shell");
 

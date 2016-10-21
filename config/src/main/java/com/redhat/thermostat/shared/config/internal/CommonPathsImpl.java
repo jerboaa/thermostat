@@ -83,8 +83,6 @@ public class CommonPathsImpl implements CommonPaths {
     // them whenever you change this class.
 
     // environment variables (also system properties for convenience):
-    private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
-    private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
     private static final String THERMOSTAT_SYSTEM_USER = "THERMOSTAT_SYSTEM_USER";
 
 

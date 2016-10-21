@@ -95,6 +95,7 @@ public class LauncherImpl implements Launcher {
     private static final Set<String> HELP_SET;
     private static final String HELP_COMMAND_NAME = "help";
     private static final String HELP_OPTION = "--help";
+    private static final String INFO_OPTION = "--info";
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(LauncherImpl.class);
@@ -170,6 +171,10 @@ public class LauncherImpl implements Launcher {
                 // We want to print the version of core
                 // thermostat, so we use the no-arg constructor of Version
                 cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
+            } else if (isInfoQuery(args, inShell)) {
+                PrintStream stdOut = cmdCtxFactory.getConsole().getOutput();
+                stdOut.println(CommonPaths.THERMOSTAT_HOME + "=" + paths.getSystemThermostatHome().getAbsolutePath());
+                stdOut.println(CommonPaths.USER_THERMOSTAT_HOME + "=" + paths.getUserThermostatHome().getAbsolutePath());
             } else {
                 // With web-always-on we need to make sure that the setup ran.
                 if (isSomeHelpInvocation(args) || isThermostatConfigured()) {
@@ -491,5 +496,13 @@ public class LauncherImpl implements Launcher {
         }
     }
 
+    private boolean isInfoQuery(String[] args, boolean inShell) {
+        // don't allow --info in the shell
+        if (inShell) {
+            return false;
+        } else {
+            return args[0].equals(INFO_OPTION);
+        }
+    }
 }
 

@@ -58,6 +58,8 @@ import com.redhat.thermostat.annotations.Service;
  */
 @Service
 public interface CommonPaths {
+    String THERMOSTAT_HOME = "THERMOSTAT_HOME";
+    String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
 
     public File getSystemThermostatHome() throws InvalidConfigurationException;
 
