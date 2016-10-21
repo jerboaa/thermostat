@@ -201,4 +201,36 @@ public class WebStorageLauncherCommand extends AbstractStateNotifyingCommand {
             getNotifier().fireAction(ApplicationState.FAIL);
         }
     }
+    
+    public void bindCommonPaths(CommonPaths commonPaths) {
+        this.commonPaths = commonPaths;
+    }
+
+    public void bindExitStatus(ExitStatus exitStatus) {
+        this.exitStatus = exitStatus;
+    }
+
+    public void bindLauncher(Launcher launcher) {
+        this.launcher = launcher;
+    }
+
+    public void bindSslConfig(SSLConfiguration sslConfig) {
+        this.sslConfig = sslConfig;
+    }
+
+    public void unbindCommonPaths(CommonPaths commonPaths) {
+        this.commonPaths = null;
+    }
+
+    public void unbindExitStatus(ExitStatus exitStatus) {
+        this.exitStatus = null;
+    }
+
+    public void unbindLauncher(Launcher launcher) {
+        this.launcher = null;
+    }
+
+    public void unbindSslConfig(SSLConfiguration sslConfig) {
+        this.sslConfig = null;
+    }
 }
