@@ -46,11 +46,11 @@ import static org.mockito.Mockito.verify;
 
 import java.io.File;
 
+import com.redhat.thermostat.testutils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 
 public class SSLConfigurationImplTest {
 
@@ -67,7 +67,14 @@ public class SSLConfigurationImplTest {
     public void canGetKeystoreFileFromProps() throws Exception {
         String keystorePath = "/path/to/thermostat.keystore";
         String keystorePwd = "some password";
-        assertEquals(keystorePath, sslConf.getKeystoreFile().getAbsolutePath());
+        String absPath = sslConf.getKeystoreFile().getAbsolutePath();
+
+        // on windows the path returned may be (probably will be) prefixed by a drive name.
+        // for example "e:\arbitrary\path\foo.dll"
+        // for the purposes of testing, ignore the drive letter and convert backslashes to '/'.
+        absPath = TestUtils.convertWinPathToUnixPath(absPath);
+
+        assertEquals(keystorePath, absPath);
         assertEquals(keystorePwd, sslConf.getKeyStorePassword());
     }
     

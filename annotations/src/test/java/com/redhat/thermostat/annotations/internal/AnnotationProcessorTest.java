@@ -154,8 +154,7 @@ public class AnnotationProcessorTest {
                 + "    </service>\n"
                 + "  </plugin-docs>\n"
                 + "";
-
-        assertEquals(expectedFileContents, actualFileContents);
+        assertEqualsNoCR(expectedFileContents, actualFileContents);
     }
 
 	@Test
@@ -202,9 +201,12 @@ public class AnnotationProcessorTest {
                 + "    </extension-point>\n"
                 + "  </plugin-docs>\n"
                 + "";
-
-        assertEquals(expectedFileContents, actualFileContents);
+        assertEqualsNoCR(expectedFileContents, actualFileContents);
     }
 
+    // copied from Asserts to avoid a circular dependency
+    private static void assertEqualsNoCR(final String expected, final String actual) {
+        assertEquals(expected, actual.replace("\r", ""));
+    }
 }
 

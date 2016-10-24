@@ -48,11 +48,10 @@ import java.io.IOException;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.redhat.thermostat.testutils.TestUtils;
 
 public class DistributionInformationTest {
     
@@ -153,7 +152,7 @@ public class DistributionInformationTest {
 
     @Test
     public void testName() {
-        if (TestUtils.isLinux()) {
+        if (OS.IS_LINUX) {
             DistributionInformation info = DistributionInformation.get();
             String name = info.getName();
             assertNotNull(name);
@@ -165,7 +164,7 @@ public class DistributionInformationTest {
 
     @Test
     public void testVersion() {
-        if (TestUtils.isLinux()) {
+        if (OS.IS_LINUX) {
             DistributionInformation info = DistributionInformation.get();
             String version = info.getVersion();
             assertNotNull(version);

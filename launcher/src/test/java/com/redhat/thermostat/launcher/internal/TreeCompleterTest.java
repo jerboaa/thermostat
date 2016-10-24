@@ -49,7 +49,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.redhat.thermostat.common.cli.CommandException;
-import jline.console.completer.FileNameCompleter;
+import com.redhat.thermostat.testutils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -241,7 +241,11 @@ public class TreeCompleterTest {
         createTempFile(filename3);
         createTempFile(filename4);
 
-        List<String> output = completeBuffer("command2 find " + testDir.getAbsolutePath() + File.separator);
+        // on Windows, the backslashes look like escape characters, so we need to escape them
+        // (there is no effect on Linux assuming the path doesn't contain backslashes)
+        final String escapedDir = TestUtils.escapeBackslashes(testDir.getAbsolutePath() + File.separator);
+
+        List<String> output = completeBuffer("command2 find " + escapedDir);
 
         assertTrue(output.contains(filename1));
         assertTrue(output.contains(filename2));
@@ -261,7 +265,11 @@ public class TreeCompleterTest {
         createTempFile(filename3);
         createTempFile(filename4);
 
-        List<String> output = completeBuffer("command2 find " + testDir.getAbsolutePath() + File.separator);
+        // on Windows, the backslashes look like escape characters, so we need to escape them
+        // (there is no effect on Linux)
+        final String escapedDir = TestUtils.escapeBackslashes(testDir.getAbsolutePath() + File.separator);
+
+        List<String> output = completeBuffer("command2 find " + escapedDir);
 
         assertTrue(output.contains(filename2));
     }

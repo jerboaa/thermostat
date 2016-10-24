@@ -48,10 +48,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.Semaphore;
 
+import com.redhat.thermostat.testutils.Asserts;
 import org.junit.Test;
 
-import com.redhat.thermostat.client.command.internal.LocaleResources;
-import com.redhat.thermostat.client.command.internal.PingCommand;
 import com.redhat.thermostat.client.command.internal.PingCommand.PongListener;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -84,6 +83,7 @@ public class PingCommandTest {
         command.run(factory.createContext(args));
 
         // TODO why doesn't ping throw an exception?
+        // NOTE: we use '\n' here, because TestCommandContextFactory has alreaady stripped any Windows line endings
         assertEquals("Ping command accepts one and only one argument.\n", factory.getOutput());
     }
 
@@ -154,7 +154,8 @@ public class PingCommandTest {
         Request request = mock(Request.class);
         when(request.getTarget()).thenReturn(addr);
         listener.fireComplete(request, new Response(ResponseType.AUTH_FAILED));
-        assertEquals("auth_fail\n", bout.toString());
+
+        Asserts.assertEqualsIgnoreCR("auth_fail\n", bout);
     }
 
     // TODO add more tests that check the actual behaviour under valid input

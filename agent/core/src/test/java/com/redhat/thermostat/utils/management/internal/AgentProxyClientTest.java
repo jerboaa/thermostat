@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
 
+import com.redhat.thermostat.testutils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -55,7 +56,7 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.utils.management.internal.AgentProxyClient.ProcessCreator;
 
 public class AgentProxyClientTest {
-    
+
     private AgentProxyClient client;
     private String user;
     private File binPath;
@@ -91,10 +92,14 @@ public class AgentProxyClientTest {
         // Check process arguments
         List<String> args = builder.command();
         assertEquals(4, args.size());
-        assertEquals("/path/to/thermostat/bin/thermostat-agent-proxy", args.get(0));
+
+        final String arg0 = TestUtils.convertWinPathToUnixPath(args.get(0));
+        final String arg3 = TestUtils.convertWinPathToUnixPath(args.get(3));
+
+        assertEquals("/path/to/thermostat/bin/thermostat-agent-proxy", arg0);
         assertEquals("9000", args.get(1));
         assertEquals("Hello", args.get(2));
-        assertEquals("/path/to/ipc/config", args.get(3));
+        assertEquals("/path/to/ipc/config", arg3);
         
         // Check cleanup
         verify(proxy).waitFor();

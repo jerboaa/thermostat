@@ -45,13 +45,15 @@ import java.nio.file.Files;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import com.redhat.thermostat.shared.config.OS;
 
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 
 public class CommonPathsImplTest {
 
@@ -272,6 +274,7 @@ public class CommonPathsImplTest {
 
     @Test
     public void instantiationThrowsExceptionThermostatHomeNotReadable() throws IOException {
+        Assume.assumeTrue(OS.IS_UNIX);
         String thermostatHome = null;
         try {
             thermostatHome = setupTempDir("CommonPathsImplTest.instantiationThrowsExceptionThermostatHomeNotReadable",
@@ -281,6 +284,11 @@ public class CommonPathsImplTest {
             fail("Should have thrown InvalidConfigurationException");
         } catch (InvalidConfigurationException e) {
             // pass
+        } catch (UnsupportedOperationException e) {
+            // TODO - fix permissions for Windows
+            // Windows uses ACLs, not Posix permissions.
+            // All the Thermostat code currently assumes posix permissions.
+            throw e;
         } finally {
             if (thermostatHome != null) {
                 // Don't use deleteTempDir because it can't list contents of unreadable dir

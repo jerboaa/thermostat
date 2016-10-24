@@ -61,20 +61,13 @@ public class TestUtils {
     }
 
     /**
-     * @return true if the current os is linux
-     */
-    public static boolean isLinux() {
-        return (System.getProperty("os.name").toLowerCase().contains("linux"));
-    }
-
-    /**
      * Creates and initializes a directory suitable for use as the storage's
      * configuration directory
      */
     public static String setupStorageConfigs(Properties dbConfig) throws IOException {
         Random random = new Random();
 
-        String tmpDir = System.getProperty("java.io.tmpdir") + File.separatorChar +
+        String tmpDir = getTmpdir() + File.separatorChar +
                  Math.abs(random.nextInt()) + File.separatorChar;
 
         setupSystemStorageConfig(tmpDir, dbConfig);
@@ -210,6 +203,51 @@ public class TestUtils {
         if (!dir.mkdirs()) {
             throw new IOException("Failed to create user configuration directory");
         }
+    }
+
+    /**
+     * Ensure there is no trailing separator on the JDK's tmpdir
+     * Some JDKs return a trailing separator on the tmpdir - on some platforms
+     */
+    public static String getTmpdir() {
+        String systemTmpDir = System.getProperty("java.io.tmpdir");
+        return systemTmpDir.endsWith(File.separator) ? systemTmpDir.substring(0,systemTmpDir.length()-1) : systemTmpDir;
+    }
+
+    /**
+     * Strip any Windows drive letters (e.g. "C:") prefix from a file path
+     * Also converts all back slashes to forward slashes
+     *
+     * @param path
+     * @return
+     */
+    public static String convertWinPathToUnixPath(final String path ) {
+        // sometimes for testing the drive letter is irrelevant because the code assumes a current drive
+        // e.g. if the current drive is E:, then E:/foo and /foo are the same file.
+        // if this code was to be absolutely correct, it would only strip the drive letter if it was the same
+        // as the current working drive letter.
+        final String withoutDrive = (path.length() > 2 && path.charAt(1) == ':') ? path.substring(2) : path;
+        return withoutDrive.replace('\\', '/');
+    }
+
+    /**
+     * Escape any backslash character with another backslash
+     *
+     * @param path
+     * @return
+     */
+    public static String escapeBackslashes( final String path ) {
+        return path.replace("\\", "\\\\");
+    }
+    /**
+     * Convert all Windows line endings to Unix
+     * (Currently simply strips all '\r')
+     *
+     * @param str
+     * @return
+     */
+    public static String stripWinLineEndings( final String str ) {
+        return str.replace("\r", "");
     }
 }
 

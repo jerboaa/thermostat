@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 
+import com.redhat.thermostat.testutils.Asserts;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,7 +66,7 @@ public class TableRendererTest {
     public void testSingleLine() {
         tableRenderer.printLine("hello", "fluff", "world");
         tableRenderer.render(out);
-        assertEquals("hello fluff world\n", new String(out.toByteArray()));
+        Asserts.assertEqualsIgnoreCR("hello fluff world\n", out);
     }
 
     @Test
@@ -74,9 +75,9 @@ public class TableRendererTest {
         tableRenderer.printLine("looooooong", "f1", "foobar");
         tableRenderer.printLine("f2", "shoooooooooooort", "poo");
         tableRenderer.render(out);
-        assertEquals("hello      fluff            world\n" +
+        Asserts.assertEqualsIgnoreCR("hello      fluff            world\n" +
                      "looooooong f1               foobar\n" +
-                     "f2         shoooooooooooort poo\n", new String(out.toByteArray()));
+                     "f2         shoooooooooooort poo\n", out);
     }
 
     @Test
@@ -86,17 +87,17 @@ public class TableRendererTest {
         tableRenderer.printLine("looooooong", "f1", "foobar");
         tableRenderer.printLine("f2", "shoooooooooooort", "poo");
         tableRenderer.render(out);
-        assertEquals("TITLE      TIME             PLACE\n" +
+        Asserts.assertEqualsIgnoreCR("TITLE      TIME             PLACE\n" +
                      "hello      fluff            world\n" +
                      "looooooong f1               foobar\n" +
-                     "f2         shoooooooooooort poo\n", new String(out.toByteArray()));
+                     "f2         shoooooooooooort poo\n", out);
         tableRenderer.printLine("f3", "foobar", "poo");
         tableRenderer.render(out);
-        assertEquals("TITLE      TIME             PLACE\n" +
+        Asserts.assertEqualsIgnoreCR("TITLE      TIME             PLACE\n" +
                      "hello      fluff            world\n" +
                      "looooooong f1               foobar\n" +
                      "f2         shoooooooooooort poo\n" +
-                     "f3         foobar           poo\n", new String(out.toByteArray()));
+                     "f3         foobar           poo\n", out);
     }
 
     @Test
@@ -126,7 +127,7 @@ public class TableRendererTest {
         tableRenderer.printLine("fish", "tiger", "trout");
 
         tableRenderer.render(out);
-        assertEquals("animal brown      alligator\n" +
+        Asserts.assertEqualsIgnoreCR("animal brown      alligator\n" +
                      "animal green      alligator\n" +
                      "animal black      bear\n" +
                      "animal brown      bear\n" +
@@ -145,14 +146,14 @@ public class TableRendererTest {
                      "fish   golden     trout\n" +
                      "fish   rainbow    trout\n" +
                      "fish   tiger      trout\n" +
-                     "fish   yellow     trout\n", new String(out.toByteArray()));
+                     "fish   yellow     trout\n", out);
     }
 
     @Test
     public void testHeader() {
         tableRenderer.printHeader("HEADER", "TITLE", "SUBTITLE");
         tableRenderer.render(out);
-        assertEquals("HEADER TITLE SUBTITLE\n", new String(out.toByteArray()));
+        Asserts.assertEqualsIgnoreCR("HEADER TITLE SUBTITLE\n", out);
     }
 
     @Test
@@ -160,15 +161,15 @@ public class TableRendererTest {
         tableRenderer.printHeader("HEADER", "TITLE", "SUBTITLE");
         tableRenderer.printLine("hello", "foo", "subtitle");
         tableRenderer.render(out);
-        assertEquals("HEADER TITLE SUBTITLE\n" +
-                     "hello  foo   subtitle\n", new String(out.toByteArray()));
+        Asserts.assertEqualsIgnoreCR("HEADER TITLE SUBTITLE\n" +
+                     "hello  foo   subtitle\n", out);
     }
 
     @Test
     public void testHeaderNotSet() {
         tableRenderer.printLine("No", "Header", "Present");
         tableRenderer.render(out);
-        assertEquals("No Header Present\n", new String(out.toByteArray()));
+        Asserts.assertEqualsIgnoreCR("No Header Present\n", out);
     }
 
     @Test(expected=IllegalArgumentException.class)

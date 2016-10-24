@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 
+import com.redhat.thermostat.testutils.TestUtils;
 import org.junit.Test;
 
 public class NativeLibraryResolverTest {
@@ -60,6 +61,12 @@ public class NativeLibraryResolverTest {
         String absPath = NativeLibraryResolver.getAbsoluteLibraryPath(libName);
 
         assertNotNull(absPath);
+
+        // on windows the path returned may be (probably will be) prefixed by a drive name.
+        // for example "e:\arbitrary\path\foo.dll"
+        // for the purposes of testing, ignore the drive letter and convert backslashes to '/'.
+        absPath = TestUtils.convertWinPathToUnixPath(absPath);
+
         assertTrue(absPath.startsWith(mockNativeLibRoot));
         assertTrue(absPath.contains(libName));
     }

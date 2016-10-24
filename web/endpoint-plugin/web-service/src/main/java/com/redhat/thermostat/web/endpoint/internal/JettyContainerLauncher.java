@@ -76,7 +76,7 @@ import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 class JettyContainerLauncher {
     
-    private static Logger logger = LoggingUtils.getLogger(JettyContainerLauncher.class);
+    private static final Logger logger = LoggingUtils.getLogger(JettyContainerLauncher.class);
     static final String JAAS_CONFIG_PROP = "java.security.auth.login.config";
     
     private final EmbeddedServletContainerConfiguration config;
@@ -192,8 +192,9 @@ class JettyContainerLauncher {
         tempWebDefaults.deleteOnExit();
         
         writeWebDefaults(tempWebDefaults, uri);
+
         // Jetty/OpenJDK requires this string to be a forward-slash separated path, even on windows
-        ctx.setDefaultsDescriptor("file://"+tempWebDefaults.getAbsolutePath().replace('\\','/'));
+        ctx.setDefaultsDescriptor("file:///" + tempWebDefaults.getAbsolutePath().replace('\\', '/'));
         
         // Make server startup fail if context cannot be deployed.
         // Please don't change this.
@@ -243,7 +244,6 @@ class JettyContainerLauncher {
             server.setHandler(ctx);
         }
     }
-
 
     private ServerConnector getServerConnector()
             throws InvalidConfigurationException, SslInitException {

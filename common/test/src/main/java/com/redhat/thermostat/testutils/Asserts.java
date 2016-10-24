@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.testutils;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Hashtable;
+
+import static org.junit.Assert.assertEquals;
 
 public class Asserts {
 
@@ -60,6 +63,21 @@ public class Asserts {
         if (isRegistered && !wantRegistered) {
             throw new AssertionError("Command " + name + " is registered but should not be");
         }
+    }
+
+    /**
+     * Assert that two string are identical, discregarding Windows line ending characters
+     */
+    public static void assertEqualsIgnoreCR(final String expected, final String actual ) {
+        final String fixed = TestUtils.stripWinLineEndings(actual);
+        assertEquals(expected, fixed);
+    }
+
+    /**
+     * Assert that a string and a ByteArrayOutputStream are idenitcal, discregarding Windows line ending characters
+     */
+    public static void assertEqualsIgnoreCR(final String expected, final ByteArrayOutputStream bos) {
+        assertEqualsIgnoreCR(expected, bos.toString());
     }
 
     public static <T, U extends T> void assertServiceIsRegistered(StubBundleContext context, Class<T> service, Class<U> implementation) {
