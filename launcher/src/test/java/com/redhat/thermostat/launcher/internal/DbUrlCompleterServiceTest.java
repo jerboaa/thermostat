@@ -70,7 +70,7 @@ public class DbUrlCompleterServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testGetSubcommandCompletionsIsEmpty() {
-        assertThat((Map) service.getSubcommandCompleters(), is(equalTo(Collections.emptyMap())));
+        assertThat(service.getSubcommandCompleters().size(), is(0));
     }
 
     @Test
@@ -85,8 +85,7 @@ public class DbUrlCompleterServiceTest {
     @SuppressWarnings("unchecked")
     public void testReturnsNoOptionCompletersIfDbUrlFinderNotBound() {
         service.unbindDbUrlFinder(finder);
-        Map completerMap = service.getOptionCompleters();
-        assertThat(completerMap, is(equalTo(Collections.emptyMap())));
+        assertThat(service.getOptionCompleters().size(), is(0));
     }
 
     @Test
