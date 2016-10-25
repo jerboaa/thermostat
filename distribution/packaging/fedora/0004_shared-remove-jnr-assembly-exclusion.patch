@@ -1,7 +1,7 @@
 diff --git a/distribution/assembly/core-assembly.xml b/distribution/assembly/core-assembly.xml
 --- a/distribution/assembly/core-assembly.xml
 +++ b/distribution/assembly/core-assembly.xml
-@@ -74,13 +74,9 @@
+@@ -76,13 +76,9 @@
          <include>com.redhat.thermostat:thermostat-laf-utils</include>
          <include>org.osgi:org.osgi.compendium</include>
          <include>org.apache:org.apache.felix.scr</include>

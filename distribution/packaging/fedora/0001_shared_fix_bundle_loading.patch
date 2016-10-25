@@ -10,6 +10,33 @@ diff --git a/dev/multi-module-plugin-archetype/src/main/resources/archetype-reso
          <bundle><symbolic-name>com.google.gson</symbolic-name><version>${symbol_dollar}{gson.version}</version></bundle>
        </bundles>
      </command>
+diff --git a/distribution/config/osgi-export.properties b/distribution/config/osgi-export.properties
+--- a/distribution/config/osgi-export.properties
++++ b/distribution/config/osgi-export.properties
+@@ -32,23 +32,6 @@
+ # library, but you are not obligated to do so.  If you do not wish
+ # to do so, delete this exception statement from your version.
+ 
+-# jfreechart is no OSGi bundle upstream. The jar is on the
+-# classpath and packages thus made available this way.
+-org.jfree.chart
+-org.jfree.chart.axis
+-org.jfree.chart.event
+-org.jfree.chart.labels
+-org.jfree.chart.plot
+-org.jfree.chart.panel
+-org.jfree.chart.renderer.xy
+-org.jfree.data
+-org.jfree.data.category
+-org.jfree.data.general
+-org.jfree.data.time
+-org.jfree.data.xy
+-org.jfree.ui
+-org.jfree.data.gantt
+-
+ sun.swing
+ sun.swing.table
+ sun.misc
 diff --git a/main/src/main/resources/com/redhat/thermostat/main/internal/bootstrapbundles.properties b/main/src/main/resources/com/redhat/thermostat/main/internal/bootstrapbundles.properties
 --- a/main/src/main/resources/com/redhat/thermostat/main/internal/bootstrapbundles.properties
 +++ b/main/src/main/resources/com/redhat/thermostat/main/internal/bootstrapbundles.properties
@@ -25,12 +52,12 @@ diff --git a/main/src/main/resources/com/redhat/thermostat/main/internal/bootstr
 diff --git a/pom.xml b/pom.xml
 --- a/pom.xml
 +++ b/pom.xml
-@@ -271,6 +271,8 @@
+@@ -305,6 +305,8 @@
      <felix.scr.version>1.8.2</felix.scr.version>
      <felix.scr.annotations.version>1.9.12</felix.scr.annotations.version>
      <kxml2.version>2.3.0</kxml2.version>
 +    <!-- kxml2 needs xpp3 classes at runtime -->
 +    <xpp3.version>1.1.4c</xpp3.version>
  
-     <netty.version>4.0.28.Final</netty.version>
+     <netty.version>4.0.42.Final</netty.version>
      <httpcomponents.core.version>4.3.2</httpcomponents.core.version>

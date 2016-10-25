@@ -543,7 +543,7 @@ diff --git a/host-overview/client-swing/pom.xml b/host-overview/client-swing/pom
 diff --git a/keyring/pom.xml b/keyring/pom.xml
 --- a/keyring/pom.xml
 +++ b/keyring/pom.xml
-@@ -167,14 +167,8 @@
+@@ -188,14 +188,8 @@
      </dependency>
      
      <dependency>

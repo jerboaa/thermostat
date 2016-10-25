@@ -1,0 +1,22 @@
+diff --git a/distribution/scripts/thermostat-command-channel b/distribution/scripts/thermostat-command-channel
+--- a/distribution/scripts/thermostat-command-channel
++++ b/distribution/scripts/thermostat-command-channel
+@@ -67,6 +67,7 @@
+ IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-transport-@netty.version@.jar"
+ IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-codec-@netty.version@.jar"
+ IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/netty-handler-@netty.version@.jar"
++IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/jctools-core-@jctools.version@.jar"
+ IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/gson-@gson.version@.jar"
+ 
+ CMD_CHANNEL_CLASS="com.redhat.thermostat.agent.command.server.internal.CommandChannelServerMain"
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml
++++ b/pom.xml
+@@ -321,6 +321,7 @@
+     <xpp3.version>1.1.4c</xpp3.version>
+ 
+     <netty.version>4.0.42.Final</netty.version>
++    <jctools.version>1.2.1</jctools.version>
+     <httpcomponents.core.version>4.3.2</httpcomponents.core.version>
+     <httpcomponents.client.version>4.3.4</httpcomponents.client.version>
+     <gson.version>2.2.2</gson.version>

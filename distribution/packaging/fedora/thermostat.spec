@@ -123,8 +123,8 @@ __DEFAULT_RELEASE__ 7
 # Real OSGi Bundle-Version is 3.2.1.RELEASE
 %global mongo_bundle_version         3.2.1
 
-# Real OSGi Bundle-Version is 4.0.28.Final
-%global netty_bundle_version          4.0.28
+# Real OSGi Bundle-Version is 4.0.42.Final
+%global netty_bundle_version          4.0.42
 %global kxml2_version                 2.3.0
 
 # apache-commons-collections
@@ -283,6 +283,8 @@ Patch3:     0003_rhel_lucene_4.patch
 # This patch can be removed when upstream jnr-x86asm adds OSGi metadata to its
 # manifest. See https://github.com/jnr/jnr-x86asm/pull/1
 Patch4:     0004_shared-remove-jnr-assembly-exclusion.patch
+# Upstream netty 4 bundles jctools. We don't do that downstream.
+Patch5:     0005_shared_netty_jctools_classpath.patch
 
 %{?scl:
 %if 0%{?non_bootstrap_build}
@@ -539,6 +541,7 @@ security.
 %patch3 -p1
 }
 %patch4 -p1
+%patch5 -p1
 
 # Replace thermostatrc with Fedora's version
 cp %{SOURCE4} distribution/config/thermostatrc

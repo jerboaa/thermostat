@@ -1,7 +1,7 @@
 diff --git a/pom.xml b/pom.xml
 --- a/pom.xml
 +++ b/pom.xml
-@@ -232,8 +232,8 @@
+@@ -286,8 +286,8 @@
      <jffi.version>1.2.12</jffi.version>
  
      <jline.version>2.13</jline.version>
