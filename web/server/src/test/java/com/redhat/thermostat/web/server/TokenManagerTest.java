@@ -91,6 +91,17 @@ public class TokenManagerTest {
     }
     
     @Test
+    public void generateTokenCanNotBeReusedTest() {
+        TokenManager tokenManager = new TokenManager(mock(TimerRegistry.class));
+        String clientToken = "something";
+        String action = "myAction";
+        byte[] token = tokenManager.generateToken(clientToken.getBytes(), action);
+        assertTrue(tokenManager.verifyToken(clientToken.getBytes(), token, action));
+        // try again with same action name, which should not verify
+        assertFalse(tokenManager.verifyToken(clientToken.getBytes(), token, action));
+    }
+
+    @Test
     public void generateAndVerifyTokenTest() {
         TokenManager tokenManager = new TokenManager(mock(TimerRegistry.class));
         String clientToken = "something";

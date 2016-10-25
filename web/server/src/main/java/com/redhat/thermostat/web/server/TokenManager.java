@@ -85,12 +85,12 @@ class TokenManager {
         return token;
     }
 
-    private void scheduleRemoval(final String clientToken) {
+    private void scheduleRemoval(final String clientKey) {
         TimerTask task = new TimerTask() {
             
             @Override
             public void run() {
-                tokens.remove(clientToken);
+                tokens.remove(clientKey);
             }
         };
         timer.schedule(task, timeout);
@@ -111,7 +111,7 @@ class TokenManager {
             byte[] storedToken = tokens.get(clientKey);
             boolean verified = Arrays.equals(candidateToken, storedToken);
             if (verified) {
-                tokens.remove(clientToken);
+                tokens.remove(clientKey);
             }
             return verified;
         }
