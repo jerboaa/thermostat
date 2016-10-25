@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.vm.cpu.agent.internal;
 
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -49,6 +48,7 @@ import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
@@ -74,10 +74,10 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmCpuStatDAO vmCpuStatDao = (VmCpuStatDAO) services.get(VmCpuStatDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmCpuStatDAO vmCpuStatDao = services.get(VmCpuStatDAO.class);
                 Version version = new Version(context.getBundle());
-                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                WriterID writerId = services.get(WriterID.class);
                 backend = new VmCpuBackend(executor, vmCpuStatDao, version, registrar, writerId);
                 reg = context.registerService(Backend.class, backend, null);
             }

@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.vm.gc.agent.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -47,6 +45,7 @@ import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
@@ -70,10 +69,10 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmGcStatDAO vmGcStatDao = (VmGcStatDAO) services.get(VmGcStatDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmGcStatDAO vmGcStatDao = services.get(VmGcStatDAO.class);
                 Version version = new Version(context.getBundle());
-                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                WriterID writerId = services.get(WriterID.class);
                 backend = new VmGcBackend(vmGcStatDao, version, registerer, writerId);
                 reg = context.registerService(Backend.class, backend, null);
             }

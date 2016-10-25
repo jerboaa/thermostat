@@ -39,11 +39,12 @@ package com.redhat.thermostat.thread.client.swing.internal;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.swing.SwingThreadViewService;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -69,9 +70,9 @@ public class Activator implements BundleActivator {
             }
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
+            public void dependenciesAvailable(DependencyProvider services) {
 
-                UIDefaults uiDefaults = (UIDefaults) services.get(UIDefaults.class.getName());
+                UIDefaults uiDefaults = services.get(UIDefaults.class);
                 ServiceRegistration reg = context.registerService(ThreadViewProvider.class.getName(),
                                               new SwingThreadViewService(uiDefaults),
                                               null);

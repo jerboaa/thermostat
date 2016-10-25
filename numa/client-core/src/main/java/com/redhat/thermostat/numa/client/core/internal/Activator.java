@@ -38,7 +38,6 @@ package com.redhat.thermostat.numa.client.core.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
@@ -50,6 +49,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.numa.client.core.NumaInformationService;
 import com.redhat.thermostat.numa.client.core.NumaViewProvider;
 import com.redhat.thermostat.numa.common.NumaDAO;
@@ -71,13 +71,10 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                NumaDAO numaDAO = (NumaDAO) services.get(NumaDAO.class.getName());
-                Objects.requireNonNull(numaDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                NumaViewProvider numaViewProvider = (NumaViewProvider) services.get(NumaViewProvider.class.getName());
-                Objects.requireNonNull(numaViewProvider);
+            public void dependenciesAvailable(DependencyProvider services) {
+                NumaDAO numaDAO = services.get(NumaDAO.class);
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                NumaViewProvider numaViewProvider = services.get(NumaViewProvider.class);
                 NumaInformationServiceImpl service = new NumaInformationServiceImpl(appSvc, numaDAO, numaViewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());

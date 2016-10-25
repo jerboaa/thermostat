@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.killvm.client.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -47,6 +45,7 @@ import com.redhat.thermostat.client.ui.ReferenceContextAction;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -67,10 +66,10 @@ public class Activator implements BundleActivator {
 
         killVmActionTracker = new MultipleServiceTracker(context, serviceDeps, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                KillVMRequest request = (KillVMRequest) services.get(KillVMRequest.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
+                VmInfoDAO vmDao = services.get(VmInfoDAO.class);
+                KillVMRequest request = services.get(KillVMRequest.class);
                 KillVMAction service = new KillVMAction(agentDao, vmDao, request, new SwingVMKilledListener());
                 killActionRegistration = context.registerService(ReferenceContextAction.class.getName(), service, null);
             }

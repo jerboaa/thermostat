@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -49,6 +48,7 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
@@ -70,12 +70,12 @@ public class VMFilterActivator implements BundleActivator {
         
         tracker = new MultipleServiceTracker(context, services, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
+            public void dependenciesAvailable(DependencyProvider services) {
                 @SuppressWarnings("rawtypes")
                 ServiceRegistration registration = null;
                 
-                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                HostInfoDAO hostDao = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
+                VmInfoDAO vmDao = services.get(VmInfoDAO.class);
+                HostInfoDAO hostDao = services.get(HostInfoDAO.class);
 
                 LivingHostFilter hostFilter = new LivingHostFilter(hostDao);
                 registration = context.registerService(ReferenceFilter.class.getName(), hostFilter, null);

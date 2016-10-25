@@ -38,7 +38,6 @@ package com.redhat.thermostat.storage.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.osgi.framework.BundleActivator;
@@ -47,6 +46,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -95,9 +95,9 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
+            public void dependenciesAvailable(DependencyProvider services) {
                 
-                Storage storage = (Storage) services.get(Storage.class.getName());          
+                Storage storage = services.get(Storage.class);
                 SchemaInfoDAO schemaInfoDAO = new SchemaInfoDAOImpl(storage);
                 ServiceRegistration<?> reg = context.registerService(SchemaInfoDAO.class.getName(), schemaInfoDAO, null);
                 regs.add(reg);
@@ -122,7 +122,7 @@ public class Activator implements BundleActivator {
                 reg = context.registerService(VmInfoDAO.class.getName(), vmInfoDao, null);
                 regs.add(reg);
             
-                ApplicationService appService = (ApplicationService) services.get(ApplicationService.class.getName());
+                ApplicationService appService = services.get(ApplicationService.class);
                 TimerFactory timers = appService.getTimerFactory();
                 NetworkMonitor networkMonitor = new NetworkMonitorImpl(timers, hostInfoDao);
                 reg = context.registerService(NetworkMonitor.class.getName(), networkMonitor, null);

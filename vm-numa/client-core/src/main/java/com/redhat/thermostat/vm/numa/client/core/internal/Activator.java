@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.numa.client.core.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -48,6 +47,7 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.numa.client.core.VmNumaService;
@@ -71,11 +71,11 @@ public class Activator implements BundleActivator {
 
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmNumaDAO vmNumaDAO = (VmNumaDAO) services.get(VmNumaDAO.class.getName());
-                ApplicationService applicationService = (ApplicationService) services.get(ApplicationService.class.getName());
-                VmNumaViewProvider vmNumaViewProvider = (VmNumaViewProvider) services.get(VmNumaViewProvider.class.getName());
-                NumaDAO numaDAO = (NumaDAO) services.get(NumaDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmNumaDAO vmNumaDAO = services.get(VmNumaDAO.class);
+                ApplicationService applicationService = services.get(ApplicationService.class);
+                VmNumaViewProvider vmNumaViewProvider = services.get(VmNumaViewProvider.class);
+                NumaDAO numaDAO = services.get(NumaDAO.class);
 
                 VmNumaServiceImpl vmNumaService = new VmNumaServiceImpl(applicationService, numaDAO, vmNumaDAO, vmNumaViewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();

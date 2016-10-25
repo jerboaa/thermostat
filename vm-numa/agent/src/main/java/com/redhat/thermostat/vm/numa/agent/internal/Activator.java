@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.vm.numa.agent.internal;
 
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -48,6 +47,7 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.numa.common.VmNumaDAO;
@@ -71,10 +71,10 @@ public class Activator implements BundleActivator {
 
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmNumaDAO vmNumaDAO = (VmNumaDAO) services.get(VmNumaDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmNumaDAO vmNumaDAO = services.get(VmNumaDAO.class);
                 Version version = new Version(context.getBundle());
-                WriterID writerID = (WriterID) services.get(WriterID.class.getName());
+                WriterID writerID = services.get(WriterID.class);
                 backend = constructBackend(executor, vmNumaDAO, version, registrar, writerID);
                 if (backend.canRegister()) {
                     reg = context.registerService(Backend.class, backend, null);

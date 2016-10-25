@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.vm.jmx.agent.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -46,6 +44,7 @@ import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
@@ -67,13 +66,13 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                MXBeanConnectionPool pool = (MXBeanConnectionPool) services.get(MXBeanConnectionPool.class.getName());
-                JmxNotificationDAO dao = (JmxNotificationDAO) services.get(JmxNotificationDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                MXBeanConnectionPool pool = services.get(MXBeanConnectionPool.class);
+                JmxNotificationDAO dao = services.get(JmxNotificationDAO.class);
                 Version version = new Version(context.getBundle());
                 ReceiverRegistry registry = new ReceiverRegistry(context);
                 JmxRequestListener receiver = new JmxRequestListener();
-                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                WriterID writerId = services.get(WriterID.class);
                 jmxBackend = new JmxBackend(version, registry, dao, pool, receiver, writerId);
                 receiver.setBackend(jmxBackend);
                 registration = context.registerService(Backend.class, jmxBackend, null);

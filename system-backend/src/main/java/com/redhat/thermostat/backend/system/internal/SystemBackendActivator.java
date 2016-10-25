@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.backend.system.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -48,6 +46,7 @@ import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -79,15 +78,14 @@ public class SystemBackendActivator implements BundleActivator {
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                NetworkInterfaceInfoDAO netInfoDAO = (NetworkInterfaceInfoDAO) services
-                        .get(NetworkInterfaceInfoDAO.class.getName());
-                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                UserNameUtil userNameUtil = (UserNameUtil) services.get(UserNameUtil.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                HostInfoDAO hostInfoDAO = services.get(HostInfoDAO.class);
+                NetworkInterfaceInfoDAO netInfoDAO = services.get(NetworkInterfaceInfoDAO.class);
+                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
+                UserNameUtil userNameUtil = services.get(UserNameUtil.class);
                 Version version = new Version(context.getBundle());
-                WriterID id = (WriterID) services.get(WriterID.class.getName());
-                VmBlacklist blacklist = (VmBlacklist) services.get(VmBlacklist.class.getName());
+                WriterID id = services.get(WriterID.class);
+                VmBlacklist blacklist = services.get(VmBlacklist.class);
                 backend = new SystemBackend(hostInfoDAO, netInfoDAO, vmInfoDAO, version, notifier, 
                         userNameUtil, id, blacklist);
                 reg = context.registerService(Backend.class, backend, null);

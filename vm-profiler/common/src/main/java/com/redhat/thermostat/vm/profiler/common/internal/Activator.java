@@ -36,13 +36,12 @@
 
 package com.redhat.thermostat.vm.profiler.common.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
@@ -58,8 +57,8 @@ public class Activator implements BundleActivator {
         };
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                Storage storage = services.get(Storage.class);
                 ProfileDAOImpl impl = new ProfileDAOImpl(storage);
 
                 daoRegistration = context.registerService(ProfileDAO.class, impl, null);

@@ -42,7 +42,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.client.ui.MenuAction;
 import org.osgi.framework.BundleActivator;
@@ -60,6 +59,7 @@ import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -95,13 +95,13 @@ public class VMFilterActivator implements BundleActivator {
             }
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
+            public void dependenciesAvailable(DependencyProvider services) {
                 ServiceRegistration registration = null;
 
-                UIDefaults uiDefaults = (UIDefaults) services.get(UIDefaults.class.getName());
+                UIDefaults uiDefaults = services.get(UIDefaults.class);
                 
-                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                HostInfoDAO hostDao = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
+                VmInfoDAO vmDao = services.get(VmInfoDAO.class);
+                HostInfoDAO hostDao = services.get(HostInfoDAO.class);
 
                 Dictionary<String, String> decoratorProperties = new Hashtable<>();
                 
@@ -137,8 +137,7 @@ public class VMFilterActivator implements BundleActivator {
 
                 registeredServices.add(registration);
 
-                NetworkInterfaceInfoDAO networkDao = (NetworkInterfaceInfoDAO)
-                            services.get(NetworkInterfaceInfoDAO.class.getName());
+                NetworkInterfaceInfoDAO networkDao = services.get(NetworkInterfaceInfoDAO.class);
 
                 HostNetworkInterfaceLabelDecorator hostLabelDecorator =
                             new HostNetworkInterfaceLabelDecorator(networkDao);

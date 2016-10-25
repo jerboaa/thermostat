@@ -36,13 +36,12 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.config.ClientPreferences;
@@ -85,11 +84,11 @@ public class Activator implements BundleActivator {
         connectTracker = new MultipleServiceTracker(context, classes, new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Keyring keyring = (Keyring) services.get(Keyring.class.getName());
-                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                Keyring keyring = services.get(Keyring.class);
+                CommonPaths paths = services.get(CommonPaths.class);
                 ClientPreferences prefs = new ClientPreferences(paths);
-                SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class);
+                SSLConfiguration sslConf = services.get(SSLConfiguration.class);
                 reg.registerCommand("connect", new ConnectCommand(context, prefs, keyring, sslConf));
             }
 
@@ -107,8 +106,8 @@ public class Activator implements BundleActivator {
 
         vmStatTracker = new MultipleServiceTracker(context, vmStatClasses, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
                 vmStatCommand.setVmInfoDAO(vmInfoDAO);
             }
 
@@ -124,8 +123,8 @@ public class Activator implements BundleActivator {
         };
         listAgentTracker = new MultipleServiceTracker(context, listAgentClasses, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentInfoDAO agentInfoDAO = services.get(AgentInfoDAO.class);
                 listAgentsCommand.setAgentInfoDAO(agentInfoDAO);
             }
 
@@ -144,9 +143,9 @@ public class Activator implements BundleActivator {
         };
         agentInfoTracker = new MultipleServiceTracker(context, agentInfoClasses, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                BackendInfoDAO backendInfoDAO = (BackendInfoDAO) services.get(BackendInfoDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentInfoDAO agentInfoDAO = services.get(AgentInfoDAO.class);
+                BackendInfoDAO backendInfoDAO = services.get(BackendInfoDAO.class);
 
                 agentInfoCommand.setServices(agentInfoDAO, backendInfoDAO);
             }

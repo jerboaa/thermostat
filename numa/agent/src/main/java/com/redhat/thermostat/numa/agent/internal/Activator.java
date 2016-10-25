@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.numa.agent.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -47,6 +45,7 @@ import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -69,11 +68,11 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ApplicationService appService = (ApplicationService) services.get(ApplicationService.class.getName());
-                NumaDAO numaDAO = (NumaDAO) services.get(NumaDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                ApplicationService appService = services.get(ApplicationService.class);
+                NumaDAO numaDAO = services.get(NumaDAO.class);
                 Version version = new Version(context.getBundle());
-                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                WriterID writerId = services.get(WriterID.class);
                 NumaCollector collector = new NumaCollector();
                 backend = new NumaBackend(appService, numaDAO, collector, version, writerId);
                 reg = context.registerService(Backend.class, backend, null);

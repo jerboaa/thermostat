@@ -37,6 +37,7 @@
 package com.redhat.thermostat.notes.client.cli.internal;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
@@ -51,7 +52,6 @@ import org.osgi.framework.BundleContext;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class Activator implements BundleActivator {
@@ -85,17 +85,12 @@ public class Activator implements BundleActivator {
 
         serviceTracker = new MultipleServiceTracker(context, serviceDeps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                Objects.requireNonNull(vmInfoDAO);
-                AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                Objects.requireNonNull(agentInfoDAO);
-                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                Objects.requireNonNull(hostInfoDAO);
-                VmNoteDAO vmNoteDAO = (VmNoteDAO) services.get(VmNoteDAO.class.getName());
-                Objects.requireNonNull(vmNoteDAO);
-                HostNoteDAO hostNoteDAO = (HostNoteDAO) services.get(HostNoteDAO.class.getName());
-                Objects.requireNonNull(hostNoteDAO);
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
+                AgentInfoDAO agentInfoDAO = services.get(AgentInfoDAO.class);
+                HostInfoDAO hostInfoDAO = services.get(HostInfoDAO.class);
+                VmNoteDAO vmNoteDAO = services.get(VmNoteDAO.class);
+                HostNoteDAO hostNoteDAO = services.get(HostNoteDAO.class);
 
                 for (NotesCommand command : commands) {
                     command.setVmInfoDao(vmInfoDAO);
@@ -120,9 +115,9 @@ public class Activator implements BundleActivator {
         final Class<?>[] noteIdCompleterDeps = new Class<?>[] { HostNoteDAO.class, VmNoteDAO.class };
         noteIdCompleterDepsTracker = new MultipleServiceTracker(context, noteIdCompleterDeps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                HostNoteDAO hostNoteDAO = (HostNoteDAO) services.get(HostNoteDAO.class.getName());
-                VmNoteDAO vmNoteDAO = (VmNoteDAO) services.get(VmNoteDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                HostNoteDAO hostNoteDAO = services.get(HostNoteDAO.class);
+                VmNoteDAO vmNoteDAO = services.get(VmNoteDAO.class);
                 noteIdCompleterService.setHostNoteDao(hostNoteDAO);
                 noteIdCompleterService.setVmNoteDao(vmNoteDAO);
             }

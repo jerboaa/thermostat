@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.overview.client.core.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
@@ -50,6 +49,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewService;
@@ -71,13 +71,10 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps , new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                Objects.requireNonNull(vmInfoDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                VmOverviewViewProvider viewProvider = (VmOverviewViewProvider) services.get(VmOverviewViewProvider.class.getName());
-                Objects.requireNonNull(viewProvider);
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                VmOverviewViewProvider viewProvider = services.get(VmOverviewViewProvider.class);
                 
                 VmOverviewService service = new VmOverviewServiceImpl(appSvc, vmInfoDAO, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();

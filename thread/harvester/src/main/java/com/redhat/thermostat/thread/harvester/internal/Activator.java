@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.thread.harvester.internal;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -52,6 +51,7 @@ import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.LockInfoDao;
@@ -79,10 +79,9 @@ public class Activator implements BundleActivator {
             private ThreadCountBackend threadCountBackend;
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
-                ThreadDao dao = (ThreadDao) services.get(ThreadDao.class.getName());
-                Objects.requireNonNull(dao);
+            public void dependenciesAvailable(DependencyProvider services) {
+                WriterID writerId = services.get(WriterID.class);
+                ThreadDao dao = services.get(ThreadDao.class);
                 threadCountBackend = new ThreadCountBackend(dao, VERSION, VM_STATUS_REGISTRAR, writerId);
                 registration = context.registerService(Backend.class, threadCountBackend, null);
             }
@@ -108,10 +107,9 @@ public class Activator implements BundleActivator {
             private LockInfoBackend lockInfoBackend;
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
-                LockInfoDao dao = (LockInfoDao) services.get(LockInfoDao.class.getName());
-                Objects.requireNonNull(dao);
+            public void dependenciesAvailable(DependencyProvider services) {
+                WriterID writerId = services.get(WriterID.class);
+                LockInfoDao dao = services.get(LockInfoDao.class);
                 lockInfoBackend = new LockInfoBackend(dao, VERSION, VM_STATUS_REGISTRAR, writerId);
                 registration = context.registerService(Backend.class, lockInfoBackend, null);
             }
@@ -141,10 +139,10 @@ public class Activator implements BundleActivator {
             private ScheduledExecutorService executor;
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                MXBeanConnectionPool pool = (MXBeanConnectionPool) services.get(MXBeanConnectionPool.class.getName());
-                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
-                ThreadDao threadDao = (ThreadDao) services.get(ThreadDao.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                MXBeanConnectionPool pool = services.get(MXBeanConnectionPool.class);
+                WriterID writerId = services.get(WriterID.class);
+                ThreadDao threadDao = services.get(ThreadDao.class);
 
                 executor = Executors.newScheduledThreadPool(24);
                 ThreadHarvester harvester = new ThreadHarvester(executor, pool, writerId);

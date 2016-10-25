@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import java.util.Map;
-
 import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import org.osgi.framework.BundleActivator;
@@ -45,6 +43,7 @@ import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
@@ -81,11 +80,11 @@ public class Activator implements BundleActivator {
 
         serviceTracker = new MultipleServiceTracker(context, serviceDeps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                HeapDAO heapDao = (HeapDAO) services.get(HeapDAO.class.getName());
-                RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmInfoDAO vmDao = services.get(VmInfoDAO.class);
+                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
+                HeapDAO heapDao = services.get(HeapDAO.class);
+                RequestQueue queue = services.get(RequestQueue.class);
 
                 completerService.setHeapDAO(heapDao);
                 completerService.setVmInfoDAO(vmDao);

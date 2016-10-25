@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +48,7 @@ import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
@@ -72,10 +72,10 @@ public class Activator implements BundleActivator {
         sslConfigTracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
-                SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class.getName());
-                AgentIPCService ipcService = (AgentIPCService) services.get(AgentIPCService.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                CommonPaths paths = services.get(CommonPaths.class);
+                SSLConfiguration sslConf = services.get(SSLConfiguration.class);
+                AgentIPCService ipcService = services.get(AgentIPCService.class);
                 CommandChannelDelegate confServer = new CommandChannelDelegate(receivers, sslConf, 
                         paths.getSystemBinRoot(), ipcService, paths.getUserIPCConfigurationFile());
                 confServerRegistration = context.registerService(ConfigurationServer.class.getName(), confServer, null);

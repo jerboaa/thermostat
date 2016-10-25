@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent.cli.internal;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,6 +60,7 @@ import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -348,12 +348,10 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         depTracker = new MultipleServiceTracker(bundleContext, deps, new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-                AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services
-                        .get(AgentInfoDAO.class.getName());
-                BackendInfoDAO backendInfoDAO = (BackendInfoDAO) services
-                        .get(BackendInfoDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                Storage storage = services.get(Storage.class);
+                AgentInfoDAO agentInfoDAO = services.get(AgentInfoDAO.class);
+                BackendInfoDAO backendInfoDAO = services.get(BackendInfoDAO.class);
 
                 Agent agent = startAgent(storage, agentInfoDAO, backendInfoDAO);
                 handler = new CustomSignalHandler(agent, configServer);

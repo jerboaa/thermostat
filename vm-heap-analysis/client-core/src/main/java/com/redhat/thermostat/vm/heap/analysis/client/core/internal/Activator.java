@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
@@ -51,6 +50,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
@@ -89,37 +89,22 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
+            public void dependenciesAvailable(DependencyProvider services) {
                 
-                ProgressNotifier notifier = (ProgressNotifier) services.get(ProgressNotifier.class.getName());
-                Objects.requireNonNull(notifier);
+                ProgressNotifier notifier = services.get(ProgressNotifier.class);
                 
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                VmInfoDAO vmInfoDao = Objects.requireNonNull((VmInfoDAO) services.get(VmInfoDAO.class.getName()));
-                VmMemoryStatDAO vmMemoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
-                Objects.requireNonNull(vmMemoryStatDao);
-                HeapDAO heapDao = (HeapDAO) services.get(HeapDAO.class.getName());
-                Objects.requireNonNull(heapDao);
-                HeapViewProvider viewProvider = (HeapViewProvider) services.get(HeapViewProvider.class.getName());
-                Objects.requireNonNull(viewProvider);
-                HeapDumpDetailsViewProvider detailsViewProvider = (HeapDumpDetailsViewProvider) services
-                        .get(HeapDumpDetailsViewProvider.class.getName());
-                Objects.requireNonNull(detailsViewProvider);
-                HeapHistogramViewProvider histogramViewProvider = (HeapHistogramViewProvider) services
-                        .get(HeapHistogramViewProvider.class.getName());
-                HeapTreeMapViewProvider treeMapViewProvider = (HeapTreeMapViewProvider) services
-                        .get(HeapTreeMapViewProvider.class.getName());
-                Objects.requireNonNull(histogramViewProvider);
-                ObjectDetailsViewProvider objectDetailsViewProvider = (ObjectDetailsViewProvider) services
-                        .get(ObjectDetailsViewProvider.class.getName());
-                Objects.requireNonNull(objectDetailsViewProvider);
-                ObjectRootsViewProvider objectRootsViewProvider = (ObjectRootsViewProvider) services
-                        .get(ObjectRootsViewProvider.class.getName());
-                Objects.requireNonNull(objectRootsViewProvider);
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                VmInfoDAO vmInfoDao = services.get(VmInfoDAO.class);
+                VmMemoryStatDAO vmMemoryStatDao = services.get(VmMemoryStatDAO.class);
+                HeapDAO heapDao = services.get(HeapDAO.class);
+                HeapViewProvider viewProvider = services.get(HeapViewProvider.class);
+                HeapDumpDetailsViewProvider detailsViewProvider = services.get(HeapDumpDetailsViewProvider.class);
+                HeapHistogramViewProvider histogramViewProvider = services.get(HeapHistogramViewProvider.class);
+                HeapTreeMapViewProvider treeMapViewProvider = services.get(HeapTreeMapViewProvider.class);
+                ObjectDetailsViewProvider objectDetailsViewProvider = services.get(ObjectDetailsViewProvider.class);
+                ObjectRootsViewProvider objectRootsViewProvider = services.get(ObjectRootsViewProvider.class);
 
-                HeapDumpListViewProvider heapDumpListViewProvider = (HeapDumpListViewProvider) services
-                        .get(HeapDumpListViewProvider.class.getName());
+                HeapDumpListViewProvider heapDumpListViewProvider = services.get(HeapDumpListViewProvider.class);
                 
                 HeapDumperService service = new HeapDumperServiceImpl(appSvc,
                         vmInfoDao, vmMemoryStatDao, heapDao, viewProvider,

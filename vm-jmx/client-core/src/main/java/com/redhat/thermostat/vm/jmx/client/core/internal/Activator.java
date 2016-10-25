@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.jmx.client.core.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import org.osgi.framework.BundleActivator;
@@ -51,6 +50,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -77,14 +77,14 @@ public class Activator implements BundleActivator {
 
         depsTracker = new MultipleServiceTracker(context, deps, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                JmxNotificationDAO notificationDao = (JmxNotificationDAO) services.get(JmxNotificationDAO.class.getName());
-                JmxNotificationsViewProvider viewProvider = (JmxNotificationsViewProvider) services.get(JmxNotificationsViewProvider.class.getName());
-                TimerFactory tf = ((ApplicationService) services.get(ApplicationService.class.getName())).getTimerFactory();
-                RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
+                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
+                JmxNotificationDAO notificationDao = services.get(JmxNotificationDAO.class);
+                JmxNotificationsViewProvider viewProvider = services.get(JmxNotificationsViewProvider.class);
+                TimerFactory tf = services.get(ApplicationService.class).getTimerFactory();
+                RequestQueue queue = services.get(RequestQueue.class);
 
                 JmxNotificationsViewServiceImpl notificationsView = new JmxNotificationsViewServiceImpl(appSvc, agentDao, vmInfoDAO, notificationDao, queue, tf, viewProvider);
 

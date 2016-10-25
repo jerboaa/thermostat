@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.agent.cli.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -47,6 +45,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
@@ -72,10 +71,10 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ExitStatus exitStatus = (ExitStatus) services.get(ExitStatus.class.getName());
-                WriterID writerID = (WriterID) services.get(WriterID.class.getName());
-                SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                ExitStatus exitStatus = services.get(ExitStatus.class);
+                WriterID writerID = services.get(WriterID.class);
+                SSLConfiguration sslConf = services.get(SSLConfiguration.class);
                 agentApplication = new AgentApplication(context, exitStatus, writerID, sslConf);
                 reg.registerCommand("service", new ServiceCommand(context));
                 reg.registerCommand("agent", agentApplication);

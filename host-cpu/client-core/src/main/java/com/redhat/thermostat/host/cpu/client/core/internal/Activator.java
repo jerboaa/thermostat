@@ -38,7 +38,6 @@ package com.redhat.thermostat.host.cpu.client.core.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
@@ -50,6 +49,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
@@ -73,15 +73,11 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                Objects.requireNonNull(hostInfoDAO);
-                CpuStatDAO cpuStatDAO = (CpuStatDAO) services.get(CpuStatDAO.class.getName());
-                Objects.requireNonNull(cpuStatDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                HostCpuViewProvider viewProvider = (HostCpuViewProvider) services.get(HostCpuViewProvider.class.getName());
-                Objects.requireNonNull(viewProvider);
+            public void dependenciesAvailable(DependencyProvider services) {
+                HostInfoDAO hostInfoDAO = services.get(HostInfoDAO.class);
+                CpuStatDAO cpuStatDAO = services.get(CpuStatDAO.class);
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                HostCpuViewProvider viewProvider = services.get(HostCpuViewProvider.class);
                 
                 HostCpuService service = new HostCpuServiceImpl(appSvc, hostInfoDAO, cpuStatDAO, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();

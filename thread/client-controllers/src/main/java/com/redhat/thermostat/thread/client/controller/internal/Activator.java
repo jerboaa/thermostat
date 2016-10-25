@@ -42,6 +42,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
@@ -51,7 +52,6 @@ import com.redhat.thermostat.thread.dao.LockInfoDao;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
@@ -78,13 +78,13 @@ public class Activator implements BundleActivator {
             private ServiceRegistration registration;
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ThreadCollectorFactory collectorFactory = (ThreadCollectorFactory) services.get(ThreadCollectorFactory.class.getName());
-                ApplicationService applicationService = (ApplicationService) services.get(ApplicationService.class.getName());
-                VmInfoDAO vmInfoDao = Objects.requireNonNull((VmInfoDAO) services.get(VmInfoDAO.class.getName()));
-                LockInfoDao lockInfoDao = Objects.requireNonNull((LockInfoDao) services.get(LockInfoDao.class.getName()));
-                ThreadViewProvider viewFactory = (ThreadViewProvider) services.get(ThreadViewProvider.class.getName());
-                ProgressNotifier notifier = (ProgressNotifier) services.get(ProgressNotifier.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                ThreadCollectorFactory collectorFactory = services.get(ThreadCollectorFactory.class);
+                ApplicationService applicationService = services.get(ApplicationService.class);
+                VmInfoDAO vmInfoDao = services.get(VmInfoDAO.class);
+                LockInfoDao lockInfoDao = services.get(LockInfoDao.class);
+                ThreadViewProvider viewFactory = services.get(ThreadViewProvider.class);
+                ProgressNotifier notifier = services.get(ProgressNotifier.class);
 
                 ThreadInformationService vmInfoService =
                         new ThreadInformationServiceImpl(applicationService,

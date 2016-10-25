@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent.internal;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,6 +53,7 @@ import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
@@ -116,10 +116,10 @@ public class Activator implements BundleActivator {
         agentIPCTracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentIPCService ipcService = (AgentIPCService) services.get(AgentIPCService.class.getName());
-                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
-                UserNameUtil util = (UserNameUtil) services.get(UserNameUtil.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentIPCService ipcService = services.get(AgentIPCService.class);
+                CommonPaths paths = services.get(CommonPaths.class);
+                UserNameUtil util = services.get(UserNameUtil.class);
                 pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), util, 
                     ipcService, paths.getUserIPCConfigurationFile());
                 context.registerService(MXBeanConnectionPool.class, pool, null);

@@ -37,7 +37,6 @@
 package com.redhat.thermostat.dev.ipc.test.server.internal;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -47,6 +46,7 @@ import org.osgi.framework.BundleException;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class Activator implements BundleActivator {
@@ -61,9 +61,9 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(ctx, deps, new Action() {
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentIPCService service = (AgentIPCService) services.get(AgentIPCService.class.getName());
-                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentIPCService service = services.get(AgentIPCService.class);
+                CommonPaths paths = services.get(CommonPaths.class);
                 server = new UnixSocketTestServer(service, paths);
                 try {
                     server.start();

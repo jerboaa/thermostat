@@ -36,14 +36,13 @@
 
 package com.redhat.thermostat.storage.cli.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.service.process.ProcessHandler;
@@ -66,10 +65,10 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ExitStatus exitStatus = (ExitStatus) services.get(ExitStatus.class.getName());
-                ProcessHandler processHandler = (ProcessHandler) services.get(ProcessHandler.class.getName());
-                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                ExitStatus exitStatus = services.get(ExitStatus.class);
+                ProcessHandler processHandler = services.get(ProcessHandler.class);
+                CommonPaths paths = services.get(CommonPaths.class);
                 reg.registerCommand("storage", new StorageCommand(exitStatus, processHandler, paths));
             }
 

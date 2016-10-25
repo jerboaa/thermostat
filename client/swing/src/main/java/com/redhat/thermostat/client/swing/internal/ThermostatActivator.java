@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -57,7 +55,7 @@ import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewP
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -105,11 +103,11 @@ public class ThermostatActivator implements BundleActivator {
             private Main main;
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Keyring keyring = (Keyring) services.get(Keyring.class.getName());
-                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                Keyring keyring = services.get(Keyring.class);
+                CommonPaths paths = services.get(CommonPaths.class);
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                SSLConfiguration sslConf = services.get(SSLConfiguration.class);
                 cmdReg = new CommandRegistryImpl(context);
                 main = new Main(context, keyring, paths, appSvc, sslConf);
                 

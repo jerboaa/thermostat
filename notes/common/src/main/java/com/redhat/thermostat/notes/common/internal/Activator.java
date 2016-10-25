@@ -36,13 +36,12 @@
 
 package com.redhat.thermostat.notes.common.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.Storage;
@@ -65,8 +64,8 @@ public class Activator implements BundleActivator {
             }
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                Storage storage = services.get(Storage.class);
 
                 HostNoteDAO hostNoteDao = new HostNoteDAOImpl(storage);
                 hostNoteDaoregistration = context.registerService(HostNoteDAO.class, hostNoteDao, null);

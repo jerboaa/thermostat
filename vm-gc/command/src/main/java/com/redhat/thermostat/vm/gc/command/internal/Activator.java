@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.gc.command.internal;
 
 import java.util.Hashtable;
-import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -45,6 +44,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -78,10 +78,10 @@ public class Activator implements BundleActivator {
 
         gcCommandDepsServiceTracker = new MultipleServiceTracker(context, serviceDeps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                GCRequest request = (GCRequest) services.get(GCRequest.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
+                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
+                GCRequest request = services.get(GCRequest.class);
 
                 gcCommand.setServices(request, agentDao, vmInfoDAO);
             }
@@ -100,9 +100,9 @@ public class Activator implements BundleActivator {
             }
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                VmGcStatDAO vmGcStatDAO = (VmGcStatDAO) services.get(VmGcStatDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
+                VmGcStatDAO vmGcStatDAO = services.get(VmGcStatDAO.class);
                 showGcNameCmd.setVmInfo(vmInfoDAO);
                 showGcNameCmd.setVmGcStat(vmGcStatDAO);
             }

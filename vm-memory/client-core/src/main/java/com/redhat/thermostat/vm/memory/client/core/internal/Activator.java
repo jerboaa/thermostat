@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.memory.client.core.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
@@ -50,6 +49,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -85,21 +85,14 @@ public class Activator implements BundleActivator {
             }
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmInfoDAO vmInfoDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                Objects.requireNonNull(vmInfoDao);
-                VmMemoryStatDAO memoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
-                Objects.requireNonNull(memoryStatDao);
-                VmTlabStatDAO tlabStatDao = (VmTlabStatDAO) services.get(VmTlabStatDAO.class.getName());
-                Objects.requireNonNull(tlabStatDao);
-                AgentInfoDAO agentDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                Objects.requireNonNull(agentDAO);
-                GCRequest gcRequest = (GCRequest) services.get(GCRequest.class.getName());
-                Objects.requireNonNull(gcRequest);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                MemoryStatsViewProvider viewProvider = (MemoryStatsViewProvider) services.get(MemoryStatsViewProvider.class.getName());
-                Objects.requireNonNull(viewProvider);
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmInfoDAO vmInfoDao = services.get(VmInfoDAO.class);
+                VmMemoryStatDAO memoryStatDao = services.get(VmMemoryStatDAO.class);
+                VmTlabStatDAO tlabStatDao = services.get(VmTlabStatDAO.class);
+                AgentInfoDAO agentDAO = services.get(AgentInfoDAO.class);
+                GCRequest gcRequest = services.get(GCRequest.class);
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                MemoryStatsViewProvider viewProvider = services.get(MemoryStatsViewProvider.class);
 
                 MemoryStatsService impl = new MemoryStatsServiceImpl(appSvc, vmInfoDao, memoryStatDao, tlabStatDao, agentDAO, gcRequest, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();

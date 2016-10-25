@@ -39,6 +39,7 @@ package com.redhat.thermostat.launcher.internal;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
@@ -212,6 +213,7 @@ public class ActivatorTest {
         
         Action action = actionCaptor.getAllValues().get(0);
         assertNotNull(action);
+        SSLConfiguration sslConfiguration = mock(SSLConfiguration.class);
         Keyring keyringService = mock(Keyring.class);
         CommonPaths paths = mock(CommonPaths.class);
         when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
@@ -232,7 +234,8 @@ public class ActivatorTest {
         services.put(Keyring.class.getName(), keyringService);
         services.put(CommonPaths.class.getName(), paths);
         services.put(ConfigurationInfoSource.class.getName(), configurationInfoSource);
-        action.dependenciesAvailable(services);
+        services.put(SSLConfiguration.class.getName(), sslConfiguration);
+        action.dependenciesAvailable(new DependencyProvider(services));
         
         assertTrue(context.isServiceRegistered(CommandInfoSource.class.getName(), mock(CompoundCommandInfoSource.class).getClass()));
         assertTrue(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
@@ -307,7 +310,7 @@ public class ActivatorTest {
         Map<String, Object> services = new HashMap<>();
         services.put(CommonPaths.class.getName(), paths);
         services.put(ConfigurationInfoSource.class.getName(), configurationInfoSource);
-        action.dependenciesAvailable(services);
+        action.dependenciesAvailable(new DependencyProvider(services));
 
         assertTrue(context.isServiceRegistered(Command.class.getName(), ShellCommand.class));
 
@@ -404,7 +407,9 @@ public class ActivatorTest {
         Action action = vmCaptor.getValue();
 
         Map<String, Object> services = new HashMap<>();
-        action.dependenciesAvailable(services);
+        services.put(AgentInfoDAO.class.getName(), mock(AgentInfoDAO.class));
+        services.put(VmInfoDAO.class.getName(), mock(VmInfoDAO.class));
+        action.dependenciesAvailable(new DependencyProvider(services));
 
         assertTrue(context.isServiceRegistered(CompleterService.class.getName(), VmIdCompleterService.class));
 
@@ -456,7 +461,8 @@ public class ActivatorTest {
         Action action = agentCaptor.getAllValues().get(1);
 
         Map<String, Object> services = new HashMap<>();
-        action.dependenciesAvailable(services);
+        services.put(AgentInfoDAO.class.getName(), mock(AgentInfoDAO.class));
+        action.dependenciesAvailable(new DependencyProvider(services));
 
         assertTrue(context.isServiceRegistered(CompleterService.class.getName(), AgentIdCompleterService.class));
 
@@ -508,7 +514,8 @@ public class ActivatorTest {
         Action action = pingCaptor.getValue();
 
         Map<String, Object> services = new HashMap<>();
-        action.dependenciesAvailable(services);
+        services.put(AgentInfoDAO.class.getName(), mock(AgentInfoDAO.class));
+        action.dependenciesAvailable(new DependencyProvider(services));
 
         assertTrue(context.isServiceRegistered(CompleterService.class.getName(), PingCommandCompleterService.class));
 

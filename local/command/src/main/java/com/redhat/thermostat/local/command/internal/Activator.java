@@ -36,9 +36,8 @@
 
 package com.redhat.thermostat.local.command.internal;
 
-import java.util.Map;
-
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.launcher.Launcher;
@@ -64,9 +63,9 @@ public class Activator implements BundleActivator {
         };
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
-                Launcher launcher = (Launcher) services.get(Launcher.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                CommonPaths paths = services.get(CommonPaths.class);
+                Launcher launcher = services.get(Launcher.class);
                 localCommand.setPaths(paths);
                 localCommand.setLauncher(launcher);
             }

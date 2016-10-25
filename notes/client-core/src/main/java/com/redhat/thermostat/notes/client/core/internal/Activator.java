@@ -40,6 +40,7 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.notes.client.core.HostNotesControllerProvider;
 import com.redhat.thermostat.notes.client.core.NotesViewProvider;
@@ -53,7 +54,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Objects;
 
 public class Activator implements BundleActivator {
@@ -75,13 +75,10 @@ public class Activator implements BundleActivator {
         };
         hostNotesDaoTracker = new MultipleServiceTracker(context, hostDeps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                HostNoteDAO hostNoteDao = (HostNoteDAO) services.get(HostNoteDAO.class.getName());
-                Objects.requireNonNull(hostNoteDao);
-                NotesViewProvider viewProvider = (NotesViewProvider) services.get(NotesViewProvider.class.getName());
-                Objects.requireNonNull(viewProvider);
+            public void dependenciesAvailable(DependencyProvider services) {
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                HostNoteDAO hostNoteDao = services.get(HostNoteDAO.class);
+                NotesViewProvider viewProvider = services.get(NotesViewProvider.class);
                 HostNotesControllerProvider hostNotesService = new HostNotesControllerProvider(new SystemClock(), appSvc, hostNoteDao, viewProvider);
                 Hashtable<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
@@ -103,13 +100,10 @@ public class Activator implements BundleActivator {
         };
         vmNotesDaoTracker = new MultipleServiceTracker(context, vmDeps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                VmNoteDAO vmNoteDao = (VmNoteDAO) services.get(VmNoteDAO.class.getName());
-                Objects.requireNonNull(vmNoteDao);
-                NotesViewProvider viewProvider = (NotesViewProvider) services.get(NotesViewProvider.class.getName());
-                Objects.requireNonNull(viewProvider);
+            public void dependenciesAvailable(DependencyProvider services) {
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                VmNoteDAO vmNoteDao = services.get(VmNoteDAO.class);
+                NotesViewProvider viewProvider = services.get(NotesViewProvider.class);
                 VmNotesControllerProvider notesService = new VmNotesControllerProvider(new SystemClock(), appSvc, vmNoteDao, viewProvider);
                 Hashtable<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());

@@ -49,6 +49,7 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -84,11 +85,11 @@ public class Activator implements BundleActivator {
             }
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                CommonPaths path = get(CommonPaths.class, services);
-                MXBeanConnectionPool pool = get(MXBeanConnectionPool.class, services);
-                WriterID writerIdProvider = get(WriterID.class, services);
-                ProfileDAO dao = get(ProfileDAO.class, services);
+            public void dependenciesAvailable(DependencyProvider services) {
+                CommonPaths path = services.get(CommonPaths.class);
+                MXBeanConnectionPool pool = services.get(MXBeanConnectionPool.class);
+                WriterID writerIdProvider = services.get(WriterID.class);
+                ProfileDAO dao = services.get(ProfileDAO.class);
                 String writerId = writerIdProvider.getWriterID();
 
                 final Properties configuration = new Properties();
@@ -120,9 +121,6 @@ public class Activator implements BundleActivator {
                 }
             }
 
-            private <T> T get(Class<T> klass, Map<String, Object> services) {
-                return (T) services.get(klass.getName());
-            }
         });
 
         tracker.open();

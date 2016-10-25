@@ -85,6 +85,7 @@ import com.redhat.thermostat.common.AllPassFilter;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -229,8 +230,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         };
         issuesDepTracker = new MultipleServiceTracker(context, issuesDeps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                IssueViewProvider provider = (IssueViewProvider) services.get(IssueViewProvider.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                IssueViewProvider provider = services.get(IssueViewProvider.class);
                 IssueView issuesView = provider.createView();
                 issuesController = new IssueViewController(context, appSvc, view.getDecoratorManager(), issuesView);
                 issuesController.addIssueSelectionListener(new ActionListener<IssueViewController.IssueSelectionAction>() {
@@ -273,32 +274,21 @@ public class MainWindowControllerImpl implements MainWindowController {
         depTracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                keyring = (Keyring) services.get(Keyring.class.getName());
-                Objects.requireNonNull(keyring);
-                paths = (CommonPaths) services.get(CommonPaths.class.getName());
-                Objects.requireNonNull(paths);
-                hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                Objects.requireNonNull(hostInfoDAO);
-                vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                Objects.requireNonNull(vmInfoDAO);
-                agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                Objects.requireNonNull(agentInfoDAO);
-                backendInfoDAO = (BackendInfoDAO) services.get(BackendInfoDAO.class.getName());
-                Objects.requireNonNull(backendInfoDAO);
-                summaryViewProvider = (VersionAndInfoViewProvider) services.get(VersionAndInfoViewProvider.class.getName());
-                Objects.requireNonNull(summaryViewProvider);
-                hostInfoViewProvider = (HostInformationViewProvider) services.get(HostInformationViewProvider.class.getName());
-                Objects.requireNonNull(hostInfoViewProvider);
-                vmInfoViewProvider = (VmInformationViewProvider) services.get(VmInformationViewProvider.class.getName());
-                Objects.requireNonNull(vmInfoViewProvider);
-                agentInfoViewProvider = (AgentInformationViewProvider) services.get(AgentInformationViewProvider.class.getName());
-                Objects.requireNonNull(agentInfoViewProvider);
-                clientConfigViewProvider = (ClientConfigViewProvider) services.get(ClientConfigViewProvider.class.getName());
-                Objects.requireNonNull(clientConfigViewProvider);
+            public void dependenciesAvailable(DependencyProvider services) {
+                keyring = services.get(Keyring.class);
+                paths = services.get(CommonPaths.class);
+                hostInfoDAO = services.get(HostInfoDAO.class);
+                vmInfoDAO = services.get(VmInfoDAO.class);
+                agentInfoDAO = services.get(AgentInfoDAO.class);
+                backendInfoDAO = services.get(BackendInfoDAO.class);
+                summaryViewProvider = services.get(VersionAndInfoViewProvider.class);
+                hostInfoViewProvider = services.get(HostInformationViewProvider.class);
+                vmInfoViewProvider = services.get(VmInformationViewProvider.class);
+                agentInfoViewProvider = services.get(AgentInformationViewProvider.class);
+                clientConfigViewProvider = services.get(ClientConfigViewProvider.class);
 
-                networkMonitor = (NetworkMonitor) services.get(NetworkMonitor.class.getName());
-                hostMonitor = (HostMonitor) services.get(HostMonitor.class.getName());
+                networkMonitor = services.get(NetworkMonitor.class);
+                hostMonitor = services.get(HostMonitor.class);
                 
                 initView();
 

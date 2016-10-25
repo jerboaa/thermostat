@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.profiler.client.cli.internal;
 
 import java.util.Hashtable;
-import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -46,6 +45,7 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -76,14 +76,14 @@ public class Activator implements BundleActivator {
 
         profileVmCommandDepsTracker = new MultipleServiceTracker(context, classes, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentInfoDAO agentInfoDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentInfoDAO agentInfoDao = services.get(AgentInfoDAO.class);
                 command.setAgentInfoDAO(agentInfoDao);
-                VmInfoDAO vmInfoDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                VmInfoDAO vmInfoDao = services.get(VmInfoDAO.class);
                 command.setVmInfoDAO(vmInfoDao);
-                RequestQueue requestQueue = (RequestQueue) services.get(RequestQueue.class.getName());
+                RequestQueue requestQueue = services.get(RequestQueue.class);
                 command.setRequestQueue(requestQueue);
-                ProfileDAO profileDao = (ProfileDAO) services.get(ProfileDAO.class.getName());
+                ProfileDAO profileDao = services.get(ProfileDAO.class);
                 command.setProfileDAO(profileDao);
             }
 

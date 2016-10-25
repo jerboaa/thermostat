@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.find.command.internal;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -46,7 +47,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import java.util.Hashtable;
-import java.util.Map;
 
 /**
  * Registers the {@link FindVmCommand} with Thermostat.
@@ -68,10 +68,10 @@ public class Activator implements BundleActivator {
 
         serviceTracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentInfoDAO agentInfoDAO = services.get(AgentInfoDAO.class);
+                HostInfoDAO hostInfoDAO = services.get(HostInfoDAO.class);
+                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
 
                 findVmCommand.setAgentInfoDAO(agentInfoDAO);
                 findVmCommand.setHostInfoDAO(hostInfoDAO);

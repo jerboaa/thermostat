@@ -51,6 +51,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.MultipleServiceTracker.InternalServiceTrackerCustomizer;
 
 import static org.mockito.Matchers.eq;
@@ -113,7 +114,7 @@ public class MultipleServiceTrackerTest {
         verify(objectTracker).open();
 
         customizer.addingService(objectReference);
-        verify(action).dependenciesAvailable(isA(Map.class));
+        verify(action).dependenciesAvailable(isA(DependencyProvider.class));
 
         customizer.removedService(objectReference, OBJECT);
         verify(action).dependenciesUnavailable();
@@ -124,7 +125,7 @@ public class MultipleServiceTrackerTest {
         Class<?>[] deps = { Object.class, String.class };
         MultipleServiceTracker tracker = new MultipleServiceTracker(context, deps, action);
 
-        ArgumentCaptor<Map> serviceMap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<DependencyProvider> dependencyProvider = ArgumentCaptor.forClass(DependencyProvider.class);
         
         ArgumentCaptor<ServiceTrackerCustomizer> customizerCaptor = ArgumentCaptor.forClass(ServiceTrackerCustomizer.class);
         verifyNew(ServiceTracker.class).withArguments(eq(context),
@@ -141,9 +142,9 @@ public class MultipleServiceTrackerTest {
 
         customizer.addingService(objectReference);
         customizer.addingService(stringReference);
-        verify(action).dependenciesAvailable(serviceMap.capture());
+        verify(action).dependenciesAvailable(dependencyProvider.capture());
         
-        Map caputerServices = serviceMap.getValue();
+        Map caputerServices = dependencyProvider.getValue().getDependencies();
         Assert.assertTrue(caputerServices.containsKey(Object.class.getName()));
         Assert.assertTrue(caputerServices.containsKey(String.class.getName()));
         Assert.assertEquals(2, caputerServices.size());

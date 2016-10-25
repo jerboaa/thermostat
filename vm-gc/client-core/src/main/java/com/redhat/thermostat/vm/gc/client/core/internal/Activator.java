@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.gc.client.core.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
@@ -52,6 +51,7 @@ import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -85,21 +85,14 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, viewDeps, new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmMemoryStatDAO vmMemoryStatDAO = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
-                Objects.requireNonNull(vmMemoryStatDAO);
-                VmGcStatDAO vmGcStatDAO = (VmGcStatDAO) services.get(VmGcStatDAO.class.getName());
-                Objects.requireNonNull(vmGcStatDAO);
-                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                Objects.requireNonNull(vmInfoDAO);
-                AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                Objects.requireNonNull(agentInfoDAO);
-                GCRequest gcRequest = (GCRequest) services.get(GCRequest.class.getName());
-                Objects.requireNonNull(gcRequest);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                VmGcViewProvider viewProvider = (VmGcViewProvider) services.get(VmGcViewProvider.class.getName());
-                Objects.requireNonNull(viewProvider);
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmMemoryStatDAO vmMemoryStatDAO = services.get(VmMemoryStatDAO.class);
+                VmGcStatDAO vmGcStatDAO = services.get(VmGcStatDAO.class);
+                VmInfoDAO vmInfoDAO = services.get(VmInfoDAO.class);
+                AgentInfoDAO agentInfoDAO = services.get(AgentInfoDAO.class);
+                GCRequest gcRequest = services.get(GCRequest.class);
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                VmGcViewProvider viewProvider = services.get(VmGcViewProvider.class);
                 
                 VmGcService service = new VmGcServiceImpl(appSvc, vmMemoryStatDAO, vmGcStatDAO, vmInfoDAO, agentInfoDAO, viewProvider, gcRequest);
                 Dictionary<String, String> properties = new Hashtable<>();
@@ -123,10 +116,9 @@ public class Activator implements BundleActivator {
         issueServiceTracker = new MultipleServiceTracker(context, issueDeps, new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
+            public void dependenciesAvailable(DependencyProvider services) {
                 Clock clock = new SystemClock();
-                VmGcStatDAO vmGcStatDAO =
-                        (VmGcStatDAO) Objects.requireNonNull(services.get(VmGcStatDAO.class.getName()));
+                VmGcStatDAO vmGcStatDAO = services.get(VmGcStatDAO.class);
 
                 VmGcIssueDiagnoser service = new VmGcIssueDiagnoser(clock, vmGcStatDAO);
                 issueServiceReg = context.registerService(IssueDiagnoser.class.getName(), service, null);

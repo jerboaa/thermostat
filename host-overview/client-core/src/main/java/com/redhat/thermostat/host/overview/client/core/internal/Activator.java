@@ -38,7 +38,6 @@ package com.redhat.thermostat.host.overview.client.core.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
@@ -50,6 +49,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
@@ -77,23 +77,15 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                Objects.requireNonNull(hostInfoDAO);
-                NetworkInterfaceInfoDAO networkInfoDAO = (NetworkInterfaceInfoDAO) 
-                        services.get(NetworkInterfaceInfoDAO.class.getName());
-                Objects.requireNonNull(networkInfoDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                HostOverviewViewProvider viewProvider = (HostOverviewViewProvider) services
-                        .get(HostOverviewViewProvider.class.getName());
-                Objects.requireNonNull(viewProvider);
+            public void dependenciesAvailable(DependencyProvider services) {
+                HostInfoDAO hostInfoDAO = services.get(HostInfoDAO.class);
+                NetworkInterfaceInfoDAO networkInfoDAO = services.get(NetworkInterfaceInfoDAO.class);
+                ApplicationService appSvc = services.get(ApplicationService.class);
+                HostOverviewViewProvider viewProvider = services.get(HostOverviewViewProvider.class);
                 
-                CpuStatDAO cpuDao = (CpuStatDAO) services.get(CpuStatDAO.class.getName());
-                Objects.requireNonNull(cpuDao);
+                CpuStatDAO cpuDao = services.get(CpuStatDAO.class);
                 
-                MemoryStatDAO memoryDao = (MemoryStatDAO) services.get(MemoryStatDAO.class.getName());
-                Objects.requireNonNull(memoryDao);
+                MemoryStatDAO memoryDao = services.get(MemoryStatDAO.class);
                 
                 HostOverviewService service =
                         new HostOverviewServiceImpl(appSvc, hostInfoDAO,

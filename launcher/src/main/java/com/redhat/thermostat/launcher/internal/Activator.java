@@ -41,6 +41,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
@@ -68,7 +69,6 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 public class Activator implements BundleActivator {
 
@@ -91,11 +91,11 @@ public class Activator implements BundleActivator {
         }
 
         @Override
-        public void dependenciesAvailable(Map<String, Object> services) {
-            CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
-            Keyring keyring = (Keyring) services.get(Keyring.class.getName());
+        public void dependenciesAvailable(DependencyProvider services) {
+            CommonPaths paths = services.get(CommonPaths.class);
+            Keyring keyring = services.get(Keyring.class);
             ClientPreferences prefs = new ClientPreferences(paths);
-            SSLConfiguration sslConf = (SSLConfiguration) services.get(SSLConfiguration.class.getName());
+            SSLConfiguration sslConf = services.get(SSLConfiguration.class);
 
             String commandsDir = new File(paths.getSystemConfigurationDirectory(), "commands").toString();
             CommandInfoSource builtInCommandSource =
@@ -206,9 +206,9 @@ public class Activator implements BundleActivator {
         };
         shellTracker = new MultipleServiceTracker(context, shellClasses, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
-                ConfigurationInfoSource config = (ConfigurationInfoSource) services.get(ConfigurationInfoSource.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                CommonPaths paths = services.get(CommonPaths.class);
+                ConfigurationInfoSource config = services.get(ConfigurationInfoSource.class);
                 shellCommand = new ShellCommand(context, paths, config);
                 shellCommand.setTabCompletion(tabCompletion);
                 shellCommand.setCompleterServiceRegistry(completerServiceRegistry);
@@ -277,9 +277,9 @@ public class Activator implements BundleActivator {
         vmIdCompleterDepsTracker = new MultipleServiceTracker(context, vmIdCompleterDeps, new Action() {
 
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                VmInfoDAO vmDao = services.get(VmInfoDAO.class);
+                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
                 vmIdCompleterService.setVmInfoDAO(vmDao);
                 vmIdCompleterService.setAgentInfoDAO(agentDao);
             }
@@ -296,8 +296,8 @@ public class Activator implements BundleActivator {
         final Class<?>[] agentIdCompleterDeps = new Class[] { AgentInfoDAO.class };
         agentIdCompleterDepsTracker = new MultipleServiceTracker(context, agentIdCompleterDeps, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
                 agentIdCompleterService.setAgentInfoDAO(agentDao);
             }
 
@@ -312,8 +312,8 @@ public class Activator implements BundleActivator {
         final Class<?>[] pingCommandCompleterDeps = new Class[] { AgentInfoDAO.class };
         pingCommandCompleterDepsTracker = new MultipleServiceTracker(context, pingCommandCompleterDeps, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
                 pingCommandCompleterService.setAgentInfoDAO(agentDao);
             }
 

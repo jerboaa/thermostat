@@ -55,8 +55,27 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  */
 public class MultipleServiceTracker {
 
+    public static class DependencyProvider {
+
+        private Map<String, Object> deps;
+
+        public DependencyProvider(Map<String, Object> deps) {
+            this.deps = deps;
+        }
+
+        public <T> T get(Class<T> klass) {
+            T dep = (T) deps.get(klass.getName());
+            return Objects.requireNonNull(dep);
+        }
+
+        // for testing only
+        Map<String, Object> getDependencies() {
+            return deps;
+        }
+    }
+
     public interface Action {
-        public void dependenciesAvailable(Map<String, Object> services);
+        public void dependenciesAvailable(DependencyProvider services);
         public void dependenciesUnavailable();
     }
 
@@ -67,7 +86,7 @@ public class MultipleServiceTracker {
             Object service = context.getService(reference);
             services.put(getServiceClassName(reference), context.getService(reference));
             if (allServicesReady()) {
-                action.dependenciesAvailable(services);
+                action.dependenciesAvailable(new DependencyProvider(services));
             }
             return service;
         }

@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
 import java.util.Hashtable;
-import java.util.Map;
 
 import com.redhat.thermostat.client.swing.UIDefaults;
 import org.osgi.framework.BundleActivator;
@@ -50,6 +49,7 @@ import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -79,17 +79,16 @@ public class Activator implements BundleActivator {
 
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ApplicationService service = (ApplicationService) services.get(ApplicationService.class.getName());
-                ProgressNotifier notifier = (ProgressNotifier) services.get(ProgressNotifier.class.getName());
-                AgentInfoDAO agentInfoDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                VmInfoDAO vmInfoDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                ProfileDAO profileDao = (ProfileDAO) services.get(ProfileDAO.class.getName());
-                RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
-                VmProfileTreeMapViewProvider treeMapViewProvider = (VmProfileTreeMapViewProvider) services
-                        .get(VmProfileTreeMapViewProvider.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                ApplicationService service = services.get(ApplicationService.class);
+                ProgressNotifier notifier = services.get(ProgressNotifier.class);
+                AgentInfoDAO agentInfoDao = services.get(AgentInfoDAO.class);
+                VmInfoDAO vmInfoDao = services.get(VmInfoDAO.class);
+                ProfileDAO profileDao = services.get(ProfileDAO.class);
+                RequestQueue queue = services.get(RequestQueue.class);
+                VmProfileTreeMapViewProvider treeMapViewProvider = services.get(VmProfileTreeMapViewProvider.class);
 
-                UIDefaults uiDefaults = (UIDefaults) services.get(UIDefaults.class.getName());
+                UIDefaults uiDefaults = services.get(UIDefaults.class);
 
                 InformationService<VmRef> profileService = new VmProfileService(service, notifier,
                         agentInfoDao, vmInfoDao, profileDao, queue, treeMapViewProvider, uiDefaults);
