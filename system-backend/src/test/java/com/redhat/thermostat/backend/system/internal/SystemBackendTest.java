@@ -88,7 +88,7 @@ public class SystemBackendTest {
     public void testActivateTwice() {
         b.activate();
         b.activate();
-        assert(b.isActive());
+        assertTrue(b.isActive());
     }
 
     @Test

@@ -44,6 +44,7 @@ import com.redhat.thermostat.shared.config.OS;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ProcessHendlerImplTest {
 
@@ -54,9 +55,9 @@ public class ProcessHendlerImplTest {
         assertNotNull(hnd);
 
         if (OS.IS_UNIX) {
-            assert(hnd instanceof UnixProcessUtilities);
+            assertTrue(hnd instanceof UnixProcessUtilities);
         } else {
-            assert(hnd instanceof WindowsProcessUtilities);
+            assertTrue(hnd instanceof WindowsProcessUtilities);
         }
     }
 }
