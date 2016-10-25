@@ -36,9 +36,8 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
-import junit.framework.Assert;
-
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.awt.Dimension;
 import java.lang.reflect.InvocationTargetException;
@@ -82,7 +81,7 @@ public class TreeMapZoomBarTest {
                 try {
                     zoomBar = new TreeMapZoomBar(new TreeMapComponent());
                 } catch (NullPointerException e) {
-                    Assert.fail("Should not throw any exception.");
+                    fail("Should not throw any exception.");
                 }
             }
         });

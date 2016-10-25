@@ -36,14 +36,13 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
-import junit.framework.Assert;
-
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.SwingUtilities;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

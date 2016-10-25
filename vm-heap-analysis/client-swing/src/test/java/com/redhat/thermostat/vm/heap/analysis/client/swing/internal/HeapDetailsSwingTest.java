@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-import junit.framework.Assert;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import static org.junit.Assert.assertEquals;
@@ -62,6 +61,7 @@ import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JTabbedPaneFixture;
 import org.fest.swing.util.Triple;
+import org.junit.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
