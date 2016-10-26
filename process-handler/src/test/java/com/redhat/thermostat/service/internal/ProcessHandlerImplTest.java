@@ -46,7 +46,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class ProcessHendlerImplTest {
+public class ProcessHandlerImplTest {
 
     @Test
     public void testCorrectImplementation() {
