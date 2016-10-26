@@ -37,8 +37,6 @@
 package com.redhat.thermostat.platform.internal.mvc.lifecycle;
 
 import com.redhat.thermostat.beans.property.BooleanProperty;
-import com.redhat.thermostat.beans.property.ChangeListener;
-import com.redhat.thermostat.beans.property.ObservableValue;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
@@ -46,11 +44,9 @@ import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.platform.MDIService;
 import com.redhat.thermostat.platform.Platform;
 import com.redhat.thermostat.platform.event.EventQueue;
-import com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers.LifeCycleStateHandler;
-import com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers.LifeCycleTransitionDispatcher;
-import com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers.PlatformServiceRegistrar;
+import com.redhat.thermostat.platform.internal.mvc.lifecycle.state.PlatformServiceRegistrar;
+import com.redhat.thermostat.platform.internal.mvc.lifecycle.state.StateMachine;
 import com.redhat.thermostat.platform.mvc.MVCProvider;
-import com.redhat.thermostat.platform.mvc.Workbench;
 
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -62,14 +58,10 @@ public class MVCLifeCycleManager implements MDIService {
 
     private MVCRegistry registry;
     private EventQueue eventQueue;
-    private Deque<LifeCycleStateHandler> handlers;
-
-    private LifeCycleStateHandler workbench;
+    private Deque<StateMachine> providers;
 
     private Platform platform;
     private PlatformServiceRegistrar serviceRegistrar;
-
-    private volatile boolean shutdown;
 
     public MVCLifeCycleManager() {
         this(new MVCRegistry());
@@ -82,7 +74,7 @@ public class MVCLifeCycleManager implements MDIService {
 
         this.registry = registry;
 
-        handlers = new ConcurrentLinkedDeque<>();
+        providers = new ConcurrentLinkedDeque<>();
 
         MVCListener listener = new MVCListener();
         registry.addMVCRegistryListener(listener);
@@ -105,24 +97,17 @@ public class MVCLifeCycleManager implements MDIService {
     }
     
     public void stop() {
-        shutdown = true;
-
         registry.stop();
 
-        for (LifeCycleStateHandler handler : handlers) {
-            handler.destroy();
+        for (StateMachine stateMachine : providers) {
+            stateMachine.stop();
         }
 
         doShutdown();
     }
 
     private void doShutdown() {
-
-        if (handlers.isEmpty()) {
-            if (workbench != null) {
-                workbench.destroy();
-            }
-        }
+        // TODO
     }
 
     public BooleanProperty shutdownProperty() {
@@ -133,45 +118,11 @@ public class MVCLifeCycleManager implements MDIService {
 
     public void startLifeCycle(final MVCProvider provider) {
 
-        LifeCycleStateHandler handler =
-                new LifeCycleStateHandler(provider, platform, serviceRegistrar);
-        LifeCycleTransitionDispatcher dispatcher =
-                new LifeCycleTransitionDispatcher(eventQueue);
-        handler.setDispatcher(dispatcher);
-        dispatcher.addLifeCycleListener(handler);
-
-        if (provider instanceof Workbench) {
-            workbench = handler;
-            shutdownProperty.bind(workbench.shutdownProperty());
-        } else {
-            handlers.add(handler);
-
-            ShutdownListener listener = new ShutdownListener(handler);
-            handler.shutdownProperty().addListener(listener);
-        }
-
-        dispatcher.requestLifeCycleTransition(LifeCycle.CREATE_VIEW);
-    }
-
-    class ShutdownListener implements ChangeListener<Boolean> {
-        private LifeCycleStateHandler handler;
-
-        public ShutdownListener(LifeCycleStateHandler handler) {
-            this.handler = handler;
-        }
-
-        @Override
-        public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-            handler.getDispatcher().removeLifeCycleListener(handler);
-            handler.setDispatcher(null);
-            handler.shutdownProperty().removeListener(this);
-
-            handlers.remove(handler);
-
-            if (shutdown) {
-                doShutdown();
-            }
-        }
+        StateMachine stateMachine = new StateMachine(provider, platform,
+                                                     serviceRegistrar,
+                                                     eventQueue);
+        providers.add(stateMachine);
+        stateMachine.start();
     }
 
     public void setPlatform(Platform platform) {

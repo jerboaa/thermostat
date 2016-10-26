@@ -34,12 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.platform.internal.mvc.lifecycle;
+package com.redhat.thermostat.platform.internal.mvc.lifecycle.state;
+
+import com.redhat.thermostat.platform.Platform;
+import com.redhat.thermostat.platform.mvc.MVCProvider;
 
 /**
  */
-public enum ControllerLifeCycleState {
-    PRE_INIT,
-    STARTED,
-    STOPPED,
+public class Invalid implements StateAction {
+    @Override
+    public void execute(Context context) {
+
+    }
 }

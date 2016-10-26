@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers;
+package com.redhat.thermostat.platform.internal.mvc.lifecycle.state;
 
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.platform.annotations.PlatformService;

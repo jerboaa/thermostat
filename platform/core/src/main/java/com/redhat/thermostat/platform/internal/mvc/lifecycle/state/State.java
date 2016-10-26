@@ -34,31 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.platform.internal.mvc.lifecycle;
+package com.redhat.thermostat.platform.internal.mvc.lifecycle.state;
+
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
+ * List of possible states
  */
-public enum LifeCycle {
+public enum State {
+    INVALID(new Invalid()),
+    CREATE(new Create()),
+    INIT(new Init()),
+    START(new Start()),
+    STOP(new Stop()),
+    DESTROY(new Destroy()),
 
-    PRE_CREATE,
+    ;
 
-    CREATE_VIEW,
-    VIEW_CREATED,
+    /**
+     * Accepted transitions between each state,
+     */
+    Set<State> transitions;
+    static {
+        INVALID.transitions = EnumSet.of(CREATE);
+        CREATE.transitions  = EnumSet.of(INIT,  DESTROY);
+        INIT.transitions    = EnumSet.of(START, DESTROY);
+        START.transitions   = EnumSet.of(STOP);
+        STOP.transitions    = EnumSet.of(START, DESTROY);
+        DESTROY.transitions = EnumSet.of(INVALID);
+    }
 
-    INIT_VIEW,
-    VIEW_INITIALIZED,
+    StateAction action;
+    State(StateAction action) {
+        this.action = action;
+    }
 
-    REGISTER_MVC,
+    public void execute(Context context) {
+        action.execute(context);
+    }
 
-    START_CONTROLLER,
-    START_VIEW,
-    STARTED,
-
-    STOP_VIEW,
-    STOP_CONTROLLER,
-    STOPPED,
-
-    DESTROY_VIEW,
-    DESTROY,
-    DESTROYED,
+    boolean canGoToState(State other) {
+        return transitions.contains(other);
+    }
 }

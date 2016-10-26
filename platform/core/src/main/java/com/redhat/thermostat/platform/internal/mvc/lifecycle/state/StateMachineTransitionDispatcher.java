@@ -34,59 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers;
+package com.redhat.thermostat.platform.internal.mvc.lifecycle.state;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.platform.internal.mvc.lifecycle.LifeCycle;
 import com.redhat.thermostat.platform.event.EventQueue;
 
-public class LifeCycleTransitionDispatcher {
-    private ActionNotifier<LifeCycle> notifier;
-    private LifeCycle currentState;
+class StateMachineTransitionDispatcher {
     private EventQueue eventQueue;
+    private StateMachine stateMachine;
 
-    // Testing hook
-    LifeCycleTransitionDispatcher(ActionNotifier<LifeCycle> notifier,
-                                  EventQueue eventQueue) {
-        init(notifier, eventQueue);
-    }
-
-    public LifeCycleTransitionDispatcher(EventQueue eventQueue) {
-        init(new ActionNotifier<LifeCycle>(this), eventQueue);
-    }
-
-    private void init(ActionNotifier<LifeCycle> notifier, EventQueue eventQueue)
+    StateMachineTransitionDispatcher(EventQueue eventQueue,
+                                     StateMachine stateMachine)
     {
-        this.notifier = notifier;
         this.eventQueue = eventQueue;
-        currentState = LifeCycle.PRE_CREATE;
+        this.stateMachine = stateMachine;
     }
 
-    public void requestLifeCycleTransition(final LifeCycle newState) {
-        if (currentState != null && currentState.equals(newState)) {
-            return;
-        }
+    public void dispatch(final State newState) {
 
-        final Object oldState = this.currentState;
-        this.currentState = newState;
         eventQueue.runLater(new Runnable() {
             @Override
             public void run() {
-                notifier.fireAction(newState, oldState);
+                stateMachine.setState(newState);
             }
         });
-    }
-
-    public LifeCycle getCurrentLifeCycleState() {
-        return currentState;
-    }
-
-    public void addLifeCycleListener(ActionListener<LifeCycle> listener) {
-        notifier.addActionListener(listener);
-    }
-
-    public void removeLifeCycleListener(ActionListener<LifeCycle> listener) {
-        notifier.removeActionListener(listener);
     }
 }
