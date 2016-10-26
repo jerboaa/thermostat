@@ -39,10 +39,12 @@ package com.redhat.thermostat.launcher.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -51,6 +53,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 
+import jline.Terminal;
 import jline.console.ConsoleReader;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -267,6 +270,66 @@ public class ShellCommandTest {
     @Test
     public void testStorageRequired() {
         assertFalse(cmd.isStorageRequired());
+    }
+
+    @Test
+    public void testClearKeywordClearsScreen() throws CommandException, IOException {
+        final ConsoleReader reader = mock(ConsoleReader.class);
+        when(reader.readLine()).thenReturn("clear").thenReturn("quit");
+        when(reader.readLine(anyString())).thenReturn("clear").thenReturn("quit");
+        cmd = new ShellCommand(bundleContext, version, historyProvider, config, prefs) {
+            @Override
+            ConsoleReader createConsoleReader(CommandContext ctx, Terminal terminal) throws IOException {
+                return reader;
+            }
+        };
+        cmd.setTabCompletion(tabCompletion);
+        setupCommandInfoSource();
+
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+        verify(reader).clearScreen();
+        // "clear" is a shell keyword, not a real command, so it should not have been passed through to the Launcher
+        verifyZeroInteractions(launcher);
+    }
+
+    @Test
+    public void testClsKeywordClearsScreen() throws CommandException, IOException {
+        final ConsoleReader reader = mock(ConsoleReader.class);
+        when(reader.readLine()).thenReturn("clear").thenReturn("quit");
+        when(reader.readLine(anyString())).thenReturn("clear").thenReturn("quit");
+        cmd = new ShellCommand(bundleContext, version, historyProvider, config, prefs) {
+            @Override
+            ConsoleReader createConsoleReader(CommandContext ctx, Terminal terminal) throws IOException {
+                return reader;
+            }
+        };
+        cmd.setTabCompletion(tabCompletion);
+        setupCommandInfoSource();
+
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+        verify(reader).clearScreen();
+        // "cls" is a shell keyword, not a real command, so it should not have been passed through to the Launcher
+        verifyZeroInteractions(launcher);
     }
 
     @Test

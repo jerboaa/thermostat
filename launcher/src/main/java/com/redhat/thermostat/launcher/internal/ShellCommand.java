@@ -76,6 +76,7 @@ public class ShellCommand extends AbstractCommand {
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private static final List<String> exitKeywords = Arrays.asList("exit", "quit", "q" );
+    private static final List<String> clearKeywords = Arrays.asList("clear", "cls");
 
     private HistoryProvider historyProvider;
     private Version version;
@@ -137,7 +138,10 @@ public class ShellCommand extends AbstractCommand {
             String userGuideUrl = new ApplicationInfo().getUserGuide();
             String userGuideMessage = t.localize(LocaleResources.COMMAND_SHELL_USER_GUIDE, userGuideUrl).getContents();
             ctx.getConsole().getOutput().println(userGuideMessage);
-            shellMainLoop(ctx, history, term);
+
+            ConsoleReader reader = createConsoleReader(ctx, term);
+            setupConsoleReader(reader, history);
+            shellMainLoop(ctx.getConsole(), reader);
         } catch (IOException ex) {
             throw new CommandException(t.localize(LocaleResources.COMMAND_SHELL_IO_EXCEPTION), ex);
         } finally {
@@ -152,16 +156,7 @@ public class ShellCommand extends AbstractCommand {
         }
     }
 
-    private void closeTerminal(Terminal term) {
-        try {
-            term.restore();
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error restoring terminal state.", e);
-        }
-    }
-
-    private void shellMainLoop(CommandContext ctx, History history, Terminal term) throws IOException, CommandException {
-        ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), ctx.getConsole().getOutput(), term);
+    private void setupConsoleReader(ConsoleReader reader, History history) throws IOException {
         reader.setHandleUserInterrupt(true);
         reader.setPrompt(shellPrompt.getPrompt());
         if (completerServiceRegistry != null) {
@@ -174,8 +169,24 @@ public class ShellCommand extends AbstractCommand {
         CandidateListCompletionHandler completionHandler = new CandidateListCompletionHandler();
         completionHandler.setPrintSpaceAfterFullCompletion(false);
         reader.setCompletionHandler(completionHandler);
+    }
+
+    // package-private for testing
+    ConsoleReader createConsoleReader(CommandContext ctx, Terminal terminal) throws IOException {
+        return new ConsoleReader(ctx.getConsole().getInput(), ctx.getConsole().getOutput(), terminal);
+    }
+
+    private void closeTerminal(Terminal term) {
         try {
-            while (handleConsoleInput(reader, ctx.getConsole(), shellPrompt.getPrompt())) { /* no-op; the loop conditional performs the action */ }
+            term.restore();
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error restoring terminal state.", e);
+        }
+    }
+
+    private void shellMainLoop(Console console, ConsoleReader reader) throws IOException, CommandException {
+        try {
+            while (handleConsoleInput(console, reader, shellPrompt.getPrompt())) { /* no-op; the loop conditional performs the action */ }
         } finally {
             reader.shutdown();
         }
@@ -184,7 +195,7 @@ public class ShellCommand extends AbstractCommand {
     /**
      * @return true if the shell should continue accepting more input or false if the shell should quit
      */
-    private boolean handleConsoleInput(ConsoleReader reader, Console console, String prompt) throws IOException, CommandException {
+    private boolean handleConsoleInput(Console console, ConsoleReader reader, String prompt) throws IOException, CommandException {
         String line;
         try {
             line = reader.readLine(prompt);
@@ -200,6 +211,9 @@ public class ShellCommand extends AbstractCommand {
             return true;
         } else if (exitKeywords.contains(line)) {
             return false;
+        } else if (clearKeywords.contains(line)) {
+            reader.clearScreen();
+            return true;
         } else {
             launchCommand(line);
             return true;
