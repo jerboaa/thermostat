@@ -199,7 +199,8 @@ public class FileStorageCredentials implements StorageCredentials {
         }
     }
 
-    private char[] getValueFromData(char[] data, int dataLen, char[] target) {
+    /** package private for testing only */
+    char[] getValueFromData(char[] data, int dataLen, char[] target) {
         int position = 0;
         while (position < dataLen) {
             while (Character.isWhitespace(data[position])) {
@@ -214,7 +215,7 @@ public class FileStorageCredentials implements StorageCredentials {
             char[] value = getPassword(data, position);
             if (value != null) {
                 // Password
-                if (pw.equals(target)) {
+                if (Arrays.equals(pw, target)) {
                     return value;
                 } else {
                     clearCharArray(value);
@@ -226,7 +227,7 @@ public class FileStorageCredentials implements StorageCredentials {
             value = getUserName(data, position);
             if (value != null) {
                 // Username
-                if (user.equals(target)) {
+                if (Arrays.equals(user, target)) {
                     return value;
                 } else {
                     clearCharArray(value);

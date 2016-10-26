@@ -155,5 +155,13 @@ public class FileStorageCredentialsTest {
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
 
+    @Test
+    public void testArrayCompare() {
+        String data = "username=user\npassword=pass\n";
+        Reader reader = new StringReader(data);
+        FileStorageCredentials creds = new FileStorageCredentials(reader);
+        char[] result = creds.getValueFromData(data.toCharArray(), data.length(), new char[] { 'u', 's', 'e', 'r', 'n', 'a', 'm', 'e'});
+        Assert.assertArrayEquals("user".toCharArray(), result);
+    }
 }
 
