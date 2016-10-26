@@ -297,14 +297,13 @@ public class SquarifiedTreeMap {
     }
     
     /**
-     * Check if a double value is defined as Not a Number and sets it to 0.
+     * Ensure that a value is within an expected numeric range
      * @param d the value to check.
-     * @return the checked value: 0 if the given number is NaN, else the number
-     * itself.
+     * @return 0 if the input is NaN, else the number
      */
-    private double validate(double d) {
-        if (d == Double.NaN) {
-            d = 0;
+    double validate(double d) {
+        if (Double.isNaN(d)) {
+            return 0;
         }
         return d;
     }

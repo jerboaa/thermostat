@@ -64,6 +64,12 @@ public class SquarifiedTreeMapTest {
     }
 
     @Test
+    public void validateNan() {
+        algorithm = new SquarifiedTreeMap(region, elements);
+        assertEquals(0, algorithm.validate(Double.NaN), DELTA);
+    }
+
+    @Test
     public final void testSquarifiedTreeMapWithInvalidParameters() {
         //check every parameters combinations
         boolean caught = false;
