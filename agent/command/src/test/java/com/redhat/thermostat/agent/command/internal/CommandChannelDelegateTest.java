@@ -53,6 +53,7 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.codec.binary.Base64;
@@ -72,6 +73,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
@@ -241,18 +243,31 @@ public class CommandChannelDelegateTest {
     public void testProcessCmdLine() throws IOException {
         delegate.startListening("127.0.0.1", 123);
         
-        String[] args = new String[] { 
+        String[] linuxArgs = new String[] {
                 "/path/to/thermostat/home/thermostat-command-channel",
                 "127.0.0.1",
                 "123",
                 "/path/to/ipc/config"
         };
+
+        // in Windows we need to ensure the drive letter appears - by calling getAbsolutePath()
+        String[] winArgs = new String[] {
+                "cmd",
+                "/c",
+                new File("/path/to/thermostat/home/thermostat-command-channel.cmd").getAbsolutePath(),
+                "127.0.0.1",
+                "123",
+                new File("/path/to/ipc/config").getAbsolutePath()
+        };
+
+        final String[] expectedArgs = OS.IS_UNIX ? linuxArgs : winArgs;
         
         ArgumentCaptor<ProcessBuilder> builderCaptor = ArgumentCaptor.forClass(ProcessBuilder.class);
         verify(processCreator).startProcess(builderCaptor.capture());
         ProcessBuilder builder = builderCaptor.getValue();
-        
-        assertEquals(Arrays.asList(args), builder.command());
+        final List<String> actualArgs = builder.command();
+
+        assertEquals(Arrays.asList(expectedArgs), actualArgs);
         assertEquals(Redirect.INHERIT, builder.redirectError());
         assertEquals(Redirect.INHERIT, builder.redirectOutput());
         assertEquals(Redirect.INHERIT, builder.redirectInput());

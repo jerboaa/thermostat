@@ -41,6 +41,8 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.Reader;
 
+import com.redhat.thermostat.shared.config.OS;
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.utils.ProcDataSource;
@@ -50,24 +52,28 @@ public class ProcDataSourceTest {
 
     @Test
     public void testGetCpuInfoReader() throws IOException {
+        Assume.assumeTrue(OS.IS_UNIX);
         Reader r = new ProcDataSource().getCpuInfoReader();
         assertNotNull(r);
     }
 
     @Test
     public void testGetCpuLoadReader() throws IOException {
+        Assume.assumeTrue(OS.IS_UNIX);
         Reader r = new ProcDataSource().getCpuLoadReader();
         assertNotNull(r);
     }
 
     @Test
     public void testGetMemInfoReader() throws IOException {
+        Assume.assumeTrue(OS.IS_UNIX);
         Reader r = new ProcDataSource().getMemInfoReader();
         assertNotNull(r);
     }
 
     @Test
     public void testGetStatReader() throws IOException {
+        Assume.assumeTrue(OS.IS_UNIX);
         int pid = TestUtils.getProcessId();
         Reader r = new ProcDataSource().getStatReader(pid);
         assertNotNull(r);
@@ -75,6 +81,7 @@ public class ProcDataSourceTest {
 
     @Test
     public void testGetEnvironReader() throws IOException {
+        Assume.assumeTrue(OS.IS_UNIX);
         int pid = TestUtils.getProcessId();
         Reader r = new ProcDataSource().getEnvironReader(pid);
         assertNotNull(r);
@@ -82,6 +89,7 @@ public class ProcDataSourceTest {
 
     @Test
     public void testIoReader() throws Exception {
+        Assume.assumeTrue(OS.IS_UNIX);
         int pid = TestUtils.getProcessId();
         Reader r = new ProcDataSource().getIoReader(pid);
         assertNotNull(r);
@@ -89,6 +97,7 @@ public class ProcDataSourceTest {
 
     @Test
     public void testStatReader() throws Exception {
+        Assume.assumeTrue(OS.IS_UNIX);
         int pid = TestUtils.getProcessId();
         Reader r = new ProcDataSource().getStatReader(pid);
         assertNotNull(r);
@@ -96,6 +105,7 @@ public class ProcDataSourceTest {
 
     @Test
     public void testStatusReader() throws Exception {
+        Assume.assumeTrue(OS.IS_UNIX);
         int pid = TestUtils.getProcessId();
         Reader r = new ProcDataSource().getStatusReader(pid);
         assertNotNull(r);

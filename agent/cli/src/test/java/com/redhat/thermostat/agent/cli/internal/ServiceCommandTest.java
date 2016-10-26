@@ -50,6 +50,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collection;
 
+import com.redhat.thermostat.testutils.Asserts;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -229,7 +230,7 @@ public class ServiceCommandTest {
             exTriggered = true;
         }
         Assert.assertFalse(exTriggered);
-        Assert.assertEquals("Unexpected result from storage.\n", stdErrOut.toString());
+        Asserts.assertEqualsIgnoreCR("Unexpected result from storage.\n", stdErrOut.toString());
         Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
 
         verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
@@ -282,7 +283,7 @@ public class ServiceCommandTest {
             exTriggered = true;
         }
         Assert.assertTrue(exTriggered);
-        Assert.assertEquals("Test Exception\n", stdErrOut.toString());
+        Asserts.assertEqualsIgnoreCR("Test Exception\n", stdErrOut.toString());
         Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
 
         verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
@@ -335,7 +336,7 @@ public class ServiceCommandTest {
             exTriggered = true;
         }
         Assert.assertTrue(exTriggered);
-        Assert.assertEquals("Unexpected result from storage.\n", stdErrOut.toString());
+        Asserts.assertEqualsIgnoreCR("Unexpected result from storage.\n", stdErrOut.toString());
         Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
 
         verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
@@ -399,7 +400,7 @@ public class ServiceCommandTest {
             exTriggered = true;
         }
         Assert.assertFalse(exTriggered);
-        Assert.assertEquals("Thermostat agent failed to start. See logs for details.\n", stdErrOut.toString());
+        Asserts.assertEqualsIgnoreCR("Thermostat agent failed to start. See logs for details.\n", stdErrOut.toString());
         Assert.assertTrue("Agent expected to fire FAIL event", result[0]);
 
         verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());

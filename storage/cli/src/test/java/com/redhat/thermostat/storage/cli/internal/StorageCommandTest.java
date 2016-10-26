@@ -70,7 +70,7 @@ public class StorageCommandTest {
     
     private static final String PORT = "27518";
     private static final String BIND = "127.0.0.1";
-    private static final String DB = "data/db";
+    private static final String DB = "data" + File.separatorChar + "db";
 
     private String tmpDir;
     private ExitStatus exitStatus;

@@ -44,6 +44,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.testutils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -68,11 +72,12 @@ public class SSLConfigurationEncoderTest {
         when(sslConf.enableForCmdChannel()).thenReturn(true);
         when(sslConf.disableHostnameVerification()).thenReturn(false);
     }
-    
+
     @Test
     public void testSSLConfig() throws IOException {
         String expected = getJsonString(KEYSTORE_FILE, KEYSTORE_PASS);
         String result = getEncodedSSLConfiguration();
+        result = fixKeystorePath(result);
         assertEquals(expected, result);
     }
     
@@ -82,6 +87,7 @@ public class SSLConfigurationEncoderTest {
         
         String expected = getJsonString(null, KEYSTORE_PASS);
         String result = getEncodedSSLConfiguration();
+        // no need to fix the keystore path here, because the path is NULL
         assertEquals(expected, result);
     }
     
@@ -91,6 +97,7 @@ public class SSLConfigurationEncoderTest {
         
         String expected = getJsonString(KEYSTORE_FILE, null);
         String result = getEncodedSSLConfiguration();
+        result = fixKeystorePath(result);
         assertEquals(expected, result);
     }
 
@@ -117,4 +124,17 @@ public class SSLConfigurationEncoderTest {
         return gson.toJson(sslConfigJson);
     }
 
+    private String fixKeystorePath( final String json ) {
+        if (OS.IS_UNIX) {
+            return json;
+        }
+        else {
+            // on Windows, patch the filename to appear in Unix format
+            JsonElement je = new JsonParser().parse(json);
+            JsonObject jo = je.getAsJsonObject();
+            final String fn = jo.get("sslConfiguration").getAsJsonObject().get("keystoreFile").getAsString();
+            jo.get("sslConfiguration").getAsJsonObject().addProperty("keystoreFile", TestUtils.convertWinPathToUnixPath(fn));
+            return je.toString();
+        }
+    }
 }

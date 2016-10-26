@@ -41,6 +41,7 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -74,7 +75,7 @@ public class SSLConfigurationParserTest {
         mockByteChannel(encoded);
         
         SSLConfiguration config = parser.parseSSLConfiguration(agentChannel);
-        assertEquals("/path/to/keystore", config.getKeystoreFile().getAbsolutePath());
+        assertEquals(new File("/path/to/keystore").getAbsolutePath(), config.getKeystoreFile().getAbsolutePath());
         assertEquals("My Keystore Password", config.getKeyStorePassword());
         assertEquals(true, config.enableForCmdChannel());
         assertEquals(true, config.enableForBackingStorage());
@@ -108,7 +109,7 @@ public class SSLConfigurationParserTest {
         mockByteChannel(encoded);
         
         SSLConfiguration config = parser.parseSSLConfiguration(agentChannel);
-        assertEquals("/path/to/keystore", config.getKeystoreFile().getAbsolutePath());
+        assertEquals(new File("/path/to/keystore").getAbsolutePath(), config.getKeystoreFile().getAbsolutePath());
         assertNull(config.getKeyStorePassword());
         assertEquals(true, config.enableForCmdChannel());
         assertEquals(true, config.enableForBackingStorage());

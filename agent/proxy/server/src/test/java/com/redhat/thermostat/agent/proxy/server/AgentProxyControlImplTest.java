@@ -64,6 +64,7 @@ public class AgentProxyControlImplTest {
     private static final int SUCCESS = 0;
     private static final int FAILURE = 3;
     private static final int VM_PID = 0;
+    private static final String PATH_TO_JAVA_HOME = new File("/path/to/java/home").getAbsolutePath();
     private AgentProxyControlImpl control;
     private VirtualMachine vm;
     private VirtualMachineUtils vmUtils;
@@ -79,7 +80,7 @@ public class AgentProxyControlImplTest {
             .thenReturn(null).thenReturn("myJmxUrl");
         when(vm.getAgentProperties()).thenReturn(agentProps);
         Properties sysProps = mock(Properties.class);
-        when(sysProps.getProperty("java.home")).thenReturn("/path/to/java/home");
+        when(sysProps.getProperty("java.home")).thenReturn(PATH_TO_JAVA_HOME);
         when(vm.getSystemProperties()).thenReturn(sysProps);
         
         when(vmUtils.attach(anyString())).thenReturn(vm);
@@ -103,7 +104,7 @@ public class AgentProxyControlImplTest {
         List<String> args = startProcessArgs[0];
         assertNotNull(args);
         String[] expectedArgs = new String[] {
-                "/path/to/java/bin/jcmd", // Uses the jrePath.getParentFile() path
+                new File("/path/to/java/bin/jcmd").getAbsolutePath(), // Uses the jrePath.getParentFile() path
                 Integer.toString(VM_PID),
                 "ManagementAgent.start_local"
         };
@@ -113,7 +114,7 @@ public class AgentProxyControlImplTest {
         verify(vmUtils).attach(Integer.toString(VM_PID));
         verify(vm, times(2)).getAgentProperties();
         verify(vm).getSystemProperties();
-        verify(vm, times(0)).loadAgent("/path/to/java/home" + File.separator + "lib" + File.separator + "management-agent.jar");
+        verify(vm, times(0)).loadAgent(PATH_TO_JAVA_HOME + File.separator + "lib" + File.separator + "management-agent.jar");
     }
     
     @Test
@@ -131,7 +132,7 @@ public class AgentProxyControlImplTest {
         verify(vmUtils).attach(Integer.toString(VM_PID));
         verify(vm, times(2)).getAgentProperties();
         verify(vm).getSystemProperties();
-        verify(vm).loadAgent("/path/to/java/home" + File.separator + "lib" + File.separator + "management-agent.jar");
+        verify(vm).loadAgent(PATH_TO_JAVA_HOME + File.separator + "lib" + File.separator + "management-agent.jar");
     }
 
     @Test

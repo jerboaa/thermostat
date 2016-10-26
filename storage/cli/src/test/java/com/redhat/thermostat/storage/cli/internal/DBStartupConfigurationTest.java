@@ -81,7 +81,7 @@ public class DBStartupConfigurationTest {
         assertEquals("127.0.0.1", dbConfig.getBindIP());
         assertEquals(27518, dbConfig.getPort());
         assertEquals(true, dbConfig.isSslEnabled());
-        assertEquals("/path/to/some/pem/file.pem", dbConfig.getSslPemFile().getAbsolutePath());
+        assertEquals(new File("/path/to/some/pem/file.pem").getAbsolutePath(), dbConfig.getSslPemFile().getAbsolutePath());
         assertEquals("somepassword", dbConfig.getSslKeyPassphrase());
     }
     

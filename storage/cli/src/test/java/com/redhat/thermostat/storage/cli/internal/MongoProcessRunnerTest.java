@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.redhat.thermostat.service.process.ProcessHandler;
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -98,12 +99,19 @@ public class MongoProcessRunnerTest {
 
     @Test
     public void testCommandArgumentsWithOldestMongodbVersion() throws Exception {
-        String[] expected = { "mongod", "--quiet", "--fork",
+        String[] linuxExpected = { "mongod", "--quiet", "--fork",
                 "--auth", "--nohttpinterface", "--bind_ip", config.getBindIP(),
                 "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
                 config.getLogFile().getCanonicalPath(), "--pidfilepath",
                 config.getPidFile().getCanonicalPath(), "--port",
                 Long.toString(config.getPort()) };
+        String[] winExpected = { "cmd", "/c", "start", "/b", "mongod", "--quiet",
+                "--auth", "--nohttpinterface", "--bind_ip", config.getBindIP(),
+                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
+                config.getLogFile().getCanonicalPath(), "--pidfilepath",
+                config.getPidFile().getCanonicalPath(), "--port",
+                Long.toString(config.getPort()) };
+        String expected[] = OS.IS_UNIX ? linuxExpected : winExpected;
         List<String> cmds = runner.getStartupCommand(OLDEST_MONGODB_VERSION);
         String[] actual = cmds.toArray(new String[0]);
         verifyEquals(expected, actual);
@@ -111,12 +119,19 @@ public class MongoProcessRunnerTest {
 
     @Test
     public void testCommandArgumentsWithLatestMongodbVersion() throws Exception {
-        String[] expected = { "mongod", "--quiet", "--fork",
+        String[] linuxExpected = { "mongod", "--quiet", "--fork",
                 "--auth", "--nohttpinterface", "--bind_ip", config.getBindIP(),
                 "--nojournal", "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
                 config.getLogFile().getCanonicalPath(), "--pidfilepath",
                 config.getPidFile().getCanonicalPath(), "--port",
                 Long.toString(config.getPort()), "--setParameter", "enableLocalhostAuthBypass=0"};
+        String[] winExpected = { "cmd", "/c", "start", "/b", "mongod", "--quiet",
+                "--auth", "--nohttpinterface", "--bind_ip", config.getBindIP(),
+                "--nojournal", "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
+                config.getLogFile().getCanonicalPath(), "--pidfilepath",
+                config.getPidFile().getCanonicalPath(), "--port",
+                Long.toString(config.getPort()), "--setParameter", "enableLocalhostAuthBypass=0"};
+        String expected[] = OS.IS_UNIX ? linuxExpected : winExpected;
         List<String> cmds = runner.getStartupCommand(LATEST_MONGODB_VERSION);
         String[] actual = cmds.toArray(new String[0]);
         verifyEquals(expected, actual);
@@ -168,7 +183,7 @@ public class MongoProcessRunnerTest {
         File pemFile = new File("/path/to/cert_and_key.pem");
         when(config.getSslPemFile()).thenReturn(pemFile);
         when(config.getSslKeyPassphrase()).thenReturn("non-null");
-        String[] expected = { "mongod", "--quiet", "--fork", "--auth",
+        String[] linuxExpected = { "mongod", "--quiet", "--fork", "--auth",
                 "--nohttpinterface", "--bind_ip", config.getBindIP(),
                 "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
                 config.getLogFile().getCanonicalPath(), "--pidfilepath",
@@ -177,6 +192,16 @@ public class MongoProcessRunnerTest {
                 "--sslPEMKeyFile", config.getSslPemFile().getCanonicalPath(),
                 "--sslPEMKeyPassword", config.getSslKeyPassphrase()
         };
+        String[] winExpected = { "cmd", "/c", "start", "/b", "mongod", "--quiet", "--auth",
+                "--nohttpinterface", "--bind_ip", config.getBindIP(),
+                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
+                config.getLogFile().getCanonicalPath(), "--pidfilepath",
+                config.getPidFile().getCanonicalPath(), "--port",
+                Long.toString(config.getPort()), "--sslOnNormalPorts",
+                "--sslPEMKeyFile", config.getSslPemFile().getCanonicalPath(),
+                "--sslPEMKeyPassword", config.getSslKeyPassphrase()
+        };
+        String expected[] = OS.IS_UNIX ? linuxExpected : winExpected;
         List<String> cmds = runner.getStartupCommand(JOURNAL_MONGODB_VERSION);
         String[] actual = cmds.toArray(new String[0]);
         verifyEquals(expected, actual);
