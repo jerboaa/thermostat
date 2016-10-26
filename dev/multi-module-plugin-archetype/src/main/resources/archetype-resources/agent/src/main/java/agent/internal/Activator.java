@@ -11,6 +11,7 @@ import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import ${package}.storage.ExampleDAO;
@@ -31,10 +32,10 @@ public class Activator implements BundleActivator {
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ApplicationService appService = (ApplicationService) services.get(ApplicationService.class.getName());
-                ExampleDAO dao = (ExampleDAO) services.get(ExampleDAO.class.getName());
-                WriterID writer = (WriterID) services.get(WriterID.class.getName());
+            public void dependenciesAvailable(DependencyProvider services) {
+                ApplicationService appService = services.get(ApplicationService.class);
+                ExampleDAO dao = services.get(ExampleDAO.class);
+                WriterID writer = services.get(WriterID.class);
                 Version version = new Version(context.getBundle());
                 backend = new ExampleBackend(appService, version, dao, writer);
                 reg = context.registerService(Backend.class.getName(), backend, null);

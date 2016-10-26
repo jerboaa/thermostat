@@ -8,6 +8,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
 import ${package}.storage.ExampleDAO;
@@ -46,9 +47,9 @@ public class Activator implements BundleActivator {
         }
         
         @Override
-        public void dependenciesAvailable(Map<String, Object> services) {
-            Storage storage = (Storage)services.get(Storage.class.getName());
-            WriterID writerId = (WriterID)services.get(WriterID.class.getName());
+        public void dependenciesAvailable(DependencyProvider services) {
+            Storage storage = services.get(Storage.class);
+            WriterID writerId = services.get(WriterID.class);
             ExampleDAO daoImpl = new ExampleDAOImpl(storage, writerId);
             reg = context.registerService(ExampleDAO.class.getName(), daoImpl, null);
         }
