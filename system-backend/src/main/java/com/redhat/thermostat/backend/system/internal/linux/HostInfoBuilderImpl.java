@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.linux;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,42 +45,43 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.hostname.HostName;
+import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Size.Unit;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.HostInfo;
 
-public class HostInfoBuilder {
+public class HostInfoBuilderImpl implements HostInfoBuilder {
 
-    private static final Logger logger = LoggingUtils.getLogger(HostInfoBuilder.class);
+    private static final Logger logger = LoggingUtils.getLogger(HostInfoBuilderImpl.class);
 
-    public static final String FALLBACK_LOCAL_HOSTNAME = "localhost";
+    private static final String FALLBACK_LOCAL_HOSTNAME = "localhost";
 
     static class HostCpuInfo {
-        public final String model;
-        public final int count;
+        final String model;
+        final int count;
 
-        public HostCpuInfo(String model, int count) {
+        HostCpuInfo(String model, int count) {
             this.count = count;
             this.model = model;
         }
     }
 
     static class HostOsInfo {
-        public final String kernel;
-        public final String distribution;
+        final String kernel;
+        final String distribution;
 
-        public HostOsInfo(String kernel, String distribution) {
+        HostOsInfo(String kernel, String distribution) {
             this.kernel = kernel;
             this.distribution = distribution;
         }
     }
 
     static class HostMemoryInfo {
-        public final Size totalMemory;
+        final Size totalMemory;
 
-        public HostMemoryInfo(Size totalMemory) {
+        HostMemoryInfo(Size totalMemory) {
             this.totalMemory = totalMemory;
         }
     }
@@ -88,7 +89,7 @@ public class HostInfoBuilder {
     private final ProcDataSource dataSource;
     private final WriterID writerId;
 
-    public HostInfoBuilder(ProcDataSource dataSource, WriterID writerId) {
+    HostInfoBuilderImpl(ProcDataSource dataSource, WriterID writerId) {
         this.dataSource = dataSource;
         this.writerId = writerId;
     }
@@ -140,7 +141,7 @@ public class HostInfoBuilder {
             logger.log(Level.WARNING, "unable to read memory info");
         }
 
-        logger.log(Level.FINEST, "totalMemory: " + totalMemory.toString());
+        logger.log(Level.FINEST, "totalMemory: " + (totalMemory != null ? totalMemory.toString() : "(null)"));
         return new HostMemoryInfo(totalMemory);
     }
 

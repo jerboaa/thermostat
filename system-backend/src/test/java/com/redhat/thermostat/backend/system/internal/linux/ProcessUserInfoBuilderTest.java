@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.linux;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyInt;
@@ -49,7 +49,7 @@ import org.junit.Test;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.username.UserNameLookupException;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
-import com.redhat.thermostat.backend.system.internal.ProcessUserInfoBuilder.ProcessUserInfo;
+import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfo;
 import com.redhat.thermostat.common.tools.ApplicationException;
 
 public class ProcessUserInfoBuilderTest {
@@ -61,7 +61,7 @@ public class ProcessUserInfoBuilderTest {
         UserNameUtil util = mock(UserNameUtil.class);
         when(util.getUserName(2000)).thenReturn("myUser");
         when(source.getStatusReader(anyInt())).thenReturn(reader);
-        ProcessUserInfoBuilder builder = new ProcessUserInfoBuilder(source, util);
+        ProcessUserInfoBuilderImpl builder = new ProcessUserInfoBuilderImpl(source, util);
         ProcessUserInfo info = builder.build(0);
         
         assertEquals(2000, info.getUid());
@@ -74,7 +74,7 @@ public class ProcessUserInfoBuilderTest {
         ProcDataSource source = mock(ProcDataSource.class);
         UserNameUtil util = mock(UserNameUtil.class);
         when(source.getStatusReader(anyInt())).thenReturn(reader);
-        ProcessUserInfoBuilder builder = new ProcessUserInfoBuilder(source, util);
+        ProcessUserInfoBuilderImpl builder = new ProcessUserInfoBuilderImpl(source, util);
         ProcessUserInfo info = builder.build(0);
         
         assertEquals(-1, info.getUid());
@@ -88,7 +88,7 @@ public class ProcessUserInfoBuilderTest {
         UserNameUtil util = mock(UserNameUtil.class);
         when(util.getUserName(2000)).thenReturn(null);
         when(source.getStatusReader(anyInt())).thenReturn(reader);
-        ProcessUserInfoBuilder builder = new ProcessUserInfoBuilder(source, util);
+        ProcessUserInfoBuilderImpl builder = new ProcessUserInfoBuilderImpl(source, util);
         ProcessUserInfo info = builder.build(0);
         
         assertEquals(2000, info.getUid());

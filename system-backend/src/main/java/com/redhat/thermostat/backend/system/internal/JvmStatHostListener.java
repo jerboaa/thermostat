@@ -44,6 +44,9 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
+import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfo;
+import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfoBuilder;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 import sun.jvmstat.monitor.MonitoredVm;
@@ -54,8 +57,6 @@ import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
-import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.backend.system.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -64,7 +65,7 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
-public class JvmStatHostListener implements HostListener {
+class JvmStatHostListener implements HostListener {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
@@ -76,9 +77,9 @@ public class JvmStatHostListener implements HostListener {
     private final HostRef hostRef;
     private final VmBlacklist blacklist;
 
-    JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier, 
-            ProcessUserInfoBuilder userInfoBuilder, WriterID writerId, HostRef hostRef,
-            VmBlacklist blacklist) {
+    JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier,
+                        ProcessUserInfoBuilder userInfoBuilder, WriterID writerId, HostRef hostRef,
+                        VmBlacklist blacklist) {
         this.vmInfoDAO = vmInfoDAO;
         this.notifier = notifier;
         this.userInfoBuilder = userInfoBuilder;
@@ -153,8 +154,7 @@ public class JvmStatHostListener implements HostListener {
     VmInfo createVmInfo(String vmId, Integer vmPid, long startTime, long stopTime,
             JvmStatDataExtractor extractor) throws MonitorException {
         Map<String, String> properties = new HashMap<String, String>();
-        ProcDataSource dataSource = new ProcDataSource();
-        Map<String, String> environment = new ProcessEnvironmentBuilder(dataSource).build(vmPid);
+        Map<String, String> environment = InfoBuilderFactory.INSTANCE.createProcessEnvironmentBuilder().build(vmPid);
         // TODO actually figure out the loaded libraries.
         String[] loadedNativeLibraries = new String[0];
         ProcessUserInfo userInfo = userInfoBuilder.build(vmPid);

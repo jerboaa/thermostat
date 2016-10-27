@@ -50,6 +50,66 @@
 
   <name>Thermostat System Backend</name>
 
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+    </profile>
+
+    <profile>
+      <id>linux</id>
+      <activation>
+        <os><family>Unix</family></os>
+      </activation>
+      <properties>
+        <platform.libs/>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>windows</id>
+      <activation>
+        <os><family>Windows</family></os>
+      </activation>
+      <properties>
+        <platform.libs>-lws2_32</platform.libs>
+        <sharedlib.prefix/>
+        <sharedlib.suffix>.dll</sharedlib.suffix>
+      </properties>
+      <build>
+        <plugins>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>compile</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <executable>make</executable>
+              <arguments>
+                <argument>all</argument>
+                <argument>CC=${c.compiler}</argument>
+                <argument>SO_PREFIX=${sharedlib.prefix}</argument>
+                <argument>SO_SUFFIX=${sharedlib.suffix}</argument>
+                <argument>EXTRA_CFLAGS=${cflags}</argument>
+                <argument>JNI_PLATFORM=${jni.platform}</argument>
+                <argument>PLATFORM_LIBS=${platform.libs}</argument>
+              </arguments>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -111,14 +171,17 @@
             <Bundle-Activator>com.redhat.thermostat.backend.system.internal.SystemBackendActivator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.backend.system</Bundle-SymbolicName>
             <Private-Package>
-                com.redhat.thermostat.backend.system.internal,
+              com.redhat.thermostat.backend.system.internal,
+              com.redhat.thermostat.backend.system.internal.linux,
+              com.redhat.thermostat.backend.system.internal.windows,
+              com.redhat.thermostat.backend.system.internal.models
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>
-            
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>

@@ -42,12 +42,14 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
+import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfoBuilder;
+
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 
 import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Version;
@@ -77,7 +79,6 @@ public class SystemBackend extends BaseBackend {
     private JvmStatHostListener hostListener = null;
 
     private final NetworkInfoBuilder networkInfoBuilder;
-    private final HostInfoBuilder hostInfoBuilder;
     private final ProcessUserInfoBuilder userInfoBuilder;
     private final VmStatusChangeNotifier notifier;
     private final WriterID writerId;
@@ -97,10 +98,8 @@ public class SystemBackend extends BaseBackend {
         this.writerId = writerId;
         this.blacklist = blacklist;
 
-        ProcDataSource source = new ProcDataSource();
-        hostInfoBuilder = new HostInfoBuilder(source, writerId);
+        userInfoBuilder = InfoBuilderFactory.INSTANCE.createProcessUserInfoBuilder(userNameUtil);
         networkInfoBuilder = new NetworkInfoBuilder(writerId);
-        userInfoBuilder = new ProcessUserInfoBuilder(source, userNameUtil);
     }
 
     @Override
@@ -112,7 +111,7 @@ public class SystemBackend extends BaseBackend {
         if (!getObserveNewJvm()) {
             logger.fine("not monitoring new vms");
         }
-        HostInfo hostInfo = hostInfoBuilder.build();
+        HostInfo hostInfo = InfoBuilderFactory.INSTANCE.createHostInfoBuilder(writerId).build();
         hostInfos.putHostInfo(hostInfo);
 
         timer = new Timer();

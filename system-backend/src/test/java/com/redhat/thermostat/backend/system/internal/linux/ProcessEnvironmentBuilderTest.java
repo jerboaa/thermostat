@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.linux;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,6 +53,8 @@ import java.io.Reader;
 import java.util.Map;
 import java.util.Random;
 
+import com.redhat.thermostat.shared.config.OS;
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.utils.ProcDataSource;
@@ -64,8 +66,9 @@ public class ProcessEnvironmentBuilderTest {
 
     @Test
     public void testBasicBuild() {
+        Assume.assumeTrue(OS.IS_UNIX);
         ProcDataSource dataSource = new ProcDataSource();
-        Map<String, String> result = new ProcessEnvironmentBuilder(dataSource).build(TestUtils.getProcessId());
+        Map<String, String> result = new ProcessEnvironmentBuilderImpl(dataSource).build(TestUtils.getProcessId());
         assertNotNull(result);
         assertFalse(result.isEmpty());
         assertTrue(result.containsKey("USER"));
@@ -79,7 +82,7 @@ public class ProcessEnvironmentBuilderTest {
         ProcDataSource dataSource = mock(ProcDataSource.class);
         when(dataSource.getEnvironReader(any(Integer.class))).thenReturn(r);
 
-        Map<String, String> result = new ProcessEnvironmentBuilder(dataSource).build(0);
+        Map<String, String> result = new ProcessEnvironmentBuilderImpl(dataSource).build(0);
 
         verify(dataSource).getEnvironReader(eq(0));
         assertEquals("test", result.get("USER"));
@@ -110,7 +113,7 @@ public class ProcessEnvironmentBuilderTest {
         ProcDataSource dataSource = mock(ProcDataSource.class);
         when(dataSource.getEnvironReader(any(Integer.class))).thenReturn(r);
 
-        Map<String, String> result = new ProcessEnvironmentBuilder(dataSource).build(0);
+        Map<String, String> result = new ProcessEnvironmentBuilderImpl(dataSource).build(0);
 
         verify(dataSource).getEnvironReader(eq(0));
         assertNotNull(result);

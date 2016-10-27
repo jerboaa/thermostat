@@ -62,7 +62,8 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
-import com.redhat.thermostat.backend.system.internal.ProcessUserInfoBuilder.ProcessUserInfo;
+import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfoBuilder;
+import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfo;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.WriterID;

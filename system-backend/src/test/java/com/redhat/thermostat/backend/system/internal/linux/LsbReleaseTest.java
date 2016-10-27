@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.linux;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -45,6 +45,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.UUID;
 
+import com.redhat.thermostat.backend.system.internal.linux.DistributionInformation;
+import com.redhat.thermostat.backend.system.internal.linux.LsbRelease;
+import com.redhat.thermostat.shared.config.OS;
+import org.junit.Assume;
 import org.junit.Test;
 
 public class LsbReleaseTest {
@@ -54,6 +58,7 @@ public class LsbReleaseTest {
 
     @Test
     public void testName() throws IOException, InterruptedException {
+        Assume.assumeTrue(OS.IS_UNIX);
         BufferedReader reader = new BufferedReader(new StringReader("Distributor ID: Name"));
         DistributionInformation info = new LsbRelease().getFromLsbRelease(reader);
         assertEquals("Name", info.getName());
@@ -61,6 +66,7 @@ public class LsbReleaseTest {
 
     @Test
     public void testVersion() throws IOException {
+        Assume.assumeTrue(OS.IS_UNIX);
         BufferedReader reader = new BufferedReader(new StringReader("Release: Version"));
         DistributionInformation info = new LsbRelease().getFromLsbRelease(reader);
         assertEquals("Version", info.getVersion());
@@ -68,6 +74,7 @@ public class LsbReleaseTest {
     
     @Test
     public void getDistributionInformationThrowsIOExceptionIfScriptNotThere() {
+        Assume.assumeTrue(OS.IS_UNIX);
         LsbRelease lsbRelease = new LsbRelease(NOT_EXISTING_LSB_RELEASE);
         try {
             lsbRelease.getDistributionInformation();

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.linux;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -46,13 +46,15 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetAddress;
 
+import com.redhat.thermostat.shared.config.OS;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.backend.system.internal.HostInfoBuilder.HostCpuInfo;
-import com.redhat.thermostat.backend.system.internal.HostInfoBuilder.HostMemoryInfo;
-import com.redhat.thermostat.backend.system.internal.HostInfoBuilder.HostOsInfo;
+import com.redhat.thermostat.backend.system.internal.linux.HostInfoBuilderImpl.HostCpuInfo;
+import com.redhat.thermostat.backend.system.internal.linux.HostInfoBuilderImpl.HostMemoryInfo;
+import com.redhat.thermostat.backend.system.internal.linux.HostInfoBuilderImpl.HostOsInfo;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.HostInfo;
@@ -69,7 +71,8 @@ public class HostInfoBuilderTest {
 
     @Test
     public void testSimpleBuild() {
-        HostInfo info = new HostInfoBuilder(new ProcDataSource(), writerId).build();
+        Assume.assumeTrue(OS.IS_UNIX);
+        HostInfo info = new HostInfoBuilderImpl(new ProcDataSource(), writerId).build();
         assertNotNull(info);
     }
 
@@ -86,7 +89,7 @@ public class HostInfoBuilderTest {
         ProcDataSource dataSource = mock(ProcDataSource.class);
         when(dataSource.getCpuInfoReader()).thenReturn(cpuInfoReader);
 
-        HostCpuInfo cpuInfo = new HostInfoBuilder(dataSource, writerId).getCpuInfo();
+        HostCpuInfo cpuInfo = new HostInfoBuilderImpl(dataSource, writerId).getCpuInfo();
         assertEquals(2, cpuInfo.count);
         assertEquals("Test Model", cpuInfo.model);
         verify(dataSource).getCpuInfoReader();
@@ -101,7 +104,7 @@ public class HostInfoBuilderTest {
         ProcDataSource dataSource = mock(ProcDataSource.class);
         when(dataSource.getMemInfoReader()).thenReturn(memoryInfoReader);
 
-        HostMemoryInfo memoryInfo = new HostInfoBuilder(dataSource, writerId).getMemoryInfo();
+        HostMemoryInfo memoryInfo = new HostInfoBuilderImpl(dataSource, writerId).getMemoryInfo();
         assertNotNull(memoryInfo);
         assertEquals(Size.bytes(12345 * KILOBYTES_TO_BYTES), memoryInfo.totalMemory);
         verify(dataSource).getMemInfoReader();
@@ -112,7 +115,7 @@ public class HostInfoBuilderTest {
     public void testOsInfo() {
         DistributionInformation distroInfo = new DistributionInformation("distro-name", "distro-version");
         ProcDataSource dataSource = mock(ProcDataSource.class);
-        HostOsInfo osInfo = new HostInfoBuilder(dataSource, writerId).getOsInfo(distroInfo);
+        HostOsInfo osInfo = new HostInfoBuilderImpl(dataSource, writerId).getOsInfo(distroInfo);
         assertEquals("distro-name distro-version", osInfo.distribution);
         assertEquals(System.getProperty("os.name") + " " + System.getProperty("os.version"), osInfo.kernel);
     }
@@ -125,7 +128,7 @@ public class HostInfoBuilderTest {
 
         ProcDataSource dataSource = mock(ProcDataSource.class);
 
-        String name = new HostInfoBuilder(dataSource, writerId).getHostName(address);
+        String name = new HostInfoBuilderImpl(dataSource, writerId).getHostName(address);
         assertEquals("test-hostname", name);
     }
 

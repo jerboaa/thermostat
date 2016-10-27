@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.linux;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,7 +45,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class LsbRelease implements DistributionInformationSource {
+class LsbRelease implements DistributionInformationSource {
 
     private static final Logger logger = LoggingUtils.getLogger(LsbRelease.class);
 
@@ -55,7 +55,7 @@ public class LsbRelease implements DistributionInformationSource {
     
     private final String lsbRelaseBin;
     
-    public LsbRelease() {
+    LsbRelease() {
         this.lsbRelaseBin = LSB_RELEASE_SCRIPT;
     }
     
@@ -70,7 +70,7 @@ public class LsbRelease implements DistributionInformationSource {
         return getFromLsbRelease();
     }
 
-    public DistributionInformation getFromLsbRelease() throws IOException {
+    DistributionInformation getFromLsbRelease() throws IOException {
         BufferedReader reader = null;
         try {
             Process lsbProc = Runtime.getRuntime().exec(new String[] { lsbRelaseBin, "-a" });
@@ -96,7 +96,7 @@ public class LsbRelease implements DistributionInformationSource {
 
     }
 
-    public DistributionInformation getFromLsbRelease(BufferedReader reader) throws IOException {
+    DistributionInformation getFromLsbRelease(BufferedReader reader) throws IOException {
         String name = DistributionInformation.UNKNOWN_NAME;
         String version = DistributionInformation.UNKNOWN_VERSION;
 

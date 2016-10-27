@@ -42,6 +42,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.shared.config.OS;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -77,6 +79,8 @@ public class SystemBackendTest {
 
     @Test
     public void testBasicBackend() {
+        // TODO - this test currently fails on Windows because the DLL isn't along the classpath
+        Assume.assumeTrue(OS.IS_UNIX);
         assertFalse(b.isActive());
         b.activate();
         assertTrue(b.isActive());
@@ -86,6 +90,8 @@ public class SystemBackendTest {
 
     @Test
     public void testActivateTwice() {
+        // TODO - this test currently fails on Windows because the DLL isn't along the classpath
+        Assume.assumeTrue(OS.IS_UNIX);
         b.activate();
         b.activate();
         assertTrue(b.isActive());

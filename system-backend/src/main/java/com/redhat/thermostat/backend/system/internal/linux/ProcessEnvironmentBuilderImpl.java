@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.linux;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -47,15 +47,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class ProcessEnvironmentBuilder {
+class ProcessEnvironmentBuilderImpl implements ProcessEnvironmentBuilder {
 
-    private static final Logger logger = LoggingUtils.getLogger(ProcessEnvironmentBuilder.class);
+    private static final Logger logger = LoggingUtils.getLogger(ProcessEnvironmentBuilderImpl.class);
 
     private final ProcDataSource dataSource;
 
-    public ProcessEnvironmentBuilder(ProcDataSource dataSource) {
+    ProcessEnvironmentBuilderImpl(ProcDataSource dataSource) {
         this.dataSource = dataSource;
     }
 

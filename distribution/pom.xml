@@ -173,6 +173,8 @@
                           todir="${project.build.directory}/image/libs/native" />
                     <copy file="${main.basedir}/agent/core/target/UserNameUtilWrapper.dll"
                           todir="${project.build.directory}/image/libs/native" />
+                    <copy file="${main.basedir}/system-backend/target/WindowsHelperWrapper.dll"
+                          todir="${project.build.directory}/image/libs/native" />
                   </target>
                 </configuration>
                 <goals>

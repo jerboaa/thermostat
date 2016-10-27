@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.linux;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,46 +45,24 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.username.UserNameLookupException;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
+import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfo;
+import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfoBuilder;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-class ProcessUserInfoBuilder {
+class ProcessUserInfoBuilderImpl implements ProcessUserInfoBuilder {
     
     private static final ProcessUserInfo NON_EXISTENT_USER = new ProcessUserInfo();
     private static final String PROC_STATUS_UID = "Uid:";
-    private static final Logger logger = LoggingUtils.getLogger(ProcessUserInfoBuilder.class);
+    private static final Logger logger = LoggingUtils.getLogger(ProcessUserInfoBuilderImpl.class);
     private ProcDataSource source;
     private UserNameUtil userNameUtil;
     
-    ProcessUserInfoBuilder(ProcDataSource source, UserNameUtil userNameUtil) {
+    ProcessUserInfoBuilderImpl(ProcDataSource source, UserNameUtil userNameUtil) {
         this.source = source;
         this.userNameUtil = userNameUtil;
     }
-    
-    static class ProcessUserInfo {
-        
-        private long uid;
-        private String username;
-        
-        ProcessUserInfo(long uid, String username) {
-            this.uid = uid;
-            this.username = username;
-        }
-        
-        ProcessUserInfo() {
-            this.uid = -1;
-            this.username = null;
-        }
-        
-        public long getUid() {
-            return uid;
-        }
-        
-        public String getUsername() {
-            return username;
-        }
-    }
-    
-    ProcessUserInfo build(int pid) {
+
+    public ProcessUserInfo build(int pid) {
         ProcessUserInfo info = NON_EXISTENT_USER;
         try {
             Reader reader = source.getStatusReader(pid);

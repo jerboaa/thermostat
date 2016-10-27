@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.linux;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -45,6 +45,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.UUID;
 
+import com.redhat.thermostat.backend.system.internal.linux.DistributionInformation;
+import com.redhat.thermostat.backend.system.internal.linux.EtcOsRelease;
+import com.redhat.thermostat.shared.config.OS;
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.internal.test.Bug;
@@ -106,6 +110,7 @@ public class EtcOsReleaseTest {
     
     @Test
     public void getDistributionInformationThrowsIOExceptionIfFileNotThere() {
+        Assume.assumeTrue(OS.IS_UNIX);
         EtcOsRelease etcOsRelease = new EtcOsRelease(NOT_EXISTING_OS_RELEASE_FILE);
         try {
             etcOsRelease.getDistributionInformation();

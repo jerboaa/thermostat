@@ -34,54 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal;
+package com.redhat.thermostat.backend.system.internal.models;
 
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
+import java.util.Map;
 
-/*
- * Test log handler used for DistributionInformation log testing.
+/**
+ * Interface for fetching a process environment
+ * An environment is represented as a map of name-value pairs
  */
-public class TestLogHandler extends Handler {
-    
-    private boolean etcOsReleaseLogged;
-    private boolean lsbReleaseLogged;
-    private static final String EXPECTED_OS_RELEASE_FAIL_MSG =
-            "unable to use os-release";
-    private static final String EXPECTED_LSB_RELEASE_FAIL_MSG =
-            "unable to use os-release AND lsb_release";
-    
-    @Override
-    public void publish(LogRecord record) {
-        String logMessage = record.getMessage();
-        if (record.getLevel().intValue() >= Level.WARNING.intValue() && 
-                logMessage.equals(EXPECTED_OS_RELEASE_FAIL_MSG)) {
-            etcOsReleaseLogged = true;
-        };
-        if (record.getLevel().intValue() >= Level.WARNING.intValue() &&
-                logMessage.equals(EXPECTED_LSB_RELEASE_FAIL_MSG)) {
-            lsbReleaseLogged = true;
-        }
-    }
-
-    @Override
-    public void flush() {
-        // nothing
-    }
-
-    @Override
-    public void close() throws SecurityException {
-        // nothing
-    }
-    
-    boolean isEtcOsReleaseLogged() {
-        return etcOsReleaseLogged;
-    }
-    
-    boolean isLsbReleaseLogged() {
-        return lsbReleaseLogged;
-    }
-    
+public interface ProcessEnvironmentBuilder {
+    Map<String,String> build(int pid);
 }
-
