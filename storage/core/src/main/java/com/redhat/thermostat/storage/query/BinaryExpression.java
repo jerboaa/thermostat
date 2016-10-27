@@ -104,7 +104,7 @@ abstract class BinaryExpression<S extends Expression, T extends Expression, U ex
     
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("( ");
         buf.append(leftOperand.toString());
         buf.append(" ");

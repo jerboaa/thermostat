@@ -464,7 +464,7 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
         Properties userProps = new Properties();
         userProps.put(user, password);
         Properties roleProps = new Properties();
-        StringBuffer roles = new StringBuffer();
+        StringBuilder roles = new StringBuilder();
         for (int i = 0; i < roleNames.length - 1; i++) {
             roles.append(roleNames[i] + ", ");
         }

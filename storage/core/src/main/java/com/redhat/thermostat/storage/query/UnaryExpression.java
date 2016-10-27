@@ -91,7 +91,7 @@ abstract class UnaryExpression<S extends Expression, T extends UnaryOperator> im
 
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("( ");
         buf.append(operator.toString());
         buf.append(" ");

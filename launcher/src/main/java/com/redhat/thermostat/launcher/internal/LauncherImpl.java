@@ -234,7 +234,7 @@ public class LauncherImpl implements Launcher {
         if (origArgs.length == 1) {
             return origArgs[0];
         }
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < origArgs.length - 1; i++) {
             buffer.append(origArgs[i]);
             buffer.append(separator);
