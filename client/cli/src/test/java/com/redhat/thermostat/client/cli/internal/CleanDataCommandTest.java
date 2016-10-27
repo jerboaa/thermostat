@@ -142,6 +142,45 @@ public class CleanDataCommandTest {
     }
 
     @Test
+    public void testNCharacterInUserConfirmationIsNo() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'N' });
+        when(mockArguments.getNonOptionArguments()).thenReturn(getOneValidAgent());
+
+        cleanDataCommand.run(mockCommandContext);
+
+        verify(mockStorage, never()).purge(isA(String.class));
+
+        verify(mockOutput).println("Cleaning a lot of data from Thermostat storage can cause latency for other agents or clients.");
+        verify(mockOutput).println("Not cleaning Thermostat data at this time.");
+    }
+
+    @Test
+    public void testECharacterInUserConfirmationIsNo() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'e' });
+        when(mockArguments.getNonOptionArguments()).thenReturn(getOneValidAgent());
+
+        cleanDataCommand.run(mockCommandContext);
+
+        verify(mockStorage, never()).purge(isA(String.class));
+
+        verify(mockOutput).println("Cleaning a lot of data from Thermostat storage can cause latency for other agents or clients.");
+        verify(mockOutput).println("Not cleaning Thermostat data at this time.");
+    }
+
+    @Test
+    public void testInvalidCharacterInUserConfirmationIsNo() throws CommandException {
+        setupUserConfirmation(new byte[]{ '|' });
+        when(mockArguments.getNonOptionArguments()).thenReturn(getOneValidAgent());
+
+        cleanDataCommand.run(mockCommandContext);
+
+        verify(mockStorage, never()).purge(isA(String.class));
+
+        verify(mockOutput).println("Cleaning a lot of data from Thermostat storage can cause latency for other agents or clients.");
+        verify(mockOutput).println("Not cleaning Thermostat data at this time.");
+    }
+
+    @Test
     public void testMultipleValidArguments() throws CommandException {
         setupUserConfirmation(new byte[]{ 'Y' });
 

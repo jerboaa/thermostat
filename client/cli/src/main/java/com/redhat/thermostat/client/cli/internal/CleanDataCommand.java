@@ -169,7 +169,7 @@ public class CleanDataCommand extends AbstractCommand {
 
     private String[] affirmativeResponses() {
         String yesses = translator.localize(LocaleResources.AFFIRMATIVE_RESPONSES).getContents();
-        return yesses.split("|");
+        return yesses.split("\\|");
     }
 
     private void indicateCleanCancelled(PrintStream output) {
