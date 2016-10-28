@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.jmx.client.core.internal;
+package com.redhat.thermostat.vm.jmx.client.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -63,8 +63,8 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.vm.jmx.client.core.internal.JmxToggleNotificationRequest.JmxToggleResponseListener;
-import com.redhat.thermostat.vm.jmx.client.core.internal.JmxToggleNotificationRequest.JmxToggleResponseListenerFactory;
+import com.redhat.thermostat.vm.jmx.client.core.JmxToggleNotificationRequest.JmxToggleResponseListener;
+import com.redhat.thermostat.vm.jmx.client.core.JmxToggleNotificationRequest.JmxToggleResponseListenerFactory;
 import com.redhat.thermostat.vm.jmx.common.JmxCommand;
 
 public class JmxToggleNotificationRequestTest {

@@ -38,53 +38,91 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
-    <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat-vm-jmx</artifactId>
+    <groupId>com.redhat.thermostat</groupId>
     <version>1.99.12-SNAPSHOT</version>
   </parent>
-
-  <artifactId>thermostat-vm-jmx-distribution</artifactId>
-  <packaging>pom</packaging>
-
-  <name>Thermostat VM JMX plugin distribution</name>
-
-  <properties>
-    <thermostat.plugin>vm-jmx</thermostat.plugin>
-  </properties>
-
+  <artifactId>thermostat-vm-jmx-client-cli</artifactId>
+  <packaging>bundle</packaging>
+  <name>Thermostat VM JMX CLI plugin</name>
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>com.redhat.thermostat</groupId>
-            <artifactId>thermostat-assembly</artifactId>
-            <version>${project.version}</version>
-          </dependency>
-        </dependencies>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
         <configuration>
-          <descriptorRefs>
-            <descriptorRef>plugin-assembly</descriptorRef>
-          </descriptorRefs>
-          <appendAssemblyId>false</appendAssemblyId>
+          <instructions>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-SymbolicName>com.redhat.thermostat.vm.jmx.client.cli</Bundle-SymbolicName>
+            <Bundle-Activator>com.redhat.thermostat.vm.jmx.client.cli.internal.Activator</Bundle-Activator>
+            <Export-Package>
+              com.redhat.thermostat.vm.jmx.client.cli
+            </Export-Package>
+            <Private-Package>
+              com.redhat.thermostat.vm.jmx.client.cli.internal,
+              com.redhat.thermostat.vm.jmx.client.cli.locale,
+            </Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
+          </instructions>
         </configuration>
-        <executions>
-          <execution>
-            <id>assemble-plugin</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
-
   <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-jmx-common</artifactId>
@@ -92,25 +130,8 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-jmx-client-cli</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-jmx-client-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-jmx-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-jmx-agent</artifactId>
-      <version>${project.version}</version>
-    </dependency>
   </dependencies>
-
 </project>
-

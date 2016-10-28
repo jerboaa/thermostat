@@ -39,6 +39,72 @@
 <plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd">
+  <commands>
+    <command>
+      <name>notifications</name>
+      <summary>manage JMX notifications on the given VM</summary>
+      <description>Manage JMX notification monitoring on the given JVM.</description>
+      <subcommands>
+        <subcommand>
+          <name>status</name>
+          <description>Check JMX notification monitoring status</description>
+        </subcommand>
+        <subcommand>
+          <name>enable</name>
+          <description>Enable JMX notification monitoring</description>
+          <options>
+            <option>
+              <long>follow</long>
+              <short>f</short>
+              <required>false</required>
+              <description>Start following JMX events immediately</description>
+            </option>
+          </options>
+        </subcommand>
+        <subcommand>
+          <name>disable</name>
+          <description>Disable JMX notification monitoring</description>
+        </subcommand>
+        <subcommand>
+          <name>follow</name>
+          <description>Follow JMX notification events</description>
+        </subcommand>
+        <subcommand>
+          <name>show</name>
+          <description>Show all JMX events for the JVM</description>
+          <options>
+            <option>
+              <long>since</long>
+              <argument>time</argument>
+              <description>only show events occurring since the given instant. Dates must be expressed 1) in milliseconds
+                since the Unix epoch, or 2) as an integer offset from present in seconds, minutes, hours, or days, of
+                the form "30s" for the last 30 seconds, or "1d" for the last day, for example.</description>
+            </option>
+          </options>
+        </subcommand>
+      </subcommands>
+      <options>
+        <option>
+          <long>vmId</long>
+          <short>v</short>
+          <argument>id</argument>
+          <required>true</required>
+        </option>
+      </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.jmx.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.jmx.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.jmx.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+      </bundles>
+    </command>
+  </commands>
+
   <extensions>
     <extension>
       <name>gui</name>

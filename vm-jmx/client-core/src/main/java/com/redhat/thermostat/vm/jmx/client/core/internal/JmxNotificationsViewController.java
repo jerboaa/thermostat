@@ -65,6 +65,7 @@ import com.redhat.thermostat.vm.jmx.client.core.LocaleResources;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
+import com.redhat.thermostat.vm.jmx.client.core.JmxToggleNotificationRequest;
 
 public class JmxNotificationsViewController implements InformationServiceController<VmRef> {
 

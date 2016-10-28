@@ -34,9 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.jmx.client.core.internal;
-
-import java.net.InetSocketAddress;
+package com.redhat.thermostat.vm.jmx.client.core;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
@@ -48,9 +46,11 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxCommand;
 
+import java.net.InetSocketAddress;
+
 public class JmxToggleNotificationRequest {
-    
-    static final String CMD_CHANNEL_ACTION_NAME = "jmx-toggle-notifications";
+
+    public static final String CMD_CHANNEL_ACTION_NAME = "jmx-toggle-notifications";
 
     private RequestQueue queue;
     private AgentInfoDAO agentDAO;
@@ -62,8 +62,8 @@ public class JmxToggleNotificationRequest {
             Runnable successAction, Runnable failureAction) {
         this(queue, agentDAO, successAction, failureAction, new JmxToggleResponseListenerFactory());
     }
-    
-    JmxToggleNotificationRequest(RequestQueue queue, AgentInfoDAO agentDAO, Runnable successAction, 
+
+    JmxToggleNotificationRequest(RequestQueue queue, AgentInfoDAO agentDAO, Runnable successAction,
             Runnable failureAction, JmxToggleResponseListenerFactory factory) {
         this.queue = queue;
         this.agentDAO = agentDAO;
@@ -90,12 +90,12 @@ public class JmxToggleNotificationRequest {
 
         queue.putRequest(req);
     }
-    
+
     static class JmxToggleResponseListener implements RequestResponseListener {
-        
+
         private Runnable successAction;
         private Runnable failureAction;
-        
+
         public JmxToggleResponseListener(Runnable successAction, Runnable failureAction) {
             this.successAction = successAction;
             this.failureAction = failureAction;
@@ -112,16 +112,16 @@ public class JmxToggleNotificationRequest {
                 break;
             }
         }
-        
+
     }
-    
+
     static class JmxToggleResponseListenerFactory {
-        
-        JmxToggleResponseListener createListener(Runnable successAction, 
+
+        public JmxToggleResponseListener createListener(Runnable successAction,
                 Runnable failureAction) {
             return new JmxToggleResponseListener(successAction, failureAction);
         }
-        
+
     }
 }
 

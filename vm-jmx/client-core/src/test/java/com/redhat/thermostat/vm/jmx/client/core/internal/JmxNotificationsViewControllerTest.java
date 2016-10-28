@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.jmx.client.core.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeastOnce;
@@ -57,6 +56,7 @@ import java.util.concurrent.TimeUnit;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.vm.jmx.client.core.JmxToggleNotificationRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
