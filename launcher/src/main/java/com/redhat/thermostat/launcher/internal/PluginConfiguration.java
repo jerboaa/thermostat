@@ -82,8 +82,8 @@ public class PluginConfiguration {
         return this.pluginID.isValidID();
     }
 
-    public boolean isEmpty() {
-        return this.configurations.isEmpty() && !this.pluginID.equals("");
+    public boolean hasConfigurations() {
+        return !this.configurations.isEmpty();
     }
 
     public static class CommandExtensions {

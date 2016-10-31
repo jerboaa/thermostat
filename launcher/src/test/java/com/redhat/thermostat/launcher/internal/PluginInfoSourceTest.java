@@ -389,6 +389,7 @@ public class PluginInfoSourceTest {
         conf.put(configName, customConfigPath);
 
         when(parserResult.getPluginID()).thenReturn(new PluginID(pluginID));
+        when(parserResult.hasConfigurations()).thenReturn(true);
         when(parserResult.getConfigurations()).thenReturn(new Configurations(conf));
         when(parserResult.hasValidID()).thenReturn(true);
 

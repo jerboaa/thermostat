@@ -114,7 +114,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
                 loadNewAndExtendedCommands(internalJarRoot, pluginDir, pluginConfig);
                 if (allConfigs.containsKey(pluginConfig.getPluginID())) {
                     logger.log(Level.WARNING, "Plugin with ID: " + pluginConfig.getPluginID() + " conflicts with a previous plugin's ID and the config file will not be overwritten.");
-                } else if (pluginConfig.hasValidID() && !pluginConfig.isEmpty()){
+                } else if (pluginConfig.hasValidID() && pluginConfig.hasConfigurations()) {
                     allConfigs.put(pluginConfig.getPluginID(), pluginConfig.getConfigurations());
                 }
 
