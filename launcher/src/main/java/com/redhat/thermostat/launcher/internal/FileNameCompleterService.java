@@ -36,17 +36,28 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.AbstractCompleterService;
 import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.CompleterService;
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-public class FileNameCompleterService extends AbstractCompleterService {
+@Component(immediate = true)
+@Service
+public class FileNameCompleterService implements CompleterService {
 
     public static final CliCommandOption FILENAME_OPTION = new CliCommandOption("f", "filename", true, "path/to/local/file", false);
+
+    @Reference(policy = ReferencePolicy.STATIC, cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    private FileNameTabCompleter fileNameTabCompleter;
 
     @Override
     public Set<String> getCommands() {
@@ -55,9 +66,23 @@ public class FileNameCompleterService extends AbstractCompleterService {
 
     @Override
     public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
-        CliCommandOption option = FILENAME_OPTION;
-        TabCompleter completer = new JLineFileNameCompleter();
-
-        return Collections.singletonMap(option, completer);
+        if (fileNameTabCompleter == null) {
+            return Collections.emptyMap();
+        }
+        return Collections.singletonMap(FILENAME_OPTION, fileNameTabCompleter);
     }
+
+    @Override
+    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
+        return Collections.emptyMap();
+    }
+
+    public void bindFileNameTabCompleter(FileNameTabCompleter fileNameTabCompleter) {
+        this.fileNameTabCompleter = fileNameTabCompleter;
+    }
+
+    public void unbindFileNameTabCompleter(FileNameTabCompleter fileNameTabCompleter) {
+        this.fileNameTabCompleter = null;
+    }
+
 }

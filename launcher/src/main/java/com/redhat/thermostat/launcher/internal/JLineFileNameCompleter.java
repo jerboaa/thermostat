@@ -38,11 +38,15 @@ package com.redhat.thermostat.launcher.internal;
 
 import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import jline.console.completer.FileNameCompleter;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
+@Service(FileNameTabCompleter.class)
 public class JLineFileNameCompleter extends JLineCompleterWrapper implements FileNameTabCompleter {
 
     public JLineFileNameCompleter() {

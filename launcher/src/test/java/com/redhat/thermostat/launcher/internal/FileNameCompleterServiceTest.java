@@ -37,6 +37,7 @@
 package com.redhat.thermostat.launcher.internal;
 
 import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +49,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class FileNameCompleterServiceTest {
 
@@ -56,6 +58,7 @@ public class FileNameCompleterServiceTest {
     @Before
     public void setup() {
         completerService = new FileNameCompleterService();
+        completerService.bindFileNameTabCompleter(mock(FileNameTabCompleter.class));
     }
 
     @Test
@@ -85,6 +88,13 @@ public class FileNameCompleterServiceTest {
     public void testFileNameOptionArgumentName() {
         assertThat(FileNameCompleterService.FILENAME_OPTION.getLongOpt(), is("filename"));
         assertThat(FileNameCompleterService.FILENAME_OPTION.getOpt(), is("f"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProvidesNoCompleterIfFileNameTabCompleterUnavailable() {
+        completerService.unbindFileNameTabCompleter(mock(FileNameTabCompleter.class));
+        assertThat(completerService.getOptionCompleters().size(), is(0));
     }
 
 }

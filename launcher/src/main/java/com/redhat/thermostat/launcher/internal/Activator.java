@@ -48,7 +48,6 @@ import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.common.cli.FileNameTabCompleter;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.launcher.BundleManager;
@@ -326,15 +325,11 @@ public class Activator implements BundleActivator {
 
         LogLevelCompleterService logLevelCompleterService = new LogLevelCompleterService();
         context.registerService(CompleterService.class.getName(), logLevelCompleterService, null);
-        FileNameCompleterService fileNameCompleterService = new FileNameCompleterService();
-        context.registerService(CompleterService.class.getName(), fileNameCompleterService, null);
 
         context.registerService(CompleterService.class.getName(), helpCommandCompleterService, null);
         context.registerService(CompleterService.class.getName(), vmIdCompleterService, null);
         context.registerService(CompleterService.class.getName(), agentIdCompleterService, null);
         context.registerService(CompleterService.class.getName(), pingCommandCompleterService, null);
-
-        context.registerService(FileNameTabCompleter.class.getName(), new JLineFileNameCompleter(), null);
     }
 
     @Override
