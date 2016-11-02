@@ -58,7 +58,6 @@ public class FileStorageCredentials implements StorageCredentials {
     private static final char comment = '#';
 
     private final File authFile;
-    private final Reader testingAuthReader;
     private final int authDataLength;
     private String username;
 
@@ -66,7 +65,6 @@ public class FileStorageCredentials implements StorageCredentials {
         if (authFile == null) {
             throw new IllegalArgumentException("auth file must not be null");
         }
-        this.testingAuthReader = null;
         this.authFile = authFile;
         long length = this.authFile.length();
         if (length > Integer.MAX_VALUE || length < 0L) {
@@ -85,27 +83,6 @@ public class FileStorageCredentials implements StorageCredentials {
         initUsername();
     }
 
-    // Testing constructor
-    FileStorageCredentials(Reader authReader) {
-        if (authReader == null) {
-            throw new IllegalArgumentException("authReader must not be null");
-        }
-        this.testingAuthReader = authReader;
-        long length = -1;
-        try {
-            length = testingAuthReader.skip(Long.MAX_VALUE);
-            if (length > Integer.MAX_VALUE) {
-                throw new IllegalArgumentException("authReader larger than supported Integer.MAX_VALUE");
-            }
-            testingAuthReader.reset();
-        } catch (IOException e) {
-            throw new IllegalArgumentException("IOException from authReader", e);
-        }
-        authDataLength = (int) length;
-        this.authFile = null;
-        initUsername();
-    }
-
     @Override
     public String getUsername() {
         return username;
@@ -117,10 +94,7 @@ public class FileStorageCredentials implements StorageCredentials {
     }
 
     private Reader getReader() throws IOException {
-        if (testingAuthReader != null) {
-           return testingAuthReader;
-        }
-        if (authFile == null || !authFile.canRead() || !authFile.isFile()) {
+        if (!authFile.canRead() || !authFile.isFile()) {
             throw new IllegalStateException("Invalid agent.auth file: " + authFile.getCanonicalPath());
         }
         return new InputStreamReader(new FileInputStream(authFile), StandardCharsets.US_ASCII);
@@ -154,14 +128,7 @@ public class FileStorageCredentials implements StorageCredentials {
 
     private char[] getAuthData() {
         char[] authData = null;
-        Reader reader = null;
-        try {
-            try {
-                reader = getReader();
-            } catch (IllegalStateException e) {
-                // Callers will assume null auth parameters.
-                return null;
-            }
+        try (Reader reader = getReader()) {
             // file size in bytes >= # of chars so this size should be sufficient.
             authData = new char[authDataLength];
             // This is probably the most sensitive time for password-in-heap exposure.
@@ -171,19 +138,11 @@ public class FileStorageCredentials implements StorageCredentials {
             if (chars != authDataLength) {
                 throw new InvalidConfigurationException("End of auth file stream reached unexpectedly.");
             }
-            if (reader == testingAuthReader) {
-                reader.reset();
-            }
+        } catch (IllegalStateException e) {
+            // Callers will assume null auth parameters.
+            return null;
         } catch (IOException e) {
             throw new InvalidConfigurationException(e);
-        } finally {
-            if (reader != testingAuthReader) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
         return authData;
     }

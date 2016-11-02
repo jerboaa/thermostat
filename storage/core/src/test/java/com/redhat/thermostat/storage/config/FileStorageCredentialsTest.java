@@ -37,131 +37,168 @@
 package com.redhat.thermostat.storage.config;
 
 import java.io.File;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.config.FileStorageCredentials;
-
 public class FileStorageCredentialsTest {
     
-    @Test
-    public void testAuthConfigNoNewlineAtEOF() {
-        Reader reader = new StringReader("username=user\npassword=pass");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
-        Assert.assertEquals("user", creds.getUsername());
-        Assert.assertEquals(4, creds.getPassword().length);
-        Assert.assertEquals("pass", new String(creds.getPassword()));
+    private File credentialsFile = null;
+
+    private void createCredentialsFile(String contents) throws IOException {
+        createCredentialsFile(contents.getBytes(StandardCharsets.US_ASCII));
+    }
+
+    private void createCredentialsFile(byte[] contents) throws IOException {
+        Path tempFile = Files.createTempFile("auth.config", "test");
+        Files.write(tempFile, contents, StandardOpenOption.TRUNCATE_EXISTING);
+        credentialsFile = tempFile.toFile();
+    }
+
+    @After
+    public void cleanup() {
+        if (credentialsFile != null && credentialsFile.exists()) {
+            credentialsFile.delete();
+        }
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testNullAuthFile() throws Exception {
+        new FileStorageCredentials(null);
     }
 
     @Test
-    public void testAuthConfigCanReadWindows() {
-        Reader reader = new StringReader("username=user\r\npassword=pass");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
-        Assert.assertEquals("user", creds.getUsername());
-        Assert.assertEquals(4, creds.getPassword().length);
-        Assert.assertEquals("pass", new String(creds.getPassword()));
-    }
-
-    @Test
-    public void testAuthConfigCanReadReversed() {
-        Reader reader = new StringReader("username=user\n\rpassword=pass\n");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
-        Assert.assertEquals("user", creds.getUsername());
-        Assert.assertEquals(4, creds.getPassword().length);
-        Assert.assertEquals("pass", new String(creds.getPassword()));
-    }
-
-    @Test
-    public void testAuthConfigCanReadOldschoolMac() {
-        Reader reader = new StringReader("username=user\r\rpassword=pass\r");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
-        Assert.assertEquals("user", creds.getUsername());
-        Assert.assertEquals(4, creds.getPassword().length);
-        Assert.assertEquals("pass", new String(creds.getPassword()));
-    }
-
-    @Test
-    public void testAuthConfig() {
-        Reader reader = new StringReader("username=user\npassword=pass\n");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
-        Assert.assertEquals("user", creds.getUsername());
-        Assert.assertEquals("pass", new String(creds.getPassword()));
-    }
-
-    @Test
-    public void testEmptyAuthConfig() {
-        Reader reader = new StringReader("");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
+    public void testNonExistingAgentAuthFile() throws Exception {
+        credentialsFile = new File("this.file.should.not.exist");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
         Assert.assertNull(creds.getUsername());
         Assert.assertNull(creds.getPassword());
     }
 
     @Test
-    public void testNonExistingAgentAuthFile() {
-        File file = new File("this.file.should.not.exist");
-        FileStorageCredentials creds = new FileStorageCredentials(file);
+    public void testAuthConfigNoNewlineAtEOF() throws Exception {
+        createCredentialsFile("username=user\npassword=pass");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals(4, creds.getPassword().length);
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testAuthConfigCanReadWindows() throws Exception {
+        createCredentialsFile("username=user\r\npassword=pass");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals(4, creds.getPassword().length);
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testAuthConfigCanReadReversed() throws Exception {
+        createCredentialsFile("username=user\n\rpassword=pass\n");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals(4, creds.getPassword().length);
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testAuthConfigCanReadOldschoolMac() throws Exception {
+        createCredentialsFile("username=user\r\rpassword=pass\r");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals(4, creds.getPassword().length);
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testAuthConfig() throws Exception {
+        createCredentialsFile("username=user\npassword=pass\n");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testEmptyAuthConfig() throws Exception {
+        createCredentialsFile("");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
         Assert.assertNull(creds.getUsername());
         Assert.assertNull(creds.getPassword());
     }
 
     @Test
-    public void testAuthConfigWithConfigCommentedOut() {
-        Reader reader = new StringReader("#username=user\n#password=pass\n");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
+    public void testAuthConfigWithConfigCommentedOut() throws Exception {
+        createCredentialsFile("#username=user\n#password=pass\n");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
         Assert.assertNull(creds.getUsername());
         Assert.assertNull(creds.getPassword());
     }
 
     @Test
-    public void testAuthConfigWithVariousExtraNewlines() {
-        Reader reader = new StringReader("\n#username=nottheuser\n\n\n#password=wrong\nusername=user\n\n\npassword=pass\n\n\n#username=wronguser\n\n\n#password=badpassword");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
+    public void testAuthConfigWithVariousExtraNewlines() throws Exception {
+        createCredentialsFile("\n#username=nottheuser\n\n\n#password=wrong\nusername=user\n\n\npassword=pass\n\n\n#username=wronguser\n\n\n#password=badpassword");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
 
     @Test
-    public void testAuthConfigWithSillyWhitespace() {
-        Reader reader = new StringReader("\tusername =\t  user\n\n\npassword=pass   \n\n\n");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
+    public void testAuthConfigWithSillyWhitespace() throws Exception {
+        createCredentialsFile("\tusername =\t  user\n\n\npassword=pass   \n\n\n");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
 
     @Test
-    public void testCommentPrecededByWhitespaceIsStillIgnored() {
-        Reader reader = new StringReader("     #username=wronguser\nusername=user\npassword=pass\n    #username=wronguser");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
+    public void testCommentPrecededByWhitespaceIsStillIgnored() throws Exception {
+        createCredentialsFile("     #username=wronguser\nusername=user\npassword=pass\n    #username=wronguser");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
 
     @Test
-    public void testAuthParamsContainingWhitespace() {
-        Reader reader = new StringReader("     #username=wronguser\nusername=u s e r\npassword=p a s s\n    #username=wronguser");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
+    public void testAuthParamsContainingWhitespace() throws Exception {
+        createCredentialsFile("     #username=wronguser\nusername=u s e r\npassword=p a s s\n    #username=wronguser");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
         Assert.assertEquals("u s e r", creds.getUsername());
         Assert.assertEquals("p a s s", new String(creds.getPassword()));
     }
 
     @Test
-    public void testAlternateNewLine() {
-        Reader reader = new StringReader("username=user\r\npassword=pass\r\n");
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
+    public void testAlternateNewLine() throws Exception {
+        createCredentialsFile("username=user\r\npassword=pass\r\n");
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
 
     @Test
-    public void testArrayCompare() {
+    public void testArrayCompare() throws Exception {
         String data = "username=user\npassword=pass\n";
-        Reader reader = new StringReader(data);
-        FileStorageCredentials creds = new FileStorageCredentials(reader);
+        createCredentialsFile(data);
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
         char[] result = creds.getValueFromData(data.toCharArray(), data.length(), new char[] { 'u', 's', 'e', 'r', 'n', 'a', 'm', 'e'});
         Assert.assertArrayEquals("user".toCharArray(), result);
     }
+
+    @Test
+    public void testAuthConfigWithUnexpectedEncoding() throws Exception {
+        createCredentialsFile("\nusername=\u0220\n\n\npassword=\u0220".getBytes(StandardCharsets.UTF_8));
+        FileStorageCredentials creds = new FileStorageCredentials(credentialsFile);
+        final String REPLACEMENT_CHARACTER = "\ufffd";
+        // decoder fails to parse input, replaces each ascii character with REPLACEMENT_CHARACTER
+        Assert.assertEquals(REPLACEMENT_CHARACTER + REPLACEMENT_CHARACTER, creds.getUsername());
+        Assert.assertEquals(REPLACEMENT_CHARACTER + REPLACEMENT_CHARACTER, new String(creds.getPassword()));
+    }
+
 }
 
