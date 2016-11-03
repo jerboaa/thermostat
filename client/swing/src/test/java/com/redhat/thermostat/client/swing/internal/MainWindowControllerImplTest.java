@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
+import com.redhat.thermostat.client.ui.ContentProvider;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -227,7 +228,6 @@ public class MainWindowControllerImplTest {
         doNothing().when(treeController).addReferenceSelectionChangeListener(hostTreeCaptor.capture());
 
         issueViewController = mock(IssueViewController.class);
-        when(issueViewController.getView()).thenReturn(issueView);
 
         ProgressNotifier notifier = mock(ProgressNotifier.class);
         when(view.getNotifier()).thenReturn(notifier);
@@ -290,116 +290,6 @@ public class MainWindowControllerImplTest {
         verify(uriOpener).open(isA(URI.class));
     }
 
-//    @Test
-//    @Bug(id="954",
-//         summary="Thermostat GUI client should remember my last panel selected",
-//         url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=954")
-//    public void verifyOpenSameHostVMTab() throws Exception {
-//
-//        VmRef vmRef = mock(VmRef.class);
-//        when(vmRef.getName()).thenReturn("testvm");
-//        when(vmRef.getVmId()).thenReturn("testvmid");
-//        HostRef ref = mock(HostRef.class);
-//        when(ref.getAgentId()).thenReturn("agentId");
-//        when(vmRef.getHostRef()).thenReturn(ref);
-//        
-//        when(view.getSelectedHostOrVm()).thenReturn(vmRef);
-//        
-//        when(vmInfoView.getSelectedChildID()).thenReturn(3);
-//        when(vmInfoView.selectChildID(anyInt())).thenReturn(true);
-//        
-//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-//        
-//        ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
-//        verify(vmInfoView).selectChildID(arg.capture());
-//        verify(vmInfoView, times(0)).getSelectedChildID();
-//
-//        int id = arg.getValue();
-//
-//        assertEquals(0, id);
-//
-//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-//
-//        arg = ArgumentCaptor.forClass(Integer.class);
-//        verify(vmInfoView, times(1)).getSelectedChildID();
-//        verify(vmInfoView, times(2)).selectChildID(arg.capture());
-//        id = arg.getValue();
-//
-//        assertEquals(3, id);
-//    }
-//    
-//    @Test
-//    public void verifyOpenSameHostVMTab2() {
-//        
-//        VmRef vmRef1 = mock(VmRef.class);
-//        VmRef vmRef2 = mock(VmRef.class);
-//        when(view.getSelectedHostOrVm()).thenReturn(vmRef1).thenReturn(vmRef1).thenReturn(vmRef2).thenReturn(vmRef1);
-//
-//        when(vmRef1.getName()).thenReturn("testvm");
-//        when(vmRef1.getVmId()).thenReturn("testvmid");
-//        HostRef ref = mock(HostRef.class);
-//        when(ref.getAgentId()).thenReturn("agentId");
-//        when(vmRef1.getHostRef()).thenReturn(ref);
-//        
-//        when(vmRef2.getName()).thenReturn("testvm");
-//        when(vmRef2.getVmId()).thenReturn("testvmid");
-//        when(vmRef2.getHostRef()).thenReturn(ref);
-//        
-//        VmInformationView vmInfoView2 = mock(VmInformationView.class);
-//        
-//        when(vmInfoView.getSelectedChildID()).thenReturn(2).thenReturn(2);
-//        when(vmInfoView2.getSelectedChildID()).thenReturn(3);
-//        
-//        when(vmInfoView.selectChildID(0)).thenReturn(true);
-//        when(vmInfoView.selectChildID(2)).thenReturn(true);
-//        when(vmInfoView.selectChildID(3)).thenReturn(false);
-//        
-//        when(vmInfoView2.selectChildID(0)).thenReturn(true);
-//        when(vmInfoView2.selectChildID(2)).thenReturn(true);
-//        when(vmInfoView2.selectChildID(3)).thenReturn(true);
-//        
-//        when(vmInfoViewProvider.createView()).thenReturn(vmInfoView)
-//                .thenReturn(vmInfoView2).thenReturn(vmInfoView2)
-//                .thenReturn(vmInfoView);
-//        
-//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-//
-//        ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
-//        verify(vmInfoView).selectChildID(arg.capture());
-//        verify(vmInfoView, times(0)).getSelectedChildID();
-//
-//        int id = arg.getValue();
-//
-//        assertEquals(0, id);
-//
-//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-//
-//        arg = ArgumentCaptor.forClass(Integer.class);
-//        verify(vmInfoView).getSelectedChildID();
-//        verify(vmInfoView2, times(1)).selectChildID(arg.capture());
-//        id = arg.getValue();
-//
-//        assertEquals(2, id);
-//        
-//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-//
-//        arg = ArgumentCaptor.forClass(Integer.class);
-//        verify(vmInfoView2, times(1)).getSelectedChildID();
-//        verify(vmInfoView2, times(2)).selectChildID(arg.capture());
-//        id = arg.getValue();
-//
-//        assertEquals(3, id);
-//        
-//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-//
-//        arg = ArgumentCaptor.forClass(Integer.class);
-//        verify(vmInfoView2, times(2)).getSelectedChildID();
-//        verify(vmInfoView, times(3)).selectChildID(arg.capture());
-//        id = arg.getValue();
-//
-//        assertEquals(2, id);
-//    }
-
     @Test
     public void verifyMenuItems() {
 
@@ -430,11 +320,13 @@ public class MainWindowControllerImplTest {
 
     @Test
     public void testSelectionIssuesViewClearsHostTreeSelectionAndDisplaysIssuesView() {
+        controller.__test__forceSetIssueController(issueViewController);
+
         controller.updateView(ISSUES_REF);
         InOrder inOrder = inOrder(view, treeController);
         inOrder.verify(view).getHostTreeController();
         inOrder.verify(treeController).clearSelection();
-        inOrder.verify(view).setSubView(issueView);
+        inOrder.verify(view).setContent(issueViewController);
     }
 }
 

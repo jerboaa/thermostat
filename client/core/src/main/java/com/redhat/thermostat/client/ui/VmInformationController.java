@@ -48,13 +48,29 @@ import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.VmRef;
 
-public class VmInformationController {
+public class VmInformationController implements ContentProvider {
 
+    private final List<InformationService<VmRef>> vmInfoServices;
+    private final VmRef vmRef;
     private final VmInformationView view;
 
-    public VmInformationController(List<InformationService<VmRef>> vmInfoServices, 
-            VmRef vmRef, VmInformationViewProvider provider) {
+    private int selectedID;
+
+    public VmInformationController(List<InformationService<VmRef>> vmInfoServices,
+                                   VmRef vmRef,
+                                   VmInformationViewProvider provider)
+    {
+        this.vmInfoServices = vmInfoServices;
+        this.vmRef = vmRef;
+        this.selectedID = 0;
+
         view = provider.createView();
+        rebuild();
+    }
+
+    void rebuild() {
+
+        view.clear();
 
         Collections.sort(vmInfoServices, new OrderedComparator<InformationService<VmRef>>());
         for (InformationService<VmRef> vmInfoService : vmInfoServices) {
@@ -64,6 +80,8 @@ public class VmInformationController {
                 view.addChildView(name, ctrl.getView());
             }
         }
+
+        view.selectChildID(selectedID);
     }
 
     public int getSelectedChildID() {
@@ -71,6 +89,7 @@ public class VmInformationController {
     }
 
     public boolean selectChildID(int id) {
+        selectedID = id;
         return view.selectChildID(id);
     }
 
@@ -79,6 +98,7 @@ public class VmInformationController {
     }
 
     public BasicView getView() {
+        rebuild();
         return view;
     }
 

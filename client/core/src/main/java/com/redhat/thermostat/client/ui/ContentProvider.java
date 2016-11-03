@@ -36,48 +36,11 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.util.Collections;
-import java.util.List;
-
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.HostInformationView;
-import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
-import com.redhat.thermostat.common.OrderedComparator;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.core.HostRef;
 
-public class HostInformationController implements ContentProvider {
+/**
+ */
+public interface ContentProvider {
 
-    private final List<InformationService<HostRef>> hostInfoServices;
-    private final HostRef ref;
-    private final HostInformationView view;
-
-    public HostInformationController(List<InformationService<HostRef>> hostInfoServices,
-                                     HostRef ref,
-                                     HostInformationViewProvider provider)
-    {
-        this.hostInfoServices = hostInfoServices;
-        this.ref = ref;
-        view = provider.createView();
-        rebuild();
-    }
-
-    public void rebuild() {
-        Collections.sort(hostInfoServices, new OrderedComparator<InformationService<HostRef>>());
-        for (InformationService<HostRef> hostInfoService : hostInfoServices) {
-            if (hostInfoService.getFilter().matches(ref)) {
-                InformationServiceController<HostRef> ctrl = hostInfoService.getInformationServiceController(ref);
-                LocalizedString name = ctrl.getLocalizedName();
-                view.addChildView(name, ctrl.getView());
-            }
-        }
-    }
-
-    public BasicView getView() {
-        rebuild();
-        return view;
-    }
+    BasicView getView();
 }
-

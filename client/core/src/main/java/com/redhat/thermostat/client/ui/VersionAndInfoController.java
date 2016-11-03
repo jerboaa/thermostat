@@ -41,7 +41,7 @@ import com.redhat.thermostat.client.core.views.VersionAndInfoView;
 import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.common.ApplicationInfo;
 
-public class VersionAndInfoController {
+public class VersionAndInfoController implements ContentProvider {
 
 
     private final VersionAndInfoView view;
@@ -56,6 +56,4 @@ public class VersionAndInfoController {
     public BasicView getView() {
         return view;
     }
-
 }
-

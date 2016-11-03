@@ -506,21 +506,21 @@ public class MainWindowControllerImpl implements MainWindowController {
     void updateView(Ref ref) {
         if (ref == null) {
             VersionAndInfoController controller = createSummaryController();
-            view.setSubView(controller.getView());
+            view.setContent(controller);
         } else if (ref == ISSUES_REF) {
             view.getHostTreeController().clearSelection();
-            view.setSubView(issuesController.getView());
+            view.setContent(issuesController);
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;
             HostInformationController hostController = createHostInformationController(hostRef);
-            view.setSubView(hostController.getView());
+            view.setContent(hostController);
             view.setStatusBarPrimaryStatus(t.localize(LocaleResources.HOST_PRIMARY_STATUS,
                     hostRef.getHostName(), hostRef.getAgentId()));
         } else if (ref instanceof VmRef) {
             VmRef vmRef = (VmRef) ref;
             VmInformationController vmInformation =
                     vmInfoControllerProvider.getVmInfoController(vmRef);
-            view.setSubView(vmInformation.getView());
+            view.setContent(vmInformation);
             view.setStatusBarPrimaryStatus(t.localize(LocaleResources.VM_PRIMARY_STATUS,
                     vmRef.getName(), String.valueOf(vmRef.getPid()), vmRef.getHostRef().getHostName()));
         } else {
@@ -531,22 +531,29 @@ public class MainWindowControllerImpl implements MainWindowController {
     private class VmInformationControllerProvider {
         private VmInformationController lastSelectedVM;
         private Map<VmRef, Integer> selectedForVM = new ConcurrentHashMap<>();
-        
+        private Map<VmRef, VmInformationController> cachedControllers = new ConcurrentHashMap<>();
+
         VmInformationController getVmInfoController(VmRef vmRef) {
             int id = 0;
             if (lastSelectedVM != null) {
                 id = lastSelectedVM.getSelectedChildID();
             }
-            
-            lastSelectedVM = createVmController(vmRef);
+
+            if (cachedControllers.containsKey(vmRef)) {
+                lastSelectedVM = cachedControllers.get(vmRef);
+            } else {
+                lastSelectedVM = createVmController(vmRef);
+                cachedControllers.put(vmRef, lastSelectedVM);
+            }
+
             if (!lastSelectedVM.selectChildID(id)) {
                 Integer _id = selectedForVM.get(vmRef);
-                id = _id != null? _id : 0;
+                id = _id != null ? _id : 0;
                 lastSelectedVM.selectChildID(id);
             }
 
             selectedForVM.put(vmRef, id);
-            
+
             return lastSelectedVM;
         }
     }
@@ -569,6 +576,10 @@ public class MainWindowControllerImpl implements MainWindowController {
         public void open(URI uri) throws IOException {
             Desktop.getDesktop().browse(uri);
         }
+    }
+
+    void __test__forceSetIssueController(IssueViewController issuesController) {
+        this.issuesController = issuesController;
     }
 }
 

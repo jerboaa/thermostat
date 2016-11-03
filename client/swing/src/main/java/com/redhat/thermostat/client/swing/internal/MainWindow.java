@@ -68,6 +68,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.TreeNode;
 
+import com.redhat.thermostat.client.ui.ContentProvider;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import sun.misc.Signal;
 
@@ -108,7 +109,7 @@ public class MainWindow extends JFrame implements MainView {
     
     public static final String MAIN_WINDOW_NAME = "Thermostat_mainWindo_JFrame_parent#1";
 
-    private static final Logger logger = LoggingUtils.getLogger(MainWindow.class);
+    private static Logger logger = LoggingUtils.getLogger(MainWindow.class);
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -481,30 +482,39 @@ public class MainWindow extends JFrame implements MainView {
     }
     
     @Override
-    public void setSubView(final BasicView view) {
-        if (view instanceof SwingComponent) {
-            final SwingComponent swingComp = (SwingComponent)view;
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
+    public void setContent(final ContentProvider provider) {
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+
+                BasicView view = provider.getView();
+                if (view instanceof SwingComponent) {
+                    SwingComponent swingComp = (SwingComponent) view;
+
                     contentArea.removeAll();
                     Component toAdd = swingComp.getUiComponent();
                     contentArea.add(toAdd);
                     contentArea.revalidate();
                     contentArea.repaint();
+
+                    return;
                 }
-            });
-        } else {
-            String message = ""
-                    + "There's a non-swing view registered: '" + view.toString()
-                    + "'. The swing client can not use these views. This is "
-                    + "most likely a developer mistake. If this is meant to "
-                    + "be a swing-based view, it must implement the "
-                    + "'SwingComponent' interface. If it's not meant to be a "
-                    + "swing-based view, it should not have been registered.";
-            logger.severe(message);
-            throw new AssertionError(message);
-        }
+
+                final String message = ""
+                        + "There's a non-swing view registered: '" + view.toString()
+                        + "'. The swing client can not use these views. This is "
+                        + "most likely a developer mistake. If this is meant to "
+                        + "be a swing-based view, it must implement the "
+                        + "'SwingComponent' interface. If it's not meant to be a "
+                        + "swing-based view, it should not have been registered.";
+                logger.severe(message);
+            }
+        });
+    }
+
+    static void __test__setLogger(Logger logger) {
+        MainWindow.logger = logger;
     }
 
     @Override

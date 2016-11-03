@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.internal;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,6 +46,7 @@ import static org.mockito.Mockito.when;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
+import com.redhat.thermostat.client.ui.ContentProvider;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
@@ -70,7 +72,10 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
+import java.awt.AWTException;
+import java.awt.Robot;
 import java.io.File;
+import java.util.logging.Logger;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -268,48 +273,23 @@ public class MainWindowTest {
     }
 
     @GUITest
-    @Test(expected=AssertionError.class)
-    public void verifyThatAddingNonSwingSubViewFails() {
+    @Test
+    public void verifyThatAddingNonSwingSubViewFails() throws AWTException {
+
+        Logger logger = mock(Logger.class);
+        window.__test__setLogger(logger);
+
         BasicView subView = mock(BasicView.class);
+        ContentProvider subViewProvider = mock(ContentProvider.class);
+        when(subViewProvider.getView()).thenReturn(subView);
 
         frameFixture.show();
-        window.setSubView(subView);
+        window.setContent(subViewProvider);
+
+        Robot robot = new Robot();
+        robot.waitForIdle();
+
+        verify(logger).severe(anyString());
     }
-
-//    @GUITest
-//    @Test
-//    public void verifyContextMenu() {
-//        List<ContextAction> actions = new ArrayList<>();
-//
-//        HostContextAction action = mock(HostContextAction.class);
-//        when(action.getName()).thenReturn(new LocalizedString("action"));
-//        when(action.getDescription()).thenReturn(new LocalizedString("description of action"));
-//        Filter allMatchingFilter = mock(Filter.class);
-//        when(allMatchingFilter.matches(any(HostRef.class))).thenReturn(true);
-//
-//        actions.add(action);
-//
-//        frameFixture.show();
-//
-//        // add a second action listener to discard the 'show' event invoked on the first
-//        l = mock(ActionListener.class);
-//        window.addActionListener(l);
-//
-//        MouseEvent e = new MouseEvent(window, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), MouseEvent.BUTTON2_MASK, 0, 0, 0, 0, 1, true, MouseEvent.BUTTON2);
-//
-//        window.showContextActions(actions, e);
-//
-//        JMenuItemFixture hostActionMenuItem = frameFixture.menuItem("action");
-//        hostActionMenuItem.click();
-//
-//        ArgumentCaptor<ActionEvent> actionEventCaptor = ArgumentCaptor.forClass(ActionEvent.class);
-//        verify(l).actionPerformed(actionEventCaptor.capture());
-//
-//        ActionEvent actionEvent = actionEventCaptor.getValue();
-//        assertEquals(window, actionEvent.getSource());
-//        assertEquals(MainView.Action.HOST_VM_CONTEXT_ACTION, actionEvent.getActionId());
-//        assertEquals(action, actionEvent.getPayload());
-//    }
-
 }
 

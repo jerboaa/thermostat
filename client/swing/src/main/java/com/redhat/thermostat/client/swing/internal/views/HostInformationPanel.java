@@ -68,7 +68,7 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
         tabPane = new JTabbedPane();
         visiblePanel.add(tabPane);
     }
-
+    
     @Override
     public void addChildView(final LocalizedString title, final UIComponent view) {
         if (view instanceof SwingComponent) {

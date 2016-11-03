@@ -69,6 +69,21 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     }
 
     @Override
+    public void clear() {
+        try {
+            edtHelper.callAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    tabPane.removeAll();
+                }
+            });
+
+        } catch (InvocationTargetException | InterruptedException e) {
+            logger.severe(e.getLocalizedMessage());
+        }
+    }
+
+    @Override
     public void addChildView(final LocalizedString title, final UIComponent view) {
         if (view instanceof SwingComponent) {
             try {

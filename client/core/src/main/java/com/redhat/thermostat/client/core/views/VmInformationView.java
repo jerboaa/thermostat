@@ -50,5 +50,6 @@ public abstract class VmInformationView extends BasicView implements UIComponent
     public abstract boolean selectChildID(int id);
     public abstract int getSelectedChildID();
 
+    public abstract void clear();
 }
 

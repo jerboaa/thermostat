@@ -44,6 +44,7 @@ import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFi
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
+import com.redhat.thermostat.client.ui.ContentProvider;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -71,7 +72,7 @@ public interface MainView {
 
     void hideMainWindow();
 
-    void setSubView(BasicView view);
+    void setContent(ContentProvider content);
 
     void setStatusBarPrimaryStatus(LocalizedString primaryStatus);
 

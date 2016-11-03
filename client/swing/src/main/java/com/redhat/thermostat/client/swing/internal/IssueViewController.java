@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.core.Severity;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
+import com.redhat.thermostat.client.ui.ContentProvider;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -76,7 +77,7 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
-public class IssueViewController {
+public class IssueViewController implements ContentProvider {
 
     private static final Logger logger = LoggingUtils.getLogger(IssueViewController.IssueDiagnoserTracker.class);
 
