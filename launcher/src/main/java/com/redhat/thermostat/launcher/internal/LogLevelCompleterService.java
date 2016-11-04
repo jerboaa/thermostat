@@ -36,11 +36,13 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.AbstractCompleterService;
 import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.cli.StringsTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +50,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class LogLevelCompleterService extends AbstractCompleterService {
+@Component(immediate = true)
+@Service
+public class LogLevelCompleterService implements CompleterService {
 
     public static final CliCommandOption LOG_LEVEL_OPTION = new CliCommandOption("l", "logLevel", true, "log level", false);
 
@@ -67,8 +71,12 @@ public class LogLevelCompleterService extends AbstractCompleterService {
 
     @Override
     public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
-        TabCompleter logLevelCompleter = new StringsTabCompleter(LOG_LEVELS);
-
-        return Collections.singletonMap(LOG_LEVEL_OPTION, logLevelCompleter);
+        return Collections.singletonMap(LOG_LEVEL_OPTION, (TabCompleter) new StringsTabCompleter(LOG_LEVELS));
     }
+
+    @Override
+    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
+        return Collections.emptyMap();
+    }
+
 }

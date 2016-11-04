@@ -323,9 +323,6 @@ public class Activator implements BundleActivator {
         });
         pingCommandCompleterDepsTracker.open();
 
-        LogLevelCompleterService logLevelCompleterService = new LogLevelCompleterService();
-        context.registerService(CompleterService.class.getName(), logLevelCompleterService, null);
-
         context.registerService(CompleterService.class.getName(), helpCommandCompleterService, null);
         context.registerService(CompleterService.class.getName(), vmIdCompleterService, null);
         context.registerService(CompleterService.class.getName(), agentIdCompleterService, null);

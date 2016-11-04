@@ -104,4 +104,10 @@ public class LogLevelCompleterServiceTest {
         assertThat(completer, is(not(equalTo(null))));
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProvidesNoSubcommandCompletions() {
+        assertThat(service.getSubcommandCompleters().size(), is(0));
+    }
+
 }

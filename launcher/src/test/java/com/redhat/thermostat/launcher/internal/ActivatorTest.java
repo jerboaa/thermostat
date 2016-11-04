@@ -323,48 +323,6 @@ public class ActivatorTest {
     }
 
     @Test
-    public void testLogLevelCompleterServiceAvailability() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
-        ArgumentCaptor<Action> unusedCaptor = ArgumentCaptor.forClass(Action.class);
-        Class<?>[] launcherDeps = new Class[] {
-                Keyring.class,
-                CommonPaths.class,
-                SSLConfiguration.class,
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(launcherDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-
-        Class<?>[] shellDeps = new Class[] {
-                CommonPaths.class,
-                ConfigurationInfoSource.class,
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(shellDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] vmIdCompleterDeps = new Class[] {
-                VmInfoDAO.class,
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(vmIdCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] agentIdCompleterDeps = new Class[] {
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(agentIdCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-        Class<?>[] pingCompleterDeps = new Class[] {
-                AgentInfoDAO.class
-        };
-        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                eq(pingCompleterDeps), unusedCaptor.capture()).thenReturn(unusedTracker);
-
-        Activator activator = new Activator();
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(CompleterService.class.getName(), LogLevelCompleterService.class));
-    }
-
-    @Test
     public void testVmIdCompleterServiceAvailability() throws Exception {
         StubBundleContext context = new StubBundleContext();
         MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
