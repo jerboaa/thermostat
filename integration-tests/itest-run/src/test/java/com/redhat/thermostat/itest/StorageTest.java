@@ -82,15 +82,10 @@ public class StorageTest extends IntegrationTest {
 
         try {
             service.expect("Agent started.");
+            // Give agent some time to startup before killing it
+            Thread.sleep(2000l);
         } finally {
             killRecursively(spawnResult.process);
-            try {
-                // On Eclipse IDE runs this recursive killing does not kill
-                // mongod. Do it this way to be really sure.
-                stopStorage();
-            } catch (Exception e) {
-                // ignore if second try of stopping storage failed.
-            }
         }
 
         service.stop();

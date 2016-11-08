@@ -84,16 +84,11 @@ public class DevWebStorageTest extends WebStorageUsingIntegrationTest {
         
         try {
             service.expect("Agent started.");
+            // Give agent some time to startup before killing it
+            Thread.sleep(2000l);
         } finally {
             // service.stop only stops the agent/webservice.
             killRecursively(spawnResult.process);
-            try {
-                // On Eclipse IDE runs this recursive killing does not kill
-                // mongod. Do it this way to be really sure.
-                stopStorage();
-            } catch (Exception e) {
-                // ignore if second try of stopping storage failed.
-            }
         }
         
         service.expectClose();

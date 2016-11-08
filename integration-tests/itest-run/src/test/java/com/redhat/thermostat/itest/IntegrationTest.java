@@ -405,6 +405,11 @@ public class IntegrationTest {
     private static void killProcess(int processId) throws Exception {
         System.err.println("Killing process with pid: " + processId);
         Runtime.getRuntime().exec("kill " + processId).waitFor();
+
+        while (1 != Runtime.getRuntime().exec("kill -s 0 " + processId).waitFor()) {
+            // Repeatedly send kill signal until it fails meaning process doesn't exist
+            Thread.sleep(50l);
+        }
     }
 
     private static List<Integer> findChildPids(int processId) throws IOException {
