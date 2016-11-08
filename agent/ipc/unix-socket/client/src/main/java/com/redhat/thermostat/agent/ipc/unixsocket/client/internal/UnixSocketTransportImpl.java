@@ -47,9 +47,6 @@ import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCP
 
 public class UnixSocketTransportImpl implements ClientTransport {
     
-    // Filename prefix for socket file
-    static final String SOCKET_PREFIX = "sock-";
-
     private final UnixSocketIPCProperties socketProps;
     private final SocketHelper sockHelper;
     
@@ -78,7 +75,10 @@ public class UnixSocketTransportImpl implements ClientTransport {
         if (!socketDir.exists()) {
             throw new IOException("Server address is invalid");
         }
-        File socketFile = sockHelper.getSocketFile(socketDir, SOCKET_PREFIX + name);
+        
+        // Get subdirectory for current user
+        String username = sockHelper.getUsername();
+        File socketFile = socketProps.getSocketFile(name, username);
         if (!socketFile.exists()) {
             throw new IOException("IPC server with name \"" + name + "\" does not exist");
         }
@@ -102,8 +102,12 @@ public class UnixSocketTransportImpl implements ClientTransport {
             return new UnixSocketMessageChannel(sockChannel);
         }
         
-        File getSocketFile(File socketDir, String name) {
+        File getFile(File socketDir, String name) {
             return new File(socketDir, name);
+        }
+        
+        String getUsername() {
+            return System.getProperty("user.name");
         }
     }
 

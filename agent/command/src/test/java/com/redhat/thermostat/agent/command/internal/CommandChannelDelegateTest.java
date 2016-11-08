@@ -52,6 +52,8 @@ import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -65,6 +67,7 @@ import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.FileSystemUtils;
 import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.ProcessCreator;
 import com.redhat.thermostat.agent.command.internal.CommandChannelDelegate.StorageGetter;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
@@ -101,6 +104,8 @@ public class CommandChannelDelegateTest {
     private CountDownLatch latch;
     private SSLConfiguration sslConf;
     private IPCMessage startedMessage;
+    private FileSystemUtils fsUtils;
+    private ProcessUserInfoBuilder userInfoBuilder;
 
     @Before
     public void setUp() throws Exception {
@@ -139,8 +144,11 @@ public class CommandChannelDelegateTest {
         when(processCreator.startProcess(any(ProcessBuilder.class))).thenReturn(process);
         
         latch = mock(CountDownLatch.class);
+        fsUtils = mock(FileSystemUtils.class);
+        userInfoBuilder = mock(ProcessUserInfoBuilder.class);
         delegate = new CommandChannelDelegate(receivers, sslConf, binPath, ipcService, ipcConfig, 
-                latch, sslConfEncoder, requestDecoder, responseEncoder, storageGetter, processCreator);
+                latch, sslConfEncoder, requestDecoder, responseEncoder, storageGetter, userInfoBuilder, 
+                fsUtils, processCreator);
         
         startedMessage = mock(IPCMessage.class);
         when(startedMessage.get()).thenReturn(ByteBuffer.wrap(CommandChannelConstants.SERVER_STARTED_TOKEN));
@@ -165,6 +173,19 @@ public class CommandChannelDelegateTest {
         delegate.startListening("127.0.0.1", 123);
         
         verify(ipcService).createServer(IPC_SERVER_NAME, delegate);
+        verify(processCreator).startProcess(any(ProcessBuilder.class));
+    }
+    
+    @Test
+    public void testServerStartedPrivUser() throws Exception {
+        when(userInfoBuilder.isPrivilegedUser()).thenReturn(true);
+        Path scriptPath = mock(Path.class);
+        when(fsUtils.getPath(binPath.getAbsolutePath(), "thermostat-command-channel")).thenReturn(scriptPath);
+        UserPrincipal principal = mock(UserPrincipal.class);
+        when(fsUtils.getOwner(scriptPath)).thenReturn(principal);
+        delegate.startListening("127.0.0.1", 123);
+        
+        verify(ipcService).createServer(IPC_SERVER_NAME, delegate, principal);
         verify(processCreator).startProcess(any(ProcessBuilder.class));
     }
     

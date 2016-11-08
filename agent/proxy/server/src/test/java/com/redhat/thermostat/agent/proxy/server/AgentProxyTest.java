@@ -63,6 +63,7 @@ import com.redhat.thermostat.agent.proxy.server.AgentProxy.ControlCreator;
 public class AgentProxyTest {
     
     private static final String JMX_URL = "service:jmx:rmi://myHost:1099/blah";
+    private static final String IPC_SERVER_NAME = "agent-proxy-8000";
     
     private AgentProxyControlImpl control;
     private ClientIPCService ipcService;
@@ -80,7 +81,7 @@ public class AgentProxyTest {
         
         ipcService = mock(ClientIPCService.class);
         channel = mock(IPCMessageChannel.class);
-        when(ipcService.connectToServer(AgentProxy.IPC_SERVER_NAME)).thenReturn(channel);
+        when(ipcService.connectToServer(IPC_SERVER_NAME)).thenReturn(channel);
         AgentProxy.setIPCService(ipcService);
     }
     
@@ -94,7 +95,7 @@ public class AgentProxyTest {
     @Test
     public void testMainSuccess() throws Exception {
         // Invoke main with PID of 8000
-        AgentProxy.main(new String[] { "8000" });
+        AgentProxy.main(new String[] { "8000", IPC_SERVER_NAME });
         
         verify(control).attach();
         verify(control).getConnectorAddress();
@@ -121,7 +122,7 @@ public class AgentProxyTest {
         
         try {
             // Invoke main with PID of 0
-            AgentProxy.main(new String[] { "0" });
+            AgentProxy.main(new String[] { "0", IPC_SERVER_NAME });
             fail("Expected IOException");
         } catch (IOException e) {
             // Should only call attach and close channel
@@ -142,7 +143,7 @@ public class AgentProxyTest {
         
         try {
             // Invoke main with PID of 0
-            AgentProxy.main(new String[] { "0" });
+            AgentProxy.main(new String[] { "0", IPC_SERVER_NAME });
             fail("Expected IOException");
         } catch (IOException e) {
             verify(control).attach();
@@ -163,7 +164,7 @@ public class AgentProxyTest {
         
         try {
             // Invoke main with PID of 0
-            AgentProxy.main(new String[] { "0" });
+            AgentProxy.main(new String[] { "0", IPC_SERVER_NAME });
             fail("Expected IOException");
         } catch (IOException e) {
             verify(control).attach();
@@ -183,7 +184,7 @@ public class AgentProxyTest {
         doThrow(new IOException()).when(control).detach();
         
         // Invoke main with PID of 0
-        AgentProxy.main(new String[] { "0" });
+        AgentProxy.main(new String[] { "0", IPC_SERVER_NAME });
         
         // All should be called, should not be fatal
         verify(control).attach();
@@ -201,7 +202,7 @@ public class AgentProxyTest {
         doThrow(new IOException()).when(channel).close();
         
         // Invoke main with PID of 0
-        AgentProxy.main(new String[] { "0" });
+        AgentProxy.main(new String[] { "0", IPC_SERVER_NAME });
         
         // All should be called, should not be fatal
         verify(control).attach();

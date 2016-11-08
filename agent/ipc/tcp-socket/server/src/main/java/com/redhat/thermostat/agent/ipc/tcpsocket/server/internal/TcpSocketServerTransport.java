@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.agent.ipc.tcpsocket.server.internal;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.Selector;
@@ -44,16 +43,13 @@ import java.nio.channels.spi.SelectorProvider;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
 import java.nio.file.attribute.UserPrincipalLookupService;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -148,6 +144,12 @@ class TcpSocketServerTransport implements ServerTransport {
         sockets.put(name, socket);
         if (!acceptThread.isAlive())
             acceptThread.start();
+    }
+    
+    @Override
+    public void createServer(String name, ThermostatIPCCallbacks callbacks, UserPrincipal owner) throws IOException {
+        // UserPrincipal is unused in TCP implementation
+        createServer(name, callbacks);
     }
     
     @Override

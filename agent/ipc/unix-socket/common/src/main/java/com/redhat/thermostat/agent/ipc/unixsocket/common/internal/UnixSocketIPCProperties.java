@@ -45,6 +45,8 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 
 public class UnixSocketIPCProperties extends IPCProperties {
     
+    // Filename prefix for socket file
+    static final String SOCKET_PREFIX = "sock-";
     static final String PROP_UNIX_SOCKET_DIR = "unixsocket.dir";
     private static final String SOCKET_DIR_NAME = "thermostat-socks";
     
@@ -70,6 +72,12 @@ public class UnixSocketIPCProperties extends IPCProperties {
     
     public File getSocketDirectory() {
         return sockDir;
+    }
+    
+    public File getSocketFile(String serverName, String ownerName) {
+        File ownerDir = new File(sockDir, ownerName);
+        String socketFilename = SOCKET_PREFIX.concat(serverName);
+        return new File(ownerDir, socketFilename);
     }
     
     /*

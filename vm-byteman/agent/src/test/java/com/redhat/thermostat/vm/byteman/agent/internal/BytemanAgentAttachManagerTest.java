@@ -51,6 +51,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
+import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.List;
 import java.util.Properties;
 
@@ -64,8 +66,10 @@ import com.redhat.thermostat.agent.utils.ProcessChecker;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAgentAttachManager.FileSystemUtils;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAgentAttachManager.SubmitHelper;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
+import com.redhat.thermostat.vm.byteman.agent.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 
@@ -74,6 +78,8 @@ public class BytemanAgentAttachManagerTest {
     private static final VmId SOME_VM_ID = new VmId("some-vm-id");
     private static final int SOME_VM_PID = 99910;
     private static final String SOME_AGENT_ID = "some-agent-id";
+    private static final int SOME_UID = 1111;
+    private static final String SOME_USERNAME = "someUser";
     private static final BytemanAgentInfo SOME_SUCCESS_BYTEMAN_INFO = new BytemanAgentInfo(SOME_VM_PID, 3344, null, SOME_VM_ID.get(), SOME_AGENT_ID, false, false);
     
     private BytemanAgentAttachManager manager;
@@ -81,16 +87,27 @@ public class BytemanAgentAttachManagerTest {
     private VmBytemanDAO vmBytemanDao;
     private SubmitHelper submit;
     private BytemanAttacher bytemanAttacher;
+    private ProcessUserInfoBuilder userInfoBuilder;
+    private UserPrincipalLookupService lookup;
     
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         ipcManager = mock(IPCEndpointsManager.class);
         vmBytemanDao = mock(VmBytemanDAO.class);
         submit = mock(SubmitHelper.class);
         bytemanAttacher = mock(BytemanAttacher.class);
         WriterID writerId = mock(WriterID.class);
         when(writerId.getWriterID()).thenReturn(SOME_AGENT_ID);
-        manager = new BytemanAgentAttachManager(bytemanAttacher, ipcManager, vmBytemanDao, submit, writerId);
+        userInfoBuilder = mock(ProcessUserInfoBuilder.class);
+        FileSystemUtils fsUtils = mock(FileSystemUtils.class);
+        
+        ProcessUserInfo info = new ProcessUserInfo(SOME_UID, SOME_USERNAME);
+        when(userInfoBuilder.build(SOME_VM_PID)).thenReturn(info);
+        lookup = mock(UserPrincipalLookupService.class);
+        when(fsUtils.getUserPrincipalLookupService()).thenReturn(lookup);
+        UserPrincipal owner = mock(UserPrincipal.class);
+        when(lookup.lookupPrincipalByName(SOME_USERNAME)).thenReturn(owner);
+        manager = new BytemanAgentAttachManager(bytemanAttacher, ipcManager, vmBytemanDao, submit, writerId, userInfoBuilder, fsUtils);
     }
     
     @After
@@ -100,7 +117,7 @@ public class BytemanAgentAttachManagerTest {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
-    public void canAttachAgentToVmStartIPCandAddsStatus() {
+    public void canAttachAgentToVmStartIPCandAddsStatus() throws IOException {
         String workingVmId = "working-vm-id";
         int vmPid = 1001;
         String agentId = "working-agent-id";
@@ -111,6 +128,11 @@ public class BytemanAgentAttachManagerTest {
         // mock that installing of helper jars works
         when(submit.addJarsToSystemClassLoader(any(List.class), any(BytemanAgentInfo.class))).thenReturn(true);
         
+        ProcessUserInfo info = new ProcessUserInfo(5000, "testUser");
+        when(userInfoBuilder.build(vmPid)).thenReturn(info);
+        UserPrincipal owner = mock(UserPrincipal.class);
+        when(lookup.lookupPrincipalByName("testUser")).thenReturn(owner);
+        
         VmId vmId = new VmId(workingVmId);
         WriterID writerId = mock(WriterID.class);
         when(writerId.getWriterID()).thenReturn(agentId);
@@ -119,7 +141,7 @@ public class BytemanAgentAttachManagerTest {
         VmSocketIdentifier socketId = new VmSocketIdentifier(workingVmId, vmPid, agentId);
         
         // IPC endpoint must be started
-        verify(ipcManager).startIPCEndpoint(eq(socketId), isA(BytemanMetricsReceiver.class));
+        verify(ipcManager).startIPCEndpoint(eq(socketId), isA(BytemanMetricsReceiver.class), eq(owner));
         
         // Status should have been updated/inserted
         ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
@@ -140,7 +162,7 @@ public class BytemanAgentAttachManagerTest {
     
     @SuppressWarnings("unchecked")
     @Test
-    public void canUseOldAttachedAgentStartIPCandAddsStatus() {
+    public void canUseOldAttachedAgentStartIPCandAddsStatus() throws IOException {
         String workingVmId = "working-vm-id";
         int vmPid = 1001;
         String agentId = "working-agent-id";
@@ -151,6 +173,11 @@ public class BytemanAgentAttachManagerTest {
         // mock setting system properties' success
         when(submit.setSystemProperties(any(Properties.class), any(BytemanAgentInfo.class))).thenReturn(true);
         
+        ProcessUserInfo info = new ProcessUserInfo(5000, "testUser");
+        when(userInfoBuilder.build(vmPid)).thenReturn(info);
+        UserPrincipal owner = mock(UserPrincipal.class);
+        when(lookup.lookupPrincipalByName("testUser")).thenReturn(owner);
+        
         VmId vmId = new VmId(workingVmId);
         WriterID writerId = mock(WriterID.class);
         when(writerId.getWriterID()).thenReturn(agentId);
@@ -159,7 +186,7 @@ public class BytemanAgentAttachManagerTest {
         VmSocketIdentifier socketId = new VmSocketIdentifier(workingVmId, vmPid, agentId);
         
         // IPC endpoint must be started
-        verify(ipcManager).startIPCEndpoint(eq(socketId), isA(BytemanMetricsReceiver.class));
+        verify(ipcManager).startIPCEndpoint(eq(socketId), isA(BytemanMetricsReceiver.class), eq(owner));
         
         // Status should have been updated/inserted
         ArgumentCaptor<VmBytemanStatus> statusCaptor = ArgumentCaptor.forClass(VmBytemanStatus.class);
@@ -186,11 +213,32 @@ public class BytemanAgentAttachManagerTest {
     }
     
     @Test
+    public void usernameFailureDoesNotAttach() throws IOException {
+        ProcessUserInfo info = new ProcessUserInfo(SOME_UID, null);
+        when(userInfoBuilder.build(SOME_VM_PID)).thenReturn(info);
+        
+        VmBytemanStatus status = manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
+        verify(bytemanAttacher, never()).attach(any(String.class), any(int.class), any(String.class));
+        verify(ipcManager, never()).startIPCEndpoint(any(VmSocketIdentifier.class), any(ThermostatIPCCallbacks.class), any(UserPrincipal.class));
+        assertNull(status);
+    }
+    
+    @Test
+    public void userPrincipalExceptionDoesNotAttach() throws IOException {
+        when(lookup.lookupPrincipalByName(SOME_USERNAME)).thenThrow(new IOException("TEST"));
+        
+        VmBytemanStatus status = manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
+        verify(bytemanAttacher, never()).attach(any(String.class), any(int.class), any(String.class));
+        verify(ipcManager, never()).startIPCEndpoint(any(VmSocketIdentifier.class), any(ThermostatIPCCallbacks.class), any(UserPrincipal.class));
+        assertNull(status);
+    }
+    
+    @Test
     public void failureToAttachDoesNotStartIPC() throws Exception {
         BytemanAttacher failAttacher = getFailureAttacher();
         manager.setAttacher(failAttacher);
         VmBytemanStatus status = manager.attachBytemanToVm(SOME_VM_ID, SOME_VM_PID);
-        verify(ipcManager, never()).startIPCEndpoint(any(VmSocketIdentifier.class), any(ThermostatIPCCallbacks.class));
+        verify(ipcManager, never()).startIPCEndpoint(any(VmSocketIdentifier.class), any(ThermostatIPCCallbacks.class), any(UserPrincipal.class));
         assertNull(status);
     }
 

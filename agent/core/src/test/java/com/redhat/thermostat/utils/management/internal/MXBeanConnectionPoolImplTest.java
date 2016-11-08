@@ -41,7 +41,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -51,6 +50,8 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.file.attribute.UserPrincipal;
+import java.nio.file.attribute.UserPrincipalLookupService;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -65,9 +66,12 @@ import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.ConnectorCreator;
+import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.FileSystemUtils;
 import com.redhat.thermostat.utils.management.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 
 public class MXBeanConnectionPoolImplTest {
+    
+    private static final String IPC_SERVER_NAME = "agent-proxy-8000";
 
     private File binDir;
     private AgentIPCService ipcService;
@@ -77,6 +81,11 @@ public class MXBeanConnectionPoolImplTest {
     private ConnectorCreator creator;
     private MXBeanConnector connector;
     private File ipcConfigFile;
+    private FileSystemUtils fsUtils;
+    private UserPrincipalLookupService lookup;
+    private UserPrincipal principal;
+
+    private ProcessUserInfoBuilder builder;
     
     @Before
     public void setup() throws Exception {
@@ -86,16 +95,22 @@ public class MXBeanConnectionPoolImplTest {
         connector = mock(MXBeanConnector.class);
         creator = mock(ConnectorCreator.class);
         ipcConfigFile = mock(File.class);
+        fsUtils = mock(FileSystemUtils.class);
 
         proxy = mock(AgentProxyClient.class);
-        when(creator.createConnector(any(String.class))).thenReturn(connector);
+        when(creator.createConnector("jmxUrl://hello")).thenReturn(connector);
         when(connector.connect()).thenReturn(connection);
 
-        ProcessUserInfoBuilder builder = mock(ProcessUserInfoBuilder.class);
+        builder = mock(ProcessUserInfoBuilder.class);
         ProcessUserInfo info = new ProcessUserInfo(8000, "Test");
         when(builder.build(8000)).thenReturn(info);
+        
+        lookup = mock(UserPrincipalLookupService.class);
+        when(fsUtils.getUserPrincipalLookupService()).thenReturn(lookup);
+        principal = mock(UserPrincipal.class);
+        when(lookup.lookupPrincipalByName("Test")).thenReturn(principal);
 
-        pool = new MXBeanConnectionPoolImpl(creator, binDir, builder, ipcService, ipcConfigFile);
+        pool = new MXBeanConnectionPoolImpl(creator, binDir, builder, ipcService, ipcConfigFile, fsUtils);
     }
     
     @Test
@@ -103,24 +118,8 @@ public class MXBeanConnectionPoolImplTest {
         assertFalse(pool.isStarted());
         pool.start();
         assertTrue(pool.isStarted());
-        verify(ipcService).createServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME, pool);
     }
     
-    @Test
-    public void testStartCleanup() throws Exception {
-        pool.start();
-        verify(ipcService).serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
-        verify(ipcService, never()).destroyServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
-    }
-    
-    @Test
-    public void testStartCleanupServerExists() throws Exception {
-        when(ipcService.serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME)).thenReturn(true);
-        pool.start();
-        verify(ipcService).serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
-        verify(ipcService).destroyServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
-    }
-
     @Test
     public void testShutdown() throws Exception {
         pool.start();
@@ -132,17 +131,37 @@ public class MXBeanConnectionPoolImplTest {
     
     @Test
     public void testShutdownCleanup() throws Exception {
+        pool.getIPCServerNames().add(IPC_SERVER_NAME);
         pool.shutdown();
-        verify(ipcService).serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
-        verify(ipcService, never()).destroyServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+        verify(ipcService).serverExists(IPC_SERVER_NAME);
+        verify(ipcService, never()).destroyServer(IPC_SERVER_NAME);
+        assertTrue(pool.getIPCServerNames().isEmpty());
     }
     
     @Test
     public void testShutdownCleanupServerExists() throws Exception {
-        when(ipcService.serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME)).thenReturn(true);
+        pool.getIPCServerNames().add(IPC_SERVER_NAME);
+        when(ipcService.serverExists(IPC_SERVER_NAME)).thenReturn(true);
         pool.shutdown();
-        verify(ipcService).serverExists(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
-        verify(ipcService).destroyServer(MXBeanConnectionPoolImpl.IPC_SERVER_NAME);
+        verify(ipcService).serverExists(IPC_SERVER_NAME);
+        verify(ipcService).destroyServer(IPC_SERVER_NAME);
+        assertTrue(pool.getIPCServerNames().isEmpty());
+    }
+    
+    @Test
+    public void testShutdownCleanupMultipleServers() throws Exception {
+        pool.getIPCServerNames().add(IPC_SERVER_NAME);
+        pool.getIPCServerNames().add("agent-proxy-1001");
+        
+        when(ipcService.serverExists(IPC_SERVER_NAME)).thenReturn(true);
+        when(ipcService.serverExists("agent-proxy-1001")).thenReturn(true);
+        
+        pool.shutdown();
+        verify(ipcService).serverExists(IPC_SERVER_NAME);
+        verify(ipcService).destroyServer(IPC_SERVER_NAME);
+        verify(ipcService).serverExists("agent-proxy-1001");
+        verify(ipcService).destroyServer("agent-proxy-1001");
+        assertTrue(pool.getIPCServerNames().isEmpty());
     }
     
     @Test
@@ -150,8 +169,13 @@ public class MXBeanConnectionPoolImplTest {
         final byte[] data = getJsonString(8000, "jmxUrl://hello");
         invokeCallbacksOnProxyCreation(data);
 
+        pool.start();
         MXBeanConnection result = pool.acquire(8000);
         
+        verify(lookup).lookupPrincipalByName("Test");
+        verify(ipcService).serverExists(IPC_SERVER_NAME);
+        verify(ipcService, never()).destroyServer(IPC_SERVER_NAME);
+        verify(ipcService).createServer(IPC_SERVER_NAME, pool, principal);
         verify(creator).createConnector("jmxUrl://hello");
 
         assertNotNull(result);
@@ -161,7 +185,11 @@ public class MXBeanConnectionPoolImplTest {
     }
 
     private void invokeCallbacksOnProxyCreation(final byte[] data) {
-        when(creator.createAgentProxy(8000, "Test", binDir, ipcConfigFile)).thenAnswer(new Answer<AgentProxyClient>() {
+        invokeCallbacksOnProxyCreation(data, 8000, "Test", IPC_SERVER_NAME);
+    }
+    
+    private void invokeCallbacksOnProxyCreation(final byte[] data, int pid, String username, String ipcServerName) {
+        when(creator.createAgentProxy(pid, username, binDir, ipcConfigFile, ipcServerName)).thenAnswer(new Answer<AgentProxyClient>() {
             @Override
             public AgentProxyClient answer(InvocationOnMock invocation) throws Throwable {
                 // Invoke callback
@@ -273,22 +301,99 @@ public class MXBeanConnectionPoolImplTest {
             verify(connector, never()).connect();
         }
     }
+    
+    @Test
+    public void testAcquireNotRunning() throws Exception {
+        try {
+            pool.acquire(8000);
+            fail("Expected MXBeanConnectionException");
+        } catch (MXBeanConnectionException e) {
+            verify(creator, never()).createConnector("jmxUrl://hello");
+            verify(connector, never()).connect();
+        }
+    }
+    
+    @Test
+    public void testAcquireOldServer() throws Exception {
+        final byte[] data = getJsonString(8000, "jmxUrl://hello");
+        invokeCallbacksOnProxyCreation(data);
+        when(ipcService.serverExists(IPC_SERVER_NAME)).thenReturn(true);
+        
+        pool.start();
+        MXBeanConnection result = pool.acquire(8000);
+        
+        verify(lookup).lookupPrincipalByName("Test");
+        verify(ipcService).serverExists(IPC_SERVER_NAME);
+        verify(ipcService).destroyServer(IPC_SERVER_NAME);
+        verify(ipcService).createServer(IPC_SERVER_NAME, pool, principal);
+        verify(creator).createConnector("jmxUrl://hello");
+
+        assertNotNull(result);
+        assertEquals(result, connection);
+
+        verify(connector).connect();
+    }
 
     @Test
-    public void testAcquireTwice() throws Exception {
+    public void testAcquireTwiceSameUser() throws Exception {
         byte[] data = getJsonString(8000, "jmxUrl://hello");
         invokeCallbacksOnProxyCreation(data);
     
+        pool.start();
         MXBeanConnection connection1 = pool.acquire(8000);
     
         verify(connector).connect();
     
         MXBeanConnection connection2 = pool.acquire(8000);
     
+        // Should only be invoked once
+        verify(lookup).lookupPrincipalByName("Test");
+        verify(ipcService).serverExists(IPC_SERVER_NAME);
+        verify(ipcService, never()).destroyServer(IPC_SERVER_NAME);
+        verify(ipcService).createServer(IPC_SERVER_NAME, pool, principal);
+        
         assertEquals(connection1, connection);
         assertEquals(connection2, connection);
     
         verifyNoMoreInteractions(connector);
+    }
+    
+    @Test
+    public void testAcquireTwiceDifferentUser() throws Exception {
+        byte[] data = getJsonString(8000, "jmxUrl://hello");
+        invokeCallbacksOnProxyCreation(data);
+        data = getJsonString(8001, "jmxUrl://hello1");
+        invokeCallbacksOnProxyCreation(data, 8001, "Test1", "agent-proxy-1001");
+        
+        ProcessUserInfo info = new ProcessUserInfo(1001, "Test1");
+        when(builder.build(8001)).thenReturn(info);
+        UserPrincipal otherPrincipal = mock(UserPrincipal.class);
+        when(lookup.lookupPrincipalByName("Test1")).thenReturn(otherPrincipal);
+        MXBeanConnector otherConnector = mock(MXBeanConnector.class);
+        when(creator.createConnector("jmxUrl://hello1")).thenReturn(otherConnector);
+        MXBeanConnectionImpl otherConnection = mock(MXBeanConnectionImpl.class);
+        when(otherConnector.connect()).thenReturn(otherConnection);
+    
+        pool.start();
+        MXBeanConnection connection1 = pool.acquire(8000);
+        MXBeanConnection connection2 = pool.acquire(8001);
+        
+        verify(lookup).lookupPrincipalByName("Test");
+        verify(ipcService).serverExists(IPC_SERVER_NAME);
+        verify(ipcService, never()).destroyServer(IPC_SERVER_NAME);
+        verify(ipcService).createServer(IPC_SERVER_NAME, pool, principal);
+        verify(creator).createConnector("jmxUrl://hello");
+        verify(connector).connect();
+        
+        verify(lookup).lookupPrincipalByName("Test1");
+        verify(ipcService).serverExists("agent-proxy-1001");
+        verify(ipcService, never()).destroyServer("agent-proxy-1001");
+        verify(ipcService).createServer("agent-proxy-1001", pool, otherPrincipal);
+        verify(creator).createConnector("jmxUrl://hello1");
+        verify(otherConnector).connect();
+    
+        assertEquals(connection1, connection);
+        assertEquals(connection2, otherConnection);
     }
 
     @Test
@@ -296,6 +401,7 @@ public class MXBeanConnectionPoolImplTest {
         byte[] data = getJsonString(8000, "jmxUrl://hello");
         invokeCallbacksOnProxyCreation(data);
     
+        pool.start();
         MXBeanConnection result = pool.acquire(8000);
     
         verify(connection, never()).close();
@@ -310,6 +416,7 @@ public class MXBeanConnectionPoolImplTest {
         byte[] data = getJsonString(8000, "jmxUrl://hello");
         invokeCallbacksOnProxyCreation(data);
     
+        pool.start();
         // connection1 == connection1 == actualConnection
         MXBeanConnection connection1 = pool.acquire(8000);
         MXBeanConnection connection2 = pool.acquire(8000);
@@ -321,7 +428,11 @@ public class MXBeanConnectionPoolImplTest {
         pool.release(8000, connection2);
     
         verify(connection).close();
+    }
     
+    @Test(expected=MXBeanConnectionException.class)
+    public void testReleaseNotRunning() throws Exception {
+        pool.release(8000, connection);
     }
 
     private byte[] getJsonString(Integer pid, String jmxUrl) {

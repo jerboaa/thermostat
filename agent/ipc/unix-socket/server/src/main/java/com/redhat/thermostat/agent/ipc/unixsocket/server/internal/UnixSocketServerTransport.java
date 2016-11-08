@@ -40,17 +40,22 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -72,16 +77,27 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 class UnixSocketServerTransport implements ServerTransport {
     
     private static final Logger logger = LoggingUtils.getLogger(UnixSocketServerTransport.class);
-    // Filename prefix for socket file
-    static final String SOCKET_PREFIX = "sock-";
-    // Permissions to allow only the owner and group access to the directory
+    // Permissions for the top-level sockets directory
     private static final Set<PosixFilePermission> SOCKET_DIR_PERM;
     static {
         Set<PosixFilePermission> perms = new HashSet<>();
         perms.add(PosixFilePermission.OWNER_READ);
         perms.add(PosixFilePermission.OWNER_WRITE);
         perms.add(PosixFilePermission.OWNER_EXECUTE);
+        perms.add(PosixFilePermission.GROUP_READ);
+        perms.add(PosixFilePermission.GROUP_EXECUTE);
+        perms.add(PosixFilePermission.OTHERS_READ);
+        perms.add(PosixFilePermission.OTHERS_EXECUTE);
         SOCKET_DIR_PERM = Collections.unmodifiableSet(perms);
+    }
+    // Permissions for the user-specific socket directories, under the top-level directory
+    private static final Set<PosixFilePermission> OWNER_DIR_PERM;
+    static {
+        Set<PosixFilePermission> perms = new HashSet<>();
+        perms.add(PosixFilePermission.OWNER_READ);
+        perms.add(PosixFilePermission.OWNER_WRITE);
+        perms.add(PosixFilePermission.OWNER_EXECUTE);
+        OWNER_DIR_PERM = Collections.unmodifiableSet(perms);
     }
     
     private final SelectorProvider selectorProvider;
@@ -97,6 +113,7 @@ class UnixSocketServerTransport implements ServerTransport {
     private AcceptThread acceptThread;
     private Selector selector;
     private Path socketDir;
+    private UserPrincipal currentUser;
     
     UnixSocketServerTransport(SelectorProvider selectorProvider) {
         this(selectorProvider, Executors.newFixedThreadPool(determineDefaultThreadPoolSize(), new CountingThreadFactory()), 
@@ -121,6 +138,10 @@ class UnixSocketServerTransport implements ServerTransport {
             throw new IOException("Unsupported IPC type: " + type.getConfigValue());
         }
         this.props = (UnixSocketIPCProperties) props;
+        
+        // Get UserPrincipal for currently logged-in user
+        this.currentUser = getCurrentUser();
+        
         // Prepare socket directory with strict permissions, which will contain the socket file when bound
         File sockDirFile = ((UnixSocketIPCProperties) props).getSocketDirectory();
         this.socketDir = createSocketDirPath(sockDirFile);
@@ -147,9 +168,10 @@ class UnixSocketServerTransport implements ServerTransport {
         }
     }
 
-    private Path getPathToServer(String name) throws IOException {
+    private Path getPathToServer(String name, UserPrincipal owner) throws IOException {
         checkName(name);
-        return socketDir.resolve(SOCKET_PREFIX + name);
+        String ownerName = owner.getName();
+        return props.getSocketFile(name, ownerName).toPath();
     }
 
     private void checkName(String name) throws IOException {
@@ -166,23 +188,40 @@ class UnixSocketServerTransport implements ServerTransport {
 
     @Override
     public synchronized void createServer(String name, ThermostatIPCCallbacks callbacks) throws IOException {
+        createServer(name, callbacks, currentUser);
+    }
+    
+    public synchronized void createServer(String name, ThermostatIPCCallbacks callbacks, UserPrincipal owner) throws IOException {
         // Check if the socket has already been created and we know about it
         if (sockets.containsKey(name)) {
             throw new IOException("IPC server with name \"" + name + "\" already exists");
         }
 
         // Check for existing socket
-        Path socketPath = getPathToServer(name);
+        Path socketPath = getPathToServer(name, owner);
         if (fileUtils.exists(socketPath)) {
             // Must have been left behind, so delete before attempting to bind
             fileUtils.delete(socketPath);
         }
         
         // Check that socket directory permissions haven't changed
-        if (!permissionsMatch(socketDir)) {
+        if (!permissionsMatch(socketDir, SOCKET_DIR_PERM)) {
             throw new IOException("Socket directory permissions are insecure");
         }
         checkOwner(socketDir, "Socket directory");
+        
+        // Check if owner subdirectory exists, create it if not
+        String ownerName = owner.getName(); // TODO uid would be better for directory name to keep paths short
+        Path ownerDir = socketDir.resolve(ownerName);
+        if (!fileUtils.exists(ownerDir)) {
+            fileUtils.createDirectory(ownerDir, fileUtils.toFileAttribute(OWNER_DIR_PERM));
+            fileUtils.setOwner(ownerDir, owner);
+        }
+        // Check the permissions are what we expect
+        if (!permissionsMatch(ownerDir, OWNER_DIR_PERM)) {
+            throw new IOException("Socket directory permissions are insecure for user: " + ownerName);
+        }
+        checkOwner(ownerDir, owner, "User-specific socket directory");
         
         // Create socket
         ThermostatLocalServerSocketChannelImpl socket = 
@@ -190,7 +229,8 @@ class UnixSocketServerTransport implements ServerTransport {
         
         // Verify owner of new socket file
         File socketFile = socket.getSocketFile();
-        checkOwner(socketFile.toPath(), "Socket file " + socketFile.getName());
+        fileUtils.setOwner(socketFile.toPath(), owner);
+        checkOwner(socketFile.toPath(), owner, "Socket file " + socketFile.getName());
         sockets.put(name, socket);
     }
     
@@ -200,7 +240,7 @@ class UnixSocketServerTransport implements ServerTransport {
             prepareSocketDir(socketDir);
         } else if (!fileUtils.isDirectory(socketDir)) {
             throw new IOException("Socket directory exists, but is not a directory");
-        } else if (!permissionsMatch(socketDir)) {
+        } else if (!permissionsMatch(socketDir, SOCKET_DIR_PERM)) {
             throw new IOException("Socket directory has incorrect permissions");
         } // else -> socket directory exists and is valid
         
@@ -209,29 +249,36 @@ class UnixSocketServerTransport implements ServerTransport {
         logger.fine("Using Unix socket directory: " + socketDir.toString());
     }
     
-    private boolean permissionsMatch(Path path) throws IOException {
-        Set<PosixFilePermission> acutalPerms = fileUtils.getPosixFilePermissions(path);
-        return SOCKET_DIR_PERM.equals(acutalPerms);
+    private boolean permissionsMatch(Path path, Set<PosixFilePermission> permissions) throws IOException {
+        Set<PosixFilePermission> actualPerms = fileUtils.getPosixFilePermissions(path);
+        return permissions.equals(actualPerms);
     }
     
     private void checkOwner(Path path, String errorMessagePrefix) throws IOException {
+        checkOwner(path, currentUser, errorMessagePrefix);
+    }
+    
+    private void checkOwner(Path path, UserPrincipal expectedOwner, String errorMessagePrefix) throws IOException {
+        try {
+            UserPrincipal owner = fileUtils.getOwner(path);
+            if (owner == null) {
+                throw new IOException("Unable to determine owner for path: " + path.toString());
+            } else if (!owner.equals(expectedOwner)) {
+                throw new IOException(errorMessagePrefix + " insecure with owner: " + owner.getName());
+            }
+        } catch (UnsupportedOperationException e) {
+            throw new IOException("Cannot determine owner from file system", e);
+        }
+    }
+    
+    private UserPrincipal getCurrentUser() throws IOException {
         String username = fileUtils.getUsername();
         UserPrincipalLookupService lookup = fileUtils.getUserPrincipalLookupService();
         UserPrincipal principal = lookup.lookupPrincipalByName(username);
         if (principal == null) {
             throw new IOException("No Principal found for user: " + username);
         }
-        
-        try {
-            UserPrincipal owner = fileUtils.getOwner(path);
-            if (owner == null) {
-                throw new IOException("Unable to determine owner for path: " + path.toString());
-            } else if (!owner.equals(principal)) {
-                throw new IOException(errorMessagePrefix + " insecure with owner: " + owner.getName());
-            }
-        } catch (UnsupportedOperationException e) {
-            throw new IOException("Cannot determine owner from file system", e);
-        }
+        return principal;
     }
 
     private void prepareSocketDir(Path path) throws IOException {
@@ -246,13 +293,26 @@ class UnixSocketServerTransport implements ServerTransport {
     
     private void deleteSocketDir(Path path) throws IOException {
         if (fileUtils.exists(path)) {
-            DirectoryStream<Path> entries = fileUtils.newDirectoryStream(path);
-            // Empty directory
-            for (Path entry : entries) {
-                fileUtils.delete(entry);
-            }
-            // Delete directory
-            fileUtils.delete(path);
+            // Empty sockets directory
+            int maxDepth = 2; // top-level socket directory + user-specific subdirectories
+            fileUtils.walkFileTree(path, EnumSet.noneOf(FileVisitOption.class), maxDepth, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file,
+                        BasicFileAttributes attrs) throws IOException {
+                    fileUtils.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    if (exc == null) {
+                        fileUtils.delete(dir);
+                        return FileVisitResult.CONTINUE;
+                    } else {
+                        // Exception occurred, abort cleanup
+                        throw exc;
+                    }
+                }
+            });
         }
     }
     
@@ -355,8 +415,9 @@ class UnixSocketServerTransport implements ServerTransport {
             return PosixFilePermissions.asFileAttribute(perms);
         }
         
-        DirectoryStream<Path> newDirectoryStream(Path dir) throws IOException {
-            return Files.newDirectoryStream(dir);
+        Path walkFileTree(Path start, Set<FileVisitOption> options, int maxDepth, 
+                FileVisitor<? super Path> visitor) throws IOException {
+            return Files.walkFileTree(start, options, maxDepth, visitor);
         }
         
         UserPrincipalLookupService getUserPrincipalLookupService() {
@@ -371,6 +432,9 @@ class UnixSocketServerTransport implements ServerTransport {
             return Files.getOwner(path);
         }
         
+        Path setOwner(Path path, UserPrincipal owner) throws IOException {
+            return Files.setOwner(path, owner);
+        }
     }
     
     /* For testing purposes */

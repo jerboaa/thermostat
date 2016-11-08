@@ -50,23 +50,25 @@ class AgentProxyClient {
     private final File binPath;
     private final String username;
     private final File ipcConfigFile;
+    private final String serverName;
     
-    AgentProxyClient(int pid, String user, File binPath, File ipcConfigFile) {
-        this(pid, user, binPath, ipcConfigFile, new ProcessCreator());
+    AgentProxyClient(int pid, String user, File binPath, File ipcConfigFile, String serverName) {
+        this(pid, user, binPath, ipcConfigFile, serverName, new ProcessCreator());
     }
     
-    AgentProxyClient(int pid, String user, File binPath, File ipcConfigFile, ProcessCreator procCreator) {
+    AgentProxyClient(int pid, String user, File binPath, File ipcConfigFile, String serverName, ProcessCreator procCreator) {
         this.pid = pid;
         this.binPath = binPath;
         this.procCreator = procCreator;
         this.username = user;
         this.ipcConfigFile = ipcConfigFile;
+        this.serverName = serverName;
     }
 
     void runProcess() throws IOException, InterruptedException {
         // Start the agent proxy
         String serverPath = binPath + File.separator + SERVER_NAME;
-        String[] args = new String[] { serverPath, String.valueOf(pid), username, ipcConfigFile.getAbsolutePath() };
+        String[] args = new String[] { serverPath, String.valueOf(pid), username, ipcConfigFile.getAbsolutePath(), serverName };
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.inheritIO();
         Process proxy = procCreator.startProcess(builder);

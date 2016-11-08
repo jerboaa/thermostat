@@ -37,6 +37,10 @@
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.attribute.UserPrincipal;
+import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -50,6 +54,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.byteman.agent.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 
@@ -72,26 +77,37 @@ class BytemanAgentAttachManager {
     static List<String> helperJars;
     
     private final SubmitHelper submit;
+    private final FileSystemUtils fsUtils;
     private BytemanAttacher attacher;
     private IPCEndpointsManager ipcManager;
     private VmBytemanDAO vmBytemanDao;
     private WriterID writerId;
+    private ProcessUserInfoBuilder userInfoBuilder;
 
     BytemanAgentAttachManager() {
         this.submit = new SubmitHelper();
+        this.fsUtils = new FileSystemUtils();
     }
     
     // for testing only
-    BytemanAgentAttachManager(BytemanAttacher attacher, IPCEndpointsManager ipcManager, VmBytemanDAO vmBytemanDao, SubmitHelper submit, WriterID writerId) {
+    BytemanAgentAttachManager(BytemanAttacher attacher, IPCEndpointsManager ipcManager, VmBytemanDAO vmBytemanDao, SubmitHelper submit, 
+            WriterID writerId, ProcessUserInfoBuilder userInfoBuilder, FileSystemUtils fsUtils) {
         this.attacher = attacher;
         this.ipcManager = ipcManager;
         this.vmBytemanDao = vmBytemanDao;
         this.submit = submit;
         this.writerId = writerId;
+        this.userInfoBuilder = userInfoBuilder;
+        this.fsUtils = fsUtils;
     }
     
     VmBytemanStatus attachBytemanToVm(VmId vmId, int vmPid) {
         logger.fine("Attaching byteman agent to VM '" + vmPid + "'");
+        // Fail early if we can't determine process owner
+        UserPrincipal owner = getUserPrincipalForPid(vmPid);
+        if (owner == null) {
+            return null;
+        }
         BytemanAgentInfo info = attacher.attach(vmId.get(), vmPid, writerId.getWriterID());
         if (info == null) {
             logger.warning("Failed to attach byteman agent for VM '" + vmPid + "'. Skipping rule updater and IPC channel.");
@@ -103,7 +119,7 @@ class BytemanAgentAttachManager {
             return null;
         }
         ThermostatIPCCallbacks callback = new BytemanMetricsReceiver(vmBytemanDao, socketId);
-        ipcManager.startIPCEndpoint(socketId, callback);
+        ipcManager.startIPCEndpoint(socketId, callback, owner);
         // Add a status record to storage
         VmBytemanStatus status = new VmBytemanStatus(writerId.getWriterID());
         status.setListenPort(info.getAgentListenPort());
@@ -113,6 +129,23 @@ class BytemanAgentAttachManager {
         return status;
     }
     
+    private UserPrincipal getUserPrincipalForPid(int vmPid) {
+        UserPrincipal principal = null;
+        ProcessUserInfo info = userInfoBuilder.build(vmPid);
+        String username = info.getUsername();
+        if (username == null) {
+            logger.warning("Unable to determine owner of VM '" + vmPid + "'. Skipping rule updater and IPC channel.");
+        } else {
+            UserPrincipalLookupService lookup = fsUtils.getUserPrincipalLookupService();
+            try {
+                principal = lookup.lookupPrincipalByName(username);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Invalid user name '" + username + "' for VM '" + vmPid + "'. Skipping rule updater and IPC channel.", e);
+            }
+        }
+        return principal;
+    }
+
     private boolean performPostAttachSteps(BytemanAgentInfo info, VmSocketIdentifier socketId) {
         if (info.isAttachFailedNoSuchProcess()) {
             logger.finest("Process with pid " + info.getVmPid() + " went away before we could attach the byteman agent to it.");
@@ -185,6 +218,10 @@ class BytemanAgentAttachManager {
         this.writerId = writerId;
     }
 
+    void setUserInfoBuilder(ProcessUserInfoBuilder userInfoBuilder) {
+        this.userInfoBuilder = userInfoBuilder;
+    }
+    
     static class SubmitHelper {
         
         boolean addJarsToSystemClassLoader(List<String> jars, BytemanAgentInfo info) {
@@ -209,6 +246,14 @@ class BytemanAgentAttachManager {
                 logger.log(Level.INFO, e.getMessage(), e);
                 return false;
             }
+        }
+        
+    }
+    
+    static class FileSystemUtils {
+        
+        UserPrincipalLookupService getUserPrincipalLookupService() {
+            return FileSystems.getDefault().getUserPrincipalLookupService();
         }
         
     }

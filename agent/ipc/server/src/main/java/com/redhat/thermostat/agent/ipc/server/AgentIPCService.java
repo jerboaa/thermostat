@@ -37,6 +37,7 @@
 package com.redhat.thermostat.agent.ipc.server;
 
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 
 import com.redhat.thermostat.annotations.Service;
 
@@ -51,6 +52,7 @@ public interface AgentIPCService {
     /**
      * Creates an IPC server identified by the provided name, which can be connected to
      * by IPC clients. The caller will be notified when this server receives data.
+     * The created server will be owned by the user running the agent.
      * <p>
      * The server name must contain only letters, numbers, hyphens, and underscores.
      * @param name - A unique name for this IPC server, must not be null
@@ -58,6 +60,19 @@ public interface AgentIPCService {
      * @throws IOException if this IPC server cannot be created for any reason
      */
     void createServer(String name, ThermostatIPCCallbacks callbacks) throws IOException;
+    
+    /**
+     * Creates an IPC server identified by the provided name, which can be connected to
+     * by IPC clients. The caller will be notified when this server receives data.
+     * The created server will be owned by the user specified by the supplied {@link UserPrincipal}.
+     * <p>
+     * The server name must contain only letters, numbers, hyphens, and underscores.
+     * @param name - A unique name for this IPC server, must not be null
+     * @param callbacks - Object to be notified when data is received, must not be null
+     * @param owner - principal representing the intended owner of the server
+     * @throws IOException if this IPC server cannot be created for any reason
+     */
+    void createServer(String name, ThermostatIPCCallbacks callbacks, UserPrincipal owner) throws IOException;
     
     /**
      * Check if an IPC server exists with a given name.

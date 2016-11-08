@@ -38,6 +38,7 @@ package com.redhat.thermostat.agent.ipc.server.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -111,6 +112,15 @@ class AgentIPCServiceImpl implements AgentIPCService {
             startService();
         }
         transport.createServer(name, callbacks);
+    }
+    
+    @Override
+    public synchronized void createServer(String name, ThermostatIPCCallbacks callbacks, UserPrincipal owner) throws IOException {
+        // Start the service if not already started
+        if (!started) {
+            startService();
+        }
+        transport.createServer(name, callbacks, owner);
     }
 
     @Override

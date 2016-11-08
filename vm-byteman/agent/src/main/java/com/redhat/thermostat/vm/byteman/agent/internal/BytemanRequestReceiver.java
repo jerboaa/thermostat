@@ -53,6 +53,8 @@ import org.jboss.byteman.agent.submit.Submit;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
@@ -103,6 +105,9 @@ public class BytemanRequestReceiver implements RequestReceiver {
     @Reference
     private AgentIPCService agentIpcService;
     
+    @Reference
+    private UserNameUtil userNameUtil;
+    
     ////////////////////////////////////////////////
     // methods used by DS
     ////////////////////////////////////////////////
@@ -146,6 +151,15 @@ public class BytemanRequestReceiver implements RequestReceiver {
     
     protected void unbindAgentIpcService(AgentIPCService ipcService) {
         attachManager.setIpcManager(null);
+    }
+    
+    protected void bindUserNameUtil(UserNameUtil userNameUtil) {
+        ProcessUserInfoBuilder userInfoBuilder = new ProcessUserInfoBuilder(new ProcDataSource(), userNameUtil);
+        attachManager.setUserInfoBuilder(userInfoBuilder);
+    }
+    
+    protected void unbindUserNameUtil(UserNameUtil userNameUtil) {
+        attachManager.setUserInfoBuilder(null);
     }
     
     ////////////////////////////////////////////////

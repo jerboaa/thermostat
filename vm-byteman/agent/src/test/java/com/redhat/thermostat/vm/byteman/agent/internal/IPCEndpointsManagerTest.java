@@ -45,6 +45,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,11 +64,13 @@ public class IPCEndpointsManagerTest {
     private IPCEndpointsManager ipcManager;
     private AgentIPCService ipcService;
     private VmBytemanDAO vmBytemanDao;
+    private UserPrincipal owner;
     
     @Before
     public void setup() {
         vmBytemanDao = mock(VmBytemanDAO.class);
         ipcService = mock(AgentIPCService.class);
+        owner = mock(UserPrincipal.class);
         ipcManager = new IPCEndpointsManager(ipcService);
     }
 
@@ -79,9 +82,9 @@ public class IPCEndpointsManagerTest {
 
     private String doStartTest() throws IOException {
         ThermostatIPCCallbacks callback = new BytemanMetricsReceiver(vmBytemanDao, SOME_SOCK_ID);
-        ipcManager.startIPCEndpoint(SOME_SOCK_ID, callback);
+        ipcManager.startIPCEndpoint(SOME_SOCK_ID, callback, owner);
         String name = SOME_SOCK_ID.getName();
-        verify(ipcService).createServer(eq(name), isA(BytemanMetricsReceiver.class));
+        verify(ipcService).createServer(eq(name), isA(BytemanMetricsReceiver.class), eq(owner));
         verify(ipcService).serverExists(name);
         return name;
     }
@@ -113,7 +116,7 @@ public class IPCEndpointsManagerTest {
         
         // start it again, which should be a no-op
         ThermostatIPCCallbacks callback = new BytemanMetricsReceiver(vmBytemanDao, SOME_SOCK_ID);
-        ipcManager.startIPCEndpoint(SOME_SOCK_ID, callback);
+        ipcManager.startIPCEndpoint(SOME_SOCK_ID, callback, owner);
         verifyNoMoreInteractions(ipcService);
     }
 }

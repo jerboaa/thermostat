@@ -42,17 +42,20 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anySetOf;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.spi.AbstractSelector;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitor;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
@@ -60,13 +63,14 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
 import java.nio.file.attribute.UserPrincipalLookupService;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
@@ -88,6 +92,7 @@ public class UnixSocketServerTransportTest {
     private FilenameValidator validator;
     private FileUtils fileUtils;
     private Path socketDirPath;
+    private Path ownerDirPath;
     private AcceptThread acceptThread;
     private ThreadCreator threadCreator;
     private FileAttribute<Set<PosixFilePermission>> fileAttr;
@@ -97,6 +102,7 @@ public class UnixSocketServerTransportTest {
     private ThermostatLocalServerSocketChannelImpl channel;
     private UnixSocketIPCProperties props;
     private UserPrincipalLookupService lookup;
+    private UserPrincipal currentUser;
 
     @SuppressWarnings("unchecked")
     @Before
@@ -112,12 +118,17 @@ public class UnixSocketServerTransportTest {
         when(socketDirPath.toAbsolutePath()).thenReturn(socketDirPath);
         when(socketDirPath.normalize()).thenReturn(socketDirPath);
         when(sockDirFile.toPath()).thenReturn(socketDirPath);
+        ownerDirPath = mock(Path.class);
         socketPath = mock(Path.class);
-        when(socketDirPath.resolve(UnixSocketServerTransport.SOCKET_PREFIX + SERVER_NAME)).thenReturn(socketPath);
+        when(socketDirPath.resolve(USERNAME)).thenReturn(ownerDirPath);
+        File socketFile = mock(File.class);
+        when(props.getSocketFile(SERVER_NAME, USERNAME)).thenReturn(socketFile);
+        when(socketFile.toPath()).thenReturn(socketPath);
         
         fileUtils = mock(FileUtils.class);
         when(fileUtils.exists(socketDirPath)).thenReturn(false);
-        when(fileUtils.getPosixFilePermissions(socketDirPath)).thenReturn(PosixFilePermissions.fromString("rwx------"));
+        when(fileUtils.getPosixFilePermissions(socketDirPath)).thenReturn(PosixFilePermissions.fromString("rwxr-xr-x"));
+        when(fileUtils.getPosixFilePermissions(ownerDirPath)).thenReturn(PosixFilePermissions.fromString("rwx------"));
         
         fileAttr = mock(FileAttribute.class);
         when(fileUtils.toFileAttribute(any(Set.class))).thenReturn(fileAttr);
@@ -125,9 +136,11 @@ public class UnixSocketServerTransportTest {
         lookup = mock(UserPrincipalLookupService.class);
         when(fileUtils.getUserPrincipalLookupService()).thenReturn(lookup);
         when(fileUtils.getUsername()).thenReturn(USERNAME);
-        UserPrincipal principal = mock(UserPrincipal.class);
-        when(lookup.lookupPrincipalByName(USERNAME)).thenReturn(principal);
-        when(fileUtils.getOwner(socketDirPath)).thenReturn(principal);
+        currentUser = mock(UserPrincipal.class);
+        when(currentUser.getName()).thenReturn(USERNAME);
+        when(lookup.lookupPrincipalByName(USERNAME)).thenReturn(currentUser);
+        when(fileUtils.getOwner(socketDirPath)).thenReturn(currentUser);
+        when(fileUtils.getOwner(ownerDirPath)).thenReturn(currentUser);
         
         execService = mock(ExecutorService.class);
         validator = mock(FilenameValidator.class);
@@ -139,10 +152,8 @@ public class UnixSocketServerTransportTest {
         
         channelUtils = mock(ChannelUtils.class);
         channel = mock(ThermostatLocalServerSocketChannelImpl.class);
-        File socketFile = mock(File.class);
-        when(socketFile.toPath()).thenReturn(socketPath);
         when(channel.getSocketFile()).thenReturn(socketFile);
-        when(fileUtils.getOwner(socketPath)).thenReturn(principal);
+        when(fileUtils.getOwner(socketPath)).thenReturn(currentUser);
         
         callbacks = mock(ThermostatIPCCallbacks.class);
         when(channelUtils.createServerSocketChannel(SERVER_NAME, socketPath, callbacks, props, selector)).thenReturn(channel);
@@ -196,7 +207,7 @@ public class UnixSocketServerTransportTest {
         verify(fileUtils).toFileAttribute(permsCaptor.capture());
         
         Set<PosixFilePermission> perms = (Set<PosixFilePermission>) permsCaptor.getValue();
-        Set<PosixFilePermission> expectedPerms = PosixFilePermissions.fromString("rwx------");
+        Set<PosixFilePermission> expectedPerms = PosixFilePermissions.fromString("rwxr-xr-x");
         assertEquals(perms, expectedPerms);
         
         verify(fileUtils).createDirectory(socketDirPath, fileAttr);
@@ -319,10 +330,91 @@ public class UnixSocketServerTransportTest {
         }
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testCreateServer() throws Exception {
         transport.start(props);
         transport.createServer(SERVER_NAME, callbacks);
+        
+        // Verify the user-specific socket directory is created with the proper permissions
+        verify(fileUtils).exists(ownerDirPath);
+
+        ArgumentCaptor<Set> permsCaptor = ArgumentCaptor.forClass(Set.class);
+        verify(fileUtils, times(2)).toFileAttribute(permsCaptor.capture());
+        
+        // First invocation is for top-level socket dir, second is for user-specific dir
+        Set<PosixFilePermission> perms = (Set<PosixFilePermission>) permsCaptor.getAllValues().get(1);
+        Set<PosixFilePermission> expectedPerms = PosixFilePermissions.fromString("rwx------");
+        assertEquals(perms, expectedPerms);
+        
+        verify(fileUtils).createDirectory(ownerDirPath, fileAttr);
+        verify(fileUtils).getPosixFilePermissions(ownerDirPath);
+        verify(fileUtils).setOwner(ownerDirPath, currentUser);
+        
+        verify(fileUtils).exists(socketPath);
+        verify(fileUtils, never()).delete(socketPath);
+        
+        checkChannel();
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testCreateServerWithOwner() throws Exception {
+        String otherUsername = "otherUser";
+        UserPrincipal owner = mock(UserPrincipal.class);
+        when(owner.getName()).thenReturn(otherUsername);
+        Path otherOwnerDirPath = mock(Path.class);
+        when(socketDirPath.resolve(otherUsername)).thenReturn(otherOwnerDirPath);
+        when(fileUtils.getPosixFilePermissions(otherOwnerDirPath)).thenReturn(PosixFilePermissions.fromString("rwx------"));
+        when(fileUtils.getOwner(otherOwnerDirPath)).thenReturn(owner);
+        
+        Path otherSocketPath = mock(Path.class);
+        when(fileUtils.getOwner(otherSocketPath)).thenReturn(owner);
+        File otherSocketFile = mock(File.class);
+        when(props.getSocketFile(SERVER_NAME, otherUsername)).thenReturn(otherSocketFile);
+        ThermostatLocalServerSocketChannelImpl otherChannel = mock(ThermostatLocalServerSocketChannelImpl.class);
+        when(channelUtils.createServerSocketChannel(SERVER_NAME, otherSocketPath, callbacks, props, selector)).thenReturn(otherChannel);
+        when(otherChannel.getSocketFile()).thenReturn(otherSocketFile);
+        when(otherSocketFile.toPath()).thenReturn(otherSocketPath);
+        
+        transport.start(props);
+        transport.createServer(SERVER_NAME, callbacks, owner);
+        
+        // Verify the user-specific socket directory is created with the proper permissions
+        verify(fileUtils).exists(otherOwnerDirPath);
+
+        ArgumentCaptor<Set> permsCaptor = ArgumentCaptor.forClass(Set.class);
+        verify(fileUtils, times(2)).toFileAttribute(permsCaptor.capture());
+        
+        // First invocation is for top-level socket dir, second is for user-specific dir
+        Set<PosixFilePermission> perms = (Set<PosixFilePermission>) permsCaptor.getAllValues().get(1);
+        Set<PosixFilePermission> expectedPerms = PosixFilePermissions.fromString("rwx------");
+        assertEquals(perms, expectedPerms);
+        
+        verify(fileUtils).createDirectory(otherOwnerDirPath, fileAttr);
+        verify(fileUtils).getPosixFilePermissions(otherOwnerDirPath);
+        verify(fileUtils).setOwner(otherOwnerDirPath, owner);
+        
+        verify(fileUtils).exists(otherSocketPath);
+        verify(fileUtils, never()).delete(otherSocketPath);
+        
+        verify(channelUtils).createServerSocketChannel(SERVER_NAME, otherSocketPath, callbacks, props, selector);
+        verify(fileUtils).setOwner(otherSocketPath, owner);
+        ThermostatLocalServerSocketChannelImpl result = transport.getSockets().get(SERVER_NAME);
+        assertEquals(otherChannel, result);
+    }
+    
+    @Test
+    public void testCreateServerOwnerDirExists() throws Exception {
+        transport.start(props);
+        
+        when(fileUtils.exists(ownerDirPath)).thenReturn(true);
+        transport.createServer(SERVER_NAME, callbacks);
+        verify(fileUtils, never()).createDirectory(eq(ownerDirPath), any(FileAttribute[].class));
+        verify(fileUtils, never()).setOwner(eq(ownerDirPath), any(UserPrincipal.class));
+        
+        // Should still check permissions
+        verify(fileUtils).getPosixFilePermissions(ownerDirPath);
         
         verify(fileUtils).exists(socketPath);
         verify(fileUtils, never()).delete(socketPath);
@@ -332,6 +424,7 @@ public class UnixSocketServerTransportTest {
 
     private void checkChannel() throws IOException {
         verify(channelUtils).createServerSocketChannel(SERVER_NAME, socketPath, callbacks, props, selector);
+        verify(fileUtils).setOwner(socketPath, currentUser);
         ThermostatLocalServerSocketChannelImpl result = transport.getSockets().get(SERVER_NAME);
         assertEquals(channel, result);
     }
@@ -363,17 +456,32 @@ public class UnixSocketServerTransportTest {
     }
     
     @Test(expected=IOException.class)
-    public void testCreateServerPermsChanged() throws Exception {
+    public void testCreateServerSocketDirPermsChanged() throws Exception {
         transport.start(props);
         when(fileUtils.getPosixFilePermissions(socketDirPath)).thenReturn(PosixFilePermissions.fromString("rwxrwxrwx"));
         transport.createServer(SERVER_NAME, callbacks);
     }
     
     @Test(expected=IOException.class)
-    public void testCreateServerOwnerChanged() throws Exception {
+    public void testCreateServerOwnerDirPermsChanged() throws Exception {
+        transport.start(props);
+        when(fileUtils.getPosixFilePermissions(ownerDirPath)).thenReturn(PosixFilePermissions.fromString("rwxrwxrwx"));
+        transport.createServer(SERVER_NAME, callbacks);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testCreateServerSocketDirOwnerChanged() throws Exception {
         transport.start(props);
         UserPrincipal badPrincipal = mock(UserPrincipal.class);
         when(fileUtils.getOwner(socketDirPath)).thenReturn(badPrincipal);
+        transport.createServer(SERVER_NAME, callbacks);
+    }
+    
+    @Test(expected=IOException.class)
+    public void testCreateServerOwnerDirOwnerChanged() throws Exception {
+        transport.start(props);
+        UserPrincipal badPrincipal = mock(UserPrincipal.class);
+        when(fileUtils.getOwner(ownerDirPath)).thenReturn(badPrincipal);
         transport.createServer(SERVER_NAME, callbacks);
     }
     
@@ -421,20 +529,19 @@ public class UnixSocketServerTransportTest {
     }
     
     // Mock a socket directory containing a socket file
+    @SuppressWarnings("unchecked")
     private void mockSocketDirOnShutdown() throws IOException {
         when(fileUtils.exists(socketDirPath)).thenReturn(true);
-        DirectoryStream<Path> dirStream = mockDirectoryStream(socketPath);
-        when(fileUtils.newDirectoryStream(socketDirPath)).thenReturn(dirStream);
+        when(fileUtils.walkFileTree(eq(socketDirPath), anySetOf(FileVisitOption.class), eq(2), any(FileVisitor.class))).thenAnswer(new Answer<Path>() {
+            @Override
+            public Path answer(InvocationOnMock invocation) throws Throwable {
+                FileVisitor<? super Path> visitor = (FileVisitor<? super Path>) invocation.getArguments()[3];
+                // Invoke each of the methods we override once
+                visitor.visitFile(socketPath, null);
+                visitor.postVisitDirectory(socketDirPath, null);
+                return socketDirPath;
+            }
+        });
     }
 
-    @SuppressWarnings("unchecked")
-    private DirectoryStream<Path> mockDirectoryStream(Path socketFile) {
-        DirectoryStream<Path> dirStream = (DirectoryStream<Path>) mock(DirectoryStream.class);
-        Iterator<Path> iterator = mock(Iterator.class);
-        when(iterator.hasNext()).thenReturn(true).thenReturn(false);
-        when(iterator.next()).thenReturn(socketFile);
-        when(dirStream.iterator()).thenReturn(iterator);
-        return dirStream;
-    }
-    
 }

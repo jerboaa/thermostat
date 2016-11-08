@@ -36,13 +36,14 @@
 #
 #####################################################################
 #
-if [ "$#" -lt 3 ]; then
-  echo "usage: $0 <pidOfTargetJvm> <userNameOfJvmOwner> <ipcConfigFile>" >&2
+if [ "$#" -lt 4 ]; then
+  echo "usage: $0 <pidOfTargetJvm> <userNameOfJvmOwner> <ipcConfigFile> <ipcServerName>" >&2
   exit 1
 fi
 TARGET_PID="$1"
 TARGET_USER="$2"
 CONFIG_FILE="$3"
+IPC_SERVER_NAME="$4"
 
 # Source thermostat-ipc-client-common from same directory as this script
 # Defines IPC_CLASSPATH variable with JARs necessary for the IPC service
@@ -76,16 +77,16 @@ if [ $CYGWIN_MODE -eq 1 ]; then
   CONFIG_FILE_ARG="-DipcConfigFile=`cygpath -w ${CONFIG_FILE}`"
   # Drop permissions, if root
   if [ "$(id -u)" -eq 0 ]; then
-    /bin/su -s /bin/bash -c "${JAVA} -cp `cygpath -w -p ${IPC_CLASSPATH}` ${CONFIG_FILE_ARG} ${LOGGING_ARGS} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} ${TARGET_PID}" "${TARGET_USER}"
+    /bin/su -s /bin/bash -c "${JAVA} -cp `cygpath -w -p ${IPC_CLASSPATH}` ${CONFIG_FILE_ARG} ${LOGGING_ARGS} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} ${TARGET_PID} ${IPC_SERVER_NAME}" "${TARGET_USER}"
   else
-    ${JAVA} -cp `cygpath -w -p ${IPC_CLASSPATH}` "${CONFIG_FILE_ARG}" ${DEBUG_OPTS} ${LOGGING_ARGS} ${AGENT_PROXY_CLASS} "${TARGET_PID}"
+    ${JAVA} -cp `cygpath -w -p ${IPC_CLASSPATH}` "${CONFIG_FILE_ARG}" ${DEBUG_OPTS} ${LOGGING_ARGS} ${AGENT_PROXY_CLASS} "${TARGET_PID}" "${IPC_SERVER_NAME}"
   fi
 else
   CONFIG_FILE_ARG="-DipcConfigFile=${CONFIG_FILE}"
   # Drop permissions, if root
   if [ "$(id -u)" -eq 0 ]; then
-    /bin/su -s /bin/bash -c "${JAVA} -cp ${IPC_CLASSPATH} ${CONFIG_FILE_ARG} ${LOGGING_ARGS} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} ${TARGET_PID}" "${TARGET_USER}"
+    /bin/su -s /bin/bash -c "${JAVA} -cp ${IPC_CLASSPATH} ${CONFIG_FILE_ARG} ${LOGGING_ARGS} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} ${TARGET_PID} ${IPC_SERVER_NAME}" "${TARGET_USER}"
   else
-    ${JAVA} -cp ${IPC_CLASSPATH} "${CONFIG_FILE_ARG}" ${DEBUG_OPTS} ${LOGGING_ARGS} ${AGENT_PROXY_CLASS} "${TARGET_PID}"
+    ${JAVA} -cp ${IPC_CLASSPATH} "${CONFIG_FILE_ARG}" ${DEBUG_OPTS} ${LOGGING_ARGS} ${AGENT_PROXY_CLASS} "${TARGET_PID}" "${IPC_SERVER_NAME}"
   fi
 fi

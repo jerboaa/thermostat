@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -63,7 +64,8 @@ class IPCEndpointsManager {
         this.ipcService = ipcService;
     }
     
-    synchronized void startIPCEndpoint(final VmSocketIdentifier socketId, final ThermostatIPCCallbacks callback) {
+    synchronized void startIPCEndpoint(final VmSocketIdentifier socketId, final ThermostatIPCCallbacks callback, 
+            final UserPrincipal owner) {
         logger.fine("Starting IPC socket for byteman helper");
         String sId = socketId.getName();
         if (!sockets.contains(sId)) {
@@ -74,7 +76,7 @@ class IPCEndpointsManager {
                     logger.warning("Socket with id: " + sId + " already exists. Bug?");
                     return;
                 }
-                ipcService.createServer(sId, callback);
+                ipcService.createServer(sId, callback, owner);
                 sockets.add(sId);
                 logger.fine("Created IPC endpoint for id: " + sId);
             } catch (IOException e) {

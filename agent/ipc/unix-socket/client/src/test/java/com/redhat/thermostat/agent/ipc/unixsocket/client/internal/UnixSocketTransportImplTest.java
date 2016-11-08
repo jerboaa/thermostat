@@ -59,6 +59,7 @@ import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCP
 public class UnixSocketTransportImplTest {
     
     private static final String SERVER_NAME = "test";
+    private static final String USERNAME = "testUser";
     private File socketDir;
     private File socketFile;
     private SocketHelper sockHelper;
@@ -76,10 +77,11 @@ public class UnixSocketTransportImplTest {
         ThermostatLocalSocketChannelImpl sockChannel = mock(ThermostatLocalSocketChannelImpl.class);
         when(sockHelper.openSocketChannel(eq(SERVER_NAME), eq(socketFile))).thenReturn(sockChannel);
         when(sockHelper.createMessageChannel(sockChannel)).thenReturn(messageChannel);
-        when(sockHelper.getSocketFile(socketDir, UnixSocketTransportImpl.SOCKET_PREFIX + SERVER_NAME)).thenReturn(socketFile);
+        when(sockHelper.getUsername()).thenReturn(USERNAME);
         
         props = mock(UnixSocketIPCProperties.class);
         when(props.getSocketDirectory()).thenReturn(socketDir);
+        when(props.getSocketFile(SERVER_NAME, USERNAME)).thenReturn(socketFile);
     }
 
     @Test

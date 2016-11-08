@@ -40,6 +40,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -92,20 +96,23 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     private final AgentRequestDecoder requestDecoder;
     private final AgentResponseEncoder responseEncoder;
     private final ProcessCreator procCreator;
+    private final ProcessUserInfoBuilder userInfoBuilder;
+    private final FileSystemUtils fsUtils;
     private Process process;
     private AtomicInteger state;
     
     CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath,
             AgentIPCService ipcService, File ipcConfig) {
         this(receivers, sslConf, binPath, ipcService, ipcConfig, new CountDownLatch(1), new SSLConfigurationEncoder(), 
-                new AgentRequestDecoder(), new AgentResponseEncoder(), new StorageGetter(), new ProcessCreator());
+                new AgentRequestDecoder(), new AgentResponseEncoder(), new StorageGetter(), new ProcessUserInfoBuilder(), 
+                new FileSystemUtils(), new ProcessCreator());
     }
 
     /** For testing only */
     CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath, 
             AgentIPCService ipcService, File ipcConfig, CountDownLatch readyLatch, SSLConfigurationEncoder sslEncoder, 
-            AgentRequestDecoder requestDecoder, AgentResponseEncoder responseEncoder, 
-            StorageGetter getter, ProcessCreator procCreator) {
+            AgentRequestDecoder requestDecoder, AgentResponseEncoder responseEncoder, StorageGetter getter, 
+            ProcessUserInfoBuilder userInfoBuilder, FileSystemUtils fsUtils, ProcessCreator procCreator) {
         this.storageGetter = getter;
         this.receivers = receivers;
         this.sslConf = sslConf;
@@ -117,13 +124,24 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
         this.requestDecoder = requestDecoder;
         this.responseEncoder = responseEncoder;
         this.procCreator = procCreator;
+        this.userInfoBuilder = userInfoBuilder;
+        this.fsUtils = fsUtils;
         this.state = new AtomicInteger();
     }
 
     @Override
     public void startListening(String hostname, int port) throws IOException {
-        // Create IPC server
-        ipcService.createServer(IPC_SERVER_NAME, this);
+        // Determine if this process is running as a privileged user
+        if (userInfoBuilder.isPrivilegedUser()) {
+            // Get owner of command channel script, which will also be the user running it
+            Path cmdPath = fsUtils.getPath(binPath.getAbsolutePath(), CMD_NAME);
+            UserPrincipal unprivilegedPrincipal = fsUtils.getOwner(cmdPath);
+            // Create IPC server owned by user running command channel script
+            ipcService.createServer(IPC_SERVER_NAME, this, unprivilegedPrincipal);
+        } else {
+            // Create IPC server owned by current user
+            ipcService.createServer(IPC_SERVER_NAME, this);
+        }
         
         startServer(hostname, port);
     }
@@ -362,6 +380,17 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     static class ProcessCreator {
         Process startProcess(ProcessBuilder builder) throws IOException {
             return builder.start();
+        }
+    }
+    
+    /** for testing only */
+    static class FileSystemUtils {
+        Path getPath(String first, String... more) {
+            return FileSystems.getDefault().getPath(first, more);
+        }
+        
+        UserPrincipal getOwner(Path path) throws IOException {
+            return Files.getOwner(path);
         }
     }
     

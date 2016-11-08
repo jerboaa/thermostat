@@ -54,7 +54,6 @@ import com.sun.tools.attach.AttachNotSupportedException;
 public class AgentProxy {
     
     private static final Logger logger = LoggingUtils.getLogger(AgentProxy.class);
-    static final String IPC_SERVER_NAME = "agent-proxy";
     static final String CONFIG_FILE_PROP = "ipcConfigFile";
     static final String JSON_PID = "pid";
     static final String JSON_JMX_URL = "jmxUrl";
@@ -63,7 +62,7 @@ public class AgentProxy {
     private static ClientIPCService ipcService = null;
     
     public static void main(String[] args) throws IOException {
-        if (args.length < 1) {
+        if (args.length < 2) {
             usage();
         }
         
@@ -84,9 +83,9 @@ public class AgentProxy {
         } catch (NumberFormatException e) {
             usage();
         }
-        
+        String ipcServerName = args[1];
         // Connect to IPC server
-        IPCMessageChannel channel = ipcService.connectToServer(IPC_SERVER_NAME);
+        IPCMessageChannel channel = ipcService.connectToServer(ipcServerName);
         
         // Start proxy agent
         AgentProxyControlImpl agent = creator.create(pid);
@@ -150,7 +149,7 @@ public class AgentProxy {
     }
 
     private static void usage() {
-        throw new RuntimeException("usage: java " + AgentProxy.class.getName() + " <pidOfTargetJvm>");
+        throw new RuntimeException("usage: java " + AgentProxy.class.getName() + " <pidOfTargetJvm> <userNameOfJvmOwner>");
     }
     
     static class ControlCreator {

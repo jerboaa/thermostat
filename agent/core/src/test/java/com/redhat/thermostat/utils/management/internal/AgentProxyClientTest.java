@@ -56,7 +56,9 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.utils.management.internal.AgentProxyClient.ProcessCreator;
 
 public class AgentProxyClientTest {
-
+    
+    private static final String SERVER_NAME = "agent-proxy-2000";
+    
     private AgentProxyClient client;
     private String user;
     private File binPath;
@@ -72,7 +74,7 @@ public class AgentProxyClientTest {
         procCreator = mock(ProcessCreator.class);
         proxy = mock(Process.class);
         when(procCreator.startProcess(any(ProcessBuilder.class))).thenReturn(proxy);
-        client = new AgentProxyClient(9000, user, binPath, ipcConfigFile, procCreator);
+        client = new AgentProxyClient(9000, user, binPath, ipcConfigFile, SERVER_NAME, procCreator);
     }
     
     @Test
@@ -91,7 +93,7 @@ public class AgentProxyClientTest {
         
         // Check process arguments
         List<String> args = builder.command();
-        assertEquals(4, args.size());
+        assertEquals(5, args.size());
 
         final String arg0 = TestUtils.convertWinPathToUnixPath(args.get(0));
         final String arg3 = TestUtils.convertWinPathToUnixPath(args.get(3));
@@ -100,6 +102,7 @@ public class AgentProxyClientTest {
         assertEquals("9000", args.get(1));
         assertEquals("Hello", args.get(2));
         assertEquals("/path/to/ipc/config", arg3);
+        assertEquals(SERVER_NAME, args.get(4));
         
         // Check cleanup
         verify(proxy).waitFor();

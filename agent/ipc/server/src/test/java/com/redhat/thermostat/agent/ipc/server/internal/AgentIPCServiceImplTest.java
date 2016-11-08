@@ -47,6 +47,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.Map;
 
 import org.junit.Before;
@@ -165,7 +166,23 @@ public class AgentIPCServiceImplTest {
         verify(writer).write();
         verify(transport, times(2)).createServer(SERVER_NAME, callbacks);
     }
-
+    
+    @Test
+    public void testCreateServerWithOwner() throws Exception {
+        context.registerService(ServerTransport.class.getName(), transport, null);
+        AgentIPCServiceImpl service = createService();
+        ThermostatIPCCallbacks callbacks = mock(ThermostatIPCCallbacks.class);
+        UserPrincipal owner = mock(UserPrincipal.class);
+        
+        assertFalse(service.isStarted());
+        service.createServer(SERVER_NAME, callbacks, owner);
+        assertTrue(service.isStarted());
+        
+        verify(transport).start(props);
+        verify(writer).write();
+        verify(transport).createServer(SERVER_NAME, callbacks, owner);
+    }
+    
     @Test
     public void testServerExists() throws Exception {
         context.registerService(ServerTransport.class.getName(), transport, null);
