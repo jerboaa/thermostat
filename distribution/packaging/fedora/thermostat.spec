@@ -44,7 +44,7 @@ __DEFAULT_RELEASE__ 7
   %global jcommon_bundle_version     1.0.23
   %global jfreechart_bundle_version  1.0.19
   # apache-commons-beanutils
-  %global beanutils_bundle_version   1.9.2
+  %global beanutils_bundle_version   1.9.3
   # apache-commons-codec
   %global codec_bundle_version       1.10.0
   # apache-commons-logging
