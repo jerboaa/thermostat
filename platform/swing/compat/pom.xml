@@ -151,7 +151,6 @@
                         </Export-Package>
                         <Private-Package>
                             com.redhat.thermostat.compat.platform.internal,
-                            com.redhat.thermostat.compat.platform.internal.test,
                         </Private-Package>
                         <!--Do not autogenerate uses clauses in Manifests -->
                         <_nouses>true</_nouses>
