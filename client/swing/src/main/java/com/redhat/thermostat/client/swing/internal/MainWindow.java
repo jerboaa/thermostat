@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import com.redhat.thermostat.client.core.internal.platform.EmbeddedPlatformService;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -103,9 +104,11 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 @SuppressWarnings({ "restriction", "serial" })
-public class MainWindow extends JFrame implements MainView {
+public class MainWindow extends JFrame implements MainView, SwingComponent {
     
     public static final String MAIN_WINDOW_NAME = "Thermostat_mainWindo_JFrame_parent#1";
 
@@ -178,6 +181,24 @@ public class MainWindow extends JFrame implements MainView {
                 fireViewAction(Action.HIDDEN);
             }
         });
+        
+        registerServiceForPlatform(getContext());
+    }
+
+    @Override
+    public Component getUiComponent() {
+        return this;
+    }
+
+    BundleContext getContext() {
+        BundleContext context =
+                FrameworkUtil.getBundle(MainWindow.class).getBundleContext();
+        return context;
+    }
+
+    void registerServiceForPlatform(BundleContext context) {
+        EmbeddedPlatformService embeddedPlatformService = new EmbeddedPlatformService(this);
+        context.registerService(EmbeddedPlatformService.class, embeddedPlatformService, null);
     }
 
     private void setupNotificationPane(StatusBar statusBar, final ThermostatGlassPane glassPane) {

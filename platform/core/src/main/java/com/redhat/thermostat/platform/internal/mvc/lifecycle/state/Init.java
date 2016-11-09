@@ -59,6 +59,7 @@ public class Init implements StateAction {
                                                               context.provider.getModel(),
                                                               context.provider.getView());
                         context.registrar.checkAndRegister(context.provider);
+                        context.linker.link(context.provider);
                         if (context.provider instanceof Workbench) {
                             context.dispatcher.dispatch(State.START);
                         }

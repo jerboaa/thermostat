@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.platform.MDIService;
 import com.redhat.thermostat.platform.Platform;
 import com.redhat.thermostat.platform.event.EventQueue;
+import com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers.MVCExtensionLinker;
 import com.redhat.thermostat.platform.internal.mvc.lifecycle.state.PlatformServiceRegistrar;
 import com.redhat.thermostat.platform.internal.mvc.lifecycle.state.StateMachine;
 import com.redhat.thermostat.platform.mvc.MVCProvider;
@@ -60,6 +61,7 @@ public class MVCLifeCycleManager implements MDIService {
     private EventQueue eventQueue;
     private Deque<StateMachine> providers;
 
+    private MVCExtensionLinker linker;
     private Platform platform;
     private PlatformServiceRegistrar serviceRegistrar;
 
@@ -80,6 +82,7 @@ public class MVCLifeCycleManager implements MDIService {
         registry.addMVCRegistryListener(listener);
 
         eventQueue = createEventQueue();
+        linker = new MVCExtensionLinker();
     }
 
     // Testing hook
@@ -120,13 +123,14 @@ public class MVCLifeCycleManager implements MDIService {
 
         StateMachine stateMachine = new StateMachine(provider, platform,
                                                      serviceRegistrar,
-                                                     eventQueue);
+                                                     eventQueue, linker);
         providers.add(stateMachine);
         stateMachine.start();
     }
 
     public void setPlatform(Platform platform) {
         this.platform = platform;
+        linker.setPlatform(platform);
     }
 
     public Platform getPlatform() {

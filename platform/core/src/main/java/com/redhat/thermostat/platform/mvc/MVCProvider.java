@@ -42,7 +42,7 @@ package com.redhat.thermostat.platform.mvc;
  * at each invocation of the getters, in other words, they are expected
  * to be singletons.
  */
-public interface MVCProvider {
+public interface MVCProvider extends MVCComponent {
     public Controller getController();
     public View getView();
     public Model getModel();

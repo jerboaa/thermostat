@@ -38,7 +38,9 @@ package com.redhat.thermostat.client.swing.internal;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,8 +48,8 @@ import static org.mockito.Mockito.when;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
+import com.redhat.thermostat.client.core.internal.platform.EmbeddedPlatformService;
 import com.redhat.thermostat.client.ui.ContentProvider;
-import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
@@ -71,10 +73,12 @@ import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+import org.osgi.framework.BundleContext;
 
 import java.awt.AWTException;
 import java.awt.Robot;
 import java.io.File;
+import java.util.Dictionary;
 import java.util.logging.Logger;
 
 @Category(CacioTest.class)
@@ -84,6 +88,7 @@ public class MainWindowTest {
     private FrameFixture frameFixture;
     private MainWindow window;
     private ActionListener<MainView.Action> l;
+    private BundleContext context;
 
     @BeforeClass
     public static void setUpOnce() {
@@ -94,11 +99,18 @@ public class MainWindowTest {
     @Before
     public void setUp() {
 
+        context = mock(BundleContext.class);
+
         GuiActionRunner.execute(new GuiTask() {
             
             @Override
             protected void executeInEDT() throws Throwable {
-                window = new MainWindow();
+                window = new MainWindow() {
+                    @Override
+                    BundleContext getContext() {
+                        return context;
+                    }
+                };
                 l = mock(ActionListener.class);
                 window.addActionListener(l);
                 CommonPaths commonPaths = mock(CommonPaths.class);
@@ -109,6 +121,14 @@ public class MainWindowTest {
         });
 
         frameFixture = new FrameFixture(window);
+    }
+    
+    @Category(GUITest.class)
+    @Test
+    public void assertPlatformServiceRegistered() {
+        verify(context).registerService(eq(EmbeddedPlatformService.class),
+                                        any(EmbeddedPlatformService.class),
+                                        eq((Dictionary<String, ?>) null));
     }
 
     @After

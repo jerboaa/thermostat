@@ -140,6 +140,8 @@ public class MainWindowControllerImpl implements MainWindowController {
     private AgentInformationViewProvider agentInfoViewProvider;
     private ClientConfigViewProvider clientConfigViewProvider;
 
+    private DymamicHostPluginTracker dymamicHostPluginTracker;
+    private DymamicVMPluginTracker dymamicVMPluginTracker;
     private InformationServiceTracker infoServiceTracker;
     private ContextActionServiceTracker contextActionTracker;
     private MultipleServiceTracker depTracker;
@@ -217,7 +219,13 @@ public class MainWindowControllerImpl implements MainWindowController {
                 
         this.infoServiceTracker = new InformationServiceTracker(context);
         this.infoServiceTracker.open();
-        
+
+        dymamicHostPluginTracker = new DymamicHostPluginTracker(context);
+        dymamicHostPluginTracker.open();
+
+        dymamicVMPluginTracker = new DymamicVMPluginTracker(context);
+        dymamicVMPluginTracker.open();
+
         this.contextActionTracker = new ContextActionServiceTracker(context);
         this.contextActionTracker.open();
         
@@ -416,6 +424,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         depTracker.close();
         infoServiceTracker.close();
         contextActionTracker.close();
+        dymamicHostPluginTracker.close();
+        dymamicVMPluginTracker.close();
     }
 
     private void installListenersAndStartRegistries() {
@@ -564,12 +574,14 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private HostInformationController createHostInformationController(HostRef ref) {
         List<InformationService<HostRef>> hostInfoServices = infoServiceTracker.getHostInformationServices();
-        return new HostInformationController(hostInfoServices, ref, hostInfoViewProvider);
+        return new HostInformationController(hostInfoServices, ref, hostInfoViewProvider,
+                                             dymamicHostPluginTracker.getPluginProviders());
     }
 
     private VmInformationController createVmController(VmRef ref) {
         List<InformationService<VmRef>> vmInfoServices = infoServiceTracker.getVmInformationServices();
-        return new VmInformationController(vmInfoServices, ref, vmInfoViewProvider);
+        return new VmInformationController(vmInfoServices, ref, vmInfoViewProvider,
+                                           dymamicVMPluginTracker.getPluginProviders());
     }
 
     static class UriOpener {

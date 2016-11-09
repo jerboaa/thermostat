@@ -39,6 +39,7 @@ package com.redhat.thermostat.platform.internal.mvc.lifecycle.state;
 import com.redhat.thermostat.beans.property.ObjectProperty;
 import com.redhat.thermostat.platform.Platform;
 import com.redhat.thermostat.platform.event.EventQueue;
+import com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers.MVCExtensionLinker;
 import com.redhat.thermostat.platform.mvc.MVCProvider;
 
 /**
@@ -50,13 +51,15 @@ public class StateMachine {
 
     public StateMachine(MVCProvider provider, Platform platform,
                         PlatformServiceRegistrar registrar,
-                        EventQueue eventQueue) {
+                        EventQueue eventQueue,
+                        MVCExtensionLinker linker) {
 
         context = new Context();
         context.platform = platform;
         context.provider = provider;
         context.dispatcher = new StateMachineTransitionDispatcher(eventQueue, this);
         context.registrar = registrar;
+        context.linker = linker;
         stateProperty = new ObjectProperty<>(State.INVALID);
     }
 

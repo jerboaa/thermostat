@@ -147,6 +147,7 @@
                             com.redhat.thermostat.platform.internal.mvc,
                             com.redhat.thermostat.platform.internal.mvc.lifecycle,
                             com.redhat.thermostat.platform.internal.mvc.lifecycle.state,
+                            com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers,
                             com.redhat.thermostat.platform.internal.locale,
                         </Private-Package>
                         <!--Do not autogenerate uses clauses in Manifests -->

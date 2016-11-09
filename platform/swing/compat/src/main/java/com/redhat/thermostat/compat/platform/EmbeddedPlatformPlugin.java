@@ -34,60 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.platform.application.swing.internal;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.redhat.thermostat.compat.platform;
 
-import com.redhat.thermostat.platform.swing.ContentProvider;
-
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.redhat.thermostat.platform.mvc.MVCProvider;
+import com.redhat.thermostat.platform.mvc.Model;
 
 /**
+
  */
-public class ComponentVisibilityDispatcher {
+public class EmbeddedPlatformPlugin implements MVCProvider {
 
-    private Map<ContentProvider, ComponentVisibilityListener> dispatchers;
-
-    public ComponentVisibilityDispatcher() {
-        dispatchers = new ConcurrentHashMap<>();
+    private Model model;
+    private EmbeddedPlatformSwingView view;
+    private EmbeddedPlatformController controller;
+    
+    protected EmbeddedPlatformController createController() {
+        return new EmbeddedPlatformController();
+    }
+    
+    protected Model createModel() {
+        return new Model();
+    }
+    
+    protected EmbeddedPlatformSwingView createView() {
+        return new EmbeddedPlatformSwingView();
+    }
+    
+    @Override
+    public final EmbeddedPlatformController getController() {
+        if (controller == null) {
+            controller = createController();
+        }
+        return controller;
     }
 
-    public void register(ContentProvider contentProvider) {
-
-        ComponentVisibilityListener listener =
-                new ComponentVisibilityListener(contentProvider);
-
-        dispatchers.put(contentProvider, listener);
-        contentProvider.getContent().addHierarchyListener(listener);
+    @Override
+    public final EmbeddedPlatformSwingView getView() {
+        if (view == null) {
+            view = createView();
+        }
+        return view;
     }
 
-    public void deregister(ContentProvider contentProvider) {
-        if (dispatchers.containsKey(contentProvider)) {
-            ComponentVisibilityListener listener = dispatchers.get(contentProvider);
-            contentProvider.getContent().removeHierarchyListener(listener);
-            dispatchers.remove(contentProvider);
+    @Override
+    public final Model getModel() {
+        if (model == null) {
+            model = createModel();
         }
-    }
-
-    private class ComponentVisibilityListener implements HierarchyListener {
-
-        private ContentProvider contentProvider;
-
-        public ComponentVisibilityListener(ContentProvider contentProvider) {
-            this.contentProvider = contentProvider;
-        }
-
-        @Override
-        public void hierarchyChanged(HierarchyEvent e) {
-            if (contentProvider == null) {
-                return;
-            }
-
-            if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0)  {
-                contentProvider.getView().showingProperty().set(e.getComponent().isShowing());
-            }
-
-        }
+        return model;
     }
 }

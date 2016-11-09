@@ -50,14 +50,14 @@ public class ThermostatWorkbenchController extends Controller {
     private final ApplicationInfo appInfo = new ApplicationInfo();
     private CommonPaths commonPaths;
 
-    private ThermostatWorkbenchView workbenchView;
+    private ThermostatWorkbenchSwingView workbenchView;
     private MenuHandler handler;
 
     @Override
     public void init(final Platform platform, Model model, View view) {
         super.init(platform, model, view);
 
-        workbenchView = (ThermostatWorkbenchView) view;
+        workbenchView = (ThermostatWorkbenchSwingView) view;
         handler = createMenuHandler();
 
         platform.queueOnViewThread(new Runnable() {

@@ -38,8 +38,10 @@ package com.redhat.thermostat.client.swing.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.core.internal.platform.DynamicHostPluginProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;

@@ -42,7 +42,7 @@ import com.redhat.thermostat.platform.mvc.MVCProvider;
 import com.redhat.thermostat.platform.mvc.Model;
 import com.redhat.thermostat.platform.mvc.View;
 import com.redhat.thermostat.platform.swing.SwingWorkbench;
-import com.redhat.thermostat.platform.swing.WorkbenchView;
+import com.redhat.thermostat.platform.swing.WorkbenchSwingView;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -65,7 +65,7 @@ public class ThermostatWorkbenchProvider implements MVCProvider {
     private ThermostatGUI thermostatGUI;
 
     private Model model;
-    private ThermostatWorkbenchView view;
+    private ThermostatWorkbenchSwingView view;
     private ThermostatWorkbenchController controller;
 
     @Override
@@ -90,6 +90,6 @@ public class ThermostatWorkbenchProvider implements MVCProvider {
         controller = new ThermostatWorkbenchController();
         controller.setCommonPaths(paths);
 
-        view = new ThermostatWorkbenchView((WorkbenchView) workbench.getView());
+        view = new ThermostatWorkbenchSwingView((WorkbenchSwingView) workbench.getView());
     }
 }

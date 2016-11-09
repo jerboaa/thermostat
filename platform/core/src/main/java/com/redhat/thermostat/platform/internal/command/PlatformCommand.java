@@ -61,6 +61,8 @@ import java.util.concurrent.CountDownLatch;
 @Property(name = Command.NAME, value = PlatformCommand.NAME)
 public class PlatformCommand extends AbstractCommand {
     
+    public volatile static boolean IS_PLATFORM = false;
+    
     static final String NAME = "platform";
 
     @Reference

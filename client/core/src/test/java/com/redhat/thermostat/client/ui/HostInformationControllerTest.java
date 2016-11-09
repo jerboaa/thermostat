@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.redhat.thermostat.client.core.internal.platform.DynamicHostPluginProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -62,12 +63,14 @@ public class HostInformationControllerTest {
     private HostRef ref;
     private HostInformationViewProvider provider;
     private HostInformationView view;
+    private List<DynamicHostPluginProvider> dynamicProviders;
 
     @Before
     public void setup() {
         ref = mock(HostRef.class);
         provider = mock(HostInformationViewProvider.class);
         view = mock(HostInformationView.class);
+        dynamicProviders = new ArrayList<>();
         when(provider.createView()).thenReturn(view);
     }
 
@@ -78,7 +81,11 @@ public class HostInformationControllerTest {
         // Mock services
         List<InformationService<HostRef>> services = mockServices(orderValues);
 
-        new HostInformationController(new ArrayList<>(services), ref, provider);
+        HostInformationController controller =
+                new HostInformationController(new ArrayList<>(services), ref,
+                                              provider,
+                                              dynamicProviders);
+        controller.rebuild();
 
         InOrder order = inOrder(services.get(0), services.get(1),
                 services.get(2), services.get(3), services.get(4));

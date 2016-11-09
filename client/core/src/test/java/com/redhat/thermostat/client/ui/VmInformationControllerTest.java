@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.redhat.thermostat.client.core.internal.platform.DynamicVMPluginProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -62,6 +63,7 @@ public class VmInformationControllerTest {
     private VmRef ref;
     private VmInformationViewProvider provider;
     private VmInformationView view;
+    private List<DynamicVMPluginProvider> dynamicProviders;
 
     @Before
     public void setup() {
@@ -69,6 +71,8 @@ public class VmInformationControllerTest {
         provider = mock(VmInformationViewProvider.class);
         view = mock(VmInformationView.class);
         when(provider.createView()).thenReturn(view);
+
+        dynamicProviders = new ArrayList<>();
     }
 
     @Test
@@ -78,7 +82,11 @@ public class VmInformationControllerTest {
         // Mock services
         List<InformationService<VmRef>> services = mockServices(orderValues);
 
-        new VmInformationController(new ArrayList<>(services), ref, provider);
+        VmInformationController controller =
+                new VmInformationController(new ArrayList<>(services), ref, provider,
+                                    dynamicProviders);
+
+        controller.rebuild();
 
         InOrder order = inOrder(services.get(0), services.get(1),
                 services.get(2), services.get(3), services.get(4));

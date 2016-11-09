@@ -37,9 +37,12 @@
 package com.redhat.thermostat.client.swing.internal.views;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.client.core.views.UIPluginInfo;
 import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
 import com.redhat.thermostat.common.internal.test.Bug;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
@@ -58,7 +61,11 @@ import com.redhat.thermostat.client.swing.FrameWithPanelTest;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 import javax.swing.JTabbedPane;
+import java.awt.AWTException;
+import java.awt.Robot;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -98,6 +105,20 @@ public class VmInformationPanelTest extends FrameWithPanelTest<VmInformationPane
         panel.addChildView(new LocalizedString("test. please ignore"), view);
     }
 
+    @Test
+    public void testLoggerMessage() throws AWTException {
+        UIComponent view = mock(UIComponent.class);
+        when(view.toString()).thenReturn("TEST");
+        String text =
+                "There's a non-swing view registered: 'TEST'. " +
+                "The swing client can not use these views. This is "        +
+                "most likely a developer mistake. If this is meant to "     +
+                "be a swing-based view, it must implement the "             +
+                "'SwingComponent' interface. If it's not meant to be a "    +
+                "swing-based view, it should not have been registered.";
+        assertEquals(text, panel.getLoggerMessage(view));
+    }
+
     @GUITest
     @Test
     @Bug(id = "2996",
@@ -115,5 +136,4 @@ public class VmInformationPanelTest extends FrameWithPanelTest<VmInformationPane
             }
         });
     }
-
 }

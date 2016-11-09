@@ -39,6 +39,7 @@ package com.redhat.thermostat.platform.internal.mvc.lifecycle.state;
 import com.redhat.thermostat.beans.property.BooleanProperty;
 import com.redhat.thermostat.beans.property.ChangeListener;
 import com.redhat.thermostat.platform.Platform;
+import com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers.MVCExtensionLinker;
 import com.redhat.thermostat.platform.mvc.Controller;
 import com.redhat.thermostat.platform.mvc.MVCProvider;
 import com.redhat.thermostat.platform.mvc.Model;
@@ -66,6 +67,7 @@ public class InitTest {
     private Model model;
     private PlatformServiceRegistrar registrar;
     private BooleanProperty visible;
+    private MVCExtensionLinker linker;
 
     @Before
     public void setUp() {
@@ -74,6 +76,7 @@ public class InitTest {
         dispatcher = mock(StateMachineTransitionDispatcher.class);
         visible = mock(BooleanProperty.class);
         registrar = mock(PlatformServiceRegistrar.class);
+        linker = mock(MVCExtensionLinker.class);
 
         view = mock(View.class);
         when(view.showingProperty()).thenReturn(visible);
@@ -90,6 +93,7 @@ public class InitTest {
         context.provider = provider;
         context.platform = platform;
         context.registrar = registrar;
+        context.linker = linker;
     }
 
     @Test
@@ -113,6 +117,7 @@ public class InitTest {
         verify(model).init(platform);
         verify(controller).init(platform, model, view);
         verify(context.registrar).checkAndRegister(context.provider);
+        verify(context.linker).link(context.provider);
     }
 
     @Test

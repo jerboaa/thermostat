@@ -78,7 +78,7 @@ public class ThermostatWorkbenchControllerTest {
         }
     }
 
-    private ThermostatWorkbenchView view;
+    private ThermostatWorkbenchSwingView view;
     private Model model;
     private TestPlatform platform;
     private CommonPaths paths;
@@ -100,7 +100,7 @@ public class ThermostatWorkbenchControllerTest {
     @Before
     public void setUp() {
         platform = new TestPlatform();
-        view = Mockito.mock(ThermostatWorkbenchView.class);
+        view = Mockito.mock(ThermostatWorkbenchSwingView.class);
         model = Mockito.mock(Model.class);
         menuHandler = Mockito.mock(MenuHandler.class);
         paths = Mockito.mock(CommonPaths.class);

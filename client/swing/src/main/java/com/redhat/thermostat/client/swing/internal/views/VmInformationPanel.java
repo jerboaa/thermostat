@@ -39,12 +39,14 @@ package com.redhat.thermostat.client.swing.internal.views;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.views.UIPluginInfo;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.OverlayContainer;
@@ -53,6 +55,14 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class VmInformationPanel extends VmInformationView implements SwingComponent {
+    private static final String VIEW_NAME = "%VIEW_NAME%";
+    private static final String TEMPLATE =
+            "There's a non-swing view registered: '" + VIEW_NAME + "'. " +
+            "The swing client can not use these views. This is "         +
+            "most likely a developer mistake. If this is meant to "      +
+            "be a swing-based view, it must implement the "              +
+            "'SwingComponent' interface. If it's not meant to be a "     +
+            "swing-based view, it should not have been registered.";
 
     private static final Logger logger = LoggingUtils.getLogger(VmInformationPanel.class);
     private static final EdtHelper edtHelper = new EdtHelper();
@@ -84,31 +94,53 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     }
 
     @Override
+    public void addChildViews(final List<UIPluginInfo> plugins) {
+        try {
+            edtHelper.callAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    for (UIPluginInfo plugin : plugins) {
+                        UIComponent view = plugin.getView();
+                        if (view instanceof SwingComponent) {
+                            addViewImpl(plugin.getLocalizedName(), (SwingComponent) view);
+                        } else {
+                            logger.severe(getLoggerMessage(view));
+                        }
+                    }
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            logger.severe(e.getLocalizedMessage());
+        }
+    }
+
+    String getLoggerMessage(UIComponent view) {
+        return TEMPLATE.replace(VIEW_NAME, view.toString());
+    }
+
+    private void addViewImpl(final LocalizedString title, final SwingComponent view) {
+        tabPane.addTab(title.getContents(), null, view.getUiComponent(), null);
+        if (view instanceof OverlayContainer) {
+            OverlayContainer overlayContainer = (OverlayContainer) view;
+            tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
+        }
+    }
+
+    @Override
     public void addChildView(final LocalizedString title, final UIComponent view) {
         if (view instanceof SwingComponent) {
             try {
                 edtHelper.callAndWait(new Runnable() {
                     @Override
                     public void run() {
-                        SwingComponent panel = (SwingComponent) view;
-                        tabPane.addTab(title.getContents(), null, panel.getUiComponent(), null);
-                        if (view instanceof OverlayContainer) {
-                            OverlayContainer overlayContainer = (OverlayContainer) view;
-                            tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
-                        }
+                        addViewImpl(title, (SwingComponent) view);
                     }
                 });
             } catch (InvocationTargetException | InterruptedException e) {
                 logger.severe(e.getLocalizedMessage());
             }
         } else {
-            String message = ""
-                    + "There's a non-swing view registered: '" + view.toString()
-                    + "'. The swing client can not use these views. This is "
-                    + "most likely a developer mistake. If this is meant to "
-                    + "be a swing-based view, it must implement the "
-                    + "'SwingComponent' interface. If it's not meant to be a "
-                    + "swing-based view, it should not have been registered.";
+            String message = getLoggerMessage(view);
             logger.severe(message);
             throw new AssertionError(message);
         }

@@ -54,6 +54,7 @@
   <modules>
       <module>core</module>
       <module>widgets</module>
+      <module>compat</module>
       <module>distribution</module>
   </modules>
 

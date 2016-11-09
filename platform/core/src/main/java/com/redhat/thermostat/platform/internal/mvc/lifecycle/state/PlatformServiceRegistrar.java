@@ -68,6 +68,8 @@ public class PlatformServiceRegistrar {
         checkAndRegisterImpl(provider.getModel());
         checkAndRegisterImpl(provider.getController());
         checkAndRegisterImpl(provider.getView());
+
+        checkAndRegisterImpl(provider);
     }
 
     // Testing hook

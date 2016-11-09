@@ -47,10 +47,10 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 @PlatformService(service = {
-        WorkbenchView.class,
+        WorkbenchSwingView.class,
         View.class,
 })
-public class WorkbenchView extends ViewContainer {
+public class WorkbenchSwingView extends SwingView {
 
     private JFrame frame;
     private WindowAdapter adapter;
@@ -99,7 +99,7 @@ public class WorkbenchView extends ViewContainer {
     }
 
     @Override
-    public void destroy() {
+    protected void postDestroy() {
         frame.dispose();
     }
 

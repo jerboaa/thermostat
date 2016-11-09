@@ -95,6 +95,11 @@
       <artifactId>thermostat-platform-swing-widgets</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-platform-swing-compat</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
 </project>

@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.core.views;
 
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
+import java.util.List;
+
 
 public abstract class VmInformationView extends BasicView implements UIComponent {
 
@@ -50,6 +52,11 @@ public abstract class VmInformationView extends BasicView implements UIComponent
     public abstract boolean selectChildID(int id);
     public abstract int getSelectedChildID();
 
-    public abstract void clear();
-}
+    public void addChildViews(List<UIPluginInfo> plugins) {
+        for (UIPluginInfo plugin : plugins) {
+            addChildView(plugin.getLocalizedName(), plugin.getView());
+        }
+    }
 
+    public void clear() {}
+}

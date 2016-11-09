@@ -38,6 +38,7 @@ package com.redhat.thermostat.platform.internal.mvc.lifecycle.state;
 
 import com.redhat.thermostat.platform.Platform;
 import com.redhat.thermostat.platform.event.EventQueue;
+import com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers.MVCExtensionLinker;
 import com.redhat.thermostat.platform.mvc.MVCProvider;
 import org.junit.Test;
 
@@ -56,9 +57,10 @@ public class StateMachineTest {
         Platform platform = mock(Platform.class);
         EventQueue eventQueue = mock(EventQueue.class);
         PlatformServiceRegistrar registrar = mock(PlatformServiceRegistrar.class);
+        MVCExtensionLinker linker = mock(MVCExtensionLinker.class);
 
         StateMachine stateMachine =
-                new StateMachine(provider, platform, registrar, eventQueue);
+                new StateMachine(provider, platform, registrar, eventQueue, linker);
 
         assertTrue(stateMachine.canGoToState(State.CREATE));
 

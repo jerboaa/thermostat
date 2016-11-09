@@ -54,7 +54,10 @@ import com.redhat.thermostat.storage.core.Ref;
  * {@link Constants#GENERIC_SERVICE_CLASSNAME} set to the name of the Class that
  * this {@link InformationService} provides information for, and the property
  * {@link #KEY_SERVICE_ID} set to a unique identifier for your implementation.
+ *
+ * @deprecated The preferred method is to use Platform plugins
  */
+@Deprecated
 @ExtensionPoint
 public interface InformationService<T extends Ref> extends Ordered {
     

@@ -54,7 +54,7 @@ import org.apache.felix.scr.annotations.Service;
 public class SwingWorkbench implements Workbench {
 
     private WorkbenchModel model;
-    private WorkbenchView view;
+    private WorkbenchSwingView view;
     private WorkbenchController controller;
 
     @Reference()
@@ -64,7 +64,7 @@ public class SwingWorkbench implements Workbench {
     @Activate
     private void activate() {
         model = new WorkbenchModel();
-        view = new WorkbenchView();
+        view = new WorkbenchSwingView();
         controller = new WorkbenchController();
         controller.setPlatformShutdown(shutdown);
     }

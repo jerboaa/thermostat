@@ -42,7 +42,9 @@ import com.redhat.thermostat.storage.core.Ref;
 
 /**
  * The UI controller for a view that provides some information about a Host or a VM.
+ * @deprecated use UIPluginInfo instead
  */
+@Deprecated
 public interface InformationServiceController<T extends Ref> {
 
     UIComponent getView();

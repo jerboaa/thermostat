@@ -41,9 +41,12 @@ import java.util.List;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.internal.platform.DynamicHostPluginProvider;
+import com.redhat.thermostat.client.core.internal.platform.UIPluginAction;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
+import com.redhat.thermostat.client.core.views.UIPluginInfo;
 import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -53,15 +56,31 @@ public class HostInformationController implements ContentProvider {
     private final List<InformationService<HostRef>> hostInfoServices;
     private final HostRef ref;
     private final HostInformationView view;
+    private List<DynamicHostPluginProvider> dynamicProviders;
+
+    private static class PluginAction implements UIPluginAction {
+
+        private HostInformationView view;
+        PluginAction(HostInformationView view) {
+            this.view = view;
+        }
+
+        @Override
+        public void execute(UIPluginInfo info) {
+            LocalizedString name = info.getLocalizedName();
+            view.addChildView(name, info.getView());
+        }
+    }
 
     public HostInformationController(List<InformationService<HostRef>> hostInfoServices,
                                      HostRef ref,
-                                     HostInformationViewProvider provider)
+                                     HostInformationViewProvider provider,
+                                     List<DynamicHostPluginProvider> dynamicProviders)
     {
         this.hostInfoServices = hostInfoServices;
         this.ref = ref;
+        this.dynamicProviders = dynamicProviders;
         view = provider.createView();
-        rebuild();
     }
 
     public void rebuild() {
@@ -72,6 +91,12 @@ public class HostInformationController implements ContentProvider {
                 LocalizedString name = ctrl.getLocalizedName();
                 view.addChildView(name, ctrl.getView());
             }
+        }
+
+        PluginAction action = new PluginAction(view);
+
+        for (DynamicHostPluginProvider dynamicProvider : dynamicProviders) {
+            dynamicProvider.forEach(ref, action);
         }
     }
 

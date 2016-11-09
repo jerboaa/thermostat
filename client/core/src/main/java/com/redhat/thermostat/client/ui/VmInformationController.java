@@ -36,12 +36,17 @@
 
 package com.redhat.thermostat.client.ui;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.internal.platform.DynamicVMPluginProvider;
+import com.redhat.thermostat.client.core.internal.platform.UIPluginAction;
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.views.UIPluginInfo;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.common.OrderedComparator;
@@ -56,19 +61,56 @@ public class VmInformationController implements ContentProvider {
 
     private int selectedID;
 
+    private List<DynamicVMPluginProvider> dynamicProviders;
+
+    private static class PluginAction implements UIPluginAction {
+
+        private List<UIPluginInfo> plugins;
+        PluginAction(List<UIPluginInfo> plugins) {
+            this.plugins = plugins;
+        }
+
+        @Override
+        public void execute(UIPluginInfo info) {
+            plugins.add(info);
+        }
+    }
+
+    private class PluginInfo implements UIPluginInfo {
+        UIComponent view;
+        LocalizedString name;
+
+        public PluginInfo(LocalizedString name, UIComponent view) {
+            this.view = view;
+            this.name = name;
+        }
+
+        @Override
+        public UIComponent getView() {
+            return view;
+        }
+
+        @Override
+        public LocalizedString getLocalizedName() {
+            return name;
+        }
+    }
+
     public VmInformationController(List<InformationService<VmRef>> vmInfoServices,
                                    VmRef vmRef,
-                                   VmInformationViewProvider provider)
+                                   VmInformationViewProvider provider,
+                                   List<DynamicVMPluginProvider> dynamicProviders)
     {
         this.vmInfoServices = vmInfoServices;
         this.vmRef = vmRef;
         this.selectedID = 0;
+        this.dynamicProviders = dynamicProviders;
 
         view = provider.createView();
-        rebuild();
     }
 
     void rebuild() {
+        List<UIPluginInfo> plugins = new ArrayList<>();
 
         view.clear();
 
@@ -76,10 +118,16 @@ public class VmInformationController implements ContentProvider {
         for (InformationService<VmRef> vmInfoService : vmInfoServices) {
             if (vmInfoService.getFilter().matches(vmRef)) {
                 InformationServiceController<VmRef> ctrl = vmInfoService.getInformationServiceController(vmRef);
-                LocalizedString name = ctrl.getLocalizedName();
-                view.addChildView(name, ctrl.getView());
+                plugins.add(new PluginInfo(ctrl.getLocalizedName(), ctrl.getView()));
             }
         }
+
+        PluginAction action = new PluginAction(plugins);
+        for (DynamicVMPluginProvider dynamicProvider : dynamicProviders) {
+            dynamicProvider.forEach(vmRef, action);
+        }
+
+        view.addChildViews(plugins);
 
         view.selectChildID(selectedID);
     }

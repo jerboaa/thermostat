@@ -34,14 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.platform.swing;
+package com.redhat.thermostat.compat.platform;
 
-import com.redhat.thermostat.platform.mvc.View;
-import com.redhat.thermostat.platform.swing.components.ThermostatComponent;
+import com.redhat.thermostat.platform.mvc.Controller;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
+ *
  */
-public interface ContentProvider {
-    ThermostatComponent getContent();
-    View getView();
+public class EmbeddedPlatformController extends Controller {
+   public LocalizedString getName() {
+       return LocalizedString.EMPTY_STRING;
+   }
+   
+   public LocalizedString getDescription() {
+       return LocalizedString.EMPTY_STRING;
+   }
 }

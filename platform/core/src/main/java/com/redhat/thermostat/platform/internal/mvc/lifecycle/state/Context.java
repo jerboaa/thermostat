@@ -37,6 +37,7 @@
 package com.redhat.thermostat.platform.internal.mvc.lifecycle.state;
 
 import com.redhat.thermostat.platform.Platform;
+import com.redhat.thermostat.platform.internal.mvc.lifecycle.handlers.MVCExtensionLinker;
 import com.redhat.thermostat.platform.mvc.MVCProvider;
 
 /**
@@ -46,4 +47,5 @@ public class Context {
     MVCProvider provider;
     StateMachineTransitionDispatcher dispatcher;
     PlatformServiceRegistrar registrar;
+    MVCExtensionLinker linker;
 }

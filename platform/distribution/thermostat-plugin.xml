@@ -73,4 +73,13 @@
             </bundles>
         </command>
     </commands>
+  <extensions>
+    <extension>
+      <name>gui</name>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.compat.platform</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+      </bundles>
+    </extension>
+  </extensions>
 </plugin>

@@ -80,6 +80,8 @@ class PlatformCommandDelegate {
             return;
         }
 
+        PlatformCommand.IS_PLATFORM = true;
+        
         lifeCycleManager.setTarget(info);
         lifeCycleManager.registerShutdownService();
         lifeCycleManager.registerMDIService();

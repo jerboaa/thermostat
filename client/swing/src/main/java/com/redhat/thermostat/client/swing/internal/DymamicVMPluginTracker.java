@@ -34,54 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.application.gui.internal;
+package com.redhat.thermostat.client.swing.internal;
 
-import com.redhat.thermostat.platform.Platform;
-import com.redhat.thermostat.platform.mvc.View;
-import com.redhat.thermostat.platform.swing.ContentProvider;
-import com.redhat.thermostat.platform.swing.ViewContainer;
-import com.redhat.thermostat.platform.swing.WorkbenchView;
-import com.redhat.thermostat.platform.swing.components.ContentPane;
-import com.redhat.thermostat.platform.swing.components.ThermostatComponent;
+import com.redhat.thermostat.client.core.internal.platform.DynamicVMPluginProvider;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  */
-public class ThermostatWorkbenchView extends ViewContainer implements ContentProvider {
+public class DymamicVMPluginTracker extends ServiceTracker {
 
-    private MenuHandler handler;
-    private WorkbenchView parent;
+    private List<DynamicVMPluginProvider> dynamicHostPluginProviders;
 
-    public ThermostatWorkbenchView(WorkbenchView parent) {
-        this.parent = parent;
+    public DymamicVMPluginTracker(BundleContext context) {
+        super(context, DynamicVMPluginProvider.class.getName(), null);
+        dynamicHostPluginProviders = new CopyOnWriteArrayList<>();
     }
 
     @Override
-    protected void postCreate(ContentPane contentPane) {
-        super.postCreate(contentPane);
+    public Object addingService(ServiceReference reference) {
+        Object service = super.addingService(reference);
+        dynamicHostPluginProviders.add((DynamicVMPluginProvider) service);
+        return service;
     }
 
     @Override
-    public void init(Platform platform) {
-        super.init(platform);
-        parent.add(this);
+    public void removedService(ServiceReference reference, Object service) {
+        dynamicHostPluginProviders.remove(service);
+        super.removedService(reference, service);
     }
 
-    public void setMenuHandler(MenuHandler handler) {
-        this.handler = handler;
-        parent.getFrame().setJMenuBar(handler.getMenuBar());
-    }
-
-    void setApplicationTitle(String title) {
-        parent.getFrame().setTitle(title);
-    }
-
-    @Override
-    public ThermostatComponent getContent() {
-        return contentPane;
-    }
-
-    @Override
-    public View getView() {
-        return this;
+    public List<DynamicVMPluginProvider> getPluginProviders() {
+        return new ArrayList<>(dynamicHostPluginProviders);
     }
 }
