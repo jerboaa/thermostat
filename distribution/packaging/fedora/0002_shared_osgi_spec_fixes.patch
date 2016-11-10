@@ -847,6 +847,21 @@ diff --git a/platform/core/pom.xml b/platform/core/pom.xml
          </dependency>
  
          <dependency>
+diff --git a/platform/swing/compat/pom.xml b/platform/swing/compat/pom.xml
+--- a/platform/swing/compat/pom.xml
++++ b/platform/swing/compat/pom.xml
+@@ -61,9 +61,8 @@
+         </dependency>
+ 
+         <dependency>
+-            <groupId>org.osgi</groupId>
+-            <artifactId>org.osgi.core</artifactId>
+-            <scope>provided</scope>
++            <groupId>org.apache.felix</groupId>
++            <artifactId>org.apache.felix.framework</artifactId>
+         </dependency>
+ 
+         <dependency>
 diff --git a/platform/swing/core/pom.xml b/platform/swing/core/pom.xml
 --- a/platform/swing/core/pom.xml
 +++ b/platform/swing/core/pom.xml
@@ -948,7 +963,7 @@ diff --git a/storage/cli/pom.xml b/storage/cli/pom.xml
 diff --git a/system-backend/pom.xml b/system-backend/pom.xml
 --- a/system-backend/pom.xml
 +++ b/system-backend/pom.xml
-@@ -87,14 +87,8 @@
+@@ -147,14 +147,8 @@
      </dependency>
      
      <dependency>
