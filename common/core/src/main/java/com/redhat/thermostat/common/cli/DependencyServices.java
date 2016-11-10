@@ -79,7 +79,7 @@ public class DependencyServices {
     }
 
     public <T> boolean hasService(Class<T> serviceClass) {
-        return !getHolder(serviceClass).isEmpty();
+        return getService(serviceClass) != null;
     }
 
     /** @return the service, or {@code null} */
