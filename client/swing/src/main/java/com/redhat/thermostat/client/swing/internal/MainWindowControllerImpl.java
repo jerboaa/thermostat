@@ -334,7 +334,11 @@ public class MainWindowControllerImpl implements MainWindowController {
     ActionListener<ThermostatExtensionRegistry.Action> getMenuListener() {
         return menuListener;
     }
-    
+
+    VmInformationControllerProvider __test__getVmInfoControllerProvider() {
+        return vmInfoControllerProvider;
+    }
+
     private void initHostVMTree() {
         HostTreeController hostController = view.getHostTreeController();
         ReferenceFieldSearchFilter filter = view.getSearchFilter();
@@ -538,7 +542,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
     }
 
-    private class VmInformationControllerProvider {
+    class VmInformationControllerProvider {
         private VmInformationController lastSelectedVM;
         private Map<VmRef, Integer> selectedForVM = new ConcurrentHashMap<>();
         private Map<VmRef, VmInformationController> cachedControllers = new ConcurrentHashMap<>();
@@ -555,6 +559,8 @@ public class MainWindowControllerImpl implements MainWindowController {
                 lastSelectedVM = createVmController(vmRef);
                 cachedControllers.put(vmRef, lastSelectedVM);
             }
+
+            lastSelectedVM.rebuild();
 
             if (!lastSelectedVM.selectChildID(id)) {
                 Integer _id = selectedForVM.get(vmRef);
@@ -578,7 +584,7 @@ public class MainWindowControllerImpl implements MainWindowController {
                                              dymamicHostPluginTracker.getPluginProviders());
     }
 
-    private VmInformationController createVmController(VmRef ref) {
+    VmInformationController createVmController(VmRef ref) {
         List<InformationService<VmRef>> vmInfoServices = infoServiceTracker.getVmInformationServices();
         return new VmInformationController(vmInfoServices, ref, vmInfoViewProvider,
                                            dymamicVMPluginTracker.getPluginProviders());

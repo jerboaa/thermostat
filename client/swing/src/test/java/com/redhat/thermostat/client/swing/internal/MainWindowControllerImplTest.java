@@ -56,8 +56,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import com.redhat.thermostat.client.swing.internal.MainWindowControllerImpl.VmInformationControllerProvider;
 import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
 import com.redhat.thermostat.client.ui.ContentProvider;
+import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -133,6 +135,9 @@ public class MainWindowControllerImplTest {
     private IssueViewController issueViewController;
     private IssueView issueView;
 
+    private ApplicationService appSvc;
+    private RegistryFactory registryFactory;
+
     private ContextActionController contextController;
     private ReferenceFieldSearchFilter referenceFieldSearchFilter;
     private HostMonitor hostMonitor;
@@ -152,7 +157,7 @@ public class MainWindowControllerImplTest {
 
         // Setup timers
         TimerFactory timerFactory = mock(TimerFactory.class);
-        ApplicationService appSvc = mock(ApplicationService.class);
+        appSvc = mock(ApplicationService.class);
         when (appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         Keyring keyring = mock(Keyring.class);
@@ -232,7 +237,7 @@ public class MainWindowControllerImplTest {
         ProgressNotifier notifier = mock(ProgressNotifier.class);
         when(view.getNotifier()).thenReturn(notifier);
 
-        RegistryFactory registryFactory = mock(RegistryFactory.class);
+        registryFactory = mock(RegistryFactory.class);
         hostFilterRegistry = mock(ReferenceFilterRegistry.class);
 
         menus = mock(MenuRegistry.class);
@@ -327,6 +332,24 @@ public class MainWindowControllerImplTest {
         inOrder.verify(view).getHostTreeController();
         inOrder.verify(treeController).clearSelection();
         inOrder.verify(view).setContent(issueViewController);
+    }
+
+    @Test
+    public void testVMControllerProviderRebuildsView() {
+
+        final VmInformationController controller0 = mock(VmInformationController.class);
+        controller = new MainWindowControllerImpl(context, appSvc, view, registryFactory, shutdown, uriOpener) {
+            @Override
+            VmInformationController createVmController(VmRef ref) {
+                return controller0;
+            }
+        };
+
+        VmInformationControllerProvider provider = controller.__test__getVmInfoControllerProvider();
+
+        provider.getVmInfoController(vm1);
+
+        verify(controller0).rebuild();
     }
 }
 

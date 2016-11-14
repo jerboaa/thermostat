@@ -109,7 +109,7 @@ public class VmInformationController implements ContentProvider {
         view = provider.createView();
     }
 
-    void rebuild() {
+    public void rebuild() {
         List<UIPluginInfo> plugins = new ArrayList<>();
 
         view.clear();
