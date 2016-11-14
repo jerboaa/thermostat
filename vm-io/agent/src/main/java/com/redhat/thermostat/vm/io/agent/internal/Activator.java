@@ -57,7 +57,6 @@ import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
 
 public class Activator implements BundleActivator {
 
-    private ScheduledExecutorService executor;
     private MultipleServiceTracker tracker;
     private VmIoBackend backend;
     private ServiceRegistration<Backend> reg;
@@ -65,8 +64,6 @@ public class Activator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         final VmStatusListenerRegistrar registrar = new VmStatusListenerRegistrar(context);
-
-        executor = Executors.newSingleThreadScheduledExecutor();
 
         Class<?>[] deps = new Class<?>[] {
                 BackendService.class,
@@ -80,7 +77,7 @@ public class Activator implements BundleActivator {
                 Version version = new Version(context.getBundle());
                 WriterID writerId = services.get(WriterID.class);
                 Clock clock = new SystemClock();
-                backend = new VmIoBackend(clock, executor, version, vmIoStatDao, registrar, writerId);
+                backend = new VmIoBackend(clock, version, vmIoStatDao, registrar, writerId);
                 reg = context.registerService(Backend.class, backend, null);
             }
 

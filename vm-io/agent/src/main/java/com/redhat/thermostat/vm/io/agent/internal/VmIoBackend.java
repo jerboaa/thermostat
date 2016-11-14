@@ -36,12 +36,11 @@
 
 package com.redhat.thermostat.vm.io.agent.internal;
 
-import java.util.concurrent.ScheduledExecutorService;
-
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.backend.VmPollingAction;
-import com.redhat.thermostat.backend.VmPollingBackend;
+import com.redhat.thermostat.backend.VmListenerBackend;
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -49,47 +48,57 @@ import com.redhat.thermostat.vm.io.common.Constants;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
 import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
 
-public class VmIoBackend extends VmPollingBackend {
+public class VmIoBackend extends VmListenerBackend {
 
-    public VmIoBackend(Clock clock, ScheduledExecutorService executor, Version version,
+    private VmIoStatDAO vmIoStatDAO;
+    private VmIoStatBuilder builder;
+
+    public VmIoBackend(Clock clock, Version version,
             VmIoStatDAO vmIoStatDao,
             VmStatusListenerRegistrar registrar, WriterID writerId) {
-        this(clock, executor, version,
+        this(version,
                 vmIoStatDao,
                 new VmIoStatBuilder(clock, new ProcIoDataReader(new ProcDataSource()), writerId),
                 registrar, writerId);
     }
 
-    VmIoBackend(Clock clock, ScheduledExecutorService executor, Version version,
-            VmIoStatDAO vmIoStatDao, VmIoStatBuilder vmIoStatBuilder,
+    VmIoBackend(Version version,
+            VmIoStatDAO vmIoStatDao, VmIoStatBuilder builder,
             VmStatusListenerRegistrar registrar, WriterID writerId) {
         super("VM IO Backend",
               "Gathers IO statistics about a JVM",
               "Red Hat, Inc.",
-              version, executor, registrar);
-
-        VmIoBackendAction action = new VmIoBackendAction(vmIoStatDao, vmIoStatBuilder);
-        registerAction(action);
+              version.getVersionNumber(), true , registrar, writerId);
+        this.vmIoStatDAO = vmIoStatDao;
+        this.builder = builder;
     }
 
-    private static class VmIoBackendAction implements VmPollingAction {
+    @Override
+    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
+        return new VmIoBackendListener(vmIoStatDAO, builder, vmId, pid);
+    }
 
-        private VmIoStatDAO dao;
+    private static class VmIoBackendListener implements VmUpdateListener {
+        private VmIoStatDAO vmIoStatDAO;
         private VmIoStatBuilder builder;
+        private String vmId;
+        private int pid;
 
-        private VmIoBackendAction(VmIoStatDAO dao, VmIoStatBuilder builder) {
-            this.dao = dao;
+
+        public VmIoBackendListener (VmIoStatDAO vmIoStatDAO, VmIoStatBuilder builder, String vmId, int pid) {
+            this.vmIoStatDAO = vmIoStatDAO;
             this.builder = builder;
+            this.vmId = vmId;
+            this.pid = pid;
         }
 
         @Override
-        public void run(String vmId, int pid) {
+        public void countersUpdated(VmUpdate update) {
             VmIoStat dataBuilt = builder.build(vmId, pid);
             if (dataBuilt != null) {
-                dao.putVmIoStat(dataBuilt);
+                vmIoStatDAO.putVmIoStat(dataBuilt);
             }
         }
-        
     }
 
     @Override

@@ -67,15 +67,12 @@ import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
 public class VmIoBackendTest {
 
     private VmIoBackend backend;
-    private ScheduledExecutorService executor;
     private VmIoStatDAO vmIoStatDao;
     private VmStatusListenerRegistrar registrar;
     private VmIoStatBuilder ioStatBuilder;
 
     @Before
     public void setup() {
-        Clock clock = mock(Clock.class);
-        executor = mock(ScheduledExecutorService.class);
         vmIoStatDao = mock(VmIoStatDAO.class);
 
         Version version = mock(Version.class);
@@ -85,14 +82,13 @@ public class VmIoBackendTest {
 
         WriterID id = mock(WriterID.class);
         ioStatBuilder = mock(VmIoStatBuilder.class);
-        backend = new VmIoBackend(clock, executor, version, vmIoStatDao, ioStatBuilder, registrar, id);
+        backend = new VmIoBackend(version, vmIoStatDao, ioStatBuilder, registrar, id);
     }
 
     @Test
     public void testActivate() {
         backend.activate();
 
-        verify(executor).scheduleAtFixedRate(isA(Runnable.class), eq(0l), eq(1000l), eq(TimeUnit.MILLISECONDS));
         verify(registrar).register(backend);
         assertTrue(backend.isActive());
     }
@@ -112,7 +108,6 @@ public class VmIoBackendTest {
         backend.activate();
         backend.deactivate();
 
-        verify(executor).shutdown();
         verify(registrar).unregister(backend);
         assertFalse(backend.isActive());
     }
@@ -126,41 +121,6 @@ public class VmIoBackendTest {
         assertFalse(backend.isActive());
         assertTrue(backend.deactivate());
         assertFalse(backend.isActive());
-    }
-
-    @Test
-    public void testStart() {
-        // Setup Runnable mocks
-        final Set<Integer> pids = new HashSet<>();
-        pids.add(0);
-        pids.add(1);
-
-        VmIoStat stat0 = mock(VmIoStat.class);
-        VmIoStat stat1 = mock(VmIoStat.class);
-        when(ioStatBuilder.build("vm1", 0)).thenReturn(stat0);
-        when(ioStatBuilder.build("vm2", 1)).thenReturn(stat1);
-
-        backend.activate();
-
-        verify(registrar).register(backend);
-        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
-        verify(executor).scheduleAtFixedRate(captor.capture(), any(Long.class), any(Long.class), any(TimeUnit.class));
-        assertTrue(backend.isActive());
-
-        backend.vmStatusChanged(Status.VM_ACTIVE, "vm1", 0);
-        backend.vmStatusChanged(Status.VM_STARTED, "vm2", 1);
-
-        Runnable runnable = captor.getValue();
-        runnable.run();
-        verify(vmIoStatDao).putVmIoStat(stat0);
-        verify(vmIoStatDao).putVmIoStat(stat1);
-
-        backend.vmStatusChanged(Status.VM_STOPPED, "vm1", 0);
-        backend.vmStatusChanged(Status.VM_STOPPED, "vm2", 1);
-
-        runnable.run();
-
-        verifyNoMoreInteractions(vmIoStatDao);
     }
 
     @Test
