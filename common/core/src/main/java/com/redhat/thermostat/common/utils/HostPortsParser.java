@@ -110,7 +110,7 @@ public class HostPortsParser {
                 } catch (NumberFormatException e) {
                     throw formatException;
                 }
-                ipPorts.add(new HostPortPair(ipPortPair.substring(idxLParen + 1, idxRparen), port));
+                ipPorts.add(new HostPortPair(ipPortPair.substring(idxLParen + 1, idxRparen), port, true));
             }
         }
     }

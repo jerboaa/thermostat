@@ -59,6 +59,7 @@ public class HostPortsParserTest {
         assertEquals("127.0.0.1", ipPorts.get(0).getHost());
         assertEquals(9999, (long) ipPorts.get(1).getPort());
         assertEquals("127.0.0.1", ipPorts.get(1).getHost());
+        assertEquals("127.0.0.1:8080", ipPorts.get(0).toExternalForm());
     }
     
     @Test
@@ -70,6 +71,7 @@ public class HostPortsParserTest {
         assertEquals(2, ipPorts.size());
         assertEquals(8080, (long) ipPorts.get(0).getPort());
         assertEquals("somehost.example.com", ipPorts.get(0).getHost());
+        assertEquals("somehost.example.com:8080", ipPorts.get(0).toExternalForm());
         assertEquals(9999, (long) ipPorts.get(1).getPort());
         assertEquals("host2.example.com", ipPorts.get(1).getHost());
         parser = new HostPortsParser(
@@ -89,8 +91,28 @@ public class HostPortsParserTest {
         assertEquals(2, ipPorts.size());
         assertEquals(8001, (long) ipPorts.get(0).getPort());
         assertEquals("1fff:0:a88:85a3::ac1f", ipPorts.get(0).getHost());
+        assertEquals("[1fff:0:a88:85a3::ac1f]:8001", ipPorts.get(0).toExternalForm());
         assertEquals(8001, (long) ipPorts.get(1).getPort());
         assertEquals("1fff:0:a88:85a3::ac2f", ipPorts.get(1).getHost());
+    }
+    
+    @Test
+    public void canParseExternalizedPair() {
+        HostPortPair original = new HostPortPair("foo.example.com", 999, false);
+        doExternalizedPairTest(original);
+        original = new HostPortPair("::1", 38, true);
+        doExternalizedPairTest(original);
+        original = new HostPortPair("127.0.0.1", 8000);
+        doExternalizedPairTest(original);
+    }
+    
+    private void doExternalizedPairTest(HostPortPair original) {
+        HostPortsParser parser = new HostPortsParser(original.toExternalForm());
+        parser.parse();
+        HostPortPair newPair = parser.getHostsPorts().get(0);
+        assertEquals(original.getHost(), newPair.getHost());
+        assertEquals(original.getPort(), newPair.getPort());
+        assertEquals(original.toExternalForm(), newPair.toExternalForm());
     }
 
     @Test

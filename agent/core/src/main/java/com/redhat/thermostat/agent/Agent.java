@@ -179,11 +179,7 @@ public class Agent {
         agentInfo.setStartTime(config.getStartTime());
         agentInfo.setAlive(true);
         HostPortPair hostPort = config.getConfigListenAddress();
-        String host = hostPort.getHost();
-        if (host.indexOf(":") != -1) {
-            host = "[" + host + "]";
-        }
-        agentInfo.setConfigListenAddress(String.format("%s:%d", host, hostPort.getPort()));
+        agentInfo.setConfigListenAddress(hostPort.toExternalForm());
         return agentInfo;
     }
 

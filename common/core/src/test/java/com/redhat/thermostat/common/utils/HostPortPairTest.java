@@ -36,45 +36,25 @@
 
 package com.redhat.thermostat.common.utils;
 
-/**
- * Model class for a hostname/port pair.
- * 
- * @see HostPortsParser
- */
-public class HostPortPair {
-    
-    private final String host;
-    private final int port;
-    private final boolean isIPv6;
-    
-    public HostPortPair(String host, int port) {
-        this(host, port, false);
-    }
-    
-    HostPortPair(String host, int port, boolean isIPv6) {
-        this.host = host;
-        this.port = port;
-        this.isIPv6 = isIPv6;
-    }
+import static org.junit.Assert.assertEquals;
 
-    public String getHost() {
-        return host;
-    }
+import org.junit.Test;
 
-    public int getPort() {
-        return port;
+public class HostPortPairTest {
+
+    @Test
+    public void testExternalFormIPv4() {
+        HostPortPair pair = new HostPortPair("foo.example.com", 33);
+        assertEquals("foo.example.com:33", pair.toExternalForm());
+        pair = new HostPortPair("127.0.0.1", 90);
+        assertEquals("127.0.0.1:90", pair.toExternalForm());
     }
     
-    /**
-     * 
-     * @return A parseable external form of this host/port pair. Examples:
-     *         {@code host.example.com:12345} {@code [::1]:123}
-     */
-    public String toExternalForm() {
-        String myHost = host;
-        if (isIPv6) {
-            myHost = "[" + myHost + "]";
-        }
-        return String.format("%s:%d", myHost, port);
+    @Test
+    public void testExternalFormIPv6() {
+        HostPortPair pair = new HostPortPair("::1", 999, true);
+        assertEquals("[::1]:999", pair.toExternalForm());
+        pair = new HostPortPair("fe80::565a:be2e:e9d3:ba1b", 12000, true);
+        assertEquals("[fe80::565a:be2e:e9d3:ba1b]:12000", pair.toExternalForm());
     }
 }
