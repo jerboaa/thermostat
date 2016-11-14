@@ -100,6 +100,11 @@ public class AgentConfigsUtils {
             // accept any connection
             configuration.setConfigListenAddress("127.0.0.1:12000");
         }
+        
+        String configPublishAddress = properties.getProperty(AgentProperties.CONFIG_PUBLISH_ADDRESS.name());
+        if (configPublishAddress != null) {
+            configuration.setConfigPublishAddress(configPublishAddress);
+        }
     }
 }
 

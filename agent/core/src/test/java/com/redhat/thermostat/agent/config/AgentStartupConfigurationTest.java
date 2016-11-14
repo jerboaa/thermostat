@@ -37,6 +37,8 @@
 package com.redhat.thermostat.agent.config;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -69,5 +71,26 @@ public class AgentStartupConfigurationTest {
         HostPortPair hostPort = config.getConfigListenAddress();
         assertEquals("::1", hostPort.getHost());
         assertEquals(12000, hostPort.getPort());
+    }
+    
+    @Test
+    public void noPublishAddressDefaultsToListenAddress() {
+        config.setConfigListenAddress(IP_V6_LISTEN_ADDRESS);
+        HostPortPair publishAddr = config.getConfigPublishAddress();
+        assertNotNull(publishAddr);
+        assertEquals("::1", publishAddr.getHost());
+        assertEquals(12000, publishAddr.getPort());
+    }
+    
+    @Test
+    public void canSetPublishAddressIndependentOfListenAddress() {
+        config.setConfigListenAddress(IP_V6_LISTEN_ADDRESS);
+        config.setConfigPublishAddress("foo.example.com:9212");
+        HostPortPair publishAddr = config.getConfigPublishAddress();
+        assertNotNull(publishAddr);
+        assertEquals("foo.example.com", publishAddr.getHost());
+        assertEquals(9212, publishAddr.getPort());
+        HostPortPair listenAddr = config.getConfigListenAddress();
+        assertFalse(listenAddr.toExternalForm().equals(publishAddr.toExternalForm()));
     }
 }

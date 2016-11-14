@@ -88,6 +88,11 @@ public class AgentConfigsUtilsTest {
         HostPortPair hostPorts = config.getConfigListenAddress();
         Assert.assertEquals("42.42.42.42", hostPorts.getHost());
         Assert.assertEquals(42, hostPorts.getPort());
+        
+        // Not explicitly set, should default to config listen address
+        HostPortPair publishAddr = config.getConfigPublishAddress();
+        Assert.assertEquals("42.42.42.42", publishAddr.getHost());
+        Assert.assertEquals(42, publishAddr.getPort());
     }
     
     @Test
@@ -120,6 +125,11 @@ public class AgentConfigsUtilsTest {
         HostPortPair hostPorts = config.getConfigListenAddress();
         Assert.assertEquals("24.24.24.24", hostPorts.getHost());
         Assert.assertEquals(24, hostPorts.getPort());
+        
+        // Not explicitly set, should default to config listen address
+        HostPortPair publishAddr = config.getConfigPublishAddress();
+        Assert.assertEquals("24.24.24.24", publishAddr.getHost());
+        Assert.assertEquals(24, publishAddr.getPort());
     }
     
     @Test
@@ -129,9 +139,43 @@ public class AgentConfigsUtilsTest {
         setConfigs(sysProps, new Properties());
         AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
 
-        HostPortPair hostPorts = config.getConfigListenAddress();
-        Assert.assertEquals("::1", hostPorts.getHost());
-        Assert.assertEquals(12000, hostPorts.getPort());
+        HostPortPair listenAddr = config.getConfigListenAddress();
+        Assert.assertEquals("::1", listenAddr.getHost());
+        Assert.assertEquals(12000, listenAddr.getPort());
+    }
+    
+    @Test
+    public void canOptionallySetSystemPublishAddress() {
+        Properties sysProps = createSystemProperties();
+        sysProps.put("CONFIG_PUBLISH_ADDRESS", "foo.example.com:9999");
+        setConfigs(sysProps, new Properties());
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
+
+        HostPortPair listenAddr = config.getConfigListenAddress();
+        Assert.assertEquals("42.42.42.42", listenAddr.getHost());
+        Assert.assertEquals(42, listenAddr.getPort());
+        
+        HostPortPair publishAddr = config.getConfigPublishAddress();
+        Assert.assertEquals("foo.example.com", publishAddr.getHost());
+        Assert.assertEquals(9999, publishAddr.getPort());
+    }
+    
+    @Test
+    public void canOptionallySetUserPublishAddress() {
+        Properties sysProps = createSystemProperties();
+        sysProps.put("CONFIG_PUBLISH_ADDRESS", "foo.example.com:9999");
+        Properties userProps = createUserProperties();
+        userProps.put("CONFIG_PUBLISH_ADDRESS", "33.33.33.33:9333");
+        setConfigs(sysProps, userProps);
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
+
+        HostPortPair listenAddr = config.getConfigListenAddress();
+        Assert.assertEquals("24.24.24.24", listenAddr.getHost());
+        Assert.assertEquals(24, listenAddr.getPort());
+        
+        HostPortPair publishAddr = config.getConfigPublishAddress();
+        Assert.assertEquals("33.33.33.33", publishAddr.getHost());
+        Assert.assertEquals(9333, publishAddr.getPort());
     }
     
     private Properties createSystemProperties(String configListenAddress) {

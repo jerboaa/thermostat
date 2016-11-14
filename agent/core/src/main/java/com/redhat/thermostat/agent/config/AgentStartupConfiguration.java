@@ -47,7 +47,8 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     private boolean purge;
     private String url;
     private long startTime;
-    private HostPortPair hostPort;
+    private HostPortPair listenAddr;
+    private HostPortPair publishAddr;
     
     AgentStartupConfiguration() {
     }
@@ -79,17 +80,34 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     }
 
     public void setConfigListenAddress(String address) {
+        this.listenAddr = parseAddress(address);
+    }
+
+    public HostPortPair getConfigListenAddress() {
+        return listenAddr;
+    }
+    
+    public void setConfigPublishAddress(String address) {
+        this.publishAddr = parseAddress(address);
+    }
+    
+    public HostPortPair getConfigPublishAddress() {
+        if (publishAddr != null) {
+            return publishAddr;
+        }
+        // Otherwise default to configured listen address
+        // as the publish address for backwards compat reasons.
+        return listenAddr;
+    }
+
+    private HostPortPair parseAddress(String address) throws AssertionError {
         HostPortsParser parser = new HostPortsParser(address);
         parser.parse();
         List<HostPortPair> list = parser.getHostsPorts();
         if (list.size() != 1) {
             throw new AssertionError("Multiple listen addresses not supported! Got: " + address);
         }
-        this.hostPort = parser.getHostsPorts().get(0);
-    }
-
-    public HostPortPair getConfigListenAddress() {
-        return hostPort;
+        return parser.getHostsPorts().get(0);
     }
 }
 

@@ -41,5 +41,6 @@ public enum AgentProperties {
     DB_URL,
     SAVE_ON_EXIT,
     CONFIG_LISTEN_ADDRESS,
+    CONFIG_PUBLISH_ADDRESS,
 }
 

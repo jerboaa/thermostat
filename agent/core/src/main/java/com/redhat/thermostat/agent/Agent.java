@@ -178,8 +178,10 @@ public class Agent {
         AgentInformation agentInfo = new AgentInformation(writerId);
         agentInfo.setStartTime(config.getStartTime());
         agentInfo.setAlive(true);
-        HostPortPair hostPort = config.getConfigListenAddress();
-        agentInfo.setConfigListenAddress(hostPort.toExternalForm());
+        // Report the configured publish address if any. Otherwise,
+        // defaults to (agent-local) configured listen address.
+        HostPortPair publishAddress = config.getConfigPublishAddress();
+        agentInfo.setConfigListenAddress(publishAddress.toExternalForm());
         return agentInfo;
     }
 
