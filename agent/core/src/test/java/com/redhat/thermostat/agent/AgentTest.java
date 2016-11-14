@@ -64,6 +64,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
+import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -92,6 +93,7 @@ public class AgentTest {
         config = mock(AgentStartupConfiguration.class);
         when(config.getStartTime()).thenReturn(123L);
         when(config.purge()).thenReturn(true);
+        when(config.getConfigListenAddress()).thenReturn(new HostPortPair("foo", 23));
         
         storage = mock(Storage.class);
         agentInfoDao = mock(AgentInfoDAO.class);
@@ -216,6 +218,7 @@ public class AgentTest {
         AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
         when(config.getStartTime()).thenReturn(123L);
         when(config.purge()).thenReturn(false);
+        when(config.getConfigListenAddress()).thenReturn(new HostPortPair("foo", 23));
         
         WriterID id = mock(WriterID.class);
         Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao, id, poolTracker);

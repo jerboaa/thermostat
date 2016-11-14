@@ -44,6 +44,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.testutils.TestUtils;
 
@@ -84,7 +85,9 @@ public class AgentConfigsUtilsTest {
         setConfigs(sysProps, new Properties());
         AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();
 
-        Assert.assertEquals("42.42.42.42:42", config.getConfigListenAddress());
+        HostPortPair hostPorts = config.getConfigListenAddress();
+        Assert.assertEquals("42.42.42.42", hostPorts.getHost());
+        Assert.assertEquals(42, hostPorts.getPort());
     }
     
     @Test
@@ -114,15 +117,29 @@ public class AgentConfigsUtilsTest {
         setConfigs(sysProps, userProps);
         AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
 
-        Assert.assertEquals("24.24.24.24:24", config.getConfigListenAddress());
+        HostPortPair hostPorts = config.getConfigListenAddress();
+        Assert.assertEquals("24.24.24.24", hostPorts.getHost());
+        Assert.assertEquals(24, hostPorts.getPort());
+    }
+    
+    @Test
+    public void canParseIpv6ConfigAddress() {
+        String ipV6AddressPair = "[::1]:12000";
+        Properties sysProps = createSystemProperties(ipV6AddressPair);
+        setConfigs(sysProps, new Properties());
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
+
+        HostPortPair hostPorts = config.getConfigListenAddress();
+        Assert.assertEquals("::1", hostPorts.getHost());
+        Assert.assertEquals(12000, hostPorts.getPort());
+    }
+    
+    private Properties createSystemProperties(String configListenAddress) {
+        return doCreateSystemProperties(configListenAddress);
     }
     
     private Properties createSystemProperties() {
-        Properties agentProperties = new Properties();
-        agentProperties.setProperty("DB_URL", "http://1.2.3.4:9001/hello");
-        agentProperties.setProperty("SAVE_ON_EXIT", "true");
-        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
-        return agentProperties;
+        return createSystemProperties("42.42.42.42:42");
     }
     
     private Properties createUserProperties() {
@@ -130,6 +147,14 @@ public class AgentConfigsUtilsTest {
         agentProperties.setProperty("DB_URL", "http://5.6.7.8:9002/world");
         agentProperties.setProperty("SAVE_ON_EXIT", "false");
         agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "24.24.24.24:24");
+        return agentProperties;
+    }
+    
+    private Properties doCreateSystemProperties(String configListenAddress) {
+        Properties agentProperties = new Properties();
+        agentProperties.setProperty("DB_URL", "http://1.2.3.4:9001/hello");
+        agentProperties.setProperty("SAVE_ON_EXIT", "true");
+        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", configListenAddress);
         return agentProperties;
     }
     

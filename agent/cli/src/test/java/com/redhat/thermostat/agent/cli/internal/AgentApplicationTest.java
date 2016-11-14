@@ -68,7 +68,6 @@ import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.cli.internal.AgentApplication.ConfigurationCreator;
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.LaunchException;
@@ -76,6 +75,7 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -112,7 +112,8 @@ public class AgentApplicationTest {
         
         AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
         when(config.getDBConnectionString()).thenReturn("test string; please ignore");
-        when(config.getConfigListenAddress()).thenReturn(COMMAND_CHANNLE_BIND_HOST + ":" + COMMAND_CHANNEL_BIND_PORT);
+        HostPortPair hostPort = new HostPortPair(COMMAND_CHANNLE_BIND_HOST, COMMAND_CHANNEL_BIND_PORT);
+        when(config.getConfigListenAddress()).thenReturn(hostPort);
 
         configCreator = mock(ConfigurationCreator.class);
         when(configCreator.create()).thenReturn(config);
@@ -160,7 +161,6 @@ public class AgentApplicationTest {
         if (!ret) {
             fail("Timeout expired!");
         }
-        
     }
     
     @Test

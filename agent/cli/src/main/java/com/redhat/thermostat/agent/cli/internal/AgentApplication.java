@@ -67,6 +67,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
@@ -152,10 +153,10 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             @Override
             public Object addingService(ServiceReference reference) {
                 final ConfigurationServer configServer = (ConfigurationServer) super.addingService(reference);
-                String [] host = configuration.getConfigListenAddress().split(":");
+                final HostPortPair hostPort = configuration.getConfigListenAddress();
 
                 try {
-                    configServer.startListening(host[0], Integer.valueOf(host[1]));
+                    configServer.startListening(hostPort.getHost(), hostPort.getPort());
 
                     ConnectionListener connectionListener = new ConnectionListener() {
                         @Override

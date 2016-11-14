@@ -36,60 +36,38 @@
 
 package com.redhat.thermostat.agent.config;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import com.redhat.thermostat.common.utils.HostPortPair;
-import com.redhat.thermostat.common.utils.HostPortsParser;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 
-public class AgentStartupConfiguration implements StartupConfiguration {
+public class AgentStartupConfigurationTest {
 
-    private boolean purge;
-    private String url;
-    private long startTime;
-    private HostPortPair hostPort;
+    private static final String IP_V4_LISTEN_ADDRESS = "127.0.0.1:12000";
+    private static final String IP_V6_LISTEN_ADDRESS = "[::1]:12000";
     
-    AgentStartupConfiguration() {
-    }
+    private AgentStartupConfiguration config;
     
-    @Override
-    public String getDBConnectionString() {
-        return url;
-    }
-
-    public void setDatabaseURL(String url) {
-        this.url = url;
+    @Before
+    public void setup() {
+        config = new AgentStartupConfiguration();
     }
     
-    // TODO: that should be a friend, we only want the Service to set this value
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
+    @Test
+    public void testIPv4ConfigListenAddress() {
+        config.setConfigListenAddress(IP_V4_LISTEN_ADDRESS);
+        HostPortPair hostPort = config.getConfigListenAddress();
+        assertEquals("127.0.0.1", hostPort.getHost());
+        assertEquals(12000, hostPort.getPort());
     }
     
-    public long getStartTime() {
-        return startTime;
-    }
-
-    void setPurge(boolean purge) {
-        this.purge = purge;
-    }
-    
-    public boolean purge() {
-        return purge;
-    }
-
-    public void setConfigListenAddress(String address) {
-        HostPortsParser parser = new HostPortsParser(address);
-        parser.parse();
-        List<HostPortPair> list = parser.getHostsPorts();
-        if (list.size() != 1) {
-            throw new AssertionError("Multiple listen addresses not supported! Got: " + address);
-        }
-        this.hostPort = parser.getHostsPorts().get(0);
-    }
-
-    public HostPortPair getConfigListenAddress() {
-        return hostPort;
+    @Test
+    public void testIPv6ConfigListenAddress() {
+        config.setConfigListenAddress(IP_V6_LISTEN_ADDRESS);
+        HostPortPair hostPort = config.getConfigListenAddress();
+        assertEquals("::1", hostPort.getHost());
+        assertEquals(12000, hostPort.getPort());
     }
 }
-
