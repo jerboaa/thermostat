@@ -48,7 +48,7 @@
   <artifactId>thermostat-dependency-tool</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Depdency Analysis Tool</name>
+  <name>Thermostat Dependency Analysis Tool</name>
 
   <modules>
     <module>command</module>

@@ -47,7 +47,7 @@
   <artifactId>thermostat-dependency-tool-command</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Thermostat Depdency Analysis Tool</name>
+  <name>Thermostat Dependency Analysis Command</name>
 
   <dependencies>
     <dependency>
