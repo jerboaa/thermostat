@@ -239,10 +239,9 @@ public class CursorManagerTest {
     
     @Test
     public void testCheckIsCursorExpired() {
-        long now = System.currentTimeMillis();
+        long now = 0;
         CursorHolder holder = new CursorHolder(mock(Cursor.class), now);
-        sleep(10);
-        long laterTime = System.currentTimeMillis();
+        long laterTime = 10;
         assertFalse("cursor still valid. timeout == 20ms, but only 10ms old.",
                 holder.checkIsCursorExpired(laterTime, 20));
         assertTrue("cursor older than 5 milliseconds", holder.checkIsCursorExpired(laterTime, 5));
