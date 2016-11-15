@@ -57,6 +57,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.Response;
@@ -216,8 +217,17 @@ public class BytemanRequestReceiverTest {
         BytemanRequestReceiver receiver = new BytemanRequestReceiver(attachManager);
         CommonPaths paths = mock(CommonPaths.class);
         receiver.bindCommonPaths(paths);
-        verify(attachManager).setAttacher(any(BytemanAttacher.class));
         verify(attachManager).setPaths(paths);
+    }
+    
+    @Test
+    public void testBindAgentIPCService() {
+        BytemanAgentAttachManager attachManager = mock(BytemanAgentAttachManager.class);
+        BytemanRequestReceiver receiver = new BytemanRequestReceiver(attachManager);
+        AgentIPCService ipcService = mock(AgentIPCService.class);
+        receiver.bindAgentIpcService(ipcService);
+        verify(attachManager).setIpcManager(any(IPCEndpointsManager.class));
+        verify(attachManager).setAttacher(any(BytemanAttacher.class));
     }
 
     @SuppressWarnings("unchecked")

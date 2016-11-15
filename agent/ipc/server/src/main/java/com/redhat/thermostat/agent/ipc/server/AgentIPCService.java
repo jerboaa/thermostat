@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.agent.ipc.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.attribute.UserPrincipal;
 
@@ -89,5 +90,13 @@ public interface AgentIPCService {
      * @throws IOException if this server does not exist, or cannot be destroyed for any reason
      */
     void destroyServer(String name) throws IOException;
+    
+    /**
+     * Returns the configuration file used by this IPC service. This file contains properties used
+     * to exchange information between the server-side and client-side IPC services.
+     * @return the configuration file
+     * @throws IOException if the configuration file cannot be obtained or the IPC service fails to start
+     */
+    File getConfigurationFile() throws IOException;
     
 }

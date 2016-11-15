@@ -120,8 +120,7 @@ public class Activator implements BundleActivator {
                 AgentIPCService ipcService = services.get(AgentIPCService.class);
                 CommonPaths paths = services.get(CommonPaths.class);
                 UserNameUtil util = services.get(UserNameUtil.class);
-                pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), util, 
-                    ipcService, paths.getUserIPCConfigurationFile());
+                pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), util, ipcService);
                 context.registerService(MXBeanConnectionPool.class, pool, null);
                 // Used only internally
                 context.registerService(MXBeanConnectionPoolControl.class, pool, null);

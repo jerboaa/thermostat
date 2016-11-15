@@ -43,13 +43,15 @@ import java.util.logging.Logger;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.storage.core.WriterID;
 
 public class Activator implements BundleActivator {
     
@@ -57,22 +59,25 @@ public class Activator implements BundleActivator {
     
     private ServerIPCPropertiesBuilder propBuilder;
     private AgentIPCServiceImpl ipcService;
-    private ServiceTracker tracker;
+    private MultipleServiceTracker tracker;
     private ServiceRegistration reg;
     
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
         propBuilder = new ServerIPCPropertiesBuilder(context);
-        tracker = new ServiceTracker(context, CommonPaths.class.getName(), null) {
+        Class<?>[] deps = new Class<?>[] { CommonPaths.class, WriterID.class };
+        tracker = new MultipleServiceTracker(context, deps, new Action() {
+            
             @Override
-            public Object addingService(ServiceReference reference) {
-                CommonPaths paths = (CommonPaths) super.addingService(reference);
+            public void dependenciesAvailable(DependencyProvider services) {
+                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class);
+                WriterID writerID = (WriterID) services.get(WriterID.class);
                 File propFile = paths.getUserIPCConfigurationFile();
-                ipcService = new AgentIPCServiceImpl(propBuilder, context, propFile);
+                ipcService = new AgentIPCServiceImpl(propBuilder, context, propFile, writerID);
                 reg = context.registerService(AgentIPCService.class.getName(), ipcService, null);
-                return paths;
             }
+
             @Override
-            public void removedService(ServiceReference reference, Object service) {
+            public void dependenciesUnavailable() {
                 if (reg != null) {
                     try {
                         ipcService.shutdown();
@@ -82,9 +87,8 @@ public class Activator implements BundleActivator {
                     reg.unregister();
                     reg = null;
                 }
-                super.removedService(reference, service);
             }
-        };
+        });
         
         tracker.open();
     }

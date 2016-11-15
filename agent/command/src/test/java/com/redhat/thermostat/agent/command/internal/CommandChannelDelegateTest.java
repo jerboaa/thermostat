@@ -142,11 +142,12 @@ public class CommandChannelDelegateTest {
         when(sslConfEncoder.encodeAsJson(sslConf)).thenReturn(ENCODED_SSL_CONFIG);
         
         when(processCreator.startProcess(any(ProcessBuilder.class))).thenReturn(process);
+        when(ipcService.getConfigurationFile()).thenReturn(ipcConfig);
         
         latch = mock(CountDownLatch.class);
         fsUtils = mock(FileSystemUtils.class);
         userInfoBuilder = mock(ProcessUserInfoBuilder.class);
-        delegate = new CommandChannelDelegate(receivers, sslConf, binPath, ipcService, ipcConfig, 
+        delegate = new CommandChannelDelegate(receivers, sslConf, binPath, ipcService, 
                 latch, sslConfEncoder, requestDecoder, responseEncoder, storageGetter, userInfoBuilder, 
                 fsUtils, processCreator);
         

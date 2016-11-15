@@ -134,23 +134,23 @@ public class BytemanRequestReceiver implements RequestReceiver {
     
     protected void bindCommonPaths(CommonPaths paths) {
         attachManager.setPaths(paths);
-        BytemanAttacher bmAttacher = new BytemanAttacher(paths);
-        attachManager.setAttacher(bmAttacher);
     }
     
     protected void unbindCommonPaths(CommonPaths paths) {
         // helper jars don't strictly need unsetting so we don't
         // call setPaths(null)
-        attachManager.setAttacher(null);
     }
     
     protected void bindAgentIpcService(AgentIPCService ipcService) {
         IPCEndpointsManager ipcEndpointsManager = new IPCEndpointsManager(ipcService);
         attachManager.setIpcManager(ipcEndpointsManager);
+        BytemanAttacher bmAttacher = new BytemanAttacher(ipcService);
+        attachManager.setAttacher(bmAttacher);
     }
     
     protected void unbindAgentIpcService(AgentIPCService ipcService) {
         attachManager.setIpcManager(null);
+        attachManager.setAttacher(null);
     }
     
     protected void bindUserNameUtil(UserNameUtil userNameUtil) {

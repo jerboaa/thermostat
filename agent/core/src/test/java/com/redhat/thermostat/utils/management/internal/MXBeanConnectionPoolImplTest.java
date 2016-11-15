@@ -110,7 +110,8 @@ public class MXBeanConnectionPoolImplTest {
         principal = mock(UserPrincipal.class);
         when(lookup.lookupPrincipalByName("Test")).thenReturn(principal);
 
-        pool = new MXBeanConnectionPoolImpl(creator, binDir, builder, ipcService, ipcConfigFile, fsUtils);
+        when(ipcService.getConfigurationFile()).thenReturn(ipcConfigFile);
+        pool = new MXBeanConnectionPoolImpl(creator, binDir, builder, ipcService, fsUtils);
     }
     
     @Test

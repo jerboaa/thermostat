@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.byteman.agent.internal;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -47,9 +48,9 @@ import java.util.logging.Logger;
 
 import org.jboss.byteman.agent.install.Install;
 
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.ProcessChecker;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.shared.config.CommonPaths;
 import com.sun.tools.attach.AgentInitializationException;
 import com.sun.tools.attach.AgentLoadException;
 import com.sun.tools.attach.AttachNotSupportedException;
@@ -72,16 +73,16 @@ class BytemanAttacher {
     };
     private final BtmInstallHelper installer;
     private final ProcessChecker processChecker;
-    private final CommonPaths paths;
+    private final AgentIPCService ipcService;
     
-    BytemanAttacher(CommonPaths paths) {
-        this(new BtmInstallHelper(), new ProcessChecker(), paths);
+    BytemanAttacher(AgentIPCService ipcProps) {
+        this(new BtmInstallHelper(), new ProcessChecker(), ipcProps);
     }
     
-    BytemanAttacher(BtmInstallHelper installer, ProcessChecker processChecker, CommonPaths paths) {
+    BytemanAttacher(BtmInstallHelper installer, ProcessChecker processChecker, AgentIPCService ipcService) {
         this.installer = installer;
         this.processChecker = processChecker;
-        this.paths = paths;
+        this.ipcService = ipcService;
     }
     
     
@@ -122,11 +123,12 @@ class BytemanAttacher {
 
     // Note:  Setting properties will not work if they don't start with the
     //        byteman prefix. Namely, "org.jboss.byteman."
-    private String[] buildBytemanInstallProps(VmSocketIdentifier sockIdentifier, int port) {
+    private String[] buildBytemanInstallProps(VmSocketIdentifier sockIdentifier, int port) throws IOException {
         List<String> properties = new ArrayList<>();
         properties.addAll(Arrays.asList(BYTEMAN_STATIC_INSTALL_PROPS));
         String socketNameProperty = THERMOSTAT_HELPER_SOCKET_NAME_PROPERTY + "=" + sockIdentifier.getName();
-        String ipcSocketDirProperty = THERMOSTAT_IPC_CONFIG_NAME_PROPERTY + "=" + paths.getUserIPCConfigurationFile().getAbsolutePath();
+        File ipcConfig = ipcService.getConfigurationFile();
+        String ipcSocketDirProperty = THERMOSTAT_IPC_CONFIG_NAME_PROPERTY + "=" + ipcConfig.getAbsolutePath();
         String agentPortProperty = BYTEMAN_AGENT_PORT_PROPERTY + "=" + Integer.valueOf(port).toString();
         properties.add(socketNameProperty);
         properties.add(ipcSocketDirProperty);

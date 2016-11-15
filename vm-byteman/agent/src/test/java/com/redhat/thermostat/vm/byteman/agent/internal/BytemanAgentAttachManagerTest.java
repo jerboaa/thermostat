@@ -61,9 +61,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.utils.ProcessChecker;
-import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAgentAttachManager.FileSystemUtils;
@@ -280,7 +280,7 @@ public class BytemanAgentAttachManagerTest {
     
     @SuppressWarnings("unchecked")
     private BytemanAttacher getFailureAttacher() throws Exception {
-        CommonPaths paths = mock(CommonPaths.class);
+        AgentIPCService ipcService = mock(AgentIPCService.class);
         BtmInstallHelper failInstaller = mock(BtmInstallHelper.class);
         when(failInstaller.install(any(String.class),
                                    any(boolean.class),
@@ -288,9 +288,9 @@ public class BytemanAgentAttachManagerTest {
                                    any(String.class),
                                    any(int.class),
                                    any(String[].class))).thenThrow(IOException.class);
-        when(paths.getUserIPCConfigurationFile()).thenReturn(mock(File.class));
+        when(ipcService.getConfigurationFile()).thenReturn(mock(File.class));
         ProcessChecker processChecker = mock(ProcessChecker.class);
-        BytemanAttacher failAttacher = new BytemanAttacher(failInstaller, processChecker, paths);
+        BytemanAttacher failAttacher = new BytemanAttacher(failInstaller, processChecker, ipcService);
         return failAttacher;
     }
 

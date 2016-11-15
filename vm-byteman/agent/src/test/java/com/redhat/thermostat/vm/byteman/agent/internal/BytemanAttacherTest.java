@@ -55,8 +55,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.ProcessChecker;
-import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.InstallResult;
 
@@ -74,7 +74,7 @@ public class BytemanAttacherTest {
             System.err.println("Usage: java BytemanAttacherTest <PID_OF_JVM>");
             System.exit(1);
         }
-        BytemanAttacher attacher = new BytemanAttacher(mock(CommonPaths.class));
+        BytemanAttacher attacher = new BytemanAttacher(mock(AgentIPCService.class));
         BytemanAgentInfo info = attacher.attach("barVmId", Integer.parseInt(args[0]), "fooAgent");
         if (info != null) {
             System.out.println("Byteman agent attached successfully");
@@ -84,17 +84,17 @@ public class BytemanAttacherTest {
         }
     }
     
-    private CommonPaths paths;
+    private AgentIPCService ipcService;
     private String filePath;
     private ProcessChecker processChecker;
     
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         filePath = "/path/to/run/data";
-        paths = mock(CommonPaths.class);
+        ipcService = mock(AgentIPCService.class);
         File mockFile = mock(File.class);
         when(mockFile.getAbsolutePath()).thenReturn(filePath);
-        when(paths.getUserIPCConfigurationFile()).thenReturn(mockFile);
+        when(ipcService.getConfigurationFile()).thenReturn(mockFile);
 
         processChecker = mock(ProcessChecker.class);
         when(processChecker.exists(anyInt())).thenReturn(false);
@@ -106,7 +106,7 @@ public class BytemanAttacherTest {
         when(installer.install(any(String.class), any(boolean.class), any(boolean.class), any(String.class), any(int.class), any(String[].class)))
             .thenReturn(new InstallResult(8888, true));
         ArgumentCaptor<String[]> propsCaptor = ArgumentCaptor.forClass(String[].class);
-        BytemanAttacher attacher = new BytemanAttacher(installer, processChecker, paths);
+        BytemanAttacher attacher = new BytemanAttacher(installer, processChecker, ipcService);
         attacher.attach("testVmId", 9999, "fooAgent");
         verify(installer).install(eq(Integer.toString(9999)), eq(true), eq(false), eq((String)null), any(int.class), propsCaptor.capture());
         Map<String, String> properties = buildMapFromStringProps(propsCaptor.getValue());
@@ -134,7 +134,7 @@ public class BytemanAttacherTest {
         BtmInstallHelper installer = mock(BtmInstallHelper.class);
         when(installer.install(any(String.class), any(boolean.class), any(boolean.class), any(String.class), any(int.class), any(String[].class)))
             .thenReturn(new InstallResult(port, true));
-        BytemanAttacher attacher = new BytemanAttacher(installer, mock(ProcessChecker.class), paths);
+        BytemanAttacher attacher = new BytemanAttacher(installer, mock(ProcessChecker.class), ipcService);
         
         int somePid = 3222;
         BytemanAgentInfo info = attacher.attach("someVmId", somePid, "someAgent");
@@ -162,7 +162,7 @@ public class BytemanAttacherTest {
         IOException ioe = new IOException(exceptionMsg);
         when(installer.install(any(String.class), any(Boolean.class), any(Boolean.class), any(String.class), any(Integer.class), any(String[].class))).thenThrow(ioe);
 
-        BytemanAttacher attacher = new BytemanAttacher(installer, processChecker, paths);
+        BytemanAttacher attacher = new BytemanAttacher(installer, processChecker, ipcService);
         BytemanAgentInfo info = attacher.attach("someVmId", -1, "someAgent");
         assertNotNull(info);
         assertTrue(info.isAttachFailedNoSuchProcess());

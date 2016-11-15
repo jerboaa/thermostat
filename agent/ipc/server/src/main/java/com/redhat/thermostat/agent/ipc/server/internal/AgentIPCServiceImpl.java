@@ -38,6 +38,9 @@ package com.redhat.thermostat.agent.ipc.server.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,27 +54,35 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.ipc.server.ServerTransport;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
+import com.redhat.thermostat.storage.core.WriterID;
 
 class AgentIPCServiceImpl implements AgentIPCService {
+    
+    static final String RUNTIME_IPC_CONFIG_PREFIX = "thermostat-ipc.properties.";
     
     private final ServerIPCPropertiesBuilder propBuilder;
     private final ServiceTracker transportTracker;
     // Access/modification of this field should by synchronized
     private final Map<IPCType, ServerTransport> transports;
+    // IPC configuration residing in USER_THERMOSTAT_HOME
     private final File propFile;
+    private final WriterID writerID;
     private final FileHelper helper;
     
     private ServerTransport transport;
     private IPCProperties props;
     private boolean started;
     
-    AgentIPCServiceImpl(ServerIPCPropertiesBuilder propBuilder, BundleContext context, File propFile) {
-        this(propBuilder, context, propFile, new FileHelper());
+    AgentIPCServiceImpl(ServerIPCPropertiesBuilder propBuilder, BundleContext context, File propFile, 
+            WriterID writerID) {
+        this(propBuilder, context, propFile, writerID, new FileHelper());
     }
             
-    AgentIPCServiceImpl(ServerIPCPropertiesBuilder propBuilder, BundleContext context, File propFile, FileHelper helper) {
+    AgentIPCServiceImpl(ServerIPCPropertiesBuilder propBuilder, BundleContext context, File propFile, 
+            WriterID writerID, FileHelper helper) {
         this.propBuilder = propBuilder;
         this.propFile = propFile;
+        this.writerID = writerID;
         this.transports = new HashMap<>();
         this.helper = helper;
         this.started = false;
@@ -171,7 +182,23 @@ class AgentIPCServiceImpl implements AgentIPCService {
             IPCConfigurationWriter writer = helper.getConfigurationWriter(propFile);
             writer.write();
         }
-        return propBuilder.getProperties(propFile);
+        
+        // Copy read-only copy of IPC properties file to a world-readable location
+        String destDirPath = helper.getSystemProperty("java.io.tmpdir");
+        if (destDirPath == null) {
+            throw new IOException("Required system property \"java.io.tmpdir\" is not defined");
+        }
+        File destDir = helper.getFile(destDirPath);
+        
+        // Append agent ID to IPC config filename
+        String filename = RUNTIME_IPC_CONFIG_PREFIX.concat(writerID.getWriterID());
+        File runtimeIpcConfig = helper.getFile(destDir, filename);
+        runtimeIpcConfig.deleteOnExit();
+        
+        // Copy config file to destination
+        helper.copy(propFile.toPath(), runtimeIpcConfig.toPath());
+        
+        return propBuilder.getProperties(runtimeIpcConfig);
     }
     
     // Helper class for testing purposes
@@ -182,6 +209,18 @@ class AgentIPCServiceImpl implements AgentIPCService {
         IPCConfigurationWriter getConfigurationWriter(File configFile) {
             return new IPCConfigurationWriter(configFile);
         }
+        String getSystemProperty(String key) {
+            return System.getProperty(key);
+        }
+        File getFile(File parent, String name) {
+            return new File(parent, name);
+        }
+        File getFile(String path) {
+            return new File(path);
+        }
+        Path copy(Path src, Path dst, CopyOption... options) throws IOException {
+            return Files.copy(src, dst, options);
+        }
     }
 
     // For testing purposes only
@@ -190,6 +229,15 @@ class AgentIPCServiceImpl implements AgentIPCService {
             // Return a copy            
             return new HashMap<>(transports);
         }
+    }
+
+    @Override
+    public File getConfigurationFile() throws IOException {
+        // Start the service if not already started
+        if (!started) {
+            startService();
+        }
+        return props.getPropertiesFile();
     }
 
 }

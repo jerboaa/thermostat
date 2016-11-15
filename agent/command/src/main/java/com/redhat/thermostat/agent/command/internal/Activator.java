@@ -77,7 +77,7 @@ public class Activator implements BundleActivator {
                 SSLConfiguration sslConf = services.get(SSLConfiguration.class);
                 AgentIPCService ipcService = services.get(AgentIPCService.class);
                 CommandChannelDelegate confServer = new CommandChannelDelegate(receivers, sslConf, 
-                        paths.getSystemBinRoot(), ipcService, paths.getUserIPCConfigurationFile());
+                        paths.getSystemBinRoot(), ipcService);
                 confServerRegistration = context.registerService(ConfigurationServer.class.getName(), confServer, null);
             }
 

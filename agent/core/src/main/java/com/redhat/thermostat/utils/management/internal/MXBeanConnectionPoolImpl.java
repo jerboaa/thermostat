@@ -79,7 +79,6 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, Th
     private final File binPath;
     private final ProcessUserInfoBuilder userInfoBuilder;
     private final AgentIPCService ipcService;
-    private final File ipcConfigFile;
     private final FileSystemUtils fsUtils;
     // Keep track of IPC servers we created
     private final Set<String> ipcServerNames;
@@ -94,20 +93,18 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, Th
     private MXBeanConnectionPoolEntry currentNewEntry;
     private boolean started;
 
-    public MXBeanConnectionPoolImpl(File binPath, UserNameUtil userNameUtil, 
-            AgentIPCService ipcService, File ipcConfigFile) {
+    public MXBeanConnectionPoolImpl(File binPath, UserNameUtil userNameUtil, AgentIPCService ipcService) {
         this(new ConnectorCreator(), binPath, new ProcessUserInfoBuilder(new ProcDataSource(), userNameUtil), 
-                ipcService, ipcConfigFile, new FileSystemUtils());
+                ipcService, new FileSystemUtils());
     }
 
     MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, File binPath, ProcessUserInfoBuilder userInfoBuilder, 
-            AgentIPCService ipcService, File ipcConfigFile, FileSystemUtils fsUtils) {
+            AgentIPCService ipcService, FileSystemUtils fsUtils) {
         this.pool = new HashMap<>();
         this.creator = connectorCreator;
         this.binPath = binPath;
         this.userInfoBuilder = userInfoBuilder;
         this.ipcService = ipcService;
-        this.ipcConfigFile = ipcConfigFile;
         this.fsUtils = fsUtils;
         this.currentNewEntry = null;
         this.started = false;
@@ -227,7 +224,8 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPoolControl, Th
                 pool.put(pid, data);
                 
                 // Start agent proxy which will send the JMX service URL to the IPC server we created
-                AgentProxyClient proxy = creator.createAgentProxy(pid, username, binPath, ipcConfigFile, serverName);
+                File configFile = ipcService.getConfigurationFile();
+                AgentProxyClient proxy = creator.createAgentProxy(pid, username, binPath, configFile, serverName);
                 proxy.runProcess(); // Process completed when this returns
                 
                 // Block until we get a JMX service URL, or Exception

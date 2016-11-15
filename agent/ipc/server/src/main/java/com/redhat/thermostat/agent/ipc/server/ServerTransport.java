@@ -37,6 +37,7 @@
 package com.redhat.thermostat.agent.ipc.server;
 
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
@@ -45,7 +46,27 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
  * non-API interface mirroring AgentIPCService that provides IPC mechanism-specific
  * implementations of AgentIPCService's API methods
  */
-public interface ServerTransport extends AgentIPCService {
+public interface ServerTransport {
+    
+    /**
+     * @see AgentIPCService#createServer(String, ThermostatIPCCallbacks)
+     */
+    void createServer(String name, ThermostatIPCCallbacks callbacks) throws IOException;
+    
+    /**
+     * @see AgentIPCService#createServer(String, ThermostatIPCCallbacks, UserPrincipal)
+     */
+    void createServer(String name, ThermostatIPCCallbacks callbacks, UserPrincipal owner) throws IOException;
+    
+    /**
+     * @see AgentIPCService#serverExists(String)
+     */
+    boolean serverExists(String name) throws IOException;
+    
+    /**
+     * @see AgentIPCService#destroyServer(String)
+     */
+    void destroyServer(String name) throws IOException;
     
     void start(IPCProperties props) throws IOException;
     

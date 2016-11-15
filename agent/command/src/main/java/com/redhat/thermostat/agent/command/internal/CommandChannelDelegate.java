@@ -90,7 +90,6 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     private final StorageGetter storageGetter;
     private final File binPath;
     private final AgentIPCService ipcService;
-    private final File ipcConfig;
     private final CountDownLatch readyLatch;
     private final SSLConfigurationEncoder sslEncoder;
     private final AgentRequestDecoder requestDecoder;
@@ -102,15 +101,15 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     private AtomicInteger state;
     
     CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath,
-            AgentIPCService ipcService, File ipcConfig) {
-        this(receivers, sslConf, binPath, ipcService, ipcConfig, new CountDownLatch(1), new SSLConfigurationEncoder(), 
+            AgentIPCService ipcService) {
+        this(receivers, sslConf, binPath, ipcService, new CountDownLatch(1), new SSLConfigurationEncoder(), 
                 new AgentRequestDecoder(), new AgentResponseEncoder(), new StorageGetter(), new ProcessUserInfoBuilder(), 
                 new FileSystemUtils(), new ProcessCreator());
     }
 
     /** For testing only */
     CommandChannelDelegate(ReceiverRegistry receivers, SSLConfiguration sslConf, File binPath, 
-            AgentIPCService ipcService, File ipcConfig, CountDownLatch readyLatch, SSLConfigurationEncoder sslEncoder, 
+            AgentIPCService ipcService, CountDownLatch readyLatch, SSLConfigurationEncoder sslEncoder, 
             AgentRequestDecoder requestDecoder, AgentResponseEncoder responseEncoder, StorageGetter getter, 
             ProcessUserInfoBuilder userInfoBuilder, FileSystemUtils fsUtils, ProcessCreator procCreator) {
         this.storageGetter = getter;
@@ -118,7 +117,6 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
         this.sslConf = sslConf;
         this.binPath = binPath;
         this.ipcService = ipcService;
-        this.ipcConfig = ipcConfig;
         this.readyLatch = readyLatch;
         this.sslEncoder = sslEncoder;
         this.requestDecoder = requestDecoder;
@@ -226,6 +224,7 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     }
     
     private void startServer(String hostname, int port) throws IOException {
+        File ipcConfig = ipcService.getConfigurationFile();
         String[] processArgs = OS.IS_UNIX
                 ? new String[]{ binPath.getAbsolutePath() + File.separator + CMD_NAME, hostname,
                                 String.valueOf(port), ipcConfig.getAbsolutePath() }
