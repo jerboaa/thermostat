@@ -70,6 +70,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -86,8 +87,18 @@ import static org.mockito.Mockito.when;
 
 public class NotificationsCommandTest {
 
-    private static final String NOTIFICATION_OUTPUT = "[31-Dec-1969 7:00:00 EST PM] (notification source details) : notification contents";
-    private static final String FAR_FUTURE_NOTIFICATION_OUTPUT = "[17-Aug-292278994 2:12:55 EST AM] (notification source details) : notification contents";
+    private static final long TIMESTAMP = 110L;
+    private static final long FUTURE_TIMESTAMP = Long.MAX_VALUE;
+
+    private static final String NOTIFICATION_OUTPUT;
+    private static final String FAR_FUTURE_NOTIFICATION_OUTPUT;
+
+    static {
+        String timestampString = Clock.DEFAULT_DATE_FORMAT.format(new Date(TIMESTAMP));
+        NOTIFICATION_OUTPUT = "[" + timestampString + "] (notification source details) : notification contents";
+        String futureTimestampString = Clock.DEFAULT_DATE_FORMAT.format(new Date(FUTURE_TIMESTAMP));
+        FAR_FUTURE_NOTIFICATION_OUTPUT = "[" + futureTimestampString + "] (notification source details) : notification contents";
+    }
 
     private static final String JMX_NOTIFICATION_MONITORING_ENABLED = "JMX notification monitoring enabled";
     private static final String PRESS_ANY_KEY_TO_EXIT_FOLLOW_MODE = "Press any key to exit follow mode...";
@@ -214,7 +225,7 @@ public class NotificationsCommandTest {
         jmxNotificationStatus.setEnabled(true);
         jmxNotification = new JmxNotification(FOO_AGENTID);
         jmxNotification.setVmId(FOO_VMID);
-        jmxNotification.setTimeStamp(110L);
+        jmxNotification.setTimeStamp(TIMESTAMP);
         jmxNotification.setContents("notification contents");
         jmxNotification.setSourceBackend("jmxBackend");
         jmxNotification.setSourceDetails("notification source details");
@@ -295,7 +306,7 @@ public class NotificationsCommandTest {
     @Test
     public void testEnableWithFollowOption() throws CommandException, IOException {
         jmxNotificationStatus.setEnabled(false);
-        jmxNotification.setTimeStamp(Long.MAX_VALUE);
+        jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
         when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(ENABLE_SUBCOMMAND));
         when(args.hasArgument(FOLLOW_OPTION)).thenReturn(true);
 
@@ -312,7 +323,7 @@ public class NotificationsCommandTest {
 
     @Test
     public void testEnableWithFollowOptionWhenAlreadyEnabled() throws CommandException, IOException {
-        jmxNotification.setTimeStamp(Long.MAX_VALUE);
+        jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
         when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(ENABLE_SUBCOMMAND));
         when(args.hasArgument(FOLLOW_OPTION)).thenReturn(true);
 
@@ -330,7 +341,7 @@ public class NotificationsCommandTest {
     @Test
     public void testEnableWithFollowOptionWithExternalInterrupt() throws CommandException, IOException {
         jmxNotificationStatus.setEnabled(false);
-        jmxNotification.setTimeStamp(Long.MAX_VALUE);
+        jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
         when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(ENABLE_SUBCOMMAND));
         when(args.hasArgument(FOLLOW_OPTION)).thenReturn(true);
 
@@ -350,7 +361,7 @@ public class NotificationsCommandTest {
     @Test
     public void testFollowWhenDisabled() throws CommandException {
         jmxNotificationStatus.setEnabled(false);
-        jmxNotification.setTimeStamp(Long.MAX_VALUE);
+        jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
         when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(FOLLOW_SUBCOMMAND));
 
         assertThat(runCommandForOutput(), is("JMX notification monitoring is not enabled for this JVM - notifications cannot be followed"));
@@ -358,7 +369,7 @@ public class NotificationsCommandTest {
 
     @Test
     public void testFollowWhenEnabled() throws CommandException, IOException {
-        jmxNotification.setTimeStamp(Long.MAX_VALUE);
+        jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
         when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(FOLLOW_SUBCOMMAND));
 
         doFollowTestWithKeyboardInterrupt();
@@ -372,7 +383,7 @@ public class NotificationsCommandTest {
 
     @Test
     public void testFollowWithExternalInterrupt() throws CommandException, IOException {
-        jmxNotification.setTimeStamp(Long.MAX_VALUE);
+        jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
         when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(FOLLOW_SUBCOMMAND));
 
         doFollowTestWithExternalMonitoringInterrupt();
