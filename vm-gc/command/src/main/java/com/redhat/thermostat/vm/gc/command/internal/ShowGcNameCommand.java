@@ -80,11 +80,10 @@ public class ShowGcNameCommand extends AbstractCommand {
     
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        this.vmInfoDao = services.getService(VmInfoDAO.class);
-        this.gcDao = services.getService(VmGcStatDAO.class);
-        
-        requireNonNull(vmInfoDao, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-        requireNonNull(gcDao, translator.localize(LocaleResources.GC_STAT_DAO_SERVICE_UNAVAILABLE));
+        this.vmInfoDao = services.getRequiredService(VmInfoDAO.class,
+                translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+        this.gcDao = services.getRequiredService(VmGcStatDAO.class,
+                translator.localize(LocaleResources.GC_STAT_DAO_SERVICE_UNAVAILABLE));
 
         Arguments arguments = ctx.getArguments();
 

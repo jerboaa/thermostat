@@ -41,7 +41,6 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
 
-    SERVICE_UNAVAILABLE_MESSAGE,
     ERROR_STARTING_SERVICE,
     STOPPING_SERVICE_INTERRUPTED,
     SERVICE_WAIT_INTERRUPTED,

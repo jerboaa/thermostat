@@ -75,16 +75,11 @@ public abstract class AbstractNotesCommand extends AbstractCommand implements No
     }
 
     protected void setupServices() throws CommandException {
-        vmInfoDAO = dependencyServices.getService(VmInfoDAO.class);
-        requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_INFO_DAO_UNAVAILABLE));
-        hostInfoDAO = dependencyServices.getService(HostInfoDAO.class);
-        requireNonNull(hostInfoDAO, translator.localize(LocaleResources.HOST_INFO_DAO_UNAVAILABLE));
-        agentInfoDAO = dependencyServices.getService(AgentInfoDAO.class);
-        requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_INFO_DAO_UNAVAILABLE));
-        vmNoteDAO = dependencyServices.getService(VmNoteDAO.class);
-        requireNonNull(vmNoteDAO, translator.localize(LocaleResources.VM_NOTE_DAO_UNAVAILABLE));
-        hostNoteDAO = dependencyServices.getService(HostNoteDAO.class);
-        requireNonNull(hostNoteDAO, translator.localize(LocaleResources.HOST_NOTE_DAO_UNAVAILABLE));
+        vmInfoDAO = dependencyServices.getRequiredService(VmInfoDAO.class);
+        hostInfoDAO = dependencyServices.getRequiredService(HostInfoDAO.class);
+        agentInfoDAO = dependencyServices.getRequiredService(AgentInfoDAO.class);
+        vmNoteDAO = dependencyServices.getRequiredService(VmNoteDAO.class);
+        hostNoteDAO = dependencyServices.getRequiredService(HostNoteDAO.class);
     }
 
     protected static void assertExpectedAgentAndVmArgsProvided(Arguments args) throws CommandException {

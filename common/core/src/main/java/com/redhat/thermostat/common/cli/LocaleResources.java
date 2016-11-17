@@ -40,6 +40,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
     MISSING_COMMAND_NAME,
+    MISSING_REQUIRED_SERVICE,
     ;
 
     public static final String RESOURCE_BUNDLE =

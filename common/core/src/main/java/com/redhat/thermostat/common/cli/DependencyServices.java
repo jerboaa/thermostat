@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.common.cli;
 
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +54,8 @@ import java.util.concurrent.TimeUnit;
  * services. Fetching has timeout support.
  */
 public class DependencyServices {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private Map<Class<?>, BlockingQueue<?>> serviceHolder = new HashMap<>();
 
@@ -95,6 +100,26 @@ public class DependencyServices {
         } catch (InterruptedException e) {
             return null;
         }
+    }
+
+    /**
+     * @return the service
+     * @throws CommandException if the service is unavailable
+     */
+    public <T> T getRequiredService(Class<T> serviceClass) throws CommandException {
+        return getRequiredService(serviceClass, t.localize(LocaleResources.MISSING_REQUIRED_SERVICE, serviceClass.getSimpleName()));
+    }
+
+    /**
+     * @return the service
+     * @throws CommandException if the service is unavailable
+     */
+    public <T> T getRequiredService(Class<T> serviceClass, LocalizedString message) throws CommandException {
+        T svc = getService(serviceClass);
+        if (svc == null) {
+            throw new CommandException(message);
+        }
+        return svc;
     }
 
 }

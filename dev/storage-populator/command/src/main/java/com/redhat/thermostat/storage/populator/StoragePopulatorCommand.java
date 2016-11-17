@@ -168,26 +168,12 @@ public class StoragePopulatorCommand extends AbstractCompleterCommand {
     public void run(CommandContext ctx) throws CommandException {
         console = ctx.getConsole();
 
-        paths = dependencyServices.getService(CommonPaths.class);
-        requireNonNull(paths,
-                translator.localize(LocaleResources.COMMON_PATHS_SERVICE_UNAVAILABLE));
-
-        hostInfoDAO = dependencyServices.getService(HostInfoDAO.class);
-        requireNonNull(hostInfoDAO, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
-
-        agentInfoDAO = dependencyServices.getService(AgentInfoDAO.class);
-        requireNonNull(agentInfoDAO,
-                translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
-
-        vmInfoDAO = dependencyServices.getService(VmInfoDAO.class);
-        requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-
-        networkInfoDAO = dependencyServices.getService(NetworkInterfaceInfoDAO.class);
-        requireNonNull(networkInfoDAO,
-                translator.localize(LocaleResources.NETWORK_SERVICE_UNAVAILABLE));
-
-        threadDAO = dependencyServices.getService(ThreadDao.class);
-        requireNonNull(threadDAO, translator.localize(LocaleResources.THREAD_SERVICE_UNAVAILABLE));
+        paths = dependencyServices.getRequiredService(CommonPaths.class);
+        hostInfoDAO = dependencyServices.getRequiredService(HostInfoDAO.class);
+        agentInfoDAO = dependencyServices.getRequiredService(AgentInfoDAO.class);
+        vmInfoDAO = dependencyServices.getRequiredService(VmInfoDAO.class);
+        networkInfoDAO = dependencyServices.getRequiredService(NetworkInterfaceInfoDAO.class);
+        threadDAO = dependencyServices.getRequiredService(ThreadDao.class);
 
         HostInfoPopulator hostInfoPopulator = new HostInfoPopulator(hostInfoDAO);
         populators.put(hostInfoPopulator.getHandledCollection(), hostInfoPopulator);

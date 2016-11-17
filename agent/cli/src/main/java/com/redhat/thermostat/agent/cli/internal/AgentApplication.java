@@ -142,8 +142,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private void runAgent(CommandContext ctx) throws CommandException {
         long startTime = System.currentTimeMillis();
         configuration.setStartTime(startTime);
-        
-        StorageCredentials creds = getServiceOrExit(StorageCredentials.class);
+
+        StorageCredentials creds = depServices.getRequiredService(StorageCredentials.class);
         final DbService dbService = dbServiceFactory.createDbService(
                 configuration.getDBConnectionString(), creds, sslConf);
         
@@ -225,14 +225,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         }
     }
 
-    private StorageCredentials getServiceOrExit(Class<StorageCredentials> clazz) throws CommandException {
-        StorageCredentials creds = depServices.getService(clazz);
-        if (creds == null) {
-            throw new CommandException(t.localize(LocaleResources.STORAGE_CREDS_UNAVAILABLE));
-        }
-        return creds;
-    }
-    
     void setStorageCredentials(StorageCredentials creds) {
         if (creds == null) {
             depServices.removeService(StorageCredentials.class);

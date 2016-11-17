@@ -96,12 +96,9 @@ public class FindVmCommand extends AbstractCommand {
     }
 
     void setServices() throws CommandException {
-        agentInfoDAO = services.getService(AgentInfoDAO.class);
-        requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
-        hostInfoDAO = services.getService(HostInfoDAO.class);
-        requireNonNull(hostInfoDAO, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
-        vmInfoDAO = services.getService(VmInfoDAO.class);
-        requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+        agentInfoDAO = services.getRequiredService(AgentInfoDAO.class);
+        hostInfoDAO = services.getRequiredService(HostInfoDAO.class);
+        vmInfoDAO = services.getRequiredService(VmInfoDAO.class);
     }
 
     void initDaoData() {

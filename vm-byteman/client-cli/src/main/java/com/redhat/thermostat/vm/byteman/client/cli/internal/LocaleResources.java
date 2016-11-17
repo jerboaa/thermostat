@@ -41,9 +41,6 @@ import com.redhat.thermostat.shared.locale.Translate;
 public enum LocaleResources {
 
     VM_SERVICE_UNAVAILABLE,
-    AGENT_SERVICE_UNAVAILABLE,
-    QUEUE_SERVICE_UNAVAILABLE,
-    BYTEMAN_METRICS_SERVICE_UNAVAILABLE,
     AGENT_NOT_FOUND,
     AGENT_DEAD,
     COMMAND_EXPECTED,

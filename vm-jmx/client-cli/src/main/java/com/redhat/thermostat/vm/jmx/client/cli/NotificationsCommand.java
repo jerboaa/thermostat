@@ -104,13 +104,13 @@ public class NotificationsCommand extends AbstractCompleterCommand {
         }
         String subcommand = args.getNonOptionArguments().get(0);
 
-        ApplicationService applicationService = getService(ApplicationService.class);
-        Clock clock = getService(Clock.class);
-        RequestQueue queue = getService(RequestQueue.class);
-        HostInfoDAO hostInfoDAO = getService(HostInfoDAO.class);
-        AgentInfoDAO agentInfoDAO = getService(AgentInfoDAO.class);
-        VmInfoDAO vmInfoDAO = getService(VmInfoDAO.class);
-        JmxNotificationDAO jmxNotificationDAO = getService(JmxNotificationDAO.class);
+        ApplicationService applicationService = dependencyServices.getRequiredService(ApplicationService.class);
+        Clock clock = dependencyServices.getRequiredService(Clock.class);
+        RequestQueue queue = dependencyServices.getRequiredService(RequestQueue.class);
+        HostInfoDAO hostInfoDAO = dependencyServices.getRequiredService(HostInfoDAO.class);
+        AgentInfoDAO agentInfoDAO = dependencyServices.getRequiredService(AgentInfoDAO.class);
+        VmInfoDAO vmInfoDAO = dependencyServices.getRequiredService(VmInfoDAO.class);
+        JmxNotificationDAO jmxNotificationDAO = dependencyServices.getRequiredService(JmxNotificationDAO.class);
 
         VmRef vmRef = getVmRef(args, vmInfoDAO, hostInfoDAO);
 
@@ -147,12 +147,6 @@ public class NotificationsCommand extends AbstractCompleterCommand {
             default:
                 throw new CommandException(t.localize(LocaleResources.UNRECOGNIZED_SUBCOMMAND, subcommand));
         }
-    }
-
-    private <T> T getService(Class<T> klazz) throws CommandException {
-        T service = dependencyServices.getService(klazz);
-        requireNonNull(service, t.localize(LocaleResources.MISSING_REQUIRED_SERVICE));
-        return service;
     }
 
     private VmRef getVmRef(Arguments arguments, VmInfoDAO vmInfoDAO, HostInfoDAO hostInfoDAO) throws CommandException {

@@ -37,8 +37,11 @@
 package com.redhat.thermostat.common.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import org.junit.Test;
 
 public class DependencyServicesTest {
@@ -72,5 +75,27 @@ public class DependencyServicesTest {
 
         services.removeService(Object.class);
         assertNull(services.getService(Object.class));
+    }
+
+    @Test
+    public void testGetRequiredServiceThrowsException() {
+        DependencyServices services = new DependencyServices();
+        try {
+            services.getRequiredService(Object.class);
+            fail("CommandException should have been thrown");
+        } catch (CommandException e) {
+            assertEquals(e.getTranslatedMessage().getContents(), "Required service Object is unavailable");
+        }
+    }
+
+    @Test
+    public void testGetRequiredServiceThrowsExceptionWithConfigurableMessage() {
+        DependencyServices services = new DependencyServices();
+        try {
+            services.getRequiredService(Object.class, new LocalizedString("test message"));
+            fail("CommandException should have been thrown");
+        } catch (CommandException e) {
+            assertEquals(e.getTranslatedMessage().getContents(), "test message");
+        }
     }
 }

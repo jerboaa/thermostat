@@ -83,19 +83,15 @@ public class ProfileVmCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
-        AgentInfoDAO agentInfoDAO = myServices.getService(AgentInfoDAO.class);
-        VmInfoDAO vmInfoDAO = myServices.getService(VmInfoDAO.class);
+        AgentInfoDAO agentInfoDAO = myServices.getRequiredService(AgentInfoDAO.class);
+        VmInfoDAO vmInfoDAO = myServices.getRequiredService(VmInfoDAO.class);
 
         VmArgument vmArgument = VmArgument.required(ctx.getArguments());
         VmId vmId = vmArgument.getVmId();
         final VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
         final AgentId agentId = new AgentId(vmInfo.getAgentId());
 
-        requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
-        requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-
-        RequestQueue requestQueue = myServices.getService(RequestQueue.class);
-        requireNonNull(requestQueue, translator.localize(LocaleResources.QUEUE_SERVICE_UNAVAILABLE));
+        RequestQueue requestQueue = myServices.getRequiredService(RequestQueue.class);
 
         AgentInformation agentInfo = agentInfoDAO.getAgentInformation(agentId);
         if (agentInfo == null) {

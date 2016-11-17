@@ -77,7 +77,7 @@ public class LocalCommandTest {
             cmd.run(ctxt);
             fail();
         } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("CommonPaths service dependency unavailable"));
+            assertTrue(e.getMessage().contains("Required service CommonPaths is unavailable"));
         }
     }
 
@@ -89,7 +89,7 @@ public class LocalCommandTest {
             cmd.run(ctxt);
             fail();
         } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("Launcher service dependency unavailable"));
+            assertTrue(e.getMessage().contains("Required service Launcher is unavailable"));
         }
     }
 

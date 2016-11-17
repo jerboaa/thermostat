@@ -123,7 +123,7 @@ public class StoragePopulatorCommandTest {
             command.run(ctx);
             fail("A CommandException was expected but not thrown.");
         } catch (CommandException e) {
-            assertTrue(e.getMessage().matches("Unable to get .* service\\."));
+            assertTrue(e.getMessage().matches("Required service .* is unavailable"));
         }
     }
 

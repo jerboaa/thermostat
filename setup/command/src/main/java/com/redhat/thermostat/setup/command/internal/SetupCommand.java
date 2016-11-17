@@ -97,18 +97,13 @@ public class SetupCommand extends AbstractCommand {
             }
         }
 
-        ExitStatus exitStatus = dependentServices.getService(ExitStatus.class);
-        requireNonNull(exitStatus, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "ExitStatus"));
+        ExitStatus exitStatus = dependentServices.getRequiredService(ExitStatus.class);
 
         try {
-            this.paths = dependentServices.getService(CommonPaths.class);
-            requireNonNull(paths, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "CommonPaths"));
-            this.launcher = dependentServices.getService(Launcher.class);
-            requireNonNull(launcher, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Launcher"));
-            this.keyring = dependentServices.getService(Keyring.class);
-            requireNonNull(keyring, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Keyring"));
-            this.processHandler = dependentServices.getService(ProcessHandler.class);
-            requireNonNull(processHandler, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "UnixProcessHandler"));
+            this.paths = dependentServices.getRequiredService(CommonPaths.class);
+            this.launcher = dependentServices.getRequiredService(Launcher.class);
+            this.keyring = dependentServices.getRequiredService(Keyring.class);
+            this.processHandler = dependentServices.getRequiredService(ProcessHandler.class);
             ThermostatSetup setup = createSetup();
 
             if (args.hasArgument(NON_GUI_OPTION_NAME) || isHeadless()) {

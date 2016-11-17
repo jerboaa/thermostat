@@ -181,7 +181,7 @@ public class SetupCommandTest {
             cmd.run(ctxt);
             fail();
         } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("CommonPaths service dependency unavailable"));
+            assertTrue(e.getMessage().contains("Required service CommonPaths is unavailable"));
         }
     }
     
@@ -195,7 +195,7 @@ public class SetupCommandTest {
             cmd.run(ctxt);
             fail();
         } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("Launcher service dependency unavailable"));
+            assertTrue(e.getMessage().contains("Required service Launcher is unavailable"));
         }
     }
     
@@ -207,7 +207,7 @@ public class SetupCommandTest {
             cmd.run(ctxt);
             fail();
         } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("ExitStatus service dependency unavailable"));
+            assertTrue(e.getMessage().contains("Required service ExitStatus is unavailable"));
         }
     }
 
@@ -515,7 +515,7 @@ public class SetupCommandTest {
             cmd.run(ctxt);
             fail();
         } catch (CommandException e) {
-            assertTrue(e.getMessage().contains("Keyring service dependency unavailable"));
+            assertTrue(e.getMessage().contains("Required service Keyring is unavailable"));
         }
     }
     

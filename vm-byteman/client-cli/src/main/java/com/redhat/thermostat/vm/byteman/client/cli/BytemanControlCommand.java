@@ -126,15 +126,13 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
         VmArgument vmArgument = VmArgument.required(ctx.getArguments());
         VmId vmId = vmArgument.getVmId();
         
-        VmInfoDAO vmInfoDAO = depServices.getService(VmInfoDAO.class);
+        VmInfoDAO vmInfoDAO = depServices.getRequiredService(VmInfoDAO.class);
         
-        requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         final VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
         requireNonNull(vmInfo, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
 
-        AgentInfoDAO agentInfoDAO = depServices.getService(AgentInfoDAO.class);
+        AgentInfoDAO agentInfoDAO = depServices.getRequiredService(AgentInfoDAO.class);
         final AgentId agentId = new AgentId(vmInfo.getAgentId());
-        requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
 
         AgentInformation agentInfo = agentInfoDAO.getAgentInformation(agentId);
         if (agentInfo == null) {
@@ -150,8 +148,7 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
         if (nonOptionargs.size() != 1) {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_EXPECTED));
         }
-        VmBytemanDAO bytemanDao = depServices.getService(VmBytemanDAO.class);
-        requireNonNull(bytemanDao, translator.localize(LocaleResources.BYTEMAN_METRICS_SERVICE_UNAVAILABLE));
+        VmBytemanDAO bytemanDao = depServices.getRequiredService(VmBytemanDAO.class);
 
         String command = nonOptionargs.get(0);
 
@@ -176,7 +173,7 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
     /* Unloads byteman rules */
     private void unloadRules(InetSocketAddress target, VmInfo vmInfo, CommandContext ctx, VmBytemanDAO bytemanDao) throws CommandException {
         VmId vmId = new VmId(vmInfo.getVmId());
-        RequestQueue requestQueue = getRequestQueue();
+        RequestQueue requestQueue = depServices.getRequiredService(RequestQueue.class);
         VmBytemanStatus status = getVmBytemanStatus(vmId, bytemanDao);
         int listenPort = status.getListenPort();
         Request unloadRequest = BytemanRequest.create(target, vmInfo, RequestAction.UNLOAD_RULES, listenPort);
@@ -207,7 +204,7 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
         if (status != null) {
             listenPort = status.getListenPort();
         }
-        RequestQueue requestQueue = getRequestQueue();
+        RequestQueue requestQueue = depServices.getRequiredService(RequestQueue.class);
         Request request = BytemanRequest.create(target, vmInfo, RequestAction.LOAD_RULES, listenPort, rulesContent);
         submitRequest(ctx, requestQueue, request);
     }
@@ -283,13 +280,7 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
             // ignore
         }
     }
-    
-    private RequestQueue getRequestQueue() throws CommandException {
-        RequestQueue requestQueue = depServices.getService(RequestQueue.class);
-        requireNonNull(requestQueue, translator.localize(LocaleResources.QUEUE_SERVICE_UNAVAILABLE));
-        return requestQueue;
-    }
-    
+
     private VmBytemanStatus getVmBytemanStatus(VmId vmId, VmBytemanDAO bytemanDao) throws CommandException {
         VmBytemanStatus status = bytemanDao.findBytemanStatus(vmId);
         if (status == null) {

@@ -55,10 +55,8 @@ public class LocalCommand extends AbstractCommand {
     private CommonPaths paths;
 
     public void run(CommandContext ctx) throws CommandException {
-        this.paths = dependentServices.getService(CommonPaths.class);
-        requireNonNull(paths, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "CommonPaths"));
-        this.launcher = dependentServices.getService(Launcher.class);
-        requireNonNull(launcher, t.localize(LocaleResources.SERVICE_UNAVAILABLE_MESSAGE, "Launcher"));
+        this.paths = dependentServices.getRequiredService(CommonPaths.class);
+        this.launcher = dependentServices.getRequiredService(Launcher.class);
 
         ServiceLauncher serviceLauncher = createServiceLauncher();
         serviceLauncher.start();
