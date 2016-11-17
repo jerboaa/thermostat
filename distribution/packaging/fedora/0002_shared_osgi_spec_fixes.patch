@@ -1827,6 +1827,21 @@ diff --git a/vm-jmx/agent/pom.xml b/vm-jmx/agent/pom.xml
      </dependency>
      <dependency>
        <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-jmx/client-cli/pom.xml b/vm-jmx/client-cli/pom.xml
+--- a/vm-jmx/client-cli/pom.xml
++++ b/vm-jmx/client-cli/pom.xml
+@@ -89,9 +89,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.osgi</groupId>
 diff --git a/vm-jmx/client-core/pom.xml b/vm-jmx/client-core/pom.xml
 --- a/vm-jmx/client-core/pom.xml
 +++ b/vm-jmx/client-core/pom.xml
