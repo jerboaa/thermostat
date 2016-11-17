@@ -40,11 +40,22 @@ import java.util.List;
 
 public interface Arguments {
     @Deprecated
-    static public final String HOST_ID_ARGUMENT = "hostId";
-    static public final String DB_URL_ARGUMENT = "dbUrl";
+    String HOST_ID_ARGUMENT = "hostId";
+    String DB_URL_ARGUMENT = "dbUrl";
 
     List<String> getNonOptionArguments();
     boolean hasArgument(String name);
     String getArgument(String name);
+
+    /**
+     * Get the selected subcommand
+     * Subcommands are taken to be the first of any non-option arguments passed to a Command.
+     * If any value is returned by this method, that value is guaranteed to be equal to one of the names given for
+     * a subcommand defined within the plugin's thermostat-plugin.xml.
+     * @return the selected subcommand
+     * @throws SubcommandExpectedException if no subcommand was supplied
+     * @throws InvalidSubcommandException if an unrecognized subcommand was supplied
+     */
+    String getSubcommand() throws SubcommandExpectedException, InvalidSubcommandException;
 }
 

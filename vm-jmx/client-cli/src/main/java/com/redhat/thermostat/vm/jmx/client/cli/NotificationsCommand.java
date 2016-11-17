@@ -98,11 +98,7 @@ public class NotificationsCommand extends AbstractCompleterCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         Arguments args = ctx.getArguments();
-
-        if (args.getNonOptionArguments().size() != 1) {
-            throw new CommandException(t.localize(LocaleResources.EXPECTED_ONE_NONOPTION_ARG));
-        }
-        String subcommand = args.getNonOptionArguments().get(0);
+        String subcommand = args.getSubcommand();
 
         ApplicationService applicationService = dependencyServices.getRequiredService(ApplicationService.class);
         Clock clock = dependencyServices.getRequiredService(Clock.class);
@@ -144,8 +140,6 @@ public class NotificationsCommand extends AbstractCompleterCommand {
             case SHOW_SUBCOMMAND:
                 printNotifications(ctx, jmxNotificationDAO, vmRef, parseSinceOption(args));
                 break;
-            default:
-                throw new CommandException(t.localize(LocaleResources.UNRECOGNIZED_SUBCOMMAND, subcommand));
         }
     }
 

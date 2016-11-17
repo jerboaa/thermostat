@@ -36,8 +36,13 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import com.redhat.thermostat.common.cli.InvalidSubcommandException;
+import com.redhat.thermostat.common.cli.SubcommandExpectedException;
 import org.apache.commons.cli.CommandLine;
 
 import com.redhat.thermostat.common.cli.Arguments;
@@ -45,9 +50,11 @@ import com.redhat.thermostat.common.cli.Arguments;
 class CommandLineArguments implements Arguments {
 
     private CommandLine cmdLine;
+    private Set<String> subcommands;
 
-    public CommandLineArguments(CommandLine commandLine) {
+    public CommandLineArguments(CommandLine commandLine, Collection<String> subcommands) {
         cmdLine = commandLine;
+        this.subcommands = new HashSet<>(subcommands);
     }
 
     @SuppressWarnings("unchecked")
@@ -66,5 +73,17 @@ class CommandLineArguments implements Arguments {
         return cmdLine.getOptionValue(name);
     }
 
+    @Override
+    public String getSubcommand() throws SubcommandExpectedException, InvalidSubcommandException {
+        List<String> nonOptionArgs = getNonOptionArguments();
+        if (nonOptionArgs.isEmpty()) {
+            throw new SubcommandExpectedException();
+        }
+        String subcommand = nonOptionArgs.get(0);
+        if (!subcommands.contains(subcommand)) {
+            throw new InvalidSubcommandException(subcommand);
+        }
+        return subcommand;
+    }
 }
 

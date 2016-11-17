@@ -111,7 +111,7 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
 
     static final CliCommandOption RULES_OPTION = new CliCommandOption("r", "rules", true,
             "a file with Byteman rules to load into a VM", false);
-    
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     static final String INJECT_RULE_ACTION = "load";
     static final String UNLOAD_RULE_ACTION = "unload";
@@ -124,7 +124,7 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
     private static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");
     private static final String[] DIVIDER = {"-", "-", "-", "-"};
 
-    
+
     private final DependencyServices depServices = new DependencyServices();
 
     private BorderedTableRenderer table;
@@ -160,14 +160,9 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
 
         InetSocketAddress target = agentInfo.getRequestQueueAddress();
 
-        List<String> nonOptionargs = ctx.getArguments().getNonOptionArguments();
-        if (nonOptionargs.size() != 1) {
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_EXPECTED));
-        }
         VmBytemanDAO bytemanDao = depServices.getRequiredService(VmBytemanDAO.class);
 
-        String command = nonOptionargs.get(0);
-
+        String command = ctx.getArguments().getSubcommand();
         switch (command) {
         case INJECT_RULE_ACTION:
             injectRules(target, vmInfo, ctx, bytemanDao);
@@ -186,8 +181,6 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
             }
             showMetrics(ctx, vmId, agentId, bytemanDao, nameQuery);
             break;
-        default:
-            throw new CommandException(translator.localize(LocaleResources.UNKNOWN_COMMAND, command));
         }
     }
     

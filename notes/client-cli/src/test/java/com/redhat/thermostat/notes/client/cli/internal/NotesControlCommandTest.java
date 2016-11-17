@@ -40,9 +40,12 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.InvalidSubcommandException;
+import com.redhat.thermostat.common.cli.SubcommandExpectedException;
 import com.redhat.thermostat.common.cli.TabCompleter;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Matchers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -128,28 +131,28 @@ public class NotesControlCommandTest {
         CommandContext ctx = mock(CommandContext.class);
         Arguments args = mock(Arguments.class);
         when(ctx.getArguments()).thenReturn(args);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(subcommandName));
+        when(args.getSubcommand()).thenReturn(subcommandName);
 
         notesControlCommand.run(ctx);
         verify(subcommand).run(ctx);
     }
 
-    @Test(expected = CommandException.class)
+    @Test(expected = InvalidSubcommandException.class)
     public void testUnknownSubcommand() throws CommandException {
         CommandContext ctx = mock(CommandContext.class);
         Arguments args = mock(Arguments.class);
         when(ctx.getArguments()).thenReturn(args);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList("fake-subcommand"));
+        when(args.getSubcommand()).thenThrow(InvalidSubcommandException.class);
 
         notesControlCommand.run(ctx);
     }
 
-    @Test(expected = CommandException.class)
+    @Test(expected = SubcommandExpectedException.class)
     public void testNoSubcommand() throws CommandException {
         CommandContext ctx = mock(CommandContext.class);
         Arguments args = mock(Arguments.class);
         when(ctx.getArguments()).thenReturn(args);
-        when(args.getNonOptionArguments()).thenReturn(Collections.<String>emptyList());
+        when(args.getSubcommand()).thenThrow(SubcommandExpectedException.class);
 
         notesControlCommand.run(ctx);
     }

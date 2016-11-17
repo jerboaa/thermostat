@@ -47,14 +47,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.cli.VmArgument;
-import com.redhat.thermostat.client.cli.internal.LocaleResources;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
-import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -65,8 +63,6 @@ import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class ProfileVmCommandTest {
-
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String AGENT_ID = "some-agent";
     private static final String VM_ID = "some-vm";
@@ -123,6 +119,7 @@ public class ProfileVmCommandTest {
         SimpleArguments args = new SimpleArguments();
         args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
         args.addNonOptionArgument("status");
+        addSubcommandsToArguments(args);
         CommandContext ctx = cmdCtxFactory.createContext(args);
 
         cmd.run(ctx);
@@ -141,6 +138,7 @@ public class ProfileVmCommandTest {
         SimpleArguments args = new SimpleArguments();
         args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
         args.addNonOptionArgument("status");
+        addSubcommandsToArguments(args);
         CommandContext ctx = cmdCtxFactory.createContext(args);
 
         cmd.run(ctx);
@@ -156,6 +154,7 @@ public class ProfileVmCommandTest {
         SimpleArguments args = new SimpleArguments();
         args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
         args.addNonOptionArgument("show");
+        addSubcommandsToArguments(args);
         CommandContext ctx = cmdCtxFactory.createContext(args);
 
         cmd.run(ctx);
@@ -175,6 +174,7 @@ public class ProfileVmCommandTest {
         SimpleArguments args = new SimpleArguments();
         args.addArgument(VmArgument.ARGUMENT_NAME, VM_ID);
         args.addNonOptionArgument("show");
+        addSubcommandsToArguments(args);
         CommandContext ctx = cmdCtxFactory.createContext(args);
 
         cmd.run(ctx);
@@ -182,5 +182,12 @@ public class ProfileVmCommandTest {
         assertEquals("% Time    Time (ms) Method Name\n" +
                      "75.000000 3         int bar(int)\n" +
                      "25.000000 1         void foo()\n", cmdCtxFactory.getOutput());
+    }
+
+    private void addSubcommandsToArguments(SimpleArguments args) {
+        args.addSubcommand(ProfileVmCommand.START_ARGUMENT);
+        args.addSubcommand(ProfileVmCommand.STOP_ARGUMENT);
+        args.addSubcommand(ProfileVmCommand.STATUS_ARGUMENT);
+        args.addSubcommand(ProfileVmCommand.SHOW_ARGUMENT);
     }
 }

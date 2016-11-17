@@ -37,13 +37,14 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -59,6 +60,7 @@ public class CommandLineArgumentsParser {
     private static Translate<LocaleResources> tr = LocaleResources.createLocalizer();
 
     private Options options = new Options();
+    private Set<String> subcommands = new HashSet<>();
 
     @SuppressWarnings("unchecked")
     void addOptions(Options options) {
@@ -67,12 +69,16 @@ public class CommandLineArgumentsParser {
         }
     }
 
+    void addSubcommands(Collection<String> subcommands) {
+        this.subcommands.addAll(subcommands);
+    }
+
     Arguments parse(String[] args) throws CommandLineArgumentParseException {
         try {
             CommandLineParser parser = new GnuParser();
             CommandLine commandLine;
             commandLine = parser.parse(options, args);
-            return new CommandLineArguments(commandLine);
+            return new CommandLineArguments(commandLine, subcommands);
         } catch (MissingOptionException moe) {
             LocalizedString msg = createMissingOptionsMessage(moe);
             throw new CommandLineArgumentParseException(msg, moe);

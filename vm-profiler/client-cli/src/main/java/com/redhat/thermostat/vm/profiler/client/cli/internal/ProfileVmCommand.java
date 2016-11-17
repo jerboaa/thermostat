@@ -73,10 +73,10 @@ public class ProfileVmCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String START_ARGUMENT = "start";
-    private static final String STOP_ARGUMENT = "stop";
-    private static final String STATUS_ARGUMENT = "status";
-    private static final String SHOW_ARGUMENT = "show";
+    static final String START_ARGUMENT = "start";
+    static final String STOP_ARGUMENT = "stop";
+    static final String STATUS_ARGUMENT = "status";
+    static final String SHOW_ARGUMENT = "show";
 
     private final DependencyServices myServices = new DependencyServices();
 
@@ -100,13 +100,7 @@ public class ProfileVmCommand extends AbstractCommand {
 
         InetSocketAddress target = agentInfo.getRequestQueueAddress();
 
-        List<String> arguments = ctx.getArguments().getNonOptionArguments();
-        if (arguments.size() != 1) {
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_EXPECTED));
-        }
-
-        String command = arguments.get(0);
-
+        String command = ctx.getArguments().getSubcommand();
         switch (command) {
         case START_ARGUMENT:
             sendStartProfilingRequest(ctx.getConsole(), requestQueue, target, vmId.get());
@@ -120,8 +114,6 @@ public class ProfileVmCommand extends AbstractCommand {
         case SHOW_ARGUMENT:
             showProfilingResults(ctx.getConsole(), agentId, vmId);
             break;
-        default:
-            throw new CommandException(translator.localize(LocaleResources.UNKNOWN_COMMAND, command));
         }
     }
 

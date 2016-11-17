@@ -222,7 +222,7 @@ public class NotesCommandsTest extends IntegrationTest {
 
         assertCommandIsFound(cmd);
         assertNoExceptions(cmd);
-        assertThat(cmd.getCurrentStandardErrContents(), containsString("The subcommand \"lsit\" is not recognized"));
+        assertThat(cmd.getCurrentStandardErrContents(), containsString("Invalid subcommand: lsit"));
     }
 
     @Test

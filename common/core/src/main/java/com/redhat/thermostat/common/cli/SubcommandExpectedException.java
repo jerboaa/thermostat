@@ -36,58 +36,14 @@
 
 package com.redhat.thermostat.common.cli;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.redhat.thermostat.shared.locale.Translate;
 
-public class SimpleArguments implements Arguments {
+public class SubcommandExpectedException extends CommandException {
 
-    private Map<String,String> arguments = new HashMap<>();
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    private List<String> nonOptionArguments = new ArrayList<>();
-
-    private List<String> subcommands = new ArrayList<>();
-
-    @Override
-    public boolean hasArgument(String name) {
-        return arguments.containsKey(name);
+    public SubcommandExpectedException() {
+        super(t.localize(LocaleResources.SUBCOMMAND_EXPECTED));
     }
 
-    @Override
-    public String getArgument(String name) {
-        return arguments.get(name);
-    }
-
-    public void addArgument(String name, String value) {
-        arguments.put(name, value);
-        
-    }
-
-    @Override
-    public List<String> getNonOptionArguments() {
-        return nonOptionArguments;
-    }
-
-    public void addNonOptionArgument(String arg) {
-        nonOptionArguments.add(arg);
-    }
-
-    public void addSubcommand(String subcommand) {
-        subcommands.add(subcommand);
-    }
-
-    @Override
-    public String getSubcommand() throws SubcommandExpectedException, InvalidSubcommandException {
-        List<String> nonOptionArgs = getNonOptionArguments();
-        if (nonOptionArgs.isEmpty()) {
-            throw new SubcommandExpectedException();
-        }
-        String subcommand = nonOptionArgs.get(0);
-        if (!subcommands.contains(subcommand)) {
-            throw new InvalidSubcommandException(subcommand);
-        }
-        return subcommand;
-    }
 }
-

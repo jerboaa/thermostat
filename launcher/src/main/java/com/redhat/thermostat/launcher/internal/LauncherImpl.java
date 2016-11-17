@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -367,8 +368,7 @@ public class LauncherImpl implements Launcher {
             }
         }
         try {
-            Options options = mergeSubcommandOptionsWithParent(cmdInfo, cmdArgs);
-            Arguments args = parseCommandArguments(cmdArgs, options);
+            Arguments args = parseCommandArguments(cmdArgs, cmdInfo);
             setupLogLevel(args);
             CommandContext ctx = setupCommandContext(cmd, args);
             cmd.run(ctx);
@@ -386,6 +386,15 @@ public class LauncherImpl implements Launcher {
             message = t.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL_ONLY, cmd);
     	}
     	out.println(message.getContents());
+    }
+
+    private Arguments parseCommandArguments(String[] cmdArgs, CommandInfo commandInfo)
+            throws CommandLineArgumentParseException {
+        CommandLineArgumentsParser cliArgsParser = new CommandLineArgumentsParser();
+        cliArgsParser.addOptions(mergeSubcommandOptionsWithParent(commandInfo, cmdArgs));
+        cliArgsParser.addSubcommands(flattenSubcommandNames(commandInfo.getSubcommands()));
+
+        return cliArgsParser.parse(cmdArgs);
     }
 
     // Note: this has the side-effect of adding subcommands' options to the parent command's Options.
@@ -420,6 +429,9 @@ public class LauncherImpl implements Launcher {
         return options;
     }
 
+    // Here we have to take a little bit of a guess about the selected subcommand, if any. We are in the process of
+    // setting up all of the required information to hand over to the CommandLineArgumentsParser, which is what returns
+    // the CommandLineArguments instance which really does know for sure which subcommand has been selected
     private PluginConfiguration.Subcommand getSelectedSubcommand(CommandInfo cmdInfo, String[] cmdArgs) {
         for (PluginConfiguration.Subcommand subcommand : cmdInfo.getSubcommands()) {
             for (String arg : cmdArgs) {
@@ -429,6 +441,14 @@ public class LauncherImpl implements Launcher {
             }
         }
         return null;
+    }
+
+    private List<String> flattenSubcommandNames(List<PluginConfiguration.Subcommand> subcommands) {
+        List<String> result = new ArrayList<>(subcommands.size());
+        for (PluginConfiguration.Subcommand subcommand : subcommands) {
+            result.add(subcommand.getName());
+        }
+        return result;
     }
 
     private void setupLogLevel(Arguments args) {
@@ -445,14 +465,6 @@ public class LauncherImpl implements Launcher {
         } catch (IllegalArgumentException ex) {
             // Ignore this, use default loglevel.
         }
-    }
-
-    private Arguments parseCommandArguments(String[] cmdArgs, Options options)
-            throws CommandLineArgumentParseException {
-        CommandLineArgumentsParser cliArgsParser = new CommandLineArgumentsParser();
-        cliArgsParser.addOptions(options);
-        Arguments args = cliArgsParser.parse(cmdArgs);
-        return args;
     }
 
     @SuppressWarnings("rawtypes")

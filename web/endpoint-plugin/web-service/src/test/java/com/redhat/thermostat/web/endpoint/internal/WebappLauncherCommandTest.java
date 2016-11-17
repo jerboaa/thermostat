@@ -67,6 +67,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.cli.Console;
+import com.redhat.thermostat.testutils.NotImplementedException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -237,7 +238,11 @@ public class WebappLauncherCommandTest {
             public String getArgument(String name) {
                 return null;
             }
-            
+
+            @Override
+            public String getSubcommand() {
+                throw new NotImplementedException();
+            }
         });
         setupLogger(matchString);
         assertFalse(handler.gotLogMessage);

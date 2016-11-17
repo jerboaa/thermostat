@@ -44,6 +44,8 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
+import com.redhat.thermostat.common.cli.InvalidSubcommandException;
+import com.redhat.thermostat.common.cli.SubcommandExpectedException;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
@@ -245,61 +247,61 @@ public class NotificationsCommandTest {
 
     @Test
     public void testStatusWhenMonitoringIsEnabled() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(STATUS_SUBCOMMAND));
+        addSubcommandToArgs(STATUS_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(JMX_NOTIFICATION_MONITORING_IS_ENABLED));
     }
 
     @Test
     public void testStatusWhenMonitoringIsDisabled() throws CommandException {
         jmxNotificationStatus.setEnabled(false);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(STATUS_SUBCOMMAND));
+        addSubcommandToArgs(STATUS_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(JMX_NOTIFICATION_MONITORING_IS_DISABLED));
     }
 
     @Test
     public void testStatusWhenMonitoringStatusIsUnknown() throws CommandException {
         when(jmxNotificationDAO.getLatestNotificationStatus(any(VmRef.class))).thenReturn(null);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(STATUS_SUBCOMMAND));
+        addSubcommandToArgs(STATUS_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(JMX_NOTIFICATION_MONITORING_IS_DISABLED));
     }
 
     @Test
     public void testDisableWhenMonitoringIsEnabled() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(DISABLE_SUBCOMMAND));
+        addSubcommandToArgs(DISABLE_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(JMX_NOTIFICATION_MONITORING_DISABLED));
     }
 
     @Test
     public void testDisableWhenMonitoringIsDisabled() throws CommandException {
         jmxNotificationStatus.setEnabled(false);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(DISABLE_SUBCOMMAND));
+        addSubcommandToArgs(DISABLE_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(JMX_NOTIFICATION_MONITORING_IS_NOT_ENABLED));
     }
 
     @Test
     public void testDisableWhenMonitoringStatusIsUnknown() throws CommandException {
         when(jmxNotificationDAO.getLatestNotificationStatus(any(VmRef.class))).thenReturn(null);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(DISABLE_SUBCOMMAND));
+        addSubcommandToArgs(DISABLE_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(JMX_NOTIFICATION_MONITORING_IS_NOT_ENABLED));
     }
 
     @Test
     public void testEnableWhenMonitoringIsEnabled() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(ENABLE_SUBCOMMAND));
+        addSubcommandToArgs(ENABLE_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(JMX_NOTIFICATION_MONITORING_IS_ALREADY_ENABLED));
     }
 
     @Test
     public void testEnableWhenMonitoringIsDisabled() throws CommandException {
         jmxNotificationStatus.setEnabled(false);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(ENABLE_SUBCOMMAND));
+        addSubcommandToArgs(ENABLE_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(JMX_NOTIFICATION_MONITORING_ENABLED));
     }
 
     @Test
     public void testEnableWhenMonitoringStatusIsUnknown() throws CommandException {
         when(jmxNotificationDAO.getLatestNotificationStatus(any(VmRef.class))).thenReturn(null);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(ENABLE_SUBCOMMAND));
+        addSubcommandToArgs(ENABLE_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(JMX_NOTIFICATION_MONITORING_ENABLED));
     }
 
@@ -307,7 +309,7 @@ public class NotificationsCommandTest {
     public void testEnableWithFollowOption() throws CommandException, IOException {
         jmxNotificationStatus.setEnabled(false);
         jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(ENABLE_SUBCOMMAND));
+        addSubcommandToArgs(ENABLE_SUBCOMMAND);
         when(args.hasArgument(FOLLOW_OPTION)).thenReturn(true);
 
         doFollowTestWithKeyboardInterrupt();
@@ -324,7 +326,7 @@ public class NotificationsCommandTest {
     @Test
     public void testEnableWithFollowOptionWhenAlreadyEnabled() throws CommandException, IOException {
         jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(ENABLE_SUBCOMMAND));
+        addSubcommandToArgs(ENABLE_SUBCOMMAND);
         when(args.hasArgument(FOLLOW_OPTION)).thenReturn(true);
 
         doFollowTestWithKeyboardInterrupt();
@@ -342,7 +344,7 @@ public class NotificationsCommandTest {
     public void testEnableWithFollowOptionWithExternalInterrupt() throws CommandException, IOException {
         jmxNotificationStatus.setEnabled(false);
         jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(ENABLE_SUBCOMMAND));
+        addSubcommandToArgs(ENABLE_SUBCOMMAND);
         when(args.hasArgument(FOLLOW_OPTION)).thenReturn(true);
 
         doFollowTestWithExternalMonitoringInterrupt();
@@ -362,7 +364,7 @@ public class NotificationsCommandTest {
     public void testFollowWhenDisabled() throws CommandException {
         jmxNotificationStatus.setEnabled(false);
         jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(FOLLOW_SUBCOMMAND));
+        addSubcommandToArgs(FOLLOW_SUBCOMMAND);
 
         assertThat(runCommandForOutput(), is("JMX notification monitoring is not enabled for this JVM - notifications cannot be followed"));
     }
@@ -370,7 +372,7 @@ public class NotificationsCommandTest {
     @Test
     public void testFollowWhenEnabled() throws CommandException, IOException {
         jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(FOLLOW_SUBCOMMAND));
+        addSubcommandToArgs(FOLLOW_SUBCOMMAND);
 
         doFollowTestWithKeyboardInterrupt();
 
@@ -384,7 +386,7 @@ public class NotificationsCommandTest {
     @Test
     public void testFollowWithExternalInterrupt() throws CommandException, IOException {
         jmxNotification.setTimeStamp(FUTURE_TIMESTAMP);
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(FOLLOW_SUBCOMMAND));
+        addSubcommandToArgs(FOLLOW_SUBCOMMAND);
 
         doFollowTestWithExternalMonitoringInterrupt();
 
@@ -473,13 +475,13 @@ public class NotificationsCommandTest {
 
     @Test
     public void testShow() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(SHOW_SUBCOMMAND));
+        addSubcommandToArgs(SHOW_SUBCOMMAND);
         assertThat(runCommandForOutput(), is(NOTIFICATION_OUTPUT));
     }
 
     @Test
     public void testShowSinceWithTimestampNewerThanData() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(SHOW_SUBCOMMAND));
+        addSubcommandToArgs(SHOW_SUBCOMMAND);
         when(args.hasArgument(SINCE_OPTION)).thenReturn(true);
         when(args.getArgument(SINCE_OPTION)).thenReturn("500");
         cmd.run(ctx);
@@ -488,7 +490,7 @@ public class NotificationsCommandTest {
 
     @Test
     public void testShowSinceWithTimestampOlderThanData() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(SHOW_SUBCOMMAND));
+        addSubcommandToArgs(SHOW_SUBCOMMAND);
         when(args.hasArgument(SINCE_OPTION)).thenReturn(true);
         when(args.getArgument(SINCE_OPTION)).thenReturn("1");
         assertThat(runCommandForOutput(), is(NOTIFICATION_OUTPUT));
@@ -502,9 +504,8 @@ public class NotificationsCommandTest {
 
     @Test(expected = CommandException.class)
     public void testRequiresRequestQueue() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(STATUS_SUBCOMMAND));
+        addSubcommandToArgs(STATUS_SUBCOMMAND);
         cmd.dependenciesUnavailable();
-//        cmd.bindRequestQueue(requestQueue);
         cmd.bindHostInfoDao(hostInfoDAO);
         cmd.bindAgentInfoDao(agentInfoDAO);
         cmd.bindVmInfoDao(vmInfoDAO);
@@ -514,10 +515,9 @@ public class NotificationsCommandTest {
 
     @Test(expected = CommandException.class)
     public void testRequiresHostInfoDao() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(STATUS_SUBCOMMAND));
+        addSubcommandToArgs(STATUS_SUBCOMMAND);
         cmd.dependenciesUnavailable();
         cmd.bindRequestQueue(requestQueue);
-//        cmd.bindHostInfoDao(hostInfoDAO);
         cmd.bindAgentInfoDao(agentInfoDAO);
         cmd.bindVmInfoDao(vmInfoDAO);
         cmd.bindJmxNotificationDao(jmxNotificationDAO);
@@ -526,11 +526,10 @@ public class NotificationsCommandTest {
 
     @Test(expected = CommandException.class)
     public void testRequiresAgentInfoDao() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(STATUS_SUBCOMMAND));
+        addSubcommandToArgs(STATUS_SUBCOMMAND);
         cmd.dependenciesUnavailable();
         cmd.bindRequestQueue(requestQueue);
         cmd.bindHostInfoDao(hostInfoDAO);
-//        cmd.bindAgentInfoDao(agentInfoDAO);
         cmd.bindVmInfoDao(vmInfoDAO);
         cmd.bindJmxNotificationDao(jmxNotificationDAO);
         cmd.run(ctx);
@@ -538,26 +537,28 @@ public class NotificationsCommandTest {
 
     @Test(expected = CommandException.class)
     public void testRequiresVmInfoDao() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(STATUS_SUBCOMMAND));
+        addSubcommandToArgs(STATUS_SUBCOMMAND);
         cmd.dependenciesUnavailable();
         cmd.bindRequestQueue(requestQueue);
         cmd.bindHostInfoDao(hostInfoDAO);
         cmd.bindAgentInfoDao(agentInfoDAO);
-//        cmd.bindVmInfoDao(vmInfoDAO);
         cmd.bindJmxNotificationDao(jmxNotificationDAO);
         cmd.run(ctx);
     }
 
     @Test(expected = CommandException.class)
     public void testRequiresJmxNotificationDao() throws CommandException {
-        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(STATUS_SUBCOMMAND));
+        addSubcommandToArgs(STATUS_SUBCOMMAND);
         cmd.dependenciesUnavailable();
         cmd.bindRequestQueue(requestQueue);
         cmd.bindHostInfoDao(hostInfoDAO);
         cmd.bindAgentInfoDao(agentInfoDAO);
         cmd.bindVmInfoDao(vmInfoDAO);
-//        cmd.bindJmxNotificationDao(jmxNotificationDAO);
         cmd.run(ctx);
+    }
+
+    private void addSubcommandToArgs(String subcommand) throws SubcommandExpectedException, InvalidSubcommandException {
+        when(args.getSubcommand()).thenReturn(subcommand);
     }
 
 }

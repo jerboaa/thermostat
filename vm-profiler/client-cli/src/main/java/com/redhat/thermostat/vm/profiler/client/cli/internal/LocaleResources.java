@@ -40,8 +40,6 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
 
-    COMMAND_EXPECTED,
-    UNKNOWN_COMMAND,
     INTERRUPTED_WAITING_FOR_RESPONSE,
     AGENT_NOT_FOUND,
 

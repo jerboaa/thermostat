@@ -50,12 +50,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.common.cli.InvalidSubcommandException;
+import com.redhat.thermostat.common.cli.SubcommandExpectedException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.launcher.Launcher;
@@ -318,6 +321,16 @@ public class SetupCommand extends AbstractCommand {
                 return arg;
             }
             return additionalOptions.get(name);
+        }
+
+        @Override
+        public String getSubcommand() throws SubcommandExpectedException, InvalidSubcommandException {
+            // This is only expected to be called by actual Command implementations, not during setup interception.
+            // MergedSetupArguments is discarded and the original arguments String array passed through to the
+            // Launcher, which will recreate a new Arguments object with the correct implementation and pass that
+            // to the Command implementation.
+            // See http://icedtea.classpath.org/pipermail/thermostat/2016-December/021803.html
+            throw new NotImplementedException();
         }
         
         @Override

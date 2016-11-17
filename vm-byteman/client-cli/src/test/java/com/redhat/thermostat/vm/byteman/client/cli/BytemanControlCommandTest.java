@@ -46,6 +46,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -65,6 +66,8 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 
+import com.redhat.thermostat.common.cli.InvalidSubcommandException;
+import com.redhat.thermostat.common.cli.SubcommandExpectedException;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -95,6 +98,8 @@ import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAction;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequestResponseListener;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class BytemanControlCommandTest {
 
@@ -154,15 +159,15 @@ public class BytemanControlCommandTest {
     @Test
     public void testUnknownAction() {
         String unknownAction = "some-action-that-doesn't-exist";
-        Arguments args = getBasicArgsWithAction(unknownAction);
-        CommandContext ctx = ctxFactory.createContext(args);
         try {
+            Arguments args = getBasicArgsWithAction(unknownAction);
+            CommandContext ctx = ctxFactory.createContext(args);
             command.run(ctx);
             fail("Expected failure due to unknown action");
         } catch (CommandException e) {
             String msg = e.getMessage();
-            assertTrue(msg.contains(unknownAction));
-            assertTrue(msg.startsWith("Unknown command:"));
+            assertThat(msg, containsString(unknownAction));
+            assertTrue(msg.startsWith("Invalid subcommand:"));
         }
     }
     
@@ -480,10 +485,21 @@ public class BytemanControlCommandTest {
         assertEquals(stdOutExpected, stdOut);
     }
 
-    private Arguments getBasicArgsWithAction(String action) {
-        Arguments args = mock(Arguments.class);
+    private Arguments getBasicArgsWithAction(final String action) throws SubcommandExpectedException, InvalidSubcommandException {
+        final Arguments args = mock(Arguments.class);
         when(args.getArgument("vmId")).thenReturn(SOME_VM_ID);
-        when(args.getNonOptionArguments()).thenReturn(Arrays.asList(action));
+        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList(action));
+        when(args.getSubcommand()).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
+                List<String> options = Arrays.asList(BytemanControlCommand.SHOW_ACTION, BytemanControlCommand.STATUS_ACTION,
+                        BytemanControlCommand.UNLOAD_RULE_ACTION, BytemanControlCommand.INJECT_RULE_ACTION);
+                if (!options.contains(action)) {
+                    throw new InvalidSubcommandException(action);
+                }
+                return action;
+            }
+        });
         return args;
     }
 }

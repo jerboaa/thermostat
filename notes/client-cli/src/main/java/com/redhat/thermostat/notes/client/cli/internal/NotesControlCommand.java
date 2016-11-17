@@ -37,28 +37,22 @@
 package com.redhat.thermostat.notes.client.cli.internal;
 
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
-import com.redhat.thermostat.notes.client.cli.locale.LocaleResources;
-import com.redhat.thermostat.shared.locale.Translate;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class NotesControlCommand extends AbstractCommand implements CompleterService {
+class NotesControlCommand extends AbstractCommand implements CompleterService {
 
-    public static final String COMMAND_NAME = "notes";
+    static final String COMMAND_NAME = "notes";
     static final CliCommandOption NOTE_ID_OPTION = new CliCommandOption("n", "noteId", true, "Note ID", false);
-
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private NoteIdsFinder noteIdsFinder;
 
@@ -67,9 +61,9 @@ public class NotesControlCommand extends AbstractCommand implements CompleterSer
     private UpdateNoteSubcommand updateNoteCommand;
     private ListNotesSubcommand listNotesCommand;
 
-    public NotesControlCommand(NoteIdsFinder noteIdsFinder, AddNoteSubcommand addNoteCommand,
-                               DeleteNoteSubcommand deleteNoteCommand, UpdateNoteSubcommand updateNoteCommand,
-                               ListNotesSubcommand listNotesCommand) {
+    NotesControlCommand(NoteIdsFinder noteIdsFinder, AddNoteSubcommand addNoteCommand,
+                        DeleteNoteSubcommand deleteNoteCommand, UpdateNoteSubcommand updateNoteCommand,
+                        ListNotesSubcommand listNotesCommand) {
         this.noteIdsFinder = noteIdsFinder;
         this.addNoteCommand = addNoteCommand;
         this.deleteNoteCommand = deleteNoteCommand;
@@ -100,13 +94,7 @@ public class NotesControlCommand extends AbstractCommand implements CompleterSer
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        Arguments args = ctx.getArguments();
-        List<String> nonOptionArgs = args.getNonOptionArguments();
-        if (nonOptionArgs.isEmpty()) {
-            throw new CommandException(translator.localize(LocaleResources.SUBCOMMAND_EXPECTED));
-        }
-
-        String subcommand = nonOptionArgs.get(0);
+        String subcommand = ctx.getArguments().getSubcommand();
         switch (subcommand) {
             case AddNoteSubcommand.SUBCOMMAND_NAME:
                 addNoteCommand.run(ctx);
@@ -120,8 +108,6 @@ public class NotesControlCommand extends AbstractCommand implements CompleterSer
             case ListNotesSubcommand.SUBCOMMAND_NAME:
                 listNotesCommand.run(ctx);
                 break;
-            default:
-                throw new CommandException(translator.localize(LocaleResources.UNKNOWN_SUBCOMMAND, subcommand));
         }
     }
 
