@@ -36,53 +36,47 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.CliCommandOption;
-import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
-import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
-/* FIXME: the Ping command should be provided by a separate plugin and have a thermostat-plugin.xml of its own.
-* http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2876
-* http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2877
-*/
-@Component(immediate = true)
+@Component
 @Service
-public class PingCommandCompleterService implements CompleterService {
+public class AgentIdsFinderImpl implements AgentIdsFinder {
 
     @Reference
-    private AgentIdsFinder agentIdsFinder;
+    private AgentInfoDAO agentInfoDAO;
 
     @Override
-    public Set<String> getCommands() {
-        return Collections.singleton("ping");
-    }
-
-    @Override
-    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
-        if (agentIdsFinder == null) {
-            return Collections.emptyMap();
+    public List<CompletionInfo> findCompletions() {
+        if (agentInfoDAO == null) {
+            return Collections.emptyList();
         }
-        return Collections.singletonMap(CliCommandOption.POSITIONAL_ARG_COMPLETION, new CompletionFinderTabCompleter(agentIdsFinder));
+        return getAgentIdCompletions(agentInfoDAO.getAllAgentInformation());
     }
 
-    @Override
-    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
-        return Collections.emptyMap();
+    private List<CompletionInfo> getAgentIdCompletions(Collection<AgentInformation> agentInfos) {
+        List<CompletionInfo> agentIds = new ArrayList<>();
+        for (AgentInformation agentInfo : agentInfos) {
+            agentIds.add(new CompletionInfo(agentInfo.getAgentId()));
+        }
+        return agentIds;
     }
 
-    public void bindAgentIdsFinder(AgentIdsFinder agentIdsFinder) {
-        this.agentIdsFinder = agentIdsFinder;
+    public void bindAgentInfoDao(AgentInfoDAO agentInfoDAO) {
+        this.agentInfoDAO = agentInfoDAO;
     }
 
-    public void unbindAgentIdsFinder(AgentIdsFinder agentIdsFinder) {
-        this.agentIdsFinder = null;
+    public void unbindAgentInfoDao(AgentInfoDAO agentInfoDAO) {
+        this.agentInfoDAO = null;
     }
 
 }

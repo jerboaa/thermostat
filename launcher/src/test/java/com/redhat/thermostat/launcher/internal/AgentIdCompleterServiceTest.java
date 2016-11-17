@@ -49,14 +49,18 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class AgentIdCompleterServiceTest {
 
     private AgentIdCompleterService service;
+    private AgentIdsFinder finder;
 
     @Before
     public void setup() {
         service = new AgentIdCompleterService();
+        finder = mock(AgentIdsFinder.class);
+        service.bindAgentIdsFinder(finder);
     }
 
     @Test
@@ -76,6 +80,12 @@ public class AgentIdCompleterServiceTest {
     public void testAgentIdCompleterIsProvided() {
         TabCompleter completer = service.getOptionCompleters().get(AgentIdCompleterService.AGENT_ID_OPTION);
         assertThat(completer, is(not(equalTo(null))));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProvidesNoSubcommandCompletions() {
+        assertThat(service.getSubcommandCompleters().size(), is(0));
     }
 
 }

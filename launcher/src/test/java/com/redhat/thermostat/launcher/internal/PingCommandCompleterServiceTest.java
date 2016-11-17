@@ -38,6 +38,7 @@ package com.redhat.thermostat.launcher.internal;
 
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.storage.core.AgentId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,18 +50,22 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class PingCommandCompleterServiceTest {
 
     private PingCommandCompleterService service;
+    private AgentIdsFinder finder;
 
     @Before
     public void setup() {
         service = new PingCommandCompleterService();
+        finder = mock(AgentIdsFinder.class);
+        service.bindAgentIdsFinder(finder);
     }
 
     @Test
-    public void testCompleterAppliesToAllCommands() {
+    public void testCompleterAppliesToPingCommandOnly() {
         Set<String> commands = service.getCommands();
         Set<String> expected = Collections.singleton("ping");
         assertThat(commands, is(equalTo(expected)));
@@ -76,6 +81,12 @@ public class PingCommandCompleterServiceTest {
     public void testPingMainArgCompleterIsProvided() {
         TabCompleter completer = service.getOptionCompleters().get(CliCommandOption.POSITIONAL_ARG_COMPLETION);
         assertThat(completer, is(not(equalTo(null))));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProvidesNoSubcommandCompletions() {
+        assertThat(service.getSubcommandCompleters().size(), is(0));
     }
 
 }

@@ -143,8 +143,6 @@ public class Activator implements BundleActivator {
     private MultipleServiceTracker launcherDepsTracker;
     private MultipleServiceTracker shellTracker;
     private MultipleServiceTracker vmIdCompleterDepsTracker;
-    private MultipleServiceTracker agentIdCompleterDepsTracker;
-    private MultipleServiceTracker pingCommandCompleterDepsTracker;
 
     private CommandRegistry registry;
 
@@ -291,42 +289,8 @@ public class Activator implements BundleActivator {
         });
         vmIdCompleterDepsTracker.open();
 
-        final AgentIdCompleterService agentIdCompleterService = new AgentIdCompleterService();
-        final Class<?>[] agentIdCompleterDeps = new Class[] { AgentInfoDAO.class };
-        agentIdCompleterDepsTracker = new MultipleServiceTracker(context, agentIdCompleterDeps, new Action() {
-            @Override
-            public void dependenciesAvailable(DependencyProvider services) {
-                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
-                agentIdCompleterService.setAgentInfoDAO(agentDao);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                agentIdCompleterService.setAgentInfoDAO(null);
-            }
-        });
-        agentIdCompleterDepsTracker.open();
-
-        final PingCommandCompleterService pingCommandCompleterService = new PingCommandCompleterService();
-        final Class<?>[] pingCommandCompleterDeps = new Class[] { AgentInfoDAO.class };
-        pingCommandCompleterDepsTracker = new MultipleServiceTracker(context, pingCommandCompleterDeps, new Action() {
-            @Override
-            public void dependenciesAvailable(DependencyProvider services) {
-                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
-                pingCommandCompleterService.setAgentInfoDAO(agentDao);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                pingCommandCompleterService.setAgentInfoDAO(null);
-            }
-        });
-        pingCommandCompleterDepsTracker.open();
-
         context.registerService(CompleterService.class.getName(), helpCommandCompleterService, null);
         context.registerService(CompleterService.class.getName(), vmIdCompleterService, null);
-        context.registerService(CompleterService.class.getName(), agentIdCompleterService, null);
-        context.registerService(CompleterService.class.getName(), pingCommandCompleterService, null);
     }
 
     @Override
@@ -345,12 +309,6 @@ public class Activator implements BundleActivator {
         }
         if (vmIdCompleterDepsTracker != null) {
             vmIdCompleterDepsTracker.close();
-        }
-        if (agentIdCompleterDepsTracker != null) {
-            agentIdCompleterDepsTracker.close();
-        }
-        if (pingCommandCompleterDepsTracker != null) {
-            pingCommandCompleterDepsTracker.close();
         }
         registry.unregisterCommands();
     }

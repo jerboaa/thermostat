@@ -36,19 +36,26 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.AbstractCompleterService;
 import com.redhat.thermostat.common.cli.CliCommandOption;
+import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
 import com.redhat.thermostat.common.cli.TabCompleter;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-public class AgentIdCompleterService extends AbstractCompleterService {
+@Component(immediate = true)
+@Service
+public class AgentIdCompleterService implements CompleterService {
 
     public static final CliCommandOption AGENT_ID_OPTION = new CliCommandOption("a", "agentId", true, "Agent ID", false);
+
+    @Reference
+    private AgentIdsFinder agentIdsFinder;
 
     @Override
     public Set<String> getCommands() {
@@ -57,13 +64,23 @@ public class AgentIdCompleterService extends AbstractCompleterService {
 
     @Override
     public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
-        TabCompleter completer = new CompletionFinderTabCompleter(new AgentIdsFinder(dependencyServices));
-
-        return Collections.singletonMap(AGENT_ID_OPTION, completer);
+        if (agentIdsFinder == null) {
+            return Collections.emptyMap();
+        }
+        return Collections.singletonMap(AGENT_ID_OPTION, new CompletionFinderTabCompleter(agentIdsFinder));
     }
 
-    void setAgentInfoDAO(AgentInfoDAO agentInfoDAO) {
-        setService(AgentInfoDAO.class, agentInfoDAO);
+    @Override
+    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
+        return Collections.emptyMap();
+    }
+
+    public void bindAgentIdsFinder(AgentIdsFinder agentIdsFinder) {
+        this.agentIdsFinder = agentIdsFinder;
+    }
+
+    public void unbindAgentIdsFinder(AgentIdsFinder agentIdsFinder) {
+        this.agentIdsFinder = null;
     }
 
 }

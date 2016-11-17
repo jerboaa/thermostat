@@ -36,43 +36,7 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
-import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.common.cli.CompletionFinder;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-public class AgentIdsFinder extends AbstractCompletionFinder {
-
-    public AgentIdsFinder(DependencyServices dependencyServices) {
-        super(dependencyServices);
-    }
-
-    @Override
-    protected Class<?>[] getRequiredDependencies() {
-        return new Class<?>[]{ AgentInfoDAO.class };
-    }
-
-    @Override
-    public List<CompletionInfo> findCompletions() {
-        if (!allDependenciesAvailable()) {
-            return Collections.emptyList();
-        }
-        AgentInfoDAO agentInfoDAO = getService(AgentInfoDAO.class);
-        return getAgentIdCompletions(agentInfoDAO.getAllAgentInformation());
-    }
-
-    private List<CompletionInfo> getAgentIdCompletions(Collection<AgentInformation> agentInfos) {
-        List<CompletionInfo> agentIds = new ArrayList<>();
-        for (AgentInformation agentInfo : agentInfos) {
-            agentIds.add(new CompletionInfo(agentInfo.getAgentId()));
-        }
-        return agentIds;
-    }
-
+interface AgentIdsFinder extends CompletionFinder {
 }

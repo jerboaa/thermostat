@@ -37,7 +37,6 @@
 package com.redhat.thermostat.launcher.internal;
 
 import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import org.junit.Before;
@@ -47,29 +46,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class AgentIdsFinderTest {
+public class AgentIdsFinderImplTest {
 
-    private DependencyServices dependencyServices;
-    private AgentIdsFinder finder;
+    private AgentIdsFinderImpl finder;
 
     @Before
     public void setup() {
-        dependencyServices = mock(DependencyServices.class);
-        finder = new AgentIdsFinder(dependencyServices);
+        finder = new AgentIdsFinderImpl();
     }
 
     @Test
     public void testFindIds() {
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(dependencyServices.hasService(AgentInfoDAO.class)).thenReturn(true);
-        when(dependencyServices.getService(AgentInfoDAO.class)).thenReturn(agentInfoDAO);
+        finder.bindAgentInfoDao(agentInfoDAO);
 
         String id1 = "012345-56789";
         String id2 = "111111-22222";
@@ -99,8 +92,4 @@ public class AgentIdsFinderTest {
         assertEquals(id4, result.get(3).getActualCompletion());
     }
 
-    @Test
-    public void testListDependencies() {
-        assertThat(finder.getRequiredDependencies(), is(equalTo(new Class[]{AgentInfoDAO.class})));
-    }
 }
