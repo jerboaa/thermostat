@@ -60,21 +60,24 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 
-import com.redhat.thermostat.common.cli.CliCommandOption;
-import com.redhat.thermostat.common.cli.FileNameTabCompleter;
-import com.redhat.thermostat.common.cli.TabCompleter;
-import com.redhat.thermostat.vm.byteman.client.cli.BytemanControlCommand;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.FileNameTabCompleter;
+import com.redhat.thermostat.common.cli.TabCompleter;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.internal.test.TestCommandContextFactory;
@@ -90,8 +93,8 @@ import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest;
-import com.redhat.thermostat.vm.byteman.common.command.BytemanRequestResponseListener;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAction;
+import com.redhat.thermostat.vm.byteman.common.command.BytemanRequestResponseListener;
 
 public class BytemanControlCommandTest {
 
@@ -107,7 +110,9 @@ public class BytemanControlCommandTest {
     private static final InetSocketAddress REQUEST_QUEUE_ADDRESS = mock(InetSocketAddress.class);
     private BytemanControlCommand command;
     private TestCommandContextFactory ctxFactory;
-    
+    private static TimeZone defaultTimeZone;
+    private static Locale defaultLocale;
+
     @Before
     public void setup() {
         command = new BytemanControlCommand() {
@@ -130,6 +135,20 @@ public class BytemanControlCommandTest {
         command.bindAgentInfoDao(agentInfoDAO);
         command.bindVmBytemanDao(mock(VmBytemanDAO.class));
         ctxFactory = new TestCommandContextFactory();
+    }
+
+    @BeforeClass
+    public static void setUpBeforeClass() {
+        defaultTimeZone = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone("EST"));
+        defaultLocale = Locale.getDefault(Locale.Category.FORMAT);
+        Locale.setDefault(Locale.Category.FORMAT, Locale.CANADA);
+    }
+
+    @AfterClass
+    public static void tearDownAfterClass() {
+        TimeZone.setDefault(defaultTimeZone);
+        Locale.setDefault(Locale.Category.FORMAT, defaultLocale);
     }
     
     @Test
@@ -228,11 +247,24 @@ public class BytemanControlCommandTest {
     public void testShowMetricsActionWithMetrics() throws CommandException {
         String metricData1 = "{ \"foo\": \"bar\" }";
         String metricData2 = "{ \"foo2\": -300 }";
-        String expectedStdOut = String.format("%s\n%s\n", metricData1, metricData2);
+        long timestamp = 1_234_567_890_111L;
+        String expectedStdOut = "Currently viewing metrics for: all\n" +
+            "Available metrics: [foo, foo2]\n" +
+            "+----------------------------+---------+------+--------+\n" +
+            "| Timestamp                  | Marker  | Name | Value  |\n" +
+            "+----------------------------+---------+------+--------+\n" +
+            "| 13-Feb-2009 6:31:30 EST PM | marker1 | foo  | bar    |\n" +
+            "+----------------------------+---------+------+--------+\n" +
+            "| 13-Feb-2009 6:31:30 EST PM | marker2 | foo2 | -300.0 |\n" +
+            "+----------------------------+---------+------+--------+\n";
         BytemanMetric metric1 = new BytemanMetric();
+        metric1.setMarker("marker1");
         metric1.setData(metricData1);
+        metric1.setTimeStamp(timestamp);
         BytemanMetric metric2 = new BytemanMetric();
+        metric2.setMarker("marker2");
         metric2.setData(metricData2);
+        metric2.setTimeStamp(timestamp);
         List<BytemanMetric> returnedList = Arrays.asList(metric1, metric2);
         doShowMetricsTest(returnedList, expectedStdOut);
     }

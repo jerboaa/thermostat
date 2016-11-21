@@ -52,6 +52,14 @@ public enum LocaleResources {
     ERROR_NO_STATUS,
     BYTEMAN_STATUS_MSG,
     REQUEST_SUCCESS,
+    HEADER_TIMESTAMP,
+    HEADER_MARKER,
+    HEADER_METRIC_NAME,
+    HEADER_METRIC_VALUE,
+    ALL_METRICS,
+    AVAILABLE_METRICS,
+    NO_METRICS_DATA,
+    CURRENT_METRICS_DISPLAYED,
     ;
 
     static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";

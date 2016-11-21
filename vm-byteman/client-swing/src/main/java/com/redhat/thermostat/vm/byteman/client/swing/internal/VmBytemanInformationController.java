@@ -40,7 +40,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -85,6 +89,7 @@ public class VmBytemanInformationController implements InformationServiceControl
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");
     private static final String EMPTY_STR = "";
+    private static final long ONE_SECOND = 1000L;
     static final String NO_RULES_LOADED = t.localize(LocaleResources.NO_RULES_LOADED).getContents();
     
     private final VmRef vm;
@@ -93,7 +98,11 @@ public class VmBytemanInformationController implements InformationServiceControl
     private final VmBytemanView view;
     private final VmBytemanDAO bytemanDao;
     private final RequestQueue requestQueue;
-    
+    private Timer timer;
+    private List<BytemanMetric> previousPayload = Collections.EMPTY_LIST;
+    private boolean comboBoxSelected = false;
+    private boolean isPolling = false;
+
     VmBytemanInformationController(final VmBytemanView view, VmRef vm,
                                    AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao,
                                    VmBytemanDAO bytemanDao, RequestQueue requestQueue) {
@@ -103,6 +112,7 @@ public class VmBytemanInformationController implements InformationServiceControl
         this.vmInfoDao = vmInfoDao;
         this.bytemanDao = bytemanDao;
         this.requestQueue = requestQueue;
+
         view.addActionListener(new ActionListener<Action>() {
             
             @Override
@@ -166,6 +176,10 @@ public class VmBytemanInformationController implements InformationServiceControl
                 switch(id) {
                 case GENERATE_TEMPLATE:
                     generateTemplate();
+                    break;
+                case GENERATE_TABLE:
+                    comboBoxSelected = true;
+                    updateMetrics();
                     break;
                 case GENERATE_GRAPH:
                     updateGraph();
@@ -239,18 +253,64 @@ public class VmBytemanInformationController implements InformationServiceControl
     }
 
     // Package-private for testing
-    void updateMetrics() {
+    synchronized void updateMetrics() {
         VmId vmId = new VmId(vm.getVmId());
         AgentId agentId = new AgentId(vm.getHostRef().getAgentId());
         long now = System.currentTimeMillis();
         long duration = view.getDurationMillisecs();
         long from = now - duration;
-        long to = now;
-        Range<Long> timeRange = new Range<Long>(from, to);
+        Range<Long> timeRange = new Range<Long>(from, now);
         List<BytemanMetric> metrics = bytemanDao.findBytemanMetrics(timeRange, vmId, agentId);
         ActionEvent<TabbedPaneContentAction> event = new ActionEvent<>(this, TabbedPaneContentAction.METRICS_CHANGED);
         event.setPayload(metrics);
-        view.contentChanged(event);
+        if ((metrics.isEmpty() && view.getInjectState() == BytemanInjectState.UNLOADED) || !isAlive()) {
+            // stop polling if new payload is empty and inject state is not injected, or if VM is dead
+            stopPolling();
+            view.contentChanged(event);
+        } else if (previousPayload.isEmpty() || isNewPayload(metrics, previousPayload)) {
+            // start or continue polling if it's the first or new distinct payload
+            if (!isPolling) {
+                startPolling();
+            }
+            view.contentChanged(event);
+        } else if (comboBoxSelected) {
+            // selecting a combo box option requires a payload to redraw the table
+            comboBoxSelected = false;
+            view.contentChanged(event);
+        }
+        previousPayload = metrics;
+    }
+
+    private boolean isNewPayload(List<BytemanMetric> newPayload, List<BytemanMetric> prevPayload) {
+        boolean result = false;
+        if (newPayload.size() == 0 && prevPayload.size() == 0) {
+            return false;
+        } else if (newPayload.size() != prevPayload.size()) {
+            return true;
+        } else {
+            for (int i = 0; i < newPayload.size(); i++) {
+                if (!Objects.equals(newPayload.get(i).getDataAsJson(), prevPayload.get(i).getDataAsJson())) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    void startPolling() {
+        isPolling = true;
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            public void run() {
+                updateMetrics();
+            }
+        }, 0, ONE_SECOND);
+    }
+
+    void stopPolling() {
+        isPolling = false;
+        timer.cancel();
     }
 
     void updateGraph() {

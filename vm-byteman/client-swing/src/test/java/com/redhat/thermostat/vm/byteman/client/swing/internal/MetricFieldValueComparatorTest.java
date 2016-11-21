@@ -36,42 +36,49 @@
 
 package com.redhat.thermostat.vm.byteman.client.swing.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import static org.junit.Assert.assertEquals;
 
-public enum LocaleResources {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-    VM_BYTEMAN_TAB_NAME,
-    BYTEMAN_HEADER_TITLE,
-    INJECT_RULE,
-    UNLOAD_RULE,
-    TAB_RULES,
-    TAB_METRICS,
-    TAB_GRAPH,
-    GENERATE_RULE_TEMPLATE,
-    GENERATE_GRAPH,
-    RULE_EMPTY,
-    NO_RULES_LOADED,
-    NO_METRICS_AVAILABLE,
-    LABEL_LOCAL_RULE,
-    LABEL_INJECTED_RULE,
-    IMPORT_RULE,
-    COMBO_ALL_METRICS,
-    LABEL_SELECT_METRICS,
-    HEADER_TIMESTAMP,
-    HEADER_MARKER,
-    HEADER_METRIC_NAME,
-    HEADER_METRIC_VALUE,
-    FILTER,
-    FILTER_VALUE_LABEL,
-    NO_FILTER_NAME,
-    X_COORD,
-    Y_COORD,
-    X_AGAINST_Y,
-    ;
-    
-    static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";
-    
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+import org.junit.Test;
+
+public class MetricFieldValueComparatorTest {
+
+    @Test
+    public void testWithBoolean() {
+        Object[] values = {true, "not boolean", false, false, true};
+        List<Object> sorted = new ArrayList<>(Arrays.asList(values));
+        Collections.sort(sorted, new MetricFieldValueComparator());
+        assertEquals(values[2], sorted.get(0));
+        assertEquals(values[3], sorted.get(1));
+        assertEquals(values[1], sorted.get(2));
+        assertEquals(values[0], sorted.get(3));
+        assertEquals(values[4], sorted.get(4));
+    }
+
+    @Test(expected=NullPointerException.class)
+    public void testWithNull() {
+        Object[] values = {"foo", null, "bar", "1", "3", "2"};
+        List<Object> sorted = new ArrayList<>(Arrays.asList(values));
+        Collections.sort(sorted, new MetricFieldValueComparator());
+    }
+
+    @Test
+    public void testWithValidValues() {
+        String[] values = {"foo", "1", "2.5", "4", "3", "baz", "bar"};
+
+        List<String> sorted = new ArrayList<String>(Arrays.asList(values));
+        Collections.sort(sorted, new MetricFieldValueComparator());
+
+        assertEquals(values[1], sorted.get(0));
+        assertEquals(values[2], sorted.get(1));
+        assertEquals(values[4], sorted.get(2));
+        assertEquals(values[3], sorted.get(3));
+        assertEquals(values[6], sorted.get(4));
+        assertEquals(values[5], sorted.get(5));
+        assertEquals(values[0], sorted.get(6));
     }
 }

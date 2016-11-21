@@ -44,13 +44,14 @@ import static org.mockito.Mockito.when;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.lang.reflect.InvocationTargetException;
-import java.text.DateFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
@@ -62,6 +63,8 @@ import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.Containers;
 import org.fest.swing.fixture.FrameFixture;
+import org.fest.swing.fixture.JComboBoxFixture;
+import org.fest.swing.fixture.JTableFixture;
 import org.fest.swing.fixture.JTextComponentFixture;
 import org.fest.swing.fixture.JToggleButtonFixture;
 import org.junit.After;
@@ -181,7 +184,6 @@ public class SwingVmBytemanViewTest {
         assertEquals(template, view.getUnloadedRuleContent());
     }
 
-
     @GUITest
     @Test
     public void testInjectButton() throws InvocationTargetException, InterruptedException {
@@ -253,29 +255,99 @@ public class SwingVmBytemanViewTest {
         assertEquals(ruleContent, actual);
     }
 
-    @GUITest
-    @Test
-    public void testContentChangedMetrics() {
-        String content = "{ \"foo\": \"bar\" }";
-        String marker = "marker";
-        long timestamp = 1_440_000_000_000L;
-        DateFormat metricsDateFormat = SwingVmBytemanView.metricsDateFormat;
-        String timestring = metricsDateFormat.format(new Date(timestamp));
+    private BytemanMetric createMetric(String content, String marker, long timestamp) {
         BytemanMetric m = new BytemanMetric();
         m.setData(content);
         m.setMarker(marker);
         m.setTimeStamp(timestamp);
+        return m;
+    }
 
+    private void runActionEventMetricsChanged(List<BytemanMetric> metrics) {
         ActionEvent<VmBytemanView.TabbedPaneContentAction> event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.METRICS_CHANGED);
-        event.setPayload(Arrays.asList(m));
+        event.setPayload(metrics);
         view.contentChanged(event);
-        verifyMetricsTextEquals(timestring + ": " + marker + " " + content + "\n");
+    }
 
-        // Do the same with an empty metrics list
-        event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.METRICS_CHANGED);
+    @GUITest
+    @Test
+    public void testMetricsTableWithNoMetrics() throws InvocationTargetException, InterruptedException {
+        frame.show();
+        ActionEvent<VmBytemanView.TabbedPaneContentAction> event = new ActionEvent<>(this, VmBytemanView.TabbedPaneContentAction.METRICS_CHANGED);
         event.setPayload(Collections.emptyList());
         view.contentChanged(event);
-        verifyMetricsTextEquals(SwingVmBytemanView.NO_METRICS_AVAILABLE + "\n");
+        JTable table = getMetricsTable();
+        verifyTableValueAt(table, SwingVmBytemanView.NO_METRICS_AVAILABLE, 0, 0);
+    }
+
+    @GUITest
+    @Test
+    public void testMetricsTableWithMetrics() throws InvocationTargetException, InterruptedException {
+        frame.show();
+        JComboBox comboBox = getMetricsComboBox();
+        JTable table = getMetricsTable();
+
+        List<BytemanMetric> metrics = new ArrayList<>();
+        String content = "{ \"foo\": \"value1\" }";
+        String marker = "marker";
+        long timestamp = 1_234_567_890_111L;
+        metrics.add(createMetric(content, marker, timestamp));
+
+        runActionEventMetricsChanged(metrics);
+        verifyComboItemAt(comboBox, "foo", 0);
+        verifyTableValueAt(table, "foo", 0, 2);
+        verifyTableValueAt(table, "value1", 0, 3);
+
+        content = "{ \"bar\": \"value2\" , \"baz\": \"value3\" }";
+        timestamp = 1_234_567_890_333L;
+        metrics.add(0, createMetric(content, marker, timestamp));
+
+        runActionEventMetricsChanged(metrics);
+        comboBox = getMetricsComboBox();
+        table = getMetricsTable();
+        verifyComboItemAt(comboBox, t.localize(LocaleResources.COMBO_ALL_METRICS).getContents(), 0);
+        verifyTableValueAt(table, "bar", 0, 2);
+        verifyTableValueAt(table, "value2", 0, 3);
+        verifyTableValueAt(table, "baz", 1, 2);
+        verifyTableValueAt(table, "value3", 1, 3);
+        verifyTableValueAt(table, "foo", 2, 2);
+        verifyTableValueAt(table, "value1", 2, 3);
+    }
+
+    @GUITest
+    @Test
+    public void testMetricsComboBox() throws InvocationTargetException, InterruptedException {
+        frame.show();
+        JComboBox comboBox = getMetricsComboBox();
+
+        // after initial setup, should have only tab in ComboBox
+        verifyComboItemCount(comboBox, 1);
+        verifyComboItemAt(comboBox, "\t", 0);
+
+        List<BytemanMetric> metrics = new ArrayList<>();
+
+        String content = "{ \"foo\": \"foo\" }";
+        String marker = "marker";
+        long timestamp = 1_234_567_890_111L;
+        metrics.add(createMetric(content, marker, timestamp));
+
+        // after 1 metric, should only have one ComboBox option
+        runActionEventMetricsChanged(metrics);
+        comboBox = getMetricsComboBox();
+        verifyComboItemCount(comboBox, 1);
+        verifyComboItemAt(comboBox, "foo", 0);
+
+        content = "{ \"bar\": \"foo\" , \"baz\": \"foo\" }";
+        timestamp = 1_234_567_890_333L;
+        metrics.add(0, createMetric(content, marker, timestamp));
+
+        runActionEventMetricsChanged(metrics);
+        comboBox = getMetricsComboBox();
+        verifyComboItemCount(comboBox, 4);
+        verifyComboItemAt(comboBox, t.localize(LocaleResources.COMBO_ALL_METRICS).getContents(), 0);
+        verifyComboItemAt(comboBox, "bar", 1);
+        verifyComboItemAt(comboBox, "baz", 2);
+        verifyComboItemAt(comboBox, "foo", 3);
     }
 
     @GUITest
@@ -336,6 +408,45 @@ public class SwingVmBytemanViewTest {
         NameMatcher textMatcher = new NameMatcher(name, JTextArea.class);
         JTextComponentFixture textFixture = new JTextComponentFixture(frame.robot, (JTextArea)frame.robot.finder().find(frame.component(), textMatcher));
         return (JTextComponent) textFixture.component();
+    }
+
+    private JComboBox getMetricsComboBox() {
+        NameMatcher comboMatcher = new NameMatcher(SwingVmBytemanView.METRICS_COMBO_BOX_NAME, JComboBox.class);
+        JComboBoxFixture comboFixture = new JComboBoxFixture(frame.robot, (JComboBox)frame.robot.finder().find(frame.component(), comboMatcher));
+        return (JComboBox)comboFixture.component();
+    }
+
+    private void verifyComboItemAt(final JComboBox comboBox, final String expected, final int index) {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                assertEquals(expected, comboBox.getItemAt(index));
+            }
+        });
+    }
+
+    private void verifyComboItemCount(final JComboBox comboBox, final int expected) {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                assertEquals(expected, comboBox.getItemCount());
+            }
+        });
+    }
+
+    private JTable getMetricsTable() {
+        NameMatcher tableMatcher = new NameMatcher(SwingVmBytemanView.METRICS_TABLE_NAME, JTable.class);
+        JTableFixture tableFixture = new JTableFixture(frame.robot, (JTable) frame.robot.finder().find(frame.component(), tableMatcher));
+        return (JTable) tableFixture.component();
+    }
+
+    private void verifyTableValueAt(final JTable table, final Object expected, final int row, final int column) {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                assertEquals(expected, table.getValueAt(row, column));
+            }
+        });
     }
 
     private void checkButtonState(final BytemanInjectState state, final ActionToggleButton toggleButton)

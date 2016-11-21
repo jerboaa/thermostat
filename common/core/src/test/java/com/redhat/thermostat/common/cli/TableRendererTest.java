@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.common.cli;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.ByteArrayOutputStream;
 
 import com.redhat.thermostat.testutils.Asserts;

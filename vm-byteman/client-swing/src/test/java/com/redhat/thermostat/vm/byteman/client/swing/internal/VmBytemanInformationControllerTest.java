@@ -39,10 +39,13 @@ package com.redhat.thermostat.vm.byteman.client.swing.internal;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -292,7 +295,50 @@ public class VmBytemanInformationControllerTest {
         BytemanMetric m = metrics.get(0);
         assertEquals(VM_ID, m.getVmId());
     }
-    
+
+    @Test
+    public void testPollingState() {
+        VmBytemanInformationController controller = Mockito.spy(createController());
+        VmBytemanView view = (VmBytemanView)controller.getView();
+        List<BytemanMetric> metricsList = new ArrayList<>();
+        String content = "{ \"foo\": \"bar\" }";
+        String marker = "marker";
+        long timestamp = System.currentTimeMillis();
+        metricsList.add(createMetric(content, marker, timestamp));
+        doNothing().when(controller).startPolling();
+        doNothing().when(controller).stopPolling();
+
+        // after successful passing of metrics, controller should be polling
+        when(view.getInjectState()).thenReturn(BytemanInjectState.INJECTED);
+        when(vmBytemanDao.findBytemanMetrics(any(Range.class), any(VmId.class), any(AgentId.class))).thenReturn(metricsList);
+        controller.updateMetrics();
+        Mockito.verify(controller).startPolling();
+
+        // if no new metrics & the byteman state is unloaded, controller should not be polling
+        when(view.getInjectState()).thenReturn(BytemanInjectState.UNLOADED);
+        List<BytemanMetric> emptyList = new ArrayList<BytemanMetric>();
+        when(vmBytemanDao.findBytemanMetrics(any(Range.class), any(VmId.class), any(AgentId.class))).thenReturn(emptyList);
+        controller.updateMetrics();
+        Mockito.verify(controller).stopPolling();
+
+        // new metrics should resume polling
+        when(view.getInjectState()).thenReturn(BytemanInjectState.INJECTED);
+        metricsList = new ArrayList<>();
+        timestamp = System.currentTimeMillis();
+        metricsList.add(createMetric(content, marker, timestamp));
+        when(vmBytemanDao.findBytemanMetrics(any(Range.class), any(VmId.class), any(AgentId.class))).thenReturn(metricsList);
+        controller.updateMetrics();
+        Mockito.verify(controller, times(2)).startPolling();
+    }
+
+    private BytemanMetric createMetric(String content, String marker, long timestamp) {
+        BytemanMetric m = new BytemanMetric();
+        m.setData(content);
+        m.setMarker(marker);
+        m.setTimeStamp(timestamp);
+        return m;
+    }
+
     private VmBytemanInformationController createController() {
         VmBytemanView view = mock(VmBytemanView.class);
         ref = mock(VmRef.class);

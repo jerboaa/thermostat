@@ -36,42 +36,27 @@
 
 package com.redhat.thermostat.vm.byteman.client.swing.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.Comparator;
 
-public enum LocaleResources {
+public class MetricFieldValueComparator implements Comparator {
 
-    VM_BYTEMAN_TAB_NAME,
-    BYTEMAN_HEADER_TITLE,
-    INJECT_RULE,
-    UNLOAD_RULE,
-    TAB_RULES,
-    TAB_METRICS,
-    TAB_GRAPH,
-    GENERATE_RULE_TEMPLATE,
-    GENERATE_GRAPH,
-    RULE_EMPTY,
-    NO_RULES_LOADED,
-    NO_METRICS_AVAILABLE,
-    LABEL_LOCAL_RULE,
-    LABEL_INJECTED_RULE,
-    IMPORT_RULE,
-    COMBO_ALL_METRICS,
-    LABEL_SELECT_METRICS,
-    HEADER_TIMESTAMP,
-    HEADER_MARKER,
-    HEADER_METRIC_NAME,
-    HEADER_METRIC_VALUE,
-    FILTER,
-    FILTER_VALUE_LABEL,
-    NO_FILTER_NAME,
-    X_COORD,
-    Y_COORD,
-    X_AGAINST_Y,
-    ;
-    
-    static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";
-    
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public int compare(Object o1, Object o2) {
+
+        if (o1 == null || o2 == null) {
+            throw new NullPointerException();
+        }
+
+        String str1 = o1.toString();
+        String str2 = o2.toString();
+
+        int result;
+
+        try {
+            result = Double.compare(Double.parseDouble(str1), Double.parseDouble(str2));
+        } catch (NumberFormatException nfe) {
+            result = str1.compareTo(str2);
+        }
+
+        return result;
     }
 }

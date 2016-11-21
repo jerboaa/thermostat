@@ -79,6 +79,13 @@
                 <required>true</required>
                 <description>the ID of the VM to instrument</description>
               </option>
+              <option>
+                <long>show</long>
+                <short>s</short>
+                <argument>name</argument>
+                <required>false</required>
+                <description>the name of a metric to show retrieved data for</description>
+              </option>
             </options>
             <environments>
                 <environment>cli</environment>

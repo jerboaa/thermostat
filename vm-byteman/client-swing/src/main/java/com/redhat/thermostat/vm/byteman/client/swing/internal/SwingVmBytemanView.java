@@ -45,6 +45,8 @@ import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
@@ -57,13 +59,21 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -84,6 +94,9 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableRowSorter;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -93,7 +106,9 @@ import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYDataset;
 
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
@@ -101,6 +116,7 @@ import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
+import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.components.ThermostatTextArea;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel.UnitRange;
@@ -109,6 +125,7 @@ import com.redhat.thermostat.client.swing.components.experimental.ThermostatChar
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Duration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -138,13 +155,24 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
     static final String RULES_INJECTED_TEXT_NAME = "RULES_INJECTED_TEXT";
     static final String RULES_UNLOADED_TEXT_NAME = "RULES_UNLOADED_TEXT";
     static final String METRICS_TEXT_NAME = "METRICS_TEXT";
+    static final String METRICS_COMBO_BOX_NAME = "METRICS_COMBO_BOX";
+    static final String METRICS_TABLE_NAME = "METRICS_TABLE";
     
     private String injectedRuleContent;
     private String unloadedRuleContent;
     private ThermostatChartPanel graphPanel;
     private RecentTimeControlPanel graphTimeControlPanel;
     private boolean generateRuleToggle;
-    private final JTextArea metricsText;
+    private DefaultComboBoxModel comboModel;
+    private final JComboBox metricsComboBox;
+    private NonEditableTableModel tableModel;
+    private TableColumnModel columnModel;
+    private final ThermostatTable metricsTable;
+    private BytemanInjectState bytemanState;
+    private List<BytemanMetric> previousPayload = Collections.EMPTY_LIST;
+    private List<? extends javax.swing.RowSorter.SortKey> sortKey;
+    private Set<String> metricsNameSet;
+    private final int COLUMN_METRIC_VALUE = 3;
     private final JTextArea unloadedRulesText;
     private final JTextArea injectedRulesText;
     private final JButton injectRuleButton;
@@ -367,21 +395,57 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         rulesPanel.add(buttonHolder, cRules);
         
         // Metrics tab
+        metricsNameSet = new HashSet<String>();
         metricsPanel = new JPanel();
         metricsPanel.setLayout(new GridBagLayout());
-        metricsText = new ThermostatTextArea(EMPTY_STR);
-        metricsText.setName(METRICS_TEXT_NAME);
-        metricsText.setBackground(Color.WHITE);
-        metricsText.setEditable(false);
-        metricsText.setMargin(paddingInsets);
         GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
+        c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 0;
         c.gridy = 0;
-        c.weighty = yWeightRow0 + yWeightRow1;
+        c.weighty = yWeightRow0;
         c.weightx = xWeightFullWidth;
-        c.insets = paddingInsets;
-        JScrollPane metricsScroll = new ThermostatScrollPane(metricsText);
+        // Setting up the ComboBox and refresh button
+        buttonHolder = new JPanel();
+        layout = new FlowLayout();
+        layout.setAlignment(FlowLayout.LEFT);
+        layout.setHgap(5);
+        layout.setVgap(0);
+        buttonHolder.setLayout(layout);
+        buttonHolder.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+        JLabel metricsLabel = new JLabel(t.localize(LocaleResources.LABEL_SELECT_METRICS).getContents());
+        comboModel = setupComboModel();
+        metricsComboBox = new JComboBox();
+        metricsComboBox.setName(METRICS_COMBO_BOX_NAME);
+        updateMetricsComboBox(comboModel);
+        metricsComboBox.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                fireGenerateEvent(GenerateAction.GENERATE_TABLE);
+            }
+        });
+        buttonHolder.add(metricsLabel);
+        buttonHolder.add(metricsComboBox);
+        buttonHolder.setAlignmentX(Component.LEFT_ALIGNMENT);
+        metricsPanel.add(buttonHolder, c);
+        // setting up the Table
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 1;
+        c.weighty = yWeightRow1;
+        tableModel = new NonEditableTableModel();
+        metricsTable = new ThermostatTable(tableModel);
+        metricsTable.setName(METRICS_TABLE_NAME);
+        final JTableHeader header = metricsTable.getTableHeader();
+        header.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (metricsTable.getColumnCount() > 1) {
+                        sortKey = metricsTable.getRowSorter().getSortKeys();
+                }
+            }
+        });
+        metricsPanel.add(metricsTable, c);
+        JScrollPane metricsScroll = new ThermostatScrollPane(metricsTable);
         metricsPanel.add(metricsScroll, c);
         // add a panel to control selection of metrics time interval
         updateGraphControlPanel(xWeightFullWidth, yWeightRow2);
@@ -563,7 +627,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                 } else if (selectedPanel == graphMainPanel) {
                     fireTabSelectedEvent(TabbedPaneAction.GRAPH_TAB_SELECTED);
                 } else {
-                    throw new AssertionError("Unkown tab in tabbed pane: " + selectedPanel);
+                    throw new AssertionError("Unknown tab in tabbed pane: " + selectedPanel);
                 }
             }
         });
@@ -597,7 +661,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = 2;
         c.weighty = weighty;
         c.weightx = weightx;
         
@@ -690,6 +754,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                bytemanState = state;
                 final String buttonLabel;
                 if (!viewControlsEnabled) {
                     buttonLabel = t.localize(LocaleResources.INJECT_RULE).getContents();
@@ -710,6 +775,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                     injectedRulesText.setText(unloadedRulesText.getText());
                     injectRuleButton.setEnabled(false);
                     unloadRuleButton.setEnabled(true);
+                    fireGenerateEvent(GenerateAction.GENERATE_TABLE);
                 } else if (state == BytemanInjectState.UNLOADING) {
                     if (EMPTY_STR.equals(unloadedRulesText.getText().trim())) {
                         unloadedRulesText.setText(injectedRulesText.getText());
@@ -724,11 +790,30 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
     }
 
     @Override
-    public void setViewControlsEnabled(boolean newState) {
-        this.viewControlsEnabled = newState;
-        if (!viewControlsEnabled) {
-            setInjectState(BytemanInjectState.DISABLED);
+    public BytemanInjectState getInjectState() {
+        try {
+            return new EdtHelper().callAndWait(new Callable<BytemanInjectState>() {
+                @Override
+                public BytemanInjectState call() throws Exception {
+                    return bytemanState;
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            e.printStackTrace();
+            return null;
         }
+    }
+
+    public void setViewControlsEnabled(final boolean newState) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                viewControlsEnabled = newState;
+                if (!viewControlsEnabled) {
+                    setInjectState(BytemanInjectState.DISABLED);
+                }
+            }
+        });
     }
 
     @Override
@@ -737,7 +822,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         switch(action) {
         case METRICS_CHANGED:
             @SuppressWarnings("unchecked")
-            List<BytemanMetric> metrics = (List<BytemanMetric>)event.getPayload();
+            List<BytemanMetric> metrics = (List<BytemanMetric>) event.getPayload();
             updateViewWithMetrics(metrics);
             break;
         case RULES_CHANGED:
@@ -751,10 +836,11 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
             updateMetricsRangeInView();
             break;
         default:
-            throw new AssertionError("Unknown event: " + action);
+                throw new AssertionError("Unknown event: " + action);
         }
-        
     }
+
+
 
     // time range might have changed in graph view. update metrics
     // accordingly
@@ -789,27 +875,89 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
         });
     }
 
-    // package private for testing
-    static DateFormat metricsDateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.LONG);
-
-    private void updateViewWithMetrics(List<BytemanMetric> metrics) {
-        final StringBuffer buffer = new StringBuffer();
-        for (BytemanMetric m: metrics) {
-            String marker = m.getMarker();
-            long timestamp = m.getTimeStamp();
-            String timestring = metricsDateFormat.format(new Date(timestamp));
-            buffer.append(timestring).append(": ").append(marker).append(" ").append(m.getDataAsJson()).append("\n");
+    private DefaultComboBoxModel setupComboModel() {
+        DefaultComboBoxModel model = new DefaultComboBoxModel();
+        SortedSet<String> sortedMetricNames = new TreeSet<>(metricsNameSet);
+        for (String s : sortedMetricNames) {
+            model.addElement(s);
         }
-        if (buffer.length() == 0) {
-            buffer.append(NO_METRICS_AVAILABLE).append("\n");
-        }
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                metricsText.setText(buffer.toString());
-            }
-        });
+        return model;
     }
+
+    private void updateMetricsComboBox (DefaultComboBoxModel model) {
+        int indexCombo = metricsComboBox.getSelectedIndex();
+
+        if (metricsNameSet.size() == 0) { // initial setup
+            metricsComboBox.setEnabled(false);
+            model.addElement("\t");
+            indexCombo = 0;
+        } else { // when metrics are available for display
+            if (indexCombo == -1) {
+                indexCombo = 0;
+            }
+            metricsComboBox.setEnabled(true);
+            if (metricsNameSet.size() > 1) {
+                comboModel.insertElementAt(t.localize(LocaleResources.COMBO_ALL_METRICS).getContents(), 0);
+            }
+        }
+        metricsComboBox.setModel(model);
+        metricsComboBox.setSelectedIndex(indexCombo);
+    }
+
+    private void updateViewWithMetrics(final List<BytemanMetric> metrics) {
+        try {
+            SwingUtilities.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    tableModel = new NonEditableTableModel();
+                    if (metrics.size() == 0) {
+                        tableModel.addColumn(EMPTY_STR);
+                        tableModel.addRow(new Object[]{NO_METRICS_AVAILABLE});
+                        metricsTable.setModel(tableModel);
+                        metricsTable.setAutoCreateColumnsFromModel(true);
+                    } else {
+                        Map<String, Object> map = new HashMap<>();
+                        int previousNameSetSize = metricsNameSet.size();
+                        String selectedMetric = metricsComboBox.getSelectedItem().toString();
+                        tableModel.addColumn(t.localize(LocaleResources.HEADER_TIMESTAMP).getContents());
+                        tableModel.addColumn(t.localize(LocaleResources.HEADER_MARKER).getContents());
+                        tableModel.addColumn(t.localize(LocaleResources.HEADER_METRIC_NAME).getContents());
+                        tableModel.addColumn(t.localize(LocaleResources.HEADER_METRIC_VALUE).getContents());
+                        columnModel = metricsTable.getColumnModel();
+                        for (BytemanMetric m : metrics) {
+                            String timestamp = Clock.DEFAULT_DATE_FORMAT.format(m.getTimeStamp());
+                            map = m.getDataAsMap();
+                            for (Entry<String, Object> item : map.entrySet()) {
+                                String metricsName = item.getKey();
+                                Object metricsValue = item.getValue();
+                                metricsNameSet.add(metricsName);
+                                if (selectedMetric.equals(metricsName) || metricsComboBox.getSelectedIndex() == 0) {
+                                    tableModel.addRow(new Object[]{timestamp, m.getMarker(), metricsName, metricsValue});
+                                }
+                            }
+                        }
+                        if (previousNameSetSize != metricsNameSet.size()) {
+                            comboModel = setupComboModel();
+                            updateMetricsComboBox(comboModel);
+                        }
+                        metricsTable.setModel(tableModel);
+                        TableRowSorter<NonEditableTableModel> sorter = new TableRowSorter<>(tableModel);
+                        sorter.setComparator(COLUMN_METRIC_VALUE, new MetricFieldValueComparator());
+                        sorter.setSortKeys(sortKey);
+                        metricsTable.setAutoCreateColumnsFromModel(false);
+                        metricsTable.setColumnModel(columnModel);
+                        metricsTable.setRowSorter(sorter);
+                    }
+                }
+            });
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Methods for testing
 
     // Package private for testing
     String getInjectedRuleContent() throws InvocationTargetException, InterruptedException {

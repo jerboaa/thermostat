@@ -64,6 +64,7 @@ public abstract class VmBytemanView extends BasicView implements UIComponent {
     
     static enum GenerateAction {
         GENERATE_TEMPLATE,
+        GENERATE_TABLE,
         GENERATE_GRAPH,
     }
     
@@ -111,9 +112,11 @@ public abstract class VmBytemanView extends BasicView implements UIComponent {
     public abstract void addGenerateActionListener(ActionListener<GenerateAction> listener);
 
     public abstract void setInjectState(BytemanInjectState state);
+
+    public abstract BytemanInjectState getInjectState();
     
     public abstract void setViewControlsEnabled(boolean newState);
-    
+
     public abstract void contentChanged(ActionEvent<TabbedPaneContentAction> event);
     
     public abstract String getRuleContent();

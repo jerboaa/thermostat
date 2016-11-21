@@ -43,16 +43,35 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
+import org.apache.felix.scr.annotations.Service;
+
 import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.cli.AbstractCompleterCommand;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.BorderedTableRenderer;
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -75,15 +94,8 @@ import com.redhat.thermostat.vm.byteman.common.BytemanMetric;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest;
-import com.redhat.thermostat.vm.byteman.common.command.BytemanRequestResponseListener;
 import com.redhat.thermostat.vm.byteman.common.command.BytemanRequest.RequestAction;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
-import org.apache.felix.scr.annotations.Service;
+import com.redhat.thermostat.vm.byteman.common.command.BytemanRequestResponseListener;
 
 @Component
 @Service
@@ -106,12 +118,16 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
     static final String STATUS_ACTION = "status";
     static final String SHOW_ACTION = "show-metrics";
     private static final String RULES_FILE_OPTION = "rules";
+    private static final String NAME_QUERY_OPTION = "show";
     private static final String NO_RULES_LOADED = "<no-loaded-rules>";
     private static final String UNSET_PORT = "<unset>";
     private static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");
+    private static final String[] DIVIDER = {"-", "-", "-", "-"};
 
     
     private final DependencyServices depServices = new DependencyServices();
+
+    private BorderedTableRenderer table;
 
     @Override
     public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
@@ -163,7 +179,12 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
             showStatus(ctx, vmInfo, bytemanDao);
             break;
         case SHOW_ACTION:
-            showMetrics(ctx, vmId, agentId, bytemanDao);
+            Arguments args = ctx.getArguments();
+            String nameQuery = translator.localize(LocaleResources.ALL_METRICS).getContents();
+            if (args.hasArgument(NAME_QUERY_OPTION)) {
+                nameQuery = args.getArgument(NAME_QUERY_OPTION);
+            }
+            showMetrics(ctx, vmId, agentId, bytemanDao, nameQuery);
             break;
         default:
             throw new CommandException(translator.localize(LocaleResources.UNKNOWN_COMMAND, command));
@@ -180,7 +201,6 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
         submitRequest(ctx, requestQueue, unloadRequest);
     }
 
-    
     /* Injects byteman rules */
     private void injectRules(InetSocketAddress target, VmInfo vmInfo, CommandContext ctx, VmBytemanDAO bytemanDao) throws CommandException {
         VmId vmId = new VmId(vmInfo.getVmId());
@@ -209,21 +229,57 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
         submitRequest(ctx, requestQueue, request);
     }
 
+    private void printTableHeaders(BorderedTableRenderer table) {
+        List<String> header = new ArrayList<String>();
+        header.add(translator.localize(LocaleResources.HEADER_TIMESTAMP).getContents());
+        header.add(translator.localize(LocaleResources.HEADER_MARKER).getContents());
+        header.add(translator.localize(LocaleResources.HEADER_METRIC_NAME).getContents());
+        header.add(translator.localize(LocaleResources.HEADER_METRIC_VALUE).getContents());
+        table.printHeader(header.toArray(new String[header.size()]));
+    }
+
     /* Show metrics retrieved via byteman rules */
-    private void showMetrics(CommandContext ctx, VmId vmId, AgentId agentId, VmBytemanDAO bytemanDao) throws CommandException {
+    private void showMetrics(CommandContext ctx, VmId vmId, AgentId agentId, VmBytemanDAO bytemanDao, String nameQuery) throws CommandException {
         // TODO: Make this query configurable with arguments
+        table = new BorderedTableRenderer(4);
+        printTableHeaders(table);
+        Set<String> metricsNamesSet = new HashSet<>();
+        SortedSet<String> sortedMetricNames;
+
         long now = System.currentTimeMillis();
         long from = now - TimeUnit.MINUTES.toMillis(5);
         long to = now;
         Range<Long> timeRange = new Range<Long>(from, to);
         List<BytemanMetric> metrics = bytemanDao.findBytemanMetrics(timeRange, vmId, agentId);
-        PrintStream output = ctx.getConsole().getOutput();
         PrintStream out = ctx.getConsole().getOutput();
         if (metrics.isEmpty()) {
             out.println(translator.localize(LocaleResources.NO_METRICS_AVAILABLE, vmId.get()).getContents());
         } else {
-            for (BytemanMetric m: metrics) {
-                output.println(m.getDataAsJson());
+            Map<String, Object> map = new HashMap<>();
+            for (BytemanMetric m : metrics) {
+                String timestring = Clock.DEFAULT_DATE_FORMAT.format(new Date(m.getTimeStamp()));
+                map = m.getDataAsMap();
+                for (Entry<String, Object> item: map.entrySet()) {
+                    Object metricsName = item.getKey();
+                    metricsNamesSet.add(metricsName.toString());
+                    Object metricsValue = item.getValue();
+                    if (nameQuery.equals(translator.localize(LocaleResources.ALL_METRICS).getContents()) || metricsName.equals(nameQuery)) {
+                        table.printLine(new String[] {timestring, m.getMarker(), metricsName.toString(), metricsValue.toString()});
+                    }
+                }
+                /* print a divider to group metrics in the table if viewing multiple fields */
+                if (nameQuery.equals(translator.localize(LocaleResources.ALL_METRICS).getContents())) {
+                    table.printLine(DIVIDER);
+                }
+            }
+            sortedMetricNames = new TreeSet<>(metricsNamesSet);
+            if (sortedMetricNames.contains(nameQuery) || nameQuery.equals(translator.localize(LocaleResources.ALL_METRICS).getContents())) {
+                out.println(translator.localize(LocaleResources.CURRENT_METRICS_DISPLAYED, nameQuery).getContents());
+                out.println(translator.localize(LocaleResources.AVAILABLE_METRICS, sortedMetricNames.toString()).getContents());
+                table.render(out);
+            } else {
+                out.println(translator.localize(LocaleResources.NO_METRICS_DATA, nameQuery).getContents());
+                out.println(translator.localize(LocaleResources.AVAILABLE_METRICS, sortedMetricNames.toString()).getContents());
             }
         }
     }

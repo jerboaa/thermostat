@@ -45,14 +45,14 @@ import java.util.List;
 
 public class TableRenderer {
 
-    private List<String[]> lines;
-    private String[] header;
+    protected List<String[]> lines;
+    protected String[] header;
     private List<Integer> columnSortingQueue = new ArrayList<>();
-    private int[] maxColumnWidths;
-    private int lastPrintedLine = -1;
+    protected int[] maxColumnWidths;
+    protected int lastPrintedLine = -1;
 
-    private int numColumns;
-    private int minWidth;
+    protected int numColumns;
+    protected int minWidth;
 
     public TableRenderer(int numColumns) {
         this(numColumns, 1);
@@ -101,7 +101,7 @@ public class TableRenderer {
         }
     }
 
-    private void sortLines() {
+    protected void sortLines() {
         Collections.sort(lines, new Comparator<String[]>() {
             @Override
             public int compare(final String[] lines1, final String[] lines2) {
