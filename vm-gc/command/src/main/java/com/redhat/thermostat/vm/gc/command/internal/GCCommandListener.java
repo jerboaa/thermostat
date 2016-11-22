@@ -91,8 +91,8 @@ public class GCCommandListener implements RequestResponseListener {
         latch.countDown();
     }
 
-    public synchronized void await(long timeout) throws InterruptedException {
-        this.latch.await(timeout, TimeUnit.MILLISECONDS);
+    public synchronized void await(long milliseconds) throws InterruptedException {
+        this.latch.await(milliseconds, TimeUnit.MILLISECONDS);
     }
 
     public void setOut(PrintStream out) {

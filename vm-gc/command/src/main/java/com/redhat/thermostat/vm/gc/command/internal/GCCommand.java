@@ -64,11 +64,13 @@ public class GCCommand extends AbstractCommand {
     private GCRequest request;
     private AgentInfoDAO agentInfoDAO;
     private VmInfoDAO vmInfoDAO;
-    private final GCCommandListener listener;
+
+    private final GCCommandListenerFactory listenerFactory;
+    private GCCommandListener listener;
     private Semaphore servicesAvailable = new Semaphore(0);
 
-    public GCCommand(GCCommandListener listener) {
-        this.listener = listener;
+    GCCommand(GCCommandListenerFactory listenerFactory) {
+        this.listenerFactory = listenerFactory;
     }
 
     @Override
@@ -79,8 +81,7 @@ public class GCCommand extends AbstractCommand {
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         requireNonNull(request, translator.localize(LocaleResources.GCREQUEST_SERVICE_UNAVAILABLE));
 
-        listener.setOut(ctx.getConsole().getOutput());
-        listener.setErr(ctx.getConsole().getError());
+        listener = listenerFactory.createListener(ctx.getConsole().getOutput(), ctx.getConsole().getError());
 
         VmArgument vmArgument = VmArgument.required(ctx.getArguments());
         attemptGC(vmArgument.getVmId());
@@ -118,7 +119,7 @@ public class GCCommand extends AbstractCommand {
 
     private void waitForListenerResponse() {
         try {
-            listener.await(1000l);
+            listener.await(30_000L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

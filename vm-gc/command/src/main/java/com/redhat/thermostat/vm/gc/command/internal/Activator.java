@@ -53,7 +53,7 @@ import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
 public class Activator implements BundleActivator {
 
-    private final GCCommand gcCommand = new GCCommand(new GCCommandListener());
+    private final GCCommand gcCommand = new GCCommand(new GCCommandListenerFactoryImpl());
     private final ShowGcNameCommand showGcNameCmd = new ShowGcNameCommand();
 
     private MultipleServiceTracker showGcNameCmdTracker;

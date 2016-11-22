@@ -62,6 +62,8 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 
+import java.io.PrintStream;
+
 public class GCCommandTest {
 
     private GCCommand command;
@@ -70,7 +72,6 @@ public class GCCommandTest {
     private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDAO;
     private GCRequest gcRequest;
-    private GCCommandListener listener;
 
     @Before
     public void setup() {
@@ -80,9 +81,11 @@ public class GCCommandTest {
         agentInfoDAO = mock(AgentInfoDAO.class);
         gcRequest = mock(GCRequest.class);
 
-        listener = mock(GCCommandListener.class);
+        GCCommandListenerFactory listenerFactory = mock(GCCommandListenerFactory.class);
+        GCCommandListener listener = mock(GCCommandListener.class);
+        when(listenerFactory.createListener(any(PrintStream.class), any(PrintStream.class))).thenReturn(listener);
 
-        command = new GCCommand(listener);
+        command = new GCCommand(listenerFactory);
     }
 
     @Test
@@ -109,7 +112,7 @@ public class GCCommandTest {
                 complete[0] = true;
                 return null;
             }
-        }).when(gcRequest).sendGCRequestToAgent(vmRef, agentInfoDAO, listener);
+        }).when(gcRequest).sendGCRequestToAgent(eq(vmRef), eq(agentInfoDAO), any(GCCommandListener.class));
 
         CommandContext context = createVmIdArgs(vmId);
 
