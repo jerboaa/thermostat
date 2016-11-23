@@ -306,6 +306,7 @@ public class SwingVmBytemanViewTest {
         comboBox = getMetricsComboBox();
         table = getMetricsTable();
         verifyComboItemAt(comboBox, t.localize(LocaleResources.COMBO_ALL_METRICS).getContents(), 0);
+        sortTableElements(table, 2);
         verifyTableValueAt(table, "bar", 0, 2);
         verifyTableValueAt(table, "value2", 0, 3);
         verifyTableValueAt(table, "baz", 1, 2);
@@ -438,6 +439,15 @@ public class SwingVmBytemanViewTest {
         NameMatcher tableMatcher = new NameMatcher(SwingVmBytemanView.METRICS_TABLE_NAME, JTable.class);
         JTableFixture tableFixture = new JTableFixture(frame.robot, (JTable) frame.robot.finder().find(frame.component(), tableMatcher));
         return (JTable) tableFixture.component();
+    }
+
+    private void sortTableElements(final JTable table, final int column) {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                table.getRowSorter().toggleSortOrder(column);
+            }
+        });
     }
 
     private void verifyTableValueAt(final JTable table, final Object expected, final int row, final int column) {

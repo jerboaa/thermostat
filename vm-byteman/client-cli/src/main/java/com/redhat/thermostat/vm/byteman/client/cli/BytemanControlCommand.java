@@ -255,7 +255,7 @@ public class BytemanControlCommand extends AbstractCompleterCommand {
         if (metrics.isEmpty()) {
             out.println(translator.localize(LocaleResources.NO_METRICS_AVAILABLE, vmId.get()).getContents());
         } else {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map;
             for (BytemanMetric m : metrics) {
                 String timestring = Clock.DEFAULT_DATE_FORMAT.format(new Date(m.getTimeStamp()));
                 map = m.getDataAsMap();

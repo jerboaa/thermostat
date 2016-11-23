@@ -916,7 +916,7 @@ public class SwingVmBytemanView extends VmBytemanView implements SwingComponent 
                         metricsTable.setModel(tableModel);
                         metricsTable.setAutoCreateColumnsFromModel(true);
                     } else {
-                        Map<String, Object> map = new HashMap<>();
+                        Map<String, Object> map;
                         int previousNameSetSize = metricsNameSet.size();
                         String selectedMetric = metricsComboBox.getSelectedItem().toString();
                         tableModel.addColumn(t.localize(LocaleResources.HEADER_TIMESTAMP).getContents());
