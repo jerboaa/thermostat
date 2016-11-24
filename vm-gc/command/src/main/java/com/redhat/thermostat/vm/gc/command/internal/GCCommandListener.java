@@ -49,14 +49,25 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class GCCommandListener implements RequestResponseListener {
+
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    private static final Logger logger = LoggingUtils
-            .getLogger(GCCommandListener.class);
 
     private final CountDownLatch latch = new CountDownLatch(1);
 
-    private PrintStream out;
-    private PrintStream err;
+    private final Logger logger;
+    private final PrintStream out;
+    private final PrintStream err;
+
+    // injectable logger intended for testing only
+    GCCommandListener(Logger logger, PrintStream out, PrintStream err) {
+        this.logger = logger;
+        this.out = out;
+        this.err = err;
+    }
+
+    GCCommandListener(PrintStream out, PrintStream err) {
+        this(LoggingUtils.getLogger(GCCommandListener.class), out, err);
+    }
 
     @Override
     public void fireComplete(Request request, Response response) {
@@ -95,11 +106,4 @@ public class GCCommandListener implements RequestResponseListener {
         this.latch.await(milliseconds, TimeUnit.MILLISECONDS);
     }
 
-    public void setOut(PrintStream out) {
-        this.out = out;
-    }
-
-    public void setErr(PrintStream err) {
-        this.err = err;
-    }
 }

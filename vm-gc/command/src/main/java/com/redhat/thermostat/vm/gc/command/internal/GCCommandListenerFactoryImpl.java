@@ -41,9 +41,6 @@ import java.io.PrintStream;
 class GCCommandListenerFactoryImpl implements GCCommandListenerFactory {
     @Override
     public GCCommandListener createListener(PrintStream out, PrintStream err) {
-        GCCommandListener gcCommandListener = new GCCommandListener();
-        gcCommandListener.setOut(out);
-        gcCommandListener.setErr(err);
-        return gcCommandListener;
+        return new GCCommandListener(out, err);
     }
 }

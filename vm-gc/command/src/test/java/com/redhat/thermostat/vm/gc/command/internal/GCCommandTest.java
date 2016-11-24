@@ -36,17 +36,14 @@
 
 package com.redhat.thermostat.vm.gc.command.internal;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.client.cli.VmArgument;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -72,6 +69,8 @@ public class GCCommandTest {
     private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDAO;
     private GCRequest gcRequest;
+    private GCCommandListenerFactory gcCommandListenerFactory;
+    private GCCommandListener gcCommandListener;
 
     @Before
     public void setup() {
@@ -81,11 +80,11 @@ public class GCCommandTest {
         agentInfoDAO = mock(AgentInfoDAO.class);
         gcRequest = mock(GCRequest.class);
 
-        GCCommandListenerFactory listenerFactory = mock(GCCommandListenerFactory.class);
-        GCCommandListener listener = mock(GCCommandListener.class);
-        when(listenerFactory.createListener(any(PrintStream.class), any(PrintStream.class))).thenReturn(listener);
+        gcCommandListenerFactory = mock(GCCommandListenerFactory.class);
+        gcCommandListener = mock(GCCommandListener.class);
+        when(gcCommandListenerFactory.createListener(any(PrintStream.class), any(PrintStream.class))).thenReturn(gcCommandListener);
 
-        command = new GCCommand(listenerFactory);
+        command = new GCCommand(gcCommandListenerFactory);
     }
 
     @Test
@@ -105,22 +104,14 @@ public class GCCommandTest {
 
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
 
-        final boolean[] complete = {false};
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                complete[0] = true;
-                return null;
-            }
-        }).when(gcRequest).sendGCRequestToAgent(eq(vmRef), eq(agentInfoDAO), any(GCCommandListener.class));
-
         CommandContext context = createVmIdArgs(vmId);
 
         setServices();
 
         command.run(context);
 
-        assertTrue(complete[0]);
+        verify(gcRequest).sendGCRequestToAgent(vmRef, agentInfoDAO, gcCommandListener);
+        verify(gcCommandListenerFactory).createListener(any(PrintStream.class), any(PrintStream.class));
     }
 
     @Test(expected = CommandException.class)

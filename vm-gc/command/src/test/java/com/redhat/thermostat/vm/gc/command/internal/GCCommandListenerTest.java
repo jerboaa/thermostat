@@ -36,131 +36,74 @@
 
 package com.redhat.thermostat.vm.gc.command.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+
+import java.io.PrintStream;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class GCCommandListenerTest {
 
-    private final GCCommandListener listener = new GCCommandListener();
-    private static final Logger logger = LoggingUtils
-            .getLogger(GCCommandListener.class);
+    private static Locale defaultLocale;
 
-    private PrintStream ps;
-    private ByteArrayOutputStream baos;
+    private GCCommandListener listener;
 
+    private Logger logger;
+    private PrintStream out;
+    private PrintStream err;
+
+    @BeforeClass
+    public static void setupClass() {
+        defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.US);
+    }
+
+    @AfterClass
+    public static void teardownClass() {
+        Locale.setDefault(defaultLocale);
+    }
 
     @Before
     public void setup() {
-        baos = new ByteArrayOutputStream();
-        ps = new PrintStream(baos);
-        listener.setOut(ps);
-        listener.setErr(ps);
+        logger = mock(Logger.class);
+        out = mock(PrintStream.class);
+        err = mock(PrintStream.class);
+
+        listener = new GCCommandListener(logger, out, err);
     }
 
     @Test
     public void testSuccessfulGCResponse() {
-        Request request = mock(Request.class);
+        listener.fireComplete(mock(Request.class), new Response(Response.ResponseType.OK));
 
-        Response resp = new Response(Response.ResponseType.OK);
-
-        Handler handler = mock(Handler.class);
-        logger.addHandler(handler);
-
-        final boolean[] complete = {false};
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                LogRecord log = (LogRecord)invocation.getArguments()[0];
-                if (log.getLevel().equals(Level.INFO)) {
-                    complete[0] = true;
-                }
-                return null;
-            }
-        }).when(handler).publish(any(LogRecord.class));
-
-        listener.fireComplete(request, resp);
-
-        assertTrue(complete[0]);
-
-        String expected = "GC Successful for VM with PID: null\n";
-        assertEquals(expected, new String(baos.toByteArray(), StandardCharsets.UTF_8));
+        verify(logger).log(Level.INFO, "Garbage Collection performed on VM with PID null");
+        verify(out).println("GC Successful for VM with PID: null");
     }
 
     @Test
     public void testErrorResponse() {
-        Request request = mock(Request.class);
-        Response resp = new Response(Response.ResponseType.ERROR);
+        listener.fireComplete(mock(Request.class), new Response(Response.ResponseType.ERROR));
 
-        Handler handler = mock(Handler.class);
-        logger.addHandler(handler);
-
-        final boolean[] complete = {false};
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                LogRecord log = (LogRecord)invocation.getArguments()[0];
-                if (log.getLevel().equals(Level.SEVERE)) {
-                    complete[0] = true;
-                }
-                return null;
-            }
-        }).when(handler).publish(any(LogRecord.class));
-
-        listener.fireComplete(request, resp);
-
-        assertTrue(complete[0]);
-
-        String expected = "GC Request Error for VM with PID: null\n";
-        assertEquals(expected, new String(baos.toByteArray(), StandardCharsets.UTF_8));
+        verify(logger).log(Level.SEVERE, "GC Request error for VM PID null");
+        verify(err).println("GC Request Error for VM with PID: null");
     }
 
     @Test
     public void testDefaultResponse() {
-        Request request = mock(Request.class);
-        Response resp = new Response(Response.ResponseType.NOK);
+        listener.fireComplete(mock(Request.class), new Response(Response.ResponseType.NOK));
 
-        Handler handler = mock(Handler.class);
-        logger.addHandler(handler);
-
-        final boolean[] complete = {false};
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                LogRecord log = (LogRecord)invocation.getArguments()[0];
-                if (log.getLevel().equals(Level.WARNING)) {
-                    complete[0] = true;
-                }
-                return null;
-            }
-        }).when(handler).publish(any(LogRecord.class));
-
-        listener.fireComplete(request, resp);
-
-        assertTrue(complete[0]);
-
-        assertTrue(baos.size() > 0);
-
-        String expected = "Unknown result for GC request\n";
-        assertEquals(expected, new String(baos.toByteArray(), StandardCharsets.UTF_8));
+        verify(logger).log(Level.WARNING, "Unknown result from GC command");
+        verify(out).println("Unknown result for GC request");
     }
+
 }
