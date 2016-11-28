@@ -36,6 +36,14 @@
 
 package com.redhat.thermostat.backend.internal;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
+import com.redhat.thermostat.backend.VmUpdateListener;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+
 import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
@@ -43,15 +51,16 @@ import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.backend.VmUpdate;
-import com.redhat.thermostat.backend.VmUpdateException;
-import com.redhat.thermostat.backend.VmUpdateListener;
-
 public class VmListenerWrapper implements VmListener {
     
-    private VmUpdateListener listener;
-    private MonitoredVm vm;
-    private VmUpdate update;
+    private static final Logger logger = LoggingUtils.getLogger(VmListenerWrapper.class);
+    // Threshold until this listener gets removed from the JVM in case of it throwing
+    // exceptions on countersUpdated()
+    private static final int EXCEPTION_THRESHOLD = 10;
+    private final VmUpdateListener listener;
+    private final MonitoredVm vm;
+    private final VmUpdate update;
+    private int exceptionCount;
 
     public VmListenerWrapper(VmUpdateListener listener, MonitoredVm vm) {
         this.listener = listener;
@@ -64,7 +73,26 @@ public class VmListenerWrapper implements VmListener {
         if (!vm.equals(event.getMonitoredVm())) {
             throw new AssertionError("Received change event for wrong VM");
         }
-        listener.countersUpdated(update);
+        try {
+            listener.countersUpdated(update);
+        } catch (Throwable t) {
+            handleListenerException(t);
+        }
+    }
+    
+    private void handleListenerException(Throwable t) {
+        final String listenerName = listener.getClass().getName();
+        if (exceptionCount < EXCEPTION_THRESHOLD) {
+            logger.log(Level.INFO, "VM listener " + listenerName + " threw an exception", t);
+            exceptionCount++;
+        } else {
+            logger.fine("Removing bad listener " + listenerName + " due to too many repeated exceptions.");
+            try {
+                vm.removeVmListener(this);
+            } catch (MonitorException e) {
+                // ignore remove failures for bad listeners
+            }
+        }
     }
 
     @Override

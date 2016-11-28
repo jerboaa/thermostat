@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.backend;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -47,6 +48,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -59,16 +61,19 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 public abstract class VmPollingBackend extends PollingBackend implements VmStatusListener {
 
     private final Set<VmPollingAction> actions;
+    private final Map<String, Pair<Integer, VmPollingAction>> badActions;
     private final Map<Integer, String> pidsToMonitor = new ConcurrentHashMap<>();
     private final VmStatusListenerRegistrar registrar;
     private static final Logger logger = LoggingUtils.getLogger(VmPollingBackend.class);
+    private static final int EXCEPTIONS_THRESHOLD = 10;
 
     public VmPollingBackend(String name, String description,
             String vendor, Version version, ScheduledExecutorService executor,
             VmStatusListenerRegistrar registrar) {
         super(name, description, vendor, version, executor);
         this.registrar = registrar;
-        actions = new CopyOnWriteArraySet<>();
+        this.actions = new CopyOnWriteArraySet<>();
+        this.badActions = new HashMap<>();
     }
 
     @Override
@@ -87,8 +92,31 @@ public abstract class VmPollingBackend extends PollingBackend implements VmStatu
             int pid = entry.getKey();
             String vmId = entry.getValue();
             for (VmPollingAction action : actions) {
-                action.run(vmId, pid);
+                try {
+                    action.run(vmId, pid);
+                } catch (Throwable t) {
+                    handleActionException(action, vmId);
+                }
             }
+        }
+    }
+
+    private synchronized void handleActionException(VmPollingAction action, String vmId) {
+        final String actionName = action.getClass().getName();
+        final String actionKey = actionName + vmId;
+        Pair<Integer, VmPollingAction> actionPair = badActions.remove(actionKey);
+        if (actionPair == null) {
+            actionPair = new Pair<>(Integer.valueOf(1), action);
+        }
+        int exceptionsPerAction = actionPair.getFirst();
+        if (exceptionsPerAction < EXCEPTIONS_THRESHOLD) {
+            exceptionsPerAction++;
+            logger.info(VmPollingAction.class.getSimpleName() + " " +
+                    actionName + " threw an exception");
+            badActions.put(actionKey, new Pair<>(exceptionsPerAction, action));
+        } else {
+            logger.fine("Removing " + actionName + " due to too many repeated exceptions.");
+            unregisterAction(action);
         }
     }
 

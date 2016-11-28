@@ -39,6 +39,7 @@ package com.redhat.thermostat.backend.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,13 +47,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
+import com.redhat.thermostat.backend.VmUpdateListener;
+
 import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.event.VmEvent;
-
-import com.redhat.thermostat.backend.VmUpdateException;
-import com.redhat.thermostat.backend.VmUpdateListener;
 
 public class VmListenerWrapperTest {
 
@@ -65,6 +67,31 @@ public class VmListenerWrapperTest {
         listener = mock(VmUpdateListener.class);
         monitoredVm = mock(MonitoredVm.class);
         wrapper = new VmListenerWrapper(listener, monitoredVm);
+    }
+    
+    /**
+     * Verify that a bad listener which throws exceptions gets removed
+     * from the JVM beyond a threshold.
+     * @throws MonitorException 
+     */
+    @Test
+    public void testMonitorsUpdatedListenerExceptions() throws MonitorException {
+        final int beyondThresholdLimit = 11;
+        VmUpdateListener badListener = new VmUpdateListener() {
+            @Override
+            public void countersUpdated(VmUpdate update) {
+                throw new RuntimeException("countersUpdated() testing!");
+            }
+        };
+        VmListenerWrapper vmListenerWrapper = new VmListenerWrapper(badListener, monitoredVm);
+        VmEvent event = mock(VmEvent.class);
+        for (int i = 0; i < beyondThresholdLimit; i++) {
+            when(event.getMonitoredVm()).thenReturn(monitoredVm);
+            
+            vmListenerWrapper.monitorsUpdated(event);
+            
+        }
+        verify(monitoredVm, times(1)).removeVmListener(vmListenerWrapper);
     }
 
     @Test

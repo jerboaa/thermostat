@@ -36,12 +36,16 @@
 
 package com.redhat.thermostat.backend;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
  * Convenience {@link Backend} class for implementations that will take some
@@ -51,17 +55,41 @@ import com.redhat.thermostat.common.Version;
  */
 public abstract class HostPollingBackend extends PollingBackend {
 
+    private static final Logger logger = LoggingUtils.getLogger(HostPollingBackend.class);
+    private static final int EXCEPTIONS_THRESHOLD = 10;
     private final Set<HostPollingAction> actions;
+    private final Map<String, Integer> badActions;
 
     public HostPollingBackend(String name, String description,
             String vendor, Version version, ScheduledExecutorService executor) {
         super(name, description, vendor, version, executor);
         actions = new CopyOnWriteArraySet<>();
+        badActions = new HashMap<>();
     }
 
     final void doScheduledActions() {
         for (HostPollingAction action : actions) {
-            action.run();
+            try {
+                action.run();
+            } catch (Throwable t) {
+                handleActionException(action);
+            }
+        }
+    }
+    
+    private synchronized void handleActionException(HostPollingAction action) {
+        final String actionName = action.getClass().getName();
+        Integer count = badActions.remove(actionName);
+        if (count == null) {
+            count = Integer.valueOf(1); // Already called once when this happens
+        }
+        if (count < EXCEPTIONS_THRESHOLD) {
+            logger.info(HostPollingAction.class.getSimpleName() + " " + actionName + " threw an exception.");
+            count++;
+            badActions.put(actionName, count);
+        } else {
+            logger.fine("Removing " + actionName + " due to too many repeated exceptions.");
+            unregisterAction(action);
         }
     }
 

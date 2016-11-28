@@ -38,8 +38,11 @@ package com.redhat.thermostat.backend;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /*
  * Convenience {@link Backend} class for implementations that will take action
@@ -49,6 +52,7 @@ import com.redhat.thermostat.common.Version;
  */
 abstract class PollingBackend extends BaseBackend {
 
+    private static final Logger logger = LoggingUtils.getLogger(PollingBackend.class);
     static final long DEFAULT_INTERVAL = 1000; // TODO make this configurable.
 
     private ScheduledExecutorService executor;
@@ -69,7 +73,11 @@ abstract class PollingBackend extends BaseBackend {
             executor.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    doScheduledActions();
+                    try {
+                        doScheduledActions();
+                    } catch (Throwable e) {
+                        logger.log(Level.WARNING, "Polling action threw exception");
+                    }
                 }
             }, 0, DEFAULT_INTERVAL, TimeUnit.MILLISECONDS);
 

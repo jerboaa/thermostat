@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.backend;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.junit.Before;
@@ -45,6 +47,7 @@ import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Version;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -80,6 +83,37 @@ public class VmPollingBackendTest {
         }
     }
 
+    /**
+     * If an action throws exceptions repeatedly, that action shall get
+     * disabled/unregistered.
+     */
+    @Test
+    public void testDoScheduledActionsWithExceptions() {
+        final int beyondExceptionThreshold = 13; // anything beyond 10 will do
+        String vmId1 = "test-vm-id1", vmId2 = "test-vm-id2";
+        int pid1 = 123, pid2 = 456;
+        backend.vmStatusChanged(Status.VM_ACTIVE, vmId1, pid1);
+        backend.vmStatusChanged(Status.VM_ACTIVE, vmId2, pid2);
+        BadVmPollingAction badAction = new BadVmPollingAction();
+        backend.registerAction(badAction);
+        for (int i = 0; i < beyondExceptionThreshold; i++) {
+            backend.doScheduledActions();
+        }
+    
+        // The exceptions thrown for one vmID might disable the action
+        // for *all* other vmIDs too. So the call count for one of the
+        // vmIDs is actually 9, whereas the other one must have reached
+        // the threshold count of 10.
+        int callCountVm1 = badAction.getCallCount(vmId1);
+        int callCountVm2 = badAction.getCallCount(vmId2);
+        int minCallCount = Math.min(callCountVm2, callCountVm1);
+        int maxCallCount = Math.max(callCountVm1, callCountVm2);
+        assertEquals("Must not be called beyond exception threshold",
+                10, maxCallCount);
+        assertEquals("Other action's exception cancels globally",
+                9, minCallCount);
+    }
+
     @Test
     public void verifyCustomActivateRegistersListener() {
         backend.preActivate();
@@ -91,7 +125,7 @@ public class VmPollingBackendTest {
         backend.postDeactivate();
         verify(mockRegistrar).unregister(backend);
     }
-
+    
     @Test
     public void verifyRegisteredActionPerformed() {
         String vmId = "test-vm-id";
@@ -211,5 +245,27 @@ public class VmPollingBackendTest {
 
         verify(action).run(eq(vmId1), eq(pid1));
         verify(action, never()).run(eq(vmId2), eq(pid2));
+    }
+    
+    private static class BadVmPollingAction implements VmPollingAction {
+        
+        private final Map<String, Integer> callCounts = new HashMap<>();
+        
+        @Override
+        public void run(String vmId, int pid) {
+            Integer currCount = callCounts.remove(vmId);
+            if (currCount == null) {
+                currCount = Integer.valueOf(1);
+            } else {
+                currCount++;
+            }
+            callCounts.put(vmId, Integer.valueOf(currCount));
+            throw new RuntimeException("doScheduledActions() testing!");
+        }
+        
+        private Integer getCallCount(String vmId) {
+            return callCounts.get(vmId);
+        }
+        
     }
 }

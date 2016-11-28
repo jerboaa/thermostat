@@ -44,6 +44,7 @@ import org.junit.Test;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Version;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -74,6 +75,21 @@ public class HostPollingBackendTest {
              */
             backend.setObserveNewJvm(true);
         }
+    }
+    
+    /**
+     * If an action throws exceptions repeatedly, that action shall get
+     * disabled/unregistered.
+     */
+    @Test
+    public void testDoScheduledActionsWithExceptions() {
+        final int beyondExceptionThreshold = 13; // Anything beyond 10 will do
+        BadHostPollingAction badAction = new BadHostPollingAction();
+        backend.registerAction(badAction);
+        for (int i = 0; i < beyondExceptionThreshold; i++) {
+            backend.doScheduledActions();
+        }
+        assertEquals(10, badAction.callCount);
     }
 
     @Test
@@ -112,6 +128,18 @@ public class HostPollingBackendTest {
         backend.unregisterAction(action);
         backend.doScheduledActions();
         verify(action, never()).run();
+    }
+    
+    private static class BadHostPollingAction implements HostPollingAction {
+        
+        private int callCount;
+
+        @Override
+        public void run() {
+            callCount++;
+            throw new RuntimeException("HostPollingBackend.doScheduledActions() testing!");
+        }
+        
     }
 
 }

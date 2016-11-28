@@ -129,8 +129,15 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
         case VM_ACTIVE:
             if (getObserveNewJvm()) {
                 String wId = writerId.getWriterID();
-                VmUpdateListener listener = createVmListener(wId, vmId, pid);
-                monitor.handleNewVm(listener, pid);
+                VmUpdateListener listener = null;
+                try {
+                    listener = createVmListener(wId, vmId, pid);
+                } catch (Throwable t) {
+                    logger.log(Level.INFO, "Creating the VM listener for a VmListenerBackend threw an exception. Going to ignore the backend!", t);
+                }
+                if (listener != null) {
+                    monitor.handleNewVm(listener, pid);
+                }
             } else {
                 logger.log(Level.FINE, "skipping new vm " + pid);
             }
