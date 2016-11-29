@@ -46,6 +46,7 @@ import org.junit.Test;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.internal.test.Bug;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
@@ -87,6 +88,9 @@ public class VmPollingBackendTest {
      * If an action throws exceptions repeatedly, that action shall get
      * disabled/unregistered.
      */
+    @Bug(id = "3242",
+         summary = "Adverse Backend breaks other Backends badly ",
+         url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3242")
     @Test
     public void testDoScheduledActionsWithExceptions() {
         final int beyondExceptionThreshold = 13; // anything beyond 10 will do

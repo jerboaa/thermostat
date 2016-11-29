@@ -38,6 +38,7 @@ package com.redhat.thermostat.backend;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -53,6 +54,7 @@ import sun.jvmstat.monitor.MonitorException;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.internal.VmMonitor;
+import com.redhat.thermostat.common.internal.test.Bug;
 import com.redhat.thermostat.storage.core.WriterID;
 
 public class VmListenerBackendTest {
@@ -127,6 +129,29 @@ public class VmListenerBackendTest {
         backend.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
         verify(monitor).handleNewVm(listener, VM_PID);
     }
+    
+    /**
+     * createVmListener() might be plugin-supplied code. When creating the
+     * listener fails due to exceptions, other listeners should still continue
+     * to work. That is, the exception of creating one listener must not be
+     * propagated.
+     */
+    @Bug(id = "3242",
+         summary = "Adverse Backend breaks other Backends badly ",
+         url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3242")
+    @Test
+    public void testNewVMCreateListenerWithExceptions() {
+        VmStatusListenerRegistrar customRegistrar = mock(VmStatusListenerRegistrar.class);
+        WriterID wid = mock(WriterID.class);
+        VmListenerBackend testBackend = new ExceptionThrowingCreateVmListenerBackend(
+                "Test Backend", "Backend for test", "Test Co.",
+                "0.0.0", customRegistrar, wid);
+        testBackend.setObserveNewJvm(true);
+        VmMonitor testMonitor = mock(VmMonitor.class);
+        testBackend.setMonitor(testMonitor);
+        testBackend.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
+        verify(testMonitor, times(0)).handleNewVm(any(VmUpdateListener.class), any(int.class));
+    }
 
     @Test
     public void testAlreadyRunningVM() {
@@ -172,6 +197,19 @@ public class VmListenerBackendTest {
             return listener;
         }
         
+    }
+    
+    private class ExceptionThrowingCreateVmListenerBackend extends TestBackend {
+        
+        public ExceptionThrowingCreateVmListenerBackend(String name, String description, String vendor,
+                String version, VmStatusListenerRegistrar registrar, WriterID writerId) {
+            super(name, description, vendor, version, registrar, writerId);
+        }
+        
+        @Override
+        protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
+            throw new RuntimeException("createVmListener() testing!");
+        }
     }
 
 }

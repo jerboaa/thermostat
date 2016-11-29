@@ -50,6 +50,7 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.backend.VmUpdate;
 import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.backend.VmUpdateListener;
+import com.redhat.thermostat.common.internal.test.Bug;
 
 import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitorException;
@@ -74,6 +75,9 @@ public class VmListenerWrapperTest {
      * from the JVM beyond a threshold.
      * @throws MonitorException 
      */
+    @Bug(id = "3242",
+         summary = "Adverse Backend breaks other Backends badly ",
+         url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3242")
     @Test
     public void testMonitorsUpdatedListenerExceptions() throws MonitorException {
         final int beyondThresholdLimit = 11;

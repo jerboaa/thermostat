@@ -43,6 +43,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.internal.test.Bug;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -81,6 +82,9 @@ public class HostPollingBackendTest {
      * If an action throws exceptions repeatedly, that action shall get
      * disabled/unregistered.
      */
+    @Bug(id = "3242",
+         summary = "Adverse Backend breaks other Backends badly ",
+         url = "http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3242")
     @Test
     public void testDoScheduledActionsWithExceptions() {
         final int beyondExceptionThreshold = 13; // Anything beyond 10 will do
