@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.agent.ipc.tcpsocket.server.internal;
 
-import java.io.File;
 import java.io.IOException;
 
 import java.net.SocketAddress;
@@ -63,22 +62,22 @@ class ThermostatServerSocketChannelImpl implements Channel {
     private final ServerSocketChannel impl;
     private final SocketAddress addr;
     private final ThermostatIPCCallbacks callbacks;
-    private final Selector selector;
-    
+    private final AcceptThread acceptThread;
+
     private SelectionKey key;
     
     ThermostatServerSocketChannelImpl(String name, ServerSocketChannel impl, SocketAddress addr, 
-            ThermostatIPCCallbacks callbacks, Selector selector, SelectionKey key) {
+            ThermostatIPCCallbacks callbacks, AcceptThread acceptThread, SelectionKey key) {
         this.name = name;
         this.impl = impl;
         this.addr = addr;
         this.callbacks = callbacks;
-        this.selector = selector;
+        this.acceptThread = acceptThread;
         this.key = key;
     }
 
     static ThermostatServerSocketChannelImpl open(String name, SocketAddress addr, ThermostatIPCCallbacks callbacks, 
-            IPCProperties props, Selector selector) throws IOException {
+            IPCProperties props, Selector selector, AcceptThread acceptThread) throws IOException {
         
         ServerSocketChannel impl = channelHelper.open();
 
@@ -87,10 +86,10 @@ class ThermostatServerSocketChannelImpl implements Channel {
         // Set non-blocking
         channelHelper.configureBlocking(impl, false);
         // Register for selection
-        SelectionKey key = channelHelper.register(impl, selector, SelectionKey.OP_ACCEPT);
+        SelectionKey key = channelHelper.register(acceptThread, impl, SelectionKey.OP_ACCEPT);
         // Attach wrapper socket to key, for use in select loop
         ThermostatServerSocketChannelImpl sock =
-                new ThermostatServerSocketChannelImpl(name, impl, addr, callbacks, selector, key);
+                new ThermostatServerSocketChannelImpl(name, impl, addr, callbacks, acceptThread, key);
         channelHelper.attachToKey(key, sock);
         // Send wakeup to trigger re-selection
         selector.wakeup();
@@ -113,7 +112,7 @@ class ThermostatServerSocketChannelImpl implements Channel {
         // Set non-blocking
         channelHelper.configureBlocking(clientImpl, false);
         // Register for selection
-        SelectionKey key = channelHelper.register(clientImpl, selector, SelectionKey.OP_READ);
+        SelectionKey key = channelHelper.register(acceptThread, clientImpl, SelectionKey.OP_READ);
         return new AcceptedSocketChannelImpl(name, clientImpl, key);
     }
 
@@ -145,10 +144,9 @@ class ThermostatServerSocketChannelImpl implements Channel {
         void bind(ServerSocketChannel channel, SocketAddress addr) throws IOException {
             channel.socket().bind(addr);
         }
-        
-        SelectionKey register(SelectableChannel channel, Selector sel, int ops) throws IOException {
-            sel.wakeup();
-            return channel.register(sel, ops);
+
+        SelectionKey register(AcceptThread acceptThread, SelectableChannel channel, int ops) throws IOException {
+            return acceptThread.register(channel, ops);
         }
         
         SelectableChannel configureBlocking(AbstractSelectableChannel channel, boolean block) throws IOException {

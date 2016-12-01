@@ -37,6 +37,7 @@
 package com.redhat.thermostat.agent.ipc.tcpsocket.server.internal;
 
 import java.io.IOException;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.HashSet;
@@ -55,6 +56,7 @@ class AcceptThread extends Thread {
     private final ExecutorService execService;
     private final Selector selector;
     private final ClientHandlerCreator handlerCreator;
+    private final Object registerLock = new Object();
     
     private boolean shutdown;
     
@@ -74,6 +76,7 @@ class AcceptThread extends Thread {
         logger.info("Ready to accept client connections");
         try {
             while (!shutdown) {
+                synchronized(registerLock) {}
                 int selected = selector.select();
                 if (selected < 0) {
                     // Something bad happened
@@ -134,7 +137,31 @@ class AcceptThread extends Thread {
             }
         }
     }
-    
+
+    /**
+     * Register a new channel to this acceptThread.
+     * Handles the select() loop and associated locks.
+     *
+     * See http://php.mandelson.org/mk3/index.php/2011/10/06/better-selectablechannel-registration-in-java-nio/
+     * This could also be an issue for Unix Domain Sockets, but it doesn't seem to be a problem on Linux for
+     * either UDS or TCP sockets on Linux - not sure why.
+     *
+     * May need to add a simiilar deregister() function for clean shutdown.
+     *
+     * @param channel
+     * @param ops
+     * @return
+     * @throws IOException
+     */
+    SelectionKey register(SelectableChannel channel, int ops) throws IOException {
+        final SelectionKey key;
+        synchronized(registerLock) {
+            selector.wakeup();
+            key =  channel.register(selector, ops);
+        }
+        return key;
+    }
+
     void shutdown() throws IOException {
         this.shutdown = true;
         // Interrupt accept thread

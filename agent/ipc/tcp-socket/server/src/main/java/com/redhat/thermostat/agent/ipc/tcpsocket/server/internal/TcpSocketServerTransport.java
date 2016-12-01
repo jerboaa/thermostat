@@ -40,19 +40,10 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
-import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -74,7 +65,6 @@ class TcpSocketServerTransport implements ServerTransport {
     // Access/modification of this field should by synchronized
     private final Map<String, ThermostatServerSocketChannelImpl> sockets;
     private final ExecutorService execService;
-    private final FileUtils fileUtils;
     private final ChannelUtils channelUtils;
     private final ThreadCreator threadCreator;
     
@@ -84,15 +74,14 @@ class TcpSocketServerTransport implements ServerTransport {
     
     TcpSocketServerTransport(SelectorProvider selectorProvider) {
         this(selectorProvider, Executors.newFixedThreadPool(determineDefaultThreadPoolSize(), new CountingThreadFactory()), 
-                new FileUtils(), new ThreadCreator(), new ChannelUtils());
+                new ThreadCreator(), new ChannelUtils());
     }
     
     TcpSocketServerTransport(SelectorProvider selectorProvider, ExecutorService execService,
-            FileUtils fileUtils, ThreadCreator threadCreator, ChannelUtils channelCreator) {
+            ThreadCreator threadCreator, ChannelUtils channelCreator) {
         this.selectorProvider = selectorProvider;
         this.sockets = new HashMap<>();
         this.execService = execService;
-        this.fileUtils = fileUtils;
         this.channelUtils = channelCreator;
         this.threadCreator = threadCreator;
     }
@@ -139,7 +128,7 @@ class TcpSocketServerTransport implements ServerTransport {
         
         // Create socket
         ThermostatServerSocketChannelImpl socket = 
-                channelUtils.createServerSocketChannel(name, addr, callbacks, props, selector);
+                channelUtils.createServerSocketChannel(name, addr, callbacks, props, selector, acceptThread);
 
         sockets.put(name, socket);
         if (!acceptThread.isAlive())
@@ -212,54 +201,6 @@ class TcpSocketServerTransport implements ServerTransport {
     /* for testing purposes */
     Thread getAcceptThread() { return acceptThread; }
 
-    /* For testing purposes */
-    static class FileUtils {
-        
-        boolean exists(Path path) {
-            return Files.exists(path);
-        }
-        
-        void delete(Path path) throws IOException {
-            Files.delete(path);
-        }
-        
-        boolean isDirectory(Path path) {
-            return Files.isDirectory(path);
-        }
-        
-        Path createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException {
-            return Files.createDirectory(dir, attrs);
-        }
-        
-        Path createDirectories(Path dir, FileAttribute<?>... attrs) throws IOException {
-            return Files.createDirectories(dir, attrs);
-        }
-        
-        Set<PosixFilePermission> getPosixFilePermissions(Path path) throws IOException {
-            return Files.getPosixFilePermissions(path);
-        }
-        
-        FileAttribute<Set<PosixFilePermission>> toFileAttribute(Set<PosixFilePermission> perms) {
-            return PosixFilePermissions.asFileAttribute(perms);
-        }
-        
-        DirectoryStream<Path> newDirectoryStream(Path dir) throws IOException {
-            return Files.newDirectoryStream(dir);
-        }
-        
-        UserPrincipalLookupService getUserPrincipalLookupService() {
-            return FileSystems.getDefault().getUserPrincipalLookupService();
-        }
-        
-        String getUsername() {
-            return System.getProperty("user.name");
-        }
-        
-        UserPrincipal getOwner(Path path) throws IOException {
-            return Files.getOwner(path);
-        }
-        
-    }
     
     /* For testing purposes */
     static class ThreadCreator {
@@ -271,8 +212,8 @@ class TcpSocketServerTransport implements ServerTransport {
     /* For testing purposes */
     static class ChannelUtils {
         ThermostatServerSocketChannelImpl createServerSocketChannel(String name, SocketAddress addr, 
-                ThermostatIPCCallbacks callbacks, IPCProperties props, Selector selector) throws IOException {
-            return ThermostatServerSocketChannelImpl.open(name, addr, callbacks, props, selector);
+                ThermostatIPCCallbacks callbacks, IPCProperties props, Selector selector, AcceptThread acceptThread) throws IOException {
+            return ThermostatServerSocketChannelImpl.open(name, addr, callbacks, props, selector, acceptThread);
         }
         void closeSelector(Selector selector) throws IOException {
             selector.close();

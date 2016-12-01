@@ -67,6 +67,7 @@ public class ThermostatServerSocketChannelImplTest {
     private static final String SERVER_NAME = "test";
     
     private TcpServerSocketChannelHelper channelHelper;
+    private AcceptThread acceptThread;
     private SocketAddress addr;
     private ServerSocketChannel impl;
     private Selector selector;
@@ -79,7 +80,9 @@ public class ThermostatServerSocketChannelImplTest {
         channelHelper = mock(TcpServerSocketChannelHelper.class);
         ThermostatServerSocketChannelImpl.setChannelHelper(channelHelper);
         addr = mock(SocketAddress.class);
-        
+
+        acceptThread = mock(AcceptThread.class);
+
         impl = mock(ServerSocketChannel.class);
         when(channelHelper.open()).thenReturn(impl);
         when(channelHelper.isOpen(impl)).thenReturn(true);
@@ -88,7 +91,7 @@ public class ThermostatServerSocketChannelImplTest {
         callbacks = mock(ThermostatIPCCallbacks.class);
 
         key = mock(SelectionKey.class);
-        when(channelHelper.register(impl, selector, SelectionKey.OP_ACCEPT)).thenReturn(key);
+        when(channelHelper.register(acceptThread, impl, SelectionKey.OP_ACCEPT)).thenReturn(key);
         props = mock(IPCProperties.class);
         File propFile = mock(File.class);
         when(props.getPropertiesFile()).thenReturn(propFile);
@@ -118,7 +121,7 @@ public class ThermostatServerSocketChannelImplTest {
         verify(channelHelper).open();
         verify(channelHelper).bind(impl, addr);
         verify(channelHelper).configureBlocking(impl, false);
-        verify(channelHelper).register(impl, selector, SelectionKey.OP_ACCEPT);
+        verify(channelHelper).register(acceptThread, impl, SelectionKey.OP_ACCEPT);
         verify(channelHelper).attachToKey(key, channel);
         verify(selector).wakeup();
         
@@ -130,7 +133,7 @@ public class ThermostatServerSocketChannelImplTest {
         verify(channelHelper, never()).open();
         verify(channelHelper, never()).bind(impl, addr);
         verify(channelHelper, never()).configureBlocking(impl, false);
-        verify(channelHelper, never()).register(impl, selector, SelectionKey.OP_ACCEPT);
+        verify(channelHelper, never()).register(acceptThread, impl, SelectionKey.OP_ACCEPT);
         verify(channelHelper, never()).attachToKey(eq(key), any());
         verify(selector, never()).wakeup();
     }
@@ -150,7 +153,7 @@ public class ThermostatServerSocketChannelImplTest {
         channel.accept();
         verify(impl).accept();
         verify(channelHelper).configureBlocking(clientImpl, false);
-        verify(channelHelper).register(clientImpl, selector, SelectionKey.OP_READ);
+        verify(channelHelper).register(acceptThread, clientImpl, SelectionKey.OP_READ);
     }
     
     @Test
@@ -177,7 +180,7 @@ public class ThermostatServerSocketChannelImplTest {
     }
 
     private ThermostatServerSocketChannelImpl createChannel() throws IOException {
-        return ThermostatServerSocketChannelImpl.open(SERVER_NAME, addr, callbacks, props, selector);
+        return ThermostatServerSocketChannelImpl.open(SERVER_NAME, addr, callbacks, props, selector, acceptThread);
     }
 
 }

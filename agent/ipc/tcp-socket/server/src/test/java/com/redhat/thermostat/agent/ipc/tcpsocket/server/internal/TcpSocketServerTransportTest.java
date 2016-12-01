@@ -48,24 +48,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.SocketAddress;
-import java.net.InetSocketAddress;
-import java.net.InetAddress;
 
 import java.nio.channels.spi.AbstractSelector;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.DirectoryStream;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.nio.file.attribute.UserPrincipal;
-import java.nio.file.attribute.UserPrincipalLookupService;
-import java.util.Iterator;
-import java.util.Set;
+
 import java.util.concurrent.ExecutorService;
 
 import org.junit.Before;
@@ -77,7 +65,6 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.ipc.tcpsocket.common.internal.TcpSocketIPCProperties;
 import com.redhat.thermostat.agent.ipc.tcpsocket.server.internal.TcpSocketServerTransport.ChannelUtils;
-import com.redhat.thermostat.agent.ipc.tcpsocket.server.internal.TcpSocketServerTransport.FileUtils;
 import com.redhat.thermostat.agent.ipc.tcpsocket.server.internal.TcpSocketServerTransport.ThreadCreator;
 
 public class TcpSocketServerTransportTest {
@@ -91,14 +78,12 @@ public class TcpSocketServerTransportTest {
     private SelectorProvider provider;
     private AbstractSelector selector;
     private ExecutorService execService;
-    private FileUtils fileUtils;
     private AcceptThread acceptThread;
     private ThreadCreator threadCreator;
     private ThermostatIPCCallbacks callbacks;
     private ChannelUtils channelUtils;
     private ThermostatServerSocketChannelImpl channel;
     private TcpSocketIPCProperties props;
-    private UserPrincipalLookupService lookup;
     private SocketAddress addr;
     
     @SuppressWarnings("unchecked")
@@ -107,9 +92,7 @@ public class TcpSocketServerTransportTest {
         provider = mock(SelectorProvider.class);
         selector = mock(AbstractSelector.class);
         when(provider.openSelector()).thenReturn(selector);
-        
-               
-        fileUtils = mock(FileUtils.class);
+
         addr = mock(SocketAddress.class);
         
         props = mock(TcpSocketIPCProperties.class);
@@ -117,12 +100,6 @@ public class TcpSocketServerTransportTest {
         when(props.getSocketAddr(SERVER_NAME)).thenReturn(addr);
         when(props.getType()).thenReturn(IPCType.TCP_SOCKET);
         doThrow(new IOException()).when(props).getSocketAddr(BAD_SERVER_NAME);
-        
-        lookup = mock(UserPrincipalLookupService.class);
-        when(fileUtils.getUserPrincipalLookupService()).thenReturn(lookup);
-        when(fileUtils.getUsername()).thenReturn(USERNAME);
-        UserPrincipal principal = mock(UserPrincipal.class);
-        when(lookup.lookupPrincipalByName(USERNAME)).thenReturn(principal);
         
         execService = mock(ExecutorService.class);
         
@@ -134,10 +111,9 @@ public class TcpSocketServerTransportTest {
         channel = mock(ThermostatServerSocketChannelImpl.class);
         
         callbacks = mock(ThermostatIPCCallbacks.class);
-        when(channelUtils.createServerSocketChannel(SERVER_NAME, addr, callbacks, props, selector)).thenReturn(channel);
+        when(channelUtils.createServerSocketChannel(SERVER_NAME, addr, callbacks, props, selector, acceptThread)).thenReturn(channel);
         
-        transport = new TcpSocketServerTransport(provider, execService, fileUtils, 
-                threadCreator, channelUtils);
+        transport = new TcpSocketServerTransport(provider, execService, threadCreator, channelUtils);
     }
     
     @Test
@@ -152,8 +128,7 @@ public class TcpSocketServerTransportTest {
         // Not TcpSocketIPCProperties
         IPCProperties badProps = mock(IPCProperties.class);
         when(badProps.getType()).thenReturn(IPCType.UNKNOWN);
-        transport = new TcpSocketServerTransport(provider, execService, fileUtils, 
-                threadCreator, channelUtils);
+        transport = new TcpSocketServerTransport(provider, execService, threadCreator, channelUtils);
         transport.start(badProps);
     }
     
@@ -184,12 +159,8 @@ public class TcpSocketServerTransportTest {
     public void testShutdownFailure() throws Exception {
         transport.start(props);
         doThrow(new IOException()).when(acceptThread).shutdown();
-        
-        //try {
-            transport.shutdown();
-            fail("Expected IO Exception");
-        //} catch (IOException e) {
-        //}
+        transport.shutdown();
+        fail("Expected IO Exception");
     }
     
     @Test
@@ -200,7 +171,7 @@ public class TcpSocketServerTransportTest {
     }
 
     private void checkChannel() throws IOException {
-        verify(channelUtils).createServerSocketChannel(SERVER_NAME, addr, callbacks, props, selector);
+        verify(channelUtils).createServerSocketChannel(SERVER_NAME, addr, callbacks, props, selector, acceptThread);
         ThermostatServerSocketChannelImpl result = transport.getSockets().get(SERVER_NAME);
         assertEquals(channel, result);
     }
