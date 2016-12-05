@@ -81,29 +81,15 @@ public class UnixSocketIPCProperties extends IPCProperties {
     }
     
     /*
-     * Default socket directory is calculated using the first available from the following:
-     * 1. Environment variable "$XDG_RUNTIME_DIR" (e.g. /run/user/1000/)
-     * 2. System property "java.io.tmpdir", with a subdirectory named from
-     *    the value of system property "user.name" (e.g. /tmp/alice/)
+     * Socket directory should be accessible by all users, by default we use
+     * the value of "java.io.tmpdir".
      */
     private File getDefaultSocketDir() throws IOException {
-        File result;
-        // First check XDG_RUNTIME_DIR
-        String path = pathUtils.getEnvironmentVariable("XDG_RUNTIME_DIR");
-        if (path != null) {
-            result = new File(path);
-        } else {
-            // Fall back to java.io.tmpdir
-            path = pathUtils.getSystemProperty("java.io.tmpdir");
-            if (path == null) {
-                throw new IOException("Failed to build default socket directory");
-            }
-            String username = pathUtils.getSystemProperty("user.name");
-            if (username == null) {
-                throw new IOException("Unable to build socket directory path without username");
-            }
-            result = new File(path, username);
+        String path = pathUtils.getSystemProperty("java.io.tmpdir");
+        if (path == null) {
+            throw new IOException("Failed to build default socket directory");
         }
+        File result = new File(path);
         
         // Append our socket directory name
         result = new File(result, SOCKET_DIR_NAME);
@@ -114,9 +100,6 @@ public class UnixSocketIPCProperties extends IPCProperties {
     static class PathUtils {
         String getSystemProperty(String name) {
             return System.getProperty(name);
-        }
-        String getEnvironmentVariable(String name) {
-            return System.getenv(name);
         }
     }
 }

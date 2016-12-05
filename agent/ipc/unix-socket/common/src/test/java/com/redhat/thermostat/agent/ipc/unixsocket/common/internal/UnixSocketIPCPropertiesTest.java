@@ -80,32 +80,16 @@ public class UnixSocketIPCPropertiesTest {
     }
     
     @Test
-    public void testDefaultSocketDirectoryXDG() throws Exception {
-        when(jProps.getProperty(UnixSocketIPCProperties.PROP_UNIX_SOCKET_DIR)).thenReturn(null);
-        when(pathUtils.getEnvironmentVariable("XDG_RUNTIME_DIR")).thenReturn("/path/to/xdg/runtime");
-        UnixSocketIPCProperties props = new UnixSocketIPCProperties(jProps, propFile, pathUtils);
-        assertEquals("/path/to/xdg/runtime/thermostat-socks", props.getSocketDirectory().getAbsolutePath());
-    }
-    
-    @Test
     public void testDefaultSocketDirectoryTmp() throws Exception {
         when(jProps.getProperty(UnixSocketIPCProperties.PROP_UNIX_SOCKET_DIR)).thenReturn(null);
         when(pathUtils.getSystemProperty("java.io.tmpdir")).thenReturn("/path/to/tmp");
-        when(pathUtils.getSystemProperty("user.name")).thenReturn("myUserName");
         UnixSocketIPCProperties props = new UnixSocketIPCProperties(jProps, propFile, pathUtils);
-        assertEquals("/path/to/tmp/myUserName/thermostat-socks", props.getSocketDirectory().getAbsolutePath());
+        assertEquals("/path/to/tmp/thermostat-socks", props.getSocketDirectory().getAbsolutePath());
     }
     
     @Test(expected=IOException.class)
     public void testNoXDGNoTmp() throws Exception {
         when(jProps.getProperty(UnixSocketIPCProperties.PROP_UNIX_SOCKET_DIR)).thenReturn(null);
-        new UnixSocketIPCProperties(jProps, propFile, pathUtils);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testNoUsername() throws Exception {
-        when(jProps.getProperty(UnixSocketIPCProperties.PROP_UNIX_SOCKET_DIR)).thenReturn(null);
-        when(pathUtils.getSystemProperty("java.io.tmpdir")).thenReturn("/path/to/tmp");
         new UnixSocketIPCProperties(jProps, propFile, pathUtils);
     }
     
