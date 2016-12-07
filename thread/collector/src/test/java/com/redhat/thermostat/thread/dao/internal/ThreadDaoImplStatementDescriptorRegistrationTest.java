@@ -56,7 +56,7 @@ public class ThreadDaoImplStatementDescriptorRegistrationTest extends ServiceLoa
     public void registersAllDescriptors() {
         ThreadDaoImplStatementDescriptorRegistration reg = new ThreadDaoImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(15, descriptors.size());
+        assertEquals(13, descriptors.size());
         assertFalse("null statement not allowed", descriptors.contains(null));
     }
 

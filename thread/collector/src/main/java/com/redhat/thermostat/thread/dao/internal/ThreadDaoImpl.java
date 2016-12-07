@@ -111,22 +111,6 @@ public class ThreadDaoImpl extends BaseCountable implements ThreadDao {
                  "'" + DEADLOCK_DESCRIPTION_KEY.getName() + "' = ?s";
 
 
-    static final String ADD_CONTENTION_SAMPLE =
-            "ADD "  + THREAD_CONTENTION_SAMPLE.getName() + " "               +
-                    "SET '" + Key.AGENT_ID.getName() + "' = ?s , "       +
-                    "'" + Key.VM_ID.getName() + "' = ?s , "          +
-                    "'" + THREAD_CONTENTION_BLOCKED_COUNT_KEY.getName() + "' = ?l , " +
-                    "'" + THREAD_CONTENTION_BLOCKED_TIME_KEY.getName() + "' = ?l , "  +
-                    "'" + THREAD_CONTENTION_WAITED_COUNT_KEY.getName() + "' = ?l , "  +
-                    "'" + THREAD_CONTENTION_WAITED_TIME_KEY.getName() + "' = ?l , "  +
-                    "'" + ThreadDaoKeys.THREAD_HEADER_UUID.getName() + "' = ?s , " +
-                    "'" + Key.TIMESTAMP.getName() + "' = ?l";
-
-    static final String GET_LATEST_CONTENTION_SAMPLE= "QUERY "
-            + THREAD_CONTENTION_SAMPLE.getName() + " WHERE '"
-            + ThreadDaoKeys.THREAD_HEADER_UUID.getName() + "' = ?s SORT '"
-            + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
-
     private final Category<AggregateCount> aggregateCategory;
     private Storage storage;
     
@@ -136,7 +120,6 @@ public class ThreadDaoImpl extends BaseCountable implements ThreadDao {
         ThreadDaoCategories.register(storage);
 
         storage.registerCategory(THREAD_HARVESTING_STATUS);
-        storage.registerCategory(THREAD_CONTENTION_SAMPLE);
 
         storage.registerCategory(DEADLOCK_INFO);
 

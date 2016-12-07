@@ -51,7 +51,7 @@ import com.redhat.thermostat.thread.dao.ThreadDao;
 
 public class ThreadDAOCategoryRegistrationTest extends ServiceLoaderTest<CategoryRegistration> {
 
-    private static final int EXPECTED_CATEGORIES = 6;
+    private static final int EXPECTED_CATEGORIES = 5;
 
     public ThreadDAOCategoryRegistrationTest() {
         super(CategoryRegistration.class, STORAGE_SERVICES + 1 /* from lock dao */,
@@ -68,7 +68,6 @@ public class ThreadDAOCategoryRegistrationTest extends ServiceLoaderTest<Categor
 
         assertTrue(categories.contains(ThreadDao.DEADLOCK_INFO.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_HARVESTING_STATUS.getName()));
-        assertTrue(categories.contains(ThreadDao.THREAD_CONTENTION_SAMPLE.getName()));
 
         Set<String> sourceCategories = new HashSet<>();
         ThreadDaoCategories.register(sourceCategories);

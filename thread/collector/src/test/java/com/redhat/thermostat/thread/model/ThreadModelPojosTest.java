@@ -45,7 +45,6 @@ public class ThreadModelPojosTest extends DataObjectTest {
         ThreadHarvestingStatus.class,
         ThreadState.class,
         ThreadSummary.class,
-        ThreadContentionSample.class,
         VmDeadLockData.class,
     };
 

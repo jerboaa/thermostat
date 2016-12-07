@@ -64,8 +64,6 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
 
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_DEADLOCK_DATA);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS);
-        descs.add(ThreadDaoImpl.ADD_CONTENTION_SAMPLE);
-        descs.add(ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE);
     }
     
     @Override

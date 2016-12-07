@@ -44,9 +44,7 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
-import com.redhat.thermostat.thread.dao.internal.ThreadDaoKeys;
 import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
@@ -81,23 +79,6 @@ public interface ThreadDao {
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
             DEADLOCK_DESCRIPTION_KEY);
 
-
-    /*
-     * THREAD_CONTENTION_SAMPLE
-     */
-    static final Key<String> THREAD_CONTENTION_BLOCKED_COUNT_KEY = new Key<>("blockedCount");
-    static final Key<String> THREAD_CONTENTION_BLOCKED_TIME_KEY = new Key<>("blockedTime");
-    static final Key<String> THREAD_CONTENTION_WAITED_COUNT_KEY = new Key<>("waitedCount");
-    static final Key<String> THREAD_CONTENTION_WAITED_TIME_KEY = new Key<>("waitedTime");
-    static final Category<ThreadContentionSample> THREAD_CONTENTION_SAMPLE =
-            new Category<>("thread-contention-sample", ThreadContentionSample.class,
-                           Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID,
-                                                 THREAD_CONTENTION_BLOCKED_COUNT_KEY,
-                                                 THREAD_CONTENTION_BLOCKED_TIME_KEY,
-                                                 THREAD_CONTENTION_WAITED_COUNT_KEY,
-                                                 THREAD_CONTENTION_WAITED_TIME_KEY,
-                                                 ThreadDaoKeys.THREAD_HEADER_UUID, Key.TIMESTAMP),
-                           Arrays.<Key<?>>asList(ThreadDaoKeys.THREAD_HEADER_UUID, Key.TIMESTAMP));
 
     void saveSummary(ThreadSummary summary);
     List<ThreadSummary> getSummary(VmRef ref, Range<Long> range, int limit);

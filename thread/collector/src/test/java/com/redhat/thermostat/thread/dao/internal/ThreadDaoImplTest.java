@@ -101,27 +101,6 @@ public class ThreadDaoImplTest {
                                                     "'timeStamp' = ?l , " +
                                                     "'harvesting' = ?b";
         assertEquals(addThreadHarvesting, ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS);
-
-        String addThreadInfo = "ADD vm-thread-header SET 'agentId' = ?s , " +
-                                    "'vmId' = ?s , " +
-                                    "'threadName' = ?s , " +
-                                    "'threadId' = ?l , " +
-                                    "'timeStamp' = ?l , " +
-                                    "'referenceID' = ?s";
-
-        String addContentionSample = "ADD thread-contention-sample SET " +
-                "'agentId' = ?s , 'vmId' = ?s , 'blockedCount' = ?l , " +
-                "'blockedTime' = ?l , 'waitedCount' = ?l , " +
-                "'waitedTime' = ?l , 'referenceID' = ?s , 'timeStamp' = ?l";
-        assertEquals(addContentionSample, ThreadDaoImpl.ADD_CONTENTION_SAMPLE);
-
-        String getLatestContentionSample = "QUERY thread-contention-sample " +
-                "WHERE 'referenceID' = ?s SORT 'timeStamp' DSC LIMIT 1";
-        assertEquals(getLatestContentionSample, ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE);
-
-        String getFirstThreadState = "QUERY vm-thread-state WHERE " +
-                "'agentId' = ?s AND 'referenceID' = ?s SORT 'probeStartTime' " +
-                "ASC LIMIT 1";
     }
     
     @Test
