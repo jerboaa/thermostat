@@ -48,16 +48,14 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfo;
-import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfoBuilder;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
 
-public class ProcessStatusInfoBuilderTest {
+public class LinuxProcessStatusInfoBuilderTest {
 
     @Test
     public void testSimpleProcessStatus() {
         ProcDataSource dataSource = new ProcDataSource();
-        ProcessStatusInfo stat = new ProcessStatusInfoBuilder(dataSource).build(1);
+        ProcessStatusInfo stat = new LinuxProcessStatusInfoBuilderImpl(dataSource).build(1);
         assertNotNull(stat);
     }
 
@@ -91,7 +89,7 @@ public class ProcessStatusInfoBuilderTest {
 
         ProcDataSource dataSource = mock(ProcDataSource.class);
         when(dataSource.getStatReader(any(Integer.class))).thenReturn(new StringReader(statString));
-        ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(dataSource);
+        ProcessStatusInfoBuilder builder = new LinuxProcessStatusInfoBuilderImpl(dataSource);
         ProcessStatusInfo stat = builder.build(PID);
 
         verify(dataSource).getStatReader(PID);
@@ -131,7 +129,7 @@ public class ProcessStatusInfoBuilderTest {
 
         ProcDataSource dataSource = mock(ProcDataSource.class);
         when(dataSource.getStatReader(any(Integer.class))).thenReturn(new StringReader(statString));
-        ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(dataSource);
+        ProcessStatusInfoBuilder builder = new LinuxProcessStatusInfoBuilderImpl(dataSource);
         ProcessStatusInfo stat = builder.build(PID);
 
         verify(dataSource).getStatReader(PID);

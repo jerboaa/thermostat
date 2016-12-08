@@ -54,7 +54,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 
-public class NumaCollectorTest {
+public class NumaLinuxCollectorTest {
 
     private static final String TEST_STAT0 = "numa_hit 11\n" +
             "numa_miss 12\n" +
@@ -127,7 +127,7 @@ public class NumaCollectorTest {
 
     @Test
     public void testStats() throws IOException {
-        NumaCollector coll = new NumaCollector(tmpDir.getAbsolutePath());
+        NumaCollector coll = new NumaLinuxCollectorImpl(tmpDir.getAbsolutePath());
         NumaNodeStat[] stats = coll.collectData();
 
         assertEquals(3, stats.length);
@@ -160,7 +160,7 @@ public class NumaCollectorTest {
 
     @Test
     public void testDefaultDir() {
-        NumaCollector coll = new NumaCollector();
+        NumaLinuxCollectorImpl coll = new NumaLinuxCollectorImpl();
         assertEquals("/sys/devices/system/node", coll.getBaseDir());
     }
 }

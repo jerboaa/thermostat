@@ -41,10 +41,11 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 
 public class CpuStatBuilder {
@@ -73,8 +74,12 @@ public class CpuStatBuilder {
             throw new IllegalStateException("already initialized");
         }
 
+        if (OS.IS_WINDOWS) {
+            logger.log(Level.WARNING, "CPU backend is not yet ported to Windows");
+        }
+
         previousTime = clock.getMonotonicTimeNanos();
-        previousCpuTicks = getCurrentCpuTicks();
+        previousCpuTicks = OS.IS_LINUX ? getCurrentCpuTicksLinux() : getCurrentCpuTicksWindows();
         initialized = true;
     }
 
@@ -85,7 +90,7 @@ public class CpuStatBuilder {
 
         long currentRealTime = clock.getRealTimeMillis();
         long currentTime = clock.getMonotonicTimeNanos();
-        long[] currentValues = getCurrentCpuTicks();
+        long[] currentValues = OS.IS_LINUX ? getCurrentCpuTicksLinux() : getCurrentCpuTicksWindows();
 
         double[] cpuUsage = new double[currentValues.length];
 
@@ -102,7 +107,7 @@ public class CpuStatBuilder {
         return new CpuStat(wId, currentRealTime, cpuUsage);
     }
 
-    private long[] getCurrentCpuTicks() {
+    private long[] getCurrentCpuTicksLinux() {
         int maxIndex = 0;
         long[] values = new long[1];
         try (BufferedReader reader = new BufferedReader(dataSource.getStatReader())) {
@@ -129,6 +134,12 @@ public class CpuStatBuilder {
             logger.log(Level.WARNING, "error reading stat file", e);
         }
 
+        return values;
+    }
+
+    private long[] getCurrentCpuTicksWindows() {
+        long[] values = new long[1];
+        values[1] = clock.getMonotonicTimeNanos();
         return values;
     }
 

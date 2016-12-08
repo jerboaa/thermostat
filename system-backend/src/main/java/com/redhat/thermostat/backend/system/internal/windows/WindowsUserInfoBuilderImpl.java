@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.backend.system.internal.windows;
 
+import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
 import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfo;
 import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfoBuilder;
 import com.redhat.thermostat.common.utils.LoggingUtils;

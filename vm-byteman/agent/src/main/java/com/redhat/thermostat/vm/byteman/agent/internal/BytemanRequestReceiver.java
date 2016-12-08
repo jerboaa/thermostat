@@ -53,7 +53,7 @@ import org.jboss.byteman.agent.submit.Submit;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
-import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;

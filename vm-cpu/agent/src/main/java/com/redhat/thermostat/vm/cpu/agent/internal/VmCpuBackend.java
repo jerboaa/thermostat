@@ -43,14 +43,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
 import com.redhat.thermostat.agent.utils.SysConf;
+import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
 import com.redhat.thermostat.backend.VmPollingAction;
 import com.redhat.thermostat.backend.VmPollingBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
@@ -87,9 +89,12 @@ public class VmCpuBackend extends VmPollingBackend {
             long ticksPerSecond = SysConf.getClockTicksPerSecond();
             ProcDataSource source = new ProcDataSource();
             int numCpus = getCpuCount(source);
-            ProcessStatusInfoBuilder PSIBuilder = new ProcessStatusInfoBuilder(source);
+            ProcessStatusInfoBuilder PSIBuilder = OS.IS_LINUX ? new LinuxProcessStatusInfoBuilderImpl(source) : new WindowsProcessStatusInfoBuilderImpl();
             builder = new VmCpuStatBuilder(clock, numCpus, ticksPerSecond, PSIBuilder, id);
             this.dao = dao;
+            if (OS.IS_WINDOWS) {
+                LOGGER.log(Level.WARNING, "VmCpu backend is not yet ported to Windows");
+            }
         }
 
         @Override
@@ -105,6 +110,14 @@ public class VmCpuBackend extends VmPollingBackend {
         }
 
         private int getCpuCount(ProcDataSource dataSource) {
+            return OS.IS_WINDOWS ? getWindowsCpuCount() : getLinuxCpuCount(dataSource);
+        }
+
+        private int getWindowsCpuCount() {
+            return WindowsHelperImpl.INSTANCE.getCPUCount();
+        }
+
+        private int getLinuxCpuCount(ProcDataSource dataSource) {
             final String KEY_PROCESSOR_ID = "processor";
             int cpuCount = 0;
             try (BufferedReader bufferedReader = new BufferedReader(dataSource.getCpuInfoReader())) {

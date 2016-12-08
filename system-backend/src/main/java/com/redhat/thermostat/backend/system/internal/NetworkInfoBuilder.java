@@ -61,23 +61,35 @@ public class NetworkInfoBuilder {
     public NetworkInfoBuilder(WriterID writerId) {
         this.writerId = writerId;
     }
-    
-    public List<NetworkInterfaceInfo> build() {
-        List<NetworkInterfaceInfo> infos = new ArrayList<NetworkInterfaceInfo>();
-        String wId = writerId.getWriterID();
-        try {
-            Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
-            for (NetworkInterface iface : Collections.list(ifaces)) {
-                NetworkInterfaceInfo info = new NetworkInterfaceInfo(wId, iface.getName());
-                for (InetAddress addr : Collections.list(iface.getInetAddresses())) {
-                    if (addr instanceof Inet4Address) {
-                        info.setIp4Addr(addr.getHostAddress());
-                    } else if (addr instanceof Inet6Address) {
-                        info.setIp6Addr(addr.getHostAddress());
-                    }
+
+    private void addInterfaces(final String wId, List<NetworkInterfaceInfo> infos, List<NetworkInterface> ifaceList, boolean addAll, boolean addUnconnected) {
+        for (NetworkInterface iface : ifaceList) {
+            NetworkInterfaceInfo info = new NetworkInterfaceInfo(wId, iface.getName());
+            List<InetAddress> addrList = Collections.list(iface.getInetAddresses());
+            final boolean want = addAll || (addrList.isEmpty() == addUnconnected);
+            for (InetAddress addr : addrList) {
+                if (addr instanceof Inet4Address) {
+                    info.setIp4Addr(addr.getHostAddress());
+                } else if (addr instanceof Inet6Address) {
+                    info.setIp6Addr(addr.getHostAddress());
                 }
+            }
+            if (want) {
                 infos.add(info);
             }
+        }
+    }
+
+    public List<NetworkInterfaceInfo> build() {
+        final List<NetworkInterfaceInfo> infos = new ArrayList<NetworkInterfaceInfo>();
+        final String wId = writerId.getWriterID();
+        try {
+            final Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
+            final List<NetworkInterface> ifaceList = Collections.list(ifaces);
+            // list connected interfaces first (there is a lot of noise on windows)
+            addInterfaces(wId, infos, ifaceList, false, false);
+            addInterfaces(wId, infos, ifaceList, false, true);
+
         } catch (SocketException e) {
             logger.log(Level.WARNING, "error enumerating network interfaces");
         }

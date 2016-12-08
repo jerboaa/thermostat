@@ -59,7 +59,7 @@ import com.google.gson.JsonParser;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.ipc.server.IPCMessage;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
-import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;

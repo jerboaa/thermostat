@@ -34,48 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.memory.agent.internal;
+package com.redhat.thermostat.vm.cpu.agent.internal;
 
-import java.util.concurrent.ScheduledExecutorService;
+import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
-import com.redhat.thermostat.backend.HostPollingAction;
-import com.redhat.thermostat.backend.HostPollingBackend;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
-import com.redhat.thermostat.storage.core.WriterID;
+import java.util.logging.Logger;
 
-public class HostMemoryBackend extends HostPollingBackend {
+/**
+ * Extract status information about the process
+ */
+public class WindowsProcessStatusInfoBuilderImpl implements ProcessStatusInfoBuilder {
 
-    public HostMemoryBackend(ScheduledExecutorService executor, MemoryStatDAO memoryStatDAO, Version version, final WriterID writerId) {
-        super("Host Memory Backend",
-                "Gathers memory statistics about a host",
-                "Red Hat, Inc.",
-                version, executor);
-        registerAction(new MemoryProcBackendAction(writerId, memoryStatDAO));
+    //private static final Logger logger = LoggingUtils.getLogger(WindowsProcessStatusInfoBuilderImpl.class);
+
+    WindowsProcessStatusInfoBuilderImpl() {
     }
 
-    private static class MemoryProcBackendAction implements HostPollingAction {
+    public ProcessStatusInfo build(int pid) {
 
-        private MemoryStatBuilder builder;
-        private MemoryStatDAO dao;
+        final long[] info =  WindowsHelperImpl.INSTANCE.getProcessCPUInfo(pid);
 
-        MemoryProcBackendAction(final WriterID id, MemoryStatDAO dao) {
-            ProcDataSource source = new ProcDataSource();
-            builder = new MemoryStatBuilder(source, id);
-            this.dao = dao;
-        }
+        final long utime = info[1];
+        final long stime = info[2];
 
-        @Override
-        public void run() {
-            dao.putMemoryStat(builder.build());
-        }
-
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_MEMORY_GROUP;
+        return new ProcessStatusInfo(pid, utime, stime);
     }
 
 }

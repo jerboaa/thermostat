@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.backend.system.internal.windows;
 
+import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
 import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.HostInfo;

@@ -41,11 +41,13 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
+import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 
 /**
@@ -54,6 +56,8 @@ import com.redhat.thermostat.storage.core.WriterID;
 public class MemoryStatBuilder {
 
     private static final long UNAVAILABLE = -1;
+
+    private static final boolean IS_UNIX = OS.IS_UNIX;
 
     private static final String KEY_MEMORY_TOTAL = "MemTotal";
     private static final String KEY_MEMORY_FREE = "MemFree";
@@ -71,9 +75,16 @@ public class MemoryStatBuilder {
     public MemoryStatBuilder(ProcDataSource dataSource, WriterID writerId) {
         this.dataSource = dataSource;
         this.writerId = writerId;
+        if (OS.IS_WINDOWS) {
+            logger.log(Level.WARNING, "Memory backend is not yet ported to Windows");
+        }
     }
 
     protected MemoryStat build() {
+        return IS_UNIX ? buildFromLinuxProc() : buildFromWindows();
+    }
+
+    private MemoryStat buildFromLinuxProc() {
         long timestamp = System.currentTimeMillis();
 
         long total = UNAVAILABLE;
@@ -113,6 +124,16 @@ public class MemoryStatBuilder {
         }
         String wId = writerId.getWriterID();
         return new MemoryStat(wId, timestamp, total, free, buffers, cached, swapTotal, swapFree, commitLimit);
+    }
+
+
+    private MemoryStat buildFromWindows() {
+        long timestamp = System.currentTimeMillis();
+
+        WindowsHelperImpl.MemoryStat memstat = new WindowsHelperImpl.MemoryStat();
+
+        String wId = writerId.getWriterID();
+        return new MemoryStat(wId, timestamp, memstat.getTotal(), memstat.getFree(), memstat.getBuffers(), memstat.getCached(), memstat.getSwapTotal(), memstat.getSwapFree(), memstat.getCommitLimit());
     }
 
     private long getValue(String rawValue) {

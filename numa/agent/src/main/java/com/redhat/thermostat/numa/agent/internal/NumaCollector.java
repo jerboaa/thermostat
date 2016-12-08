@@ -37,66 +37,13 @@
 
 package com.redhat.thermostat.numa.agent.internal;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 
-class NumaCollector {
+interface NumaCollector {
 
-    private static final String NUMA_BASE_DIR = "/sys/devices/system/node";
-
-    private static final String NODE_DIR_PREFIX = "node";
-
-    private static final String NUMA_STAT_FILE = "numastat";
-
-    private int numberOfNodes;
-
-    private File baseDir;
-
-    NumaCollector() {
-        this(NUMA_BASE_DIR);
-    }
-
-    NumaCollector(String baseDirectory) {
-        baseDir = new File(baseDirectory);
-        FilenameFilter filter = new FilenameFilter() {
-            
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.startsWith(NODE_DIR_PREFIX);
-            }
-        };
-        String[] nodeFiles = baseDir.list(filter);
-        numberOfNodes = nodeFiles.length;
-    }
-
-    NumaNodeStat[] collectData() throws IOException {
-        NumaNodeStat[] stat = new NumaNodeStat[numberOfNodes];
-        for (int i = 0; i < numberOfNodes; i++) {
-            File nodeDir = new File(baseDir, NODE_DIR_PREFIX + i);
-            File numaStatFile = new File(nodeDir, NUMA_STAT_FILE);
-            try (FileInputStream in = new FileInputStream(numaStatFile)) {
-                Reader reader = new InputStreamReader(in);
-                NumaStatBuilder builder = new NumaStatBuilder(reader);
-                stat[i] = builder.build();
-                stat[i].setNodeId(i);
-            }
-        }
-        return stat;
-    }
-
-    // This is here for testing.
-    String getBaseDir() {
-        return baseDir.getAbsolutePath();
-    }
-
-    public int getNumberOfNumaNodes() {
-        return numberOfNodes;
-    }
+    NumaNodeStat[] collectData() throws IOException;
+    int getNumberOfNumaNodes();
 }
 

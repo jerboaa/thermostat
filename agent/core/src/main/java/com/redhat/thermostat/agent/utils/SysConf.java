@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.agent.utils;
 
+import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
+import com.redhat.thermostat.shared.config.OS;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -52,6 +55,14 @@ public class SysConf {
     }
 
     public static long getClockTicksPerSecond() {
+        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
+    }
+
+    private static long getWindowsClockTicksPerSecond() {
+        return WindowsHelperImpl.INSTANCE.getClockTicksPerSecond();
+    }
+
+    public static long getLinuxClockTicksPerSecond() {
         String ticks = sysConf("CLK_TCK");
         try {
             return Long.valueOf(ticks);

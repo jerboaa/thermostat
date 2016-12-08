@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.numa.agent.internal;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.OS;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -50,8 +52,13 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.storage.core.WriterID;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class Activator implements BundleActivator {
-    
+
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
+
     private MultipleServiceTracker tracker;
     private NumaBackend backend;
     private ServiceRegistration<Backend> reg;
@@ -73,9 +80,12 @@ public class Activator implements BundleActivator {
                 NumaDAO numaDAO = services.get(NumaDAO.class);
                 Version version = new Version(context.getBundle());
                 WriterID writerId = services.get(WriterID.class);
-                NumaCollector collector = new NumaCollector();
+                NumaCollector collector = OS.IS_LINUX ? new NumaLinuxCollectorImpl() : new NumaWindowsCollectorImpl();
                 backend = new NumaBackend(appService, numaDAO, collector, version, writerId);
                 reg = context.registerService(Backend.class, backend, null);
+                if (OS.IS_WINDOWS) {
+                    logger.log(Level.WARNING, "NUMA backend is not yet ported to Windows");
+                }
             }
 
             @Override

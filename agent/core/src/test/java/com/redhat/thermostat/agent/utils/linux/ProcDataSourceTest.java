@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.utils;
+package com.redhat.thermostat.agent.utils.linux;
 
 import static org.junit.Assert.*;
 
@@ -45,7 +45,7 @@ import com.redhat.thermostat.shared.config.OS;
 import org.junit.Assume;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
 import com.redhat.thermostat.testutils.TestUtils;
 
 public class ProcDataSourceTest {

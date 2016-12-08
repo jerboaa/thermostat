@@ -130,7 +130,8 @@ class CommandChannelDelegate implements ConfigurationServer, ThermostatIPCCallba
     @Override
     public void startListening(String hostname, int port) throws IOException {
         // Determine if this process is running as a privileged user
-        if (userInfoBuilder.isPrivilegedUser()) {
+        // NOTE: on Windows, security is handled by permission bits, not userid.
+        if (OS.IS_UNIX && userInfoBuilder.isPrivilegedUser()) {
             // Get owner of command channel script, which will also be the user running it
             Path cmdPath = fsUtils.getPath(binPath.getAbsolutePath(), CMD_NAME);
             UserPrincipal unprivilegedPrincipal = fsUtils.getOwner(cmdPath);

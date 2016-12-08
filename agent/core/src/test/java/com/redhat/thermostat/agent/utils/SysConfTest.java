@@ -40,8 +40,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.utils.SysConf;
-
 public class SysConfTest {
 
     @Test

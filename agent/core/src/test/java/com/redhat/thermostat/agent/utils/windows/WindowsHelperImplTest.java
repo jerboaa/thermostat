@@ -34,8 +34,9 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system.internal.windows;
+package com.redhat.thermostat.agent.utils.windows;
 
+import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
 import com.redhat.thermostat.shared.config.OS;
 
 import org.junit.Assume;

@@ -36,85 +36,14 @@
 
 package com.redhat.thermostat.vm.cpu.agent.internal;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-
 /**
  * Extract status information about the process from /proc/. This is what tools
  * like {@code ps} and {@code top} use.
  *
  * @see {@code proc(5)}
  */
-public class ProcessStatusInfoBuilder {
+public interface ProcessStatusInfoBuilder {
 
-    private static final Logger logger = LoggingUtils.getLogger(ProcessStatusInfoBuilder.class);
-
-    private final ProcDataSource dataSource;
-
-    public ProcessStatusInfoBuilder(ProcDataSource dataSource) {
-        this.dataSource = dataSource;
-    }
-
-    public ProcessStatusInfo build(int pid) {
-        try (BufferedReader reader = new BufferedReader(dataSource.getStatReader(pid))) {
-            return build(reader);
-        } catch (IOException e) {
-            logger.log(Level.FINE, "Unable to read stat info for: " + pid);
-        }
-
-        return null;
-    }
-
-    private ProcessStatusInfo build(Reader r) throws IOException {
-
-        int pid = -1;
-        long utime = -1;
-        long stime = -1;
-
-        Scanner scanner = null;
-
-        /* TODO map these (effectively c) data types to java types more sanely */
-
-        try (BufferedReader reader = new BufferedReader(r)) {
-            String statusLine = reader.readLine();
-
-            /* be prepared for process names like '1 ) 2 3 4 foo 5' */
-
-            scanner = new Scanner(statusLine);
-            pid = scanner.nextInt();
-            scanner.close();
-
-            int execEndNamePos = statusLine.lastIndexOf(')');
-
-            String cleanStatusLine = statusLine.substring(execEndNamePos + 1);
-
-            scanner = new Scanner(cleanStatusLine);
-            /* state = */scanner.next();
-            /* ppid = */scanner.nextInt();
-            /* pgrp = */scanner.nextInt();
-            /* session = */scanner.nextInt();
-            /* tty_nr = */scanner.nextInt();
-            /* tpgid = */scanner.nextInt();
-            /* flags = */scanner.nextInt();
-            /* minflt = */scanner.nextLong();
-            /* cminflt = */scanner.nextLong();
-            /* majflt = */scanner.nextLong();
-            /* cmajflt = */scanner.nextLong();
-            utime = scanner.nextLong();
-            stime = scanner.nextLong();
-            scanner.close();
-        }
-
-        return new ProcessStatusInfo(pid, utime, stime);
-
-    }
-
+    ProcessStatusInfo build(int pid);
 }
 

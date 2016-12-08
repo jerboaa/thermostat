@@ -44,7 +44,7 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
 
 public class ProcIoDataReaderTest {
 

@@ -51,7 +51,7 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
 import com.redhat.thermostat.backend.system.internal.linux.HostInfoBuilderImpl.HostCpuInfo;
 import com.redhat.thermostat.backend.system.internal.linux.HostInfoBuilderImpl.HostMemoryInfo;
 import com.redhat.thermostat.backend.system.internal.linux.HostInfoBuilderImpl.HostOsInfo;

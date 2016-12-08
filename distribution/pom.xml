@@ -58,7 +58,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
-  
+
   <profiles>
     <profile>
       <id>default</id>
@@ -173,7 +173,7 @@
                           todir="${project.build.directory}/image/libs/native" />
                     <copy file="${main.basedir}/agent/core/target/UserNameUtilWrapper.dll"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/system-backend/target/WindowsHelperWrapper.dll"
+                    <copy file="${main.basedir}/agent/core/target/WindowsHelperWrapper.dll"
                           todir="${project.build.directory}/image/libs/native" />
                   </target>
                 </configuration>
@@ -212,7 +212,7 @@
             </executions>
           </plugin>
 
-         <plugin>
+          <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <executions>
@@ -236,7 +236,7 @@
       </build>
     </profile>
   </profiles>
-    
+
   <build>
     <plugins>
       <!-- skip unit test run-->
@@ -277,7 +277,7 @@
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
-          <appendAssemblyId>false</appendAssemblyId> 
+          <appendAssemblyId>false</appendAssemblyId>
         </configuration>
         <executions>
           <execution>
@@ -620,7 +620,7 @@
         <artifactId>thermostat-storage-mongodb</artifactId>
         <version>${project.version}</version>
     </dependency>
-    
+
     <!-- Plugins -->
 
     <!-- Be sure to add the distribution module of your plugin below

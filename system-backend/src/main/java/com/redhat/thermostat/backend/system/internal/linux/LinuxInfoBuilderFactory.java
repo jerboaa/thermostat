@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.backend.system.internal.linux;
 
-import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
