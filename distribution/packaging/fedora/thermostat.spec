@@ -715,6 +715,7 @@ pushd agent/core
          src/main/java/com/redhat/thermostat/agent/utils/hostname/HostName.java \
          src/main/java/com/redhat/thermostat/agent/utils/username/UserNameUtil.java \
          src/main/java/com/redhat/thermostat/agent/utils/username/UserNameLookupException.java \
+         src/main/java/com/redhat/thermostat/agent/utils/windows/WindowsHelperImpl.java \
          src/main/java/com/redhat/thermostat/utils/username/internal/UserNameUtilImpl.java
   make all
 popd
