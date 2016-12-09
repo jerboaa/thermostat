@@ -36,48 +36,70 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.CliCommandOption;
-import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
-import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
-@Component(immediate = true)
+@Component
 @Service
-public class VmIdCompleterService implements CompleterService {
-
-    public static final CliCommandOption VM_ID_OPTION = new CliCommandOption("v", "vmId", true, "VM ID", false);
+public class VmIdsFinderImpl implements VmIdsFinder {
 
     @Reference
-    private VmIdsFinder vmIdsFinder;
+    private VmInfoDAO vmInfoDao;
+
+    @Reference
+    private AgentInfoDAO agentInfoDao;
 
     @Override
-    public Set<String> getCommands() {
-        return TabCompletion.ALL_COMMANDS_COMPLETER;
+    public List<CompletionInfo> findCompletions() {
+        if (vmInfoDao == null || agentInfoDao == null) {
+            return Collections.emptyList();
+        }
+
+        List<CompletionInfo> vmIds = new ArrayList<>();
+        for (AgentId agentId : agentInfoDao.getAgentIds()) {
+            AgentInformation agentInfo = agentInfoDao.getAgentInformation(agentId);
+            if (agentInfo != null) {
+                Collection<VmId> vms = vmInfoDao.getVmIds(agentId);
+                for (VmId vm : vms) {
+                    VmInfo info = vmInfoDao.getVmInfo(vm);
+                    vmIds.add(new CompletionInfo(info.getVmId(), getUserVisibleText(info, agentInfo)));
+                }
+            }
+        }
+        return vmIds;
     }
 
-    @Override
-    public Map<CliCommandOption, ? extends TabCompleter> getOptionCompleters() {
-        return Collections.singletonMap(VM_ID_OPTION, new CompletionFinderTabCompleter(vmIdsFinder));
+    private String getUserVisibleText(VmInfo info, AgentInformation agentInfo) {
+        return info.getMainClass() + "(" + info.isAlive(agentInfo).toString() + ")";
     }
 
-    @Override
-    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
-        return Collections.emptyMap();
+    void bindVmInfoDao(VmInfoDAO vmInfoDAO) {
+        this.vmInfoDao = vmInfoDAO;
     }
 
-    void bindVmIdsFinder(VmIdsFinder vmIdsFinder) {
-        this.vmIdsFinder = vmIdsFinder;
+    void unbindVmInfoDao(VmInfoDAO vmInfoDAO) {
+        this.vmInfoDao = null;
     }
 
-    void unbindVmIdsFinder(VmIdsFinder vmIdsFinder) {
-        this.vmIdsFinder = null;
+    void bindAgentInfoDao(AgentInfoDAO agentInfoDAO) {
+        this.agentInfoDao = agentInfoDAO;
+    }
+
+    void unindAgentInfoDao(AgentInfoDAO agentInfoDAO) {
+        this.agentInfoDao = null;
     }
 
 }

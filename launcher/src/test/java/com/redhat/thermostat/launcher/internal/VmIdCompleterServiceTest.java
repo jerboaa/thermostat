@@ -49,6 +49,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class VmIdCompleterServiceTest {
 
@@ -57,6 +58,7 @@ public class VmIdCompleterServiceTest {
     @Before
     public void setup() {
         service = new VmIdCompleterService();
+        service.bindVmIdsFinder(mock(VmIdsFinder.class));
     }
 
     @Test

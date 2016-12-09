@@ -56,8 +56,6 @@ import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnviron
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.DbService;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -142,7 +140,6 @@ public class Activator implements BundleActivator {
 
     private MultipleServiceTracker launcherDepsTracker;
     private MultipleServiceTracker shellTracker;
-    private MultipleServiceTracker vmIdCompleterDepsTracker;
 
     private CommandRegistry registry;
 
@@ -269,28 +266,7 @@ public class Activator implements BundleActivator {
         dbServiceTracker.open();
         registry.registerCommand("help", helpCommand);
 
-        final VmIdCompleterService vmIdCompleterService = new VmIdCompleterService();
-        final Class<?>[] vmIdCompleterDeps = new Class[] { VmInfoDAO.class, AgentInfoDAO.class };
-        vmIdCompleterDepsTracker = new MultipleServiceTracker(context, vmIdCompleterDeps, new Action() {
-
-            @Override
-            public void dependenciesAvailable(DependencyProvider services) {
-                VmInfoDAO vmDao = services.get(VmInfoDAO.class);
-                AgentInfoDAO agentDao = services.get(AgentInfoDAO.class);
-                vmIdCompleterService.setVmInfoDAO(vmDao);
-                vmIdCompleterService.setAgentInfoDAO(agentDao);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                vmIdCompleterService.setVmInfoDAO(null);
-                vmIdCompleterService.setAgentInfoDAO(null);
-            }
-        });
-        vmIdCompleterDepsTracker.open();
-
         context.registerService(CompleterService.class.getName(), helpCommandCompleterService, null);
-        context.registerService(CompleterService.class.getName(), vmIdCompleterService, null);
     }
 
     @Override
@@ -306,9 +282,6 @@ public class Activator implements BundleActivator {
         }
         if (shellTracker != null) {
             shellTracker.close();
-        }
-        if (vmIdCompleterDepsTracker != null) {
-            vmIdCompleterDepsTracker.close();
         }
         registry.unregisterCommands();
     }

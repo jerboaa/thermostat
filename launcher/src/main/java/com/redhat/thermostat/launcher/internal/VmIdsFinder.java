@@ -36,61 +36,7 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
-import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.common.cli.CompletionFinder;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-public class VmIdsFinder extends AbstractCompletionFinder {
-
-    public VmIdsFinder(DependencyServices dependencyServices) {
-        super(dependencyServices);
-    }
-
-    @Override
-    protected Class<?>[] getRequiredDependencies() {
-        return new Class<?>[]{ VmInfoDAO.class, AgentInfoDAO.class };
-    }
-
-    @Override
-    public List<CompletionInfo> findCompletions() {
-        if (!allDependenciesAvailable()) {
-            return Collections.emptyList();
-        }
-
-        VmInfoDAO vmDao = getService(VmInfoDAO.class);
-        AgentInfoDAO agentDao = getService(AgentInfoDAO.class);
-
-        return findVmIds(vmDao, agentDao, agentDao.getAgentIds());
-    }
-
-    private List<CompletionInfo> findVmIds(VmInfoDAO vmsDAO, AgentInfoDAO agentInfoDAO, Set<AgentId> agentIds) {
-        List<CompletionInfo> vmIds = new ArrayList<>();
-        for (AgentId agentId : agentIds) {
-            AgentInformation agentInfo = agentInfoDAO.getAgentInformation(agentId);
-            if (agentInfo != null) {
-                Collection<VmId> vms = vmsDAO.getVmIds(agentId);
-                for (VmId vm : vms) {
-                    VmInfo info = vmsDAO.getVmInfo(vm);
-                    vmIds.add(new CompletionInfo(info.getVmId(), getUserVisibleText(info, agentInfo)));
-                }
-            }
-        }
-        return vmIds;
-    }
-
-    private String getUserVisibleText(VmInfo info, AgentInformation agentInfo) {
-        return info.getMainClass() + "(" + info.isAlive(agentInfo).toString() + ")";
-    }
+interface VmIdsFinder extends CompletionFinder {
 }

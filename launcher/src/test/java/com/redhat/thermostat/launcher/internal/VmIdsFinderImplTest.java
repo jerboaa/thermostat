@@ -37,7 +37,6 @@
 package com.redhat.thermostat.launcher.internal;
 
 import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -55,16 +54,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class VmIdsFinderTest {
+public class VmIdsFinderImplTest {
 
-    private VmIdsFinder vmIdsFinder;
+    private VmIdsFinderImpl vmIdsFinder;
     private final String id0 = "pequ-14as-54yt";
     private final String id1 = "412345-56789";
     private final String id2 = "111111-22222";
@@ -87,19 +83,16 @@ public class VmIdsFinderTest {
     private final VmInfo.AliveStatus aliveStatus5 = VmInfo.AliveStatus.RUNNING;
     private final VmInfo.AliveStatus aliveStatus6 = VmInfo.AliveStatus.UNKNOWN;
 
-    private VmIdsFinder vmIdsFinderWithOnlyOneVm;
+    private VmIdsFinderImpl vmIdsFinderWithOnlyOneVm;
 
     @Before
     public void setupVmIdsFinder() {
-        DependencyServices dependencyServices = mock(DependencyServices.class);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(dependencyServices.hasService(AgentInfoDAO.class)).thenReturn(true);
-        when(dependencyServices.getService(AgentInfoDAO.class)).thenReturn(agentInfoDAO);
         VmInfoDAO vmsInfoDAO = mock(VmInfoDAO.class);
-        when(dependencyServices.hasService(VmInfoDAO.class)).thenReturn(true);
-        when(dependencyServices.getService(VmInfoDAO.class)).thenReturn(vmsInfoDAO);
 
-        vmIdsFinder = new VmIdsFinder(dependencyServices);
+        vmIdsFinder = new VmIdsFinderImpl();
+        vmIdsFinder.bindAgentInfoDao(agentInfoDAO);
+        vmIdsFinder.bindVmInfoDao(vmsInfoDAO);
 
         Set<AgentId> agentIds = new HashSet<>();
         AgentId agentId1 = mock(AgentId.class);
@@ -177,15 +170,12 @@ public class VmIdsFinderTest {
     }
 
     private void setupVmIdsFinderWithOnlyOneVm() {
-        DependencyServices dependencyServices = mock(DependencyServices.class);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(dependencyServices.hasService(AgentInfoDAO.class)).thenReturn(true);
-        when(dependencyServices.getService(AgentInfoDAO.class)).thenReturn(agentInfoDAO);
         VmInfoDAO vmsInfoDAO = mock(VmInfoDAO.class);
-        when(dependencyServices.hasService(VmInfoDAO.class)).thenReturn(true);
-        when(dependencyServices.getService(VmInfoDAO.class)).thenReturn(vmsInfoDAO);
 
-        vmIdsFinderWithOnlyOneVm = new VmIdsFinder(dependencyServices);
+        vmIdsFinderWithOnlyOneVm = new VmIdsFinderImpl();
+        vmIdsFinderWithOnlyOneVm.bindAgentInfoDao(agentInfoDAO);
+        vmIdsFinderWithOnlyOneVm.bindVmInfoDao(vmsInfoDAO);
 
         Set<AgentId> agentIds = new HashSet<>();
         AgentId agentId = new AgentId(id0);
@@ -243,11 +233,6 @@ public class VmIdsFinderTest {
 
     private String formatExpected(String id, String mainClass, VmInfo.AliveStatus aliveStatus) {
         return id + " [" + mainClass + "(" + aliveStatus.toString() + ")]";
-    }
-
-    @Test
-    public void testListDependencies() {
-        assertThat(vmIdsFinder.getRequiredDependencies(), is(equalTo(new Class[]{ VmInfoDAO.class, AgentInfoDAO.class })));
     }
 
 }
