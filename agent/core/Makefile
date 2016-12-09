@@ -1,22 +1,22 @@
 CC         = gcc
 JAVAH      = javah
-MYCFLAGS   = -c -Wall -fPIC $(EXTRA_CFLAGS)
-MYLDFLAGS  = -fPIC -shared $(EXTRA_CFLAGS)
+MYCFLAGS   = -c -Wall $(EXTRA_CFLAGS)
+MYLDFLAGS  = -shared $(EXTRA_CFLAGS)
 COPY       = cp -a
 
 CLASSPATH  = target/classes/
 TARGET_DIR = target
 
-ifeq ($(OS),Linux)
+ifeq ($(OS),Windows_NT)
+    JNI_PLATFORM = win32
+    SO_PREFIX  =
+    SO_SUFFIX  = .dll
+else
     JNI_PLATFORM = linux
     SO_PREFIX  = lib
     SO_SUFFIX  = .so
     MYCFLAGS   += -fPIC
     MYLDFLAGS  += -fPIC
-else
-    JNI_PLATFORM = win32
-    SO_PREFIX  =
-    SO_SUFFIX  = .dll
 endif
 
 INCLUDE    = -I $(TARGET_DIR) -I "$(JAVA_HOME)/include/" -I "$(JAVA_HOME)/include/$(JNI_PLATFORM)"
@@ -38,15 +38,14 @@ WINHELPER_EXECUTABLE = $(SO_PREFIX)WindowsHelperWrapper$(SO_SUFFIX)
 
 EXECUTABLES          = $(HOSTNAME_EXECUTABLE) $(USERNAME_EXECUTABLE)
 
-ifeq ($(OS),Windows_NT)
-    EXECUTABLES        += $(WINHELPER_EXECUTABLE)
-endif
-
-
 .PHONY:
 JNI_LIST = com.redhat.thermostat.agent.utils.hostname.HostName\
- com.redhat.thermostat.utils.username.internal.UserNameUtilImpl\
- com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl
+ com.redhat.thermostat.utils.username.internal.UserNameUtilImpl
+
+ifeq ($(OS),Windows_NT)
+    EXECUTABLES  += $(WINHELPER_EXECUTABLE)
+    JNI_LIST     +=  com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl
+endif
 
 $(JNI_LIST):
 	$(JAVAH) -force -classpath $(CLASSPATH) -d $(TARGET_DIR) $(JNI_LIST)
@@ -60,13 +59,13 @@ init:
 	$(COPY) $(WINHELPER_SOURCES) $(WINHELPER_TARGET)
 
 $(HOSTNAME_EXECUTABLE): $(HOSTNAME_OBJECTS)
-	$(CC) $(HOSTNAME_OBJECTS) -o $(TARGET_DIR)/$@ $(MYLDFLAGS) $(LDFLAGS) $(PLATFORM_LIBS)
+	$(CC) $(MYLDFLAGS) $(LDFLAGS) $(HOSTNAME_OBJECTS) $(PLATFORM_LIBS) -o $(TARGET_DIR)/$@
 	
 $(USERNAME_EXECUTABLE): $(USERNAME_OBJECTS)
-	$(CC) $(USERNAME_OBJECTS) -o $(TARGET_DIR)/$@ $(MYLDFLAGS) $(LDFLAGS) $(PLATFORM_LIBS)
+	$(CC) $(MYLDFLAGS) $(LDFLAGS) $(USERNAME_OBJECTS) $(PLATFORM_LIBS) -o $(TARGET_DIR)/$@
 
 $(WINHELPER_EXECUTABLE): $(WINHELPER_OBJECTS)
-	$(CC) $(WINHELPER_OBJECTS) -o $(TARGET_DIR)/$@ $(MYLDFLAGS) $(LDFLAGS) $(PLATFORM_LIBS) -l psapi
+	$(CC) $(MYLDFLAGS) $(LDFLAGS) $(WINHELPER_OBJECTS) $(PLATFORM_LIBS) -l psapi -o $(TARGET_DIR)/$@
 
 .c.o:
 	$(CC) $(MYCFLAGS) $(CFLAGS) $(INCLUDE) $< -o $@

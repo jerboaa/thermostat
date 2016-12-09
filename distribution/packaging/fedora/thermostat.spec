@@ -691,11 +691,18 @@ pushd config
         -cp ../annotations/target/classes \
            src/main/java/com/redhat/thermostat/shared/config/NativeLibraryResolver.java \
            src/main/java/com/redhat/thermostat/shared/config/CommonPaths.java \
+           src/main/java/com/redhat/thermostat/shared/config/OS.java \
            src/main/java/com/redhat/thermostat/shared/config/internal/CommonPathsImpl.java \
            src/main/java/com/redhat/thermostat/shared/config/InvalidConfigurationException.java \
            src/main/java/com/redhat/thermostat/shared/locale/Translate.java \
            src/main/java/com/redhat/thermostat/shared/locale/LocalizedString.java \
            src/main/java/com/redhat/thermostat/shared/locale/internal/LocaleResources.java
+popd
+pushd common/core
+  mkdir -p target/classes
+  javac -d target/classes -cp ../../annotations/target/classes:../../config/target/classes \
+           src/main/java/com/redhat/thermostat/common/internal/LocaleResources.java \
+           src/main/java/com/redhat/thermostat/common/utils/LoggingUtils.java
 popd
 pushd keyring
   mkdir -p target/classes
@@ -710,7 +717,7 @@ pushd keyring
 popd
 pushd agent/core
   mkdir -p target/classes
-  javac -cp ../../config/target/classes:../../annotations/target/classes \
+  javac -cp ../../config/target/classes:../../annotations/target/classes:../../common/core/target/classes \
         -d target/classes \
          src/main/java/com/redhat/thermostat/agent/utils/hostname/HostName.java \
          src/main/java/com/redhat/thermostat/agent/utils/username/UserNameUtil.java \
