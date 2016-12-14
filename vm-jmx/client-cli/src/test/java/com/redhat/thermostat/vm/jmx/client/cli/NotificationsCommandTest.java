@@ -74,6 +74,7 @@ import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -424,11 +425,7 @@ public class NotificationsCommandTest {
             }
         });
         helper.start();
-        try {
-            Thread.sleep(750);
-            timerFactory.getAction().run();
-        } catch (InterruptedException ignored) {
-        }
+        runTimerFactoryAction();
         when(inStream.available()).thenReturn(1);
         try {
             helper.join();
@@ -461,11 +458,7 @@ public class NotificationsCommandTest {
             }
         });
         helper.start();
-        try {
-            Thread.sleep(750);
-            timerFactory.getAction().run();
-        } catch (InterruptedException ignored) {
-        }
+        runTimerFactoryAction();
         jmxNotificationStatus.setEnabled(false);
         try {
             helper.join();
@@ -559,6 +552,21 @@ public class NotificationsCommandTest {
 
     private void addSubcommandToArgs(String subcommand) throws SubcommandExpectedException, InvalidSubcommandException {
         when(args.getSubcommand()).thenReturn(subcommand);
+    }
+
+    private void runTimerFactoryAction() {
+        long startTime = System.nanoTime();
+        while(!timerFactory.isActive()) {
+            long elapsedTime = System.nanoTime() - startTime;
+            if (elapsedTime > TimeUnit.NANOSECONDS.convert(5, TimeUnit.SECONDS)) {
+                fail("Timer took more than 1 second to be created.");
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {
+            }
+        }
+        timerFactory.getAction().run();
     }
 
 }
