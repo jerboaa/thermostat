@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
@@ -74,6 +77,8 @@ public class HeapDumperServiceImpl implements HeapDumperService {
     private ProgressNotifier notifier;
     
     private HeapDumpListViewProvider heapDumpListViewProvider;
+
+    private Map<VmRef, HeapDumpController> controllers = new ConcurrentHashMap<>();
     
     public HeapDumperServiceImpl(ApplicationService appService,
             VmInfoDAO vmInfoDao, VmMemoryStatDAO vmMemoryStatDao,
@@ -101,9 +106,10 @@ public class HeapDumperServiceImpl implements HeapDumperService {
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new HeapDumpController(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService,
-                viewProvider, detailsViewProvider, histogramViewProvider, treeMapViewProvider, objectDetailsViewProvider,
-                objectRootsViewProvider, heapDumpListViewProvider, notifier);
+        if (controllers.get(ref) == null) {
+            controllers.put(ref, new HeapDumpController(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService, viewProvider, detailsViewProvider, histogramViewProvider, treeMapViewProvider, objectDetailsViewProvider, objectRootsViewProvider, heapDumpListViewProvider, notifier));
+        }
+        return controllers.get(ref);
     }
 
     @Override

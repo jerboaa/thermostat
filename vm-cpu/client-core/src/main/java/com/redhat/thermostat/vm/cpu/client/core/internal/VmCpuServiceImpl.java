@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.cpu.client.core.internal;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
@@ -53,6 +56,7 @@ public class VmCpuServiceImpl implements VmCpuService {
     private ApplicationService appSvc;
     private VmCpuStatDAO vmCpuStatDAO;
     private VmCpuViewProvider viewProvider;
+    private Map<VmRef, VmCpuController> controllers = new ConcurrentHashMap<>();
     
     public VmCpuServiceImpl(ApplicationService appSvc, VmCpuStatDAO vmCpuStatDAO,
             VmCpuViewProvider viewProvider) {
@@ -64,7 +68,10 @@ public class VmCpuServiceImpl implements VmCpuService {
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(
             VmRef ref) {
-        return new VmCpuController(appSvc, vmCpuStatDAO, ref, viewProvider);
+        if (controllers.get(ref) == null) {
+            controllers.put(ref, new VmCpuController(appSvc, vmCpuStatDAO, ref, viewProvider));
+        }
+        return controllers.get(ref);
     }
 
     @Override

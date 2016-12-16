@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.memory.client.core.internal;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
@@ -61,6 +64,7 @@ public class MemoryStatsServiceImpl implements MemoryStatsService {
     private AgentInfoDAO agentDAO;
     private GCRequest gcRequest;
     private MemoryStatsViewProvider viewProvider;
+    private Map<VmRef, MemoryStatsController> controllers = new ConcurrentHashMap<>();
     
     public MemoryStatsServiceImpl(ApplicationService appSvc,
             VmInfoDAO vmInfoDao, VmMemoryStatDAO vmMemoryStatDao, VmTlabStatDAO vmTlabStatDao, AgentInfoDAO agentDAO,
@@ -76,7 +80,10 @@ public class MemoryStatsServiceImpl implements MemoryStatsService {
     
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new MemoryStatsController(appSvc, vmInfoDao, vmMemoryStatDao, vmTlabStatDao, ref, viewProvider, agentDAO, gcRequest);
+        if (controllers.get(ref) == null) {
+            controllers.put(ref, new MemoryStatsController(appSvc, vmInfoDao, vmMemoryStatDao, vmTlabStatDao, ref, viewProvider, agentDAO, gcRequest));
+        }
+        return controllers.get(ref);
     }
 
     @Override

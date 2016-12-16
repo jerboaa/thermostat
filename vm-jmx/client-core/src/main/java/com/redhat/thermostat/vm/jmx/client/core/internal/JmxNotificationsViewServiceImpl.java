@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.jmx.client.core.internal;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
@@ -62,6 +65,8 @@ public class JmxNotificationsViewServiceImpl implements JmxNotificationsViewServ
     private final RequestQueue requestQueue;
     private final TimerFactory timerFactory;
 
+    private Map<VmRef, JmxNotificationsViewController> controllers = new ConcurrentHashMap<>();
+
     public JmxNotificationsViewServiceImpl(ApplicationService appSvc,
             AgentInfoDAO agentDao, VmInfoDAO vmInfoDao, JmxNotificationDAO notificationDao,
             RequestQueue requestQueue, TimerFactory timerFactory,
@@ -82,8 +87,10 @@ public class JmxNotificationsViewServiceImpl implements JmxNotificationsViewServ
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new JmxNotificationsViewController(appSvc, agentDao, vmInfoDao, notificationDao, timerFactory,
-                requestQueue, viewProvider, ref);
+        if (controllers.get(ref) == null) {
+            controllers.put(ref, new JmxNotificationsViewController(appSvc, agentDao, vmInfoDao, notificationDao, timerFactory, requestQueue, viewProvider, ref));
+        }
+        return controllers.get(ref);
     }
 
     @Override

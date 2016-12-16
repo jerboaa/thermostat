@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.byteman.client.swing.internal;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -74,6 +77,8 @@ public class VmBytemanInformationService implements InformationService<VmRef> {
     
     @Reference
     private RequestQueue requestQueue;
+    
+    private Map<VmRef, VmBytemanInformationController> controllers = new ConcurrentHashMap<>();
 
     @Override
     public int getOrderValue() {
@@ -89,9 +94,10 @@ public class VmBytemanInformationService implements InformationService<VmRef> {
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new VmBytemanInformationController(ref, agentInfoDao,
-                                                  vmInfoDao, vmBytemanDao,
-                                                  requestQueue);
+        if (controllers.get(ref) == null) {
+            controllers.put(ref, new VmBytemanInformationController(ref, agentInfoDao, vmInfoDao, vmBytemanDao, requestQueue));
+        }
+        return controllers.get(ref);
     }
 
 }

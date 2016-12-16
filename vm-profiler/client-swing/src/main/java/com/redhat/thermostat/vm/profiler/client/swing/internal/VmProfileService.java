@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
@@ -59,6 +62,7 @@ public class VmProfileService implements InformationService<VmRef> {
     private RequestQueue queue;
     private VmProfileTreeMapViewProvider treeMapViewProvider;
     private UIDefaults uiDefaults;
+    private Map<VmRef, VmProfileController> controllers = new ConcurrentHashMap<>();
 
     public VmProfileService(ApplicationService service, ProgressNotifier notifier,
             AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
@@ -88,8 +92,10 @@ public class VmProfileService implements InformationService<VmRef> {
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new VmProfileController(service, notifier, agentInfoDao, vmInfoDao, dao, queue,
-                treeMapViewProvider, ref, uiDefaults);
+        if (controllers.get(ref) == null) {
+            controllers.put(ref, new VmProfileController(service, notifier, agentInfoDao, vmInfoDao, dao, queue, treeMapViewProvider, ref, uiDefaults));
+        }
+        return controllers.get(ref);
     }
 
 }

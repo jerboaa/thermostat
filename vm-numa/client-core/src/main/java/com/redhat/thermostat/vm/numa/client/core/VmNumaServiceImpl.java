@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.numa.client.core;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
@@ -56,6 +59,7 @@ public class VmNumaServiceImpl implements VmNumaService {
     private VmNumaDAO vmNumaDAO;
     private VmNumaViewProvider vmNumaViewProvider;
     private NumaDAO numaDAO;
+    private Map<VmRef, VmNumaController> controllers = new ConcurrentHashMap<>();
 
     public VmNumaServiceImpl(ApplicationService applicationService, NumaDAO numaDAO, VmNumaDAO vmNumaDAO, VmNumaViewProvider vmNumaViewProvider) {
         this.appSvc = applicationService;
@@ -73,7 +77,10 @@ public class VmNumaServiceImpl implements VmNumaService {
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
         VmId vmId = new VmId(ref.getVmId());
         AgentId agentId = new AgentId(ref.getHostRef().getAgentId());
-        return new VmNumaController(appSvc, numaDAO, vmNumaDAO, vmId, agentId, vmNumaViewProvider);
+        if (controllers.get(ref) == null) {
+            controllers.put(ref, new VmNumaController(appSvc, numaDAO, vmNumaDAO, vmId, agentId, vmNumaViewProvider));
+        }
+        return controllers.get(ref);
     }
 
     @Override

@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.notes.client.core;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
@@ -43,13 +46,18 @@ import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmNotesControllerProvider extends NotesControllerProvider<VmRef, VmNoteDAO> {
 
+    private Map<VmRef, VmNotesController> controllers = new ConcurrentHashMap<>();
+
     public VmNotesControllerProvider(Clock clock, ApplicationService appSvc, VmNoteDAO vmNoteDao, NotesViewProvider viewProvider) {
         super(clock, appSvc, vmNoteDao, viewProvider);
     }
 
     @Override
     public VmNotesController getInformationServiceController(VmRef vm) {
-        return new VmNotesController(clock, appSvc, dao, vm, viewProvider);
+        if (controllers.get(vm) == null) {
+            controllers.put(vm, new VmNotesController(clock, appSvc, dao, vm, viewProvider));
+        }
+        return controllers.get(vm);
     }
 
 }
