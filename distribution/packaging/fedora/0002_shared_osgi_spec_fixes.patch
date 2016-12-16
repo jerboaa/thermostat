@@ -652,7 +652,7 @@ diff --git a/laf-utils/pom.xml b/laf-utils/pom.xml
 diff --git a/notes/client-cli/pom.xml b/notes/client-cli/pom.xml
 --- a/notes/client-cli/pom.xml
 +++ b/notes/client-cli/pom.xml
-@@ -93,13 +93,8 @@
+@@ -90,13 +90,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
@@ -963,7 +963,7 @@ diff --git a/storage/cli/pom.xml b/storage/cli/pom.xml
 diff --git a/system-backend/pom.xml b/system-backend/pom.xml
 --- a/system-backend/pom.xml
 +++ b/system-backend/pom.xml
-@@ -147,14 +147,8 @@
+@@ -87,14 +87,8 @@
      </dependency>
      
      <dependency>
@@ -1675,7 +1675,7 @@ diff --git a/vm-heap-analysis/client-swing/pom.xml b/vm-heap-analysis/client-swi
 diff --git a/vm-heap-analysis/command/pom.xml b/vm-heap-analysis/command/pom.xml
 --- a/vm-heap-analysis/command/pom.xml
 +++ b/vm-heap-analysis/command/pom.xml
-@@ -93,14 +93,8 @@
+@@ -105,14 +105,8 @@
        <scope>test</scope>
      </dependency>
      <dependency>
@@ -1690,8 +1690,8 @@ diff --git a/vm-heap-analysis/command/pom.xml b/vm-heap-analysis/command/pom.xml
 +      <groupId>org.apache.felix</groupId>
 +      <artifactId>org.apache.felix.framework</artifactId>
      </dependency>
-     
      <dependency>
+       <groupId>org.apache.felix</groupId>
 diff --git a/vm-heap-analysis/common/pom.xml b/vm-heap-analysis/common/pom.xml
 --- a/vm-heap-analysis/common/pom.xml
 +++ b/vm-heap-analysis/common/pom.xml
