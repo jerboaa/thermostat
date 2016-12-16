@@ -38,8 +38,6 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import com.redhat.thermostat.common.cli.CliCommandOption;
 import com.redhat.thermostat.common.cli.TabCompleter;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -58,20 +56,18 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class HeapIdCompleterServiceTest {
 
-    private HeapDAO heapDao;
-    private VmInfoDAO vmInfoDao;
     private HeapIdCompleterService service;
+    private HeapIdsFinder heapIdsFinder;
 
     @Before
     public void setup() {
-        heapDao = mock(HeapDAO.class);
-        vmInfoDao = mock(VmInfoDAO.class);
+        heapIdsFinder = mock(HeapIdsFinder.class);
         service = new HeapIdCompleterService();
-        service.setHeapDAO(heapDao);
-        service.setVmInfoDAO(vmInfoDao);
+        service.bindHeapIdsFinder(heapIdsFinder);
     }
 
     @Test
@@ -101,7 +97,17 @@ public class HeapIdCompleterServiceTest {
             assertThat(opt.isRequired(), is(false));
             assertThat(opt.getDescription(), is(not(nullValue())));
             assertThat(opt.getDescription().length(), is(atLeast(1)));
+
+            TabCompleter tabCompleter = entry.getValue();
+            tabCompleter.complete("", 0, Collections.<CharSequence>emptyList());
+            verify(heapIdsFinder).findCompletions();
         }
+    }
+
+    @Test
+    public void testGetSubcommandCompleters() {
+        assertThat(service.getSubcommandCompleters(),
+                is(equalTo(Collections.<String, Map<CliCommandOption, ? extends TabCompleter>>emptyMap())));
     }
 
     private static Matcher<Integer> atLeast(final Integer i) {

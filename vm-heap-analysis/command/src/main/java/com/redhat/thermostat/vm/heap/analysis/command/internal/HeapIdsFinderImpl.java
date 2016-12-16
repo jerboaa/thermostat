@@ -36,57 +36,73 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import com.redhat.thermostat.common.cli.CliCommandOption;
-import com.redhat.thermostat.common.cli.CompleterService;
-import com.redhat.thermostat.common.cli.CompletionFinderTabCompleter;
-import com.redhat.thermostat.common.cli.TabCompleter;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.cli.CompletionInfo;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.Date;
+import java.util.List;
 
 @Component
 @Service
-public class HeapIdCompleterService implements CompleterService {
+public class HeapIdsFinderImpl implements HeapIdsFinder {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     @Reference
-    private HeapIdsFinder heapIdsFinder;
+    private HeapDAO heapDAO;
+
+    @Reference
+    private VmInfoDAO vmInfoDAO;
 
     @Override
-    public Set<String> getCommands() {
-        return new HashSet<>(Arrays.asList(
-                FindObjectsCommand.COMMAND_NAME,
-                FindRootCommand.COMMAND_NAME,
-                ObjectInfoCommand.COMMAND_NAME,
-                SaveHeapDumpToFileCommand.COMMAND_NAME,
-                ShowHeapHistogramCommand.COMMAND_NAME
-        ));
+    public List<CompletionInfo> findCompletions() {
+        if (heapDAO == null || vmInfoDAO == null) {
+            return Collections.emptyList();
+        }
+
+        List<CompletionInfo> heapIds = new ArrayList<>();
+        for (HeapInfo heap : heapDAO.getAllHeapInfo()) {
+            CompletionInfo completionInfo = getCompletionInfo(heap);
+            heapIds.add(completionInfo);
+        }
+        return heapIds;
     }
 
-    @Override
-    public Map<CliCommandOption, TabCompleter> getOptionCompleters() {
-        CliCommandOption heapOption = new CliCommandOption("h", "heapId", true, "Heap ID", false);
-        TabCompleter heapCompleter = new CompletionFinderTabCompleter(heapIdsFinder);
+    private CompletionInfo getCompletionInfo(HeapInfo heap) {
+        VmInfo vmInfo = vmInfoDAO.getVmInfo(new VmId(heap.getVmId()));
 
-        return Collections.singletonMap(heapOption, heapCompleter);
+        String mainclass = vmInfo.getMainClass();
+        String timestamp = Clock.DEFAULT_DATE_FORMAT.format(new Date(heap.getTimeStamp()));
+
+        String userVisibleText = t.localize(LocaleResources.HEAPID_COMPLETION_WITH_USER_TEXT, mainclass, timestamp).getContents();
+        return new CompletionInfo(heap.getHeapId(), userVisibleText);
     }
 
-    @Override
-    public Map<String, Map<CliCommandOption, ? extends TabCompleter>> getSubcommandCompleters() {
-        return Collections.emptyMap();
+    public void bindHeapDAO(HeapDAO heapDAO) {
+        this.heapDAO = heapDAO;
     }
 
-    public void bindHeapIdsFinder(HeapIdsFinder heapIdsFinder) {
-        this.heapIdsFinder = heapIdsFinder;
+    public void unbindHeapDAO(HeapDAO heapDAO) {
+        this.heapDAO = null;
     }
 
-    public void unbindHeapIdsFinder(HeapIdsFinder heapIdsFinder) {
-        this.heapIdsFinder = null;
+    public void bindVmInfoDAO(VmInfoDAO vmInfoDAO) {
+        this.vmInfoDAO = vmInfoDAO;
+    }
+
+    public void unbindVmInfoDAO(VmInfoDAO vmInfoDAO) {
+        this.vmInfoDAO = null;
     }
 
 }

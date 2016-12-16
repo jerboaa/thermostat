@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -46,7 +45,6 @@ import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,25 +59,16 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class HeapIdsFinderTest {
+public class HeapIdsFinderImplTest {
 
-    private BundleContext context;
-    private DependencyServices dependencyServices;
     private HeapDAO heapDao;
     private VmInfoDAO vmDao;
-    private HeapIdsFinder finder;
+    private HeapIdsFinderImpl finder;
 
     @Before
     public void setup() {
-        context = mock(BundleContext.class);
-
-        dependencyServices = mock(DependencyServices.class);
         heapDao = mock(HeapDAO.class);
         vmDao = mock(VmInfoDAO.class);
-        when(dependencyServices.hasService(HeapDAO.class)).thenReturn(true);
-        when(dependencyServices.getService(HeapDAO.class)).thenReturn(heapDao);
-        when(dependencyServices.hasService(VmInfoDAO.class)).thenReturn(true);
-        when(dependencyServices.getService(VmInfoDAO.class)).thenReturn(vmDao);
 
         HeapInfo heapInfo1 = new HeapInfo();
         heapInfo1.setTimeStamp(100L);
@@ -116,7 +105,9 @@ public class HeapIdsFinderTest {
         when(vmDao.getVmInfo(new VmId("foo-vm"))).thenReturn(vmInfo1);
         when(vmDao.getVmInfo(new VmId("bar-vm"))).thenReturn(vmInfo2);
 
-        finder = new HeapIdsFinder(dependencyServices);
+        finder = new HeapIdsFinderImpl();
+        finder.bindHeapDAO(heapDao);
+        finder.bindVmInfoDAO(vmDao);
     }
 
     @Test
@@ -153,8 +144,15 @@ public class HeapIdsFinderTest {
     }
 
     @Test
-    public void testListDependencies() {
-        assertThat(finder.getRequiredDependencies(), is(equalTo(new Class[]{HeapDAO.class, VmInfoDAO.class})));
+    public void testReturnsEmptyWhenHeapDaoUnavailable() {
+        finder.unbindHeapDAO(heapDao);
+        assertThat(finder.findCompletions(), is(equalTo(Collections.<CompletionInfo>emptyList())));
+    }
+
+    @Test
+    public void testReturnsEmptyWhenVmDaoUnavailable() {
+        finder.unbindVmInfoDAO(vmDao);
+        assertThat(finder.findCompletions(), is(equalTo(Collections.<CompletionInfo>emptyList())));
     }
 
 }

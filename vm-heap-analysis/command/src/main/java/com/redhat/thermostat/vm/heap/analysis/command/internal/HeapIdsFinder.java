@@ -36,60 +36,7 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.cli.AbstractCompletionFinder;
-import com.redhat.thermostat.common.cli.CompletionInfo;
-import com.redhat.thermostat.common.cli.DependencyServices;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
-import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
+import com.redhat.thermostat.common.cli.CompletionFinder;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
-public class HeapIdsFinder extends AbstractCompletionFinder {
-
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-
-    public HeapIdsFinder(DependencyServices dependencyServices) {
-        super(dependencyServices);
-    }
-
-    @Override
-    protected Class<?>[] getRequiredDependencies() {
-        return new Class<?>[] { HeapDAO.class, VmInfoDAO.class };
-    }
-
-    @Override
-    public List<CompletionInfo> findCompletions() {
-        if (!allDependenciesAvailable()) {
-            return Collections.emptyList();
-        }
-
-        HeapDAO heapDao = getService(HeapDAO.class);
-        VmInfoDAO vmDao = getService(VmInfoDAO.class);
-
-        List<CompletionInfo> heapIds = new ArrayList<>();
-        for (HeapInfo heap : heapDao.getAllHeapInfo()) {
-            CompletionInfo completionInfo = getCompletionInfo(vmDao, heap);
-            heapIds.add(completionInfo);
-        }
-        return heapIds;
-    }
-
-    private CompletionInfo getCompletionInfo(VmInfoDAO vmDao, HeapInfo heap) {
-        VmInfo vmInfo = vmDao.getVmInfo(new VmId(heap.getVmId()));
-
-        String mainclass = vmInfo.getMainClass();
-        String timestamp = Clock.DEFAULT_DATE_FORMAT.format(new Date(heap.getTimeStamp()));
-
-        String userVisibleText = t.localize(LocaleResources.HEAPID_COMPLETION_WITH_USER_TEXT, mainclass, timestamp).getContents();
-        return new CompletionInfo(heap.getHeapId(), userVisibleText);
-    }
-
+interface HeapIdsFinder extends CompletionFinder {
 }

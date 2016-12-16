@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import com.redhat.thermostat.common.cli.CompleterService;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +47,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
-import static com.redhat.thermostat.testutils.Asserts.assertServiceIsRegistered;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -75,11 +73,10 @@ public class ActivatorTest {
         assertCommandIsRegistered(ctx, "object-info", ObjectInfoCommand.class);
         assertCommandIsRegistered(ctx, "save-heap-dump-to-file", SaveHeapDumpToFileCommand.class);
         assertCommandIsRegistered(ctx, "show-heap-histogram", ShowHeapHistogramCommand.class);
-        assertServiceIsRegistered(ctx, CompleterService.class, HeapIdCompleterService.class);
-        
+
         activator.stop(ctx);
         
-        assertEquals(1, ctx.getAllServices().size()); // CompleterService remains
+        assertEquals(0, ctx.getAllServices().size());
     }
 
     private void makeConstructorsHappy(StubBundleContext ctx) {
