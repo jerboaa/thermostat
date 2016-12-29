@@ -169,13 +169,9 @@ public class LauncherImpl implements Launcher {
             if (hasNoArguments(args)) {
                 runHelpCommand();
             } else if (isVersionQuery(args, inShell)) {
-                // We want to print the version of core
-                // thermostat, so we use the no-arg constructor of Version
-                cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
+                showVersion();
             } else if (isInfoQuery(args, inShell)) {
-                PrintStream stdOut = cmdCtxFactory.getConsole().getOutput();
-                stdOut.println(CommonPaths.THERMOSTAT_HOME + "=" + paths.getSystemThermostatHome().getAbsolutePath());
-                stdOut.println(CommonPaths.USER_THERMOSTAT_HOME + "=" + paths.getUserThermostatHome().getAbsolutePath());
+                showInfo();
             } else {
                 // With web-always-on we need to make sure that the setup ran.
                 if (isSomeHelpInvocation(args) || isThermostatConfigured()) {
@@ -508,6 +504,12 @@ public class LauncherImpl implements Launcher {
         }
     }
 
+    private void showVersion() {
+        // We want to print the version of core
+        // thermostat, so we use the no-arg constructor of Version
+        cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
+    }
+
     private boolean isInfoQuery(String[] args, boolean inShell) {
         // don't allow --info in the shell
         if (inShell) {
@@ -516,5 +518,12 @@ public class LauncherImpl implements Launcher {
             return args[0].equals(INFO_OPTION);
         }
     }
+
+    private void showInfo() {
+        PrintStream stdOut = cmdCtxFactory.getConsole().getOutput();
+        stdOut.println(CommonPaths.THERMOSTAT_HOME + "=" + paths.getSystemThermostatHome().getAbsolutePath());
+        stdOut.println(CommonPaths.USER_THERMOSTAT_HOME + "=" + paths.getUserThermostatHome().getAbsolutePath());
+    }
+
 }
 
