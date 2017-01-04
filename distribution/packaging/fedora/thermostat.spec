@@ -59,13 +59,13 @@ __DEFAULT_RELEASE__ 7
   %global javax_servlet_bsn            javax.servlet-api
   # jnr-unixsocket and deps
   %global jnr_unixsocket_version     0.12.0
-  %global jnr_enxio_version          0.12.0
-  %global jnr_constants_version      0.9.2
+  %global jnr_enxio_version          0.14.0
+  %global jnr_constants_version      0.9.6
   %global jnr_x86asm_symbolic_name   jnr.x86asm
   %global jnr_x86asm_version         1.0.2
   %global jffi_version               1.2.12
-  %global jnr_posix_version          3.0.29
-  %global jnr_ffi_version            2.0.9
+  %global jnr_posix_version          3.0.33
+  %global jnr_ffi_version            2.1.2
   %global osgi_compendium_maven_version 1.4.0
   # xmvn-subst in rawhide and later fedoras support
   # in reactor symlinking. See RHBZ#1226251
