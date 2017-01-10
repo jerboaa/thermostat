@@ -48,6 +48,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.swing.ReferenceSelectionService;
+import com.redhat.thermostat.client.swing.internal.vmlist.ReferenceSelectionServiceImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -155,6 +157,8 @@ public class MainWindowControllerImpl implements MainWindowController {
     private HostMonitor hostMonitor;
     
     private VMMonitorController vmMonitor;
+
+    private ReferenceSelectionServiceImpl referenceSelectionService;
 
     private MenuRegistry menuRegistry;
     private ActionListener<ThermostatExtensionRegistry.Action> menuListener =
@@ -297,7 +301,9 @@ public class MainWindowControllerImpl implements MainWindowController {
 
                 networkMonitor = services.get(NetworkMonitor.class);
                 hostMonitor = services.get(HostMonitor.class);
-                
+
+                referenceSelectionService = createReferenceService(context);
+
                 initView();
 
                 vmInfoControllerProvider = new VmInformationControllerProvider();
@@ -358,7 +364,13 @@ public class MainWindowControllerImpl implements MainWindowController {
             filter.addVMs(host, vms);
         }
     }
-    
+
+    ReferenceSelectionServiceImpl createReferenceService(BundleContext context) {
+        ReferenceSelectionServiceImpl referenceSelectionService = new ReferenceSelectionServiceImpl();
+        context.registerService(ReferenceSelectionService.class, referenceSelectionService, null);
+        return referenceSelectionService;
+    }
+
     private void initView() {
         view.setCommonPaths(paths);
         view.setWindowTitle(appInfo.getName());
@@ -518,6 +530,9 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     void updateView(Ref ref) {
+
+        referenceSelectionService.setReference(ref);
+
         if (ref == null) {
             VersionAndInfoController controller = createSummaryController();
             view.setContent(controller);
