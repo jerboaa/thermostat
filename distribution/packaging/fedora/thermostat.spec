@@ -136,15 +136,8 @@ __DEFAULT_RELEASE__ 7
 %global jgraphx_bundle_version     3.6.0
 
 # Base path to the JDK which will be used in boot scripts
-%if 0%{?fedora} >= 22
-  %global jdk_base /etc/alternatives/java_sdk_openjdk
-%else
-  %if 0%{?is_rhel_6}
-    %global jdk_base /usr/lib/jvm/java-1.7.0-openjdk.x86_64
-  %else
-    %global jdk_base /usr/lib/jvm/java-1.7.0-openjdk
-  %endif
-%endif 
+# This link is managed by alternatives
+%global jdk_base /usr/lib/jvm/java
 
 %{?scl:%scl_package thermostat}
 %{!?scl:%global pkg_name %{name}}
