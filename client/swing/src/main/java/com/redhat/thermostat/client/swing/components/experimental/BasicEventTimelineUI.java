@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -58,7 +57,6 @@ import java.awt.event.HierarchyListener;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.swing.components.experimental.EventTimelineModel.Event;
@@ -92,28 +90,33 @@ public class BasicEventTimelineUI extends EventTimelineUI {
     protected void installComponents(EventTimeline component) {
         eventTimeline = component;
 
-        overviewRuler = new Timeline(new Range<Long>(1l, 2l));
+        overviewRuler = new Timeline(new Range<>(1L, 2L));
 
         moveLeftButton = new JButton("<");
+        moveLeftButton.setName("moveLeftButton");
         moveLeftButton.setMargin(new Insets(0, 0, 0, 0));
         moveRightButton = new JButton(">");
+        moveRightButton.setName("moveRightButton");
         moveRightButton.setMargin(new Insets(0, 0, 0, 0));
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new GridLayout());
 
         zoomInButton = new JButton("+");
+        zoomInButton.setName("zoomInButton");
         zoomInButton.setToolTipText(translate.localize(LocaleResources.ZOOM_IN).getContents());
         zoomInButton.setMargin(new Insets(2, 2, 2, 2));
 
         buttonPanel.add(zoomInButton);
 
         zoomOutButton = new JButton("-");
+        zoomOutButton.setName("zoomOutButton");
         zoomOutButton.setToolTipText(translate.localize(LocaleResources.ZOOM_OUT).getContents());
         zoomOutButton.setMargin(new Insets(2, 2, 2, 2));
         buttonPanel.add(zoomOutButton);
 
         resetZoomButton = new JButton("R");
+        resetZoomButton.setName("zoomResetButton");
         resetZoomButton.setToolTipText(translate.localize(LocaleResources.RESET_ZOOM).getContents());
         resetZoomButton.setMargin(new Insets(2, 2, 2, 2));
         buttonPanel.add(resetZoomButton);
@@ -193,20 +196,20 @@ public class BasicEventTimelineUI extends EventTimelineUI {
             protected Range<Long> computeNewDetailRange(long min, long max) {
                 long diff = (long) ((max - min) * 0.1);
                 return new Range<>(min - diff, max - diff);
-            };
+            }
         });
         zoomOutButton.addActionListener(new DetailChangeListener() {
            protected Range<Long> computeNewDetailRange(long min, long max) {
                long diff = max - min;
                return new Range<>(min - diff / 2, max + diff / 2);
-           };
+           }
         });
 
         zoomInButton.addActionListener(new DetailChangeListener() {
             protected Range<Long> computeNewDetailRange(long min, long max) {
                 long diff = max - min;
                 return new Range<>(min + diff / 4, max - diff / 4);
-            };
+            }
         });
 
         resetZoomButton.addActionListener(new DetailChangeListener() {
@@ -228,12 +231,18 @@ public class BasicEventTimelineUI extends EventTimelineUI {
     private abstract class DetailChangeListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Range<Long> range = eventTimeline.getModel().getDetailRange();
+            EventTimelineModel model = eventTimeline.getModel();
+
+            if (model.getEvents().isEmpty()) {
+                return;
+            }
+
+            Range<Long> range = model.getDetailRange();
 
             long min = range.getMin();
             long max = range.getMax();
 
-            eventTimeline.getModel().setDetailRange(computeNewDetailRange(min, max));
+            model.setDetailRange(computeNewDetailRange(min, max));
 
             overviewPanel.refresh();
         }
@@ -255,16 +264,14 @@ public class BasicEventTimelineUI extends EventTimelineUI {
 
     private long positionToTimeStamp(int position) {
         Range<Long> range = eventTimeline.getModel().getTotalRange();
-        LongRangeNormalizer normalizer = new LongRangeNormalizer(new Range<>(0l, (long)overviewPanel.getWidth()), range);
-        long result = normalizer.getValueNormalized(position);
-        return result;
+        LongRangeNormalizer normalizer = new LongRangeNormalizer(new Range<>(0L, (long)overviewPanel.getWidth()), range);
+        return normalizer.getValueNormalized(position);
     }
 
     private int timeStampToPosition(long timeStamp) {
         Range<Long> range = eventTimeline.getModel().getTotalRange();
-        LongRangeNormalizer normalizer = new LongRangeNormalizer(range, new Range<>(0l, (long)overviewPanel.getWidth()));
-        int result = (int) normalizer.getValueNormalized(timeStamp);
-        return result;
+        LongRangeNormalizer normalizer = new LongRangeNormalizer(range, new Range<>(0L, (long)overviewPanel.getWidth()));
+        return (int) normalizer.getValueNormalized(timeStamp);
     }
 
     private static class Refresher implements HierarchyBoundsListener, HierarchyListener, AdjustmentListener, EventTimelineDataChangeListener {
@@ -409,7 +416,7 @@ public class BasicEventTimelineUI extends EventTimelineUI {
         public void updateSelectionPosition(int newLeft, int newRight) {
             left = newLeft;
             right = newRight;
-            Range<Long> range = new Range<Long>(positionToTimeStamp(left), positionToTimeStamp(right));
+            Range<Long> range = new Range<>(positionToTimeStamp(left), positionToTimeStamp(right));
             eventTimeline.getModel().setDetailRange(range);
             refresh();
         }
