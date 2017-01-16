@@ -77,7 +77,11 @@ public class DynamicHostPluginProviderImpl implements DynamicHostPluginProvider 
         public LocalizedString getLocalizedName() {
             return plugin.getController().getName();
         }
-        
+
+        @Override
+        public int getOrderValue() {
+            return plugin.getOrderValue();
+        }
     }
     
     private DynamicHostPluginRegistry registry;

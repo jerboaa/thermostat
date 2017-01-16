@@ -77,6 +77,10 @@ public class DynamicVMPluginProviderImpl implements DynamicVMPluginProvider {
             return plugin.getController().getName();
         }
 
+        @Override
+        public int getOrderValue() {
+            return plugin.getOrderValue();
+        }
     }
 
     private DynamicVMPluginRegistry registry;

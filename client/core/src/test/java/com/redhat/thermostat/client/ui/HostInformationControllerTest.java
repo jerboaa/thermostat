@@ -36,16 +36,21 @@
 
 package com.redhat.thermostat.client.ui;
 
+import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.redhat.thermostat.client.core.internal.platform.DynamicHostPluginProvider;
+import com.redhat.thermostat.client.core.views.UIPluginInfo;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
 import com.redhat.thermostat.common.Filter;
@@ -87,25 +92,31 @@ public class HostInformationControllerTest {
                                               dynamicProviders);
         controller.rebuild();
 
-        InOrder order = inOrder(services.get(0), services.get(1),
-                services.get(2), services.get(3), services.get(4));
-        verifyService(services.get(2), order);
-        verifyService(services.get(1), order);
-        verifyService(services.get(0), order);
-        verifyService(services.get(4), order);
-        verifyService(services.get(3), order);
+        ArgumentCaptor captor = ArgumentCaptor.forClass(List.class);
+        verify(view).addChildViews((List<UIPluginInfo>) captor.capture());
+
+        List<UIPluginInfo> plugins = (List<UIPluginInfo>) captor.getValue();
+        assertEquals(5, plugins.size());
+        assertEquals("2", plugins.get(0).getLocalizedName().getContents());
+        assertEquals("1", plugins.get(1).getLocalizedName().getContents());
+        assertEquals("0", plugins.get(2).getLocalizedName().getContents());
+        assertEquals("4", plugins.get(3).getLocalizedName().getContents());
+        assertEquals("3", plugins.get(4).getLocalizedName().getContents());
     }
 
     private List<InformationService<HostRef>> mockServices(int[] orderValues) {
         List<InformationService<HostRef>> services = new ArrayList<>();
+        int id = 0;
         for (int order : orderValues) {
             InformationService<HostRef> service = mock(InformationService.class);
             InformationServiceController<HostRef> controller = mock(InformationServiceController.class);
+            when(controller.getLocalizedName()).thenReturn(new LocalizedString("" + id));
             when(service.getFilter()).thenReturn(FILTER);
             when(service.getInformationServiceController(ref)).thenReturn(
                     controller);
             when(service.getOrderValue()).thenReturn(order);
             services.add(service);
+            id++;
         }
         return services;
     }

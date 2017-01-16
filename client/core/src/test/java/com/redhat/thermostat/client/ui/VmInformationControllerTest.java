@@ -36,17 +36,21 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static org.mockito.Mockito.inOrder;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.redhat.thermostat.client.core.internal.platform.DynamicVMPluginProvider;
+import com.redhat.thermostat.client.core.views.UIPluginInfo;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InOrder;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.common.Filter;
@@ -88,32 +92,33 @@ public class VmInformationControllerTest {
 
         controller.rebuild();
 
-        InOrder order = inOrder(services.get(0), services.get(1),
-                services.get(2), services.get(3), services.get(4));
-        verifyService(services.get(2), order);
-        verifyService(services.get(1), order);
-        verifyService(services.get(0), order);
-        verifyService(services.get(4), order);
-        verifyService(services.get(3), order);
+        ArgumentCaptor captor = ArgumentCaptor.forClass(List.class);
+        verify(view).addChildViews((List<UIPluginInfo>) captor.capture());
+
+        List<UIPluginInfo> plugins = (List<UIPluginInfo>) captor.getValue();
+        assertEquals(5, plugins.size());
+        assertEquals("2", plugins.get(0).getLocalizedName().getContents());
+        assertEquals("1", plugins.get(1).getLocalizedName().getContents());
+        assertEquals("0", plugins.get(2).getLocalizedName().getContents());
+        assertEquals("4", plugins.get(3).getLocalizedName().getContents());
+        assertEquals("3", plugins.get(4).getLocalizedName().getContents());
     }
 
     private List<InformationService<VmRef>> mockServices(int[] orderValues) {
         List<InformationService<VmRef>> services = new ArrayList<>();
+        int id = 0;
         for (int order : orderValues) {
             InformationService<VmRef> service = mock(InformationService.class);
             InformationServiceController<VmRef> controller = mock(InformationServiceController.class);
+            when(controller.getLocalizedName()).thenReturn(new LocalizedString("" + id));
             when(service.getFilter()).thenReturn(FILTER);
             when(service.getInformationServiceController(ref)).thenReturn(
                     controller);
             when(service.getOrderValue()).thenReturn(order);
             services.add(service);
+            id++;
         }
         return services;
     }
-
-    private void verifyService(InformationService<VmRef> service, InOrder order) {
-        order.verify(service).getInformationServiceController(ref);
-    }
-
 }
 

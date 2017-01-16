@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.core.views;
 
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
+import java.util.List;
+
 /**
  * A {@link View} that shows host information. It does not display
  * this information directly. It relies on child views.
@@ -52,5 +54,12 @@ public abstract class HostInformationView extends BasicView implements UICompone
 
     public abstract int getNumChildren();
 
+    public void addChildViews(List<UIPluginInfo> plugins) {
+        for (UIPluginInfo plugin : plugins) {
+            addChildView(plugin.getLocalizedName(), plugin.getView());
+        }
+    }
+
+    public void clear() {}
 }
 

@@ -34,16 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.client.core.views.UIPluginInfo;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
- * A visual component plugin.
  */
-public interface UIPluginInfo extends Ordered {
-    UIComponent getView();
-    LocalizedString getLocalizedName();
+class PluginInfo implements UIPluginInfo {
+    private final UIComponent view;
+    private final LocalizedString name;
+    private final int order;
+
+    public PluginInfo(LocalizedString name, UIComponent view, int order) {
+        this.view = view;
+        this.name = name;
+        this.order = order;
+    }
+
+    @Override
+    public UIComponent getView() {
+        return view;
+    }
+
+    @Override
+    public LocalizedString getLocalizedName() {
+        return name;
+    }
+
+    @Override
+    public int getOrderValue() {
+        return order;
+    }
 }

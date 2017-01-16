@@ -45,12 +45,10 @@ import com.redhat.thermostat.client.core.controllers.InformationServiceControlle
 import com.redhat.thermostat.client.core.internal.platform.DynamicVMPluginProvider;
 import com.redhat.thermostat.client.core.internal.platform.UIPluginAction;
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.UIPluginInfo;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.common.OrderedComparator;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmInformationController implements ContentProvider {
@@ -76,26 +74,6 @@ public class VmInformationController implements ContentProvider {
         }
     }
 
-    private class PluginInfo implements UIPluginInfo {
-        UIComponent view;
-        LocalizedString name;
-
-        public PluginInfo(LocalizedString name, UIComponent view) {
-            this.view = view;
-            this.name = name;
-        }
-
-        @Override
-        public UIComponent getView() {
-            return view;
-        }
-
-        @Override
-        public LocalizedString getLocalizedName() {
-            return name;
-        }
-    }
-
     public VmInformationController(List<InformationService<VmRef>> vmInfoServices,
                                    VmRef vmRef,
                                    VmInformationViewProvider provider,
@@ -114,11 +92,10 @@ public class VmInformationController implements ContentProvider {
 
         view.clear();
 
-        Collections.sort(vmInfoServices, new OrderedComparator<InformationService<VmRef>>());
         for (InformationService<VmRef> vmInfoService : vmInfoServices) {
             if (vmInfoService.getFilter().matches(vmRef)) {
                 InformationServiceController<VmRef> ctrl = vmInfoService.getInformationServiceController(vmRef);
-                plugins.add(new PluginInfo(ctrl.getLocalizedName(), ctrl.getView()));
+                plugins.add(new PluginInfo(ctrl.getLocalizedName(), ctrl.getView(), vmInfoService.getOrderValue()));
             }
         }
 
@@ -126,6 +103,8 @@ public class VmInformationController implements ContentProvider {
         for (DynamicVMPluginProvider dynamicProvider : dynamicProviders) {
             dynamicProvider.forEach(vmRef, action);
         }
+
+        Collections.sort(plugins, new OrderedComparator<UIPluginInfo>());
 
         view.addChildViews(plugins);
 
@@ -149,6 +128,5 @@ public class VmInformationController implements ContentProvider {
         rebuild();
         return view;
     }
-
 }
 

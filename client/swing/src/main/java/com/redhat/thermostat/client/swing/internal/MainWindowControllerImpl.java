@@ -568,24 +568,28 @@ public class MainWindowControllerImpl implements MainWindowController {
                 id = lastSelectedVM.getSelectedChildID();
             }
 
+            VmInformationController currentSelection = null;
+
             if (cachedControllers.containsKey(vmRef)) {
-                lastSelectedVM = cachedControllers.get(vmRef);
+                currentSelection = cachedControllers.get(vmRef);
             } else {
-                lastSelectedVM = createVmController(vmRef);
-                cachedControllers.put(vmRef, lastSelectedVM);
+                currentSelection = createVmController(vmRef);
+                cachedControllers.put(vmRef, currentSelection);
             }
 
-            lastSelectedVM.rebuild();
+            currentSelection.rebuild();
 
-            if (!lastSelectedVM.selectChildID(id)) {
+            if (!currentSelection.selectChildID(id)) {
                 Integer _id = selectedForVM.get(vmRef);
                 id = _id != null ? _id : 0;
-                lastSelectedVM.selectChildID(id);
+                currentSelection.selectChildID(id);
             }
 
             selectedForVM.put(vmRef, id);
 
-            return lastSelectedVM;
+            lastSelectedVM = currentSelection;
+
+            return currentSelection;
         }
     }
     

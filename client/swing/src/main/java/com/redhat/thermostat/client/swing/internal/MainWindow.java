@@ -501,7 +501,7 @@ public class MainWindow extends JFrame implements MainView, SwingComponent {
             }
         });
     }
-    
+
     @Override
     public void setContent(final ContentProvider provider) {
 

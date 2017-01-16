@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -60,15 +61,14 @@ public class HostInformationController implements ContentProvider {
 
     private static class PluginAction implements UIPluginAction {
 
-        private HostInformationView view;
-        PluginAction(HostInformationView view) {
-            this.view = view;
+        private List<UIPluginInfo> plugins;
+        PluginAction(List<UIPluginInfo> plugins) {
+            this.plugins = plugins;
         }
 
         @Override
         public void execute(UIPluginInfo info) {
-            LocalizedString name = info.getLocalizedName();
-            view.addChildView(name, info.getView());
+            plugins.add(info);
         }
     }
 
@@ -84,20 +84,25 @@ public class HostInformationController implements ContentProvider {
     }
 
     public void rebuild() {
-        Collections.sort(hostInfoServices, new OrderedComparator<InformationService<HostRef>>());
+        List<UIPluginInfo> plugins = new ArrayList<>();
+        view.clear();
+
         for (InformationService<HostRef> hostInfoService : hostInfoServices) {
             if (hostInfoService.getFilter().matches(ref)) {
                 InformationServiceController<HostRef> ctrl = hostInfoService.getInformationServiceController(ref);
-                LocalizedString name = ctrl.getLocalizedName();
-                view.addChildView(name, ctrl.getView());
+                plugins.add(new PluginInfo(ctrl.getLocalizedName(), ctrl.getView(), hostInfoService.getOrderValue()));
             }
         }
 
-        PluginAction action = new PluginAction(view);
+        PluginAction action = new PluginAction(plugins);
 
         for (DynamicHostPluginProvider dynamicProvider : dynamicProviders) {
             dynamicProvider.forEach(ref, action);
         }
+
+        Collections.sort(plugins, new OrderedComparator<UIPluginInfo>());
+
+        view.addChildViews(plugins);
     }
 
     public BasicView getView() {
