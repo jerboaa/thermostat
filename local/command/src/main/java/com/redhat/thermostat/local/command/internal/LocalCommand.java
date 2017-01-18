@@ -40,19 +40,36 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.DependencyServices;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.launcher.Launcher;
 
+import java.awt.SplashScreen;
+import java.io.File;
 import java.lang.ProcessBuilder.Redirect;
 import java.io.IOException;
 
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+
 public class LocalCommand extends AbstractCommand {
 
+    private static final Logger logger = LoggingUtils.getLogger(LocalCommand.class);
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+    private static String SHOW_SPLASH = "--show-splash";
     private final DependencyServices dependentServices = new DependencyServices();
     private Launcher launcher;
     private CommonPaths paths;
+    private boolean splashScreenEnabled;
 
     public void run(CommandContext ctx) throws CommandException {
         this.paths = dependentServices.getRequiredService(CommonPaths.class);
@@ -60,6 +77,16 @@ public class LocalCommand extends AbstractCommand {
 
         ServiceLauncher serviceLauncher = createServiceLauncher();
         serviceLauncher.start();
+        if (ctx.getArguments().hasArgument(SHOW_SPLASH)) {
+            splashScreenEnabled = true;
+            File stamp = paths.getUserSplashScreenStampFile();
+            try {
+                stamp.createNewFile();
+            } catch (IOException | SecurityException e) {
+                logger.log(Level.WARNING, "Unable to create file splashscreen.stamp", e);
+            }
+        }
+        
         try {
             // this blocks
             runGui();
@@ -83,6 +110,10 @@ public class LocalCommand extends AbstractCommand {
             throw new CommandException(t.localize(LocaleResources.ERROR_STARTING_GUI));
         }
 
+        if (isSplashScreenEnabled()) {
+            closeSplashScreen();
+        }
+
         int exitStatus;
         try {
             exitStatus = gui.waitFor();
@@ -101,6 +132,34 @@ public class LocalCommand extends AbstractCommand {
         pb.redirectOutput(Redirect.INHERIT);
         pb.redirectError(Redirect.INHERIT);
         return pb.start();
+    }
+
+    // package private for testing
+    boolean isSplashScreenEnabled() {
+        return splashScreenEnabled;
+    }
+
+    private void closeSplashScreen() {
+        try {
+            WatchService watcher = FileSystems.getDefault().newWatchService();
+            Path splashStampPath = paths.getUserSplashScreenStampFile().toPath().getParent();
+            splashStampPath.register(watcher, ENTRY_DELETE);
+            while(paths.getUserSplashScreenStampFile().exists()) {
+                WatchKey key = watcher.poll(5L, TimeUnit.MINUTES);
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    if (paths.getUserSplashScreenStampFile().getName().equals(event.context().toString())) {
+                        try {
+                            SplashScreen.getSplashScreen().close();
+                        } catch (NullPointerException e) {
+                            logger.log(Level.WARNING, "Unable to close SplashScreen!", e);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to complete WatcherService.", e);
+            SplashScreen.getSplashScreen().close();
+        }
     }
 
     public void setPaths(CommonPaths paths) {

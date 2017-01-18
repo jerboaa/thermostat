@@ -36,16 +36,20 @@
 
 package com.redhat.thermostat.local.command.internal;
 
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -56,6 +60,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class LocalCommandTest {
+    private static final String SHOW_SPLASH = "--show-splash";
     private LocalCommand cmd;
     private CommandContext ctxt;
     private CommonPaths paths;
@@ -68,6 +73,59 @@ public class LocalCommandTest {
         when(paths.getSystemBinRoot()).thenReturn(new File(""));
         launcher = mock(Launcher.class);
         ctxt = mock(CommandContext.class);
+    }
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
+
+    @Test(timeout=1000)
+    public void testSplashScreenFunctionalityAndClosing() throws CommandException, InterruptedException, IOException {
+        cmd = createLocalCommandForSplashTests();
+        final File stamp = tempFolder.newFile("splashscreen.stamp");
+        assertTrue(stamp.exists());
+        when(ctxt.getArguments().hasArgument(SHOW_SPLASH)).thenReturn(true);
+        when(paths.getUserPersistentDataDirectory()).thenReturn(tempFolder.getRoot());
+        when(paths.getUserSplashScreenStampFile()).thenReturn(stamp);
+        Runnable deleteStampFile = new Runnable() {
+            public void run() {
+                try {
+                    // sleep so the stamp file is deleted while closeSplashScreen() is watching
+                    Thread.sleep(250L);
+                    stamp.delete();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        new Thread(deleteStampFile).start();
+        cmd.run(ctxt);
+        assertTrue(cmd.isSplashScreenEnabled());
+        assertFalse(stamp.exists());
+    }
+
+    @Test
+    public void testNoShowSplashOption() throws CommandException, InterruptedException {
+        cmd = createLocalCommandForSplashTests();
+        cmd.run(ctxt);
+        assertFalse(cmd.isSplashScreenEnabled());
+    }
+
+    private LocalCommand createLocalCommandForSplashTests() throws CommandException, InterruptedException {
+        cmd = new LocalCommand() {
+            @Override
+            ServiceLauncher createServiceLauncher() {
+                return mock(ServiceLauncher.class);
+            }
+
+            @Override
+            Process execProcess(String... command) throws IOException {
+                return mock(Process.class);
+            }
+        };
+        when(ctxt.getArguments()).thenReturn(mock(Arguments.class));
+        cmd.setPaths(paths);
+        cmd.setLauncher(launcher);
+        return cmd;
     }
 
     @Test
@@ -113,6 +171,7 @@ public class LocalCommandTest {
 
         final Process mockProcess = mock(Process.class);
         when(mockProcess.waitFor()).thenReturn(0);
+        when(ctxt.getArguments()).thenReturn(mock(Arguments.class));
 
         cmd = new LocalCommand() {
             @Override

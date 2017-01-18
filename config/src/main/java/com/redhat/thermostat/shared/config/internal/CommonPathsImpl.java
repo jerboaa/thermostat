@@ -315,6 +315,11 @@ public class CommonPathsImpl implements CommonPaths {
         return setupCompleteStamp;
     }
 
+    @Override
+    public File getUserSplashScreenStampFile() throws InvalidConfigurationException {
+        return new File(getUserPersistentDataDirectory(), "splashscreen.stamp");
+    }
+
     // TODO add logging files here (see LoggingUtils)
     // TODO add ssl.properties file here (see SSLConfiguration)
 

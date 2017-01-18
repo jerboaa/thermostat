@@ -71,6 +71,7 @@ ARGS=()
 RUN_IN_BG=0
 PID_FILE=""
 
+PATH_TO_SPLASHIMAGE="$THERMOSTAT_HOME/../../packaging/shared/icons/splash-image.png"
 i=0
 j=0
 
@@ -90,6 +91,13 @@ do
         ;;
     *)
         ARGS[$j]="$1"
+        if [ $1 = "--show-splash" ] && [ $j > 0 ]; then
+            if [ ${ARGS[$j-1]} = "local" ]; then
+                JAVA_ARGS+=(-splash:$PATH_TO_SPLASHIMAGE)
+            elif [ ${ARGS[$j-1]} = "gui" ] && [ ! -f $USER_THERMOSTAT_HOME/data/splashscreen.stamp ]; then
+                JAVA_ARGS+=(-splash:$PATH_TO_SPLASHIMAGE)
+            fi
+        fi
         j=$((j+1))
         shift
         ;;

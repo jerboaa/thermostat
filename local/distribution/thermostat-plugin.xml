@@ -50,6 +50,13 @@
         is installed and then start the GUI client as a separate process. On exit,
         shut them all down.
       </description>
+      <options>
+        <option>
+          <long>show-splash</long>
+          <required>false</required>
+          <description>display a splash screen while launching Thermostat local</description>
+        </option>
+      </options>
       <environments>
         <environment>cli</environment>
       </environments>

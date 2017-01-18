@@ -84,6 +84,9 @@ public interface CommonPaths {
     /** A file indicating that Thermostat commands are ready to be run **/
     public File getUserSetupCompleteStampFile() throws InvalidConfigurationException;
 
+    /** A file indicating the current use of a splash screen **/
+    public File getUserSplashScreenStampFile() throws InvalidConfigurationException;
+
     /** A location that contains data that is persisted */
     public File getUserPersistentDataDirectory() throws InvalidConfigurationException;
 

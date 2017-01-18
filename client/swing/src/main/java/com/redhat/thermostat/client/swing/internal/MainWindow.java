@@ -52,10 +52,14 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
@@ -468,9 +472,18 @@ public class MainWindow extends JFrame implements MainView, SwingComponent {
         setTitle(title);
     }
 
+    private void deleteSplashScreenStamp() {
+        try {
+            Files.deleteIfExists(commonPaths.getUserSplashScreenStampFile().toPath());
+        } catch (IOException | SecurityException | NullPointerException e) {
+            logger.log(Level.WARNING, "Unable to delete splashscreen.stamp", e);
+        }
+    }
+
     @Override
     public void showMainWindow() {
         try {
+            deleteSplashScreenStamp();
             new EdtHelper().callAndWait(new Runnable() {
 
                 @Override
