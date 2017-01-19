@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.profiler.agent.jvm;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
@@ -80,7 +81,7 @@ public class ProfilerAgent {
         Debug.println("Boot-Classpath: " + System.getProperty("sun.boot.class.path"));
         Debug.println("Classpath: " + System.getProperty("java.class.path"));
         boolean addToBoot = true;
-        String[] jarPaths = jars.split(":");
+        String[] jarPaths = jars.split(File.pathSeparator);
         for (String jarPath : jarPaths) {
             JarFile jarFile = null;
             try {

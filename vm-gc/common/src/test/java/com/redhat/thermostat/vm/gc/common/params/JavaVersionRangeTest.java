@@ -36,9 +36,12 @@
 
 package com.redhat.thermostat.vm.gc.common.params;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.redhat.thermostat.vm.gc.common.params.JavaVersionRange.VersionPoints;
+
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -58,6 +61,17 @@ public class JavaVersionRangeTest {
 
     static final JavaVersionRange SMALL_RANGE = new JavaVersionRange(ONE_ZERO_ZERO_U0, true, ONE_ZERO_ONE_U0, true);
     static final JavaVersionRange LARGE_RANGE = new JavaVersionRange(ONE_ZERO_ZERO_U0, true, TWO_ZERO_TEN_U40, true);
+
+    @Test
+    public void testVendorStringInVersion() {
+        final String winRawStr = "1.8.0_101-1-comment";
+        final String oldRawStr = "1.8.0_101-1";
+        final JavaVersionRange winRange = JavaVersionRange.fromString(winRawStr);
+        final JavaVersionRange oldRange = JavaVersionRange.fromString(oldRawStr);
+        final String winRangeStr = winRange.toString();
+        final String oldRangeStr = oldRange.toString();
+        Assert.assertEquals("must strip off '-comment'", oldRangeStr, winRangeStr);
+    }
 
     @Test
     public void testValidSingleVersionComparisons() {

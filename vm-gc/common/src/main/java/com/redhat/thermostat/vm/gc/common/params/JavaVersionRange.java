@@ -62,7 +62,8 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
     private static final String OPTIONAL_UPDATE_PATTERN = "(?:" + UPDATE_PATTERN + ")?"; // non-capturing group
     private static final String PRE_RELEASE_PATTERN = "-([0-9a-zA-Z]+)";
     private static final String OPTIONAL_PRE_RELEASE_PATTERN = "(?:" + PRE_RELEASE_PATTERN + ")?"; // non-capturing group
-    private static final String OPTIONAL_SUFFIX = "(" + OPTIONAL_UPDATE_PATTERN + OPTIONAL_PRE_RELEASE_PATTERN + ")";
+    private static final String OPTIONAL_VENDOR_PATTERN = OPTIONAL_PRE_RELEASE_PATTERN; // non-capturing group
+    private static final String OPTIONAL_SUFFIX = "(" + OPTIONAL_UPDATE_PATTERN + OPTIONAL_PRE_RELEASE_PATTERN + OPTIONAL_VENDOR_PATTERN + ")";
     private static final String SINGLE_VERSION_PATTERN_STRING = NUM + DOT + NUM + DOT + NUM + OPTIONAL_SUFFIX;
     private static final String VERSION_PATTERN_STRING = LBRACK + "?" + "(" + SINGLE_VERSION_PATTERN_STRING + ")" + RBRACK + "?";
     private static final String RANGE_PATTERN_STRING = LBRACK + "(" + SINGLE_VERSION_PATTERN_STRING + ")?" + COMMA
@@ -100,7 +101,7 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
         if (singleVersionMatcher.matches()) {
             VersionPoints points = VersionPoints.fromString(singleVersionMatcher.group(2));
             String leftBracket = singleVersionMatcher.group(1);
-            String rightBracket = singleVersionMatcher.group(9);
+            String rightBracket = singleVersionMatcher.group(10);
             if (leftBracket == null && rightBracket == null) {
                 return new JavaVersionRange(points);
             } else if (leftBracket != null && rightBracket != null) {
@@ -112,7 +113,7 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
             Matcher rangeVersionMatcher = RANGE_PATTERN.matcher(javaVersionString);
             if (rangeVersionMatcher.matches()) {
                 String lower = rangeVersionMatcher.group(2);
-                String upper = rangeVersionMatcher.group(9);
+                String upper = rangeVersionMatcher.group(10);
                 VersionPoints lowerBound, upperBound;
                 if (lower == null && upper == null) {
                     throw new InvalidJavaVersionFormatException("Cannot specify a range without any bounds");
@@ -127,7 +128,7 @@ public class JavaVersionRange implements Comparable<JavaVersionRange> {
                     upperBound = VersionPoints.fromString(upper);
                 }
                 String leftBracket = rangeVersionMatcher.group(1);
-                String rightBracket = rangeVersionMatcher.group(16);
+                String rightBracket = rangeVersionMatcher.group(18);
                 return new JavaVersionRange(lowerBound, isInclusive(leftBracket.charAt(0)), upperBound, isInclusive(rightBracket.charAt(0)));
             } else {
                 throw new InvalidJavaVersionFormatException(javaVersionString);
