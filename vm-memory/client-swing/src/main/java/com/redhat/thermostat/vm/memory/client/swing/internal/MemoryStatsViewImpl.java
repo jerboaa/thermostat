@@ -50,7 +50,6 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.BasicView;
@@ -58,6 +57,7 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.MultiChartPanel;
 import com.redhat.thermostat.client.swing.components.MultiChartPanel.DataGroup;
+import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
@@ -82,7 +82,7 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     private long lastRepaint;
     
     private HeaderPanel visiblePanel;
-    private JTabbedPane rootPanel;
+    private ThermostatTabbedPane rootPanel;
     private JPanel graphPanel;
     private JPanel contentPanel;
     private JPanel tlabPanel;
@@ -131,7 +131,7 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
 
         createTlabPanel();
 
-        rootPanel = new JTabbedPane();
+        rootPanel = new ThermostatTabbedPane();
         rootPanel.addTab(t.localize(LocaleResources.TAB_MEMORY).getContents(), null, contentPanel, t.localize(LocaleResources.TAB_MEMORY_TOOLTIP).getContents());
         rootPanel.addTab(t.localize(LocaleResources.TAB_TLAB).getContents(), null, tlabPanel, t.localize(LocaleResources.TAB_TLAB_TOOLTIP).getContents());
 
