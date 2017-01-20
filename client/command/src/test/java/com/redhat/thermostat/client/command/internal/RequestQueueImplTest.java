@@ -47,8 +47,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -168,6 +175,63 @@ public class RequestQueueImplTest {
         Request request = createRequest(mock(InetSocketAddress.class), "");
         queue.putRequest(request);
         assertTrue(queue.getQueue().contains(request));
+    }
+
+    /*
+     * Ensure that if the connection to the request target fails, the exception is caught
+     * and an error response is returned.
+     */
+    @Test
+    public void testFailedConnectionIsCaught() throws InterruptedException {
+        CountDownLatch signal = new CountDownLatch(1);
+        InetSocketAddress addr = mock(InetSocketAddress.class);
+        Request req = createRequest(addr, "");
+        when(req.getTarget()).thenReturn(addr);
+        ConnectionFailedListener listener = new ConnectionFailedListener(signal);
+        List<RequestResponseListener> listeners = new ArrayList<>();
+        listeners.add(listener);
+        when(req.getListeners()).thenReturn(listeners);
+        ConfigurationRequestContext ctx = mock(ConfigurationRequestContext.class);
+        when(ctx.getBootstrap()).thenReturn(mock(Bootstrap.class));
+        when(ctx.getBootstrap().connect(any(InetSocketAddress.class))).thenReturn(mock(ChannelFuture.class));
+        when(ctx.getBootstrap()
+                .connect(any(InetSocketAddress.class))
+                .syncUninterruptibly())
+                .thenThrow(new ChannelException("Connection Refused"));
+        RequestQueueImpl queue = new RequestQueueImpl(ctx);
+        try {
+            queue.putRequest(req);
+            queue.startProcessingRequests();
+            // Wait for the response to be sent
+            signal.await(5, TimeUnit.SECONDS);
+            queue.stopProcessingRequests();
+            assertTrue(listener.isCalled());
+        } catch (InterruptedException ie) {
+            fail(ie.getMessage());
+        }
+    }
+
+    private class ConnectionFailedListener implements RequestResponseListener {
+
+        public boolean called = false;
+        private CountDownLatch signal;
+
+        public ConnectionFailedListener(CountDownLatch signal) {
+            this.signal = signal;
+        }
+
+        public boolean isCalled() {
+            return called;
+        }
+
+        @Override
+        public void fireComplete(Request request, Response response) {
+            if (response.getType() == ResponseType.ERROR) {
+                called = true;
+                signal.countDown();
+            }
+        }
+
     }
 
     private static Request createRequest(InetSocketAddress agentAddress, String receiver) {

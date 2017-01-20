@@ -161,18 +161,26 @@ class RequestQueueImpl implements RequestQueue {
                 if (request == null) {
                     break;
                 }
-                ChannelFuture f = ctx.getBootstrap().connect(request.getTarget()).syncUninterruptibly();
-                if (f.isSuccess()) {
-                	Channel c = f.channel();
-                	ChannelPipeline pipeline = c.pipeline();
-                	if (ctx.getSSLConfiguration().enableForCmdChannel()) {
-                	    doSSLHandShake(pipeline, request);
-                	}
-                	pipeline.addLast("responseHandler", new ResponseHandler(request));
-                	pipeline.writeAndFlush(request);
-                } else {
-                	Response response  = new Response(ResponseType.ERROR);
-                	fireComplete(request, response);
+                try {
+                    ChannelFuture f = ctx.getBootstrap().connect(request.getTarget()).syncUninterruptibly();
+                    if (f.isSuccess()) {
+                        Channel c = f.channel();
+                        ChannelPipeline pipeline = c.pipeline();
+                        if (ctx.getSSLConfiguration().enableForCmdChannel()) {
+                            doSSLHandShake(pipeline, request);
+                        }
+                        pipeline.addLast("responseHandler", new ResponseHandler(request));
+                        pipeline.writeAndFlush(request);
+                    } else {
+                        Response response = new Response(ResponseType.ERROR);
+                        fireComplete(request, response);
+                    }
+                    // If an exception is thrown it needs to be caught otherwise no
+                    // response is ever sent back to the request receiver.
+                } catch (Exception e) {
+                    logger.severe(e.toString());
+                    Response response  = new Response(ResponseType.ERROR);
+                    fireComplete(request, response);
                 }
             }
         }
