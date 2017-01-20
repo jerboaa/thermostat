@@ -174,9 +174,6 @@ __DEFAULT_RELEASE__ 7
   %global system_statedir %{_localstatedir}/run/%{pkg_name}
   %global thermostat_desktop_app_name Thermostat
 }
-# system java dir definition (non-scl)
-%global system_javadir %{system_root_datadir}/java
-%global scl_javadir    %{_javadir}
 
 # Some Maven coordinates mismatch due to compat versioning.
 %{!?scl:
