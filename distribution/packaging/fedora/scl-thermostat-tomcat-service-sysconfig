@@ -2,7 +2,7 @@
 # 
 # Where your tomcat installation lives
 CATALINA_BASE="__catalina_base__"
-CATALINA_HOME="/usr/share/tomcat"
+CATALINA_HOME="__catalina_home__"
 # Set Thermostat JAAS config via Tomcat's JAVA_OPTS variable.
 # -Djava.security.egd=file:/dev/./urandom makes our tomcat use
 # /dev/urandom over /dev/random which might block.

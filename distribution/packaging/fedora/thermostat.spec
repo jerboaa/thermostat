@@ -19,15 +19,18 @@ __DEFAULT_RELEASE__ 7
 %if 0%{?rhel} <= 6
   %global is_rhel_6 1
   %global with_systemd 0
+  %global tomcat_name tomcat6
 %else
   %global is_rhel_6 0
   %global with_systemd 1
+  %global tomcat_name tomcat
 %endif
 
 %else
 
 %global is_rhel_6 0
 %global with_systemd 1
+%global tomcat_name tomcat
 
 %endif
 
@@ -208,6 +211,7 @@ __DEFAULT_RELEASE__ 7
 %{!?scl:
   %global thermostat_catalina_base %{_localstatedir}/lib/tomcats/%{pkg_name}
 }
+%global system_catalina_home %{system_root_datadir}/%{tomcat_name}
 # The port tomcat will be listening on
 %global thermostat_catalina_port 8999
 %global thermostat_tomcat_service_name %{?scl_prefix}%{pkg_name}-tomcat
@@ -363,11 +367,7 @@ BuildRequires: %{?scl_prefix}mvn(org.jboss.byteman:byteman-submit)
 BuildRequires: %{?scl_prefix_java_common}java_cup
 
 # BRs for webapp sub-package
-%if 0%{?is_rhel_6}
-BuildRequires: tomcat6
-%else
-BuildRequires: tomcat
-%endif
+BuildRequires: %{tomcat_name}
 BuildRequires: %{?scl_prefix_java_common}mvn(javax.servlet:servlet-api) >= 2.5
 BuildRequires: %{?scl_prefix}mvn(commons-fileupload:commons-fileupload)
 
@@ -507,9 +507,9 @@ This package contains the API documentation for %{pkg_name}
 Summary:    Web storage endpoint for Thermostat
 BuildArch:  noarch
 %if 0%{?is_rhel_6}
-Requires:   tomcat6
+Requires:   %{tomcat_name}
 %else
-Requires:   tomcat >= 7.0.54
+Requires:   %{tomcat_name} >= 7.0.54
 %endif
 Requires:   %{name} = %{version}-%{release}
 Requires:   %{?scl_prefix}apache-commons-fileupload
@@ -997,6 +997,7 @@ rm -rf %{buildroot}%{thermostat_catalina_base}/webapps/%{pkg_name}/WEB-INF/lib/t
 # nicely configured without any configuration required prior
 # starting tomcat via systemd.
 sed 's#__catalina_base__#%{thermostat_catalina_base}#g' %{SOURCE3} > tomcat_service_thermostat.txt
+sed -i 's#__catalina_home__#%{system_catalina_home}#g' tomcat_service_thermostat.txt
 sed -i 's#__jaas_config__#%{_sysconfdir}/%{pkg_name}/%{pkg_name}_jaas.conf#g' tomcat_service_thermostat.txt
 %{?scl:
   # install the init script on RHEL 6
@@ -1031,14 +1032,14 @@ SYSTEMD_TOMCAT_ENV
 # to not port-conflict with system tomcat. See RHBZ#1054396
 pushd %{buildroot}/%{thermostat_catalina_base}
   for i in lib logs work temp; do
-    ln -s %{system_root_datadir}/tomcat/$i $i
+    ln -s %{system_catalina_home}/$i $i
   done
   mkdir conf
 popd
 # Symlink everything other than server.xml
-pushd %{system_root_datadir}/tomcat/conf
+pushd %{system_catalina_home}/conf
   for i in *; do
-    ln -s %{system_root_datadir}/tomcat/conf/$i %{buildroot}/%{thermostat_catalina_base}/conf/$i
+    ln -s %{system_catalina_home}/conf/$i %{buildroot}/%{thermostat_catalina_base}/conf/$i
   done
   rm %{buildroot}/%{thermostat_catalina_base}/conf/server.xml
   cp -p server.xml %{buildroot}/%{thermostat_catalina_base}/conf/server.xml
