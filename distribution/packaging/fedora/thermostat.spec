@@ -1074,7 +1074,9 @@ ${__bin_dir}/useradd -c "Thermostat system user" -g thermostat \
 
 %post
 # Install but don't activate
+%if 0%{?with_systemd}
 %systemd_post %{?scl_prefix}%{pkg_name}-storage.service
+%endif
 # Required for icon cache (i.e. Thermostat icon)
 /bin/touch --no-create %{system_root_datadir}/icons/hicolor &>/dev/null || :
 
@@ -1085,7 +1087,9 @@ ${__bin_dir}/useradd -c "Thermostat system user" -g thermostat \
 %endif
 
 %preun
+%if 0%{?with_systemd}
 %systemd_preun %{?scl_prefix}%{pkg_name}-storage.service
+%endif
 
 %postun
 # Required for icon cache (i.e. Thermostat icon)
@@ -1093,7 +1097,9 @@ if [ $1 -eq 0 ] ; then
     /bin/touch --no-create %{system_root_datadir}/icons/hicolor &> /dev/null
     /usr/bin/gtk-update-icon-cache %{system_root_datadir}/icons/hicolor &>/dev/null || :
 fi
+%if 0%{?with_systemd}
 %systemd_postun %{?scl_prefix}%{pkg_name}-storage.service
+%endif
 
 %posttrans
 # Required for icon cache (i.e. Thermostat icon)
