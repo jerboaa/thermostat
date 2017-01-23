@@ -94,7 +94,7 @@
       <dependency>
           <groupId>com.redhat.thermostat</groupId>
           <artifactId>thermostat-common-portability</artifactId>
-          <version>1.99.12-SNAPSHOT</version>
+          <version>${project.version}</version>
       </dependency>
   </dependencies>
 

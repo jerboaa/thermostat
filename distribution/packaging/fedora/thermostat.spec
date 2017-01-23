@@ -701,7 +701,7 @@ pushd common/portability
          src/main/java/com/redhat/thermostat/common/portability/HostName.java \
          src/main/java/com/redhat/thermostat/common/portability/UserNameUtil.java \
          src/main/java/com/redhat/thermostat/common/portability/UserNameLookupException.java \
-         src/main/java/com/redhat/thermostat/common/portability/internal/linux/UserNameUtilImpl.java
+         src/main/java/com/redhat/thermostat/common/portability/internal/linux/UserNameUtilImpl.java \
          src/main/java/com/redhat/thermostat/common/portability/internal/windows/WindowsHelperImpl.java
   make all
 popd

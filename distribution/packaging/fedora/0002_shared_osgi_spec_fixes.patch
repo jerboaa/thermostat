@@ -339,7 +339,35 @@ diff --git a/dev/multi-module-plugin-archetype/src/main/resources/archetype-reso
 +          <artifactId>org.apache.felix.framework</artifactId>
            <scope>provided</scope>
        </dependency>
+
+diff -r e8f49e39605d dev/ipc-test/test-launcher/pom.xml
+--- a/dev/ipc-test/test-launcher/pom.xml	Mon Jan 23 14:36:39 2017 -0500
++++ b/dev/ipc-test/test-launcher/pom.xml	Mon Jan 23 14:39:35 2017 -0500
+@@ -52,8 +52,8 @@
  
+   <dependencies>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>junit</groupId>
+diff -r e8f49e39605d dev/ipc-test/test-server/pom.xml
+--- a/dev/ipc-test/test-server/pom.xml	Mon Jan 23 14:36:39 2017 -0500
++++ b/dev/ipc-test/test-server/pom.xml	Mon Jan 23 14:39:35 2017 -0500
+@@ -52,8 +52,8 @@
+ 
+   <dependencies>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>junit</groupId>
 diff --git a/host-cpu/agent/pom.xml b/host-cpu/agent/pom.xml
 --- a/host-cpu/agent/pom.xml
 +++ b/host-cpu/agent/pom.xml
@@ -1532,6 +1560,20 @@ diff --git a/vm-gc/common/pom.xml b/vm-gc/common/pom.xml
      </dependency>
      <dependency>
        <groupId>com.redhat.thermostat</groupId>
+diff --git a/common/portability/pom.xml b/common/portability/pom.xml
+--- a/common/portability/pom.xml
++++ b/common/portability/pom.xml
+@@ -115,8 +115,8 @@
+             <version>${project.version}</version>
+         </dependency>
+         <dependency>
+-            <groupId>org.osgi</groupId>
+-            <artifactId>org.osgi.core</artifactId>
++            <groupId>org.apache.felix</groupId>
++            <artifactId>org.apache.felix.framework</artifactId>
+         </dependency>
+     </dependencies>
+
 diff --git a/vm-gc/remote-collector-client-common/pom.xml b/vm-gc/remote-collector-client-common/pom.xml
 --- a/vm-gc/remote-collector-client-common/pom.xml
 +++ b/vm-gc/remote-collector-client-common/pom.xml
