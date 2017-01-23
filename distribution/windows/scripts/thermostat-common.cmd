@@ -1,6 +1,6 @@
 @echo off
 
-:: Copyright 2016 Red Hat, Inc.
+:: Copyright 2017 Red Hat, Inc.
 ::
 :: This file is part of Thermostat.
 ::
@@ -40,15 +40,15 @@ set USER_THERMOSTAT_HOME=%USERPROFILE%\.thermostat
 
 :: Duplicated in ThermostatVmMainLabelDecorator
 set THERMOSTAT_MAIN=com.redhat.thermostat.main.Thermostat
+set jdk_home_candidate=@thermostat.jdk.home@
 
 if not defined JAVA_HOME (
-  set jdk_home_candidate="@thermostat.jdk.home@"
   if exist %jdk_home_candidate%\bin\javac.exe (
     set JAVA_HOME=%jdk_home_candidate%
   ) else (
-    :: Got likely a JRE, but thermostat expects a full JDK, try
-    :: one level up and hope this will work. We check
-    :: if JAVA_HOME is a valid value below.
+    rem Got likely a JRE, but thermostat expects a full JDK, try
+    rem one level up and hope this will work. We check
+    rem if JAVA_HOME is a valid value below.
     set JAVA_HOME=%jdk_home_candidate%\..
   )
 )

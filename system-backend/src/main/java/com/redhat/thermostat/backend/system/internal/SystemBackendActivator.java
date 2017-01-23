@@ -41,7 +41,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.agent.utils.username.UserNameUtil;
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;

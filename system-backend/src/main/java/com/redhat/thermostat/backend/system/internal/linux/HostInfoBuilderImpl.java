@@ -43,8 +43,8 @@ import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
-import com.redhat.thermostat.agent.utils.hostname.HostName;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
+import com.redhat.thermostat.common.portability.HostName;
 import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Size.Unit;

@@ -48,7 +48,7 @@ import sun.jvmstat.monitor.MonitoredHost;
 import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.VmIdentifier;
 
-import com.redhat.thermostat.agent.utils.ProcessChecker;
+import com.redhat.thermostat.common.portability.ProcessChecker;
 import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;

@@ -42,15 +42,15 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
-import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfoBuilder;
 
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 
 import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.agent.utils.username.UserNameUtil;
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;

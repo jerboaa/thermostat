@@ -37,12 +37,13 @@
 package com.redhat.thermostat.vm.io.agent.internal;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.backend.VmUpdate;
 import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.io.common.Constants;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
@@ -58,7 +59,8 @@ public class VmIoBackend extends VmListenerBackend {
             VmStatusListenerRegistrar registrar, WriterID writerId) {
         this(version,
                 vmIoStatDao,
-                new VmIoStatBuilder(clock, new ProcIoDataReader(new ProcDataSource()), writerId),
+                OS.IS_LINUX ? new LinuxVmIoStatBuilder(clock, new ProcIoDataReader(new ProcDataSource()), writerId)
+                        : new WindowsVmIoStatBuilder(clock, writerId),
                 registrar, writerId);
     }
 

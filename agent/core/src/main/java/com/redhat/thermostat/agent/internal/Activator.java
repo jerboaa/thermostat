@@ -50,7 +50,7 @@ import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.agent.utils.username.UserNameUtil;
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.MultipleServiceTracker.DependencyProvider;
@@ -62,7 +62,6 @@ import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
 public class Activator implements BundleActivator {
     
@@ -74,10 +73,6 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        
-        // No deps, register immediately
-        UserNameUtilImpl usernameUtil = new UserNameUtilImpl();
-        context.registerService(UserNameUtil.class, usernameUtil, null);
         
         // Track common paths separately and register storage credentials quickly
         // We need to do this since otherwise no storage credentials will be

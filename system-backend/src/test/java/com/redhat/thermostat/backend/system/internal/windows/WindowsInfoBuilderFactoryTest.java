@@ -39,7 +39,6 @@ package com.redhat.thermostat.backend.system.internal.windows;
 import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
 import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
-import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfoBuilder;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -61,13 +60,5 @@ public class WindowsInfoBuilderFactoryTest {
         final ProcessEnvironmentBuilder hib = builder.createProcessEnvironmentBuilder();
         assertNotNull(hib);
         assertTrue(hib instanceof WindowsProcessEnvironmentBuilderImpl);
-    }
-
-    @Test
-    public void testCreateProcessUserInfoBuilder() {
-        final InfoBuilderFactory builder = new WindowsInfoBuilderFactory();
-        final ProcessUserInfoBuilder hib = builder.createProcessUserInfoBuilder(null);
-        assertNotNull(hib);
-        assertTrue(hib instanceof WindowsUserInfoBuilderImpl);
     }
 }

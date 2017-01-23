@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 import org.jboss.byteman.agent.install.Install;
 
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
-import com.redhat.thermostat.agent.utils.ProcessChecker;
+import com.redhat.thermostat.common.portability.ProcessChecker;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.sun.tools.attach.AgentInitializationException;
 import com.sun.tools.attach.AgentLoadException;

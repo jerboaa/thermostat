@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.cpu.agent.internal;
 
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import java.io.BufferedReader;

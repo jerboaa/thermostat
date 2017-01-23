@@ -44,6 +44,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.portability.ProcessUserInfo;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -53,8 +55,8 @@ import org.jboss.byteman.agent.submit.Submit;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
-import com.redhat.thermostat.agent.utils.username.UserNameUtil;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
@@ -154,7 +156,7 @@ public class BytemanRequestReceiver implements RequestReceiver {
     }
     
     protected void bindUserNameUtil(UserNameUtil userNameUtil) {
-        ProcessUserInfoBuilder userInfoBuilder = new ProcessUserInfoBuilder(new ProcDataSource(), userNameUtil);
+        ProcessUserInfoBuilder userInfoBuilder = ProcessUserInfo.createBuilder(new ProcDataSource(), userNameUtil);
         attachManager.setUserInfoBuilder(userInfoBuilder);
     }
     

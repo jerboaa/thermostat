@@ -38,7 +38,7 @@ package com.redhat.thermostat.host.memory.agent.internal;
 
 import java.util.concurrent.ScheduledExecutorService;
 
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.backend.HostPollingAction;
 import com.redhat.thermostat.backend.HostPollingBackend;
 import com.redhat.thermostat.common.Version;

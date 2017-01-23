@@ -50,37 +50,6 @@
 
   <name>Thermostat Agent Core</name>
 
-  <profiles>
-    <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-    </profile>
-
-    <profile>
-      <id>linux</id>
-      <activation>
-        <os><family>Unix</family></os>
-      </activation>
-      <properties>
-        <platform.libs></platform.libs>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>windows</id>
-      <activation>
-        <os><family>Windows</family></os>
-      </activation>
-      <properties>
-        <platform.libs>-lws2_32</platform.libs>
-        <sharedlib.prefix></sharedlib.prefix>
-        <sharedlib.suffix>.dll</sharedlib.suffix>
-      </properties>
-    </profile>
-  </profiles>
-
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -101,6 +70,11 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-portability</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -145,21 +119,16 @@
             <Bundle-SymbolicName>com.redhat.thermostat.agent.core</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.agent.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.agent,
-              com.redhat.thermostat.agent.config,
-              com.redhat.thermostat.agent.utils,
-              com.redhat.thermostat.agent.utils.hostname,
-              com.redhat.thermostat.agent.utils.linux,
-              com.redhat.thermostat.agent.utils.management,
-              com.redhat.thermostat.agent.utils.username,
-              com.redhat.thermostat.agent.utils.windows,
-              com.redhat.thermostat.backend,
+                com.redhat.thermostat.agent,
+                com.redhat.thermostat.agent.config,
+                com.redhat.thermostat.agent.utils,
+                com.redhat.thermostat.agent.utils.management,
+                com.redhat.thermostat.backend
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.agent.internal,
               com.redhat.thermostat.backend.internal,
-              com.redhat.thermostat.utils.management.internal,
-              com.redhat.thermostat.utils.username.internal,
+              com.redhat.thermostat.utils.management.internal
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
@@ -176,38 +145,9 @@
             </systemPropertyVariables>
           </configuration>
       </plugin>
-      
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <executions>  
-          <execution>
-            <phase>compile</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-          </execution>  
-        </executions>
-        <configuration>
-          <executable>make</executable>
-          <arguments>
-            <argument>all</argument>
-            <argument>CC=${c.compiler}</argument>
-            <argument>SO_PREFIX=${sharedlib.prefix}</argument>
-            <argument>SO_SUFFIX=${sharedlib.suffix}</argument>
-            <argument>EXTRA_CFLAGS=${cflags}</argument>
-            <argument>JNI_PLATFORM=${jni.platform}</argument>
-            <argument>PLATFORM_LIBS=${platform.libs}</argument>
-          </arguments>
-          <systemProperties>
-            <systemProperty>
-              <key>JAVA_HOME</key>
-              <value>${java.home}</value>
-            </systemProperty>
-          </systemProperties>
-        </configuration>
-      </plugin>
+
     </plugins>
+
     <pluginManagement>
       <plugins>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
@@ -227,7 +167,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore/>
                   </action>
                 </pluginExecution>
               </pluginExecutions>

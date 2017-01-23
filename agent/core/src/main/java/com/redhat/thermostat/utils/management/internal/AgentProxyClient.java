@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.shared.config.OS;
 
 class AgentProxyClient {
     
@@ -68,7 +69,9 @@ class AgentProxyClient {
     void runProcess() throws IOException, InterruptedException {
         // Start the agent proxy
         String serverPath = binPath + File.separator + SERVER_NAME;
-        String[] args = new String[] { serverPath, String.valueOf(pid), username, ipcConfigFile.getAbsolutePath(), serverName };
+        String[] args = OS.IS_UNIX
+                ? new String[] { serverPath, String.valueOf(pid), username, ipcConfigFile.getAbsolutePath(), serverName }
+                : new String[] { "cmd", "/C", serverPath+".cmd", String.valueOf(pid), username, ipcConfigFile.getAbsolutePath(), serverName };
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.inheritIO();
         Process proxy = procCreator.startProcess(builder);

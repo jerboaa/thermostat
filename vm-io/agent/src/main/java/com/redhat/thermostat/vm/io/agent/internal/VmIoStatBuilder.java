@@ -36,30 +36,8 @@
 
 package com.redhat.thermostat.vm.io.agent.internal;
 
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
 
-public class VmIoStatBuilder {
-
-    private final Clock clock;
-    private final ProcIoDataReader ioReader;
-    private final String writerId;
-
-    public VmIoStatBuilder(Clock clock, ProcIoDataReader ioReader, WriterID writerId) {
-        this.clock = clock;
-        this.ioReader = ioReader;
-
-        this.writerId = writerId.getWriterID();
-    }
-
-    public synchronized VmIoStat build(String vmId, Integer pid) {
-        ProcIoData data = ioReader.read(pid);
-        if (data == null) {
-            return null;
-        }
-        long miliTime = clock.getRealTimeMillis();
-        return new VmIoStat(writerId, vmId, miliTime, data.rchar, data.wchar, data.syscr, data.syscw);
-    }
-
+public interface VmIoStatBuilder {
+    VmIoStat build(String vmId, Integer pid);
 }

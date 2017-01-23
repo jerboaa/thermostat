@@ -91,6 +91,11 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-common-portability</artifactId>
+          <version>1.99.12-SNAPSHOT</version>
+      </dependency>
   </dependencies>
 
   <build>

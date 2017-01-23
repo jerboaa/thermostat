@@ -573,8 +573,8 @@ cp %{SOURCE4} distribution/config/thermostatrc
     "<groupId>com.github.jnr</groupId>"
 
 # Don't use maven-exec-plugin. We do things manually in order to avoid this
-# additional dep. It's used in agent/core/pom.xml et.al.
-%pom_remove_plugin org.codehaus.mojo:exec-maven-plugin agent/core
+# additional dep. It's used in common/portability/pom.xml et.al.
+%pom_remove_plugin org.codehaus.mojo:exec-maven-plugin common/portability
 %pom_remove_plugin org.codehaus.mojo:exec-maven-plugin keyring
 %pom_remove_plugin org.codehaus.mojo:exec-maven-plugin laf-utils
 
@@ -694,6 +694,17 @@ pushd common/core
            src/main/java/com/redhat/thermostat/common/internal/LocaleResources.java \
            src/main/java/com/redhat/thermostat/common/utils/LoggingUtils.java
 popd
+pushd common/portability
+  mkdir -p target/classes
+  javac -cp ../../config/target/classes:../../annotations/target/classes:../../common/core/target/classes \
+        -d target/classes \
+         src/main/java/com/redhat/thermostat/common/portability/HostName.java \
+         src/main/java/com/redhat/thermostat/common/portability/UserNameUtil.java \
+         src/main/java/com/redhat/thermostat/common/portability/UserNameLookupException.java \
+         src/main/java/com/redhat/thermostat/common/portability/internal/linux/UserNameUtilImpl.java
+         src/main/java/com/redhat/thermostat/common/portability/internal/windows/WindowsHelperImpl.java
+  make all
+popd
 pushd keyring
   mkdir -p target/classes
   javac -cp ../config/target/classes:../annotations/target/classes \
@@ -703,17 +714,6 @@ pushd keyring
            src/main/java/com/redhat/thermostat/utils/keyring/internal/KeyringImpl.java
   autoreconf --install
   ./configure
-  make all
-popd
-pushd agent/core
-  mkdir -p target/classes
-  javac -cp ../../config/target/classes:../../annotations/target/classes:../../common/core/target/classes \
-        -d target/classes \
-         src/main/java/com/redhat/thermostat/agent/utils/hostname/HostName.java \
-         src/main/java/com/redhat/thermostat/agent/utils/username/UserNameUtil.java \
-         src/main/java/com/redhat/thermostat/agent/utils/username/UserNameLookupException.java \
-         src/main/java/com/redhat/thermostat/agent/utils/windows/WindowsHelperImpl.java \
-         src/main/java/com/redhat/thermostat/utils/username/internal/UserNameUtilImpl.java
   make all
 popd
 pushd laf-utils

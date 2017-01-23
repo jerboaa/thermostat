@@ -58,7 +58,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.redhat.thermostat.agent.utils.ProcessChecker;
+import com.redhat.thermostat.common.portability.ProcessChecker;
 import com.redhat.thermostat.backend.VmUpdateListener;
 
 import sun.jvmstat.monitor.HostIdentifier;

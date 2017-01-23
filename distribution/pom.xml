@@ -113,9 +113,9 @@
                   <target>
                     <copy file="${main.basedir}/keyring/target/libGnomeKeyringWrapper.so"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/agent/core/target/libHostNameWrapper.so"
+                    <copy file="${main.basedir}/common/portability/target/libHostNameWrapper.so"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/agent/core/target/libUserNameUtilWrapper.so"
+                    <copy file="${main.basedir}/common/portability/target/libUserNameUtilWrapper.so"
                           todir="${project.build.directory}/image/libs/native" />
                     <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils.so"
                           todir="${project.build.directory}/image/libs/native" />
@@ -169,11 +169,11 @@
                 <configuration>
                   <target>
                     <!--  copy and rename the native libraries -->
-                    <copy file="${main.basedir}/agent/core/target/HostNameWrapper.dll"
+                    <copy file="${main.basedir}/common/portability/target/HostNameWrapper.dll"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/agent/core/target/UserNameUtilWrapper.dll"
+                    <copy file="${main.basedir}/common/portability/target/UserNameUtilWrapper.dll"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/agent/core/target/WindowsHelperWrapper.dll"
+                    <copy file="${main.basedir}/common/portability/target/WindowsHelperWrapper.dll"
                           todir="${project.build.directory}/image/libs/native" />
                   </target>
                 </configuration>
@@ -584,6 +584,11 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-portability</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

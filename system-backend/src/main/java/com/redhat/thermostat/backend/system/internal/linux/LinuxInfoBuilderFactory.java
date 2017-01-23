@@ -36,12 +36,14 @@
 
 package com.redhat.thermostat.backend.system.internal.linux;
 
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
-import com.redhat.thermostat.agent.utils.username.UserNameUtil;
+import com.redhat.thermostat.common.portability.ProcessUserInfo;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
+
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
 import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
-import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfoBuilder;
 import com.redhat.thermostat.storage.core.WriterID;
 
 /**
@@ -68,6 +70,6 @@ public class LinuxInfoBuilderFactory implements InfoBuilderFactory {
     }
 
     public ProcessUserInfoBuilder createProcessUserInfoBuilder(final UserNameUtil userNameUtil) {
-        return new ProcessUserInfoBuilderImpl(dataSource, userNameUtil);
+        return ProcessUserInfo.createBuilder(dataSource, userNameUtil);
     }
 }

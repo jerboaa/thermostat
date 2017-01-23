@@ -43,14 +43,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
-import com.redhat.thermostat.agent.utils.SysConf;
-import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
+import com.redhat.thermostat.common.portability.SysConf;
 import com.redhat.thermostat.backend.VmPollingAction;
 import com.redhat.thermostat.backend.VmPollingBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.portability.PortableHostImpl;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -114,7 +114,7 @@ public class VmCpuBackend extends VmPollingBackend {
         }
 
         private int getWindowsCpuCount() {
-            return WindowsHelperImpl.INSTANCE.getCPUCount();
+            return PortableHostImpl.INSTANCE.getCPUCount();
         }
 
         private int getLinuxCpuCount(ProcDataSource dataSource) {

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.service.internal.windows;
 
+import com.redhat.thermostat.common.portability.PortableProcessImpl;
 import com.redhat.thermostat.service.internal.ProcessUtilitiesBase;
 import com.redhat.thermostat.service.process.UNIXSignal;
 
@@ -73,8 +74,7 @@ public class WindowsProcessUtilities extends ProcessUtilitiesBase  {
 
     @Override
     public void sendSignal(Integer pid, UNIXSignal signal) {
-        // TODO - port to Windows
-        exec("kill -s " + signal.signalName() + " " + pid);
+        PortableProcessImpl.INSTANCE.terminateProcess(pid);
     }
 
 }

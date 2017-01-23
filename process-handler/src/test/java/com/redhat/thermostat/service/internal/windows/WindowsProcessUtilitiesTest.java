@@ -86,24 +86,6 @@ public class WindowsProcessUtilitiesTest {
     }
 
     @Test
-    public void sendKillSignalTest() {
-
-        process.sendSignal(12345, UNIXSignal.KILL);
-
-        Assert.assertTrue(processArguments.contains("kill -s kill 12345"));
-        Assert.assertEquals(1, processArguments.size());
-    }
-
-    @Test
-    public void sendTermSignalTest() {
-
-        process.sendSignal(12345, UNIXSignal.TERM);
-
-        Assert.assertTrue(processArguments.contains("kill -s term 12345"));
-        Assert.assertEquals(1, processArguments.size());
-    }
-
-    @Test
     public void getProcessName() {
 
         String result = process.getProcessName(12345);

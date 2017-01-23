@@ -40,28 +40,18 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
+import com.redhat.thermostat.shared.config.OS;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.io.common.VmIoStat;
 import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
 
 public class VmIoBackendTest {
@@ -81,7 +71,7 @@ public class VmIoBackendTest {
         registrar = mock(VmStatusListenerRegistrar.class);
 
         WriterID id = mock(WriterID.class);
-        ioStatBuilder = mock(VmIoStatBuilder.class);
+        ioStatBuilder = OS.IS_LINUX ? mock(LinuxVmIoStatBuilder.class) : mock(WindowsVmIoStatBuilder.class);
         backend = new VmIoBackend(version, vmIoStatDao, ioStatBuilder, registrar, id);
     }
 

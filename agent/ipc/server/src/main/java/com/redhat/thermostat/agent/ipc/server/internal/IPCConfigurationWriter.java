@@ -43,14 +43,13 @@ import java.net.ServerSocket;
 import java.util.Properties;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
+import com.redhat.thermostat.common.portability.PortableProcessImpl;
 import com.redhat.thermostat.shared.config.OS;
 
 class IPCConfigurationWriter {
 
     static final String PROP_IPC_TYPE = "type";
     private static final String PROP_UNIX_SOCKET_DIR = "unixsocket.dir";
-
-
     private static final String PROP_TCP_SOCKET_SUFFIX= ".tcpsocket.port";
     //private static final String TCP_SOCKET_JUMBO_FRAMES = "tcpsocket.jumboframes";
 
@@ -96,17 +95,25 @@ class IPCConfigurationWriter {
         props.setProperty(PROP_IPC_TYPE, OS.IS_UNIX ? IPCType.UNIX_SOCKET.getConfigValue() : IPCType.TCP_SOCKET.getConfigValue());
 
         // unix socket will work without configuration (creates sockets in tmp directory
-        // but tcpsocket always needs ports (in the future, should support service discovery)
+        // but tcpsocket always needs ports predefined (in the future, should support service discovery)
 
         // this implementation is flawed;
         //    the unused ports might be in used by a process that simply wasn't running at thermostat setup time.
 
         {
-            int cmdPort = findUnusedTCPSocket(TEST_SOCKET_LOW,TEST_SOCKET_HIGH);
-            int aport = cmdPort == 0 ? 0 : findUnusedTCPSocket(cmdPort+1,TEST_SOCKET_HIGH);
+            int cmdPort = findUnusedTCPSocket(TEST_SOCKET_LOW, TEST_SOCKET_HIGH);
+            int aport = cmdPort == 0 ? 0 : findUnusedTCPSocket(cmdPort + 1, TEST_SOCKET_HIGH);
 
             props.setProperty("command-channel" + PROP_TCP_SOCKET_SUFFIX, Integer.toString(cmdPort));
             props.setProperty("agent-proxy" + PROP_TCP_SOCKET_SUFFIX, Integer.toString(aport));
+
+            // write a property for each user on the system - currently only the current user
+            // note: this is required for UNIX too
+            if (OS.IS_WINDOWS) {
+                int uport = aport == 0 ? 0 : findUnusedTCPSocket( aport + 1, TEST_SOCKET_HIGH);
+                int uid = PortableProcessImpl.INSTANCE.getUid(0); // if pid=0, gets uid of current process
+                props.setProperty("agent-proxy-" + uid + PROP_TCP_SOCKET_SUFFIX, Integer.toString(uport));
+            }
         }
 
         try (FileOutputStream fos = helper.createStream(configFile)) {

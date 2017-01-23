@@ -36,7 +36,8 @@
 
 package com.redhat.thermostat.backend.system.internal.models;
 
-import com.redhat.thermostat.agent.utils.username.UserNameUtil;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.backend.system.internal.linux.LinuxInfoBuilderFactory;
 import com.redhat.thermostat.backend.system.internal.windows.WindowsInfoBuilderFactory;
 import com.redhat.thermostat.shared.config.OS;

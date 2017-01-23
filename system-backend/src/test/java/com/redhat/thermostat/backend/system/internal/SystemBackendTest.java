@@ -48,7 +48,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.agent.utils.username.UserNameUtil;
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;

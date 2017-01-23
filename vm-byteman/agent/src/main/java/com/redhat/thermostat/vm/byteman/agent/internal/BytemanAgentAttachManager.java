@@ -49,12 +49,13 @@ import java.util.logging.Logger;
 
 import org.jboss.byteman.agent.submit.Submit;
 
+import com.redhat.thermostat.common.portability.ProcessUserInfo;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.byteman.agent.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 
@@ -90,8 +91,8 @@ class BytemanAgentAttachManager {
     }
     
     // for testing only
-    BytemanAgentAttachManager(BytemanAttacher attacher, IPCEndpointsManager ipcManager, VmBytemanDAO vmBytemanDao, SubmitHelper submit, 
-            WriterID writerId, ProcessUserInfoBuilder userInfoBuilder, FileSystemUtils fsUtils) {
+    BytemanAgentAttachManager(BytemanAttacher attacher, IPCEndpointsManager ipcManager, VmBytemanDAO vmBytemanDao, SubmitHelper submit,
+                              WriterID writerId, ProcessUserInfoBuilder userInfoBuilder, FileSystemUtils fsUtils) {
         this.attacher = attacher;
         this.ipcManager = ipcManager;
         this.vmBytemanDao = vmBytemanDao;

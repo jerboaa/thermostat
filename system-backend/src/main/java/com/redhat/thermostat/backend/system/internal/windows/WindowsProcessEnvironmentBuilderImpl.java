@@ -36,8 +36,9 @@
 
 package com.redhat.thermostat.backend.system.internal.windows;
 
-import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
 import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
+import com.redhat.thermostat.common.portability.PortableProcess;
+import com.redhat.thermostat.common.portability.PortableProcessImpl;
 
 import java.util.Map;
 
@@ -46,18 +47,18 @@ import java.util.Map;
  */
 class WindowsProcessEnvironmentBuilderImpl implements ProcessEnvironmentBuilder {
 
-    private final WindowsHelperImpl winHelper;
+    private final PortableProcess helper;
 
     WindowsProcessEnvironmentBuilderImpl() {
-        this(WindowsHelperImpl.INSTANCE);
+        this(PortableProcessImpl.INSTANCE);
     }
 
-    WindowsProcessEnvironmentBuilderImpl(WindowsHelperImpl wh) {
-        winHelper = wh;
+    WindowsProcessEnvironmentBuilderImpl(PortableProcess wh) {
+        helper = wh;
     }
 
     @Override
     public Map<String, String> build(int pid) {
-        return winHelper.getEnvironment(pid);
+        return helper.getEnvironment(pid);
     }
 }

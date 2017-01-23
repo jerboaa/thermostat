@@ -1,6 +1,6 @@
 @echo off
 
-:: Copyright 2016 Red Hat, Inc.
+:: Copyright 2017 Red Hat, Inc.
 ::
 :: This file is part of Thermostat.
 ::
@@ -39,6 +39,7 @@ setlocal
 %~dp0\thermostat-common.cmd
 
 echo thermostat-webservice not implemented on Windows.
+exit 1
 
 set TOMCAT_DIR=tomcat
 

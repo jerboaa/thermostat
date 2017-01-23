@@ -57,7 +57,7 @@ import com.redhat.thermostat.shared.config.OS;
 import org.junit.Assume;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.testutils.TestUtils;
 
 public class ProcessEnvironmentBuilderTest {

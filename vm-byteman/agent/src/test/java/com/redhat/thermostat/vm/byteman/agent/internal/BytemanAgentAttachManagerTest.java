@@ -63,13 +63,14 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
-import com.redhat.thermostat.agent.utils.ProcessChecker;
+import com.redhat.thermostat.common.portability.ProcessUserInfo;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
+import com.redhat.thermostat.common.portability.ProcessChecker;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAgentAttachManager.FileSystemUtils;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAgentAttachManager.SubmitHelper;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
-import com.redhat.thermostat.vm.byteman.agent.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanDAO;
 import com.redhat.thermostat.vm.byteman.common.VmBytemanStatus;
 

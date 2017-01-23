@@ -36,8 +36,9 @@
 
 package com.redhat.thermostat.backend.system.internal.windows;
 
-import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
+import com.redhat.thermostat.common.portability.PortableHost;
 import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
+import com.redhat.thermostat.common.portability.PortableHostImpl;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.HostInfo;
 
@@ -47,26 +48,26 @@ import com.redhat.thermostat.storage.model.HostInfo;
 class WindowsHostInfoBuilderImpl implements HostInfoBuilder {
 
     private final WriterID writerID;
-    private final WindowsHelperImpl winHelper;
+    private final PortableHost helper;
 
     WindowsHostInfoBuilderImpl(final WriterID writerID) {
-        this(writerID, WindowsHelperImpl.INSTANCE);
+        this(writerID, PortableHostImpl.INSTANCE);
     }
 
-    WindowsHostInfoBuilderImpl(final WriterID writerID, WindowsHelperImpl winHelper) {
+    WindowsHostInfoBuilderImpl(final WriterID writerID, PortableHost helper) {
         this.writerID = writerID;
-        this.winHelper = winHelper;
+        this.helper = helper;
     }
 
     @Override
     public HostInfo build() {
         String wId = writerID.getWriterID();
         return new HostInfo(wId,
-                winHelper.getHostName(),
-                winHelper.getOSName(),
-                winHelper.getOSVersion(),
-                winHelper.getCPUModel(),
-                winHelper.getCPUCount(),
-                winHelper.getTotalMemory());
+                helper.getHostName(),
+                helper.getOSName(),
+                helper.getOSVersion(),
+                helper.getCPUModel(),
+                helper.getCPUCount(),
+                helper.getTotalMemory());
     }
 }

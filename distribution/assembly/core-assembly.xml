@@ -67,6 +67,7 @@
         <include>com.redhat.thermostat:thermostat-agent-ipc-unixsocket-client</include>
         <include>com.redhat.thermostat:thermostat-common-core</include>
         <include>com.redhat.thermostat:thermostat-common-command</include>
+        <include>com.redhat.thermostat:thermostat-common-portability</include>
         <include>com.redhat.thermostat:thermostat-process-handler</include>
         <include>com.redhat.thermostat:thermostat-storage-cli</include>
         <include>com.redhat.thermostat:thermostat-storage-mongodb</include>

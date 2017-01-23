@@ -36,29 +36,22 @@
 
 package com.redhat.thermostat.vm.cpu.agent.internal;
 
-import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-
-import java.util.logging.Logger;
+import com.redhat.thermostat.common.portability.PortableProcessImpl;
+import com.redhat.thermostat.common.portability.PortableProcessStat;
 
 /**
  * Extract status information about the process
  */
 public class WindowsProcessStatusInfoBuilderImpl implements ProcessStatusInfoBuilder {
 
-    //private static final Logger logger = LoggingUtils.getLogger(WindowsProcessStatusInfoBuilderImpl.class);
-
     WindowsProcessStatusInfoBuilderImpl() {
     }
 
     public ProcessStatusInfo build(int pid) {
 
-        final long[] info =  WindowsHelperImpl.INSTANCE.getProcessCPUInfo(pid);
+        final PortableProcessStat info =  PortableProcessImpl.INSTANCE.getProcessStat(pid);
 
-        final long utime = info[1];
-        final long stime = info[2];
-
-        return new ProcessStatusInfo(pid, utime, stime);
+        return new ProcessStatusInfo(pid, info.getUserTime(), info.getKernelTime());
     }
 
 }

@@ -1,6 +1,6 @@
 @echo off
 
-:: Copyright 2016 Red Hat, Inc.
+:: Copyright 2017 Red Hat, Inc.
 ::
 :: This file is part of Thermostat.
 ::
@@ -36,6 +36,55 @@
 
 setlocal
 
-%~dp0\thermostat-common.cmd
+if "%4"=="" goto usage
+if not "%5"=="" goto usage
 
-echo thermostat-agent-proxy not implemented on Windows.
+ goto skipfuncdefs
+
+ :usage
+   echo "usage: %~f0 <pidOfTargetJvm> <userNameOfJvmOwner> <ipcConfigFile> <ipcServerName>"
+   exit /b 1
+
+ :skipfuncdefs
+
+set TARGET_PID=%1
+set TARGET_USER=%2
+set CONFIG_FILE=%3
+set IPC_SERVER_NAME=%4
+
+:: Source thermostat-ipc-client-common from same directory as this script
+:: Defines IPC_CLASSPATH variable with JARs necessary for the IPC service
+
+call %~dp0\thermostat-ipc-client-common.cmd
+if not "%errorlevel%"=="0" exit /b %errorlevel%
+
+:: Ensure thermostat-ipc-client-common sourced correctly
+if not defined IPC_CLASSPATH (
+  echo "Classpath not properly defined for agent proxy"
+  exit /b 1
+)
+
+:: Need tools from the JVM
+set TOOLS_JAR=%JAVA_HOME%\lib\tools.jar
+
+:: Additional JARs necessary for the agent proxy
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-common-core-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-shared-config-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\thermostat-agent-proxy-server-@project.version@.jar
+set IPC_CLASSPATH=%IPC_CLASSPATH%;%THERMOSTAT_LIBS%\gson-@gson.version@.jar
+set IPC_CLASSPATH=%TOOLS_JAR%;%IPC_CLASSPATH%
+
+set AGENT_PROXY_CLASS=com.redhat.thermostat.agent.proxy.server.AgentProxy
+
+:: Set this to remote debug
+if defined THERMOSTAT_DEBUG (
+  set DEBUG_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=1082
+)
+
+:: Start server
+:: within the server, consider adjusting toek priviledge to disable debug, etc
+set CONFIG_FILE_ARG=-DipcConfigFile=%CONFIG_FILE%
+
+%JAVA% -cp %IPC_CLASSPATH% %CONFIG_FILE_ARG% %LOGGING_ARGS% %DEBUG_OPTS% %AGENT_PROXY_CLASS% %TARGET_PID% %IPC_SERVER_NAME% %TARGET_USER%
+
+

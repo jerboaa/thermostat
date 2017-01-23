@@ -95,7 +95,7 @@ abstract public class ProcessUtilitiesBase implements ProcessHandler {
         try {
             rt.exec(command);
         } catch (IOException e) {
-            logger.log(Level.WARNING, "can't run kill!", e);
+            logger.log(Level.WARNING, "can't run '" + command + "'", e);
         }
     }
 

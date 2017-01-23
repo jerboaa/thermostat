@@ -53,6 +53,8 @@ import java.nio.charset.Charset;
 import java.nio.file.attribute.UserPrincipal;
 import java.nio.file.attribute.UserPrincipalLookupService;
 
+import com.redhat.thermostat.common.portability.ProcessUserInfo;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -67,7 +69,6 @@ import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.ConnectorCreator;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.FileSystemUtils;
-import com.redhat.thermostat.utils.management.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 
 public class MXBeanConnectionPoolImplTest {
     

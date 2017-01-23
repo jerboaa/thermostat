@@ -44,6 +44,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 
+import com.redhat.thermostat.common.portability.UserNameUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceRegistration;
@@ -51,13 +52,11 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolControl;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
 public class ActivatorTest {
     
@@ -73,6 +72,11 @@ public class ActivatorTest {
     
         context = new StubBundleContext();
         context.registerService(CommonPaths.class.getName(), paths, null);
+
+        // required by MXBeanConnectionPoolImpl
+        UserNameUtil userNameUtil = mock(UserNameUtil.class);
+        context.registerService(UserNameUtil.class.getName(), userNameUtil, null);
+
         AgentIPCService ipcService = mock(AgentIPCService.class);
         ipcReg = context.registerService(AgentIPCService.class.getName(), ipcService, null);
     }
@@ -84,7 +88,6 @@ public class ActivatorTest {
 
         assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
         assertTrue(context.isServiceRegistered(MXBeanConnectionPoolControl.class.getName(), MXBeanConnectionPoolImpl.class));
-        assertTrue(context.isServiceRegistered(UserNameUtil.class.getName(), UserNameUtilImpl.class));
         assertTrue(context.isServiceRegistered(VmBlacklist.class.getName(), VmBlacklistImpl.class));
     }
 

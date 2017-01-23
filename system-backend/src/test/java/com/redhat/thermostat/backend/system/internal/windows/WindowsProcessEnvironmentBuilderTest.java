@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.backend.system.internal.windows;
 
-import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
+import com.redhat.thermostat.common.portability.PortableProcess;
 import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
 import com.redhat.thermostat.shared.config.OS;
 
@@ -62,7 +62,7 @@ import static org.mockito.Mockito.when;
  */
 public class WindowsProcessEnvironmentBuilderTest {
 
-    private WindowsHelperImpl whelp;
+    private PortableProcess whelp;
 
     private static final int FAKE_PID = 4567;
     private static final String PATH_KEY = "PATH";
@@ -72,7 +72,7 @@ public class WindowsProcessEnvironmentBuilderTest {
 
     @Before
     public void setup() {
-        whelp = mock(WindowsHelperImpl.class);
+        whelp = mock(PortableProcess.class);
         goodMap.put(PATH_KEY, FAKE_PATH);
         when(whelp.getEnvironment(anyInt())).thenReturn(null);
         when(whelp.getEnvironment(eq(FAKE_PID))).thenReturn(goodMap);

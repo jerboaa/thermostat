@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.backend.system.internal.windows;
 
-import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
+import com.redhat.thermostat.common.portability.PortableHost;
 import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
 import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -54,18 +54,18 @@ import static org.mockito.Mockito.when;
 public class WindowsHostInfoBuilderTest {
 
     private WriterID writerId;
-    private WindowsHelperImpl whelp;
+    private PortableHost helper;
 
     @Before
     public void setup() {
         writerId = mock(WriterID.class);
-        whelp = mock(WindowsHelperImpl.class);
-        when(whelp.getHostName()).thenReturn("testhost");
-        when(whelp.getOSName()).thenReturn("testos");
-        when(whelp.getOSVersion()).thenReturn("testversion");
-        when(whelp.getCPUModel()).thenReturn("testcpu");
-        when(whelp.getCPUCount()).thenReturn(4567);
-        when(whelp.getTotalMemory()).thenReturn(9876L);
+        helper = mock(PortableHost.class);
+        when(helper.getHostName()).thenReturn("testhost");
+        when(helper.getOSName()).thenReturn("testos");
+        when(helper.getOSVersion()).thenReturn("testversion");
+        when(helper.getCPUModel()).thenReturn("testcpu");
+        when(helper.getCPUCount()).thenReturn(4567);
+        when(helper.getTotalMemory()).thenReturn(9876L);
     }
 
     // TODO - This test currently fails on Windows because the helper DLL isn't on the execution path
@@ -79,7 +79,7 @@ public class WindowsHostInfoBuilderTest {
 
     @Test
     public void testGetInfo() {
-        final HostInfoBuilder ib = new WindowsHostInfoBuilderImpl(writerId, whelp);
+        final HostInfoBuilder ib = new WindowsHostInfoBuilderImpl(writerId, helper);
         final HostInfo hi = ib.build();
         assertEquals("testhost",hi.getHostname());
         assertEquals("testos", hi.getOsName());

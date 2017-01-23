@@ -41,10 +41,10 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.utils.linux.ProcDataSource;
-import com.redhat.thermostat.agent.utils.windows.WindowsHelperImpl;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
+import com.redhat.thermostat.common.portability.PortableMemoryStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 import com.redhat.thermostat.shared.config.OS;
@@ -130,7 +130,7 @@ public class MemoryStatBuilder {
     private MemoryStat buildFromWindows() {
         long timestamp = System.currentTimeMillis();
 
-        WindowsHelperImpl.MemoryStat memstat = new WindowsHelperImpl.MemoryStat();
+        PortableMemoryStat memstat = PortableMemoryStat.build();
 
         String wId = writerId.getWriterID();
         return new MemoryStat(wId, timestamp, memstat.getTotal(), memstat.getFree(), memstat.getBuffers(), memstat.getCached(), memstat.getSwapTotal(), memstat.getSwapFree(), memstat.getCommitLimit());

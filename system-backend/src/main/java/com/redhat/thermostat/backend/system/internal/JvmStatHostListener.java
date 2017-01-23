@@ -44,9 +44,9 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.portability.ProcessUserInfo;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
-import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfo;
-import com.redhat.thermostat.backend.system.internal.models.ProcessUserInfoBuilder;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 import sun.jvmstat.monitor.MonitoredVm;

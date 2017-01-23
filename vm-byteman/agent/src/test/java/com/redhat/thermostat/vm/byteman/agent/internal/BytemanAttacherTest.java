@@ -56,7 +56,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.ipc.server.AgentIPCService;
-import com.redhat.thermostat.agent.utils.ProcessChecker;
+import com.redhat.thermostat.common.portability.ProcessChecker;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.BtmInstallHelper;
 import com.redhat.thermostat.vm.byteman.agent.internal.BytemanAttacher.InstallResult;
 
