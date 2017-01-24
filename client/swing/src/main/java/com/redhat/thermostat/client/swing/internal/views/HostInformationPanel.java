@@ -41,15 +41,16 @@ import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Logger;
 
+import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.internal.Tab;
+import com.redhat.thermostat.client.swing.internal.TabbedPane;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
@@ -59,16 +60,37 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
     private static final EdtHelper edtHelper = new EdtHelper();
 
     private JPanel visiblePanel;
-    private final JTabbedPane tabPane;
+    private final TabbedPane tabPane;
 
     public HostInformationPanel() {
         super();
         visiblePanel = new JPanel();
         visiblePanel.setLayout(new BorderLayout());
-        tabPane = new JTabbedPane();
+        tabPane = new TabbedPane();
         visiblePanel.add(tabPane);
     }
-    
+
+    TabbedPane __test__getTabPane() {
+        return tabPane;
+    }
+
+    private Tab makeTab(SwingComponent component, LocalizedString title) {
+        Tab tab = null;
+
+        JComponent tabContent = null;
+        Component comp = component.getUiComponent();
+        if (comp instanceof JComponent) {
+            tabContent = (JComponent) comp;
+        } else {
+            tabContent = new JPanel();
+            tabContent.setLayout(new BorderLayout());
+            tabContent.add(comp);
+        }
+
+        tab = new Tab(tabContent, title);
+        return tab;
+    }
+
     @Override
     public void addChildView(final LocalizedString title, final UIComponent view) {
         if (view instanceof SwingComponent) {
@@ -77,7 +99,9 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
                 edtHelper.callAndWait(new Runnable() {
                     @Override
                     public void run() {
-                        tabPane.addTab(title.getContents(), null, component.getUiComponent(), null);
+                        Tab tab = makeTab(component, title);
+
+                        tabPane.add(tab);
                         if (view instanceof OverlayContainer) {
                             OverlayContainer overlayContainer = (OverlayContainer) view;
                             tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
@@ -102,17 +126,26 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
 
     @Override
     public void removeChildView(final LocalizedString title) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < tabPane.getComponentCount(); i++) {
-                    if (tabPane.getTitleAt(i).equals(title.getContents())) {
-                        tabPane.remove(i);
-                        break;
+        try {
+            edtHelper.callAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    Tab toRemove = null;
+                    for (Tab tab : tabPane.getTabs()) {
+                        if (tab.getTabName().getContents().equals(title.getContents())) {
+                            toRemove = tab;
+                            break;
+                        }
+                    }
+
+                    if (toRemove != null) {
+                        tabPane.remove(toRemove);
                     }
                 }
-            }
-        });
+            });
+        } catch (Exception e) {
+            logger.severe(e.getLocalizedMessage());
+        }
     }
 
     @Override
@@ -122,7 +155,7 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
 
     @Override
     public int getNumChildren() {
-        return tabPane.getComponentCount();
+        return tabPane.getTabs().size();
     }
 
 }

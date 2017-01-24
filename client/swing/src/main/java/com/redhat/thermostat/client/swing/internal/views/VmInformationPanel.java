@@ -40,10 +40,12 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 import java.util.logging.Logger;
 
+import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.UIPluginInfo;
@@ -51,6 +53,8 @@ import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.OverlayContainer;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.internal.Tab;
+import com.redhat.thermostat.client.swing.internal.TabbedPane;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
@@ -67,7 +71,7 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     private static final Logger logger = LoggingUtils.getLogger(VmInformationPanel.class);
     private static final EdtHelper edtHelper = new EdtHelper();
 
-    private final JTabbedPane tabPane = new JTabbedPane();
+    private final TabbedPane tabPane = new TabbedPane();
     private JPanel visiblePanel;
 
     public VmInformationPanel() {
@@ -76,6 +80,10 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
         visiblePanel.setLayout(new BorderLayout());
         tabPane.setName("tabPane");
         visiblePanel.add(tabPane);
+    }
+
+    TabbedPane __test__getTabPane() {
+        return tabPane;
     }
 
     @Override
@@ -91,6 +99,23 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
         } catch (InvocationTargetException | InterruptedException e) {
             logger.severe(e.getLocalizedMessage());
         }
+    }
+
+    private Tab makeTab(SwingComponent component, LocalizedString title) {
+        Tab tab = null;
+
+        JComponent tabContent = null;
+        Component comp = component.getUiComponent();
+        if (comp instanceof JComponent) {
+            tabContent = (JComponent) comp;
+        } else {
+            tabContent = new JPanel();
+            tabContent.setLayout(new BorderLayout());
+            tabContent.add(comp);
+        }
+
+        tab = new Tab(tabContent, title);
+        return tab;
     }
 
     @Override
@@ -119,7 +144,8 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     }
 
     private void addViewImpl(final LocalizedString title, final SwingComponent view) {
-        tabPane.addTab(title.getContents(), null, view.getUiComponent(), null);
+        Tab tabContent = makeTab(view, title);
+        tabPane.add(tabContent);
         if (view instanceof OverlayContainer) {
             OverlayContainer overlayContainer = (OverlayContainer) view;
             tabPane.addMouseListener(overlayContainer.getOverlay().getClickOutCloseListener(tabPane));
@@ -152,21 +178,60 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
 
     @Override
     public int getSelectedChildID() {
-        return tabPane.getSelectedIndex();
+        FutureTask<Integer> task = new FutureTask<>(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return tabPane.getSelectedIndex();
+            }
+        });
+
+        try {
+            edtHelper.callAndWait(task);
+            return task.get();
+
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     @Override
-    public boolean selectChildID(int id) {
-        if (tabPane.getComponentCount() > id) {
-            tabPane.setSelectedIndex(id);
-            return true;
+    public boolean selectChildID(final int id) {
+        FutureTask<Boolean> task = new FutureTask<>(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                if (tabPane.getTabs().size() > id) {
+                    tabPane.setSelectedIndex(id);
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        try {
+            edtHelper.callAndWait(task);
+            return task.get();
+
+        } catch (Exception e) {
+            return false;
         }
-        return false;
     }
 
     @Override
     public int getNumChildren() {
-        return tabPane.getComponentCount();
+        FutureTask<Integer> task = new FutureTask<>(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return tabPane.getTabs().size();
+            }
+        });
+
+        try {
+            edtHelper.callAndWait(task);
+            return task.get();
+
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }
 

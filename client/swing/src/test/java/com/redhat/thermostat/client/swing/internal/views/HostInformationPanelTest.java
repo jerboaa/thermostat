@@ -37,13 +37,13 @@
 package com.redhat.thermostat.client.swing.internal.views;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.InvocationTargetException;
 
-import javax.swing.JTabbedPane;
-
+import com.redhat.thermostat.client.swing.internal.TabbedPane;
 import com.redhat.thermostat.common.internal.test.Bug;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
@@ -58,7 +58,6 @@ import org.junit.runner.RunWith;
 import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.FrameWithPanelTest;
-import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 @Category(CacioTest.class)
@@ -81,14 +80,14 @@ public class HostInformationPanelTest extends FrameWithPanelTest<HostInformation
 
         panel.addChildView(new LocalizedString("foo1"), mock1);
 
-        // The panel in test has no views added so the matcher with a tab count > 0 works
-        // in order to select the right panel.
-        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1");
+        TabbedPane tabbedPane = panel.__test__getTabPane();
+
+        assertEquals(1, tabbedPane.getTabs().size());
+        assertEquals("foo1", tabbedPane.getTabs().get(0).getTabName().getContents());
 
         UIComponent mock2 = createPanel();
         panel.addChildView(new LocalizedString("foo2"), mock2);
-
-        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1", "foo2");
+        assertEquals("foo1", tabbedPane.getTabs().get(0).getTabName().getContents());
     }
 
     @Test
@@ -99,13 +98,14 @@ public class HostInformationPanelTest extends FrameWithPanelTest<HostInformation
         panel.addChildView(new LocalizedString("test1"), test1);
         panel.addChildView(new LocalizedString("test2"), test2);
 
-        // The panel in test has no views added so the matcher with a tab count > 0 works
-        // in order to select the right panel.
-        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("test1", "test2");
+        TabbedPane tabbedPane = panel.__test__getTabPane();
+        assertEquals(2, tabbedPane.getTabs().size());
+        assertEquals("test1", tabbedPane.getTabs().get(0).getTabName().getContents());
+        assertEquals("test2", tabbedPane.getTabs().get(1).getTabName().getContents());
 
         panel.removeChildView(new LocalizedString("test1"));
-
-        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("test2");
+        assertEquals(1, tabbedPane.getTabs().size());
+        assertEquals("test2", tabbedPane.getTabs().get(0).getTabName().getContents());
     }
 
     @GUITest
