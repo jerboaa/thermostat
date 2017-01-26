@@ -134,39 +134,75 @@ public class OSGIManifestScannerTest {
 
     @Test
     public void testParseHeader() throws Exception {
-        List<String> packages = OSGIManifestScanner.parseHeader(Export_Package);
+        List<Dependency> packages = OSGIManifestScanner.parseHeader(Export_Package);
         Assert.assertEquals(31, packages.size());
-
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.serialization"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.util"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.compression"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.execution"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.channel.local"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.bootstrap"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.base64"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.timeout"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.channel.socket.nio"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.http.websocket"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.replay"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.string"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.channel"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.ssl"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.container.microcontainer"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.rtsp"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.protobuf"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.channel.socket.http"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.channel.group"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.embedder"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.channel.socket.oio"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.frame"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.oneone"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.container.osgi"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.logging"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.buffer"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.codec.http"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.queue"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.channel.socket"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.logging"));
-        Assert.assertTrue(packages.contains("org.jboss.netty.handler.stream"));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.serialization", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.util", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.compression", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.execution", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.channel.local", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.bootstrap", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.base64", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.timeout", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.channel.socket.nio", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.http.websocket", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.replay", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.string", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.channel", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.ssl", "logging")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.container.microcontainer", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.rtsp", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.protobuf", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.channel.socket.http", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.channel.group", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.embedder", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.channel.socket.oio", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.frame", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.oneone", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.container.osgi", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.logging", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.buffer", "3.2.4 .Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.codec.http", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.queue", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.channel.socket", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.logging", "3.2.4.Final")));
+        Assert.assertTrue(packages.contains(new Dependency("org.jboss.netty.handler.stream", "3.2.4.Final")));
     }
+
+    @Test
+    public void testVersionExtractor() {
+        String versionRange = "[9.1.3,10.1.2)";
+        String[] extracted = OSGIManifestScanner.parseVersionRange(versionRange);
+        Assert.assertEquals("9.1.3", extracted[0]);
+        Assert.assertEquals("10.1.2", extracted[1]);
+    }
+
+    @Test
+    public void testVersionMatcher() {
+        String versionRange = "[3,4)";
+        Dependency result = OSGIManifestScanner.parseAndCheckBounds(versionRange, "3.1.2", new Dependency("TestBundle", "3.1.2"));
+        Assert.assertEquals(result, new Dependency("TestBundle", "3.1.2"));
+    }
+
+    @Test
+    public void testVersionMatcher2() {
+        String versionRange = "[3,4)";
+        Dependency result = OSGIManifestScanner.parseAndCheckBounds(versionRange, "4", new Dependency("TestBundle", "4"));
+        Assert.assertEquals(result, null);
+    }
+
+    @Test
+    public void testVersionMatcher3() {
+        String versionRange = "[5,5.1.2]";
+        Dependency result = OSGIManifestScanner.parseAndCheckBounds(versionRange, "5.1.2", new Dependency("TestBundle", "5.1.2"));
+        Assert.assertEquals(result, new Dependency("TestBundle", "5.1.2"));
+    }
+
+    @Test
+    public void testNullDependency() {
+        String versionRange = "[1,2]";
+        Dependency result = OSGIManifestScanner.parseAndCheckBounds(versionRange, null, null);
+        Assert.assertEquals(result, null);
+    }
+
 }

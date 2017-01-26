@@ -34,19 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.dependency.internal;
+package com.redhat.thermostat.launcher.internal;
 
-import java.nio.file.Path;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.launcher.BundleInformation;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
-import java.util.regex.Pattern;
 
-/**
- */
-public class OSGIManifestScanner {
+public class MetadataHandler {
 
     private static final String LBRACK = "([\\(|\\[])";
     private static final String VERSION = "(\\d+(\\.\\d+){0,2})";
@@ -57,29 +57,16 @@ public class OSGIManifestScanner {
     private static final String VERSION_RANGE = LBRACK + VERSION + COMMA + VERSION + RBRACK;
     private static final String INCLUSIVE_UPPER_RANGE = LBRACK + VERSION + COMMA + VERSION + INCLUSIVE_UPPER;
     private static final String INCLUSIVE_LOWER_RANGE = INCLUSIVE_LOWER + VERSION + COMMA + VERSION + RBRACK;
+    private static final String NO_VERSION = "0";
 
     private static final Pattern VERSION_RANGE_PATTERN = Pattern.compile(VERSION_RANGE);
     private static final Pattern INCLUSIVE_UPPER_PATTERN = Pattern.compile(INCLUSIVE_UPPER_RANGE);
     private static final Pattern INCLUSIVE_LOWER_PATTERN = Pattern.compile(INCLUSIVE_LOWER_RANGE);
+    private static final Logger logger = LoggingUtils.getLogger(MetadataHandler.class);
 
-    public static String getAttributeFromManifest(Path jar, String attribute) {
-        String value = null;
-        try {
-            Manifest manifest = new JarFile(jar.toFile()).getManifest();
-
-            Attributes attributes = manifest.getMainAttributes();
-            value = attributes.getValue(attribute);
-
-        } catch (Exception ignore) {
-            ignore.printStackTrace();
-        }
-
-        return value;
-    }
-
-    public static List<Dependency> parseHeader(String header) {
+    public List<BundleInformation> parseHeader(String header) {
         header = header.concat("\0");
-        List<Dependency> packages = new ArrayList<>();
+        List<BundleInformation> packages = new ArrayList<>();
         int index = 0;
         int start = 0;
         boolean invalid = false;
@@ -89,7 +76,7 @@ public class OSGIManifestScanner {
         boolean isVersionRange = false;
         boolean inQuotes = false;
         String version;
-        Dependency lastPackage = new Dependency("","");
+        BundleInformation lastPackage = new BundleInformation("","");
         String directive;
         while (index < header.length()) {
             char charAtIndex = header.charAt(index);
@@ -120,7 +107,7 @@ public class OSGIManifestScanner {
                     if (!isVersionRange) {
                         version = header.substring(start, index);
                         packages.remove(lastPackage);
-                        packages.add(new Dependency(
+                        packages.add(new BundleInformation(
                                 lastPackage.getName(), version.replace("\"", "")));
                         parsingVersion = false;
                     } else {
@@ -132,7 +119,8 @@ public class OSGIManifestScanner {
                         if (!invalid && !newSubstring) {
                             // Packages are given a default version of 0. This is changed later if a version directive
                             // is specified in the manifest.
-                            lastPackage = new Dependency(header.substring(start, index), Dependency.NO_VERSION);
+                            lastPackage = new BundleInformation(header.substring(start, index),
+                                    MetadataHandler.NO_VERSION);
                             packages.add(lastPackage);
                         }
                         if (charAtIndex == ';') {
@@ -157,57 +145,7 @@ public class OSGIManifestScanner {
         return packages;
     }
 
-    private static boolean satisfiesBound(int[] target, int[] bound, boolean exclusive) {
-        int major = Integer.compare(target[0], bound[0]);
-        int minor = Integer.compare(target[1], bound[1]);
-        int micro = Integer.compare(target[2], bound[2]);
-        if (major > 0) {
-            return true;
-        } else if (major == 0) {
-            if (minor > 0) {
-                return true;
-            } else if (minor == 0) {
-                if (micro > 0) {
-                    return true;
-                } else if (micro == 0 && !exclusive) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private static int[] extractVersions(String versionString) {
-        String[] split = versionString.split(Pattern.quote("."));
-        int[] versions = {0, 0, 0};
-        try {
-            for (int i = 0; i < Math.min(split.length, versions.length); i++) {
-                versions[i] = Integer.parseInt(split[i]);
-            }
-        } catch (NumberFormatException ignore) {
-        }
-        return versions;
-    }
-
-    static String[] parseVersionRange(String versionString) {
-        String[] raw = versionString.split(",");
-        String[] processed = new String[2];
-        for (String s : raw) {
-            if (!(s.equals(""))) {
-                if ((s.contains("[")) || (s.contains("("))) {
-                    processed[0] = s.substring(1, s.length());
-                } else {
-                    processed[1] = s.substring(0, s.length()-1);
-                }
-            }
-        }
-        return processed;
-    }
-
-    static Dependency parseAndCheckBounds(String versionString, String TargetVersion, Dependency target) {
-        if ((versionString == null || TargetVersion == null || target == null) || !isVersionRange(versionString)) {
-            return null;
-        }
+    public BundleInformation parseAndCheckBounds(String versionString, String TargetVersion, BundleInformation target) {
         boolean strictUpper = !INCLUSIVE_UPPER_PATTERN.matcher(versionString).matches();
         boolean strictLower = !INCLUSIVE_LOWER_PATTERN.matcher(versionString).matches();
         String [] bounds = parseVersionRange(versionString);
@@ -222,8 +160,60 @@ public class OSGIManifestScanner {
         return null;
     }
 
-    static boolean isVersionRange(String versionString) {
+    public boolean isVersionRange(String versionString) {
         return VERSION_RANGE_PATTERN.matcher(versionString).matches();
     }
-}
 
+
+    // Package Private for testing
+    boolean satisfiesBound(int[] target, int[] bound, boolean exclusive) {
+        int major = Integer.compare(target[0], bound[0]);
+        int minor = Integer.compare(target[1], bound[1]);
+        int micro = Integer.compare(target[2], bound[2]);
+        if (major > 0) {
+            return true;
+        } else if (major == 0) {
+            if (target[1] != -1 && bound[1] != -1) {
+                if (minor > 0) {
+                    return true;
+                } else if (minor == 0) {
+                    if (target[2] != -1 && bound[2] != -1) {
+                        if (micro > 0) {
+                            return true;
+                        } else if (micro == 0 && !exclusive) {
+                            return true;
+                        }
+                    } else if (!exclusive && bound[2] == -1) {
+                        return true;
+                    }
+                }
+            } else if (!exclusive && bound[1] == -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String[] parseVersionRange(String versionString) {
+        Matcher m = VERSION_RANGE_PATTERN.matcher(versionString);
+        if (m.matches()) {
+            return new String[]{m.group(2), m.group(4)};
+        }
+        return null;
+    }
+
+    public int[] extractVersions(String versionString) {
+        String[] split = versionString.split(Pattern.quote("."));
+        int[] versions = {-1, -1, -1};
+        try {
+            for (int i = 0; i < Math.min(split.length, versions.length); i++) {
+                versions[i] = Integer.parseInt(split[i]);
+            }
+        } catch (NumberFormatException nfe) {
+            // Should we get a malformed version string, make sure we log it
+            logger.log(Level.WARNING, "Malformed version string: " + versionString);
+        }
+        return versions;
+    }
+
+}

@@ -53,46 +53,42 @@ import java.util.jar.Manifest;
 public class TestHelper {
 
     public static File createTestDirectory() {
-        File underneathTheBrdige = null;
+        File underneathTheBridge = null;
         try {
-            underneathTheBrdige = Files.createTempDirectory("underneathTheBridge").toFile();
+            underneathTheBridge = Files.createTempDirectory("underneathTheBridge").toFile();
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-        underneathTheBrdige.deleteOnExit();
-        return underneathTheBrdige;
+        underneathTheBridge.deleteOnExit();
+        return underneathTheBridge;
     }
 
     public static Path createJar(String exportsDirective, String importDirective, Path base) throws Exception {
-        Manifest manifest = new Manifest();
-        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-        manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.EXPORT.id()), exportsDirective + ";");
-        if (importDirective != null) {
-            manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.IMPORT.id()), importDirective + ";");
-        }
-
         Path path = Paths.get(base.toFile().getAbsoluteFile() + "/" + exportsDirective + ".jar");
         FileOutputStream stream = new FileOutputStream(path.toFile());
-        JarOutputStream target = new JarOutputStream(stream, manifest);
+        JarOutputStream target = new JarOutputStream(stream, createManifest(exportsDirective, importDirective));
         target.close();
-
         return path;
     }
 
-    public static Path createJarWithPackageDependency(String jarName, String packagePath, Path base) throws Exception {
-        Manifest manifest = new Manifest();
-        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-        manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.EXPORT.id()), jarName + ";");
-        if (packagePath != null) {
-            manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.EXPORT.id()), packagePath + ";");
-        }
-
+    public static Path createJarWithExports(String jarName, String exportDirective, String importDirective, Path base) throws Exception {
+        Manifest manifest = createManifest(exportDirective, importDirective);
         Path path = Paths.get(base.toFile().getAbsoluteFile() + "/" + jarName + ".jar");
         FileOutputStream stream = new FileOutputStream(path.toFile());
         JarOutputStream target = new JarOutputStream(stream, manifest);
         target.close();
         return path;
+    }
+
+    private static Manifest createManifest(String exports, String imports) {
+        Manifest manifest = new Manifest();
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.EXPORT.id()), exports + ";");
+        if (imports != null) {
+            manifest.getMainAttributes().put(new Attributes.Name(BundleProperties.IMPORT.id()), imports + ";");
+        }
+        return manifest;
     }
 
 }

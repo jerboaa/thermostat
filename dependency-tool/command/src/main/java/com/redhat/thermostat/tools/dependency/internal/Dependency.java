@@ -36,64 +36,47 @@
 
 package com.redhat.thermostat.tools.dependency.internal;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
+public class Dependency {
 
-/**
- */
-public class OSGiSearchProcessor extends PathProcessor {
+    private String name;
+    private String version;
 
-    public static class BundleInfo {
-        public Path library;
-        public String symbolicName;
-        public String version;
+    public static final String NO_VERSION = "0";
+
+    public Dependency(String bundleName, String bundleVersion) {
+        this.name = String.valueOf(bundleName);
+        this.version = String.valueOf(bundleVersion);
     }
 
-    private String target;
-    private BundleProperties what;
-    private BundleInfo info;
-
-    public OSGiSearchProcessor(String target) {
-        this(target, BundleProperties.EXPORT);
+    public String getName() {
+        return name;
     }
 
-    public OSGiSearchProcessor(String target, BundleProperties what) {
-        this.target = target;
-        this.what = what;
+    public String getVersion() {
+        return version;
     }
 
     @Override
-    protected void process(Path jar) {
-
-        if (info != null) {
-            return;
-        }
-
-        try {
-            Manifest manifest = new JarFile(jar.toFile()).getManifest();
-            Attributes attributes = manifest.getMainAttributes();
-            String bundleAttribute = attributes.getValue(what.id());
-            if (bundleAttribute != null) {
-                List<Dependency> dependencies = OSGIManifestScanner.parseHeader(bundleAttribute);
-                // If no version is specified, a default version of 0 is given, See OSGIManifestScanner
-                if (dependencies.contains(new Dependency(target, Dependency.NO_VERSION))) {
-                    info = new BundleInfo();
-                    info.library = jar;
-                    info.symbolicName = attributes.getValue(BundleProperties.SYMBOLIC_NAME.id());
-                    info.version = attributes.getValue(BundleProperties.VERSION.id());
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public String toString() {
+        return name + " version " + version;
     }
 
-    public BundleInfo getBundleInfo() {
-        return info;
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
+        if (other == null) {
+            return false;
+        }
+
+        if (getClass() != other.getClass()) {
+            return false;
+        }
+
+        Dependency x = (Dependency) other;
+        return name.equals(x.name) && version.equals(x.version);
     }
+
 }

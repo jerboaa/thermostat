@@ -40,6 +40,7 @@ import com.redhat.thermostat.collections.graph.Graph;
 import com.redhat.thermostat.collections.graph.HashGraph;
 import com.redhat.thermostat.collections.graph.Node;
 import com.redhat.thermostat.collections.graph.Relationship;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -51,23 +52,24 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  */
 public class DependencyGraphBuilder extends PathProcessor {
 
-    private Map<String, Path> imports;
-    private Map<String, Path> exports;
+    private final Logger logger = LoggingUtils.getLogger(DependencyGraphBuilder.class);
+
+    private Map<Dependency, Path> exports;
 
     private Map<Path, Node> nodes;
 
     private Graph graph;
 
     public DependencyGraphBuilder() {
-        imports = new HashMap<>();
         exports = new HashMap<>();
         graph = new HashGraph();
-
         nodes = new HashMap<>();
     }
 
@@ -80,15 +82,15 @@ public class DependencyGraphBuilder extends PathProcessor {
         try {
             Manifest manifest = new JarFile(jar.toFile()).getManifest();
 
-            List<String> thisExports = new ArrayList<>();
-            List<String> thisImports = new ArrayList<>();
+            List<Dependency> thisExports = new ArrayList<>();
+            List<Dependency> thisImports = new ArrayList<>();
 
             Attributes attributes = manifest.getMainAttributes();
 
             String exports = attributes.getValue(BundleProperties.EXPORT.id());
             if (exports != null) {
-                List<String> dependencies = OSGIManifestScanner.parseHeader(exports);
-                for (String dependency : dependencies) {
+                List<Dependency> dependencies = OSGIManifestScanner.parseHeader(exports);
+                for (Dependency dependency : dependencies) {
                     this.exports.put(dependency, jar);
                     thisExports.add(dependency);
                 }
@@ -96,9 +98,8 @@ public class DependencyGraphBuilder extends PathProcessor {
 
             String imports = attributes.getValue(BundleProperties.IMPORT.id());
             if (imports != null) {
-                List<String> dependencies = OSGIManifestScanner.parseHeader(imports);
-                for (String dependency : dependencies) {
-                    this.imports.put(dependency, jar);
+                List<Dependency> dependencies = OSGIManifestScanner.parseHeader(imports);
+                for (Dependency dependency : dependencies) {
                     thisImports.add(dependency);
                 }
             }
@@ -112,7 +113,7 @@ public class DependencyGraphBuilder extends PathProcessor {
             nodes.put(jar, node);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.WARNING, e.getMessage());
         }
     }
 
@@ -126,22 +127,40 @@ public class DependencyGraphBuilder extends PathProcessor {
 
     private Graph build(boolean swap) {
         for (Node source : nodes.values()) {
-            List<String> thisImports = source.getProperty(BundleProperties.IMPORT.id());
-
-            for (String dep : thisImports) {
-
-                Path who = exports.get(dep);
-                if (who != null) {
-                    Node destination = nodes.get(who);
-
+            List<Dependency> thisImports = source.getProperty(BundleProperties.IMPORT.id());
+            Path location;
+            for (Dependency dep : thisImports) {
+                location = exports.get(dep);
+                if (location == null) {
+                    for (Dependency bundle : exports.keySet()) {
+                        if (OSGIManifestScanner.isVersionRange(dep.getVersion())) {
+                            if ((bundle.getName().equals(dep.getName()))) {
+                                location = exports.get(OSGIManifestScanner.parseAndCheckBounds(
+                                        dep.getVersion(), bundle.getVersion(), bundle));
+                            }
+                        } else {
+                            // If a version range is specified as a single version, it must be interpreted
+                            // as the range [version, infinity) according to the osgi specification.
+                            if ((bundle.getName().equals(dep.getName()))) {
+                                location = exports.get(OSGIManifestScanner.parseAndCheckBounds(
+                                        "[" + dep.getVersion() + "," + Integer.MAX_VALUE + ")",
+                                        bundle.getVersion(), bundle));
+                            }
+                        }
+                        if (location != null) {
+                            break;
+                        }
+                    }
+                }
+                if (location != null) {
+                    Node destination = nodes.get(location);
                     // some package seems to have dependencies on themselves, if
                     // we create a relationship we will cause a cycle
                     if (source.equals(destination)) {
                         continue;
                     }
-
-                    Relationship relationship = null;
-                    Set<Relationship> relationships = null;
+                    Relationship relationship;
+                    Set<Relationship> relationships;
                     if (swap) {
                         relationship = new Relationship(destination, "<-", source);
                         relationships = graph.getRelationships(destination);

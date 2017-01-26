@@ -34,37 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.dependency.internal.actions;
+package com.redhat.thermostat.tools.dependency.internal;
 
-import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.tools.dependency.internal.BundleProperties;
-import com.redhat.thermostat.tools.dependency.internal.Dependency;
-import com.redhat.thermostat.tools.dependency.internal.OSGIManifestScanner;
-import com.redhat.thermostat.tools.dependency.internal.Utils;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- */
-public class PrintOSGIHeaderAction {
-    public static void execute(String library, CommandContext ctx, BundleProperties property) {
-        Path path = Paths.get(library);
-        if (!path.toFile().exists()) {
-            Utils.getInstance().cannotAccessPathError(ctx, path);
-            return;
-        }
+public class DependencyTest {
 
-        String header = OSGIManifestScanner.getAttributeFromManifest(path, property.id());
-        if (header == null) {
-            Utils.getInstance().cannotFindAttributeError(ctx, property, path);
-            return;
-        }
+    private Dependency test1;
+    private Dependency test2;
+    private Dependency test3;
 
-        List<Dependency> parsedHeader = OSGIManifestScanner.parseHeader(header);
-        for (Dependency entry : parsedHeader) {
-            Utils.getInstance().print(ctx, entry.getName());
-        }
+    @Before
+    public void setup() {
+        test1 = new Dependency("foo", "1.0.0");
+        test2 = new Dependency("foo", "1.0.0");
+        test3 = new Dependency("bar", "2.9.1");
     }
+
+    @Test
+    public void testEquals() {
+        assertTrue(test1.equals(test1));
+        assertTrue(test1.equals(test2));
+        assertTrue(test2.equals(test1));
+    }
+
+    @Test
+    public void testNotEquals() {
+        String foo = "foo";
+        assertFalse(test3.equals(test1));
+        assertFalse(test3.equals(test2));
+        assertFalse(test1.equals(foo));
+        assertFalse(test1.equals(null));
+    }
+
 }

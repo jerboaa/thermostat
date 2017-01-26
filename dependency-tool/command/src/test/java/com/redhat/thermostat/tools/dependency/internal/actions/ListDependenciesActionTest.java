@@ -57,7 +57,7 @@ import java.util.List;
  */
 public class ListDependenciesActionTest {
 
-    private File underneathTheBrdige;
+    private File underneathTheBridge;
 
     private JarLocations paths;
 
@@ -69,6 +69,7 @@ public class ListDependenciesActionTest {
     private Path c;
     private Path d;
     private Path e;
+    private Path c1;
 
     private static class TestUtils extends Utils {
         List<Node> results = new ArrayList<>();
@@ -92,16 +93,20 @@ public class ListDependenciesActionTest {
         utils = new TestUtils();
         Utils.initSingletonForTest(utils);
 
-        underneathTheBrdige = TestHelper.createTestDirectory();
+        underneathTheBridge = TestHelper.createTestDirectory();
 
         paths = new JarLocations();
-        paths.getLocations().add(underneathTheBrdige.toPath());
+        paths.getLocations().add(underneathTheBridge.toPath());
 
-        a = TestHelper.createJar("a", null, underneathTheBrdige.toPath());
-        b = TestHelper.createJar("b", "a",   underneathTheBrdige.toPath());
-        c = TestHelper.createJar("c", "b",   underneathTheBrdige.toPath());
-        d = TestHelper.createJar("d", "b,c", underneathTheBrdige.toPath());
-        e = TestHelper.createJar("e", "d",   underneathTheBrdige.toPath());
+        a = TestHelper.createJar("a", null, underneathTheBridge.toPath());
+        b = TestHelper.createJar("b", "a",   underneathTheBridge.toPath());
+        c = TestHelper.createJar("c", "b",   underneathTheBridge.toPath());
+        d = TestHelper.createJar("d", "b,c", underneathTheBridge.toPath());
+        e = TestHelper.createJar("e", "d",   underneathTheBridge.toPath());
+
+        c1 = TestHelper.createJar("c1", "c2", underneathTheBridge.toPath());
+        TestHelper.createJar("c2", "c3", underneathTheBridge.toPath());
+        TestHelper.createJar("c3", "c1", underneathTheBridge.toPath());
     }
 
     @Test
@@ -137,6 +142,12 @@ public class ListDependenciesActionTest {
         Assert.assertEquals(c.toString(), utils.results.get(1).getName());
         Assert.assertEquals(d.toString(), utils.results.get(2).getName());
         Assert.assertEquals(e.toString(), utils.results.get(3).getName());
+    }
 
+    // Test that an exception is thrown when a cycle is detected.
+    @Test(expected = IllegalStateException.class)
+    public void testCyclicDependencies() {
+        PathProcessorHandler handler = new PathProcessorHandler(paths);
+        ListDependenciesAction.execute(handler, c1.toString(), ctx, true);
     }
 }

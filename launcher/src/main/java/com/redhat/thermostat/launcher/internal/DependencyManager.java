@@ -90,6 +90,9 @@ public class DependencyManager {
             return new LinkedList<>();
         }
         buildSubgraph(b);
+        if (!hasNoIncomingEdge(b)) {
+            throw new IllegalStateException("Node " + b + " has incoming edges.");
+        }
         LinkedList<BundleInformation> sorted = new LinkedList<>();
         LinkedList<BundleInformation> queue = new LinkedList<>();
         queue.add(b);
@@ -104,6 +107,9 @@ public class DependencyManager {
                     queue.addLast(bundle);
                 }
             }
+        }
+        for (BundleInformation node : discovered) {
+            assertNoEdges(node);
         }
         return sorted;
     }
@@ -125,6 +131,19 @@ public class DependencyManager {
     private void removeEdge(BundleInformation from, BundleInformation to) {
         outgoing.get(from).remove(to);
         incoming.get(to).remove(from);
+    }
+
+    private void assertNoEdges(BundleInformation node) throws IllegalStateException {
+        for (BundleInformation dest : getOutgoingRelationShips(node)) {
+            if (discovered.contains(dest)) {
+                throw new IllegalStateException("Graph contains a cycle.");
+            }
+        }
+        for (BundleInformation src : getIncomingRelationShips(node)) {
+            if (discovered.contains(src)) {
+                throw new IllegalStateException("Graph contains a cycle.");
+            }
+        }
     }
 
     private boolean hasNoIncomingEdge(BundleInformation key) {

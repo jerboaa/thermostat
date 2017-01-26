@@ -337,7 +337,7 @@ public class LauncherImpl implements Launcher {
                 }
             }
             registry.loadBundlesByName(new ArrayList<>(bundlesToLoad));
-        } catch (BundleException | IOException e) {
+        } catch (BundleException | IOException | IllegalStateException e) {
             // If this happens we definitely need to do something about it, and the
             // trace will be immeasurably helpful in figuring out what is wrong.
             out.println(t.localize(LocaleResources.COMMAND_COULD_NOT_LOAD_BUNDLES, cmdName).getContents());

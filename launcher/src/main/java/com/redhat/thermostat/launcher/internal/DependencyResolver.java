@@ -65,11 +65,14 @@ import java.util.logging.Logger;
 public class DependencyResolver {
 
     private final Map<Path, BundleInformation> nodes;
-    private final Map<String, Path> exports;
-    private final Map<BundleInformation, List<String>> importsMap;
+    private final Map<BundleInformation, Path> exports;
+    private final Map<BundleInformation, List<BundleInformation>> importsMap;
     private final Map<BundleInformation, Set<BundleInformation>> outgoing;
     private final Map<BundleInformation, Set<BundleInformation>> incoming;
+    // Provides a mapping of package names to the specific <name, version> pairs that provide it.
+    private final Map<String, List<BundleInformation>> providedVersions;
     private final Logger logger = LoggingUtils.getLogger(DependencyResolver.class);
+    private final MetadataHandler handler;
 
 
     public DependencyResolver(List<Path> paths) {
@@ -78,6 +81,9 @@ public class DependencyResolver {
         this.importsMap = new HashMap<>();
         this.outgoing = new HashMap<>();
         this.incoming = new HashMap<>();
+        this.handler = new MetadataHandler();
+        this.providedVersions = new HashMap<>();
+
         try {
             final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*.jar");
             FileVisitor visitor = new PluginDirFileVisitor() {
@@ -111,7 +117,7 @@ public class DependencyResolver {
 
     protected void process(Path jar) {
         try {
-            List<String> bImports = new ArrayList<>();
+            List<BundleInformation> bImports = new ArrayList<>();
             Manifest m = new JarFile(jar.toFile()).getManifest();
             Attributes a = m.getMainAttributes();
             String bundleName = a.getValue(Constants.BUNDLE_SYMBOLICNAME);
@@ -119,14 +125,18 @@ public class DependencyResolver {
             String bundleImports = a.getValue(Constants.IMPORT_PACKAGE);
             String bundleExports = a.getValue(Constants.EXPORT_PACKAGE);
             if (bundleExports != null) {
-                List<String> exports = parseHeader(bundleExports);
-                for (String dep : exports) {
+                List<BundleInformation> exports = handler.parseHeader(bundleExports);
+                for (BundleInformation dep : exports) {
                     this.exports.put(dep, jar);
+                    if (providedVersions.get(dep.getName()) == null) {
+                        providedVersions.put(dep.getName(), new ArrayList<BundleInformation>());
+                    }
+                    providedVersions.get(dep.getName()).add(dep);
                 }
             }
             if (bundleImports != null) {
-                List<String> imports = parseHeader(bundleImports);
-                for (String dep : imports) {
+                List<BundleInformation> imports = handler.parseHeader(bundleImports);
+                for (BundleInformation dep : imports) {
                     bImports.add(dep);
                 }
             }
@@ -140,9 +150,26 @@ public class DependencyResolver {
 
     private void buildGraph() {
         for (BundleInformation source : nodes.values()) {
-            List<String> bundleImports = importsMap.get(source);
-            for (String dep : bundleImports) {
+            List<BundleInformation> bundleImports = importsMap.get(source);
+            for (BundleInformation dep : bundleImports) {
                 Path who = exports.get(dep);
+                if (who == null && providedVersions.get(dep.getName()) != null) {
+                    for (BundleInformation export : providedVersions.get(dep.getName())) {
+                        if (handler.isVersionRange(dep.getVersion())) {
+                            who = exports.get(handler.parseAndCheckBounds(
+                                    dep.getVersion(), export.getVersion(), export));
+                        } else {
+                            // If a version range is specified as a single version, it must be interpreted
+                            // as the range [version, infinity) according to the osgi specification.
+                            who = exports.get(handler.parseAndCheckBounds(
+                                    "[" + dep.getVersion() + "," + Integer.MAX_VALUE + ")",
+                                    export.getVersion(), export));
+                        }
+                        if (who != null) {
+                            break;
+                        }
+                    }
+                }
                 if (who != null) {
                     BundleInformation destination = nodes.get(who);
                     if (source.equals(destination)) {
@@ -159,45 +186,5 @@ public class DependencyResolver {
                 }
             }
         }
-    }
-
-    private List<String> parseHeader(String header) {
-        header = header.concat("\0");
-        List<String> packages = new ArrayList<>();
-        int index = 0;
-        int start = 0;
-
-        boolean invalid = false;
-        boolean inQuotes = false;
-        boolean newSubstring = true;
-
-        while (index < header.length()) {
-            char charAtIndex = header.charAt(index);
-            if (charAtIndex == '\"') {
-                inQuotes = !inQuotes;
-            }
-            if (!inQuotes) {
-                if (charAtIndex == '=') {
-                    invalid = true;
-                    newSubstring = false;
-                } else if (charAtIndex == ';' || charAtIndex == ',' || charAtIndex == '\0') {
-                    if (!invalid && !newSubstring) {
-                        packages.add(header.substring(start, index));
-                    }
-                    start = index + 1;
-                    invalid = false;
-                    newSubstring = true;
-                } else if (newSubstring) {
-                    if (!Character.isJavaIdentifierStart(charAtIndex)) {
-                        invalid = true;
-                    }
-                    newSubstring = false;
-                } else if (!Character.isJavaIdentifierPart(charAtIndex) && charAtIndex != '.') {
-                    invalid = true;
-                }
-            }
-            index++;
-        }
-        return packages;
     }
 }

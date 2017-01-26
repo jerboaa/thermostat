@@ -74,7 +74,7 @@ public class DependencyAnalyzerCommandTest {
         locations.getLocations().add(underneathTheBridge.toPath());
         handler = new PathProcessorHandler(locations);
 
-        testJar = TestHelper.createJarWithPackageDependency("foobar", "com.real.package", underneathTheBridge.toPath());
+        testJar = TestHelper.createJarWithExports("foobar", "foobar,com.real.package", null, underneathTheBridge.toPath());
 
         when(ctx.getConsole()).thenReturn(console);
         when(console.getOutput()).thenReturn(mock(PrintStream.class));

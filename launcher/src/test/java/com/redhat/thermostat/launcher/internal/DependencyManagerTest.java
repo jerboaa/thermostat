@@ -83,11 +83,22 @@ public class DependencyManagerTest {
         underneathTheBridge.deleteOnExit();
         userPluginRoot.deleteOnExit();
         systemPluginRoot.deleteOnExit();
-        Path a = createJar("a", null, underneathTheBridge.toPath());
-        Path b = createJar("b", "a", underneathTheBridge.toPath());
-        Path c = createJar("c", "b", underneathTheBridge.toPath());
-        Path d = createJar("d", "b,c", underneathTheBridge.toPath());
-        Path e = createJar("e", "d", underneathTheBridge.toPath());
+        createJar("Bundle1", "com.redhat.thermostat.bundle1;version=\"1.1.1\",com.redhat.thermostat.bundle1.package1;version=\"1.1.1\",com.redhat.thermostat.bundle1.package2;version=\"1.1.2\"", "", "1.1.1", underneathTheBridge.toPath());
+        createJar("Bundle2", "com.redhat.thermostat.bundle2;version=\"1.1.1\",com.redhat.thermostat.bundle2.package1;version=\"1.1.1\",com.redhat.thermostat.bundle2.package2;version=\"1.1.3\"", "com.redhat.thermostat.bundle1;version=\"[1,2)\"", "1.1.1", underneathTheBridge.toPath());
+        createJar("Bundle3", "com.redhat.thermostat.bundle3;version=\"2.1.0\",com.redhat.thermostat.bundle3.package1;version=\"2.1.1\",com.redhat.thermostat.bundle3.package4;version=\"2.1.2\"", "com.redhat.thermostat.bundle1;version=\"[1.1.1,1.1.2)\",com.redhat.thermostat.bundle2.package1;version=\"[1.1.1,1.1.2)\"", "2.1.0", underneathTheBridge.toPath());
+        createJar("Bundle4-9.1.0", "com.redhat.thermostat.bundle4;version=\"9.1.0\",com.redhat.thermostat.bundle4.package1;version=\"9.1.0\",com.redhat.thermostat.bundle4.package2;version=\"9.1.0\"", "com.redhat.thermostat.bundle1,com.redhat.thermostat.bundle2.package1;version=\"1.1.1\",com.redhat.thermostat.bundle3.package4;version=\"[2,3)\"", "9.1.0", underneathTheBridge.toPath());
+        createJar("Bundle4-9.1.3", "com.redhat.thermostat.bundle4;version=\"9.1.3\",com.redhat.thermostat.bundle4.package1;version=\"9.1.3\",com.redhat.thermostat.bundle4.package2;version=\"9.1.3\"", "com.redhat.thermostat.bundle1,com.redhat.thermostat.bundle2.package1;version=\"1.1.1\",com.redhat.thermostat.bundle3.package4;version=\"[2,3)\"", "9.1.3", underneathTheBridge.toPath());
+        createJar("Bundle4-9.3", "com.redhat.thermostat.bundle4;version=\"9.3\",com.redhat.thermostat.bundle4.package1;version=\"9.3\",com.redhat.thermostat.bundle4.package2;version=\"9.3\"", "com.redhat.thermostat.bundle1,com.redhat.thermostat.bundle2.package1;version=\"1.1.1\",com.redhat.thermostat.bundle3.package4;version=\"[2,3)\"", "9.3", underneathTheBridge.toPath());
+        createJar("Bundle5", "com.redhat.thermostat.bundle5;version=\"1.1\"", "com.redhat.thermostat.bundle4.package1;version=\"[9.1.3,9.1.4)\"", "1.1", userPluginRoot.toPath());
+        createJar("Bundle6", "com.redhat.thermostat.bundle6;version=\"13.1\"", "com.redhat.thermostat.bundle4;version=\"[9.2,10)\"", "13.1", userPluginRoot.toPath());
+        createJar("Bundle7", "com.redhat.thermostat.bundle7;version=\"1.0\"", "com.redhat.thermostat.bundle1;version=\"3.1\",com.redhat.thermostat.bundle2;version=\"9.9.9\",com.redhat.thermostat.bundle4;version=\"[10,11]\"", "1.0", userPluginRoot.toPath());
+        createJar("Bundle8", "com.redhat.thermostat.bundle8;version=\"1.0\",com.redhat.thermostat.framework;version=\"4.2.0\"", "", "1.0", userPluginRoot.toPath());
+        createJar("Bundle9", "com.redhat.thermostat.bundle9;version=\"1.0\"", "com.redhat.thermostat.framework;version=\"4.2.0\"", "1.0", userPluginRoot.toPath());
+
+        createJar("Cycle-1", "cycle1;version=\"1.0\"", "cycle2;version=\"1.0\"", "1.0", underneathTheBridge.toPath());
+        createJar("Cycle-2", "cycle2;version=\"1.0\"", "cycle3;version=\"1.0\"", "1.0", underneathTheBridge.toPath());
+        createJar("Cycle-3", "cycle3;version=\"1.0\"", "cycle1;version=\"1.0\"", "1.0", underneathTheBridge.toPath());
+        createJar("Cycle-Connector", "cycle4;version=\"1.0\"", "cycle1;version=\"1.0\"", "1.0", underneathTheBridge.toPath());
         when(paths.getUserPluginRoot()).thenReturn(userPluginRoot);
         when(paths.getSystemPluginRoot()).thenReturn(systemPluginRoot);
         when(paths.getSystemLibRoot()).thenReturn(underneathTheBridge);
@@ -106,23 +117,58 @@ public class DependencyManagerTest {
     }
 
     @Test
-    public void testGetBundle() throws Exception {
-        ArrayList<BundleInformation> bundles = new ArrayList<>(depManager.getDependencies(new BundleInformation("d", "1.0")));
-        assertEquals(4, bundles.size());
-        assertEquals("d", bundles.get(0).getName());
-        assertEquals("1.0", bundles.get(0).getVersion());
-        assertEquals("c", bundles.get(1).getName());
-        assertEquals("1.0", bundles.get(1).getVersion());
-        assertEquals("b", bundles.get(2).getName());
-        assertEquals("1.0", bundles.get(2).getVersion());
-        assertEquals("a", bundles.get(3).getName());
-        assertEquals("1.0", bundles.get(3).getVersion());
+    public void testBundleWithNoDependencies() {
+        ArrayList<BundleInformation> results = new ArrayList<>(depManager.getDependencies(new BundleInformation("Bundle1", "1.1.1")));
+        assertEquals(0, results.size());
     }
 
     @Test
-    public void testMismatchBundleVersion() throws Exception {
-        List<BundleInformation> bundles = depManager.getDependencies(new BundleInformation("d", "1.2"));
-        assertEquals(0, bundles.size());
+    public void testDependencySearch() {
+        ArrayList<BundleInformation> results = new ArrayList<>(depManager.getDependencies(new BundleInformation("Bundle4-9.1.0", "9.1.0")));
+        assertEquals("Bundle4-9.1.0", results.get(0).getName());
+        assertEquals("9.1.0", results.get(0).getVersion());
+        assertEquals("Bundle3", results.get(1).getName());
+        assertEquals("2.1.0", results.get(1).getVersion());
+        assertEquals("Bundle2", results.get(2).getName());
+        assertEquals("1.1.1", results.get(2).getVersion());
+        assertEquals("Bundle1", results.get(3).getName());
+        assertEquals("1.1.1", results.get(3).getVersion());
+    }
+
+    @Test
+    public void testVersionDependency() {
+        ArrayList<BundleInformation> results = new ArrayList<>(depManager.getDependencies(new BundleInformation("Bundle5", "1.1")));
+        assertEquals("Bundle5", results.get(0).getName());
+        assertEquals("1.1", results.get(0).getVersion());
+        assertEquals("Bundle4-9.1.3", results.get(1).getName());
+        assertEquals("9.1.3", results.get(1).getVersion());
+        assertEquals("Bundle3", results.get(2).getName());
+        assertEquals("2.1.0", results.get(2).getVersion());
+        assertEquals("Bundle2", results.get(3).getName());
+        assertEquals("1.1.1", results.get(3).getVersion());
+        assertEquals("Bundle1", results.get(4).getName());
+        assertEquals("1.1.1", results.get(4).getVersion());
+    }
+
+    @Test
+    public void testVersionDependency2() {
+        ArrayList<BundleInformation> results = new ArrayList<>(depManager.getDependencies(new BundleInformation("Bundle6", "13.1")));
+        assertEquals("Bundle6", results.get(0).getName());
+        assertEquals("13.1", results.get(0).getVersion());
+        assertEquals("Bundle4-9.3", results.get(1).getName());
+        assertEquals("9.3", results.get(1).getVersion());
+        assertEquals("Bundle3", results.get(2).getName());
+        assertEquals("2.1.0", results.get(2).getVersion());
+        assertEquals("Bundle2", results.get(3).getName());
+        assertEquals("1.1.1", results.get(3).getVersion());
+        assertEquals("Bundle1", results.get(4).getName());
+        assertEquals("1.1.1", results.get(4).getVersion());
+    }
+
+    @Test
+    public void testMissingVersion() {
+        ArrayList<BundleInformation> results = new ArrayList<>(depManager.getDependencies(new BundleInformation("Bundle7", "1.0")));
+        assertEquals(0, results.size());
     }
 
     @Test
@@ -152,16 +198,26 @@ public class DependencyManagerTest {
         assertEquals(underneathTheBridge.toPath(), testManager.getLocations().get(2));
     }
 
-    private Path createJar(String exportsDirective, String importDirective, Path base) throws Exception {
+    @Test (expected = IllegalStateException.class)
+    public void testInvalidStart() {
+        ArrayList<BundleInformation> result = new ArrayList<>(depManager.getDependencies(new BundleInformation("Cycle-1", "1.0")));
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testCycle() {
+        ArrayList<BundleInformation> result = new ArrayList<>(depManager.getDependencies(new BundleInformation("Cycle-Connector", "1.0")));
+    }
+
+    private Path createJar(String name, String exportsDirective, String importDirective, String version, Path base) throws Exception {
         Manifest manifest = new Manifest();
-        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, version);
         manifest.getMainAttributes().put(new Attributes.Name("Export-Package"), exportsDirective + ";");
         if (importDirective != null) {
-                manifest.getMainAttributes().put(new Attributes.Name("Import-Package"), importDirective + ";");
-            }
-        Path path = Paths.get(base.toFile().getAbsoluteFile() + "/" + exportsDirective + ".jar");
-        manifest.getMainAttributes().put(new Attributes.Name("Bundle-SymbolicName"), exportsDirective);
-        manifest.getMainAttributes().put(new Attributes.Name("Bundle-Version"), "1.0");
+            manifest.getMainAttributes().put(new Attributes.Name("Import-Package"), importDirective + ";");
+        }
+        Path path = Paths.get(base.toFile().getAbsoluteFile() + "/" + name + ".jar");
+        manifest.getMainAttributes().put(new Attributes.Name("Bundle-SymbolicName"), name);
+        manifest.getMainAttributes().put(new Attributes.Name("Bundle-Version"), version);
         FileOutputStream stream = new FileOutputStream(path.toFile());
         JarOutputStream target = new JarOutputStream(stream, manifest);
         target.close();
