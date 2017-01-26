@@ -269,7 +269,6 @@
                 </artifactItem>
               </artifactItems>
               <outputDirectory>${project.build.directory}/image/webapp</outputDirectory>
-              <excludeTransitive>true</excludeTransitive>
             </configuration>
           </execution>
         </executions>
