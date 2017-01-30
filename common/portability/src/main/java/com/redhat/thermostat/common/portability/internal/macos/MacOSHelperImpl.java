@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability.internal.windows;
+package com.redhat.thermostat.common.portability.internal.macos;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
@@ -48,47 +48,23 @@ import java.util.logging.Logger;
 /**
  * Utility class to access Windows native code
  */
-public class WindowsHelperImpl {
+public class MacOSHelperImpl {
 
-    private static final Logger logger = LoggingUtils.getLogger(WindowsHelperImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(MacOSHelperImpl.class);
 
-    public static WindowsHelperImpl INSTANCE;
+    private static int pagesize = 0;
 
-    /*
-     // from MemoryStatusEx (8 values)
-        DWORD     dwMemoryLoad;
-        DWORDLONG ullTotalPhys;
-        DWORDLONG ullAvailPhys;
-        DWORDLONG ullTotalPageFile;
-        DWORDLONG ullAvailPageFile;
-        DWORDLONG ullTotalVirtual;
-        DWORDLONG ullAvailVirtual;
-        DWORDLONG ullAvailExtendedVirtual;
-
-     // from PERFORMANCE_INFORMATION (13 values)
-        SIZE_T CommitTotal;
-        SIZE_T CommitLimit;
-        SIZE_T CommitPeak;
-        SIZE_T PhysicalTotal;
-        SIZE_T PhysicalAvailable;
-        SIZE_T SystemCache;
-        SIZE_T KernelTotal;
-        SIZE_T KernelPaged;
-        SIZE_T KernelNonpaged;
-        SIZE_T PageSize;
-        DWORD  HandleCount;
-        DWORD  ProcessCount;
-        DWORD  ThreadCount;
-     */
+    public static MacOSHelperImpl INSTANCE;
 
     static {
-        if (OS.IS_WINDOWS) {
-            String lib = NativeLibraryResolver.getAbsoluteLibraryPath("WindowsHelperWrapper");
+        if (OS.IS_MACOS) {
+            String lib = NativeLibraryResolver.getAbsoluteLibraryPath("MacOSHelperWrapper");
             try {
                 System.load(lib);
-                INSTANCE = new WindowsHelperImpl();
+                INSTANCE = new MacOSHelperImpl();
+                pagesize = (int)getLongSysctl0("vm.pagesize");
             } catch (UnsatisfiedLinkError e) {
-                logger.severe("Could not load WindowsHelperImpl DLL:" + lib);
+                logger.severe("Could not load MacOSHelperWrapper DLL:" + lib);
                 INSTANCE = null;
                 // do not throw here, because you'll get a NoClassDefFound thrown when running other tests that Mock this class
             }
@@ -97,48 +73,42 @@ public class WindowsHelperImpl {
         }
     }
 
-    private WindowsHelperImpl() {
+    private MacOSHelperImpl() {
     }
     // local host-wide information
 
     public String getHostName() {
-        return getHostName0(true);
+        return getHostName0();
     }
 
-    public String getOSName() {
-        return System.getProperty("os.name");
+    String getOSName() {
+        return System.getProperty("os.name") + " " + System.getProperty("os.version");
     }
 
-    public String getOSVersion() {
-        final long info[] = new long[3];  // major, minor, build
-        getOSVersion0(info);
-        return "" + info[0] + "" + info[1] + " (Build " + info[2] + ")";
+    String getOSVersion() {
+        final String ostype = getStringSysctl0("kern.ostype");
+        final String osrelease = getStringSysctl0("kern.osrelease");
+        return ostype + " (Build " + osrelease + ")";
     }
 
-    public String getCPUModel() {
-        return getCPUString0();
+    String getCPUModel() {
+        return getStringSysctl0("machdep.cpu.brand_string");
     }
 
     public int getCPUCount() {
-        return getCPUCount0();
+        return (int)getLongSysctl0("hw.logicalcpu"); // factors in hyperthreads
+        //return (int)getLongSysctl0("hw.physicalcpu"); (excludes hyperthreading)
     }
 
     public long getTotalMemory() {
-        final long info[] = getMemoryInfo();
-        return info[1]; // totalPhysical
+        return getLongSysctl0("hw.memsize");
     }
 
     long[] getMemoryInfo() {
-        /**
-         *
-         data[0] = statex.dwMemoryLoad;
-         data[1] = statex.ullTotalPhys;
-         data[2] = statex.ullAvailPhys;
-         data[3] = statex.ullTotalPageFile;
-         data[4] = statex.ullAvailPageFile;
-         data[5] = statex.ullTotalVirtual;
-         data[6] = statex.ullAvailVirtual;
-         data[7] = statex.ullAvailExtendedVirtual;
+        /*
+            public PortableMemoryStat(long timeStamp,
+            long total, long free, long buffers,
+            long cached, long swapTotal, long swapFree, long commitLimit)
          */
         final long[] mi = new long[8];
         getGlobalMemoryStatus0(mi);
@@ -155,28 +125,19 @@ public class WindowsHelperImpl {
     // local process-specific information
 
     public boolean exists(int pid) {
-        final long hnd = getLimitedProcessHandle0(pid);
-        if (hnd != 0) {
-            closeHandle0(hnd);
-        }
-        return hnd != 0;
+        return getUid(pid) >= 0;
     }
 
     public String getUserName(int pid) {
-        return getUserName0(pid,true);
+        return getUserName0(pid);
     }
 
     public int getUid(int pid) {
-        final String sid = getProcessSID0(pid);
-        if (sid == null) {
-            return -1;
-        }
-        final int idx = sid.lastIndexOf('-');
-        final String uidStr = sid.substring(idx+1);
-        return Integer.parseInt(uidStr);
+        final long uid = getProcessUid0(pid);
+        return (int)uid;
     }
 
-    public Map<String, String> getEnvironment(int pid) {
+    Map<String, String> getEnvironment(int pid) {
         // the environment is returned as a 1D array of alternating env names and values
         final String[] envArray = getEnvironment0(pid);
         if (envArray == null || envArray.length == 0) {
@@ -217,42 +178,33 @@ public class WindowsHelperImpl {
         return info;
     }
 
-    public long getProcessHandle(int pid) {
-        return getProcessHandle0(pid);
-    }
-
-    public void closeHandle(long handle) {
-        closeHandle0(handle);
-    }
-
-    public boolean terminateProcess(int pid) {
+    boolean terminateProcess(int pid) {
         return terminateProcess0(pid,0, -1);
     }
 
-    public boolean terminateProcess(int pid, boolean wait) {
+    boolean terminateProcess(int pid, boolean wait) {
         return terminateProcess0(pid,0, 0);
     }
 
-    public boolean terminateProcess(int pid, int exitcode, int waitMillis) {
+    boolean terminateProcess(int pid, int exitcode, int waitMillis) {
         return terminateProcess0(pid, exitcode, waitMillis);
     }
 
-    private static native String getHostName0(boolean prependDomain);
-    private static native void getOSVersion0(long[] versionAndBuild);
+    public static native long getLongSysctl0( String name );
+    public static native String getStringSysctl0( String name );
+
+    private static native String getHostName0();
     private static native boolean getGlobalMemoryStatus0(long[] info);
-    private static native String getCPUString0();
-    private static native int getCPUCount0();
+    private static native boolean getPerformanceInfo0(long[] info);
     private static native long queryPerformanceFrequency0();
 
-    private static native String getProcessSID0(int pid);
-    private static native String getUserName0(int pid, boolean prependDomain);
+    private static native String getUserName0(int pid);
+    private static native long getProcessUid0(int pid);
     private static native String[] getEnvironment0(int pid);
     private static native boolean getProcessInfo0(int pid, long[] info);
     private static native boolean getProcessIOInfo0(int pid, long[] info);
 
-    private static native long getCurrentProcessHandle0();
-    private static native long getProcessHandle0(int pid);
-    private static native long getLimitedProcessHandle0(int pid);
-    private static native void closeHandle0(long handle);
+    private static native long getCurrentProcessPid0();
+
     private static native boolean terminateProcess0(int pid, int exitCode, int waitMillis);
 }

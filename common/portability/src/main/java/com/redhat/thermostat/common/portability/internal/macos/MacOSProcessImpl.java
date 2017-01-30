@@ -34,45 +34,65 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.service.internal.unix;
+package com.redhat.thermostat.common.portability.internal.macos;
 
-import com.redhat.thermostat.service.internal.ProcessUtilitiesBase;
-import com.redhat.thermostat.service.process.UNIXSignal;
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.portability.PortableProcess;
+import com.redhat.thermostat.common.portability.PortableProcessStat;
+import com.redhat.thermostat.common.portability.PortableVmIoStat;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
-public class UnixProcessUtilities extends ProcessUtilitiesBase {
+public class MacOSProcessImpl implements PortableProcess {
+
+    public static final MacOSProcessImpl INSTANCE = new MacOSProcessImpl();
+    private static final MacOSHelperImpl helper = MacOSHelperImpl.INSTANCE;
 
     @Override
-    public void sendSignal(Integer pid, UNIXSignal signal) {
-        exec("kill -s " + signal.signalName() + " " + pid);
+    public boolean exists(int pid) {
+        return helper.exists(pid);
     }
 
     @Override
-    protected List<String> buildCommandLine(Integer pid) {
-        final List<String> commandLine = new ArrayList<>();
-        commandLine.add("ps");
-        if (!OS.IS_MACOS)
-            commandLine.add("--no-heading");
-        else
-            commandLine.add("-ocomm=");
-        commandLine.add("-p");
-        commandLine.add(String.valueOf(pid));
-        return commandLine;
+    public String getUserName(int pid) {
+        return helper.getUserName(pid);
     }
 
     @Override
-    protected String processStdout(final BufferedReader out) throws IOException {
-        final String outStr = out.readLine();
-        if (outStr == null)
-            return null;
-        final String [] output = outStr.split(" ");
-        return output[output.length - 1];
+    public int getUid(int pid) {
+        return helper.getUid(pid);
     }
 
+    @Override
+    public Map<String, String> getEnvironment(int pid) {
+        return helper.getEnvironment(pid);
+    }
+
+    @Override
+    public PortableProcessStat getProcessStat(int pid) {
+        final long[] info = helper.getProcessCPUInfo(pid);
+        final long utime = info[1];
+        final long stime = info[2];
+        return new PortableProcessStat(pid, utime, stime);
+    }
+
+    @Override
+    public PortableVmIoStat getVmIoStat(Clock clock, int pid) {
+        return new MacOSVmIoStat(clock, pid);
+    }
+
+    @Override
+    public boolean terminateProcess(int pid) {
+        return helper.terminateProcess(pid);
+    }
+
+    @Override
+    public boolean terminateProcess(int pid, boolean wait) {
+        return helper.terminateProcess(pid, wait);
+    }
+
+    @Override
+    public boolean terminateProcess(int pid, int exitcode, int waitMillis) {
+        return helper.terminateProcess(pid, exitcode, waitMillis);
+    }
 }
-

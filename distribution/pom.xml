@@ -73,7 +73,7 @@
     <profile>
       <id>linux</id>
       <activation>
-        <os><family>Unix</family></os>
+        <os><name>linux</name></os>
       </activation>
       <properties>
         <assemblyfile.suffix/>
@@ -111,13 +111,88 @@
                 <phase>prepare-package</phase>
                 <configuration>
                   <target>
-                    <copy file="${main.basedir}/keyring/target/libGnomeKeyringWrapper.so"
+                    <copy file="${main.basedir}/keyring/target/libGnomeKeyringWrapper${sharedlib.suffix}"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/libHostNameWrapper.so"
+                    <copy file="${main.basedir}/common/portability/target/libHostNameWrapper${sharedlib.suffix}"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/libUserNameUtilWrapper.so"
+                    <copy file="${main.basedir}/common/portability/target/libUserNameUtilWrapper${sharedlib.suffix}"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils.so"
+                    <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils${sharedlib.suffix}"
+                          todir="${project.build.directory}/image/libs/native" />
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>integration-test</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <executable>${project.basedir}/tools/verify-bash-completion.sh</executable>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+
+    <profile>
+      <id>macos</id>
+      <activation>
+        <os><family>mac</family></os>
+      </activation>
+      <properties>
+        <assemblyfile.suffix/>
+        <agent.extra.bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
+          ${jffi-native.bundle.symbolic.name}=${jffi.version}</agent.extra.bundles>
+        <service.extra.bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
+          ${jffi-native.bundle.symbolic.name}=${jffi.version}</service.extra.bundles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-keyring</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-unixsocket-server</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-unixsocket-client</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <!--linux only files -->
+              <execution>
+                <id>directory-structure-linux</id>
+                <phase>prepare-package</phase>
+                <configuration>
+                  <target>
+                    <copy file="${main.basedir}/common/portability/target/libHostNameWrapper${sharedlib.suffix}"
+                          todir="${project.build.directory}/image/libs/native" />
+                    <copy file="${main.basedir}/common/portability/target/libUserNameUtilWrapper${sharedlib.suffix}"
+                          todir="${project.build.directory}/image/libs/native" />
+                    <copy file="${main.basedir}/common/portability/target/libMacOSHelperWrapper${sharedlib.suffix}"
                           todir="${project.build.directory}/image/libs/native" />
                   </target>
                 </configuration>
@@ -169,11 +244,11 @@
                 <configuration>
                   <target>
                     <!--  copy and rename the native libraries -->
-                    <copy file="${main.basedir}/common/portability/target/HostNameWrapper.dll"
+                    <copy file="${main.basedir}/common/portability/target/HostNameWrapper${sharedlib.suffix}"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/UserNameUtilWrapper.dll"
+                    <copy file="${main.basedir}/common/portability/target/UserNameUtilWrapper${sharedlib.suffix}"
                           todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/WindowsHelperWrapper.dll"
+                    <copy file="${main.basedir}/common/portability/target/WindowsHelperWrapper${sharedlib.suffix}"
                           todir="${project.build.directory}/image/libs/native" />
                   </target>
                 </configuration>

@@ -34,23 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.macos;
 
-import com.redhat.thermostat.common.portability.internal.linux.LinuxPortableProcessImpl;
-import com.redhat.thermostat.common.portability.internal.macos.MacOSProcessImpl;
-import com.redhat.thermostat.common.portability.internal.windows.WindowsPortableProcessImpl;
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.portability.PortableMemoryStat;
 
-public final class PortableProcessImpl {
+class MacOSMemoryStat extends PortableMemoryStat {
 
-    private static final PortableProcess INSTANCE = createInstance();
-
-    private static PortableProcess createInstance() {
-        return OS.IS_LINUX ? LinuxPortableProcessImpl.createInstance()
-            : OS.IS_WINDOWS ? WindowsPortableProcessImpl.createInstance() : MacOSProcessImpl.INSTANCE;
+    MacOSMemoryStat() {
+        this(MacOSHelperImpl.INSTANCE.getMemoryInfo());
     }
 
-    public static PortableProcess getInstance() {
-        return INSTANCE;
+    //     public PortableMemoryStat(long timeStamp, long total, long free, long buffers, long cached, long swapTotal, long swapFree, long commitLimit)
+    private MacOSMemoryStat(final long[] info) {
+        super(System.currentTimeMillis(), info[1], info[2], 0, 0, info[3], info[4], 0);
     }
 }

@@ -51,16 +51,24 @@ _find_thermostat_home() {
 }
 
 # set global variable for Cygwin testing
-# between all shell files, we pass cygwin-compatible paths, 
+# between all shell files, we pass cygwin-compatible paths,
 #    and let each script decide when to convert them.
 # an exception is command line args for java programs, which
 #    need to be converted to windows format at creation time
-if [ "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ]; then
+if [ "$(uname -s | cut -b1-6)" == "CYGWIN" ]; then
   ##echo "Running under Cygwin"
   export CYGWIN_MODE=1
 else
   ##echo "Running under Linux"
   export CYGWIN_MODE=0
+fi
+
+if [ "$(uname -s | cut -b1-6)" == "Darwin" ]; then
+  ##echo "Running under Darwin"
+  export DARWIN_MODE=1
+else
+  ##echo "Running under Linux"
+  export DARWIN_MODE=0
 fi
 
 # Thermostat home
@@ -103,7 +111,7 @@ if [[ "${JAVA_HOME}" = "" ]]; then
 fi
 
 # Source system thermostat profile
-. ${THERMOSTAT_HOME}/etc/thermostatrc 
+. ${THERMOSTAT_HOME}/etc/thermostatrc
 # Source user thermostat profile (if any)
 if [[ -f ${USER_THERMOSTAT_HOME}/etc/thermostatrc ]]; then
   . ${USER_THERMOSTAT_HOME}/etc/thermostatrc

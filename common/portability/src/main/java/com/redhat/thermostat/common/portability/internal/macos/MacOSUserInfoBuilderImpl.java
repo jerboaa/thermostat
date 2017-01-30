@@ -34,23 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.macos;
 
-import com.redhat.thermostat.common.portability.internal.linux.LinuxPortableProcessImpl;
-import com.redhat.thermostat.common.portability.internal.macos.MacOSProcessImpl;
-import com.redhat.thermostat.common.portability.internal.windows.WindowsPortableProcessImpl;
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.portability.PortableProcess;
+import com.redhat.thermostat.common.portability.PortableProcessImpl;
+import com.redhat.thermostat.common.portability.ProcessUserInfo;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public final class PortableProcessImpl {
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-    private static final PortableProcess INSTANCE = createInstance();
+/**
+ * Build User information via Windows helper classes
+ */
+public class MacOSUserInfoBuilderImpl implements ProcessUserInfoBuilder {
 
-    private static PortableProcess createInstance() {
-        return OS.IS_LINUX ? LinuxPortableProcessImpl.createInstance()
-            : OS.IS_WINDOWS ? WindowsPortableProcessImpl.createInstance() : MacOSProcessImpl.INSTANCE;
+    private final PortableProcess procHelper;
+
+    private static final ProcessUserInfo NON_EXISTENT_USER = new ProcessUserInfo();
+    private static final Logger logger = LoggingUtils.getLogger(MacOSUserInfoBuilderImpl.class);
+
+    public MacOSUserInfoBuilderImpl() {
+        this(PortableProcessImpl.getInstance());
     }
 
-    public static PortableProcess getInstance() {
-        return INSTANCE;
+    MacOSUserInfoBuilderImpl(PortableProcess helper) {
+        this.procHelper = helper;
+    }
+
+    @Override
+    public ProcessUserInfo build(int pid) {
+        ProcessUserInfo info = NON_EXISTENT_USER;
+        try {
+            final long uid = procHelper.getUid(pid);
+            final String name = procHelper.getUserName(pid);
+            info = new ProcessUserInfo(uid, name);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Unable to read user info for " + pid, e);
+        }
+
+        return info;
     }
 }

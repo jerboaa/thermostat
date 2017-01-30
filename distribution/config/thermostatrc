@@ -48,7 +48,7 @@
 #
 #JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
 
-if [ "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ]; then
+if [ "$(uname -s | cut -b1-6)" == "CYGWIN" ]; then
   ##echo "Running under Cygwin"
   export CYGWIN_MODE=1
 else

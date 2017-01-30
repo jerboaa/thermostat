@@ -36,7 +36,9 @@
 
 package com.redhat.thermostat.common.portability;
 
+import com.redhat.thermostat.common.portability.internal.UnimplementedError;
 import com.redhat.thermostat.common.portability.internal.linux.LinuxProcessUserInfoBuilderImpl;
+import com.redhat.thermostat.common.portability.internal.macos.MacOSUserInfoBuilderImpl;
 import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 import com.redhat.thermostat.common.portability.internal.windows.WindowsUserInfoBuilderImpl;
 import com.redhat.thermostat.shared.config.OS;
@@ -65,10 +67,33 @@ public class ProcessUserInfo {
     }
 
     public static ProcessUserInfoBuilder createBuilder(ProcDataSource source, UserNameUtil userNameUtil) {
-        return OS.IS_LINUX ? new LinuxProcessUserInfoBuilderImpl(source, userNameUtil) : new WindowsUserInfoBuilderImpl();
+        final ProcessUserInfoBuilder builder;
+        if (OS.IS_LINUX) {
+            builder = new LinuxProcessUserInfoBuilderImpl(source, userNameUtil);
+        }
+        else if (OS.IS_WINDOWS) {
+            builder = new WindowsUserInfoBuilderImpl();
+        }
+        else if (OS.IS_MACOS) {
+            builder = new MacOSUserInfoBuilderImpl();
+        }
+        else {
+            throw new UnimplementedError("ProcessUserInfo");
+        }
+        return builder;
     }
 
     public static ProcessUserInfoBuilder createBuilder() {
-        return OS.IS_LINUX ? new LinuxProcessUserInfoBuilderImpl() : new WindowsUserInfoBuilderImpl();
+        final ProcessUserInfoBuilder builder;
+        if (OS.IS_LINUX) {
+            builder = new LinuxProcessUserInfoBuilderImpl();
+        }
+        else if (OS.IS_WINDOWS) {
+            builder = new WindowsUserInfoBuilderImpl();
+        }
+        else {
+            builder = new MacOSUserInfoBuilderImpl();
+        }
+        return builder;
     }
 }

@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import com.redhat.thermostat.shared.config.OS;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -46,27 +48,27 @@ import java.io.IOException;
  * Replace when this information is available from an API.
  */
 class ProcessUserInfoBuilder {
-    
+
     private static final String PROC_STATUS_SELF_PATH = "/proc/self/status";
     private static final String PROC_STATUS_UID = "Uid:";
     private final FileReaderCreator readerCreator;
-    
+
     ProcessUserInfoBuilder() {
         this(new FileReaderCreator());
     }
-    
+
     ProcessUserInfoBuilder(FileReaderCreator readerCreator) {
         this.readerCreator = readerCreator;
     }
-    
+
     private long getUid() throws IOException {
         FileReader reader = readerCreator.create(PROC_STATUS_SELF_PATH);
         long uid = getUidFromProcfs(new BufferedReader(reader));
         return uid;
     }
-    
+
     boolean isPrivilegedUser() throws IOException {
-        return (getUid() == 0);
+        return OS.IS_LINUX ? (getUid() == 0) : false;
     }
 
     /*

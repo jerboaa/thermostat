@@ -36,13 +36,14 @@
 
 package com.redhat.thermostat.common.portability;
 
+import com.redhat.thermostat.common.portability.internal.macos.MacOSHelperImpl;
 import com.redhat.thermostat.common.portability.internal.windows.WindowsHelperImpl;
 import com.redhat.thermostat.shared.config.OS;
 
 import java.io.File;
 /**
  * Utility for checking whether a process exists or not.
- * 
+ *
  * Implementation note: This is Linux specific.
  *
  */
@@ -51,7 +52,7 @@ public class ProcessChecker {
     private static final boolean is_linux = OS.IS_LINUX;
 
     public boolean exists(int pid) {
-        return is_linux ? existsLinux(pid) : existsWindows(pid);
+        return OS.IS_LINUX ? existsLinux(pid) : (OS.IS_WINDOWS ? existsWindows(pid) : existsMacOS(pid));
     }
 
     private boolean existsLinux(int pid) {
@@ -59,13 +60,17 @@ public class ProcessChecker {
         return procFile.exists();
     }
 
+    private boolean existsMacOS(int pid) {
+        return MacOSHelperImpl.INSTANCE.exists(pid);
+    }
+
     private boolean existsWindows(int pid) {
         return WindowsHelperImpl.INSTANCE.exists(pid);
     }
-    
+
     // testing-hook
     File mapToFile(int pid) {
         return new File("/proc/" + pid);
     }
-    
+
 }

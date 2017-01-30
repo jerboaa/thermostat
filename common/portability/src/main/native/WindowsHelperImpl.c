@@ -134,58 +134,6 @@ JNIEXPORT boolean JNICALL Java_com_redhat_thermostat_common_portability_internal
     return TRUE;
 }
 
-/*
- * Class:     com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl
- * Method:    getPerformanceInfo0
- * Signature: ([J)V
- */
-JNIEXPORT boolean JNICALL Java_com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl_getPerformanceInfo0
-  (JNIEnv *env, jclass winHelperClass, jlongArray array)
-{
-    testLength(env, array, 13);
-
-    // Get the element pointer
-    jlong* data = (*env)->GetLongArrayElements(env, array, 0);
-
-    /**
-     // from PERFORMANCE_INFORMATION (13 values)
-        SIZE_T CommitTotal;
-        SIZE_T CommitLimit;
-        SIZE_T CommitPeak;
-        SIZE_T PhysicalTotal;
-        SIZE_T PhysicalAvailable;
-        SIZE_T SystemCache;
-        SIZE_T KernelTotal;
-        SIZE_T KernelPaged;
-        SIZE_T KernelNonpaged;
-        SIZE_T PageSize;
-        DWORD  HandleCount;
-        DWORD  ProcessCount;
-        DWORD  ThreadCount;
-     */
-
-    // get the memeory info
-    PERFORMANCE_INFORMATION statex;
-    statex.cb = sizeof(statex);
-    GetPerformanceInfo(&statex, statex.cb);
-    data[0] = statex.CommitTotal;
-    data[1] = statex.CommitLimit;
-    data[2] = statex.CommitPeak;
-    data[3] = statex.PhysicalTotal;
-    data[4] = statex.PhysicalAvailable;
-    data[5] = statex.SystemCache;
-    data[6] = statex.KernelTotal;
-    data[7] = statex.KernelPaged;
-    data[8] = statex.KernelNonpaged;
-    data[9] = statex.PageSize;
-    data[10] = statex.HandleCount;
-    data[11] = statex.ProcessCount;
-    data[12] = statex.ThreadCount;
-
-    (*env)->ReleaseLongArrayElements(env, array, data, 0);
-    return TRUE;
-}
-
 
 /*
  * Class:     com_redhat_thermostat_common_portability_internal_windows_WindowsHelperImpl

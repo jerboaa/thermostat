@@ -74,6 +74,21 @@
     </profile>
 
     <profile>
+      <id>macos</id>
+      <activation>
+        <os><family>mac</family></os>
+      </activation>
+      <properties>
+        <script.extension>.sh</script.extension>
+        <c.compiler>gcc</c.compiler>
+        <cflags/>
+        <jni.platform>darwin</jni.platform>
+        <sharedlib.prefix>lib</sharedlib.prefix>
+        <sharedlib.suffix>.dylib</sharedlib.suffix>
+      </properties>
+    </profile>
+
+    <profile>
       <id>windows</id>
       <activation>
         <os><family>Windows</family></os>
@@ -84,7 +99,7 @@
         <cflags>-std=c99</cflags>
         <cygwin.dir>c:/cygwin64</cygwin.dir>
         <jni.platform>win32</jni.platform>
-        <sharedlib.prefix></sharedlib.prefix>
+        <sharedlib.prefix/>
         <sharedlib.suffix>.dll</sharedlib.suffix>
       </properties>
     </profile>
@@ -109,7 +124,7 @@
 
     <!-- Profile for running performance tests. Performance tests are
          excluded from normal builds. That is, they'll only run if
-         explicitly requested via -Pperf-tests. See web/common/pom.xml 
+         explicitly requested via -Pperf-tests. See web/common/pom.xml
          for an example as to how this property is used. -->
     <profile>
       <id>perf-tests</id>
@@ -211,9 +226,9 @@
   </profiles>
 
   <properties>
-  
-    <main.basedir>${project.basedir}</main.basedir>  
-  
+
+    <main.basedir>${project.basedir}</main.basedir>
+
     <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
     <thermostat.releasedate>${maven.build.timestamp}</thermostat.releasedate>
     <thermostat.email>thermostat@icedtea.classpath.org</thermostat.email>
@@ -265,7 +280,7 @@
     <!-- the OSGi Bundle-Version; should match the manifest in the jar -->
     <commons-codec.osgi-version>1.7.0</commons-codec.osgi-version>
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
-    
+
     <!-- jnr-unixsocket and dependencies -->
     <jnr-unixsocket.bundle.symbolic.name>com.github.jnr.unixsocket</jnr-unixsocket.bundle.symbolic.name>
     <jnr-unixsocket.version>0.12</jnr-unixsocket.version>
@@ -748,7 +763,6 @@
         <artifactId>gson</artifactId>
         <version>${gson.version}</version>
       </dependency>
-    
       <!-- jnr-unixsocket and dependencies -->
       <dependency>
         <groupId>com.github.jnr</groupId>

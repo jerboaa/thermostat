@@ -34,23 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.macos;
 
-import com.redhat.thermostat.common.portability.internal.linux.LinuxPortableProcessImpl;
-import com.redhat.thermostat.common.portability.internal.macos.MacOSProcessImpl;
-import com.redhat.thermostat.common.portability.internal.windows.WindowsPortableProcessImpl;
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.portability.PortableHost;
+import com.redhat.thermostat.common.portability.PortableMemoryStat;
 
-public final class PortableProcessImpl {
+public class MacOSHostImpl implements PortableHost {
 
-    private static final PortableProcess INSTANCE = createInstance();
+    public static final MacOSHostImpl INSTANCE = new MacOSHostImpl();
+    private static final MacOSHelperImpl helper = MacOSHelperImpl.INSTANCE;
 
-    private static PortableProcess createInstance() {
-        return OS.IS_LINUX ? LinuxPortableProcessImpl.createInstance()
-            : OS.IS_WINDOWS ? WindowsPortableProcessImpl.createInstance() : MacOSProcessImpl.INSTANCE;
+    @Override
+    public String getHostName() {
+        return helper.getHostName();
     }
 
-    public static PortableProcess getInstance() {
-        return INSTANCE;
+    @Override
+    public String getOSName() {
+        return helper.getOSName();
+    }
+
+    @Override
+    public String getOSVersion() {
+        return helper.getOSVersion();
+    }
+
+    @Override
+    public String getCPUModel() {
+        return helper.getCPUModel();
+    }
+
+    @Override
+    public int getCPUCount() {
+        return helper.getCPUCount();
+    }
+
+    @Override
+    public long getTotalMemory() {
+        return helper.getTotalMemory();
+    }
+
+    @Override
+    public long getClockTicksPerSecond() {
+        return helper.getClockTicksPerSecond();
+    }
+
+    @Override
+    public PortableMemoryStat getMemoryStat() {
+        return new MacOSMemoryStat();
     }
 }

@@ -61,10 +61,21 @@
         <profile>
             <id>linux</id>
             <activation>
-                <os><family>Unix</family></os>
+                <os><name>linux</name></os>
             </activation>
             <properties>
                 <platform.libs/>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>macos</id>
+            <activation>
+                <os><family>mac</family></os>
+            </activation>
+            <properties>
+                <platform.libs/>
+                <sharedlib.suffix>.dylib</sharedlib.suffix>
             </properties>
         </profile>
 
@@ -140,7 +151,8 @@
                             com.redhat.thermostat.common.portability.internal,
                             com.redhat.thermostat.common.portability.internal.linux,
                             com.redhat.thermostat.common.portability.internal.linux.vmio,
-                            com.redhat.thermostat.common.portability.internal.windows
+                            com.redhat.thermostat.common.portability.internal.windows,
+                            com.redhat.thermostat.common.portability.internal.macos
                         </Private-Package>
                         <!-- Do not autogenerate uses clauses in Manifests -->
                         <_nouses>true</_nouses>

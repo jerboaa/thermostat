@@ -34,23 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.macos;
 
-import com.redhat.thermostat.common.portability.internal.linux.LinuxPortableProcessImpl;
-import com.redhat.thermostat.common.portability.internal.macos.MacOSProcessImpl;
-import com.redhat.thermostat.common.portability.internal.windows.WindowsPortableProcessImpl;
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.portability.PortableVmIoStat;
 
-public final class PortableProcessImpl {
+class MacOSVmIoStat extends PortableVmIoStat {
 
-    private static final PortableProcess INSTANCE = createInstance();
-
-    private static PortableProcess createInstance() {
-        return OS.IS_LINUX ? LinuxPortableProcessImpl.createInstance()
-            : OS.IS_WINDOWS ? WindowsPortableProcessImpl.createInstance() : MacOSProcessImpl.INSTANCE;
+    MacOSVmIoStat(Clock clock, int pid) {
+        this(clock, MacOSHelperImpl.INSTANCE.getProcessIOInfo(pid));
     }
 
-    public static PortableProcess getInstance() {
-        return INSTANCE;
+    private MacOSVmIoStat(Clock clock, final long info[]) {
+        super(clock.getRealTimeMillis(), info[0], info[1], info[2], info[3]);
     }
 }
