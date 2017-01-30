@@ -99,7 +99,7 @@ public class VmBytemanInformationController implements InformationServiceControl
     private final VmBytemanDAO bytemanDao;
     private final RequestQueue requestQueue;
     private Timer timer;
-    private List<BytemanMetric> previousPayload = Collections.EMPTY_LIST;
+    private List<BytemanMetric> previousPayload = Collections.emptyList();
     private boolean comboBoxSelected = false;
     private boolean isPolling = false;
 
@@ -310,7 +310,9 @@ public class VmBytemanInformationController implements InformationServiceControl
 
     void stopPolling() {
         isPolling = false;
-        timer.cancel();
+        if (timer != null) { // Dead VMs might never have had the timer started
+            timer.cancel();
+        }
     }
 
     void updateGraph() {

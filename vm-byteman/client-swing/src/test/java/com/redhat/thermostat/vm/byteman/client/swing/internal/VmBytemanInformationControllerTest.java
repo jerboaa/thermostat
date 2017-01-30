@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.byteman.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -295,6 +296,22 @@ public class VmBytemanInformationControllerTest {
         BytemanMetric m = metrics.get(0);
         assertEquals(VM_ID, m.getVmId());
     }
+    
+    /**
+     * Verifies no exceptions are thrown when the VM is dead and 
+     * updateMetrics() is called.
+     */
+    @Test
+    public void testUpdateMetricsDeadVm() {
+        boolean isAliveVm = false;
+        VmBytemanInformationController controller = createController(isAliveVm);
+        try {
+            controller.updateMetrics();
+            // pass
+        } catch (Exception e) {
+            fail("Must not throw exception when VM is dead: " + e);
+        }
+    }
 
     @Test
     public void testPollingState() {
@@ -340,17 +357,25 @@ public class VmBytemanInformationControllerTest {
     }
 
     private VmBytemanInformationController createController() {
+        return createController(true);
+    }
+    
+    private VmBytemanInformationController createController(boolean isVmAlive) {
         VmBytemanView view = mock(VmBytemanView.class);
         ref = mock(VmRef.class);
         when(ref.getVmId()).thenReturn(VM_ID);
         when(ref.getHostRef()).thenReturn(new HostRef(AGENT_ID, HOST_NAME));
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         AgentInformation agentInfo = mock(AgentInformation.class);
-        when(agentInfo.isAlive()).thenReturn(true);
+        when(agentInfo.isAlive()).thenReturn(isVmAlive);
         when(agentInfoDao.getAgentInformation(any(AgentId.class))).thenReturn(agentInfo);
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         VmInfo vmInfo = mock(VmInfo.class);
-        when(vmInfo.isAlive(agentInfo)).thenReturn(AliveStatus.RUNNING);
+        if (isVmAlive) {
+            when(vmInfo.isAlive(agentInfo)).thenReturn(AliveStatus.RUNNING);
+        } else {
+            when(vmInfo.isAlive(agentInfo)).thenReturn(AliveStatus.EXITED);
+        }
         when(vmInfoDao.getVmInfo(any(VmRef.class))).thenReturn(vmInfo);
         vmBytemanDao = mock(VmBytemanDAO.class);
         requestQueue = mock(RequestQueue.class);
@@ -361,6 +386,5 @@ public class VmBytemanInformationControllerTest {
                 // nothing, return immediately for tests
             }
         };
-        
     }
 }
