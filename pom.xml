@@ -61,12 +61,12 @@
     <profile>
       <id>linux</id>
       <activation>
-        <os><family>Unix</family></os>
+        <os><name>linux</name></os>
       </activation>
       <properties>
         <script.extension>.sh</script.extension>
         <c.compiler>gcc</c.compiler>
-        <cflags></cflags>
+        <cflags/>
         <jni.platform>linux</jni.platform>
         <sharedlib.prefix>lib</sharedlib.prefix>
         <sharedlib.suffix>.so</sharedlib.suffix>

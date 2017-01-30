@@ -34,55 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.linux;
 
-import com.redhat.thermostat.shared.config.OS;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
-/**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
+/*
+ * Test log handler used for DistributionInformation log testing.
  */
-public class SysConf {
-
-    private SysConf() {
-        /* do not initialize */
-    }
-
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
-    }
-
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
-
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
+public class TestLogHandler extends Handler {
+    
+    private boolean etcOsReleaseLogged;
+    private boolean lsbReleaseLogged;
+    private static final String EXPECTED_OS_RELEASE_FAIL_MSG =
+            "unable to use os-release";
+    private static final String EXPECTED_LSB_RELEASE_FAIL_MSG =
+            "unable to use os-release AND lsb_release";
+    
+    @Override
+    public void publish(LogRecord record) {
+        String logMessage = record.getMessage();
+        if (record.getLevel().intValue() >= Level.WARNING.intValue() && 
+                logMessage.equals(EXPECTED_OS_RELEASE_FAIL_MSG)) {
+            etcOsReleaseLogged = true;
+        };
+        if (record.getLevel().intValue() >= Level.WARNING.intValue() &&
+                logMessage.equals(EXPECTED_LSB_RELEASE_FAIL_MSG)) {
+            lsbReleaseLogged = true;
         }
     }
 
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
+    @Override
+    public void flush() {
+        // nothing
     }
+
+    @Override
+    public void close() throws SecurityException {
+        // nothing
+    }
+    
+    boolean isEtcOsReleaseLogged() {
+        return etcOsReleaseLogged;
+    }
+    
+    boolean isLsbReleaseLogged() {
+        return lsbReleaseLogged;
+    }
+    
 }
 

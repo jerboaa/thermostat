@@ -74,7 +74,7 @@ public class WindowsProcessUtilities extends ProcessUtilitiesBase  {
 
     @Override
     public void sendSignal(Integer pid, UNIXSignal signal) {
-        PortableProcessImpl.INSTANCE.terminateProcess(pid);
+        PortableProcessImpl.getInstance().terminateProcess(pid);
     }
 
 }

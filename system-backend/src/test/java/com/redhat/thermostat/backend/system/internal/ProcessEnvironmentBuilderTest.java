@@ -34,65 +34,72 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability.internal.windows;
+package com.redhat.thermostat.backend.system.internal;
 
+import com.redhat.thermostat.common.portability.PortableProcess;
+import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
 import com.redhat.thermostat.shared.config.OS;
 
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
- * These tests are disabled until we get the DLL path issues sorted out
- * TODO - These tests currently fail on Windows because the helper DLL isn't on the execution path
+ * test windows process env builder
  */
+public class ProcessEnvironmentBuilderTest {
 
-@Ignore
-public class WindowsHelperImplTest {
+    private PortableProcess whelp;
 
-    @Test
-    public void loadNativeLib() {
-        Assume.assumeTrue(OS.IS_WINDOWS);
-        final WindowsHelperImpl impl = WindowsHelperImpl.INSTANCE;
-        assertNotNull(impl);
+    private static final int FAKE_PID = 4567;
+    private static final String PATH_KEY = "PATH";
+    private static final String FAKE_PATH = "testpath";
+
+    private static final Map<String,String> goodMap = new HashMap<>();
+
+    @Before
+    public void setup() {
+        whelp = mock(PortableProcess.class);
+        goodMap.put(PATH_KEY, FAKE_PATH);
+        when(whelp.getEnvironment(anyInt())).thenReturn(null);
+        when(whelp.getEnvironment(eq(FAKE_PID))).thenReturn(goodMap);
     }
 
-    @Test
-    public void testGetHostInfo() {
-        Assume.assumeTrue(OS.IS_WINDOWS);
-        final WindowsHelperImpl impl = WindowsHelperImpl.INSTANCE;
-        assertNotNull(impl);
-        assertContainsData(impl.getHostName());
-        assertContainsData(impl.getOSName());
-        assertTrue(impl.getOSName().toLowerCase().contains("win"));
-        assertContainsData(impl.getOSVersion());
-        assertContainsData(impl.getCPUModel());
-        assertTrue(impl.getCPUCount() > 0);
-        assertTrue(impl.getTotalMemory() > 0);
-    }
-
+    // TODO - This test currently fails on Windows because the helper DLL isn't on the execution path
     @Test
     @Ignore
-    public void testGetProcessInfo() {
+    public void testSimpleBuild() {
         Assume.assumeTrue(OS.IS_WINDOWS);
-        final WindowsHelperImpl impl = WindowsHelperImpl.INSTANCE;
-        assertNotNull(impl);
-        int pid = /*TODO: retrieve current process identifier*/0;
-        assertContainsData(impl.getUserName(pid));
-        assertTrue(impl.getUid(pid) >= 0);
-        Map<String,String> envMap = impl.getEnvironment(pid);
-        assertNotNull(envMap);
-        assertFalse(envMap.isEmpty());
+        final Map<String,String> info = new ProcessEnvironmentBuilderImpl().build(FAKE_PID);
+        assertNotNull(info);
     }
 
-    private static void assertContainsData( final String s ) {
-        assertNotNull(s);
-        assertFalse(s.isEmpty());
+    @Test
+    public void testGetInfoFromGoodPid() {
+        final ProcessEnvironmentBuilder ib = new ProcessEnvironmentBuilderImpl(whelp);
+        final Map<String,String> info  = ib.build(FAKE_PID);
+        assertFalse(info.isEmpty());
+        assertTrue(info.containsKey(PATH_KEY));
+        assertEquals(FAKE_PATH, info.get(PATH_KEY));
+    }
+
+    @Test
+    public void testGetInfoFromBadPid() {
+        final ProcessEnvironmentBuilder ib = new ProcessEnvironmentBuilderImpl(whelp);
+        final Map<String,String> info  = ib.build(FAKE_PID+1);
+        assertTrue(info == null || info.isEmpty());
     }
 }

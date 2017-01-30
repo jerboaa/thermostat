@@ -71,7 +71,7 @@ public class PortableProcessStat {
     }
 
     public static PortableProcessStat build(int pid) {
-        return PortableProcessImpl.INSTANCE.getProcessStat(pid);
+        return PortableProcessImpl.getInstance().getProcessStat(pid);
     }
 }
 

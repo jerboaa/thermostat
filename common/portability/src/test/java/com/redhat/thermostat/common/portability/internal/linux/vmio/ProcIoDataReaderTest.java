@@ -34,55 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.linux.vmio;
 
-import com.redhat.thermostat.shared.config.OS;
+import java.io.StringReader;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import org.junit.Test;
 
-/**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
- */
-public class SysConf {
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 
-    private SysConf() {
-        /* do not initialize */
-    }
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
-    }
+public class ProcIoDataReaderTest {
 
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
+    @Test
+    public void verifyIsParsedCorrectly() throws Exception {
+        final int SOME_PID = 0;
+        String fileContents = "" +
+                "rchar: 19961133\n" +
+                "wchar: 2451715\n" +
+                "syscr: 17880\n" +
+                "syscw: 13870\n" +
+                "read_bytes: 21004288\n" +
+                "write_bytes: 811008\n" +
+                "cancelled_write_bytes: 16384\n";
+        ProcDataSource dataSource = mock(ProcDataSource.class);
+        when(dataSource.getIoReader(SOME_PID)).thenReturn(new StringReader(fileContents));
 
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
+        ProcIoData parsedData = new ProcIoDataReader(dataSource).read(SOME_PID);
 
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
+        assertEquals(19961133, parsedData.rchar);
+        assertEquals(2451715, parsedData.wchar);
+        assertEquals(17880, parsedData.syscr);
+        assertEquals(13870, parsedData.syscw);
+        assertEquals(21004288, parsedData.read_bytes);
+        assertEquals(811008, parsedData.write_bytes);
+        assertEquals(16384, parsedData.cancelled_write_bytes);
+
     }
 }
-

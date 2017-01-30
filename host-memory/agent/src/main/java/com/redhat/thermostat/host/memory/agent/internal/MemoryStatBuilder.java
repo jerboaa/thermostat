@@ -57,7 +57,7 @@ public class MemoryStatBuilder {
 
     private static final long UNAVAILABLE = -1;
 
-    private static final boolean IS_UNIX = OS.IS_UNIX;
+    private static final boolean IS_LINUX = OS.IS_LINUX;
 
     private static final String KEY_MEMORY_TOTAL = "MemTotal";
     private static final String KEY_MEMORY_FREE = "MemFree";
@@ -75,13 +75,10 @@ public class MemoryStatBuilder {
     public MemoryStatBuilder(ProcDataSource dataSource, WriterID writerId) {
         this.dataSource = dataSource;
         this.writerId = writerId;
-        if (OS.IS_WINDOWS) {
-            logger.log(Level.WARNING, "Memory backend is not yet ported to Windows");
-        }
     }
 
     protected MemoryStat build() {
-        return IS_UNIX ? buildFromLinuxProc() : buildFromWindows();
+        return IS_LINUX ? buildFromLinuxProc() : buildPortably();
     }
 
     private MemoryStat buildFromLinuxProc() {
@@ -127,7 +124,7 @@ public class MemoryStatBuilder {
     }
 
 
-    private MemoryStat buildFromWindows() {
+    private MemoryStat buildPortably() {
         long timestamp = System.currentTimeMillis();
 
         PortableMemoryStat memstat = PortableMemoryStat.build();

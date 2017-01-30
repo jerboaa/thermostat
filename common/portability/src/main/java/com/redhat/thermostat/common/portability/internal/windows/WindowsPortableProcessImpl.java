@@ -36,44 +36,67 @@
 
 package com.redhat.thermostat.common.portability.internal.windows;
 
-import com.redhat.thermostat.common.portability.PortableProcessImpl;
-import com.redhat.thermostat.common.portability.ProcessUserInfo;
-import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.portability.PortableProcess;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.portability.PortableProcessStat;
+import com.redhat.thermostat.common.portability.PortableVmIoStat;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Map;
 
-/**
- * Build User information via Windows helper classes
- */
-public class WindowsUserInfoBuilderImpl implements ProcessUserInfoBuilder {
+public class WindowsPortableProcessImpl implements PortableProcess {
 
-    private final PortableProcess procHelper;
+    public static final WindowsPortableProcessImpl INSTANCE = new WindowsPortableProcessImpl();
+    private static final WindowsHelperImpl helper = WindowsHelperImpl.INSTANCE;
 
-    private static final ProcessUserInfo NON_EXISTENT_USER = new ProcessUserInfo();
-    private static final Logger logger = LoggingUtils.getLogger(WindowsUserInfoBuilderImpl.class);
-
-    public WindowsUserInfoBuilderImpl() {
-        this(PortableProcessImpl.getInstance());
-    }
-
-    WindowsUserInfoBuilderImpl(PortableProcess helper) {
-        this.procHelper = helper;
+    public static PortableProcess createInstance() {
+        return new WindowsPortableProcessImpl();
     }
 
     @Override
-    public ProcessUserInfo build(int pid) {
-        ProcessUserInfo info = NON_EXISTENT_USER;
-        try {
-            final long uid = procHelper.getUid(pid);
-            final String name = procHelper.getUserName(pid);
-            info = new ProcessUserInfo(uid, name);
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Unable to read user info for " + pid, e);
-        }
+    public boolean exists(int pid) {
+        return helper.exists(pid);
+    }
 
-        return info;
+    @Override
+    public String getUserName(int pid) {
+        return helper.getUserName(pid);
+    }
+
+    @Override
+    public int getUid(int pid) {
+        return helper.getUid(pid);
+    }
+
+    @Override
+    public Map<String, String> getEnvironment(int pid) {
+        return helper.getEnvironment(pid);
+    }
+
+    @Override
+    public PortableProcessStat getProcessStat(int pid) {
+        final long[] info = helper.getProcessCPUInfo(pid);
+        final long utime = info[1];
+        final long stime = info[2];
+        return new PortableProcessStat(pid, utime, stime);
+    }
+
+    @Override
+    public PortableVmIoStat getVmIoStat(Clock clock, int pid) {
+        return new WindowsVmIoStat(clock, pid);
+    }
+
+    @Override
+    public boolean terminateProcess(int pid) {
+        return helper.terminateProcess(pid);
+    }
+
+    @Override
+    public boolean terminateProcess(int pid, boolean wait) {
+        return helper.terminateProcess(pid, wait);
+    }
+
+    @Override
+    public boolean terminateProcess(int pid, int exitcode, int waitMillis) {
+        return helper.terminateProcess(pid, exitcode, waitMillis);
     }
 }

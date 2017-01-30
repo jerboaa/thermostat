@@ -34,55 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.linux.vmio;
 
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.portability.PortableVmIoStat;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+public class LinuxVmIoStatBuilderImpl {
 
-/**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
- */
-public class SysConf {
+    private final Clock clock;
+    private final ProcIoDataReader ioReader;
 
-    private SysConf() {
-        /* do not initialize */
+    public LinuxVmIoStatBuilderImpl(Clock clock, ProcIoDataReader ioReader) {
+        this.clock = clock;
+        this.ioReader = ioReader;
     }
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
-    }
-
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
-
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
+    public synchronized PortableVmIoStat build(Integer pid) {
+        ProcIoData data = ioReader.read(pid);
+        if (data == null) {
             return null;
         }
+        long miliTime = clock.getRealTimeMillis();
+        return new PortableVmIoStat(miliTime, data.syscr, data.syscw, data.rchar, data.wchar);
     }
-}
 
+}

@@ -34,40 +34,59 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.backend.system.internal;
+
+import com.redhat.thermostat.common.portability.PortableHost;
+import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
+import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.storage.model.HostInfo;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
+public class HostInfoBuilderTest {
 
-import org.junit.Test;
+    private WriterID writerId;
+    private PortableHost helper;
 
-public class ProcessCheckerTest {
-
-    private static final int SOME_PID = 80980;
-    
-    @Test
-    public void testProcessExists() {
-        basicTest(true);
+    @Before
+    public void setup() {
+        writerId = mock(WriterID.class);
+        helper = mock(PortableHost.class);
+        when(helper.getHostName()).thenReturn("testhost");
+        when(helper.getOSName()).thenReturn("testos");
+        when(helper.getOSVersion()).thenReturn("testversion");
+        when(helper.getCPUModel()).thenReturn("testcpu");
+        when(helper.getCPUCount()).thenReturn(4567);
+        when(helper.getTotalMemory()).thenReturn(9876L);
     }
-    
+
+    // TODO - This test currently fails on Windows because the helper DLL isn't on the execution path
     @Test
-    public void testProcessNotExisting() {
-        basicTest(false);
+    @Ignore
+    public void testSimpleBuild() {
+        Assume.assumeTrue(OS.IS_WINDOWS);
+        HostInfo info = new HostInfoBuilderImpl(writerId).build();
+        assertNotNull(info);
     }
-    
-    private void basicTest(boolean expected) {
-        final File baseFile = mock(File.class);
-        when(baseFile.exists()).thenReturn(expected);
-        ProcessChecker process = new ProcessChecker() {
-            @Override
-            File mapToFile(int pid) {
-                assertEquals(SOME_PID, pid);
-                return baseFile;
-            }
-        };
-        assertEquals(expected, process.exists(SOME_PID));
+
+    @Test
+    public void testGetInfo() {
+        final HostInfoBuilder ib = new HostInfoBuilderImpl(writerId, helper);
+        final HostInfo hi = ib.build();
+        assertEquals("testhost",hi.getHostname());
+        assertEquals("testos", hi.getOsName());
+        assertEquals("testcpu", hi.getCpuModel());
+        assertEquals("testversion", hi.getOsKernel());
+        assertEquals(4567, hi.getCpuCount());
+        assertEquals(9876L, hi.getTotalMemory());
     }
 }
+

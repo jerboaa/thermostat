@@ -34,40 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.linux.vmio;
+
+import com.redhat.thermostat.common.portability.PortableVmIoStat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.io.File;
-
 import org.junit.Test;
 
-public class ProcessCheckerTest {
+import com.redhat.thermostat.common.Clock;
 
-    private static final int SOME_PID = 80980;
-    
+public class LinuxVmIoStatBuilderTest {
+
+
     @Test
-    public void testProcessExists() {
-        basicTest(true);
+    public void testBuilderBuildsNullForUnknownPid() {
+        Clock clock = mock(Clock.class);
+        ProcIoDataReader procDataReader = mock(ProcIoDataReader.class);
+        LinuxVmIoStatBuilderImpl builder = new LinuxVmIoStatBuilderImpl(clock, procDataReader);
+        PortableVmIoStat result = builder.build(0);
+        assertNull(result);
     }
-    
+
     @Test
-    public void testProcessNotExisting() {
-        basicTest(false);
+    public void testBuildWithSufficientInformation() {
+        final int PID = 0;
+
+        int rchar = 1;
+        int wchar = 2;
+        int syscr = 3;
+        int syscw = 4;
+        int read_bytes = 5;
+        int write_bytes = 6;
+        int cancelled_write_bytes = 7;
+
+        final ProcIoData data = new ProcIoData(rchar, wchar, syscr, syscw,
+                read_bytes, write_bytes, cancelled_write_bytes);
+
+        ProcIoDataReader ioReader = mock(ProcIoDataReader.class);
+        when(ioReader.read(PID)).thenReturn(data);
+        Clock clock = mock(Clock.class);
+
+        LinuxVmIoStatBuilderImpl builder = new LinuxVmIoStatBuilderImpl(clock, ioReader);
+
+        PortableVmIoStat ioData = builder.build(PID);
+        assertNotNull(ioData);
+        assertEquals(rchar, ioData.getCharactersRead());
+        assertEquals(wchar, ioData.getCharactersWritten());
+        assertEquals(syscr, ioData.getReadSyscalls());
+        assertEquals(syscw, ioData.getWriteSyscalls());
     }
-    
-    private void basicTest(boolean expected) {
-        final File baseFile = mock(File.class);
-        when(baseFile.exists()).thenReturn(expected);
-        ProcessChecker process = new ProcessChecker() {
-            @Override
-            File mapToFile(int pid) {
-                assertEquals(SOME_PID, pid);
-                return baseFile;
-            }
-        };
-        assertEquals(expected, process.exists(SOME_PID));
-    }
+
 }

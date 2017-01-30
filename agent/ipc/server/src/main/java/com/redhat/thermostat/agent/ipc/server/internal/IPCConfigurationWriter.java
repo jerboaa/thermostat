@@ -111,7 +111,7 @@ class IPCConfigurationWriter {
             // note: this is required for UNIX too
             if (OS.IS_WINDOWS) {
                 int uport = aport == 0 ? 0 : findUnusedTCPSocket( aport + 1, TEST_SOCKET_HIGH);
-                int uid = PortableProcessImpl.INSTANCE.getUid(0); // if pid=0, gets uid of current process
+                int uid = PortableProcessImpl.getInstance().getUid(0); // if pid=0, gets uid of current process
                 props.setProperty("agent-proxy-" + uid + PROP_TCP_SOCKET_SUFFIX, Integer.toString(uport));
             }
         }

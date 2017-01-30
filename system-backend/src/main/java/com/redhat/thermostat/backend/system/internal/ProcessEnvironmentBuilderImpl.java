@@ -34,55 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.backend.system.internal;
 
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
+import com.redhat.thermostat.common.portability.PortableProcess;
+import com.redhat.thermostat.common.portability.PortableProcessImpl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.Map;
 
 /**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
+ * Build process environment information via portable helper classes
  */
-public class SysConf {
+class ProcessEnvironmentBuilderImpl implements ProcessEnvironmentBuilder {
 
-    private SysConf() {
-        /* do not initialize */
+    private final PortableProcess helper;
+
+    ProcessEnvironmentBuilderImpl() {
+        this(PortableProcessImpl.getInstance());
     }
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
+    ProcessEnvironmentBuilderImpl(PortableProcess wh) {
+        helper = wh;
     }
 
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
-
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
+    @Override
+    public Map<String, String> build(int pid) {
+        return helper.getEnvironment(pid);
     }
 }
-

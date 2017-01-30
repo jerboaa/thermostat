@@ -34,55 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.backend.system.internal;
 
-import com.redhat.thermostat.shared.config.OS;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import com.redhat.thermostat.common.portability.ProcessUserInfo;
+import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
+import com.redhat.thermostat.common.portability.UserNameUtil;
+import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
+import com.redhat.thermostat.backend.system.internal.models.InfoBuilderFactory;
+import com.redhat.thermostat.backend.system.internal.models.ProcessEnvironmentBuilder;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
+import com.redhat.thermostat.storage.core.WriterID;
 
 /**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
+ * Allows callers to access Windows-specific builders portably
  */
-public class SysConf {
+public class InfoBuilderFactoryImpl implements InfoBuilderFactory {
 
-    private SysConf() {
-        /* do not initialize */
+    public InfoBuilderFactoryImpl() {
     }
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
+    public HostInfoBuilder createHostInfoBuilder(final WriterID writerID) {
+        return new HostInfoBuilderImpl(writerID);
     }
 
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
+    public ProcessEnvironmentBuilder createProcessEnvironmentBuilder() {
+        return new ProcessEnvironmentBuilderImpl();
     }
 
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
+    public ProcessUserInfoBuilder createProcessUserInfoBuilder(final UserNameUtil userNameUtil) {
+        return ProcessUserInfo.createBuilder(new ProcDataSource(), userNameUtil);
     }
 }
-

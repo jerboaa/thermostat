@@ -53,7 +53,7 @@
     <profile>
       <id>linux</id>
       <activation>
-        <os><family>unix</family></os>
+        <os><name>linux</name></os>
       </activation>
       <build>
         <plugins>
@@ -136,7 +136,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore/>
                   </action>
                 </pluginExecution>
               </pluginExecutions>

@@ -139,6 +139,7 @@
                         <Private-Package>
                             com.redhat.thermostat.common.portability.internal,
                             com.redhat.thermostat.common.portability.internal.linux,
+                            com.redhat.thermostat.common.portability.internal.linux.vmio,
                             com.redhat.thermostat.common.portability.internal.windows
                         </Private-Package>
                         <!-- Do not autogenerate uses clauses in Manifests -->

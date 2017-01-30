@@ -36,11 +36,20 @@
 
 package com.redhat.thermostat.common.portability;
 
-import com.redhat.thermostat.common.portability.internal.linux.LinuxProcessImpl;
-import com.redhat.thermostat.common.portability.internal.windows.WindowsHelperImpl;
-import com.redhat.thermostat.common.portability.internal.windows.WindowsProcessImpl;
+import com.redhat.thermostat.common.portability.internal.linux.LinuxPortableProcessImpl;
+import com.redhat.thermostat.common.portability.internal.windows.WindowsPortableProcessImpl;
 import com.redhat.thermostat.shared.config.OS;
 
 public final class PortableProcessImpl {
-    public static final PortableProcess INSTANCE = OS.IS_WINDOWS ? WindowsProcessImpl.INSTANCE : LinuxProcessImpl.INSTANCE;
+
+    private static final PortableProcess INSTANCE = createInstance();
+
+    private static PortableProcess createInstance() {
+        return OS.IS_LINUX ? LinuxPortableProcessImpl.createInstance()
+            : OS.IS_WINDOWS ? WindowsPortableProcessImpl.createInstance() : null;
+    }
+
+    public static PortableProcess getInstance() {
+        return INSTANCE;
+    }
 }

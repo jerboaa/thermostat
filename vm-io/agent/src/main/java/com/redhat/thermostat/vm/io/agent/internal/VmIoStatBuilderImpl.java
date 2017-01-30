@@ -34,55 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.vm.io.agent.internal;
 
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.portability.PortableVmIoStat;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.io.common.VmIoStat;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+public class VmIoStatBuilderImpl implements VmIoStatBuilder {
 
-/**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
- */
-public class SysConf {
+    private final Clock clock;
+    private final String writerId;
 
-    private SysConf() {
-        /* do not initialize */
+    VmIoStatBuilderImpl(Clock clock, WriterID writerId) {
+        this.clock = clock;
+        this.writerId = writerId.getWriterID();
     }
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
+    public synchronized VmIoStat build(String vmId, Integer pid) {
+
+        PortableVmIoStat data = PortableVmIoStat.build(clock, pid);
+        return (data != null) ? new VmIoStat(writerId, vmId, data.getTimeStamp(), data.getCharactersRead(), data.getCharactersWritten(), data.getReadSyscalls(), data.getWriteSyscalls()) : null;
     }
 
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
-
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
-    }
 }
-

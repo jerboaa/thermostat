@@ -80,10 +80,10 @@ public class Activator implements BundleActivator {
                 NumaDAO numaDAO = services.get(NumaDAO.class);
                 Version version = new Version(context.getBundle());
                 WriterID writerId = services.get(WriterID.class);
-                NumaCollector collector = OS.IS_LINUX ? new NumaLinuxCollectorImpl() : new NumaWindowsCollectorImpl();
+                NumaCollector collector = OS.IS_LINUX ? new NumaLinuxCollectorImpl() : new NumaCollectorImpl();
                 backend = new NumaBackend(appService, numaDAO, collector, version, writerId);
                 reg = context.registerService(Backend.class, backend, null);
-                if (OS.IS_WINDOWS) {
+                if (!OS.IS_LINUX) {
                     logger.log(Level.WARNING, "NUMA backend is not yet ported to Windows");
                 }
             }

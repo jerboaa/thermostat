@@ -34,55 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.backend.system.internal;
 
-import com.redhat.thermostat.shared.config.OS;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import com.redhat.thermostat.common.portability.PortableHost;
+import com.redhat.thermostat.backend.system.internal.models.HostInfoBuilder;
+import com.redhat.thermostat.common.portability.PortableHostImpl;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.storage.model.HostInfo;
 
 /**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
+ * Build Host information via helper classes
  */
-public class SysConf {
+class HostInfoBuilderImpl implements HostInfoBuilder {
 
-    private SysConf() {
-        /* do not initialize */
+    private final WriterID writerID;
+    private final PortableHost helper;
+
+    HostInfoBuilderImpl(final WriterID writerID) {
+        this(writerID, PortableHostImpl.getInstance());
     }
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
+    HostInfoBuilderImpl(final WriterID writerID, PortableHost helper) {
+        this.writerID = writerID;
+        this.helper = helper;
     }
 
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
-
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
+    @Override
+    public HostInfo build() {
+        String wId = writerID.getWriterID();
+        return new HostInfo(wId,
+                helper.getHostName(),
+                helper.getOSName(),
+                helper.getOSVersion(),
+                helper.getCPUModel(),
+                helper.getCPUCount(),
+                helper.getTotalMemory());
     }
 }
-

@@ -43,8 +43,8 @@ import java.io.Reader;
 /**
  * Wrapper for files under {@code /proc/}. See proc(5) for details about this.
  *
- * This class is inherently unportable, but a _lot_ of Linux code would need refactoring
- * before it can be unexported from the portability package.
+ * This class is inherently unportable, but a _lot_ of Linux code needs refactoring
+ * before it can be make package private
  *
  * Note that different Unix-like OSs may or may not have a /proc (and the format may be different)
  * for example Darwin/OSX doesn't have /proc

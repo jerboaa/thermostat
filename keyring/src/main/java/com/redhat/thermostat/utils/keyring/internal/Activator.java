@@ -79,7 +79,7 @@ public class Activator implements BundleActivator {
         try {
             theKeyring = new KeyringImpl();
         } catch (UnsatisfiedLinkError e) {
-            if (OS.IS_UNIX) {
+            if (OS.IS_LINUX) {
                 theKeyring = new DummyKeyringImpl();
             }
             else {

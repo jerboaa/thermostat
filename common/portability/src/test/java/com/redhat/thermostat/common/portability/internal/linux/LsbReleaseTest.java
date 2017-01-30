@@ -34,80 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability.linux;
+package com.redhat.thermostat.common.portability.internal.linux;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.StringReader;
+import java.util.UUID;
 
+import com.redhat.thermostat.common.portability.internal.linux.DistributionInformation;
+import com.redhat.thermostat.common.portability.internal.linux.LsbRelease;
 import com.redhat.thermostat.shared.config.OS;
-
-import com.redhat.thermostat.testutils.TestUtils;
-
 import org.junit.Assume;
 import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
 
-public class ProcDataSourceTest {
+public class LsbReleaseTest {
+    
+    static final String NOT_EXISTING_LSB_RELEASE = "lsb_release-"
+            + UUID.randomUUID();
 
     @Test
-    public void testGetCpuInfoReader() throws IOException {
+    public void testName() throws IOException, InterruptedException {
         Assume.assumeTrue(OS.IS_LINUX);
-        Reader r = new ProcDataSource().getCpuInfoReader();
-        assertNotNull(r);
+        BufferedReader reader = new BufferedReader(new StringReader("Distributor ID: Name"));
+        DistributionInformation info = new LsbRelease().getFromLsbRelease(reader);
+        assertEquals("Name", info.getName());
     }
 
     @Test
-    public void testGetCpuLoadReader() throws IOException {
+    public void testVersion() throws IOException {
         Assume.assumeTrue(OS.IS_LINUX);
-        Reader r = new ProcDataSource().getCpuLoadReader();
-        assertNotNull(r);
+        BufferedReader reader = new BufferedReader(new StringReader("Release: Version"));
+        DistributionInformation info = new LsbRelease().getFromLsbRelease(reader);
+        assertEquals("Version", info.getVersion());
+    }
+    
+    @Test
+    public void getDistributionInformationThrowsIOExceptionIfScriptNotThere() {
+        Assume.assumeTrue(OS.IS_LINUX);
+        LsbRelease lsbRelease = new LsbRelease(NOT_EXISTING_LSB_RELEASE);
+        try {
+            lsbRelease.getDistributionInformation();
+            fail("Should have thrown IOException, since file is not there!");
+        } catch (IOException e) {
+            // pass
+            String message = e.getMessage();
+            assertTrue(message.contains("Cannot run program \"lsb_release-"));
+            assertTrue(message.contains("No such file or directory"));
+        }
     }
 
-    @Test
-    public void testGetMemInfoReader() throws IOException {
-        Assume.assumeTrue(OS.IS_LINUX);
-        Reader r = new ProcDataSource().getMemInfoReader();
-        assertNotNull(r);
-    }
-
-    @Test
-    public void testGetStatReader() throws IOException {
-        Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getStatReader(pid);
-        assertNotNull(r);
-    }
-
-    @Test
-    public void testGetEnvironReader() throws IOException {
-        Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getEnvironReader(pid);
-        assertNotNull(r);
-    }
-
-    @Test
-    public void testIoReader() throws Exception {
-        Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getIoReader(pid);
-        assertNotNull(r);
-    }
-
-    @Test
-    public void testStatReader() throws Exception {
-        Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getStatReader(pid);
-        assertNotNull(r);
-    }
-
-    @Test
-    public void testStatusReader() throws Exception {
-        Assume.assumeTrue(OS.IS_LINUX);
-        int pid = TestUtils.getProcessId();
-        Reader r = new ProcDataSource().getStatusReader(pid);
-        assertNotNull(r);
-    }
 }
 

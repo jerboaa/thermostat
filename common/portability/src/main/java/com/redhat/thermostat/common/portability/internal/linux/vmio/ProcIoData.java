@@ -34,55 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.linux.vmio;
 
-import com.redhat.thermostat.shared.config.OS;
+public class ProcIoData {
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+    // This matches the proc file format. The file format is described at:
+    // http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/filesystems/proc.txt
 
-/**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
- */
-public class SysConf {
+    public final long rchar;
+    public final long wchar;
+    public final long syscr;
+    public final long syscw;
+    public final long read_bytes;
+    public final long write_bytes;
+    public final long cancelled_write_bytes;
 
-    private SysConf() {
-        /* do not initialize */
+    public ProcIoData(long rchar, long wchar,
+            long syscr, long syscw,
+            long read_bytes, long write_bytes,
+            long cancelled_write_bytes) {
+        this.rchar = rchar;
+        this.wchar = wchar;
+        this.syscr = syscr;
+        this.syscw = syscw;
+        this.read_bytes = read_bytes;
+        this.write_bytes = write_bytes;
+        this.cancelled_write_bytes = cancelled_write_bytes;
     }
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
-    }
-
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
-
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
-    }
 }
 

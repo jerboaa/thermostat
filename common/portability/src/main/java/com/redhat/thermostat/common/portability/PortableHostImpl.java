@@ -36,11 +36,21 @@
 
 package com.redhat.thermostat.common.portability;
 
-import com.redhat.thermostat.common.portability.internal.windows.WindowsHostImpl;
+import com.redhat.thermostat.common.portability.internal.linux.LinuxPortableHostImpl;
+import com.redhat.thermostat.common.portability.internal.windows.WindowsPortableHostImpl;
 import com.redhat.thermostat.shared.config.OS;
 
 public class PortableHostImpl {
 
-    public static final PortableHost INSTANCE = OS.IS_WINDOWS ? WindowsHostImpl.INSTANCE : null;
+    private static final PortableHost INSTANCE = createInstance();
+
+    private static PortableHost createInstance() {
+        return OS.IS_LINUX ? LinuxPortableHostImpl.createInstance()
+                : OS.IS_WINDOWS ? WindowsPortableHostImpl.createInstance()  : null;
+    }
+
+    public static PortableHost getInstance() {
+        return INSTANCE;
+    }
 }
 

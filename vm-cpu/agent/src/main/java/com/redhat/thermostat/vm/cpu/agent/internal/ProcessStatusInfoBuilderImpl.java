@@ -34,55 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.vm.cpu.agent.internal;
 
-import com.redhat.thermostat.shared.config.OS;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import com.redhat.thermostat.common.portability.PortableProcessImpl;
+import com.redhat.thermostat.common.portability.PortableProcessStat;
 
 /**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
+ * Extract status information about the process
  */
-public class SysConf {
+public class ProcessStatusInfoBuilderImpl implements ProcessStatusInfoBuilder {
 
-    private SysConf() {
-        /* do not initialize */
+    ProcessStatusInfoBuilderImpl() {
     }
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
+    public ProcessStatusInfo build(int pid) {
+
+        final PortableProcessStat info =  PortableProcessImpl.getInstance().getProcessStat(pid);
+
+        return info != null ? new ProcessStatusInfo(pid, info.getUserTime(), info.getKernelTime()) : null;
     }
 
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
-
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
-    }
 }
 

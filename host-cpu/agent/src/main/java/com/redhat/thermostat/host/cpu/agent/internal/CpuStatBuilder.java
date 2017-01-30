@@ -74,12 +74,8 @@ public class CpuStatBuilder {
             throw new IllegalStateException("already initialized");
         }
 
-        if (OS.IS_WINDOWS) {
-            logger.log(Level.WARNING, "CPU backend is not yet ported to Windows");
-        }
-
         previousTime = clock.getMonotonicTimeNanos();
-        previousCpuTicks = OS.IS_LINUX ? getCurrentCpuTicksLinux() : getCurrentCpuTicksWindows();
+        previousCpuTicks = OS.IS_LINUX ? getCurrentCpuTicksLinux() : getCurrentCpuTicks();
         initialized = true;
     }
 
@@ -90,7 +86,7 @@ public class CpuStatBuilder {
 
         long currentRealTime = clock.getRealTimeMillis();
         long currentTime = clock.getMonotonicTimeNanos();
-        long[] currentValues = OS.IS_LINUX ? getCurrentCpuTicksLinux() : getCurrentCpuTicksWindows();
+        long[] currentValues = OS.IS_LINUX ? getCurrentCpuTicksLinux() : getCurrentCpuTicks();
 
         double[] cpuUsage = new double[currentValues.length];
 
@@ -137,7 +133,7 @@ public class CpuStatBuilder {
         return values;
     }
 
-    private long[] getCurrentCpuTicksWindows() {
+    private long[] getCurrentCpuTicks() {
         long[] values = new long[1];
         values[0] = clock.getMonotonicTimeNanos();
         return values;

@@ -56,7 +56,7 @@ public class PortableVmIoStat {
     }
 
     public static PortableVmIoStat build(Clock clock, int pid) {
-        return PortableProcessImpl.INSTANCE.getVmIoStat(clock, pid);
+        return PortableProcessImpl.getInstance().getVmIoStat(clock, pid);
     }
 
     public long getTimeStamp() {

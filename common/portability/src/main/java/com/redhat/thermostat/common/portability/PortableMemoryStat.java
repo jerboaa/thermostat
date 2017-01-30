@@ -84,6 +84,6 @@ public class PortableMemoryStat {
     }
 
     public static PortableMemoryStat build() {
-        return PortableHostImpl.INSTANCE.getMemoryStat();
+        return PortableHostImpl.getInstance().getMemoryStat();
     }
 }

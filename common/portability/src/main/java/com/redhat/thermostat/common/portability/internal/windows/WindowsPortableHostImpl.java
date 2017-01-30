@@ -34,55 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.common.portability.internal.windows;
 
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.portability.PortableHost;
+import com.redhat.thermostat.common.portability.PortableMemoryStat;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+public class WindowsPortableHostImpl implements PortableHost {
 
-/**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
- */
-public class SysConf {
+    public static final WindowsPortableHostImpl INSTANCE = new WindowsPortableHostImpl();
 
-    private SysConf() {
-        /* do not initialize */
+    public static PortableHost createInstance() {
+        return new WindowsPortableHostImpl();
     }
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
+    private static final WindowsHelperImpl helper = WindowsHelperImpl.INSTANCE;
+
+    @Override
+    public String getHostName() {
+        return helper.getHostName();
     }
 
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
+    @Override
+    public String getOSName() {
+        return helper.getOSName();
     }
 
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
+    @Override
+    public String getOSVersion() {
+        return helper.getOSVersion();
     }
 
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
+    @Override
+    public String getCPUModel() {
+        return helper.getCPUModel();
+    }
+
+    @Override
+    public int getCPUCount() {
+        return helper.getCPUCount();
+    }
+
+    @Override
+    public long getTotalMemory() {
+        return helper.getTotalMemory();
+    }
+
+    @Override
+    public long getClockTicksPerSecond() {
+        return helper.getClockTicksPerSecond();
+    }
+
+    @Override
+    public PortableMemoryStat getMemoryStat() {
+        return new WindowsMemoryStat();
     }
 }
-

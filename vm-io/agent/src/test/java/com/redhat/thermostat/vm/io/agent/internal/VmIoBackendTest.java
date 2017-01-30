@@ -44,7 +44,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.shared.config.OS;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -71,7 +70,7 @@ public class VmIoBackendTest {
         registrar = mock(VmStatusListenerRegistrar.class);
 
         WriterID id = mock(WriterID.class);
-        ioStatBuilder = OS.IS_LINUX ? mock(LinuxVmIoStatBuilder.class) : mock(WindowsVmIoStatBuilder.class);
+        ioStatBuilder = mock(VmIoStatBuilderImpl.class);
         backend = new VmIoBackend(version, vmIoStatDao, ioStatBuilder, registrar, id);
     }
 

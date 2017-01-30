@@ -41,7 +41,6 @@ import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import com.redhat.thermostat.common.portability.PortableProcess;
 import com.redhat.thermostat.shared.config.OS;
 
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -81,7 +80,7 @@ public class WindowsProcessUserInfoBuilderTest {
     public void testSimpleBuild() {
         Assume.assumeTrue(OS.IS_WINDOWS);
         ProcessUserInfo info = new WindowsUserInfoBuilderImpl().build(FAKE_PID);
-        Assert.assertNotNull(info);
+        assertNotNull(info);
     }
 
     @Test
@@ -96,7 +95,7 @@ public class WindowsProcessUserInfoBuilderTest {
     public void testGetInfoFromBadPid() {
         final ProcessUserInfoBuilder ib = new WindowsUserInfoBuilderImpl(whelp);
         final ProcessUserInfo hi = ib.build(FAKE_PID+1);
-        Assert.assertNotSame(FAKE_USERNAME,hi.getUsername());
-        Assert.assertNotSame(FAKE_UID, hi.getUid());
+        assertNotSame(FAKE_USERNAME,hi.getUsername());
+        assertNotSame(FAKE_UID, hi.getUid());
     }
 }

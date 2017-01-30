@@ -89,12 +89,9 @@ public class VmCpuBackend extends VmPollingBackend {
             long ticksPerSecond = SysConf.getClockTicksPerSecond();
             ProcDataSource source = new ProcDataSource();
             int numCpus = getCpuCount(source);
-            ProcessStatusInfoBuilder PSIBuilder = OS.IS_LINUX ? new LinuxProcessStatusInfoBuilderImpl(source) : new WindowsProcessStatusInfoBuilderImpl();
+            ProcessStatusInfoBuilder PSIBuilder = new ProcessStatusInfoBuilderImpl();
             builder = new VmCpuStatBuilder(clock, numCpus, ticksPerSecond, PSIBuilder, id);
             this.dao = dao;
-            if (OS.IS_WINDOWS) {
-                LOGGER.log(Level.WARNING, "VmCpu backend is not yet ported to Windows");
-            }
         }
 
         @Override
@@ -110,18 +107,18 @@ public class VmCpuBackend extends VmPollingBackend {
         }
 
         private int getCpuCount(ProcDataSource dataSource) {
-            return OS.IS_WINDOWS ? getWindowsCpuCount() : getLinuxCpuCount(dataSource);
+            return OS.IS_LINUX ? getLinuxCpuCount(dataSource) : getCpuCount();
         }
 
-        private int getWindowsCpuCount() {
-            return PortableHostImpl.INSTANCE.getCPUCount();
+        private int getCpuCount() {
+            return PortableHostImpl.getInstance().getCPUCount();
         }
 
         private int getLinuxCpuCount(ProcDataSource dataSource) {
             final String KEY_PROCESSOR_ID = "processor";
             int cpuCount = 0;
             try (BufferedReader bufferedReader = new BufferedReader(dataSource.getCpuInfoReader())) {
-                String line = null;
+                String line;
                 while ((line = bufferedReader.readLine()) != null) {
                     if (line.startsWith(KEY_PROCESSOR_ID)) {
                         cpuCount++;

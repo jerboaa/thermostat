@@ -38,9 +38,7 @@ package com.redhat.thermostat.backend.system.internal.models;
 
 import com.redhat.thermostat.common.portability.ProcessUserInfoBuilder;
 import com.redhat.thermostat.common.portability.UserNameUtil;
-import com.redhat.thermostat.backend.system.internal.linux.LinuxInfoBuilderFactory;
-import com.redhat.thermostat.backend.system.internal.windows.WindowsInfoBuilderFactory;
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.backend.system.internal.InfoBuilderFactoryImpl;
 import com.redhat.thermostat.storage.core.WriterID;
 
 /**
@@ -48,7 +46,7 @@ import com.redhat.thermostat.storage.core.WriterID;
  */
 public interface InfoBuilderFactory {
 
-    static InfoBuilderFactory INSTANCE = OS.IS_UNIX ? new LinuxInfoBuilderFactory() : new WindowsInfoBuilderFactory();
+    static InfoBuilderFactory INSTANCE = new InfoBuilderFactoryImpl();
 
     public HostInfoBuilder createHostInfoBuilder(final WriterID writerID);
 
