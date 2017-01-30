@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.numa.agent.internal;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
@@ -47,6 +46,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.VmPollingAction;
 import com.redhat.thermostat.backend.VmPollingBackend;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -55,16 +55,16 @@ import com.redhat.thermostat.vm.numa.common.VmNumaStat;
 
 public class VmNumaBackend extends VmPollingBackend {
 
-    private final VmNumaBackendAction action;
     private static final Logger logger = LoggingUtils.getLogger(VmNumaBackend.class);
+    private final VmNumaBackendAction action;
 
-    public VmNumaBackend(ScheduledExecutorService executor, VmNumaDAO vmNumaDAO, Version version,
-                         VmStatusListenerRegistrar registrar, WriterID id) {
+    public VmNumaBackend(ScheduledExecutorService executor, Clock clock, NumaMapsReaderProvider readerProvider, PageSizeProvider pageSizeProvider,
+                         VmNumaDAO vmNumaDAO, Version version, VmStatusListenerRegistrar registrar, WriterID id) {
         super("VM NUMA Backend",
                 "Gathers NUMA statistics about a vm",
                 "Red Hat, Inc.",
                 version, executor, registrar);
-        this.action = new VmNumaBackendAction(id, vmNumaDAO);
+        this.action = new VmNumaBackendAction(id, clock, readerProvider, pageSizeProvider, vmNumaDAO);
         registerAction(action);
     }
 
@@ -74,12 +74,19 @@ public class VmNumaBackend extends VmPollingBackend {
     }
 
     private static class VmNumaBackendAction implements VmPollingAction {
-        private VmNumaDAO dao;
         private WriterID writerID;
+        private Clock clock;
+        private NumaMapsReaderProvider readerProvider;
+        private PageSizeProvider pageSizeProvider;
+        private VmNumaDAO dao;
         private Map<Integer, VmNumaCollector> collectors;
 
-        private VmNumaBackendAction(final WriterID writerID, VmNumaDAO dao) {
+        private VmNumaBackendAction(final WriterID writerID, Clock clock, NumaMapsReaderProvider readerProvider,
+                                    PageSizeProvider pageSizeProvider, VmNumaDAO dao) {
             this.writerID = writerID;
+            this.clock = clock;
+            this.readerProvider = readerProvider;
+            this.pageSizeProvider = pageSizeProvider;
             this.dao = dao;
             this.collectors = new HashMap<>();
         }
@@ -87,7 +94,8 @@ public class VmNumaBackend extends VmPollingBackend {
         @Override
         public void run(String vmId, int pid) {
             if (!collectors.containsKey(pid)) {
-                collectors.put(pid, new VmNumaCollector(pid));
+                VmNumaCollector collector = new VmNumaCollector(pid, clock, readerProvider, pageSizeProvider);
+                collectors.put(pid, collector);
             }
 
             try {
@@ -95,24 +103,10 @@ public class VmNumaBackend extends VmPollingBackend {
                 data.setAgentId(writerID.getWriterID());
                 data.setVmId(vmId);
                 dao.putVmNumaStat(data);
-            } catch (ParseException e) {
-                logger.log(Level.FINE, "Unable to read numa info for: " + pid);
+            } catch (IOException e) {
+                logger.log(Level.FINE, "Unable to read numa info for: " + pid, e);
             }
         }
-    }
-
-    /**
-     * VmNumaBackend requires numastat process to function
-     * @return true if numastat process exists, false otherwise
-     */
-    public boolean canRegister() {
-        try {
-            Runtime.getRuntime().exec("numastat");
-            return true;
-        } catch (IOException e) {
-            //numastat does not exist, do nothing
-        }
-        return false;
     }
 
     // For testing purposes only

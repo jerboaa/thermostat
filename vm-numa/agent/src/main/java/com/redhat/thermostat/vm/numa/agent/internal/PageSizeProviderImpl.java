@@ -34,63 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.vm.numa.agent.internal;
 
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.portability.SysConf;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-/**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
- */
-public class SysConf {
+class PageSizeProviderImpl implements PageSizeProvider {
 
-    private SysConf() {
-        /* do not initialize */
-    }
+    private static final Pattern HUGE_PAGESIZE_PATTERN = Pattern.compile("Hugepagesize:[\\s]+([\\d]+) kB");
+    private long pagesize = 4L * 1024L;
+    private long hugePagesize = 2048L * 1024L;
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
-    }
+    PageSizeProviderImpl() throws IOException {
+        pagesize = SysConf.getPageSize();
 
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
-
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    public static long getPageSize() {
-        try {
-            return Long.valueOf(sysConf("PAGESIZE"));
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
+        try (BufferedReader br = new BufferedReader(new ProcDataSource().getMemInfoReader())) {
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
+                Matcher matcher = HUGE_PAGESIZE_PATTERN.matcher(line);
+                if (matcher.matches()) {
+                    hugePagesize = Long.parseLong(matcher.group(1)) * 1024;
+                    break;
+                }
             }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
         }
+    }
+
+    @Override
+    public long getPageSize() {
+        return pagesize;
+    }
+
+    @Override
+    public long getHugePageSize() {
+        return hugePagesize;
     }
 }
-

@@ -45,7 +45,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.junit.Ignore;
+import com.redhat.thermostat.common.Clock;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
@@ -94,14 +94,9 @@ public class ActivatorTest {
 
         Activator activator = new Activator() {
             @Override
-            VmNumaBackend constructBackend(ScheduledExecutorService executor, VmNumaDAO vmNumaDAO, com.redhat.thermostat.common.Version version, VmStatusListenerRegistrar registrar, WriterID writerID) {
-                mock[0] = new VmNumaBackend(executor, vmNumaDAO, version, registrar, writerID)
-                {
-                    @Override
-                    public boolean canRegister() {
-                        return true;
-                    }
-                };
+            VmNumaBackend constructBackend(ScheduledExecutorService executor, Clock clock, NumaMapsReaderProvider readerProvider, PageSizeProvider pageSizeProvider,
+                                           VmNumaDAO vmNumaDAO, com.redhat.thermostat.common.Version version, VmStatusListenerRegistrar registrar, WriterID writerID) {
+                mock[0] = new VmNumaBackend(executor, clock, readerProvider, pageSizeProvider, vmNumaDAO, version, registrar, writerID);
                 return mock[0];
             }
         };

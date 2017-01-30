@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.numa.agent.internal;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
@@ -47,10 +48,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.text.ParseException;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.common.Clock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -67,12 +70,24 @@ public class VmNumaBackendTest {
     private VmNumaBackend backend;
     private VmNumaDAO vmNumaDAO;
     private ScheduledExecutorService executor;
+    private Clock clock;
+    private NumaMapsReaderProvider readerProvider;
+    private PageSizeProvider pageSizeProvider;
     private VmStatusListenerRegistrar registrar;
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         executor = mock(ScheduledExecutorService.class);
         vmNumaDAO = mock(VmNumaDAO.class);
+        clock = mock(Clock.class);
+        when(clock.getRealTimeMillis()).thenReturn(100L);
+
+        readerProvider = mock(NumaMapsReaderProvider.class);
+        when(readerProvider.createReader(anyInt())).thenReturn(mock(BufferedReader.class));
+
+        pageSizeProvider = mock(PageSizeProvider.class);
+        when(pageSizeProvider.getPageSize()).thenReturn(4L * 1024L);
+        when(pageSizeProvider.getHugePageSize()).thenReturn(2048L * 1024L);
 
         Version version = mock(Version.class);
         when(version.getVersionNumber()).thenReturn("0.0.0");
@@ -81,7 +96,7 @@ public class VmNumaBackendTest {
 
         WriterID id = mock(WriterID.class);
         when(id.getWriterID()).thenReturn("id");
-        backend = new VmNumaBackend(executor, vmNumaDAO, version, registrar, id);
+        backend = new VmNumaBackend(executor, clock, readerProvider, pageSizeProvider, vmNumaDAO, version, registrar, id);
     }
 
     @Test
@@ -126,7 +141,7 @@ public class VmNumaBackendTest {
     }
 
     @Test
-    public void testStart() throws ParseException {
+    public void testStart() throws IOException {
         mockCollector(backend, 0);
         mockCollector(backend, 1);
 
@@ -152,7 +167,7 @@ public class VmNumaBackendTest {
         verifyNoMoreInteractions(vmNumaDAO);
     }
 
-    private void mockCollector(VmNumaBackend backend, int pid) throws ParseException {
+    private void mockCollector(VmNumaBackend backend, int pid) throws IOException {
         VmNumaCollector collector = mock(VmNumaCollector.class);
         when(collector.collect()).thenReturn(mock(VmNumaStat.class));
         backend.setVmNumaBackendCollector(pid, collector);

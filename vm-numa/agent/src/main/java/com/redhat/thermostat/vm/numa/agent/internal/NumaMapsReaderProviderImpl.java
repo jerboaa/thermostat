@@ -34,63 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.portability;
+package com.redhat.thermostat.vm.numa.agent.internal;
 
-import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.common.portability.linux.ProcDataSource;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
-/**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
- */
-public class SysConf {
+class NumaMapsReaderProviderImpl implements NumaMapsReaderProvider {
 
-    private SysConf() {
-        /* do not initialize */
+    private final ProcDataSource procDataSource;
+
+    NumaMapsReaderProviderImpl() {
+        this(new ProcDataSource());
     }
 
-    public static long getClockTicksPerSecond() {
-        return OS.IS_LINUX ? getLinuxClockTicksPerSecond() : getWindowsClockTicksPerSecond();
+    // testing hook only
+    NumaMapsReaderProviderImpl(ProcDataSource procDataSource) {
+        this.procDataSource = procDataSource;
     }
 
-    private static long getWindowsClockTicksPerSecond() {
-        return PortableHostImpl.getInstance().getClockTicksPerSecond();
-    }
-
-    public static long getLinuxClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    public static long getPageSize() {
-        try {
-            return Long.valueOf(sysConf("PAGESIZE"));
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
-
-    private static String sysConf(String arg) {
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-            return null;
-        }
+    @Override
+    public BufferedReader createReader(int forPid) throws IOException {
+        return new BufferedReader(procDataSource.getNumaMapsReader(forPid));
     }
 }
-

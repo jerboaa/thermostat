@@ -44,9 +44,15 @@ import org.junit.Test;
 public class SysConfTest {
 
     @Test
-    public void test() {
+    public void testTicksPerSecond() {
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
         assertTrue(ticksPerSecond >= 1);
+    }
+
+    @Test
+    public void testPageSize() {
+        long pagesize = SysConf.getPageSize();
+        assertTrue(pagesize >= 1);
     }
 }
 

@@ -60,6 +60,7 @@ public class ProcDataSource {
     private static final String PID_IO_FILE = "/proc/${pid}/io";
     private static final String PID_STAT_FILE = "/proc/${pid}/stat";
     private static final String PID_STATUS_FILE = "/proc/${pid}/status";
+    private static final String PID_NUMA_MAPS_FILE = "/proc/${pid}/numa_maps";
 
     /**
      * Returns a reader for /proc/cpuinfo
@@ -109,12 +110,19 @@ public class ProcDataSource {
     public Reader getStatReader(int pid) throws IOException {
         return new FileReader(getPidFile(PID_STAT_FILE, pid));
     }
-    
+
     /**
      * Returns a reader for /proc/$PID/status
      */
     public Reader getStatusReader(int pid) throws IOException {
         return new FileReader(getPidFile(PID_STATUS_FILE, pid));
+    }
+
+    /**
+     * Returns a reader for /proc/$PID/numa_maps
+     */
+    public Reader getNumaMapsReader(int pid) throws IOException {
+        return new FileReader(getPidFile(PID_NUMA_MAPS_FILE, pid));
     }
 
     private String getPidFile(String fileName, int pid) {

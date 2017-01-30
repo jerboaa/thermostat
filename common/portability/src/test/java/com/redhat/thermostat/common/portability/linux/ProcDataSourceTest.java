@@ -109,5 +109,13 @@ public class ProcDataSourceTest {
         Reader r = new ProcDataSource().getStatusReader(pid);
         assertNotNull(r);
     }
+
+    @Test
+    public void testNumaMapsReader() throws Exception {
+        Assume.assumeTrue(OS.IS_LINUX);
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getNumaMapsReader(pid);
+        assertNotNull(r);
+    }
 }
 

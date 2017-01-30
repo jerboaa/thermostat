@@ -36,15 +36,18 @@
 
 package com.redhat.thermostat.vm.numa.agent.internal;
 
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.ParseException;
+import java.io.StringReader;
 
-import org.junit.Ignore;
+import com.redhat.thermostat.common.Clock;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.vm.numa.common.VmNumaNodeStat;
@@ -52,105 +55,73 @@ import com.redhat.thermostat.vm.numa.common.VmNumaStat;
 
 public class VmNumaCollectorTest {
 
+    private static final int PID = 100;
+
     private VmNumaCollector collector;
 
-    @Test
-    public void testCollectSingleNodeStat() throws ParseException {
-        final String input = "\n" +
-                "Per-node process memory usage (in MBs) for PID 16816 (java)\n" +
-                "                           Node 0           Total\n" +
-                "                  --------------- ---------------\n" +
-                "Huge                         0.00            0.00\n" +
-                "Heap                         0.05            0.05\n" +
-                "Stack                        6.27            6.27\n" +
-                "Private                    385.07          385.07\n" +
-                "----------------  --------------- ---------------\n" +
-                "Total                      391.39          391.39";
-        setupCollector(input);
+    private Clock clock;
+    private NumaMapsReaderProvider readerProvider;
+    private PageSizeProvider pageSizeProvider;
 
-        VmNumaStat stat = collector.collect();
-        VmNumaNodeStat[] stats = stat.getVmNodeStats();
-        assertTrue(stats.length == 1);
-        VmNumaNodeStat nodeStat = stats[0];
-        assertTrue(nodeStat.getNode() == 0);
-        assertTrue(nodeStat.getHugeMemory() == 0);
-        assertTrue(nodeStat.getHeapMemory() == 0.05d);
-        assertTrue(nodeStat.getStackMemory() == 6.27d);
-        assertTrue(nodeStat.getPrivateMemory() == 385.07d);
+    @Before
+    public void setup() {
+        clock = mock(Clock.class);
+        when(clock.getRealTimeMillis()).thenReturn(100L);
+
+        pageSizeProvider = mock(PageSizeProvider.class);
+        when(pageSizeProvider.getHugePageSize()).thenReturn(2048L * 1024L);
+        when(pageSizeProvider.getPageSize()).thenReturn(4L * 1024L);
     }
 
     @Test
-    public void testCollectMultipleNodeStat() throws ParseException {
-        final String input = "\n" +
-                "Per-node process memory usage (in MBs) for PID 3 (ksoftirqd/0)\n" +
-                "                           Node 0          Node 1           Total\n" +
-                "                  --------------- --------------- ---------------\n" +
-                "Huge                         0.00            0.00            0.00\n" +
-                "Heap                         0.00            0.00            0.00\n" +
-                "Stack                        4.00            1.00            5.00\n" +
-                "Private                      5.00            2.00            7.00\n" +
-                "----------------  --------------- --------------- ---------------\n" +
-                "Total                        9.00            3.00           12.00";
+    public void testCollectSingleNodeStat() throws IOException {
+        readerProvider = mock(NumaMapsReaderProvider.class);
+        when(readerProvider.createReader(anyInt())).thenReturn(new BufferedReader(new StringReader(
+                "017ec000 default heap anon=1861 dirty=1796 swapcache=65 active=1667 N0=1861 kernelpagesize_kB=4\n" +
+                "e09ec000 default stack anon=1776 dirty=1776 swapcache=65 active=1667 N0=1776 kernelpagesize_kB=4\n" +
+                "d1200000 default anon=45680 dirty=45680 active=43669 N0=45680 kernelpagesize_kB=4\n" +
+                "d0800000 default huge anon=456 dirty=456 active=43669 N0=456 kernelpagesize_kB=4\n"
+        )));
+        collector = new VmNumaCollector(PID, clock, readerProvider, pageSizeProvider);
 
-        setupCollector(input);
+        VmNumaStat stat = collector.collect();
+        VmNumaNodeStat[] stats = stat.getVmNodeStats();
+        assertThat(stats.length, is(1));
+        VmNumaNodeStat nodeStat = stats[0];
+        assertThat(nodeStat.getNode(), is(0));
+        assertThat(nodeStat.getHugeMemory(), is(912.0d));
+        assertThat(nodeStat.getHeapMemory(), is(7.26953125d));
+        assertThat(nodeStat.getStackMemory(), is(6.9375d));
+        assertThat(nodeStat.getPrivateMemory(), is(178.4375d));
+    }
+
+    @Test
+    public void testCollectMultipleNodeStat() throws IOException {
+        readerProvider = mock(NumaMapsReaderProvider.class);
+        when(readerProvider.createReader(anyInt())).thenReturn(new BufferedReader(new StringReader(
+                "017ec000 default heap anon=1861 dirty=1796 swapcache=65 active=1667 N0=1861 kernelpagesize_kB=4\n" +
+                "d1200000 default anon=45680 dirty=45680 active=43669 N1=45680 kernelpagesize_kB=4\n"
+        )));
+        collector = new VmNumaCollector(PID, clock, readerProvider, pageSizeProvider);
 
         VmNumaStat stat = collector.collect();
         VmNumaNodeStat[] stats = stat.getVmNodeStats();
 
-        assertTrue(stats.length == 2);
+        assertThat(stats.length, is(2));
 
         VmNumaNodeStat nodeStat1 = stats[0];
-        assertTrue(nodeStat1.getNode() == 0);
-        assertTrue(nodeStat1.getHugeMemory() == 0d);
-        assertTrue(nodeStat1.getHeapMemory() == 0d);
-        assertTrue(nodeStat1.getStackMemory() == 4d);
-        assertTrue(nodeStat1.getPrivateMemory() == 5d);
+        assertThat(nodeStat1.getNode(), is(0));
+        assertThat(nodeStat1.getHugeMemory(), is (0.0d));
+        assertThat(nodeStat1.getHeapMemory(), is(7.26953125d));
+        assertThat(nodeStat1.getStackMemory(), is(0.0d));
+        assertThat(nodeStat1.getPrivateMemory(), is(0.0d));
 
         VmNumaNodeStat nodeStat2 = stats[1];
-        assertTrue(nodeStat2.getNode() == 1);
-        assertTrue(nodeStat2.getHugeMemory() == 0d);
-        assertTrue(nodeStat2.getHeapMemory() == 0d);
-        assertTrue(nodeStat2.getStackMemory() == 1d);
-        assertTrue(nodeStat2.getPrivateMemory() == 2d);
-    }
-
-    private void setupCollector(final String input) {
-        collector = new VmNumaCollector(0) {
-            @Override
-            protected Process startProcess() {
-                return new Process() {
-                    @Override
-                    public OutputStream getOutputStream() {
-                        return null;
-                    }
-
-                    @Override
-                    public InputStream getInputStream() {
-                        return new ByteArrayInputStream(input.getBytes());
-                    }
-
-                    @Override
-                    public InputStream getErrorStream() {
-                        return null;
-                    }
-
-                    @Override
-                    public int waitFor() throws InterruptedException {
-                        return 0;
-                    }
-
-                    @Override
-                    public int exitValue() {
-                        return 0;
-                    }
-
-                    @Override
-                    public void destroy() {
-                        //Do nothing
-                    }
-                };
-            }
-        };
+        assertThat(nodeStat2.getNode(), is(1));
+        assertThat(nodeStat2.getHugeMemory(), is(0.0d));
+        assertThat(nodeStat2.getHeapMemory(), is(0.0d));
+        assertThat(nodeStat2.getStackMemory(), is(0.0d));
+        assertThat(nodeStat2.getPrivateMemory(), is(178.4375d));
     }
 
 }

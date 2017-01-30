@@ -36,9 +36,15 @@
 
 package com.redhat.thermostat.vm.numa.agent.internal;
 
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -53,6 +59,8 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.numa.common.VmNumaDAO;
 
 public class Activator implements BundleActivator {
+
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
 
     private ScheduledExecutorService executor;
     private MultipleServiceTracker tracker;
@@ -75,15 +83,20 @@ public class Activator implements BundleActivator {
                 VmNumaDAO vmNumaDAO = services.get(VmNumaDAO.class);
                 Version version = new Version(context.getBundle());
                 WriterID writerID = services.get(WriterID.class);
-                backend = constructBackend(executor, vmNumaDAO, version, registrar, writerID);
-                if (backend.canRegister()) {
+                Clock clock = new SystemClock();
+                try {
+                    PageSizeProvider pageSizeProvider = new PageSizeProviderImpl();
+                    NumaMapsReaderProvider readerProvider = new NumaMapsReaderProviderImpl();
+                    backend = constructBackend(executor, clock, readerProvider, pageSizeProvider, vmNumaDAO, version, registrar, writerID);
                     reg = context.registerService(Backend.class, backend, null);
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Unexpected exception retrieving Linux page sizes. NUMA counts will be disabled", e);
                 }
             }
 
             @Override
             public void dependenciesUnavailable() {
-                if (backend.isActive()) {
+                if (backend != null && backend.isActive()) {
                     backend.deactivate();
                 }
                 if (reg != null) {
@@ -93,7 +106,6 @@ public class Activator implements BundleActivator {
         });
 
         tracker.open();
-
     }
 
     @Override
@@ -107,7 +119,8 @@ public class Activator implements BundleActivator {
     }
 
     //Package private for testing
-    VmNumaBackend constructBackend(ScheduledExecutorService executor, VmNumaDAO vmNumaDAO, Version version, VmStatusListenerRegistrar registrar, WriterID writerID) {
-        return new VmNumaBackend(executor, vmNumaDAO, version, registrar, writerID);
+    VmNumaBackend constructBackend(ScheduledExecutorService executor, Clock clock, NumaMapsReaderProvider readerProvider, PageSizeProvider pageSizeProvider,
+                                   VmNumaDAO vmNumaDAO, Version version, VmStatusListenerRegistrar registrar, WriterID writerID) {
+        return new VmNumaBackend(executor, clock, readerProvider, pageSizeProvider, vmNumaDAO, version, registrar, writerID);
     }
 }
