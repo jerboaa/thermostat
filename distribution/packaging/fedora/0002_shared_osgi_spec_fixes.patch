@@ -571,9 +571,9 @@ diff --git a/host-overview/client-swing/pom.xml b/host-overview/client-swing/pom
 diff --git a/keyring/pom.xml b/keyring/pom.xml
 --- a/keyring/pom.xml
 +++ b/keyring/pom.xml
-@@ -188,14 +188,8 @@
+@@ -184,14 +184,8 @@
      </dependency>
-     
+
      <dependency>
 -      <groupId>org.osgi</groupId>
 -      <artifactId>org.osgi.core</artifactId>
@@ -662,7 +662,7 @@ diff --git a/laf-utils/pom.xml b/laf-utils/pom.xml
 +++ b/laf-utils/pom.xml
 @@ -155,14 +155,8 @@
      </dependency>
-     
+
      <dependency>
 -      <groupId>org.osgi</groupId>
 -      <artifactId>org.osgi.core</artifactId>
