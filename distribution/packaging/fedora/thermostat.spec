@@ -53,7 +53,7 @@ __DEFAULT_RELEASE__ 7
   # apache-commons-logging
   %global logging_bundle_version     1.2.0
   %global hc_core_bundle_version     4.4.6
-  %global hc_client_bundle_version   4.5.2
+  %global hc_client_bundle_version   4.5.3
   %global gson_bundle_version        2.3.1
   %global lucene_analysis_core_bsn   org.apache.lucene.analyzers-common
   # The javax.servlet bundle version used by the
