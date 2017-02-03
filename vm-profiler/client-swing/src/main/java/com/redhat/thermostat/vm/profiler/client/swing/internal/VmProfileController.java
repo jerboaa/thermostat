@@ -178,7 +178,15 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                         break;
                     case VISIBLE:
                         restoreState();
-                        view.setViewControlsEnabled(isAlive());
+                        boolean isAlive = isAlive();
+                        view.setViewControlsEnabled(isAlive);
+                        // When the VM we've selected is dead then the overlay would
+                        // be empty and the table wouldn't show past results 
+                        // if we didn't load latest profiling data. For live
+                        // JVMs we load them after each stopped profiling event.
+                        if (!isAlive) {
+                            loadLatestProfileData();
+                        }
                         updater.start();
                         break;
                     default:
