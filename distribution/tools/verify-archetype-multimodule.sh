@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# Copyright 2012-2017 Red Hat, Inc.
+#
 # This file is part of Thermostat.
 #
 # Thermostat is free software; you can redistribute it and/or modify
