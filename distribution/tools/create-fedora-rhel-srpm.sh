@@ -34,6 +34,7 @@
 # library, but you are not obligated to do so.  If you do not wish
 # to do so, delete this exception statement from your version.
 #
+
 #
 # Usage:
 #  ./create-fedora-rhel-srpm.sh [RPM_RELEASE] [NON_BOOT_STRAP_BUILD] [HG_USER]
