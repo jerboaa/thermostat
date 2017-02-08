@@ -397,7 +397,7 @@
                3.6+ is JDK 9 compatible. See:
                https://cwiki.apache.org/confluence/display/MAVEN/Java+9+-+Jigsaw
            -->
-          <version>3.6.0</version>
+          <version>3.6.1</version>
           <configuration>
             <fork>true</fork>
             <meminitial>128m</meminitial>
