@@ -53,6 +53,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Map;
 
@@ -167,7 +170,7 @@ public class StoragePopulatorCommandTest {
     @Test
     public void testCommandFailsWithInvalidPopulator() throws CommandException {
         final File invalidConfigFile = new File(
-                getClass().getResource("/invalid-config.json").getFile());
+                decodeFilePath(getClass().getResource("/invalid-config.json")));
         command = new StoragePopulatorCommand() {
             @Override
             File getConfigFile(Arguments args) {
@@ -183,8 +186,8 @@ public class StoragePopulatorCommandTest {
 
     @Test
     public void testCommandPopulatesDatabase() throws CommandException {
-        final File validConfigFile = new File(
-                getClass().getResource("/valid-config.json").getFile());
+        final File validConfigFile = new File(decodeFilePath(
+                getClass().getResource("/valid-config.json")));
         command = new StoragePopulatorCommand() {
             @Override
             File getConfigFile(Arguments args) {
@@ -249,5 +252,15 @@ public class StoragePopulatorCommandTest {
         command.bindNetworkInfoDAO(networkInfoDAO);
         threadDao = mock(ThreadDao.class);
         command.bindThreadDAO(threadDao);
+    }
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }

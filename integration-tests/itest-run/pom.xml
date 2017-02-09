@@ -86,7 +86,7 @@
         <configuration>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <argLine>
-            -Djava.security.auth.login.config=${thermostat.home}/etc/thermostat_jaas.conf
+            -Djava.security.auth.login.config="${thermostat.home}/etc/thermostat_jaas.conf"
             ${coverageAgent}
           </argLine>
           <skip>true</skip>

@@ -45,6 +45,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
@@ -82,8 +85,8 @@ public class SSLContextFactoryTest {
     @Test
     public void verifySetsUpServerContextWithProperKeyMaterial()
             throws Exception {
-        File keystoreFile = new File(this.getClass()
-                .getResource("/cmdChanServer.keystore").getFile());
+        File keystoreFile = new File(decodeFilePath(this.getClass()
+                .getResource("/cmdChanServer.keystore")));
 
         SSLConfiguration sslConf = mock(SSLConfiguration.class);
         when(sslConf.getKeystoreFile()).thenReturn(
@@ -127,8 +130,8 @@ public class SSLContextFactoryTest {
     @Test
     public void verifySetsUpClientContextWithProperTrustManager()
             throws Exception {
-        File keystoreFile = new File(this.getClass()
-                .getResource("/cmdChanServer.keystore").getFile());
+        File keystoreFile = new File(decodeFilePath(this.getClass()
+                .getResource("/cmdChanServer.keystore")));
 
         SSLConfiguration sslConf = mock(SSLConfiguration.class);
         when(sslConf.getKeystoreFile()).thenReturn(
@@ -213,6 +216,15 @@ public class SSLContextFactoryTest {
             // pass
         }
     }
-    
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
+    }
 }
 

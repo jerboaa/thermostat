@@ -45,6 +45,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 
 import com.redhat.thermostat.testutils.TestUtils;
 import org.junit.Before;
@@ -57,9 +60,9 @@ public class SSLConfigurationImplTest {
     private SSLConfigurationImpl sslConf;
 
     @Before
-    public void setUp() {
+    public void setUp() throws UnsupportedEncodingException {
         sslConf = new SSLConfigurationImpl(null);
-        File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
+        File clientProps = new File(decodeFilePath(this.getClass().getResource("/client.properties")));
         sslConf.initProperties(clientProps);
     }
 
@@ -108,7 +111,7 @@ public class SSLConfigurationImplTest {
      */
     @Test
     public void canInitFromSystemHomeConfig() {
-        File systemEtc = new File(this.getClass().getResource("/system_th_home").getFile());
+        File systemEtc = new File(decodeFilePath(this.getClass().getResource("/system_th_home")));
         CommonPaths paths = mock(CommonPaths.class);
         when(paths.getSystemConfigurationDirectory()).thenReturn(systemEtc);
         File userEtc = new File("/thermostat/not-existing-foo");
@@ -142,10 +145,10 @@ public class SSLConfigurationImplTest {
      */
     @Test
     public void userHomeConfigOverridesSystem() {
-        File systemEtc = new File(this.getClass().getResource("/system_th_home").getFile());
+        File systemEtc = new File(decodeFilePath(this.getClass().getResource("/system_th_home")));
         CommonPaths paths = mock(CommonPaths.class);
         when(paths.getSystemConfigurationDirectory()).thenReturn(systemEtc);
-        File userEtc = new File(this.getClass().getResource("/user_th_home").getFile());
+        File userEtc = new File(decodeFilePath(this.getClass().getResource("/user_th_home")));
         when(paths.getUserConfigurationDirectory()).thenReturn(userEtc);
         
         // assert preconditions
@@ -181,7 +184,7 @@ public class SSLConfigurationImplTest {
         File systemEtc = new File("/thermostat/not-existing-foo");
         CommonPaths paths = mock(CommonPaths.class);
         when(paths.getSystemConfigurationDirectory()).thenReturn(systemEtc);
-        File userEtc = new File(this.getClass().getResource("/user_th_home").getFile());
+        File userEtc = new File(decodeFilePath(this.getClass().getResource("/user_th_home")));
         when(paths.getUserConfigurationDirectory()).thenReturn(userEtc);
         
         // assert preconditions
@@ -237,6 +240,16 @@ public class SSLConfigurationImplTest {
         assertFalse(config.enableForBackingStorage());
         assertFalse(config.enableForCmdChannel());
         assertFalse(config.disableHostnameVerification());
+    }
+    
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }
 

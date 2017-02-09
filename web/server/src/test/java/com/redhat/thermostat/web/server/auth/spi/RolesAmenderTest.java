@@ -42,7 +42,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -68,8 +70,8 @@ public class RolesAmenderTest {
     
     @Before
     public void setup() {
-        URL testFile = this.getClass().getResource("/test_roles.properties");
-        validFile = testFile.getFile();
+        String testFile = decodeFilePath(this.getClass().getResource("/test_roles.properties"));
+        validFile = testFile;
         Set<Object> users = new HashSet<>();
         users.add("user1");
         users.add("user2");
@@ -202,7 +204,7 @@ public class RolesAmenderTest {
     
     @Test
     public void parseFailsIfUserInRecursiveRole() {
-        String brokenFile = this.getClass().getResource("/broken_test_roles.properties").getFile();
+        String brokenFile = decodeFilePath(this.getClass().getResource("/broken_test_roles.properties"));
         try {
             rolesAmender = new RolesAmender(brokenFile, validUsers);
             fail("Should not parse");
@@ -214,7 +216,7 @@ public class RolesAmenderTest {
     
     @Test
     public void parseFailsIfNotAnyUserMemberOfRecursiveRole() {
-        String brokenFile = this.getClass().getResource("/broken_test_roles2.properties").getFile();
+        String brokenFile = decodeFilePath(this.getClass().getResource("/broken_test_roles2.properties"));
         try {
             rolesAmender = new RolesAmender(brokenFile, validUsers);
             fail("Should not parse");
@@ -262,6 +264,16 @@ public class RolesAmenderTest {
         assertEquals(true, info.getMemberUsers().contains("testuser"));
         roleMembers.add("testuser");
         assertEquals(1, info.getMemberUsers().size());
+    }
+    
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }
 

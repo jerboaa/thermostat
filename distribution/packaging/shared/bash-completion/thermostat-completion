@@ -4,14 +4,14 @@ _thermostat()
     local cur prev opts base
     local thermostat_install_dir thermostat_logging_opts
     thermostat_install_dir="${thermostat.home}"
-    thermostat_logging_opts="-J-Djava.util.logging.config.file=${thermostat_install_dir}/etc/bash-complete-logging.properties"
+    thermostat_logging_opts="-J-Djava.util.logging.config.file=\"${thermostat_install_dir}/etc/bash-complete-logging.properties\""
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     # Thermostat Options
     # All valid commands and options are prefixed with a single space
-    opts="$(${thermostat_install_dir}/bin/thermostat ${thermostat_logging_opts} help | grep '^ ' | cut -d " " -f 2 | tr '\n' ' ')"
+    opts="$( "${thermostat_install_dir}/bin/thermostat" "${thermostat_logging_opts}" help | grep '^ ' | cut -d " " -f 2 | tr '\n' ' ')"
 
     COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
     return 0

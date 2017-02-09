@@ -41,7 +41,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,8 +59,8 @@ public class PropertiesUserValidatorTest {
 
     @Before
     public void setup() {
-        URL testFile = this.getClass().getResource("/test_users.properties");
-        validator = new PropertiesUserValidator(testFile.getFile());   
+        String testFile = decodeFilePath(this.getClass().getResource("/test_users.properties"));
+        validator = new PropertiesUserValidator(testFile);   
     }
     
     @After
@@ -144,6 +146,16 @@ public class PropertiesUserValidatorTest {
         assertTrue(expectedSet.equals(actual));
         expectedSet.remove("user1");
         assertFalse(expectedSet.equals(actual));
+    }
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }
 

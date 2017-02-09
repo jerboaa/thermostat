@@ -40,6 +40,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 
 import org.junit.Test;
 
@@ -67,9 +70,19 @@ public class KeyStoreProviderTest {
     
     @Test
     public void existingFileWithCorrectPasswordWorks() throws SslInitException {
-        File keystore = new File(this.getClass()
-                .getResource("/test_ca.keystore").getFile());
+        File keystore = new File(decodeFilePath(this.getClass()
+                .getResource("/test_ca.keystore")));
         assertNotNull("Should have been able to retrieve and load keystore", KeyStoreProvider.getKeyStore(keystore, "testpassword"));
+    }
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }
 

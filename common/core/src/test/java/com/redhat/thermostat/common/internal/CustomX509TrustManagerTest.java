@@ -42,6 +42,9 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -90,8 +93,8 @@ public class CustomX509TrustManagerTest {
 
     @Test
     public void testLoadEmptyTrustStoreForOur() throws SslInitException {
-        File emptyKeyStore = new File(this.getClass()
-                .getResource("/empty.keystore").getFile());
+        File emptyKeyStore = new File(decodeFilePath(this.getClass()
+                .getResource("/empty.keystore")));
         X509TrustManager tm = new CustomX509TrustManager(null, emptyKeyStore,
                 null);
         assertEquals(0, tm.getAcceptedIssuers().length);
@@ -111,8 +114,8 @@ public class CustomX509TrustManagerTest {
 
     @Test
     public void testLoadEmptyTrustStoreForOurDefaultAsUsual() throws Exception {
-        File emptyKeyStore = new File(this.getClass()
-                .getResource("/empty.keystore").getFile());
+        File emptyKeyStore = new File(decodeFilePath(this.getClass()
+                .getResource("/empty.keystore")));
         X509TrustManager tm = new CustomX509TrustManager(emptyKeyStore, null);
         // Default list should not be null
         assertNotNull(tm.getAcceptedIssuers());
@@ -125,8 +128,8 @@ public class CustomX509TrustManagerTest {
     
     @Test
     public void canGetCustomCaCertFromOurTrustManager() throws SslInitException {
-        File ourKeyStore = new File(this.getClass()
-                .getResource("/test_ca.keystore").getFile());
+        File ourKeyStore = new File(decodeFilePath(this.getClass()
+                .getResource("/test_ca.keystore")));
         X509TrustManager tm = new CustomX509TrustManager((X509TrustManager)null, ourKeyStore, "testpassword");
         // keystore contains private key of itself + imported CA cert
         assertEquals(2, tm.getAcceptedIssuers().length);
@@ -136,6 +139,16 @@ public class CustomX509TrustManagerTest {
                 .getIssuerX500Principal().getName());
         assertEquals(issuerNameKeystoreCA, tm.getAcceptedIssuers()[1]
                 .getIssuerX500Principal().getName());
+    }
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 
 }

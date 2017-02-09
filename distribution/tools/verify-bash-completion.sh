@@ -41,7 +41,7 @@ set -e
 
 errors=0
 
-TARGET="$(dirname $0)/../target"
+TARGET="$(dirname "$0")/../target"
 
 # Join the supplied arguments into a single string using the specified separator
 # $1 : the separator
@@ -65,9 +65,10 @@ function __init {
     echo "Exporting custom home..."
     export USER_THERMOSTAT_HOME
     echo "Checking that help works..."
-    ${TARGET}/image/bin/thermostat help >/dev/null
+    "${TARGET}/image/bin/thermostat" help >/dev/null
 
     completion_file="${TARGET}/packaging/bash-completion/thermostat-completion"
+    echo "'$completion_file'"
     source "${completion_file}"
 }
 
@@ -98,12 +99,12 @@ function __check_completion {
     expected=$2
     expected_pretty=$(echo $expected | __prettify)
     # clean up (cygwin doesn't seem to delete redirect files if no output)
-    rm -f ${TARGET}/completion.actual
+    rm -f "${TARGET}/completion.actual"
     # save completions and any other output separately and check both
-    __find_completion $input >${TARGET}/completion.actual 2>${TARGET}/completion.output
-    actual=$(<${TARGET}/completion.actual)
+    __find_completion $input > "${TARGET}/completion.actual" 2> "${TARGET}/completion.output"
+    actual=$(<"${TARGET}/completion.actual")
     actual_pretty=$(echo "$actual" | __prettify)
-    output=$(<${TARGET}/completion.output)
+    output=$(<"${TARGET}/completion.output")
     if [[ $actual == $expected && -z $output ]] ; then
         echo "[OK]   '$input' => '$actual_pretty'"
     elif [[ -z $output ]]; then

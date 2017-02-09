@@ -90,16 +90,16 @@ if [ $CYGWIN_MODE -eq 1 ]; then
 	CONFIG_FILE_ARG="-DipcConfigFile=`cygpath -w ${CONFIG_FILE}`"
 	# Drop permissions, if root
 	if [ "$(id -u)" -eq 0 ]; then
-	  exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} ${LOGGING_ARGS} -cp `cygpath -w -p ${IPC_CLASSPATH}` ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}"
+	  exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} "${LOGGING_ARGS[@]}" -cp "`cygpath -w -p ${IPC_CLASSPATH}`" ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}"
 	else
-	  exec ${JAVA} "${CONFIG_FILE_ARG}" ${LOGGING_ARGS} -cp "`cygpath -w -p ${IPC_CLASSPATH}`" ${DEBUG_OPTS} "${CMD_CHANNEL_CLASS}" "${HOSTNAME}" "${PORT}"
+	  exec ${JAVA} "${CONFIG_FILE_ARG}" "${LOGGING_ARGS[@]}" -cp "`cygpath -w -p ${IPC_CLASSPATH}`" ${DEBUG_OPTS} "${CMD_CHANNEL_CLASS}" "${HOSTNAME}" "${PORT}"
 	fi
 else
 	CONFIG_FILE_ARG="-DipcConfigFile=${CONFIG_FILE}"
 	# Drop permissions, if root
 	if [ "$(id -u)" -eq 0 ]; then
-	  exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} ${LOGGING_ARGS} -cp ${IPC_CLASSPATH} ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}"
+	  exec /bin/su -s /bin/bash -c "${JAVA} ${CONFIG_FILE_ARG} "${LOGGING_ARGS[@]}" -cp "${IPC_CLASSPATH}" ${DEBUG_OPTS} ${CMD_CHANNEL_CLASS} ${HOSTNAME} ${PORT}" "${SCRIPT_OWNER}"
 	else
-	  exec ${JAVA} "${CONFIG_FILE_ARG}" ${LOGGING_ARGS} -cp ${IPC_CLASSPATH} ${DEBUG_OPTS} "${CMD_CHANNEL_CLASS}" "${HOSTNAME}" "${PORT}"
+	  exec ${JAVA} "${CONFIG_FILE_ARG}" "${LOGGING_ARGS[@]}" -cp "${IPC_CLASSPATH}" ${DEBUG_OPTS} "${CMD_CHANNEL_CLASS}" "${HOSTNAME}" "${PORT}"
 	fi
 fi

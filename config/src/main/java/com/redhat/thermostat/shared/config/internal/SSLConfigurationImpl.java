@@ -115,6 +115,7 @@ public class SSLConfigurationImpl implements SSLConfiguration {
         } catch (IOException | IllegalArgumentException e) {
             // Could not load ssl properties file. This is fine as it's
             // an optional config.
+            logger.log(Level.FINEST, "Caught exception loading properties. Diagnostics follow.", e);
         }
     }
 

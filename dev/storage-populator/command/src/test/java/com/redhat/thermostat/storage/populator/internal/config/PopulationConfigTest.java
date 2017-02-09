@@ -42,6 +42,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -66,7 +69,8 @@ public class PopulationConfigTest {
 
     @Test
     public void canParseFromFile() throws IOException {
-        String json = new String(Files.readAllBytes(new File(getClass().getResource("/testconfig").getFile()).toPath()));
+        File testConfig = new File(decodeFilePath(getClass().getResource("/testconfig")));
+        String json = new String(Files.readAllBytes(testConfig.toPath()));
         PopulationConfig config = PopulationConfig.parseFromJsonString(json);
         ConfigItem item = config.getConfig("agent-config").getProperty("item");
         assertNotNull(item);
@@ -220,5 +224,15 @@ public class PopulationConfigTest {
         List<Relationship> rels = buildGoodRels();
         PopulationConfig pc = PopulationConfig.createFromLists(records, rels);
         pc.getConfigsTopologicallySorted();
+    }
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }

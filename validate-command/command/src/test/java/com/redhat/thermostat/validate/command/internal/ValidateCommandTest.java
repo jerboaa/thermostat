@@ -44,6 +44,9 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -91,7 +94,7 @@ public class ValidateCommandTest {
     
     @Test
     public void validateIncorrectFile() throws CommandException, MissingArgumentException {
-        fileName = PluginValidator.class.getResource("/incorrectPlugin.xml").getPath().toString();
+        fileName = decodeFilePath(PluginValidator.class.getResource("/incorrectPlugin.xml"));
 
         when(mockArgs.getNonOptionArguments()).thenReturn(Collections.singletonList(fileName));
 
@@ -105,7 +108,7 @@ public class ValidateCommandTest {
 
     @Test
     public void validateCorrectFile() throws CommandException, MissingArgumentException {
-        fileName = PluginValidator.class.getResource("/correctPlugin.xml").getPath().toString();
+        fileName = decodeFilePath(PluginValidator.class.getResource("/correctPlugin.xml"));
 
         when(mockArgs.getNonOptionArguments()).thenReturn(Collections.singletonList(fileName));
 
@@ -186,6 +189,16 @@ public class ValidateCommandTest {
         builder.append("Validation failed for file ").append(fileName).append(LS).append(LS);
 
         return builder.toString();
+    }
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 
 }

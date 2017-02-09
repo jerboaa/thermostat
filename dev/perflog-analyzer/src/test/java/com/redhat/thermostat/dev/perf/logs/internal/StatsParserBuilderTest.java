@@ -42,6 +42,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -122,7 +125,7 @@ public class StatsParserBuilderTest {
     @Test
     public void canParseBasicLogFile() throws FileNotFoundException {
         StatsParser parser = StatsParserBuilder.build();
-        File perfLogFile = new File(this.getClass().getResource("/testPerfLogFile.log").getFile());
+        File perfLogFile = new File(decodeFilePath(this.getClass().getResource("/testPerfLogFile.log")));
         Scanner scanner = new Scanner(perfLogFile);
         ArrayList<LineStat> stats = new ArrayList<>();
         while (scanner.hasNextLine()) {
@@ -146,7 +149,7 @@ public class StatsParserBuilderTest {
     @Test
     public void canParseLogFileWithMultipleLogTags() throws FileNotFoundException, IllegalFilterException, ParseException {
         StatsParser parser = StatsParserBuilder.build();
-        File perfLogFile = new File(this.getClass().getResource("/perflogMultipleLogTags.log").getFile());
+        File perfLogFile = new File(decodeFilePath(this.getClass().getResource("/perflogMultipleLogTags.log")));
         Scanner scanner = new Scanner(perfLogFile);
         LogFileStats stats = new LogFileStats(new SharedStatementState(), null);
         // add composite filters for queue stats.
@@ -235,5 +238,15 @@ public class StatsParserBuilderTest {
         logEntry = "Any String that does not start with \"PERFLOG\" should not parse.";
         stat = parser.parse(logEntry);
         assertNull(stat);
+    }
+    
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }

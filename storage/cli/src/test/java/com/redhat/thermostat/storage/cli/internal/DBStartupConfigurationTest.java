@@ -41,6 +41,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 
 import org.junit.After;
 import org.junit.Before;
@@ -71,7 +74,7 @@ public class DBStartupConfigurationTest {
 
     @Test
     public void canGetConfigFromPropertiesFile() throws Exception {
-        File dbProps = new File(this.getClass().getResource("/testDbConfig.properties").getFile());
+        File dbProps = new File(decodeFilePath(this.getClass().getResource("/testDbConfig.properties")));
         File canNotBeFoundFile = new File("");
         DBStartupConfiguration dbConfig = new DBStartupConfiguration(dbProps, canNotBeFoundFile, dbPath, dbLogFile, dbPidFile);
         
@@ -87,7 +90,7 @@ public class DBStartupConfigurationTest {
     
     @Test
     public void canGetConfigFromPropertiesFile2() throws Exception {
-        File dbProps = new File(this.getClass().getResource("/testDbConfig2.properties").getFile());
+        File dbProps = new File(decodeFilePath(this.getClass().getResource("/testDbConfig2.properties")));
         File canNotBeFoundFile = new File("");
         DBStartupConfiguration dbConfig = new DBStartupConfiguration(dbProps, canNotBeFoundFile, dbPath, dbLogFile, dbPidFile);
         
@@ -103,7 +106,7 @@ public class DBStartupConfigurationTest {
     
     @Test
     public void missingBindThrowsConfigException() throws Exception {
-        File dbProps = new File(this.getClass().getResource("/brokenDbConfig.properties").getFile());
+        File dbProps = new File(decodeFilePath(this.getClass().getResource("/brokenDbConfig.properties")));
         File canNotBeFoundFile = new File("");
         try {
             new DBStartupConfiguration(dbProps, canNotBeFoundFile, dbPath, dbLogFile, dbPidFile);
@@ -115,13 +118,23 @@ public class DBStartupConfigurationTest {
     
     @Test
     public void missingPortThrowsConfigException() throws Exception {
-        File dbProps = new File(this.getClass().getResource("/brokenDbConfig2.properties").getFile());
+        File dbProps = new File(decodeFilePath(this.getClass().getResource("/brokenDbConfig2.properties")));
         File canNotBeFoundFile = new File("");
         try {
             new DBStartupConfiguration(dbProps, canNotBeFoundFile, dbPath, dbLogFile, dbPidFile);
             fail("PORT was not specified in properties file");
         } catch (InvalidConfigurationException e) {
             assertEquals("PORT property missing", e.getMessage());
+        }
+    }
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
         }
     }
 }

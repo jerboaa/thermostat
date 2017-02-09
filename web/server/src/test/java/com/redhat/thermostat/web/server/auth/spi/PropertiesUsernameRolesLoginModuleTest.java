@@ -41,7 +41,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,10 +87,10 @@ public class PropertiesUsernameRolesLoginModuleTest {
     public void canInitialize() {
         LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
         mockCallBack = new SimpleCallBackHandler("testUser", "testpassword".toCharArray());
-        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
-        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
-        mockOptions.put("users.properties", userFile.getFile());
-        mockOptions.put("roles.properties", rolesFile.getFile());
+        String userFile = decodeFilePath(this.getClass().getResource("/properties_module_test_users.properties"));
+        String rolesFile = decodeFilePath(this.getClass().getResource("/properties_module_test_roles.properties"));
+        mockOptions.put("users.properties", userFile);
+        mockOptions.put("roles.properties", rolesFile);
         try {
             // this must not throw an exception
             loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
@@ -103,10 +105,10 @@ public class PropertiesUsernameRolesLoginModuleTest {
         LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
         // testUser/testpassword not defined
         mockCallBack = new SimpleCallBackHandler("testUser", "testpassword".toCharArray());
-        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
-        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
-        mockOptions.put("users.properties", userFile.getFile());
-        mockOptions.put("roles.properties", rolesFile.getFile());
+        String userFile = decodeFilePath(this.getClass().getResource("/properties_module_test_users.properties"));
+        String rolesFile = decodeFilePath(this.getClass().getResource("/properties_module_test_roles.properties"));
+        mockOptions.put("users.properties", userFile);
+        mockOptions.put("roles.properties", rolesFile);
         loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
         try {
             loginModule.login();
@@ -130,10 +132,10 @@ public class PropertiesUsernameRolesLoginModuleTest {
     public void canLoginWithValidCredentials() {
         LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
         mockCallBack = new SimpleCallBackHandler("user1", "somepassword".toCharArray());
-        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
-        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
-        mockOptions.put("users.properties", userFile.getFile());
-        mockOptions.put("roles.properties", rolesFile.getFile());
+        String userFile = decodeFilePath(this.getClass().getResource("/properties_module_test_users.properties"));
+        String rolesFile = decodeFilePath(this.getClass().getResource("/properties_module_test_roles.properties"));
+        mockOptions.put("users.properties", userFile);
+        mockOptions.put("roles.properties", rolesFile);
         loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
         try {
             boolean retval = loginModule.login();
@@ -158,10 +160,10 @@ public class PropertiesUsernameRolesLoginModuleTest {
     public void canCommitOnSuccessfulLogin() throws LoginException {
         LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
         mockCallBack = new SimpleCallBackHandler("user1", "somepassword".toCharArray());
-        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
-        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
-        mockOptions.put("users.properties", userFile.getFile());
-        mockOptions.put("roles.properties", rolesFile.getFile());
+        String userFile = decodeFilePath(this.getClass().getResource("/properties_module_test_users.properties"));
+        String rolesFile = decodeFilePath(this.getClass().getResource("/properties_module_test_roles.properties"));
+        mockOptions.put("users.properties", userFile);
+        mockOptions.put("roles.properties", rolesFile);
         loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
         assertTrue(loginModule.login());
         try {
@@ -185,10 +187,10 @@ public class PropertiesUsernameRolesLoginModuleTest {
     public void testRecursiveRoles() throws LoginException {
         LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
         mockCallBack = new SimpleCallBackHandler("user2", "password".toCharArray());
-        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
-        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
-        mockOptions.put("users.properties", userFile.getFile());
-        mockOptions.put("roles.properties", rolesFile.getFile());
+        String userFile = decodeFilePath(this.getClass().getResource("/properties_module_test_users.properties"));
+        String rolesFile = decodeFilePath(this.getClass().getResource("/properties_module_test_roles.properties"));
+        mockOptions.put("users.properties", userFile);
+        mockOptions.put("roles.properties", rolesFile);
         loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
         assertTrue(loginModule.login());
         try {
@@ -214,10 +216,10 @@ public class PropertiesUsernameRolesLoginModuleTest {
     public void testRecursiveRolesMultiple() throws LoginException {
         LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
         mockCallBack = new SimpleCallBackHandler("user3", "password".toCharArray());
-        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
-        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
-        mockOptions.put("users.properties", userFile.getFile());
-        mockOptions.put("roles.properties", rolesFile.getFile());
+        String userFile = decodeFilePath(this.getClass().getResource("/properties_module_test_users.properties"));
+        String rolesFile = decodeFilePath(this.getClass().getResource("/properties_module_test_roles.properties"));
+        mockOptions.put("users.properties", userFile);
+        mockOptions.put("roles.properties", rolesFile);
         loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
         assertTrue(loginModule.login());
         try {
@@ -267,10 +269,10 @@ public class PropertiesUsernameRolesLoginModuleTest {
         
         loginModule = new PropertiesUsernameRolesLoginModule();
         mockCallBack = new SimpleCallBackHandler("user1", "somepassword".toCharArray());
-        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
-        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
-        mockOptions.put("users.properties", userFile.getFile());
-        mockOptions.put("roles.properties", rolesFile.getFile());
+        String userFile = decodeFilePath(this.getClass().getResource("/properties_module_test_users.properties"));
+        String rolesFile = decodeFilePath(this.getClass().getResource("/properties_module_test_roles.properties"));
+        mockOptions.put("users.properties", userFile);
+        mockOptions.put("roles.properties", rolesFile);
         loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
         assertFalse(loginModule.commit());
         assertEquals(0, subject.getPrincipals().size());
@@ -280,10 +282,10 @@ public class PropertiesUsernameRolesLoginModuleTest {
     public void testLoginCommitAbort() throws LoginException {
         LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
         mockCallBack = new SimpleCallBackHandler("user1", "somepassword".toCharArray());
-        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
-        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
-        mockOptions.put("users.properties", userFile.getFile());
-        mockOptions.put("roles.properties", rolesFile.getFile());
+        String userFile = decodeFilePath(this.getClass().getResource("/properties_module_test_users.properties"));
+        String rolesFile = decodeFilePath(this.getClass().getResource("/properties_module_test_roles.properties"));
+        mockOptions.put("users.properties", userFile);
+        mockOptions.put("roles.properties", rolesFile);
         loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
         assertTrue(loginModule.login());
         assertTrue(loginModule.commit());
@@ -300,10 +302,10 @@ public class PropertiesUsernameRolesLoginModuleTest {
     public void testLoginCommitLogout() throws LoginException {
         LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
         mockCallBack = new SimpleCallBackHandler("user1", "somepassword".toCharArray());
-        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
-        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
-        mockOptions.put("users.properties", userFile.getFile());
-        mockOptions.put("roles.properties", rolesFile.getFile());
+        String userFile = decodeFilePath(this.getClass().getResource("/properties_module_test_users.properties"));
+        String rolesFile = decodeFilePath(this.getClass().getResource("/properties_module_test_roles.properties"));
+        mockOptions.put("users.properties", userFile);
+        mockOptions.put("roles.properties", rolesFile);
         loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
         assertTrue(loginModule.login());
         assertTrue(loginModule.commit());
@@ -314,6 +316,16 @@ public class PropertiesUsernameRolesLoginModuleTest {
         assertTrue(loginModule.logout());
         // make sure principals are cleared
         assertEquals(0, principals.size());
+    }
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }
 

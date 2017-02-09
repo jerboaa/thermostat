@@ -57,7 +57,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -375,7 +378,7 @@ public class BytemanControlCommandTest {
         when(dao.findBytemanStatus(eq(new VmId(SOME_VM_ID)))).thenReturn(status);
         Arguments args = getBasicArgsWithAction(LOAD_ACTION);
         when(args.hasArgument(RULE_OPTION)).thenReturn(true);
-        String file = getClass().getResource("/testRule.btm").getFile();
+        String file = decodeFilePath(getClass().getResource("/testRule.btm"));
         when(args.getArgument(RULE_OPTION)).thenReturn(file);
         CommandContext ctx = ctxFactory.createContext(args);
         command.unbindVmBytemanDao(dao);
@@ -412,7 +415,7 @@ public class BytemanControlCommandTest {
         when(dao.findBytemanStatus(eq(new VmId(SOME_VM_ID)))).thenReturn(null);
         Arguments args = getBasicArgsWithAction(LOAD_ACTION);
         when(args.hasArgument(RULE_OPTION)).thenReturn(true);
-        String file = getClass().getResource("/testRule.btm").getFile();
+        String file = decodeFilePath(getClass().getResource("/testRule.btm"));
         when(args.getArgument(RULE_OPTION)).thenReturn(file);
         CommandContext ctx = ctxFactory.createContext(args);
         command.unbindVmBytemanDao(dao);
@@ -501,5 +504,15 @@ public class BytemanControlCommandTest {
             }
         });
         return args;
+    }
+
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }

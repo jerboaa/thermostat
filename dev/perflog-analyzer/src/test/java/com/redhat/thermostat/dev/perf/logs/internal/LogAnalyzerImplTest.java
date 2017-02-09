@@ -42,6 +42,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 
 import org.junit.After;
 import org.junit.Before;
@@ -67,7 +70,7 @@ public class LogAnalyzerImplTest {
 
     @Test
     public void verifyBasicAnalysis() {
-        File logFile = new File(this.getClass().getResource("/perflogMultipleLogTags.log").getFile());
+        File logFile = new File(decodeFilePath(this.getClass().getResource("/perflogMultipleLogTags.log")));
         StatsConfig config = new StatsConfig(logFile, SortBy.AVG, Direction.DSC, false);
         LogAnalyzerImpl analyzer = new LogAnalyzerImpl(config);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -84,5 +87,15 @@ public class LogAnalyzerImplTest {
         String moreOutput = baos.toString();
         assertTrue(moreOutput.contains(output));
         assertFalse(moreOutput.equals(output));
+    }
+    
+    private static String decodeFilePath(URL url) {
+        try {
+            // Spaces are encoded as %20 in URLs. Use URLDecoder.decode() so
+            // as to handle cases like that.
+            return URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 not supported, huh?");
+        }
     }
 }
