@@ -59,6 +59,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.internal.LocaleResources;
+import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaultsImpl;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -104,7 +105,7 @@ public class HeaderPanel extends JPanel {
         setName(HeaderPanel.class.getName());
         
         headerLabel = new ShadowLabel(header, new EmptyIcon(5, 5));
-        headerPanel = new GradientPanel(Color.WHITE, getBackground());
+        headerPanel = new GradientPanel(Color.WHITE, UIDefaultsImpl.getInstance().getComponentBGColor());
         headerPanel.setName("clickableArea");
         headerPanel.setPreferredSize(new Dimension(HeaderPanel.this.getWidth(), 40));
         

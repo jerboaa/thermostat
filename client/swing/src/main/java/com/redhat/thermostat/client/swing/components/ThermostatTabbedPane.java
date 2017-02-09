@@ -45,6 +45,7 @@ import javax.swing.JTabbedPane;
 public class ThermostatTabbedPane extends JTabbedPane {
 
     public ThermostatTabbedPane() {
+        super(TOP, SCROLL_TAB_LAYOUT);
         setUI(new CleanTabUI());
     }
 }
