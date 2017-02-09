@@ -40,6 +40,7 @@ import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -167,7 +168,12 @@ public class HeapDetailsSwingTest {
             public void run() {
                 tabPane = frameFixture.tabbedPane("tabs");
                 assertNotNull(tabPane);
-                assertEquals(0, tabPane.component().getComponents().length);
+                assertEquals(0, tabPane.component().getSelectedIndex());
+                assertEquals(3, tabPane.component().getTabCount());
+
+                assertNull(tabPane.component().getTabComponentAt(0));
+                assertNull(tabPane.component().getTabComponentAt(1));
+                assertNull(tabPane.component().getTabComponentAt(2));
             }
         });
 
@@ -206,7 +212,7 @@ public class HeapDetailsSwingTest {
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
-                assertEquals(3, tabPane.component().getComponents().length);
+                assertEquals(3, tabPane.component().getTabCount());
             }
         });
     }
