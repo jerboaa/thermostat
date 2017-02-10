@@ -23,3 +23,8 @@ IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/asm-commons-${asm.version}.ja
 IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/asm-util-${asm.version}.jar"
 IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/asm-analysis-${asm.version}.jar"
 IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/asm-tree-${asm.version}.jar"
+
+if [ $CYGWIN_MODE -eq 1 ]; then
+  IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-ipc-winpipes-client-${project.version}.jar"
+  IPC_CLASSPATH="${IPC_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-ipc-winpipes-common-${project.version}.jar"
+fi

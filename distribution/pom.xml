@@ -228,9 +228,21 @@
       </activation>
       <properties>
         <assemblyfile.suffix>-windows</assemblyfile.suffix>
-        <agent.extra.bundles/>
-        <service.extra.bundles/>
+        <agent.extra.bundles>,com.redhat.thermostat.agent.ipc.winpipes.server=${project.version}</agent.extra.bundles>
+        <service.extra.bundles>,com.redhat.thermostat.agent.ipc.winpipes.server=${project.version}</service.extra.bundles>
       </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-winpipes-server</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-agent-ipc-winpipes-client</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
       <build>
         <plugins>
           <plugin>
@@ -249,6 +261,8 @@
                     <copy file="${main.basedir}/common/portability/target/UserNameUtilWrapper${sharedlib.suffix}"
                           todir="${project.build.directory}/image/libs/native" />
                     <copy file="${main.basedir}/common/portability/target/WindowsHelperWrapper${sharedlib.suffix}"
+                          todir="${project.build.directory}/image/libs/native" />
+                    <copy file="${main.basedir}/agent/ipc/windows-named-pipes/common/target/WinPipesNativeWrapper.dll"
                           todir="${project.build.directory}/image/libs/native" />
                   </target>
                 </configuration>

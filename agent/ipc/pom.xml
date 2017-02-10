@@ -64,6 +64,7 @@
     <module>server</module>
     <module>unix-socket</module>
     <module>tcp-socket</module>
+    <module>windows-named-pipes</module>
   </modules>
 
 </project>

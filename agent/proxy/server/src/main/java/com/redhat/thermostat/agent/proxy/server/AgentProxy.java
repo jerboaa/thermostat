@@ -49,6 +49,9 @@ import com.redhat.thermostat.agent.ipc.client.ClientIPCService;
 import com.redhat.thermostat.agent.ipc.client.ClientIPCServiceFactory;
 import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.NativeLibraryResolver;
+import com.redhat.thermostat.shared.config.OS;
+import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import com.sun.tools.attach.AttachNotSupportedException;
 
 public class AgentProxy {
@@ -65,7 +68,12 @@ public class AgentProxy {
         if (args.length < 2) {
             usage();
         }
-        
+
+        // Windows named pipes has some native code - must set paths to find the DLL
+        if (OS.IS_WINDOWS) {
+            NativeLibraryResolver.setCommonPaths(new CommonPathsImpl());
+        }
+
         // Get IPC configuration file location from system property
         String configFileStr = System.getProperty(CONFIG_FILE_PROP);
         if (configFileStr == null) {

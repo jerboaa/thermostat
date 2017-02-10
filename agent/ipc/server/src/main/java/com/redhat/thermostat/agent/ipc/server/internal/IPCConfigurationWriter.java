@@ -41,6 +41,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Properties;
+import java.util.UUID;
 
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 import com.redhat.thermostat.common.portability.PortableProcessImpl;
@@ -50,29 +51,29 @@ class IPCConfigurationWriter {
 
     static final String PROP_IPC_TYPE = "type";
     private static final String PROP_UNIX_SOCKET_DIR = "unixsocket.dir";
+    private static final String PROP_WINPIPE_ID = "winpipe.id";
     private static final String PROP_TCP_SOCKET_SUFFIX= ".tcpsocket.port";
-    //private static final String TCP_SOCKET_JUMBO_FRAMES = "tcpsocket.jumboframes";
 
-    // suggest some default vaules for TCP sockets - test this range for unused sockets
-    private static int TEST_SOCKET_LOW = 51200;
-    private static int TEST_SOCKET_HIGH = 55000;
+    // suggest some default values for TCP sockets - test this range for unused sockets
+    private static final int TEST_SOCKET_LOW = 51200;
+    private static final int TEST_SOCKET_HIGH = 55000;
 
     private static final String COMMENTS =
-        "Configuration for Inter-process Communication (IPC) used in the Thermostat agent.\n"
-        + "The agent is configured to use Unix sockets for IPC by default on Linux,\n"
-        + "or TCP sockets on Windows.\n"
-        + "The options below can be set to modify the defaults used by the agent:\n\n"
-
-        + "Directory where Unix sockets are created, which may be deleted if it already exists.\n"
+        " Configuration for Inter-process Communication (IPC) used in the Thermostat agent.\n"
+        + " The agent is configured to use Unix sockets for IPC by default on Linux,\n"
+        + " and TCP sockets by default on Windows.\n"
+        + " The options below can be set to modify the defaults used by the agent:\n\n"
+        + " Transport type (one of unixsocket, tcpsocket, winpipes).\n"
+        + " On Linux, unixsocket or tcpsocket are valid choices."
+        + " On Windows, winpipes or tcpsocket are valid choices.\n"
+        + PROP_IPC_TYPE + "=transporttype\n\n"
+        + " Directory where Unix sockets are created, which may be deleted if it already exists.\n"
         + PROP_UNIX_SOCKET_DIR + "=/path/to/unix/sockets\n\n"
-
-        + "TCP socket port numbers for various services.\n"
+        + " Prefix for thermostat-related named pipes - should be different for every installation.\n"
+        + PROP_WINPIPE_ID + "=XXXXXX\n\n"
+        + " TCP socket port numbers for various services.\n"
         + "command-channel" + PROP_TCP_SOCKET_SUFFIX + "=NNNN\n"
         + "agent-proxy" + PROP_TCP_SOCKET_SUFFIX + "=MMMM\n\n";
-
-        //in the future, will allow jumbo frames for performance
-        //+ "TCP parameters\n"
-        //+ TCP_SOCKET_JUMBO_FRAMES + "=false\n\n";
     
     private final File configFile;
     private final PropertiesHelper helper;
@@ -87,8 +88,11 @@ class IPCConfigurationWriter {
     }
     
     void write() throws IOException {
+
         // Write defaults to config file
-        configFile.createNewFile();
+        if (!configFile.createNewFile()) {
+            throw new IOException("IPC configuration file '" + configFile + "' already exists");
+        }
         
         Properties props = helper.createProperties();
 
@@ -96,10 +100,18 @@ class IPCConfigurationWriter {
 
         // unix socket will work without configuration (creates sockets in tmp directory
         // but tcpsocket always needs ports predefined (in the future, should support service discovery)
+        // windows named pipes will use a random string for different Thermostat installations
 
+        // Windows named pipes id
+        // will be combined with other strings to make a full pipe name
+        // for example, winpipe.id=abc345 may five a pipe name such as \\.\thermostat-abc345-command-channel
+        {
+            final String randString = makeThermostatId();
+            props.setProperty(PROP_WINPIPE_ID, randString);
+        }
+        // TCP properties (will be ignored if a different transpot is selected)
         // this implementation is flawed;
         //    the unused ports might be in used by a process that simply wasn't running at thermostat setup time.
-
         {
             int cmdPort = findUnusedTCPSocket(TEST_SOCKET_LOW, TEST_SOCKET_HIGH);
             int aport = cmdPort == 0 ? 0 : findUnusedTCPSocket(cmdPort + 1, TEST_SOCKET_HIGH);
@@ -110,8 +122,8 @@ class IPCConfigurationWriter {
             // write a property for each user on the system - currently only the current user
             // note: this is required for UNIX too
             if (OS.IS_WINDOWS) {
-                int uport = aport == 0 ? 0 : findUnusedTCPSocket( aport + 1, TEST_SOCKET_HIGH);
-                int uid = PortableProcessImpl.getInstance().getUid(0); // if pid=0, gets uid of current process
+                int uport = aport == 0 ? 0 : findUnusedTCPSocket(aport + 1, TEST_SOCKET_HIGH);
+                int uid = helper.getCurrentUid();
                 props.setProperty("agent-proxy-" + uid + PROP_TCP_SOCKET_SUFFIX, Integer.toString(uport));
             }
         }
@@ -119,6 +131,10 @@ class IPCConfigurationWriter {
         try (FileOutputStream fos = helper.createStream(configFile)) {
             props.store(fos, COMMENTS);
         }
+    }
+
+    private static String makeThermostatId() {
+        return UUID.randomUUID().toString();
     }
 
     private static int findUnusedTCPSocket(int lowPort, int highPort) {
@@ -149,6 +165,9 @@ class IPCConfigurationWriter {
         }
         Properties createProperties() {
             return new Properties();
+        }
+        int getCurrentUid() {
+            return PortableProcessImpl.getInstance().getUid(0); // if pid=0, gets uid of current process
         }
     }
 

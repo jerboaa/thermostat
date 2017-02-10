@@ -44,6 +44,7 @@ public enum IPCType {
     
     UNIX_SOCKET("unixsocket"),
     TCP_SOCKET("tcpsocket"),
+    WINDOWS_NAMED_PIPES("winpipes"),
     UNKNOWN(null); // Used for testing
     
     // Reverse lookup

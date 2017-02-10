@@ -69,12 +69,14 @@ public class IPCConfigurationWriterTest {
     @Before
     public void setUp() throws Exception {
         helper = mock(PropertiesHelper.class);
-        
+
         File configFile = mock(File.class);
+        when(configFile.createNewFile()).thenReturn(true);
         props = mock(Properties.class);
         when(helper.createProperties()).thenReturn(props);
         fos = mock(FileOutputStream.class);
         when(helper.createStream(configFile)).thenReturn(fos);
+        when(helper.getCurrentUid()).thenReturn(9876);
         
         writer = new IPCConfigurationWriter(configFile, helper);
     }
@@ -83,7 +85,7 @@ public class IPCConfigurationWriterTest {
     public void testWrite() throws Exception {
         writer.write();
 
-        final IPCType expectedType = OS.IS_UNIX ? IPCType.UNIX_SOCKET : IPCType.TCP_SOCKET;
+        final IPCType expectedType = OS.IS_UNIX ? IPCType.UNIX_SOCKET : IPCType.WINDOWS_NAMED_PIPES;
         verify(props).setProperty(IPCConfigurationWriter.PROP_IPC_TYPE, expectedType.getConfigValue());
         verify(props).store(eq(fos), anyString());
         verify(fos).close();

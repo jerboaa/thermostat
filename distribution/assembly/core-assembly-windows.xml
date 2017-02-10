@@ -63,6 +63,8 @@
         <include>com.redhat.thermostat:thermostat-agent-proxy-server</include>
         <include>com.redhat.thermostat:thermostat-agent-ipc-tcpsocket-server</include>
         <include>com.redhat.thermostat:thermostat-agent-ipc-tcpsocket-client</include>
+        <include>com.redhat.thermostat:thermostat-agent-ipc-winpipes-server</include>
+        <include>com.redhat.thermostat:thermostat-agent-ipc-winpipes-client</include>
         <include>com.redhat.thermostat:thermostat-common-core</include>
         <include>com.redhat.thermostat:thermostat-common-command</include>
         <include>com.redhat.thermostat:thermostat-common-portability</include>

@@ -43,7 +43,7 @@ import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 
 /**
  * Class which enables resolving of native libraries placed in
- * {@link CommonPaths#getNativeLibsRoot()}.
+ * {@link CommonPaths#getSystemNativeLibsRoot()}.
  *
  */
 public class NativeLibraryResolver {
@@ -57,7 +57,7 @@ public class NativeLibraryResolver {
 
     /**
      * Gets the absolute path of a native library. The native library must be
-     * placed in directory as returned by {@link CommonPathsImpl#getNativeLibsRoot()}.
+     * placed in directory as returned by {@link CommonPathsImpl#getSystemNativeLibsRoot()}.
      * 
      * @param libraryName
      *            The name of the library. Specified in the same fashion as for
