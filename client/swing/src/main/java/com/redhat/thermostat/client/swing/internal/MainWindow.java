@@ -56,14 +56,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -73,6 +71,9 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.TreeNode;
 
+import com.redhat.thermostat.client.swing.UIDefaults;
+import com.redhat.thermostat.client.swing.internal.components.ThermostatButton;
+import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaultsImpl;
 import com.redhat.thermostat.client.ui.ContentProvider;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import sun.misc.Signal;
@@ -387,9 +388,19 @@ public class MainWindow extends JFrame implements MainView, SwingComponent {
         installGlobalNavigation();
         installSearchField();
     }
-    
+
     private void installGlobalNavigation() {
-        JButton action = new JButton(translator.localize(LocaleResources.SHOW_ISSUES).getContents());
+
+        UIDefaults defaults = UIDefaultsImpl.getInstance();
+
+        ThermostatButton action = new ThermostatButton(translator.localize(LocaleResources.SHOW_ISSUES).getContents());
+        action.setForegroundPaint(defaults.getSelectedComponentFGColor());
+        action.setBackgroundPaint(defaults.getSelectedComponentBGColor());
+        action.setSelectedForegroundPaint(defaults.getSelectedComponentBGColor());
+        action.setSelectedBackgroundPaint(defaults.getSelectedComponentFGColor());
+        action.setMinimumSize(new Dimension(24, 36));
+        action.setPreferredSize(new Dimension(24, 36));
+
         action.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
