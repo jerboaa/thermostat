@@ -132,6 +132,9 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
 
         String summary = selectBest(info1.getSummary(), info2.getSummary());
         String description = selectBest(info1.getDescription(), info2.getDescription());
+        List<String> commandGroups = new ArrayList<>();
+        commandGroups.addAll(info1.getCommandGroups());
+        commandGroups.addAll(info2.getCommandGroups());
         String usage = selectBest(info1.getUsage(), info2.getUsage());
         List<PluginConfiguration.Subcommand> subcommands = selectBest(info1.getSubcommands(), info2.getSubcommands());
         Options options = selectBest(info1.getOptions(), info2.getOptions());
@@ -140,7 +143,7 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
         bundles.addAll(info1.getBundles());
         bundles.addAll(info2.getBundles());
 
-        return new BasicCommandInfo(name, summary, description, usage, options, subcommands, environment, bundles);
+        return new BasicCommandInfo(name, summary, description, commandGroups, usage, options, subcommands, environment, bundles);
     }
 
     private <T> T selectBest(T first, T second) {

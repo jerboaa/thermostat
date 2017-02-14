@@ -55,6 +55,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
@@ -239,6 +240,7 @@ public class PluginConfigurationParser {
 
     private PluginConfiguration parseRootElement(String pluginName, Node root) {
         List<NewCommand> commands = Collections.emptyList();
+        List<CommandGroupMetadata> commandGroupMetadataList = Collections.emptyList();
         List<CommandExtensions> extensions = Collections.emptyList();
         Configurations configurations = null;
         String pluginID = null;
@@ -249,6 +251,8 @@ public class PluginConfigurationParser {
                 Node node = nodes.item(i);
                 if (node.getNodeName().equals("commands")) {
                     commands = parseCommands(pluginName, node);
+                } else if (node.getNodeName().equals("command-group-metadatas")) {
+                    commandGroupMetadataList  = parseCommandGroupMetadatas(node);
                 } else if (node.getNodeName().equals("extensions")) {
                     extensions = parseExtensions(pluginName, node);
                 } else if (node.getNodeName().equals("id")) {
@@ -270,7 +274,7 @@ public class PluginConfigurationParser {
             pluginID = "";
         }
 
-        return new PluginConfiguration(commands, extensions, new PluginID(pluginID), configurations);
+        return new PluginConfiguration(commands, commandGroupMetadataList, extensions, new PluginID(pluginID), configurations);
     }
 
     private List<NewCommand> parseCommands(String pluginName, Node commandsNode) {
@@ -286,6 +290,36 @@ public class PluginConfigurationParser {
             }
         }
         return newCommands;
+    }
+
+    private List<CommandGroupMetadata> parseCommandGroupMetadatas(Node commandGroupMetadatasNode) {
+        NodeList childNodes = commandGroupMetadatasNode.getChildNodes();
+        List<CommandGroupMetadata> commandGroupMetadatas = new ArrayList<>(childNodes.getLength());
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node node = childNodes.item(i);
+            if (node.getNodeName().equals("command-group-metadata")) {
+                commandGroupMetadatas.add(parseCommandGroupMetadata(node));
+            }
+        }
+        return commandGroupMetadatas;
+    }
+
+    private CommandGroupMetadata parseCommandGroupMetadata(Node commandGroupMetadataNode) {
+        String name = null;
+        String description = null;
+        int sortOrder = -1;
+        NodeList childNodes = commandGroupMetadataNode.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node node = childNodes.item(i);
+            if (node.getNodeName().equals("name")) {
+                name = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("description")) {
+                description = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("sort-order")) {
+                sortOrder = Integer.parseInt(node.getTextContent().trim());
+            }
+        }
+        return new CommandGroupMetadata(name, description, sortOrder);
     }
 
     private List<CommandExtensions> parseExtensions(String pluginName, Node extensionsNode) {
@@ -354,6 +388,7 @@ public class PluginConfigurationParser {
         String usage = null;
         String summary = null;
         String description = null;
+        List<String> commandGroups = new ArrayList<>();
         List<PluginConfiguration.Subcommand> subcommands = new ArrayList<>();
         List<String> arguments = new ArrayList<>();
         Options options = new Options();
@@ -371,6 +406,8 @@ public class PluginConfigurationParser {
                 summary = node.getTextContent().trim();
             } else if (node.getNodeName().equals("description")) {
                 description = parseDescription(node);
+            } else if (node.getNodeName().equals("command-groups")) {
+                commandGroups = parseCommandGroups(node);
             } else if (node.getNodeName().equals("subcommands")) {
                 subcommands = parseSubcommands(node);
             } else if (node.getNodeName().equals("arguments")) {
@@ -393,7 +430,8 @@ public class PluginConfigurationParser {
                     "name='" + name + "', summary='" + summary + ", description='" + description + "', options='" + options + "'");
             return null;
         } else {
-            return new NewCommand(name, summary, description, usage, arguments, options, subcommands, availableInEnvironments, bundles);
+            return new NewCommand(name, summary, description, commandGroups, usage, arguments, options, subcommands,
+                    availableInEnvironments, bundles);
         }
     }
 
@@ -447,6 +485,23 @@ public class PluginConfigurationParser {
             result.append(" ");
         }
         return result.toString().trim();
+    }
+
+    private List<String> parseCommandGroups(Node commandGroupsNode) {
+        NodeList nodes = commandGroupsNode.getChildNodes();
+        List<String> groups = new ArrayList<>(nodes.getLength());
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("command-group")) {
+                String group = node.getTextContent().trim();
+                groups.add(group);
+            }
+        }
+        return groups;
+    }
+
+    private String parseCommandGroup(Node commandGroupNode) {
+        return commandGroupNode.getTextContent().trim().toLowerCase();
     }
 
     private List<String> parseArguments(String pluginName, String commandName, Node argumentsNode) {

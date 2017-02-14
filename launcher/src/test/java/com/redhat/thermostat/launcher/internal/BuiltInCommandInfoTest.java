@@ -42,6 +42,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -102,6 +103,18 @@ public class BuiltInCommandInfoTest {
 
         String commandDesc = info.getDescription();
         assertEquals(desc, commandDesc);
+    }
+
+    @Test
+    public void verifyGetCommandGroup() {
+        Properties props = new Properties();
+        String name = "command-groups";
+        String groups = "a,b";
+        props.put(name, groups);
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
+
+        List<String> commandGroups = info.getCommandGroups();
+        assertEquals(Arrays.asList("a", "b"), commandGroups);
     }
 
     @Test

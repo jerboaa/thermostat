@@ -36,62 +36,10 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 
-public enum LocaleResources {
+import java.util.Map;
 
-    MISSING_LAUNCHER,
-
-    CANNOT_GET_COMMAND_INFO,
-    CANNOT_GET_COMMAND_GROUP_METADATA,
-    UNKNOWN_COMMAND,
-    COMMAND_COULD_NOT_LOAD_BUNDLES,
-    COMMAND_DESCRIBED_BUT_NOT_AVAILALBE,
-    COMMAND_AVAILABLE_INSIDE_SHELL,
-    COMMAND_AVAILABLE_INSIDE_SHELL_ONLY,
-    COMMAND_AVAILABLE_OUTSIDE_SHELL,
-    COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY,
-
-    COMMAND_HELP_COMMAND_LIST_HEADER,
-    COMMAND_HELP_COMMAND_OPTION_HEADER,
-
-    COMMAND_GROUP_HEADER,
-
-    COMMAND_SHELL_USER_GUIDE,
-    COMMAND_SHELL_IO_EXCEPTION,
-
-    SUBCOMMANDS_SECTION_HEADER,
-    SUBCOMMAND_ENTRY_HEADER,
-
-    SEE_ALSO_HEADER,
-
-    OPTION_DB_URL_DESC,
-    OPTION_LOG_LEVEL_DESC,
-    OPTION_HELP_DESC,
-
-    MISSING_OPTION,
-    MISSING_OPTIONS,
-    PARSE_EXCEPTION_MESSAGE,
-
-    LAUNCHER_USER_AUTH_PROMPT_ERROR,
-    LAUNCHER_MALFORMED_URL,
-    LAUNCHER_CONNECTION_ERROR,
-    LAUNCHER_FIRST_LAUNCH_MSG,
-
-    INVALID_DB_URL,
-    PARSE_ISSUES_CALLED_BEFORE_PARSE,
-    PARSER_ERROR,
-    PARSER_WARNING,
-
-    QUIT_PROMPT,
-    QUIT_CONFIRM,
-    QUIT_DENY,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
-    }
+interface CommandGroupMetadataSource {
+    Map<String, CommandGroupMetadata> getCommandGroupMetadata();
 }
-

@@ -39,6 +39,7 @@ package com.redhat.thermostat.launcher.internal;
 import java.util.List;
 import java.util.Set;
 
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.launcher.BundleInformation;
@@ -62,6 +63,15 @@ public interface CommandInfo {
      * {@link #getSummary()}, this can be as detailed as needed.
      */
     public String getDescription();
+
+    /**
+     * A simple one-word tag used to group related commands together,
+     * such as "vm", "agent", "thread", or "numa". Useful for scenarios
+     * where subcommands are not applicable. Commands within a group are
+     * placed together in help output and receive a "see also" mention
+     * in help output for other commands within their group.
+     */
+    public List<String> getCommandGroups();
 
     /**
      * How the user should invoke this command

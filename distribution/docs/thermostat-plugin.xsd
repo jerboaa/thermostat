@@ -28,6 +28,54 @@
   </xs:annotation>
 </xs:element>
 
+<xs:element name="command-groups">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="command-group" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="command-group" type="xs:string">
+  <xs:annotation>
+    <xs:documentation>
+      A simple one-word tag used to group related commands together,
+      such as "vm", "agent", "thread", or "numa". Useful for scenarios
+      where subcommands are not applicable. Commands within a group are
+      placed together in help output and receive a "see also" mention
+      in help output for other commands within their group.
+    </xs:documentation>
+  </xs:annotation>
+</xs:element>
+
+<xs:element name="command-group-metadatas">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="command-group-metadata" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="command-group-metadata">
+  <xs:annotation>
+    <xs:documentation>
+      Metadata for the "command-group" elements which tag collections of related
+      commands. This metadata is used to provide stylized names and descriptions
+      as well as the order of appearance of command groups as displayed in 'help'
+      output. Metadata elements are expected to map 1:1 with command-group
+      elements and may be provided within the same thermostat-plugin.xml, or in
+      a separate thermostat-plugin.xml.
+    </xs:documentation>
+  </xs:annotation>
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="name"/>
+      <xs:element name="description" type="xs:string"/>
+      <xs:element name="sort-order" type="xs:integer"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
 <xs:element name="short" type="xs:string"/>
 
 <xs:element name="long" type="xs:string"/>
@@ -49,6 +97,7 @@
       <xs:choice>
         <xs:sequence>
           <xs:element ref="commands"/>
+          <xs:element ref="command-group-metadatas" minOccurs="0" maxOccurs="1"/>
           <xs:element ref="extensions" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:element ref="extensions"/>
@@ -93,6 +142,7 @@
       <xs:element ref="usage" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="summary"/>
       <xs:element ref="description"/>
+      <xs:element ref="command-groups" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="subcommands" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="arguments" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="options" minOccurs="0" maxOccurs="1"/>

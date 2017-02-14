@@ -50,6 +50,7 @@ public class TestCommandInfo implements CommandInfo {
     private String name;
     private String summary;
     private String description;
+    private List<String> commandGroups;
     private String usage;
 
     private Options options = new Options();
@@ -80,6 +81,15 @@ public class TestCommandInfo implements CommandInfo {
 
     public void setDescription(String desc) {
         description = desc;
+    }
+
+    @Override
+    public List<String> getCommandGroups() {
+        return commandGroups;
+    }
+
+    public void addCommandGroup(String commandGroup) {
+        commandGroups.add(commandGroup);
     }
 
     @Override

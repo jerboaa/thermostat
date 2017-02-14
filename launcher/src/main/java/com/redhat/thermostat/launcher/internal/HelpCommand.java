@@ -37,12 +37,21 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -58,19 +67,31 @@ import com.redhat.thermostat.shared.locale.Translate;
 public class HelpCommand extends AbstractCommand  {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private static final Logger logger = LoggingUtils.getLogger(HelpCommand.class);
     static final String COMMAND_NAME = "help";
 
     private static final int COMMANDS_COLUMNS_WIDTH = 14;
+    public static final int MAX_COLUMN_WIDTH = 80;
     private static final String APP_NAME = "thermostat";
 
     private static final CommandInfoComparator comparator = new CommandInfoComparator();
+    private static final CommandGroupMetadata UNGROUPED_COMMANDS_METADATA = new CommandGroupMetadata(null, null, Integer.MAX_VALUE);
 
     private CommandInfoSource commandInfoSource;
+    private CommandGroupMetadataSource commandGroupMetadataSource;
 
     private Environment currentEnvironment;
 
+    private SortedMap<CommandGroupMetadata, SortedSet<CommandInfo>> commandGroupMap;
+    private Map<String, CommandGroupMetadata> commandGroupMetadataMap;
+    private Set<CommandInfo> contextualCommands = new HashSet<>();
+
     public void setCommandInfoSource(CommandInfoSource source) {
         this.commandInfoSource = source;
+    }
+
+    public void setCommandGroupMetadataSource(CommandGroupMetadataSource commandGroupMetadataSource) {
+        this.commandGroupMetadataSource = commandGroupMetadataSource;
     }
 
     public void setEnvironment(Environment env) {
@@ -87,6 +108,20 @@ public class HelpCommand extends AbstractCommand  {
             return;
         }
 
+        if (commandGroupMetadataSource == null) {
+            ctx.getConsole().getError().print(translator.localize(LocaleResources.CANNOT_GET_COMMAND_GROUP_METADATA).getContents());
+            return;
+        }
+
+        for (CommandInfo info: commandInfoSource.getCommandInfos()) {
+            if (info.getEnvironments().contains(currentEnvironment)) {
+                contextualCommands.add(info);
+            }
+        }
+
+        commandGroupMetadataMap = new HashMap<>(commandGroupMetadataSource.getCommandGroupMetadata());
+        commandGroupMap = createCommandGroupMap();
+
         if (nonParsed.isEmpty()) {
             if (currentEnvironment == Environment.CLI) {
                 //CLI only since the framework will already be
@@ -100,24 +135,60 @@ public class HelpCommand extends AbstractCommand  {
         }
     }
 
+    private SortedMap<CommandGroupMetadata, SortedSet<CommandInfo>> createCommandGroupMap() {
+        Set<CommandInfo> seen = new HashSet<>();
+        Map<String, SortedSet<CommandInfo>> groupNameMap = new HashMap<>();
+        for (CommandInfo commandInfo : contextualCommands) {
+            for (String commandGroup : commandInfo.getCommandGroups()) {
+                seen.add(commandInfo);
+                if (!groupNameMap.containsKey(commandGroup)) {
+                    groupNameMap.put(commandGroup, new TreeSet<>(comparator));
+                }
+                groupNameMap.get(commandGroup).add(commandInfo);
+            }
+        }
+
+        SortedMap<CommandGroupMetadata, SortedSet<CommandInfo>> result = new TreeMap<>(new CommandGroupMetadataComparator());
+        for (Map.Entry<String, SortedSet<CommandInfo>> entry : groupNameMap.entrySet()) {
+            String groupName = entry.getKey();
+            CommandGroupMetadata metadata = commandGroupMetadataMap.get(groupName);
+            if (metadata == null) {
+                logger.warning("No metadata provided for command group \"" + groupName + "\"");
+                metadata = new CommandGroupMetadata(groupName, groupName, Integer.MAX_VALUE);
+                commandGroupMetadataMap.put(groupName, metadata);
+            }
+            result.put(metadata, entry.getValue());
+        }
+
+        SortedSet<CommandInfo> ungrouped = new TreeSet<>(comparator);
+        ungrouped.addAll(contextualCommands);
+        ungrouped.removeAll(seen);
+        result.put(UNGROUPED_COMMANDS_METADATA, ungrouped);
+
+        return result;
+    }
+
     private void printCommandSummaries(CommandContext ctx) {
         ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HELP_COMMAND_LIST_HEADER).getContents());
 
         TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
 
-        Collection<CommandInfo> commandInfos = new ArrayList<>();
-        for (CommandInfo info: commandInfoSource.getCommandInfos()) {
-            if (info.getEnvironments().contains(currentEnvironment)) {
-                commandInfos.add(info);
+        for (Map.Entry<CommandGroupMetadata, SortedSet<CommandInfo>> group : commandGroupMap.entrySet()) {
+            CommandGroupMetadata commandGroupMetadata = group.getKey();
+            if (commandGroupMetadata.equals(UNGROUPED_COMMANDS_METADATA) || group.getValue().isEmpty()) {
+                continue;
             }
+            renderer.printLine(translator.localize(LocaleResources.COMMAND_GROUP_HEADER,
+                    commandGroupMetadata.getDescription()).getContents(), "");
+            for (CommandInfo info : group.getValue()) {
+                printCommandSummary(renderer, info);
+            }
+            renderer.printLine("", "");
+        }
+        for (CommandInfo ungroupedCommand : commandGroupMap.get(UNGROUPED_COMMANDS_METADATA)) {
+            printCommandSummary(renderer, ungroupedCommand);
         }
 
-        List<CommandInfo> sortedCommandInfos = new ArrayList<>(commandInfos);
-
-        Collections.sort(sortedCommandInfos, comparator);
-        for (CommandInfo info : sortedCommandInfos) {
-            printCommandSummary(renderer, info);
-        }
         renderer.render(ctx.getConsole().getOutput());
     }
 
@@ -160,26 +231,39 @@ public class HelpCommand extends AbstractCommand  {
         String usage = APP_NAME + " " + info.getUsage() + "\n" + info.getDescription();
         String header = "";
         if (isAvailabilityNoteNeeded(info)) {
-            header = header + getAvailabilityNote(info);
+            header = getAvailabilityNote(info);
         }
         header = header + "\n" + APP_NAME + " " + info.getName();
         Option help = CommonOptions.getHelpOption();
         options.addOption(help);
-        helpFormatter.printHelp(pw, 80, usage, header, options, 2, 4, null);
+        helpFormatter.printHelp(pw, MAX_COLUMN_WIDTH, usage, header, options, 2, 4, null);
 
         if (!info.getSubcommands().isEmpty()) {
             pw.println();
-            helpFormatter.printWrapped(pw, 80, translator.localize(LocaleResources.SUBCOMMANDS_SECTION_HEADER).getContents());
+            helpFormatter.printWrapped(pw, MAX_COLUMN_WIDTH, translator.localize(LocaleResources.SUBCOMMANDS_SECTION_HEADER).getContents());
             pw.println();
             for (PluginConfiguration.Subcommand subcommand : info.getSubcommands()) {
                 pw.println(translator.localize(LocaleResources.SUBCOMMAND_ENTRY_HEADER, subcommand.getName()).getContents());
                 pw.println(subcommand.getDescription());
                 Options o = subcommand.getOptions();
-                helpFormatter.printOptions(pw, 80, o, 2, 4);
+                helpFormatter.printOptions(pw, MAX_COLUMN_WIDTH, o, 2, 4);
                 if (!o.getOptions().isEmpty()) {
                     pw.println();
                 }
             }
+        }
+
+        SortedSet<CommandInfo> relatedCommands = new TreeSet<>(comparator);
+        for (String commandGroup : info.getCommandGroups()) {
+            relatedCommands.addAll(commandGroupMap.get(commandGroupMetadataMap.get(commandGroup)));
+        }
+        relatedCommands.remove(info);
+        if (!relatedCommands.isEmpty()) {
+            pw.println();
+            pw.println(translator.localize(LocaleResources.SEE_ALSO_HEADER).getContents());
+            pw.print(' ');
+            RelatedCommandsFormatter relatedCommandsFormatter = new RelatedCommandsFormatter(relatedCommands);
+            pw.println(relatedCommandsFormatter.format());
         }
 
         pw.flush();
@@ -191,20 +275,15 @@ public class HelpCommand extends AbstractCommand  {
 
     /** Describe where command is available */
     private String getAvailabilityNote(CommandInfo info) {
-
-        String availabilityNote = "";
-
         // there are two mutually exclusive environments: if an availability
         // note is needed, it will just be about one
         if (info.getEnvironments().contains(Environment.SHELL)) {
-            availabilityNote = translator.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL).getContents();
+            return translator.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL).getContents();
         } else if (info.getEnvironments().contains(Environment.CLI)) {
-            availabilityNote = translator.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL).getContents();
+            return translator.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL).getContents();
         } else {
             throw new AssertionError("Need to handle a third environment");
         }
-
-        return availabilityNote;
     }
 
     @Override
@@ -226,10 +305,45 @@ public class HelpCommand extends AbstractCommand  {
             if (o2.getName().equals("help")) {
                 return 1;
             }
-
             return o1.getName().compareTo(o2.getName());
         }
 
+    }
+
+    private static class CommandGroupMetadataComparator implements Comparator<CommandGroupMetadata> {
+        @Override
+        public int compare(CommandGroupMetadata cgm1, CommandGroupMetadata cgm2) {
+            int sortOrderComparison = Integer.compare(cgm1.getSortOrder(), cgm2.getSortOrder());
+            if (sortOrderComparison != 0) {
+                return sortOrderComparison;
+            }
+            return StringUtils.compare(cgm1.getName(), cgm2.getName());
+        }
+    }
+
+    private static class RelatedCommandsFormatter {
+
+        private final Set<CommandInfo> commandInfos;
+
+        public RelatedCommandsFormatter(Set<CommandInfo> commandInfos) {
+            this.commandInfos = commandInfos;
+        }
+
+        public String format() {
+            StringBuilder sb = new StringBuilder();
+            for (CommandInfo info : commandInfos) {
+                String next = info.getName();
+                if (sb.length() + (" " + next + ",").length() > MAX_COLUMN_WIDTH) {
+                    sb.append("\n ");
+                }
+                sb.append(' ').append(next).append(",");
+            }
+            String result = sb.toString();
+            if (result.endsWith(",")) {
+                result = result.substring(0, result.length() - 1);
+            }
+            return result;
+        }
     }
 
 }

@@ -61,6 +61,7 @@ public class BuiltInCommandInfo implements CommandInfo {
     private static final String PROPERTY_BUNDLES = "bundles";
     private static final String PROPERTY_SUMMARY = "summary";
     private static final String PROPERTY_DESC = "description";
+    private static final String COMMAND_GROUP_DESC = "command-groups";
     private static final String PROPERTY_USAGE = "usage";
     private static final String PROPERTY_OPTIONS = "options";
     private static final String PROPERTY_ENVIRONMENTS = "environments";
@@ -72,6 +73,7 @@ public class BuiltInCommandInfo implements CommandInfo {
     private static final String PROP_OPTDESC = ".description";
     
     private String name, summary, description, usage;
+    private List<String> commandGroups = new ArrayList<>();
     private Options options;
     private EnumSet<Environment> environment;
     private List<BundleInformation> dependencies;
@@ -87,6 +89,15 @@ public class BuiltInCommandInfo implements CommandInfo {
                 summary = properties.getProperty(key);
             } else if (key.equals(PROPERTY_DESC)) {
                 description = properties.getProperty(key);
+            } else if (key.equals(COMMAND_GROUP_DESC)) {
+                String raw = properties.getProperty(key);
+                if (raw == null || raw.isEmpty()) {
+                    continue;
+                }
+                String[] parts = raw.split(",");
+                for (String part : parts) {
+                    commandGroups.add(part.trim());
+                }
             } else if (key.equals(PROPERTY_USAGE)) {
                 usage = properties.getProperty(key);
             } else if (key.equals(PROPERTY_OPTIONS)) {
@@ -375,6 +386,11 @@ public class BuiltInCommandInfo implements CommandInfo {
     @Override
     public String getDescription() {
         return description;
+    }
+
+    @Override
+    public List<String> getCommandGroups() {
+        return commandGroups;
     }
 
     @Override

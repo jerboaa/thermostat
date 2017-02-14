@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
@@ -52,12 +55,14 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
@@ -190,9 +195,10 @@ public class PluginInfoSourceTest {
     }
 
     @Test
-    public void verifyCommandInfoObjectsForNewComamndsAreCreated() throws IOException {
+    public void verifyCommandInfoObjectsForNewCommandsAreCreated() throws IOException {
         final String NAME = "command-name";
         final String DESCRIPTION = "description of the command";
+        final List<String> COMMAND_GROUPS = Collections.singletonList("group");
         final String USAGE = "usage";
         final Options OPTIONS = new Options();
         final Set<Environment> ENVIRONMENTS = EnumSet.of(Environment.SHELL);
@@ -204,6 +210,7 @@ public class PluginInfoSourceTest {
         NewCommand cmd = mock(NewCommand.class);
         when(cmd.getCommandName()).thenReturn(NAME);
         when(cmd.getDescription()).thenReturn(DESCRIPTION);
+        when(cmd.getCommandGroups()).thenReturn(COMMAND_GROUPS);
         when(usageBuilder.getUsage(NAME, false, OPTIONS)).thenReturn(USAGE);
         when(cmd.getOptions()).thenReturn(OPTIONS);
         when(cmd.getEnvironments()).thenReturn(ENVIRONMENTS);
@@ -219,12 +226,37 @@ public class PluginInfoSourceTest {
 
         assertEquals(NAME, result.getName());
         assertEquals(DESCRIPTION, result.getDescription());
+        assertEquals(COMMAND_GROUPS, result.getCommandGroups());
         assertEquals(USAGE, result.getUsage());
         assertEquals(OPTIONS, result.getOptions());
 
         List<BundleInformation> deps = result.getBundles();
         assertEquals(1, deps.size());
         assertTrue(deps.contains(bundleInfo));
+    }
+
+    @Test
+    public void verifyCommandGroupMetadataAreCreated() throws IOException {
+        CommandGroupMetadata metadata1 = new CommandGroupMetadata("foo", "FooGroup", 7);
+        CommandGroupMetadata metadata2 = new CommandGroupMetadata("bar", "BarGroup", 9);
+        CommandGroupMetadata metadata3 = new CommandGroupMetadata("foo", "FooGroup2", 11); // this one should get ignored
+
+        Path pluginDir = sysPluginRootDir.resolve("plugin1");
+        Files.createDirectories(pluginDir);
+
+        when(parserResult.getCommandGroupMetadata()).thenReturn(Arrays.asList(metadata1, metadata2, metadata3));
+
+        PluginInfoSource source = new PluginInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(),
+                userPluginRootDir.toFile(), sysConfRootDir.toFile(), userConfRootDir.toFile(),
+                parser, usageBuilder);
+
+        Map<String, CommandGroupMetadata> actual = source.getCommandGroupMetadata();
+
+        Map<String, CommandGroupMetadata> expected = new HashMap<>();
+        expected.put("foo", metadata1);
+        expected.put("bar", metadata2);
+
+        assertThat(actual, is(equalTo(expected)));
     }
 
     @Test

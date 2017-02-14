@@ -90,5 +90,23 @@ public class StringUtils {
         return in;
     }
 
+    /**
+     * Compare nullable Strings.
+     * The "null string" is considered to be "greater than", or "come after", any non-null String.
+     * For two non-null values, this method is equal to s1.compareTo(s2).
+     */
+    public static int compare(String s1, String s2) {
+        if (s1 == null && s2 == null) {
+            return 0;
+        }
+        if (s1 == null) {
+            return 1;
+        }
+        if (s2 == null) {
+            return -1;
+        }
+        return s1.compareTo(s2);
+    }
+
 }
 

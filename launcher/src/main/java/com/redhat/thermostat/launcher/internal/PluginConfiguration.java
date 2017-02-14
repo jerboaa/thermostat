@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.cli.Options;
@@ -49,14 +50,17 @@ import com.redhat.thermostat.launcher.BundleInformation;
 
 public class PluginConfiguration {
 
-    private final List<CommandExtensions> extensions;
     private final List<NewCommand> newCommands;
+    private final List<CommandGroupMetadata> commandGroupMetadataList;
+    private final List<CommandExtensions> extensions;
 
     private final PluginID pluginID;
     private final Configurations configurations;
 
-    public PluginConfiguration(List<NewCommand> newCommands, List<CommandExtensions> extensions, PluginID pluginID, Configurations config) {
+    public PluginConfiguration(List<NewCommand> newCommands, List<CommandGroupMetadata> commandGroupMetadataList,
+                               List<CommandExtensions> extensions, PluginID pluginID, Configurations config) {
         this.newCommands = newCommands;
+        this.commandGroupMetadataList = commandGroupMetadataList;
         this.extensions = extensions;
         this.pluginID = pluginID;
         this.configurations = config;
@@ -68,6 +72,10 @@ public class PluginConfiguration {
 
     public List<NewCommand> getNewCommands() {
         return newCommands;
+    }
+
+    public List<CommandGroupMetadata> getCommandGroupMetadata() {
+        return commandGroupMetadataList;
     }
 
     public PluginID getPluginID() {
@@ -115,6 +123,7 @@ public class PluginConfiguration {
         private final String commandName;
         private final String summary;
         private final String description;
+        private final List<String> commandGroups;
         private final String usage;
         private final List<String> positionalArguments;
         private final Options options;
@@ -122,12 +131,13 @@ public class PluginConfiguration {
         private final Set<Environment> environment;
         private final List<BundleInformation> bundles;
 
-        public NewCommand(String name, String summary, String description, String usage,
+        public NewCommand(String name, String summary, String description, List<String> commandGroups, String usage,
                           List<String> positionalArguments, Options options, List<Subcommand> subcommands,
                           Set<Environment> environment, List<BundleInformation> bundles) {
             this.commandName = name;
             this.summary = summary;
             this.description = description;
+            this.commandGroups = commandGroups;
             this.usage = usage;
             this.positionalArguments = positionalArguments;
             this.options = options;
@@ -146,6 +156,10 @@ public class PluginConfiguration {
 
         public String getDescription() {
             return description;
+        }
+
+        public List<String> getCommandGroups() {
+            return commandGroups;
         }
 
         /**
@@ -180,6 +194,47 @@ public class PluginConfiguration {
             return Collections.unmodifiableList(bundles);
         }
 
+    }
+
+    public static class CommandGroupMetadata {
+        private final String name;
+        private final String description;
+        private final int sortOrder;
+
+        public CommandGroupMetadata(String name, String description, int sortOrder) {
+            this.name = name;
+            this.description = description;
+            this.sortOrder = sortOrder;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public int getSortOrder() {
+            return sortOrder;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof CommandGroupMetadata)) {
+                return false;
+            }
+            if (this == o) {
+                return true;
+            }
+            CommandGroupMetadata other = (CommandGroupMetadata) o;
+            return Objects.equals(this.getName(), other.getName());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
+        }
     }
 
     public static class PluginID {

@@ -45,12 +45,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,6 +60,7 @@ import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.Configurations;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.PluginID;
@@ -74,7 +77,7 @@ import com.redhat.thermostat.plugin.validator.ValidationErrorsFormatter;
  *
  * @see PluginConfigurationParser how the thermostat-plugin.xml file is parsed
  */
-public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSource {
+public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSource, CommandGroupMetadataSource {
 
     private static final String PLUGIN_CONFIG_FILE = "thermostat-plugin.xml";
 
@@ -83,6 +86,8 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
     private final UsageStringBuilder usageBuilder;
 
     private Map<String, BasicCommandInfo> allNewCommands = new HashMap<>();
+    private Map<CommandGroupMetadata, Set<String>> pluginMetadataMap = new HashMap<>();
+    private Map<String, CommandGroupMetadata> commandGroupMetadataMap = new HashMap<>();
     private Map<String, List<BundleInformation>> additionalBundlesForExistingCommands = new HashMap<>();
     private Map<PluginID, Configurations> allConfigs = new HashMap<>();
 
@@ -112,6 +117,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
                 File configurationFile = new File(pluginDir, PLUGIN_CONFIG_FILE);
                 PluginConfiguration pluginConfig = parser.parse(configurationFile);
                 loadNewAndExtendedCommands(internalJarRoot, pluginDir, pluginConfig);
+                processCommandGroupMetadata(pluginConfig, pluginDir);
                 if (allConfigs.containsKey(pluginConfig.getPluginID())) {
                     logger.log(Level.WARNING, "Plugin with ID: " + pluginConfig.getPluginID() + " conflicts with a previous plugin's ID and the config file will not be overwritten.");
                 } else if (pluginConfig.hasValidID() && pluginConfig.hasConfigurations()) {
@@ -131,6 +137,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
             }
         }
         combineCommands();
+        validateCommandGroupMetadataSources();
     }
 
     private void addPluginDirectory(List<File> allPluginDirectories, File aPluginRoot) {
@@ -176,6 +183,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
             BasicCommandInfo info = new BasicCommandInfo(commandName,
                     command.getSummary(),
                     command.getDescription(),
+                    command.getCommandGroups(),
                     usage,
                     command.getOptions(), command.getSubcommands(),
                     command.getEnvironments(),
@@ -185,6 +193,33 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
             allNewCommands.put(commandName, info);
         }
 
+    }
+
+    private void processCommandGroupMetadata(PluginConfiguration pluginConfiguration, File pluginDir) {
+        List<CommandGroupMetadata> commandGroupMetadata = pluginConfiguration.getCommandGroupMetadata();
+        for (CommandGroupMetadata metadata : commandGroupMetadata) {
+            if (!pluginMetadataMap.containsKey(metadata)) {
+                pluginMetadataMap.put(metadata, new HashSet<String>());
+            }
+            pluginMetadataMap.get(metadata).add(pluginDir.getName());
+            String name = metadata.getName();
+            if (commandGroupMetadataMap.containsKey(name)) {
+                logger.warning("Already found metadata for command group \"" + name + "\"");
+                continue;
+            }
+            commandGroupMetadataMap.put(name, metadata);
+        }
+    }
+
+    private void validateCommandGroupMetadataSources() {
+        for (Map.Entry<CommandGroupMetadata, Set<String>> entry : pluginMetadataMap.entrySet()) {
+            CommandGroupMetadata metadata = entry.getKey();
+            Set<String> providingPlugins = entry.getValue();
+            if (providingPlugins.size() > 1) {
+                logger.warning(String.format("Metadata for command group \"%s\" is provided by multiple plugins: %s",
+                        metadata.getName(), providingPlugins));
+            }
+        }
     }
 
     private void combineCommands() {
@@ -199,6 +234,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
                 BasicCommandInfo updated = new BasicCommandInfo(old.getName(),
                         old.getSummary(),
                         old.getDescription(),
+                        old.getCommandGroups(),
                         old.getUsage(),
                         old.getOptions(), old.getSubcommands(),
                         old.getEnvironments(),
@@ -232,8 +268,13 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
         return result;
     }
 
+    @Override
+    public Map<String, CommandGroupMetadata> getCommandGroupMetadata() {
+        return new HashMap<>(commandGroupMetadataMap);
+    }
+
     private BasicCommandInfo createCommandInfo(String name, List<BundleInformation> bundles) {
-        return new BasicCommandInfo(name, null, null, null, null, null, null, bundles);
+        return new BasicCommandInfo(name, null, null, Collections.<String>emptyList(), null, null, null, null, bundles);
     }
 
     public Map<String, String> getConfiguration(String pluginID, String fileName) throws IOException {

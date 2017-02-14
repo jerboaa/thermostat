@@ -155,12 +155,12 @@ public class ActivatorTest {
 
         assertCommandIsRegistered(context, "help", HelpCommand.class);
 
-        verify(mockTracker, times(2)).open();
+        verify(mockTracker, times(3)).open();
 
         Action action = actionCaptor.getValue();
         assertNotNull(action);
         activator.stop(context);
-        verify(mockTracker, times(2)).close();
+        verify(mockTracker, times(3)).close();
     }
     
     @Test
@@ -194,6 +194,12 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(agentIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
+        Class<?>[] helpCommandDeps = new Class[] {
+                CommandInfoSource.class,
+                CommandGroupMetadataSource.class
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(helpCommandDeps), actionCaptor.capture()).thenReturn(unusedTracker);
 
         Activator activator = new Activator();
         context.registerService(Keyring.class, mock(Keyring.class), null);
@@ -276,6 +282,12 @@ public class ActivatorTest {
         };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
                 eq(agentIdCompleterDeps), actionCaptor.capture()).thenReturn(unusedTracker);
+        Class<?>[] helpCommandDeps = new Class[] {
+                CommandInfoSource.class,
+                CommandGroupMetadataSource.class
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(helpCommandDeps), actionCaptor.capture()).thenReturn(unusedTracker);
 
         Activator activator = new Activator();
         ConfigurationInfoSource configurationInfoSource = mock(ConfigurationInfoSource.class);

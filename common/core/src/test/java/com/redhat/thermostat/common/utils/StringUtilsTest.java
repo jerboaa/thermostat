@@ -36,8 +36,10 @@
 
 package com.redhat.thermostat.common.utils;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +60,7 @@ public class StringUtilsTest {
 
     static List<String> list(String... items) {
         if (items == null) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         } else {
             return Arrays.asList(items);
         }
@@ -75,6 +77,14 @@ public class StringUtilsTest {
         assertFalse(escapedFunnyCharacters.contains(">"));
         assertFalse(escapedFunnyCharacters.contains("\""));
         assertFalse(escapedFunnyCharacters.contains("/"));
+    }
+
+    @Test
+    public void testStringCompare() {
+        assertThat(StringUtils.compare("a", "b"), is("a".compareTo("b")));
+        assertThat(StringUtils.compare("a", null), is(-1));
+        assertThat(StringUtils.compare(null, "a"), is(1));
+        assertThat(StringUtils.compare(null, null), is(0));
     }
 
 }

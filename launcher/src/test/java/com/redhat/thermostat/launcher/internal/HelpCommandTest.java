@@ -65,13 +65,16 @@ public class HelpCommandTest {
             + " --boot-delegation        boot delegation string passed on to the OSGi framework\n";
 
     private TestCommandContextFactory  ctxFactory;
-    private CommandInfoSource infos;
+    private CommandInfoSource commandInfoSource;
+    private CommandGroupMetadataSource commandGroupMetadataSource;
 
     @Before
     public void setUp() {
         ctxFactory = new TestCommandContextFactory();
 
-        infos = mock(CommandInfoSource.class);
+        commandInfoSource = mock(CommandInfoSource.class);
+        commandGroupMetadataSource = mock(CommandGroupMetadataSource.class);
+        when(commandGroupMetadataSource.getCommandGroupMetadata()).thenReturn(Collections.<String, PluginConfiguration.CommandGroupMetadata>emptyMap());
     }
 
     @Test
@@ -86,6 +89,7 @@ public class HelpCommandTest {
 
         Arguments args = mock(Arguments.class);
         when(args.getNonOptionArguments()).thenReturn(Arrays.asList("test1"));
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
         cmd.run(ctxFactory.createContext(args));
 
         assertEquals("no information about commands", ctxFactory.getError());
@@ -93,9 +97,23 @@ public class HelpCommandTest {
     }
 
     @Test
+    public void verifyHelpFailsWithoutCommandGroupMetadataSource() {
+        HelpCommand cmd = new HelpCommand();
+
+        Arguments args = mock(Arguments.class);
+        when(args.getNonOptionArguments()).thenReturn(Arrays.asList("test1"));
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.run(ctxFactory.createContext(args));
+
+        assertEquals("command group metadata source is missing", ctxFactory.getError());
+        assertEquals("", ctxFactory.getOutput());
+    }
+
+    @Test
     public void verifyHelpNoArgPrintsListOfCommandsNoCommands() {
         HelpCommand cmd = new HelpCommand();
-        cmd.setCommandInfoSource(infos);
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
         Arguments args = mock(Arguments.class);
         cmd.run(ctxFactory.createContext(args));
         String expected = "list of commands:\n\n";
@@ -120,11 +138,12 @@ public class HelpCommandTest {
         when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
         infoList.add(info2);
 
-        when(infos.getCommandInfos()).thenReturn(infoList);
+        when(commandInfoSource.getCommandInfos()).thenReturn(infoList);
 
         HelpCommand cmd = new HelpCommand();
         cmd.setEnvironment(Environment.CLI);
-        cmd.setCommandInfoSource(infos);
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
 
         Arguments args = mock(Arguments.class);
         cmd.run(ctxFactory.createContext(args));
@@ -156,10 +175,11 @@ public class HelpCommandTest {
         when(subcommand.getOptions()).thenReturn(subOptions);
         when(testCommandInfo.getSubcommands()).thenReturn(Collections.singletonList(subcommand));
 
-        when(infos.getCommandInfo("test1")).thenReturn(testCommandInfo);
+        when(commandInfoSource.getCommandInfo("test1")).thenReturn(testCommandInfo);
 
         HelpCommand cmd = new HelpCommand();
-        cmd.setCommandInfoSource(infos);
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
         Arguments args = mock(Arguments.class);
         when(args.getNonOptionArguments()).thenReturn(Arrays.asList("test1"));
         cmd.run(ctxFactory.createContext(args));
@@ -204,11 +224,12 @@ public class HelpCommandTest {
         when(info4.getSummary()).thenReturn("test command 4");
         when(info4.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
 
-        when(infos.getCommandInfos()).thenReturn(Arrays.asList(info2, helpInfo, info4, info3, info1));
+        when(commandInfoSource.getCommandInfos()).thenReturn(Arrays.asList(info2, helpInfo, info4, info3, info1));
 
         HelpCommand cmd = new HelpCommand();
         cmd.setEnvironment(Environment.CLI);
-        cmd.setCommandInfoSource(infos);
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
         Arguments args = mock(Arguments.class);
         when(args.getNonOptionArguments()).thenReturn(new ArrayList<String>());
         cmd.run(ctxFactory.createContext(args));
@@ -253,11 +274,12 @@ public class HelpCommandTest {
         when(info4.getSummary()).thenReturn("test command 4");
         when(info4.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
 
-        when(infos.getCommandInfos()).thenReturn(Arrays.asList(info2, helpInfo, info4, info3, info1));
+        when(commandInfoSource.getCommandInfos()).thenReturn(Arrays.asList(info2, helpInfo, info4, info3, info1));
 
         HelpCommand cmd = new HelpCommand();
         cmd.setEnvironment(Environment.CLI);
-        cmd.setCommandInfoSource(infos);
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
         Arguments args = mock(Arguments.class);
         when(args.getNonOptionArguments()).thenReturn(new ArrayList<String>());
         cmd.run(ctxFactory.createContext(args));
@@ -291,11 +313,12 @@ public class HelpCommandTest {
         when(info2.getSummary()).thenReturn("test command 2");
         when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL));
 
-        when(infos.getCommandInfos()).thenReturn(Arrays.asList(info2, helpInfo, info1));
+        when(commandInfoSource.getCommandInfos()).thenReturn(Arrays.asList(info2, helpInfo, info1));
 
         HelpCommand cmd = new HelpCommand();
         cmd.setEnvironment(Environment.SHELL);
-        cmd.setCommandInfoSource(infos);
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
         Arguments args = mock(Arguments.class);
         when(args.getNonOptionArguments()).thenReturn(new ArrayList<String>());
         cmd.run(ctxFactory.createContext(args));
@@ -310,10 +333,11 @@ public class HelpCommandTest {
 
     @Test
     public void verifyHelpUnknownCmdPrintsSummaries() {
-        when(infos.getCommandInfo("test1")).thenThrow(new CommandInfoNotFoundException("test1"));
+        when(commandInfoSource.getCommandInfo("test1")).thenThrow(new CommandInfoNotFoundException("test1"));
 
         HelpCommand cmd = new HelpCommand();
-        cmd.setCommandInfoSource(infos);
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
         SimpleArguments args = new SimpleArguments();
         args.addNonOptionArgument("test1");
         cmd.run(ctxFactory.createContext(args));
@@ -323,6 +347,99 @@ public class HelpCommandTest {
 
         String actual = ctxFactory.getOutput();
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void verifyHelpKnownCmdPrintsCommandGroupSeeAlso() {
+        CommandInfo info1 = mock(CommandInfo.class);
+        when(info1.getName()).thenReturn("test1");
+        when(info1.getUsage()).thenReturn("usage of test1 command");
+        when(info1.getDescription()).thenReturn("description of test1 command");
+        when(info1.getCommandGroups()).thenReturn(Collections.singletonList("group"));
+        when(info1.getOptions()).thenReturn(new Options());
+        when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
+
+        CommandInfo info2 = mock(CommandInfo.class);
+        when(info2.getName()).thenReturn("test2");
+        when(info2.getUsage()).thenReturn("usage of test2 command");
+        when(info2.getDescription()).thenReturn("description of test2 command");
+        when(info2.getCommandGroups()).thenReturn(Collections.singletonList("group"));
+        when(info2.getOptions()).thenReturn(new Options());
+        when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
+
+        CommandInfo info3 = mock(CommandInfo.class);
+        when(info3.getName()).thenReturn("test3");
+        when(info3.getUsage()).thenReturn("usage of test3 command");
+        when(info3.getDescription()).thenReturn("description of test3 command");
+        when(info3.getCommandGroups()).thenReturn(Collections.<String>emptyList());
+        when(info3.getOptions()).thenReturn(new Options());
+        when(info3.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
+
+        when(commandInfoSource.getCommandInfo("test1")).thenReturn(info1);
+        when(commandInfoSource.getCommandInfo("test2")).thenReturn(info2);
+        when(commandInfoSource.getCommandInfo("test3")).thenReturn(info3);
+        when(commandInfoSource.getCommandInfos()).thenReturn(Arrays.asList(info1, info2, info3));
+
+        HelpCommand cmd = new HelpCommand();
+        cmd.setEnvironment(Environment.CLI);
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
+        Arguments args = mock(Arguments.class);
+        when(args.getNonOptionArguments()).thenReturn(Collections.singletonList("test1"));
+        cmd.run(ctxFactory.createContext(args));
+
+        String actual = ctxFactory.getOutput();
+        assertEquals("usage: thermostat usage of test1 command\n" +
+                "                  description of test1 command\n" +
+                "\n" +
+                "thermostat test1\n" +
+                "     --help    show usage of command\n" +
+                "\n" +
+                "See also:\n" +
+                "  test2\n", actual);
+    }
+
+    @Test
+    public void testCommandGroupMetadataDescriptions() {
+        when(commandGroupMetadataSource.getCommandGroupMetadata()).thenReturn(Collections.singletonMap(
+                "group1", new PluginConfiguration.CommandGroupMetadata("group1", "Group Name", 10)
+        ));
+
+        CommandInfo commandInfo = mock(CommandInfo.class);
+        when(commandInfo.getName()).thenReturn("test1");
+        when(commandInfo.getUsage()).thenReturn("usage of test1 command");
+        when(commandInfo.getDescription()).thenReturn("description of test1 command");
+        when(commandInfo.getSummary()).thenReturn("summary of test1 command");
+        when(commandInfo.getCommandGroups()).thenReturn(Arrays.asList("group1", "group2"));
+        when(commandInfo.getOptions()).thenReturn(new Options());
+        when(commandInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
+
+        when(commandInfoSource.getCommandInfo("test1")).thenReturn(commandInfo);
+        when(commandInfoSource.getCommandInfos()).thenReturn(Collections.singleton(commandInfo));
+
+        HelpCommand cmd = new HelpCommand();
+        cmd.setEnvironment(Environment.CLI);
+        cmd.setCommandInfoSource(commandInfoSource);
+        cmd.setCommandGroupMetadataSource(commandGroupMetadataSource);
+        Arguments args = mock(Arguments.class);
+        cmd.run(ctxFactory.createContext(args));
+
+        String output = ctxFactory.getOutput();
+        assertEquals("list of global options:\n" +
+                "\n" +
+                " --version                display the version of the current thermostat installation\n" +
+                " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n" +
+                " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n" +
+                " --boot-delegation        boot delegation string passed on to the OSGi framework\n" +
+                "\n" +
+                "list of commands:\n" +
+                "\n" +
+                "Group Name:    \n" +
+                " test1         summary of test1 command\n" +
+                "               \n" +
+                "group2:        \n" +
+                " test1         summary of test1 command\n" +
+                "               \n", output);
     }
 
 }

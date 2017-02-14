@@ -79,6 +79,7 @@ public class Activator implements BundleActivator {
         private ServiceRegistration cmdInfoReg;
         private ServiceRegistration exitStatusReg;
         private ServiceRegistration pluginConfReg;
+        private ServiceRegistration commandGroupMetaReg;
         private BundleContext context;
         private CurrentEnvironment env;
 
@@ -107,6 +108,8 @@ public class Activator implements BundleActivator {
             ConfigurationInfoSource configurations = pluginSource;
             pluginConfReg = context.registerService(ConfigurationInfoSource.class, configurations, null);
 
+            commandGroupMetaReg = context.registerService(CommandGroupMetadataSource.class, pluginSource, null);
+
             CommandInfoSource commands = new CompoundCommandInfoSource(builtInCommandSource, pluginSource);
             cmdInfoReg = context.registerService(CommandInfoSource.class, commands, null);
 
@@ -134,6 +137,7 @@ public class Activator implements BundleActivator {
             cmdInfoReg.unregister();
             exitStatusReg.unregister();
             pluginConfReg.unregister();
+            commandGroupMetaReg.unregister();
         }
 
     }
@@ -146,7 +150,7 @@ public class Activator implements BundleActivator {
     private ShellCommand shellCommand;
     private TabCompletion tabCompletion;
     @SuppressWarnings("rawtypes")
-    private ServiceTracker commandInfoSourceTracker;
+    private MultipleServiceTracker commandInfoSourceTracker;
     private ServiceTracker dbServiceTracker;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -217,28 +221,34 @@ public class Activator implements BundleActivator {
         shellTracker.open();
 
         final HelpCommandCompleterService helpCommandCompleterService = new HelpCommandCompleterService();
-        commandInfoSourceTracker = new ServiceTracker(context, CommandInfoSource.class, null) {
+        final Class<?>[] helpCommandClasses = new Class<?>[] {
+                CommandInfoSource.class,
+                CommandGroupMetadataSource.class
+        };
+        commandInfoSourceTracker = new MultipleServiceTracker(context, helpCommandClasses, new Action() {
             @Override
-            public Object addingService(ServiceReference reference) {
-                CommandInfoSource infoSource = (CommandInfoSource) super.addingService(reference);
+            public void dependenciesAvailable(DependencyProvider services) {
+                CommandInfoSource infoSource = services.get(CommandInfoSource.class);
                 helpCommand.setCommandInfoSource(infoSource);
                 helpCommandCompleterService.bindCommandInfoSource(infoSource);
                 if (shellCommand != null) {
                     shellCommand.setCommandInfoSource(infoSource);
                 }
-                return infoSource;
+
+                CommandGroupMetadataSource commandGroupMetadataSource = services.get(CommandGroupMetadataSource.class);
+                helpCommand.setCommandGroupMetadataSource(commandGroupMetadataSource);
             }
 
             @Override
-            public void removedService(ServiceReference reference, Object service) {
+            public void dependenciesUnavailable() {
                 helpCommand.setCommandInfoSource(null);
+                helpCommand.setCommandGroupMetadataSource(null);
                 helpCommandCompleterService.unbindCommandInfoSource();
                 if (shellCommand != null) {
                     shellCommand.setCommandInfoSource(null);
                 }
-                super.removedService(reference, service);
             }
-        };
+        });
         commandInfoSourceTracker.open();
 
         dbServiceTracker = new ServiceTracker(context, DbService.class.getName(), new ServiceTrackerCustomizer() {

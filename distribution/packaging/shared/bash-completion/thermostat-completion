@@ -11,7 +11,7 @@ _thermostat()
 
     # Thermostat Options
     # All valid commands and options are prefixed with a single space
-    opts="$( "${thermostat_install_dir}/bin/thermostat" "${thermostat_logging_opts}" help | grep '^ ' | cut -d " " -f 2 | tr '\n' ' ')"
+    opts="$( "${thermostat_install_dir}/bin/thermostat" "${thermostat_logging_opts}" help | grep '^ ' | cut -d " " -f 2 | sort | uniq | tr '\n' ' ')"
 
     COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
     return 0

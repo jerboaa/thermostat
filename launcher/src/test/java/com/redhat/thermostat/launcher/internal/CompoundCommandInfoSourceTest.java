@@ -102,6 +102,7 @@ public class CompoundCommandInfoSourceTest {
     public void verifyGetCommandInfoMergesResultFromBothSources() {
         String NAME = "test-command-please-ignore";
         String DESCRIPTION = "test-description";
+        List<String> COMMAND_GROUPS = Collections.singletonList("test-command-group");
         String USAGE = "test-usage";
         List<PluginConfiguration.Subcommand> SUBCOMMANDS = Collections.emptyList();
         Options OPTIONS = new Options();
@@ -111,6 +112,7 @@ public class CompoundCommandInfoSourceTest {
         CommandInfo cmdInfo1 = mock(CommandInfo.class);
         when(cmdInfo1.getName()).thenReturn(NAME);
         when(cmdInfo1.getDescription()).thenReturn(DESCRIPTION);
+        when(cmdInfo1.getCommandGroups()).thenReturn(COMMAND_GROUPS);
         when(cmdInfo1.getUsage()).thenReturn(USAGE);
         when(cmdInfo1.getOptions()).thenReturn(OPTIONS);
         when(cmdInfo1.getSubcommands()).thenReturn(SUBCOMMANDS);
@@ -119,6 +121,7 @@ public class CompoundCommandInfoSourceTest {
         CommandInfo cmdInfo2 = mock(CommandInfo.class);
         when(cmdInfo2.getName()).thenReturn(NAME);
         when(cmdInfo2.getBundles()).thenReturn(DEPS2);
+        when(cmdInfo2.getCommandGroups()).thenReturn(Collections.<String>emptyList());
 
         when(source1.getCommandInfo(NAME)).thenReturn(cmdInfo1);
         when(source2.getCommandInfo(NAME)).thenReturn(cmdInfo2);
@@ -126,6 +129,7 @@ public class CompoundCommandInfoSourceTest {
         CommandInfo result = compoundSource.getCommandInfo(NAME);
         assertEquals(NAME, result.getName());
         assertEquals(DESCRIPTION, result.getDescription());
+        assertEquals(COMMAND_GROUPS, result.getCommandGroups());
         assertEquals(USAGE, result.getUsage());
         assertEquals(OPTIONS, result.getOptions());
         assertEquals(SUBCOMMANDS, result.getSubcommands());

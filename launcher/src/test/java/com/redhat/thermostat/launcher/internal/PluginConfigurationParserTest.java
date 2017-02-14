@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -51,8 +52,10 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandGroupMetadata;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
@@ -136,10 +139,13 @@ public class PluginConfigurationParserTest {
                 "      <name>test</name>\n" +
                 "      <summary>summary</summary>\n" +
                 "      <description>description</description>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
+                "      <command-groups>\n" +
+                "        <command-group>group</command-group>\n" +
+                "      </command-groups>\n" +
+                "      <environments>\n" +
+                "        <environment>shell</environment>\n" +
+                "        <environment>cli</environment>\n" +
+                "      </environments>\n" +
                 "      <bundles>\n" +
                 "        <bundle><symbolic-name>foo</symbolic-name><version>1.0</version></bundle>\n" +
                 "        <bundle><symbolic-name>bar</symbolic-name><version>1.0</version></bundle>\n" +
@@ -165,6 +171,7 @@ public class PluginConfigurationParserTest {
         assertEquals("test", newCommand.getCommandName());
         assertEquals("summary", newCommand.getSummary());
         assertEquals("description", newCommand.getDescription());
+        assertEquals(Collections.singletonList("group"), newCommand.getCommandGroups());
         Options opts = newCommand.getOptions();
         assertTrue(opts.getOptions().isEmpty());
         assertTrue(opts.getRequiredOptions().isEmpty());
@@ -241,6 +248,58 @@ public class PluginConfigurationParserTest {
         assertThat(option.getArgName(), is("bar"));
         assertThat(option.isRequired(), is(true));
         assertThat(option.getDescription(), is("foo argument"));
+    }
+
+    @Test
+    public void testConfigurationThatAddsNewCommandWithCommandGroupAndMetadata() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
+                " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
+                " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\">\n" +
+                "  <commands>\n" +
+                "    <command>\n" +
+                "      <name>test</name>\n" +
+                "      <summary>summary</summary>\n" +
+                "      <description>description</description>\n" +
+                "      <command-groups>\n" +
+                "        <command-group>group</command-group>\n" +
+                "      </command-groups>\n" +
+                "      <environments>\n" +
+                "        <environment>shell</environment>\n" +
+                "        <environment>cli</environment>\n" +
+                "      </environments>\n" +
+                "      <bundles>\n" +
+                "        <bundle><symbolic-name>foo</symbolic-name><version>1.0</version></bundle>\n" +
+                "        <bundle><symbolic-name>bar</symbolic-name><version>1.0</version></bundle>\n" +
+                "        <bundle><symbolic-name>baz</symbolic-name><version>1.0</version></bundle>\n" +
+                "      </bundles>\n" +
+                "      <dependencies>\n" +
+                "        <dependency>thermostat-foo</dependency>\n" +
+                "      </dependencies>\n" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "  <command-group-metadatas>\n" +
+                "    <command-group-metadata>\n" +
+                "      <name>group</name>\n" +
+                "      <description>Group Name</description>\n" +
+                "      <sort-order>5</sort-order>\n" +
+                "    </command-group-metadata>\n" +
+                "    <command-group-metadata>\n" +
+                "      <name>foo</name>\n" +
+                "      <description>FooGroup</description>\n" +
+                "      <sort-order>7</sort-order>\n" +
+                "    </command-group-metadata>\n" +
+                "  </command-group-metadatas>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        List<CommandGroupMetadata> metadata = result.getCommandGroupMetadata();
+        assertThat(metadata, is(equalTo(Arrays.asList(
+                new CommandGroupMetadata("group", "Group Name", 5),
+                new CommandGroupMetadata("foo", "FooGroup", 7)
+        ))));
     }
 
     @Test

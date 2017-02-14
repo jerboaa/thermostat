@@ -157,6 +157,7 @@ public class LauncherImplTest {
     private Version version;
     private DbServiceFactory dbServiceFactory;
     private CommandInfoSource infos;
+    private CommandGroupMetadataSource commandGroupMetadataSource;
     private ActionNotifier<ApplicationState> notifier;
 
     private LauncherImpl launcher;
@@ -270,6 +271,10 @@ public class LauncherImplTest {
         when(infos.getCommandInfos()).thenReturn(infoList);
 
         helpCommand.setCommandInfoSource(infos);
+
+        commandGroupMetadataSource = mock(CommandGroupMetadataSource.class);
+        when(commandGroupMetadataSource.getCommandGroupMetadata()).thenReturn(Collections.<String, PluginConfiguration.CommandGroupMetadata>emptyMap());
+        helpCommand.setCommandGroupMetadataSource(commandGroupMetadataSource);
 
         registry = mock(BundleManager.class);
 
