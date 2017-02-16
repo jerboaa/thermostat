@@ -36,28 +36,32 @@
 
 package com.redhat.thermostat.local.command.internal;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
-
-import java.io.File;
-import java.io.IOException;
 
 public class LocalCommandTest {
     private static final String SHOW_SPLASH = "--show-splash";
@@ -78,28 +82,74 @@ public class LocalCommandTest {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
-    @Test(timeout=1000)
+    /**
+     * Verifies that a watch service gets set up which listens for a delete
+     * event of the splash screen stamp file and then closes the splash screen.
+     * 
+     * This tests relies on a certain number of times
+     * {@link CommonPaths#getUserSplashScreenStampFile()}
+     * is being invoked in LocalCommand.
+     * 
+     * @throws CommandException
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    @Test(timeout=5000)
     public void testSplashScreenFunctionalityAndClosing() throws CommandException, InterruptedException, IOException {
-        cmd = createLocalCommandForSplashTests();
-        final File stamp = tempFolder.newFile("splashscreen.stamp");
-        assertTrue(stamp.exists());
+        final File stamp = new File(tempFolder.getRoot(), "splashscreen.stamp");
+        assertFalse(stamp.exists());
+        cmd = createLocalCommandForSplashTests(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(stamp.exists()); // LocalCommand created it
+            }
+        });
+        final boolean[] pollWatchDeleteEventHappened = new boolean[1];
         when(ctxt.getArguments().hasArgument(SHOW_SPLASH)).thenReturn(true);
         when(paths.getUserPersistentDataDirectory()).thenReturn(tempFolder.getRoot());
-        when(paths.getUserSplashScreenStampFile()).thenReturn(stamp);
-        Runnable deleteStampFile = new Runnable() {
-            public void run() {
-                try {
-                    // sleep so the stamp file is deleted while closeSplashScreen() is watching
-                    Thread.sleep(250L);
-                    stamp.delete();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        final CountDownLatch pollEventLatch = new CountDownLatch(1);
+        when(paths.getUserSplashScreenStampFile()).thenAnswer(new Answer<File>() {
+            private int getStampHitCount = 1;
+            @Override
+            public File answer(InvocationOnMock invocation) {
+                // The third invocation of getUserSplashScreenStampFile() will
+                // be in LocalCommand.closeSplashScreen()'s while condition.
+                // At that point, we know the stamp file exists (asserted earlier)
+                // and the WatchService for deletion events have been registered.
+                // Aside: The first invocation is in LocalCommand.run() and the
+                //        second invocation is in LocalCommand.closeSplashScreen()
+                //        before the WatchService got registered.
+                // We only start the delete thread after we know the WatchService
+                // has been installed via register(). This guarantees that the
+                // WatchService's poll() action will return (no timeout) without
+                // introducing a race as much as possible. There is a slim chance
+                // of the File.exists() call to return false when the delete
+                // stamp file thread happens to run before this answer call returns.
+                if (getStampHitCount == 3) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // We need to do this asynchronously since the
+                            // File.exists() call on the returned stamp should
+                            // first return true before we delete it.
+                            stamp.delete();
+                        }
+                    }).start();
                 }
-            }
-        };
-        new Thread(deleteStampFile).start();
+                if (getStampHitCount == 4) {
+                    // At this point we are handling the WatchEvent.
+                    pollWatchDeleteEventHappened[0] = true;
+                    pollEventLatch.countDown();
+                }
+                getStampHitCount++;
+                return stamp;
+           }
+        });
         cmd.run(ctxt);
+        pollEventLatch.await();
         assertTrue(cmd.isSplashScreenEnabled());
+        assertTrue("Expected poll event for deleted file to happen",
+                   pollWatchDeleteEventHappened[0]);
         assertFalse(stamp.exists());
     }
 
@@ -109,8 +159,8 @@ public class LocalCommandTest {
         cmd.run(ctxt);
         assertFalse(cmd.isSplashScreenEnabled());
     }
-
-    private LocalCommand createLocalCommandForSplashTests() throws CommandException, InterruptedException {
+    
+    private LocalCommand createLocalCommandForSplashTests(final Runnable execProcCallback) {
         cmd = new LocalCommand() {
             @Override
             ServiceLauncher createServiceLauncher() {
@@ -119,6 +169,7 @@ public class LocalCommandTest {
 
             @Override
             Process execProcess(String... command) throws IOException {
+                execProcCallback.run();
                 return mock(Process.class);
             }
         };
@@ -126,6 +177,17 @@ public class LocalCommandTest {
         cmd.setPaths(paths);
         cmd.setLauncher(launcher);
         return cmd;
+    }
+
+    private LocalCommand createLocalCommandForSplashTests() throws CommandException, InterruptedException {
+        Runnable doNothingCallBack = new Runnable() {
+            
+            @Override
+            public void run() {
+                // nothing
+            }
+        };
+        return createLocalCommandForSplashTests(doNothingCallBack);
     }
 
     @Test

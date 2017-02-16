@@ -148,17 +148,20 @@ public class LocalCommand extends AbstractCommand {
                 WatchKey key = watcher.poll(5L, TimeUnit.MINUTES);
                 for (WatchEvent<?> event : key.pollEvents()) {
                     if (paths.getUserSplashScreenStampFile().getName().equals(event.context().toString())) {
-                        try {
-                            SplashScreen.getSplashScreen().close();
-                        } catch (NullPointerException e) {
-                            logger.log(Level.WARNING, "Unable to close SplashScreen!", e);
-                        }
+                        doCloseSplashScreen();
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException | InterruptedException e) {
             logger.log(Level.WARNING, "Failed to complete WatcherService.", e);
-            SplashScreen.getSplashScreen().close();
+            doCloseSplashScreen();
+        }
+    }
+
+    private void doCloseSplashScreen() {
+        SplashScreen spScreen = SplashScreen.getSplashScreen();
+        if (spScreen != null) { // if it's null there is nothing to close
+            spScreen.close();
         }
     }
 
