@@ -57,6 +57,7 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.MultiChartPanel;
 import com.redhat.thermostat.client.swing.components.MultiChartPanel.DataGroup;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
 import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
@@ -69,6 +70,7 @@ import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.vm.memory.client.core.MemoryMeter;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
 import com.redhat.thermostat.vm.memory.client.core.Payload;
 import com.redhat.thermostat.vm.memory.client.locale.LocaleResources;
@@ -87,11 +89,11 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     private JPanel contentPanel;
     private JPanel tlabPanel;
     
-    private final Map<String, MemoryGraphPanel> regions;
+    private final Map<String, MemoryMeter> regions;
     
     private ToolbarGCButton toolbarButton;
     private RequestGCAction toolbarButtonAction;
-    
+
     private Dimension preferredSize;
 
     private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<>(this);
@@ -100,13 +102,15 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     private DataGroup numberGroup;
     private DataGroup bytesGroup;
 
+    private ThermostatScrollPane scrollPane;
+
     public MemoryStatsViewImpl(Duration duration) {
         super();
         visiblePanel = new HeaderPanel();
         regions = new HashMap<>();
- 
+
         preferredSize = new Dimension(0, 0);
-        
+
         visiblePanel.setHeader(t.localize(LocaleResources.MEMORY_REGIONS_HEADER));
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
@@ -114,10 +118,12 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
         graphPanel = new JPanel();
         graphPanel.setLayout(new BoxLayout(graphPanel, BoxLayout.Y_AXIS));
 
+        scrollPane = new ThermostatScrollPane(graphPanel);
+
         contentPanel = new JPanel();
         contentPanel.setLayout(new BorderLayout());
 
-        contentPanel.add(graphPanel, BorderLayout.CENTER);
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
 
         RecentTimeControlPanel recentTimeControlPanel = new RecentTimeControlPanel(duration);
         recentTimeControlPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
@@ -174,13 +180,13 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     public Dimension getPreferredSize() {
         return new Dimension(preferredSize);
     }
-    
+
     @Override
     public void updateRegion(final Payload region) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                MemoryGraphPanel memoryGraphPanel = regions.get(region.getName());
+                MemoryMeter memoryGraphPanel = regions.get(region.getName());
                 memoryGraphPanel.setMemoryGraphProperties(region);
             }
         });
@@ -212,19 +218,18 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                MemoryGraphPanel memoryGraphPanel = new MemoryGraphPanel();
+                MemoryMeter meter = new MemoryMeter();
                 
-                graphPanel.add(memoryGraphPanel);
+                graphPanel.add(meter);
                 graphPanel.add(Box.createRigidArea(new Dimension(5, 5)));
-                regions.put(region.getName(), memoryGraphPanel);
-                
+                regions.put(region.getName(), meter);
+
                 // components are stacked up vertically in this panel
-                Dimension memoryGraphPanelMinSize = memoryGraphPanel.getMinimumSize();
+                Dimension memoryGraphPanelMinSize = meter.getMinimumSize();
                 preferredSize.height += memoryGraphPanelMinSize.height + 5;
                 if (preferredSize.width < (memoryGraphPanelMinSize.width + 5)) {
                     preferredSize.width = memoryGraphPanelMinSize.width + 5;
                 }
-
                 updateRegion(region);
                 graphPanel.revalidate();
                 graphPanel.repaint();

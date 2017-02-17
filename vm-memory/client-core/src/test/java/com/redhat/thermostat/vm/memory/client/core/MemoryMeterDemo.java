@@ -34,53 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.client.swing.internal;
+package com.redhat.thermostat.vm.memory.client.core;
 
-import java.awt.Dimension;
-import java.beans.Transient;
+import com.redhat.thermostat.common.Size.Unit;
 
 import javax.swing.BoxLayout;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import java.awt.Dimension;
 
-import com.redhat.thermostat.vm.memory.client.core.MemoryMeter;
-import com.redhat.thermostat.vm.memory.client.core.Payload;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 
-@SuppressWarnings("serial")
-class MemoryGraphPanel extends JPanel {
+public class MemoryMeterDemo {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame frame = new JFrame();
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setMinimumSize(new Dimension(200, 200));
 
-    private MemoryMeter meter;
-    
-    /**
-     * Create the panel.
-     */
-    public MemoryGraphPanel() {
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        meter = new MemoryMeter();
-        add(meter);
-    }
-    
-    public void setMemoryGraphProperties(Payload region) {
+                MemoryMeter meter = new MemoryMeter();
 
-        meter.getPrimaryModel().setMinimum(0);
-        meter.getPrimaryModel().setMaximum(region.getMaxUsed());
-        meter.getPrimaryModel().setValue(region.getUsed());
-        
-        meter.getSecondaryModel().setMinimum(0);
-        meter.getSecondaryModel().setMaximum(region.getMaxCapacity());
-        meter.getSecondaryModel().setValue(region.getCapacity());
-        
-        meter.setToolTipText(region.getTooltip());
-        
-        meter.setPrimaryScaleUnit(region.getUsedUnit().toString());
-        meter.setSecondayScaleUnit(region.getCapacityUnit().toString());
-        
-        meter.setStats(region.getModel());
-    }
-    
-    @Override
-    @Transient
-    public Dimension getPreferredSize() {
-        return meter.getPreferredSize();
+                JPanel graphPanel = new JPanel();
+                graphPanel.setLayout(new BoxLayout(graphPanel, BoxLayout.Y_AXIS));
+
+                graphPanel.add(meter);
+
+                Payload payload = new Payload();
+                payload.setName("Test");
+                payload.setUsedUnit(Unit.KiB);
+                payload.setCapacityUnit(Unit.KiB);
+                payload.setCapacity(1.7);
+                payload.setMaxCapacity(2.0);
+                meter.setMemoryGraphProperties(payload);
+
+                meter = new MemoryMeter();
+                graphPanel.add(meter);
+
+                payload = new Payload();
+                payload.setName("Test2");
+                payload.setUsedUnit(Unit.KiB);
+                payload.setCapacityUnit(Unit.KiB);
+                meter.setMemoryGraphProperties(payload);
+
+                ThermostatScrollPane scrollPane = new ThermostatScrollPane(graphPanel);
+                frame.setContentPane(scrollPane);
+
+                frame.setVisible(true);
+            }
+        });
     }
 }
-

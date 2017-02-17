@@ -55,11 +55,14 @@ import java.beans.Transient;
 import javax.swing.JComponent;
 import javax.swing.plaf.ColorUIResource;
 
+import com.redhat.thermostat.client.ui.Palette;
 import sun.swing.SwingUtilities2;
 
 @SuppressWarnings({ "restriction", "serial" })
 public class MemoryMeter extends JComponent {
-    
+
+    private static final int BORDER_RADIUS = 6;
+
     // TODO the font should be customizable
     private static final Font font = new Font("SansSerif", Font.PLAIN, 10);
     
@@ -69,13 +72,9 @@ public class MemoryMeter extends JComponent {
     private static final int MAIN_BAR_HEIGHT = 20;
     
     private static final ColorUIResource MAIN_GRADIENT_TOP = new ColorUIResource(0xf1f3f1);
-    private static final ColorUIResource MAIN_BORDER_COLOR = new ColorUIResource(0xa8aca8);
+    private static final ColorUIResource MAIN_BORDER_COLOR = new ColorUIResource(Palette.EARL_GRAY.getColor());
     
-    private static final ColorUIResource MAIN_BAR_BASE_COLOR_TOP = new ColorUIResource(0xbcd5ef);
     private static final ColorUIResource MAIN_BAR_BASE_COLOR = new ColorUIResource(0x4A90D9);
-    
-    //private static final ColorUIResource STATS_BG = new ColorUIResource(0xF8F8F8);
-    private static final ColorUIResource STATS_BG = new ColorUIResource(0xFFFFFF);
     
     private ColorUIResource tickColor;
     
@@ -105,6 +104,23 @@ public class MemoryMeter extends JComponent {
     
     public void setStats(StatsModel primaryStats) {
         this.primaryStats = primaryStats;
+    }
+    public void setMemoryGraphProperties(Payload region) {
+
+        getPrimaryModel().setMinimum(0);
+        getPrimaryModel().setMaximum(region.getMaxUsed());
+        getPrimaryModel().setValue(region.getUsed());
+
+        getSecondaryModel().setMinimum(0);
+        getSecondaryModel().setMaximum(region.getMaxCapacity());
+        getSecondaryModel().setValue(region.getCapacity());
+
+        setToolTipText(region.getTooltip());
+
+        setPrimaryScaleUnit(region.getUsedUnit().toString());
+        setSecondayScaleUnit(region.getCapacityUnit().toString());
+
+        setStats(region.getModel());
     }
 
     public MemoryMeter() {
@@ -157,46 +173,27 @@ public class MemoryMeter extends JComponent {
                              bounds.width  - boundInsets.right,
                              bounds.height - boundInsets.bottom);
     }
-        
-    /**
-     * paint the outher frame, including the light border sorrounding
-     */
-    protected void paintOuterFrame(Graphics2D graphics, Rectangle bounds) {
 
-        RoundRectangle2D frame = new RoundRectangle2D.Float(bounds.x, bounds.y, bounds.width, bounds.height, 6, 6);
-
-        Paint paint = new GradientPaint(0, 0, MAIN_GRADIENT_TOP, 0, getHeight(), getBackground());
-        graphics.setPaint(paint);
-        graphics.fill(frame);
-        
-        paint = new GradientPaint(0, 0, MAIN_BORDER_COLOR, 0, getHeight(), getBackground());
-        graphics.setPaint(paint);
-        frame = new RoundRectangle2D.Float(bounds.x, bounds.y, bounds.width -1, bounds.height, 6, 6);
-        graphics.draw(frame);
-    }
-    
     /**
-     * paint the track sorrounding the main bar
+     * paint the track surrounding the main bar
      */
     protected void paintMainBarTrackFill(Graphics2D graphics, Rectangle bounds) {
         
         Paint paint = new GradientPaint(0, 0, MAIN_GRADIENT_TOP, 0, bounds.height, Color.WHITE);
         graphics.setPaint(paint);
-        RoundRectangle2D frame = new RoundRectangle2D.Float(0, 0, bounds.width, bounds.height, 6, 6);
+        RoundRectangle2D frame = new RoundRectangle2D.Float(0, 0, bounds.width, bounds.height, BORDER_RADIUS, BORDER_RADIUS);
         graphics.fill(frame);
     }
     
     /**
      */
     protected void paintMainBarTrackBorder(Graphics2D graphics, Rectangle bounds) {
-        Paint paint = new GradientPaint(0, 0, MAIN_BORDER_COLOR, getWidth(), 0, getBackground());
-        graphics.setPaint(paint);
-        
-        RoundRectangle2D frame = new RoundRectangle2D.Float(0, 0, bounds.width - 1, bounds.height, 6, 6);
+
+        graphics.setPaint(MAIN_BORDER_COLOR);
+        RoundRectangle2D frame = new RoundRectangle2D.Float(0, 0, bounds.width - 1, bounds.height, BORDER_RADIUS, BORDER_RADIUS);
         graphics.draw(frame);
     }
 
-    
     /**
      * this is the main bar, will it up to what is defined by the model
      */
@@ -294,47 +291,52 @@ public class MemoryMeter extends JComponent {
     
     protected void drawStrings(Graphics2D graphics, int top, int bottom, int right) {
       
-      // now draw the min/max values of both side of markers      
-      // top bar min value
-      FontMetrics fm = SwingUtilities2.getFontMetrics(this, font);
-      
-      String value = String.format("%.2f", getPrimaryModel().getMinimum()) + " " + primaryUnit;
-      int height = top + fm.getAscent()/2;
-      SwingUtilities2.drawString(this, graphics, value, 1, height);
-      
-      value = String.format("%.2f", getSecondaryModel().getMinimum()) + " " + secondaryUnit;
-      height = bottom;
-      SwingUtilities2.drawString(this, graphics, value, 1, height);
-      
-      value = String.format("%.2f", getPrimaryModel().getMaximum()) + " " + primaryUnit;
-      height = top + fm.getAscent()/2;
+        // now draw the min/max values of both side of markers
+        // top bar min value
+        FontMetrics fm = SwingUtilities2.getFontMetrics(this, font);
 
-      int width = (int) (right - font.getStringBounds(value, graphics.getFontRenderContext()).getWidth()) - 1;
-      SwingUtilities2.drawString(this, graphics, value, width, height);
-      
-      value = String.format("%.2f", getSecondaryModel().getMaximum()) + " " + secondaryUnit;
-      height = bottom;
-      width = (int) (right - font.getStringBounds(value, graphics.getFontRenderContext()).getWidth()) - 1;
-      SwingUtilities2.drawString(this, graphics, value, width, height);
-      
-      // now draw the actual value for the bottom bar, the top bar is drawn in
-      // its fill method
-      value = String.format("%.2f", getSecondaryModel().getValue()) + " " + secondaryUnit;
-      width = right/2;
-      Rectangle2D bounds = font.getStringBounds(value, graphics.getFontRenderContext());
-      width = (int) (width - bounds.getWidth()/2) - 1;
-      SwingUtilities2.drawString(this, graphics, value, width, height);
-      RoundRectangle2D frame = new RoundRectangle2D.Double(width - 2, height - bounds.getHeight(),
+        String value = String.format("%.2f", getPrimaryModel().getMinimum()) + " " + primaryUnit;
+        int height = top + fm.getAscent()/2;
+        SwingUtilities2.drawString(this, graphics, value, 1, height);
+
+        value = String.format("%.2f", getSecondaryModel().getMinimum()) + " " + secondaryUnit;
+        height = bottom;
+        SwingUtilities2.drawString(this, graphics, value, 1, height);
+
+        value = String.format("%.2f", getPrimaryModel().getMaximum()) + " " + primaryUnit;
+        height = top + fm.getAscent()/2;
+
+        int width = (int) (right - font.getStringBounds(value, graphics.getFontRenderContext()).getWidth()) - 1;
+        SwingUtilities2.drawString(this, graphics, value, width, height);
+
+        value = String.format("%.2f", getSecondaryModel().getMaximum()) + " " + secondaryUnit;
+        height = bottom;
+        width = (int) (right - font.getStringBounds(value, graphics.getFontRenderContext()).getWidth()) - 1;
+        SwingUtilities2.drawString(this, graphics, value, width, height);
+
+        // now draw the actual value for the bottom bar, the top bar is drawn in
+        // its fill method
+        value = String.format("%.2f", getSecondaryModel().getValue()) + " " + secondaryUnit;
+        width = right/2;
+        Rectangle2D bounds = font.getStringBounds(value, graphics.getFontRenderContext());
+        width = (int) (width - bounds.getWidth()/2) - 1;
+        RoundRectangle2D frame = new RoundRectangle2D.Double(width - 2, height - bounds.getHeight(),
                                                           bounds.getWidth() + 4, bounds.getHeight() + 4,
                                                           4, 4);
-      graphics.draw(frame);
+
+        Paint paint = new GradientPaint(0, 0, Palette.DARK_GRAY.getColor(), 0, height, Palette.LIGHT_GRAY.getColor());
+        graphics.setPaint(paint);
+        graphics.fill(frame);
+
+        graphics.setPaint(MAIN_BAR_BASE_COLOR);
+        SwingUtilities2.drawString(this, graphics, value, width, height);
+
+        graphics.setPaint(MAIN_BORDER_COLOR);
+        graphics.draw(frame);
     }
     
     protected void paintSecondaryBarFill(Graphics2D graphics, Rectangle bounds) {
-        
-        graphics.setPaint(MAIN_BAR_BASE_COLOR_TOP);
-        graphics.drawLine(1, bounds.height, getSecondaryModel().getValueNormalized() - 1, bounds.height);
-        
+
         graphics.setPaint(MAIN_BAR_BASE_COLOR);
         graphics.fillRect(1, bounds.height + 1, getSecondaryModel().getValueNormalized(), 2);
     }
@@ -349,11 +351,11 @@ public class MemoryMeter extends JComponent {
         StatsModel stats = getStats();
         drawStats(graphics, stats, bounds.x, bounds.y, imageWidth, bounds.height);
     }
-    
+
     private void drawStats(Graphics2D graphics, StatsModel stats, int x, int y, int imageWidth, int height) {
         if (stats != null) {
-            BufferedImage image = stats.getChart(imageWidth, height, STATS_BG,
-                                                 new ColorUIResource(getForeground()));
+            BufferedImage image = stats.getChart(imageWidth, height, new ColorUIResource(getBackground()),
+                                                 MAIN_BAR_BASE_COLOR);
        
             paintStatsLabel(graphics, image, stats.getName());
             graphics.drawImage(image, x, y, null);
@@ -395,9 +397,6 @@ public class MemoryMeter extends JComponent {
         
         resetModels(0, innerBounds.width);
 
-        // some eye candy
-        paintOuterFrame(graphics, outerBounds);
-
         // paint the usage stats
         paintStats(graphics, statsBound);
         
@@ -428,7 +427,7 @@ public class MemoryMeter extends JComponent {
     @Override
     @Transient
     public Dimension getPreferredSize() {
-        return new Dimension(850, 150);
+        return new Dimension(280, 150);
     }
 }
 
