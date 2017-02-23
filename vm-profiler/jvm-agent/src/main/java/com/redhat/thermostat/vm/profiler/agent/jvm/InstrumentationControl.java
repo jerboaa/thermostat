@@ -218,13 +218,25 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
             return new ResultsFile(output);
         }
 
+        private boolean isPosixSystem() {
+            final String osname = System.getProperty("os.name").toLowerCase();
+            final boolean IS_UNIX = !osname.contains("win");
+            return IS_UNIX;
+        }
+
         private Path createOutput() throws IOException {
-            Set<PosixFilePermission> perm = PosixFilePermissions.fromString("rw-------");
-            FileAttribute<Set<PosixFilePermission>> attributes = PosixFilePermissions.asFileAttribute(perm);
-            // Include the pid so agent can find it. Surround pid with - to
-            // avoid false prefix-based matches. Otherwise the agent searching
-            // for "-12" may find "-123" as a valid match.
-            return Files.createTempFile("thermostat-" + getProcessId() + "-", ".perfdata", attributes);
+            if (isPosixSystem()) {
+                Set<PosixFilePermission> perm = PosixFilePermissions.fromString("rw-------");
+                FileAttribute<Set<PosixFilePermission>> attributes = PosixFilePermissions.asFileAttribute(perm);
+                // Include the pid so agent can find it. Surround pid with - to
+                // avoid false prefix-based matches. Otherwise the agent searching
+                // for "-12" may find "-123" as a valid match.
+                return Files.createTempFile("thermostat-" + getProcessId() + "-", ".perfdata", attributes);
+            }
+            else {
+                // should check that this is in a secure location
+                return Files.createTempFile("thermostat-" + getProcessId() + "-", ".perfdata");
+            }
         }
 
         private String getProcessId() {

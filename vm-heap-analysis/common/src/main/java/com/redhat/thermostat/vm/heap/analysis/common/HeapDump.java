@@ -49,6 +49,7 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.shared.config.OS;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -188,7 +189,13 @@ public class HeapDump {
         String dirname = "thermostat-" + System.getProperty("user.name");
         File tmpFile = new File(System.getProperty("java.io.tmpdir"), dirname);
         if (! tmpFile.exists()) {
-            Files.createDirectory(tmpFile.toPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
+            if (OS.IS_UNIX) {
+                Files.createDirectory(tmpFile.toPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
+            }
+            else {
+                // windows Java doesn't support PosixFilePermissions class, but the tmpfir is private by default
+                Files.createDirectory(tmpFile.toPath());
+            }
             return tmpFile;
         } else {
             if (tmpFile.isDirectory()) {
