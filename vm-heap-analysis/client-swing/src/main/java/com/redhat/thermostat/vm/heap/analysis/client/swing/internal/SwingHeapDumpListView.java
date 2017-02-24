@@ -110,6 +110,12 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
     public void setDumps(List<HeapDump> dumps) {
         setDumps(dumps, null);
     }
+
+    // package-private for testing
+    // otherwise, container dimension is 10 x 12 for test
+    void setContainerSize(int width, int height) {
+        container.setPreferredSize(new Dimension(width, height));
+    }
     
     // package-private for testing
     void setDumps(final List<HeapDump> dumps, final Runnable callback) {
@@ -230,7 +236,6 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
             button.setToolTipText("Export heap dump.");
             button.setName(heapDump.toString() + "_button");
             button.setBackground(null);
-
             button.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -244,16 +249,21 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
             setLayout(gbl);
 
             GridBagConstraints gbc = new GridBagConstraints();
-
+            gbc.gridx = 0;
             gbc.gridy = 0;
-            gbc.gridx = GridBagConstraints.RELATIVE;
-            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.weightx = 0.01; // has to be non-zero for anchor
             gbc.weighty = 1;
-
-            gbc.weightx = 1;
+            gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+            gbc.fill = GridBagConstraints.NONE;
             add(label, gbc);
 
-            gbc.weightx = 0;
+            gbc = new GridBagConstraints();
+            gbc.gridx = 1;
+            gbc.gridy = 0;
+            gbc.weightx = 0.01;
+            gbc.weighty = 1;
+            gbc.anchor = GridBagConstraints.EAST;
+            gbc.fill = GridBagConstraints.NONE;
             add(button, gbc);
 
             setOpaque(false);
@@ -265,7 +275,6 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
                     if (evt.getClickCount() == 2) {
                         listNotifier.fireAction(ListAction.OPEN_DUMP_DETAILS, HeapDumpItem.this.heapDump);
                     }
-
                 }
 
                 public void mouseEntered(MouseEvent evt) {
