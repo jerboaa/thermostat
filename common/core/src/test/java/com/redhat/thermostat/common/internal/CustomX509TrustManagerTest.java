@@ -38,6 +38,7 @@ package com.redhat.thermostat.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
@@ -47,12 +48,13 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.net.ssl.X509TrustManager;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.internal.CustomX509TrustManager;
 import com.redhat.thermostat.common.ssl.SslInitException;
 
 /**
@@ -133,12 +135,13 @@ public class CustomX509TrustManagerTest {
         X509TrustManager tm = new CustomX509TrustManager((X509TrustManager)null, ourKeyStore, "testpassword");
         // keystore contains private key of itself + imported CA cert
         assertEquals(2, tm.getAcceptedIssuers().length);
-        String issuerNameCustomCA = "1.2.840.113549.1.9.1=#16126a6572626f6161407265646861742e636f6d,CN=test.example.com,O=Red Hat Inc.,L=Saalfelden,ST=Salzburg,C=AT";
-        String issuerNameKeystoreCA = "CN=Unknown,OU=Unknown,O=Unknown,L=Unknown,ST=Unknown,C=Unknown";
-        assertEquals(issuerNameCustomCA, tm.getAcceptedIssuers()[0]
-                .getIssuerX500Principal().getName());
-        assertEquals(issuerNameKeystoreCA, tm.getAcceptedIssuers()[1]
-                .getIssuerX500Principal().getName());
+        Set<String> trustedIssuers = new HashSet<>();
+        trustedIssuers.add("1.2.840.113549.1.9.1=#16126a6572626f6161407265646861742e636f6d,CN=test.example.com,O=Red Hat Inc.,L=Saalfelden,ST=Salzburg,C=AT");
+        trustedIssuers.add("CN=Unknown,OU=Unknown,O=Unknown,L=Unknown,ST=Unknown,C=Unknown");
+        // Don't assume a specific order in which issuers are returned
+        for (X509Certificate issuer: tm.getAcceptedIssuers()) {
+            assertTrue(trustedIssuers.contains(issuer.getIssuerX500Principal().getName()));
+        }
     }
 
     private static String decodeFilePath(URL url) {

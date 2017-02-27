@@ -44,6 +44,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -211,14 +212,14 @@ public class StatementStatsTest {
     }
     
     @Test
-    public void verifySummaryPrinting() {
+    public void verifySummaryPrinting() throws UnsupportedEncodingException {
         when(state.getDescriptor(desc1Id)).thenReturn(desc1);
         when(state.getDescriptor(desc2Id)).thenReturn(desc2);
         when(state.getDescriptor(desc3Id)).thenReturn(desc3);
         
         StatsConfig config = new StatsConfig(new File("foo-bar"), SortBy.AVG, Direction.DSC, false);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream pStream = new PrintStream(baos);
+        PrintStream pStream = new PrintStream(baos, false, "UTF-8");
         stats.setConfig(config);
         stats.printSummary(pStream);
         String expected = "Statement statistics (6 records): 3 distinct statements (5 reads, 1 writes)\n" +
@@ -227,7 +228,7 @@ public class StatementStatsTest {
                           "Total #: 2, 300µs (min), 333µs (max), 316.50µs (avg), DESCRIPTOR: QUERY foo-bar WHERE 'x' = ?l\n" +
                           "Total #: 3, 2ms (min), 120ms (max), 44.67ms (avg), DESCRIPTOR: QUERY foo WHERE 'a' = ?s\n" +
                           "Total #: 1, 44ns (min), 44ns (max), 44.00ns (avg), DESCRIPTOR: ADD foo SET 'a' = ?s\n\n";
-        String summary = baos.toString();
+        String summary = baos.toString("UTF-8");
         assertEquals(expected, summary);
     }
     

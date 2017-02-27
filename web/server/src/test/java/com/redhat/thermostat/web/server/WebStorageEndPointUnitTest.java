@@ -67,6 +67,7 @@ import javax.servlet.ServletException;
 import com.redhat.thermostat.common.internal.test.Bug;
 import com.redhat.thermostat.storage.core.Storage;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -162,6 +163,7 @@ public class WebStorageEndPointUnitTest {
     
     @Test
     public void initThrowsRuntimeExceptionIfThermostatHomeNotSet() {
+        Assume.assumeTrue(System.getenv("THERMOSTAT_HOME") == null);
         WebStorageEndPoint endpoint = new WebStorageEndPoint();
         ServletConfig config = mock(ServletConfig.class);
         try {

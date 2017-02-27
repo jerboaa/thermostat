@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -228,6 +229,7 @@ public class RolesAmenderTest {
 
     @Test
     public void testInit() {
+        Assume.assumeTrue(System.getenv("THERMOSTAT_HOME") == null);
         try {
             new RolesAmender(null);
             fail("THERMOSTAT_HOME not set, should have failed!");

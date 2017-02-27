@@ -37,8 +37,10 @@
 package com.redhat.thermostat.dev.perf.logs.internal;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.Scanner;
 
 import com.redhat.thermostat.dev.perf.logs.LogAnalyzer;
@@ -102,8 +104,8 @@ public class LogAnalyzerImpl implements LogAnalyzer {
     }
 
     private void readFileCollectStats(final StatsParser parser, final LogFileStats stats) throws ReadException {
-        try (FileReader freader = new FileReader(config.getLogFile());
-                Scanner scanner = new Scanner(freader)) {
+        try (Reader freader = Files.newBufferedReader(config.getLogFile().toPath(), Charset.forName("UTF-8"));
+             Scanner scanner = new Scanner(freader)) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 LineStat stat = parser.parse(line);

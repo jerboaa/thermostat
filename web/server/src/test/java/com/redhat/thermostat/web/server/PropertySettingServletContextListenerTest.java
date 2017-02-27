@@ -41,6 +41,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.Constants;
@@ -63,6 +64,7 @@ public class PropertySettingServletContextListenerTest {
     
     @Test
     public void verifySetsProperty() {
+        Assume.assumeTrue(System.getenv("THERMOSTAT_HOME") == null);
         PropertySettingServletContextListener listener = new PropertySettingServletContextListener();
         ServletContextEvent event = mock(ServletContextEvent.class);
         ServletContext mockContext = mock(ServletContext.class);

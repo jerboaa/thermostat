@@ -126,7 +126,7 @@ public class StatsParserBuilderTest {
     public void canParseBasicLogFile() throws FileNotFoundException {
         StatsParser parser = StatsParserBuilder.build();
         File perfLogFile = new File(decodeFilePath(this.getClass().getResource("/testPerfLogFile.log")));
-        Scanner scanner = new Scanner(perfLogFile);
+        Scanner scanner = new Scanner(perfLogFile, "UTF-8");
         ArrayList<LineStat> stats = new ArrayList<>();
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
@@ -150,7 +150,7 @@ public class StatsParserBuilderTest {
     public void canParseLogFileWithMultipleLogTags() throws FileNotFoundException, IllegalFilterException, ParseException {
         StatsParser parser = StatsParserBuilder.build();
         File perfLogFile = new File(decodeFilePath(this.getClass().getResource("/perflogMultipleLogTags.log")));
-        Scanner scanner = new Scanner(perfLogFile);
+        Scanner scanner = new Scanner(perfLogFile, "UTF-8");
         LogFileStats stats = new LogFileStats(new SharedStatementState(), null);
         // add composite filters for queue stats.
         LineStatsFilter<QueueStat, QueueStats> qFrontFilter = new LogTagStatsFilterDecorator<>(new QueueStatsFilter(), LogTag.STORAGE_FRONT_END);

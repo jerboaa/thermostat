@@ -145,7 +145,7 @@ public class CommonPathsImplTest {
         try {
             thermostatHome = setupTempDir("CommonPathsImplTest.testUserLocations",
                     THERMOSTAT_HOME_PROPERTY);
-            String userHome = System.getProperty("user.home") + s + ".thermostat";
+            String userHome = getUserHome();
             CommonPaths config = new CommonPathsImpl();
 
             Assert.assertEquals(concatPath(userHome, "etc", "agent.properties"),
@@ -170,11 +170,32 @@ public class CommonPathsImplTest {
             }
         }
     }
+    
+    // Duplicated from CommonPathsImpl.UnprivilegedUserDirectories
+    private String getUserHome() {
+        String userHome = System.getProperty(USER_THERMOSTAT_HOME_PROPERTY);
+        if (userHome == null) {
+            userHome = System.getenv(USER_THERMOSTAT_HOME_PROPERTY);
+        }
+        if (userHome == null) {
+            userHome = System.getProperty("user.home") + s + ".thermostat";
+        }
+        return userHome;
+    }
 
     @Test
     public void testPrivilegedUserLocations() throws InvalidConfigurationException, IOException {
         String thermostatHomeAndFakeRoot = null;
         try {
+            // It's not safe to create directories in this setup. It's treated
+            // as a prefix "/tmp/foo" for example in this config. Creating
+            // directories in a random prefix is not a good idea. Not even for
+            // tests. Skip the test in this case
+            String userHomeEnv = System.getenv(USER_THERMOSTAT_HOME_PROPERTY);
+            if (userHomeEnv != null) {
+                System.out.println("USER_TEHMOSTAT_HOME set to: " + userHomeEnv + " skipping test!");
+                return;
+            }
             thermostatHomeAndFakeRoot = setupTempDir("CommonPathsImplTest.testPrivilegedUserLocations",
                     THERMOSTAT_HOME_PROPERTY);
             System.setProperty(THERMOSTAT_SYSTEM_USER_PROPERTY, "");
@@ -243,6 +264,9 @@ public class CommonPathsImplTest {
 
     @Test
     public void instantiationThrowsExceptionUndefinedThermostatHome() {
+        // This test does not make sense when THERMOSTAT_HOME env var is defined
+        // externally. Ignore in this case.
+        Assume.assumeTrue(System.getenv(THERMOSTAT_HOME_PROPERTY) == null);
         try {
             new CommonPathsImpl();
             // The web archive uses this. See WebStorageEndPoint#init();

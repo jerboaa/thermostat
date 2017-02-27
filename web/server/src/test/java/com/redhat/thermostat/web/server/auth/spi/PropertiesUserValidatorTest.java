@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -114,6 +115,7 @@ public class PropertiesUserValidatorTest {
     
     @Test
     public void testInit() {
+        Assume.assumeTrue(System.getenv("THERMOSTAT_HOME") == null);
         try {
             new PropertiesUserValidator();
             fail("THERMOSTAT_HOME not set, should have failed!");

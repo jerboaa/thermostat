@@ -41,9 +41,13 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -61,16 +65,22 @@ import static org.junit.Assert.assertTrue;
 
 public class LinuxProcessEnvironmentBuilderImplTest {
 
+    private static final String ROOT_CGROUP_SCOPE = "/";
+    private static final String PID_1_PROC_CGROUP = "/proc/1/cgroup";
     private final Random r = new Random();
 
     @Test
     public void testBasicBuild() {
         Assume.assumeTrue(OS.IS_LINUX);
         ProcDataSource dataSource = new ProcDataSource();
-        Map<String, String> result = new LinuxProcessEnvironmentBuilderImpl(dataSource).build(TestUtils.getProcessId());
+        int pid = TestUtils.getProcessId();
+        Map<String, String> result = new LinuxProcessEnvironmentBuilderImpl(dataSource).build(pid);
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertTrue(result.containsKey("USER"));
+        // assert this only for the non-container case.
+        if (!isContainer()) {
+            assertTrue(result.containsKey("USER"));
+        }
     }
 
     @Test
@@ -132,6 +142,26 @@ public class LinuxProcessEnvironmentBuilderImplTest {
             result[i] = alphabet[r.nextInt(alphabet.length)];
         }
         return result;
+    }
+    
+    /*
+     * Heuristic: /proc/1/cgroup => A:B:C where C == '/' outside a container.
+     *                                    where C == '/system.slice/docker-<SHA256>.scope in a container
+     */
+    private boolean isContainer() {
+        try {
+            List<String> lines = Files.readAllLines(new File(PID_1_PROC_CGROUP).toPath(), Charset.forName("UTF-8"));
+            String[] tokens = lines.get(0).split(":");
+            if (tokens.length == 3) {
+                return !(tokens[2].equals(ROOT_CGROUP_SCOPE));
+            } else {
+                // unknown format?
+                return false;
+            }
+        } catch (Throwable e) {
+            // Default to false
+            return false;
+        }
     }
 }
 
