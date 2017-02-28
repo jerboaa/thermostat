@@ -36,8 +36,10 @@
 
 package com.redhat.thermostat.common.portability.internal.windows;
 
+import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.shared.config.OS;
 
+import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -95,4 +97,79 @@ public class WindowsHelperImplTest {
         assertNotNull(s);
         assertFalse(s.isEmpty());
     }
+
+    private static void dumpProcess(int pid) {
+
+        final WindowsHelperImpl helper = WindowsHelperImpl.INSTANCE;
+
+        System.out.println("pid " + pid + " user=" + helper.getUserName(pid));
+
+        final String cwd = helper.getCWD(pid);
+        final String exec = helper.getExecutable(pid);
+        final String cmd = helper.getCommandLine(pid);
+
+        if (cwd != null) {
+            System.out.println("pid " + pid + " cwd = " + cwd);
+        } else {
+            System.out.println("pid " + pid + " cwd is not available");
+        }
+
+        if (exec != null) {
+            System.out.println("pid " + pid + " exec = " + exec);
+        } else {
+            System.out.println("pid " + pid + " exec is not available");
+        }
+
+        if (cmd != null) {
+            System.out.println("pid " + pid + " cmd = " + cmd);
+        } else {
+            System.out.println("pid " + pid + " cmd is not available");
+        }
+
+        Map<String, String> env = helper.getEnvironment(pid);
+        if (env != null && !env.isEmpty()) {
+            for (final Map.Entry<String,String> var : env.entrySet()) {
+                System.out.println(var.getKey() + " = " + var.getValue());
+            }
+        }
+        else {
+            System.out.println("env for pid " + pid + " is not available");
+        }
+    }
+    // manual sanity test
+    public static void main( String[] args ) {
+        if (System.getenv("THERMOSTAT_HOME") == null) {
+            // fix up for CommonPaths
+            System.setProperty("THERMOSTAT_HOME", "/");
+            System.setProperty("USER_THERMOSTAT_HOME", "/");
+        }
+        NativeLibraryResolver.setCommonPaths(new CommonPathsImpl());
+        final WindowsHelperImpl helper = WindowsHelperImpl.INSTANCE;
+
+        System.out.println("Hostname = " + helper.getHostName());
+        System.out.println("OS version = " + helper.getOSVersion());
+        System.out.println("CPU = " + helper.getCPUModel());
+        System.out.println("OS name = " + helper.getOSName());
+
+        System.out.println("Current process = " + helper.getCurrentProcessPid());
+
+        final int pid = args.length > 0 ? Integer.parseInt(args[0]) : 0;
+
+        dumpProcess(pid);
+
+        System.out.println("\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+
+        dumpProcess(0);
+
+        System.out.println("\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+
+        Map<String, String> myenv = System.getenv();
+        for (String envName : myenv.keySet()) {
+            System.out.format("%s = %s%n",
+                    envName,
+                    myenv.get(envName));
+        }
+
+    }
+
 }

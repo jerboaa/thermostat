@@ -41,6 +41,7 @@ import com.redhat.thermostat.common.portability.PortableProcess;
 import com.redhat.thermostat.common.portability.PortableProcessStat;
 import com.redhat.thermostat.common.portability.PortableVmIoStat;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class WindowsPortableProcessImpl implements PortableProcess {
@@ -69,7 +70,8 @@ public class WindowsPortableProcessImpl implements PortableProcess {
 
     @Override
     public Map<String, String> getEnvironment(int pid) {
-        return helper.getEnvironment(pid);
+        final Map<String, String> envMap = helper.getEnvironment(pid);
+        return envMap != null ? envMap : Collections.<String, String>emptyMap();
     }
 
     @Override

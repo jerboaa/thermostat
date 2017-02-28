@@ -47,7 +47,7 @@ public class PortableHostImpl {
 
     private static PortableHost createInstance() {
         return OS.IS_LINUX ? LinuxPortableHostImpl.createInstance()
-                : OS.IS_WINDOWS ? WindowsPortableHostImpl.createInstance() : MacOSHostImpl.INSTANCE;
+                : OS.IS_WINDOWS ? WindowsPortableHostImpl.createInstance() : MacOSHostImpl.createInstance();
     }
 
     public static PortableHost getInstance() {

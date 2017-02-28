@@ -40,6 +40,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.shared.config.OS;
 
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -112,7 +113,8 @@ public class WindowsHelperImpl {
     public String getOSVersion() {
         final long info[] = new long[3];  // major, minor, build
         getOSVersion0(info);
-        return "" + info[0] + "" + info[1] + " (Build " + info[2] + ")";
+        // the build number is not available on newer windows versions (8.1 and up)
+        return (info[2] != 0) ? "" + info[0] + "" + info[1] + " (Build " + info[2] + ")" : "" + info[0] + "." + info[1];
     }
 
     public String getCPUModel() {
@@ -154,6 +156,10 @@ public class WindowsHelperImpl {
 
     // local process-specific information
 
+    public int getCurrentProcessPid() {
+        return getCurrentProcessID0();
+    }
+
     public boolean exists(int pid) {
         final long hnd = getLimitedProcessHandle0(pid);
         if (hnd != 0) {
@@ -176,22 +182,74 @@ public class WindowsHelperImpl {
         return Integer.parseInt(uidStr);
     }
 
+    private String extractString( ByteBuffer buff, char terminator) {
+        StringBuilder sb = new StringBuilder();
+        while (buff.hasRemaining()) {
+            char c = buff.getChar();
+            if (c == terminator || c == 0) {
+                break;
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
     public Map<String, String> getEnvironment(int pid) {
-        // the environment is returned as a 1D array of alternating env names and values
-        final String[] envArray = getEnvironment0(pid);
-        if (envArray == null || envArray.length == 0) {
+        final long hProcess = pid != 0 ? getProcessHandle0(pid) : getCurrentProcessHandle0();
+        final Object obj = getEnvironment0(hProcess, 0);
+        closeHandle0(hProcess);
+        if (obj == null) {
             return Collections.emptyMap();
         }
-
-        if (envArray.length % 2 != 0) {
-            throw new AssertionError("environment array length not even");
+        else if (obj instanceof String) {
+            System.err.println("env 0 returns " + obj);
         }
-
-        final Map<String, String> env = new HashMap<>(envArray.length/2);
-        for (int i = 0; i < envArray.length / 2; i++) {
-            env.put(envArray[i * 2], envArray[i * 2 + 1]);
+        else /* if (obj instanceof ByteBuffer) */ {
+            final ByteBuffer buff = (ByteBuffer)(obj);
+            final Map<String, String> env = new HashMap<>();
+            buff.get();
+            while (buff.hasRemaining()) {
+                String k = extractString(buff, '=');
+                if (k.isEmpty()) {
+                    break;
+                }
+                String v = extractString(buff, '\0');
+                env.put(k, v);
+            }
+            freeDirectBuffer0(buff);
+            return env;
         }
-        return env;
+        return null;
+    }
+
+    public String getCWD(int pid) {
+        final long hProcess = pid != 0 ? getProcessHandle0(pid) : getCurrentProcessHandle0();
+        final Object obj = getEnvironment0(hProcess, 1);
+        closeHandle0(hProcess);
+        if (obj == null) {
+            return null;
+        }
+        return (String)(obj);
+    }
+
+    public String getExecutable(int pid) {
+        final long hProcess = pid != 0 ? getProcessHandle0(pid) : getCurrentProcessHandle0();
+        final Object obj = getEnvironment0(hProcess, 2);
+        closeHandle0(hProcess);
+        if (obj == null) {
+            return null;
+        }
+        return (String)(obj);
+    }
+
+    public String getCommandLine(int pid) {
+        final long hProcess = pid != 0 ? getProcessHandle0(pid) : getCurrentProcessHandle0();
+        final Object obj = getEnvironment0(hProcess, 3);
+        closeHandle0(hProcess);
+        if (obj == null) {
+            return null;
+        }
+        return (String)(obj);
     }
 
     /**
@@ -246,13 +304,15 @@ public class WindowsHelperImpl {
 
     private static native String getProcessSID0(int pid);
     private static native String getUserName0(int pid, boolean prependDomain);
-    private static native String[] getEnvironment0(int pid);
+    private static native Object getEnvironment0(long hProcess, int mode); // mode = 0 returns DirectByteBuffer, 1 = String cwd, 2 = String execuatable, 3 = String command line
     private static native boolean getProcessInfo0(int pid, long[] info);
     private static native boolean getProcessIOInfo0(int pid, long[] info);
 
+    private static native int getCurrentProcessID0();
     private static native long getCurrentProcessHandle0();
     private static native long getProcessHandle0(int pid);
     private static native long getLimitedProcessHandle0(int pid);
     private static native void closeHandle0(long handle);
+    private static native void freeDirectBuffer0(final ByteBuffer byteBuffer);
     private static native boolean terminateProcess0(int pid, int exitCode, int waitMillis);
 }

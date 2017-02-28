@@ -41,8 +41,11 @@ import com.redhat.thermostat.common.portability.PortableMemoryStat;
 
 public class MacOSHostImpl implements PortableHost {
 
-    public static final MacOSHostImpl INSTANCE = new MacOSHostImpl();
     private static final MacOSHelperImpl helper = MacOSHelperImpl.INSTANCE;
+
+    public static PortableHost createInstance() {
+        return new MacOSHostImpl();
+    }
 
     @Override
     public String getHostName() {
