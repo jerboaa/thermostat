@@ -94,24 +94,11 @@ class WebappLauncherCommand extends AbstractStateNotifyingCommand {
             throw new CommandException(translator.localize(LocaleResources.LAUNCHER_UNAVAILABLE));
         }
         Launcher launcher = (Launcher) context.getService(launcherRef);
-        // start storage
-        final CountDownLatch storageLatch = new CountDownLatch(1);
-        StorageStartedListener storageListener = new StorageStartedListener(storageLatch);
-        listeners.add(storageListener);
-        String[] storageArgs = new String[] {
-                "storage", "--start"
-        };
-        launcher.run(storageArgs, listeners, false);
-        listeners.clear();
-        try {
-            storageLatch.await();
-        } catch (InterruptedException e) {
-            getNotifier().fireAction(ApplicationState.FAIL, e);
-            throw new CommandException(translator.localize(LocaleResources.STORAGE_WAIT_INTERRUPTED));
-        }
-        if (!storageListener.isStartupSuccessful()) {
-            getNotifier().fireAction(ApplicationState.FAIL);
-            throw new CommandException(translator.localize(LocaleResources.ERROR_STARTING_STORAGE));
+        EmbeddedServletContainerConfiguration config = getConfiguration(paths);
+        
+        // start storage only if so desired
+        if (config.isBackingStorageStart()) {
+            startStorage(launcher);
         }
 
         ServiceReference sslConfigRef = context.getServiceReference(SSLConfiguration.class.getName());
@@ -121,7 +108,6 @@ class WebappLauncherCommand extends AbstractStateNotifyingCommand {
         }
         SSLConfiguration sslConfig = (SSLConfiguration) context.getService(sslConfigRef);
 
-        EmbeddedServletContainerConfiguration config = getConfiguration(paths);
         JettyContainerLauncher jettyLauncher = getJettyContainerLauncher(config, sslConfig);
         CountDownLatch webStartedLatch = new CountDownLatch(1);
         // start web container with the web archive deployed
@@ -132,7 +118,9 @@ class WebappLauncherCommand extends AbstractStateNotifyingCommand {
             // ignore
         }
         if (!jettyLauncher.isStartupSuccessFul()) {
-            stopStorage(launcher);
+            if (config.isBackingStorageStart()) {
+                stopStorage(launcher);
+            }
             getNotifier().fireAction(ApplicationState.FAIL);
             throw new CommandException(translator.localize(LocaleResources.ERROR_STARTING_JETTY));
         }
@@ -155,7 +143,9 @@ class WebappLauncherCommand extends AbstractStateNotifyingCommand {
             } catch (InterruptedException e) { } // ignore
         } finally {
             jettyLauncher.stopContainer();
-            stopStorage(launcher);
+            if (config.isBackingStorageStart()) {
+                stopStorage(launcher);
+            }
         };
 
         if (agentStarted) {
@@ -163,6 +153,27 @@ class WebappLauncherCommand extends AbstractStateNotifyingCommand {
         }
     }
     
+    private void startStorage(Launcher launcher) throws CommandException {
+        final CountDownLatch storageLatch = new CountDownLatch(1);
+        StorageStartedListener storageListener = new StorageStartedListener(storageLatch);
+        listeners.add(storageListener);
+        String[] storageArgs = new String[] {
+                "storage", "--start"
+        };
+        launcher.run(storageArgs, listeners, false);
+        listeners.clear();
+        try {
+            storageLatch.await();
+        } catch (InterruptedException e) {
+            getNotifier().fireAction(ApplicationState.FAIL, e);
+            throw new CommandException(translator.localize(LocaleResources.STORAGE_WAIT_INTERRUPTED));
+        }
+        if (!storageListener.isStartupSuccessful()) {
+            getNotifier().fireAction(ApplicationState.FAIL);
+            throw new CommandException(translator.localize(LocaleResources.ERROR_STARTING_STORAGE));
+        }
+    }
+
     // testing hook
     EmbeddedServletContainerConfiguration getConfiguration(CommonPaths paths) {
         return new EmbeddedServletContainerConfiguration(paths);

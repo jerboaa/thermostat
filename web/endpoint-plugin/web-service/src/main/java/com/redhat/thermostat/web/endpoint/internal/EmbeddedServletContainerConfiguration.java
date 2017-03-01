@@ -146,6 +146,20 @@ class EmbeddedServletContainerConfiguration {
         return webArchiveDir;
     }
     
+    boolean isBackingStorageStart() {
+        String storageProp = systemConfiguration.getProperty(ConfigKeys.START_BACKING_STORAGE.name());
+        // user config overrides system config
+        String userProp = userConfiguration.getProperty(ConfigKeys.START_BACKING_STORAGE.name());
+        if (userProp != null) {
+            storageProp = userProp;
+        }
+        if (storageProp == null) {
+            // default to true if neither system nor user config is present
+            return true;
+        }
+        return Boolean.parseBoolean(storageProp);
+    }
+    
     boolean isEnableTLS() {
         String sslProp = systemConfiguration.getProperty(ConfigKeys.USE_SSL.name());
         // user config overrides system config
@@ -224,6 +238,10 @@ class EmbeddedServletContainerConfiguration {
         /* Filename of the request log. It's relative to thermostat's
          * logs directory.
          */
-        REQUEST_LOG_FILENAME
+        REQUEST_LOG_FILENAME,
+        /*
+         * Determine whether backing storage should get started too
+         */
+        START_BACKING_STORAGE
     }
 }

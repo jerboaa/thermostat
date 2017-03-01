@@ -37,9 +37,6 @@
 package com.redhat.thermostat.web.endpoint.internal;
 
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doAnswer;
@@ -53,7 +50,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -176,10 +172,22 @@ public class WebStorageLauncherCommandTest {
         command.run(mockCommandContext);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testRunOnce() throws CommandException {
+        boolean startBackingStorage = true;
+        doTestRunOnce(startBackingStorage);
+    }
+
+    @Test
+    public void testRunOnceNoBackingStorage() throws CommandException {
+        boolean startBackingStorage = false;
+        doTestRunOnce(startBackingStorage);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void doTestRunOnce(boolean startBackingStorage) throws CommandException {
         final EmbeddedServletContainerConfiguration mockConfig = mock(EmbeddedServletContainerConfiguration.class);
+        when(mockConfig.isBackingStorageStart()).thenReturn(startBackingStorage);
         when(mockConfig.getConnectionUrl()).thenReturn("Test String");
 
         WebStorageLauncherCommand command = new WebStorageLauncherCommand(shutdownLatch) {
@@ -200,13 +208,18 @@ public class WebStorageLauncherCommandTest {
 
         command.run(mockCommandContext);
 
-        verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), eq(false));
+        int numberOfTimesBackingStorage = 0;
+        if (startBackingStorage) {
+            numberOfTimesBackingStorage++;
+        }
+        verify(mockLauncher, times(numberOfTimesBackingStorage)).run(eq(STORAGE_START_ARGS), isA(Collection.class), eq(false));
     }
 
     @Test(expected = CommandException.class)
     public void testStorageFailStart()  throws CommandException {
         final EmbeddedServletContainerConfiguration mockConfig = mock(EmbeddedServletContainerConfiguration.class);
         when(mockConfig.getConnectionUrl()).thenReturn("Test String");
+        when(mockConfig.isBackingStorageStart()).thenReturn(true);
 
         WebStorageLauncherCommand command = new WebStorageLauncherCommand(shutdownLatch) {
             @Override

@@ -98,6 +98,42 @@ public class WebStorageLauncherCommand extends AbstractStateNotifyingCommand {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        EmbeddedServletContainerConfiguration config = getConfiguration(commonPaths);
+        handler.setConfig(config);
+        
+        if (config.isBackingStorageStart()) {
+            startStorage();
+        }
+
+        jettyLauncher = getJettyContainerLauncher(config, sslConfig);
+        CountDownLatch webStartedLatch = new CountDownLatch(1);
+        // start web container with the web archive deployed
+        jettyLauncher.startContainer(webStartedLatch);
+        try {
+            webStartedLatch.await();
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        if (!jettyLauncher.isStartupSuccessFul()) {
+            if (config.isBackingStorageStart()) {
+                stopStorage(launcher);
+            }
+            getNotifier().fireAction(ApplicationState.FAIL);
+            throw new CommandException(translator.localize(LocaleResources.ERROR_STARTING_JETTY));
+        }
+
+        Signal.handle(new Signal("INT"), handler);
+        Signal.handle(new Signal("TERM"), handler);
+
+        //Wait for SIGINT/SIGTERM
+        try {
+            shutdownLatch.await();
+        } catch (InterruptedException e) {
+            handler.handle(new Signal("INT"));
+        }
+    }
+
+    private void startStorage() throws CommandException {
         // start storage
         final CountDownLatch storageLatch = new CountDownLatch(1);
         StorageStartedListener storageListener = new StorageStartedListener(storageLatch);
@@ -116,32 +152,6 @@ public class WebStorageLauncherCommand extends AbstractStateNotifyingCommand {
         if (!storageListener.isStartupSuccessful()) {
             getNotifier().fireAction(ApplicationState.FAIL);
             throw new CommandException(translator.localize(LocaleResources.ERROR_STARTING_STORAGE));
-        }
-
-        EmbeddedServletContainerConfiguration config = getConfiguration(commonPaths);
-        jettyLauncher = getJettyContainerLauncher(config, sslConfig);
-        CountDownLatch webStartedLatch = new CountDownLatch(1);
-        // start web container with the web archive deployed
-        jettyLauncher.startContainer(webStartedLatch);
-        try {
-            webStartedLatch.await();
-        } catch (InterruptedException e) {
-            // ignore
-        }
-        if (!jettyLauncher.isStartupSuccessFul()) {
-            stopStorage(launcher);
-            getNotifier().fireAction(ApplicationState.FAIL);
-            throw new CommandException(translator.localize(LocaleResources.ERROR_STARTING_JETTY));
-        }
-
-        Signal.handle(new Signal("INT"), handler);
-        Signal.handle(new Signal("TERM"), handler);
-
-        //Wait for SIGINT/SIGTERM
-        try {
-            shutdownLatch.await();
-        } catch (InterruptedException e) {
-            handler.handle(new Signal("INT"));
         }
     }
 
@@ -171,11 +181,15 @@ public class WebStorageLauncherCommand extends AbstractStateNotifyingCommand {
 
     private class CustomSignalHandler implements SignalHandler {
 
+        private EmbeddedServletContainerConfiguration config;
+        
         @Override
         public void handle(Signal arg0) {
             try {
                 jettyLauncher.stopContainer();
-                stopStorage(launcher);
+                if (config.isBackingStorageStart()) {
+                    stopStorage(launcher);
+                }
             } catch (Exception ex) {
                 // We don't want any exception to hold back the signal handler, otherwise
                 // there will be no way to actually stop Thermostat.
@@ -185,6 +199,10 @@ public class WebStorageLauncherCommand extends AbstractStateNotifyingCommand {
             // Hook for integration tests. Print a well known message to stdout
             // if verbose mode is turned on via the system property.
             shutdown(ExitStatus.EXIT_SUCCESS);
+        }
+        
+        private void setConfig(EmbeddedServletContainerConfiguration config) {
+            this.config = config;
         }
     }
 

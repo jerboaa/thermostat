@@ -90,7 +90,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class WebappLauncherCommandTest {
-    
+
     private TestLogHandler handler;
     private Logger logger;
     private Launcher mockLauncher;
@@ -122,6 +122,7 @@ public class WebappLauncherCommandTest {
         context.registerService(Launcher.class, mockLauncher, null);
         context.registerService(SSLConfiguration.class, mock(SSLConfiguration.class), null);
         final EmbeddedServletContainerConfiguration mockConfig = mock(EmbeddedServletContainerConfiguration.class);
+        when(mockConfig.isBackingStorageStart()).thenReturn(true);
         when(mockConfig.getConnectionUrl()).thenReturn("Test String");
         mockJettyLauncher = mock(JettyContainerLauncher.class);
         doAnswer(new Answer<Void>() {
@@ -168,30 +169,30 @@ public class WebappLauncherCommandTest {
         WebappLauncherCommand cmd = new WebappLauncherCommand(null /* not used */);
         assertFalse(cmd.isStorageRequired());
     }
-    
+
     @Test
     public void testRunCommandWithNoConfigListenAddressSpecified() {
         CommonPaths paths = mock(CommonPaths.class);
-        
+
         File thermostatHomeNotExisting = new File("/thermostat-home/not-existing");
         when(paths.getSystemThermostatHome()).thenReturn(thermostatHomeNotExisting);
         // config needs non-null paths for configuration files. It does not
         // matter if that file actually exists. Using the fake THERMOSTAT_HOME
         // variable will do.
         File nonNullConfigFile = new File("doesn't matter");
-        
+
         String matchString = "CONFIG_LISTEN_ADDRESS";
         runTestWithPathsAndConfigFiles(paths, nonNullConfigFile, nonNullConfigFile, matchString);
     }
-    
+
     @Test
     public void testRunCommandWithWebArchiveNotExisting() throws Exception {
         CommonPaths paths = mock(CommonPaths.class);
-        
+
         File thermostatHomeNotExisting = new File("/thermostat-home/not-existing");
         when(paths.getSystemThermostatHome()).thenReturn(thermostatHomeNotExisting);
         File nonNullSysConfig = new File("no matter");
-        
+
         Properties userProperties = new Properties();
         userProperties.put(ConfigKeys.SERVLET_CONTAINER_BIND_ADDRESS.name(), "127.0.0.1:8888");
         File userPropsTempFile = File.createTempFile("thermostat", WebappLauncherCommandTest.class.getName());
@@ -202,11 +203,11 @@ public class WebappLauncherCommandTest {
             // ignore
         }
         assertTrue(userPropsTempFile.exists());
-        
+
         String matchString = "Exploded web archive";
         runTestWithPathsAndConfigFiles(paths, userPropsTempFile, nonNullSysConfig, matchString);
     }
-    
+
     private void runTestWithPathsAndConfigFiles(final CommonPaths paths, final File userConfig,
                                                 final File systemConfig, final String matchString) {
         StubBundleContext context = new StubBundleContext();
@@ -632,22 +633,22 @@ public class WebappLauncherCommandTest {
                 }
             }
         }
-        
+
     }
-    
+
     private static class TestLogHandler extends Handler {
-        
+
         private final String matchString;
         private boolean gotLogMessage = false;
-        
+
         private TestLogHandler(String matchString) {
             this.matchString = matchString;
         }
-        
+
         @Override
         public void publish(LogRecord record) {
             String logMessage = record.getMessage();
-            if (record.getLevel().intValue() >= Level.WARNING.intValue() && 
+            if (record.getLevel().intValue() >= Level.WARNING.intValue() &&
                     logMessage.contains(matchString)) {
                 gotLogMessage = true;
             };
@@ -663,5 +664,5 @@ public class WebappLauncherCommandTest {
             // no-op
         }
     }
-    
+
 }

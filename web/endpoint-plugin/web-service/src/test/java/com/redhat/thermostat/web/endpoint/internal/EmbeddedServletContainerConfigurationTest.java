@@ -56,7 +56,7 @@ import com.redhat.thermostat.web.endpoint.internal.EmbeddedServletContainerConfi
 import com.redhat.thermostat.web.endpoint.internal.EmbeddedServletContainerConfiguration.ConfigKeys;
 
 public class EmbeddedServletContainerConfigurationTest {
-    
+
     /*
      * empty configs defaults to false
      */
@@ -67,7 +67,7 @@ public class EmbeddedServletContainerConfigurationTest {
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(systemConfig, userConfig);
         assertFalse(config.isEnableTLS());
     }
-    
+
     /*
      * Verifies that user config overrides system config
      */
@@ -80,7 +80,55 @@ public class EmbeddedServletContainerConfigurationTest {
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(systemConfig, userConfig);
         assertTrue(config.isEnableTLS());
     }
-    
+
+    /*
+     * Empty configs defaults to true
+     */
+    @Test
+    public void canGetIsBackingStorageStartNothingSpecified() {
+        Properties systemConfig = new Properties();
+        Properties userConfig = new Properties();
+        EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(systemConfig, userConfig);
+        assertTrue(config.isBackingStorageStart());
+    }
+
+    /*
+     * System config should be taken into account. No override by user config.
+     */
+    @Test
+    public void canGetIsBackingStorageStartSystemSpecified() {
+        Properties systemConfig = new Properties();
+        systemConfig.put(ConfigKeys.START_BACKING_STORAGE.name(), "false");
+        Properties userConfig = new Properties();
+        EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(systemConfig, userConfig);
+        assertFalse(config.isBackingStorageStart());
+    }
+
+    /*
+     * User config overrides system.
+     */
+    @Test
+    public void canGetIsBackingStorageStartUserOverridesSystem() {
+        Properties systemConfig = new Properties();
+        systemConfig.put(ConfigKeys.START_BACKING_STORAGE.name(), "false");
+        Properties userConfig = new Properties();
+        userConfig.put(ConfigKeys.START_BACKING_STORAGE.name(), "true");
+        EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(systemConfig, userConfig);
+        assertTrue(config.isBackingStorageStart());
+    }
+
+    /*
+     * No system config only user config.
+     */
+    @Test
+    public void canGetIsBackingStorageStartUserOverridesNoSystemConfig() {
+        Properties systemConfig = new Properties();
+        Properties userConfig = new Properties();
+        userConfig.put(ConfigKeys.START_BACKING_STORAGE.name(), "false");
+        EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(systemConfig, userConfig);
+        assertFalse(config.isBackingStorageStart());
+    }
+
     /*
      * Verifies that system config works
      */
@@ -92,7 +140,7 @@ public class EmbeddedServletContainerConfigurationTest {
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(systemConfig, userConfig);
         assertTrue(config.isEnableTLS());
     }
-    
+
     @Test
     public void garbageSSLConfigValsDoNotFail() {
         Properties systemConfig = new Properties();
@@ -120,7 +168,7 @@ public class EmbeddedServletContainerConfigurationTest {
         assertEquals(host, hostPort.getHost());
         assertEquals(port, hostPort.getPort());
     }
-    
+
     /*
      * If both system *and* user config are specified, user config wins.
      */
@@ -141,7 +189,7 @@ public class EmbeddedServletContainerConfigurationTest {
         assertEquals(userHost, hostPort.getHost());
         assertEquals(userPort, hostPort.getPort());
     }
-    
+
     /*
      * If neither system nor user config has the CONFIG_LISTEN_ADDRESS key
      * config is invalid.
@@ -154,7 +202,7 @@ public class EmbeddedServletContainerConfigurationTest {
         // this should throw InvalidConfigException
         config.getHostsPortsConfig();
     }
-    
+
     /*
      * Implementation detail. The host/port parser supports parsing lists.
      * However, in this context only one listen address can be specified. This
@@ -184,7 +232,7 @@ public class EmbeddedServletContainerConfigurationTest {
             // pass
         }
     }
-    
+
     /*
      * Config should not throw and exception on instantiation if user config
      * file does not exist.
@@ -203,7 +251,7 @@ public class EmbeddedServletContainerConfigurationTest {
             fail("Instantiation should not throw ICE due to missing files: " + e.getMessage());
         }
     }
-    
+
     /*
      * Config should not throw and exception on instantiation if system config
      * file does not exist.
@@ -222,7 +270,7 @@ public class EmbeddedServletContainerConfigurationTest {
             fail("Instantiation should not throw ICE due to missing files: " + e.getMessage());
         }
     }
-    
+
     /*
      * Config should not throw and exception on instantiation if user config
      * and system config file does not exist.
@@ -240,22 +288,22 @@ public class EmbeddedServletContainerConfigurationTest {
             fail("Instantiation should not throw ICE due to missing files: " + e.getMessage());
         }
     }
-    
+
     @Test
     public void testGetWebArchivePath() {
         CommonPaths paths = mock(CommonPaths.class);
         File fooThermostatHome = new File("/foo/path");
         when(paths.getSystemThermostatHome()).thenReturn(fooThermostatHome);
-        
+
         // Any non-null file will do for user/system config files
         File irrelevantForTest = new File("irrelevant");
-        
+
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(paths, irrelevantForTest, irrelevantForTest);
         File expected = new File(fooThermostatHome, "webapp");
         File actual = config.getAbsolutePathToExplodedWebArchive();
         assertEquals(expected.getAbsolutePath(), actual.getAbsolutePath());
     }
-    
+
     /*
      * If a request log configuration is set, be sure config paths are available
      */
@@ -272,7 +320,7 @@ public class EmbeddedServletContainerConfigurationTest {
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
         assertTrue("Should have request log config", config.hasRequestLogConfig());
         assertEquals("/test/userhome/logs/logfile.log", config.getAbsolutePathToRequestLog());
-        
+
         // user config only
         userConfig = new Properties();
         systemConfig = new Properties();
@@ -280,7 +328,7 @@ public class EmbeddedServletContainerConfigurationTest {
         config = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
         assertTrue("Should have request log config", config.hasRequestLogConfig());
         assertEquals("/test/userhome/logs/userlogFile.log", config.getAbsolutePathToRequestLog());
-        
+
         // user and system config
         userConfig = new Properties();
         systemConfig = new Properties();
@@ -291,7 +339,7 @@ public class EmbeddedServletContainerConfigurationTest {
         assertEquals("User config overrides system config",
                      "/test/userhome/logs/userlogFile.log",
                      config.getAbsolutePathToRequestLog());
-        
+
         // no config
         userConfig = new Properties();
         systemConfig = new Properties();
@@ -300,21 +348,21 @@ public class EmbeddedServletContainerConfigurationTest {
         assertNull("No config specified",
                      config.getAbsolutePathToRequestLog());
     }
-    
+
     @Test
     public void canGetConnectionURL() {
         doConnectionUrlTest("http://[1fff:0:a88:85a3::ac1f]:8999/thermostat/storage", "[1fff:0:a88:85a3::ac1f]:8999", false);
         doConnectionUrlTest("http://host1.example.com:8888/thermostat/storage", "host1.example.com:8888", false);
         doConnectionUrlTest("https://host1.example.com:8998/thermostat/storage", "host1.example.com:8998", true);
     }
-    
+
     @Test
     public void canGetContextPath() {
         String expectedContextPath = "/thermostat/storage";
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration((Properties)null /* unused */, (Properties)null /* unused */);
         assertEquals(expectedContextPath, config.getContextPath());
     }
-    
+
     private void doConnectionUrlTest(String expectedUrl, String hostPortToken, boolean enableSSL) {
         Properties systemConfig = new Properties();
         Properties userConfig = new Properties();
@@ -325,17 +373,17 @@ public class EmbeddedServletContainerConfigurationTest {
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(systemConfig, userConfig);
         assertEquals(expectedUrl, config.getConnectionUrl());
     }
-    
+
     @Test
     public void canGetPathToJaasConfig() throws InvalidConfigurationException {
         CommonPaths paths = mock(CommonPaths.class);
         String fooThHome = "/foo/path/etc";
         File fooThermostatHome = new File(fooThHome);
         when(paths.getSystemConfigurationDirectory()).thenReturn(fooThermostatHome);
-        
+
         // Any non-null file will do for user/system config files
         File irrelevantForTest = new File("irrelevant");
-        
+
         EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(paths, irrelevantForTest, irrelevantForTest);
         String actual = config.getAbsolutePathToJaasConfig();
         assertEquals(fooThHome + "/thermostat_jaas.conf", actual);
