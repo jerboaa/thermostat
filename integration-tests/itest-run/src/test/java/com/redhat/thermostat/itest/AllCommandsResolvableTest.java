@@ -78,7 +78,7 @@ public class AllCommandsResolvableTest extends IntegrationTest {
     public void testAllCommandsOsgiResolve() throws Exception {
         List<String> allCmds = parseAvailableCommandsFromHelp();
         System.out.println(allCmds);
-        assertTrue("sanity check help output failed", allCmds.containsAll(Arrays.asList("list-vms", "help")));
+        assertTrue("sanity check help output failed", allCmds.containsAll(Arrays.asList("agent", "help")));
         for (String command: allCmds) {
             System.out.println("###### testing command: " + command);
             Spawn shell = spawnThermostat(command, UNKNOWN_CMD_OPTION);

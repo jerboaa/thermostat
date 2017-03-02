@@ -102,32 +102,6 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <!--linux only files -->
-              <execution>
-                <id>directory-structure-linux</id>
-                <phase>prepare-package</phase>
-                <configuration>
-                  <target>
-                    <copy file="${main.basedir}/keyring/target/libGnomeKeyringWrapper${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/libHostNameWrapper${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/libUserNameUtilWrapper${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                  </target>
-                </configuration>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <executions>
@@ -139,7 +113,7 @@
               </execution>
             </executions>
             <configuration>
-              <executable>${project.basedir}/tools/verify-bash-completion.sh</executable>
+              <executable>${project.basedir}/tools/verify-bash-completion${thermostat.assemblyconfig}.sh</executable>
             </configuration>
           </plugin>
         </plugins>
@@ -153,7 +127,7 @@
         <os><family>mac</family></os>
       </activation>
       <properties>
-        <assemblyfile.suffix/>
+        <assemblyfile.suffix>macosx</assemblyfile.suffix>
         <agent.extra.bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
           ${jffi-native.bundle.symbolic.name}=${jffi.version}</agent.extra.bundles>
         <service.extra.bundles>,com.redhat.thermostat.agent.ipc.unixsocket.server=${project.version}, \
@@ -179,30 +153,6 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <!--linux only files -->
-              <execution>
-                <id>directory-structure-linux</id>
-                <phase>prepare-package</phase>
-                <configuration>
-                  <target>
-                    <copy file="${main.basedir}/common/portability/target/libHostNameWrapper${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/libUserNameUtilWrapper${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/libMacOSHelperWrapper${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                  </target>
-                </configuration>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <executions>
@@ -214,7 +164,7 @@
               </execution>
             </executions>
             <configuration>
-              <executable>${project.basedir}/tools/verify-bash-completion.sh</executable>
+              <executable>${project.basedir}/tools/verify-bash-completion${thermostat.assemblyconfig}.sh</executable>
             </configuration>
           </plugin>
         </plugins>
@@ -245,34 +195,6 @@
       </dependencies>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <!-- windows-only files-->
-              <execution>
-                <id>directory-structure-windows</id>
-                <phase>prepare-package</phase>
-                <configuration>
-                  <target>
-                    <!--  copy and rename the native libraries -->
-                    <copy file="${main.basedir}/common/portability/target/HostNameWrapper${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/UserNameUtilWrapper${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/common/portability/target/WindowsHelperWrapper${sharedlib.suffix}"
-                          todir="${project.build.directory}/image/libs/native" />
-                    <copy file="${main.basedir}/agent/ipc/windows-named-pipes/common/target/WinPipesNativeWrapper.dll"
-                          todir="${project.build.directory}/image/libs/native" />
-                  </target>
-                </configuration>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-
           <plugin>
             <artifactId>maven-resources-plugin</artifactId>
             <executions>
@@ -315,8 +237,47 @@
                   <executable>cmd.exe</executable>
                   <arguments>
                     <argument>/c</argument>
-                    <argument>${project.basedir}/tools/verify-bash-completion.cmd</argument>
+                    <argument>${project.basedir}/tools/verify-bash-completion${thermostat.assemblyconfig}.cmd</argument>
                   </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>full-image</id>
+      <activation>
+        <property>
+          <name>!agentImage</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <!-- Copy the extracted thermostat web archive to directory image/webapp
+                   using maven-dependency-plugin. The thermostat-web-war artifact
+                   will be extracted as the only artifact. -->
+              <execution>
+                <id>copy-exploded-web-archive-to-image-dir</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>com.redhat.thermostat</groupId>
+                      <artifactId>thermostat-web-war</artifactId>
+                      <type>war</type>
+                    </artifactItem>
+                  </artifactItems>
+                  <outputDirectory>${project.build.directory}/image/webapp</outputDirectory>
                 </configuration>
               </execution>
             </executions>
@@ -337,32 +298,6 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <!-- Copy the extracted thermostat web archive to directory image/webapp
-               using maven-dependency-plugin. The thermostat-web-war artifact
-               will be extracted as the only artifact. -->
-          <execution>
-            <id>copy-exploded-web-archive-to-image-dir</id>
-            <phase>package</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>com.redhat.thermostat</groupId>
-                  <artifactId>thermostat-web-war</artifactId>
-                  <type>war</type>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>${project.build.directory}/image/webapp</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <appendAssemblyId>false</appendAssemblyId>
@@ -372,7 +307,7 @@
             <id>assemble-core</id>
             <configuration>
               <descriptors>
-                <descriptor>assembly/core-assembly${assemblyfile.suffix}.xml</descriptor>
+                <descriptor>assembly/core-assembly${thermostat.assemblyconfig}${assemblyfile.suffix}.xml</descriptor>
               </descriptors>
               <finalName>image/libs</finalName>
               <attach>false</attach>
@@ -386,7 +321,7 @@
             <id>assemble-all-plugins</id>
             <configuration>
               <descriptors>
-                <descriptor>assembly/all-plugin-assembly.xml</descriptor>
+                <descriptor>assembly/plugin-assembly${thermostat.assemblyconfig}.xml</descriptor>
               </descriptors>
               <finalName>image/plugins</finalName>
               <attach>false</attach>
@@ -410,6 +345,20 @@
               <goal>single</goal>
             </goals>
           </execution>
+          <execution>
+            <id>assemble-scripts</id>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly/scripts-assembly${thermostat.assemblyconfig}.xml</descriptor>
+              </descriptors>
+              <finalName>image</finalName>
+              <attach>false</attach>
+            </configuration>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -424,62 +373,6 @@
             <configuration>
               <outputDirectory>${project.build.directory}</outputDirectory>
               <resources>
-                <resource>
-                  <directory>scripts</directory>
-                  <targetPath>image/bin</targetPath>
-                  <filtering>true</filtering>
-                </resource>
-                <resource>
-                  <directory>libs</directory>
-                  <targetPath>image/libs</targetPath>
-                  <filtering>true</filtering>
-                  <includes>
-                    <include>create-user.js</include>
-                  </includes>
-                </resource>
-                <resource>
-                  <directory>config</directory>
-                  <targetPath>image/etc</targetPath>
-                  <filtering>true</filtering>
-                  <includes>
-                    <include>agent.properties</include>
-                    <include>web-storage-service.properties</include>
-                    <include>agent.auth</include>
-                    <include>web.auth</include>
-                    <include>ssl.properties</include>
-                    <include>thermostatrc</include>
-                    <include>thermostat-users.properties</include>
-                    <include>thermostat-roles.properties</include>
-                    <include>thermostat_jaas.conf</include>
-                    <include>devsetup.input</include>
-                    <include>db.properties</include>
-                    <include>logging.properties</include>
-                    <include>bash-complete-logging.properties</include>
-                    <include>osgi-export.properties</include>
-                    <include>commands/*.properties</include>
-                  </includes>
-                </resource>
-                <resource>
-                  <directory>config/examples</directory>
-                  <targetPath>image/etc/examples</targetPath>
-                  <filtering>false</filtering>
-                  <includes>
-                    <!-- Example files with real users. agent-tester and client-tester -->
-                    <include>thermostat-users-example.properties</include>
-                    <include>thermostat-roles-example.properties</include>
-                  </includes>
-                </resource>
-                <resource>
-                  <directory>config</directory>
-                  <targetPath>image/etc/plugins.d</targetPath>
-                  <filtering>true</filtering>
-                  <includes>
-                    <include>shell-command/shell-prompt.conf</include>
-                    <include>storage-populator/*.json</include>
-                    <include>platform/*.json</include>
-                    <include>thermostat-gui/*.json</include>
-                  </includes>
-                </resource>
                 <resource>
                   <directory>tools</directory>
                   <targetPath>tools</targetPath>
@@ -551,21 +444,6 @@
               <goal>run</goal>
             </goals>
           </execution>
-          <execution>
-            <id>directory-structure-common</id>
-            <phase>prepare-package</phase>
-            <configuration>
-              <target>
-                <copy file="${main.basedir}/platform/swing/core/target/generated-sources/annotations/template.json"
-                      todir="${project.build.directory}/image/etc/plugins.d/platform" />
-                <copy file="${main.basedir}/thermostat-gui/core/target/generated-sources/annotations/gui.json"
-                      todir="${project.build.directory}/image/etc/plugins.d/platform" />
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
         </executions>
       </plugin>
     </plugins>
@@ -573,7 +451,7 @@
 
   <dependencies>
     <!-- thermostat core parts. Be sure to
-         also adjust ../distribution/assembly/core-assembly.xml -->
+         also adjust ../distribution/assembly/core-assembly*.xml -->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-main</artifactId>
@@ -717,7 +595,7 @@
     <!-- Plugins -->
 
     <!-- Be sure to add the distribution module of your plugin below
-         with type "zip", and also to ../distribution/assembly/all-plugin-assembly.xml -->
+         with type "zip", and also to ../distribution/assembly/plugin-assembly*.xml -->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-cpu-distribution</artifactId>

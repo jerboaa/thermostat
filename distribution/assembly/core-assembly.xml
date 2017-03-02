@@ -89,5 +89,30 @@
       <useTransitiveFiltering>true</useTransitiveFiltering>
     </dependencySet>
   </dependencySets>
+  <!-- Include native library dependencies -->
+  <fileSets>
+    <fileSet>
+      <outputDirectory>native</outputDirectory>
+      <directory>${main.basedir}/keyring/target</directory>
+      <includes>
+        <include>libGnomeKeyringWrapper${sharedlib.suffix}</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>native</outputDirectory>
+      <directory>${main.basedir}/common/portability/target</directory>
+      <includes>
+        <include>libHostNameWrapper${sharedlib.suffix}</include>
+        <include>libUserNameUtilWrapper${sharedlib.suffix}</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>native</outputDirectory>
+      <directory>${main.basedir}/laf-utils/target</directory>
+      <includes>
+        <include>libGTKThemeUtils${sharedlib.suffix}</include>
+      </includes>
+    </fileSet>
+  </fileSets>
 </assembly>
 

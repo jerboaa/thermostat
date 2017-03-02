@@ -77,17 +77,32 @@
         <include>com.redhat.thermostat:thermostat-laf-utils</include>
         <include>org.osgi:org.osgi.compendium</include>
         <include>org.apache:org.apache.felix.scr</include>
-        <!-- Remove once upstream has OSGi metadata -->
-        <include>com.redhat.thermostat:jnr-x86asm</include>
       </includes>
       <excludes>
         <exclude>org.osgi:org.osgi.core</exclude>
-        <!-- Exclude upstream jnr-x86asm jar in favour of our wrapped bundle -->
-        <exclude>com.github.jnr:jnr-x86asm</exclude>
       </excludes>
       <useTransitiveDependencies>true</useTransitiveDependencies>
       <useTransitiveFiltering>true</useTransitiveFiltering>
     </dependencySet>
   </dependencySets>
+  <!-- Include native library dependencies -->
+  <fileSets>
+    <fileSet>
+      <outputDirectory>native</outputDirectory>
+      <directory>${main.basedir}/common/portability/target</directory>
+      <includes>
+        <include>HostNameWrapper${sharedlib.suffix}</include>
+        <include>UserNameUtilWrapper${sharedlib.suffix}</include>
+        <include>WindowsHelperWrapper${sharedlib.suffix}</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>native</outputDirectory>
+      <directory>${main.basedir}/agent/ipc/windows-named-pipes/common/target</directory>
+      <includes>
+        <include>WinPipesNativeWrapper${sharedlib.suffix}</include>
+      </includes>
+    </fileSet>
+  </fileSets>
 </assembly>
 

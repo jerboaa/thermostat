@@ -206,6 +206,31 @@
         <license.skip>true</license.skip>
       </properties>
     </profile>
+
+    <!-- Profiles to control what components are added to the built image -->
+    <profile>
+      <id>agent-image</id>
+      <activation>
+        <property>
+          <name>agentImage</name>
+        </property>
+      </activation>
+      <properties>
+        <thermostat.assemblyconfig>-agent</thermostat.assemblyconfig>
+      </properties>
+    </profile>
+    <profile>
+      <id>full-image</id>
+      <activation>
+        <property>
+          <name>!agentImage</name>
+        </property>
+      </activation>
+      <properties>
+        <thermostat.assemblyconfig/>
+      </properties>
+    </profile>
+
   </profiles>
 
   <properties>

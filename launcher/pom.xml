@@ -120,6 +120,10 @@
       <artifactId>org.apache.felix.scr.annotations</artifactId>
     </dependency>
     <dependency>
+      <groupId>jline</groupId>
+      <artifactId>jline</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>

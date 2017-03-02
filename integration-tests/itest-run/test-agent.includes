@@ -1,0 +1,5 @@
+# Include tests that only depend on the "agent" command
+**/AllCommandsResolvableTest.java
+**/EnvironmentExecutorTest.java
+**/LogConfiguratorTest.java
+**/PropertiesExecutorTest.java

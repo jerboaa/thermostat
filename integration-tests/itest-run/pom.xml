@@ -100,6 +100,7 @@
             </goals>
             <configuration>
               <skip>false</skip>
+              <includesFile>${project.basedir}/test${thermostat.assemblyconfig}.includes</includesFile>
               <!-- Don't run the suite class. We only have it for the stand-alone itest thingy -->
               <excludes>
                 <exclude>**/AllStandaloneTests.java</exclude>
