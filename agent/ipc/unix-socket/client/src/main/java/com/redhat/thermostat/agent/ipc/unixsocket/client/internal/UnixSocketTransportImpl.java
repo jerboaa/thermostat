@@ -38,28 +38,33 @@ package com.redhat.thermostat.agent.ipc.unixsocket.client.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 
 import com.redhat.thermostat.agent.ipc.client.IPCMessageChannel;
 import com.redhat.thermostat.agent.ipc.client.internal.ClientTransport;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.ThermostatLocalSocketChannelImpl;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCProperties;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UserPrincipalUtils;
 
 public class UnixSocketTransportImpl implements ClientTransport {
     
     private final UnixSocketIPCProperties socketProps;
     private final SocketHelper sockHelper;
+    private final UserPrincipalUtils userUtils;
     
     UnixSocketTransportImpl(IPCProperties props) throws IOException {
-        this(props, new SocketHelper());
+        this(props, new SocketHelper(), new UserPrincipalUtils());
     }
     
-    UnixSocketTransportImpl(IPCProperties props, SocketHelper sockHelper) throws IOException {
+    UnixSocketTransportImpl(IPCProperties props, SocketHelper sockHelper, 
+            UserPrincipalUtils userUtils) throws IOException {
         if (!(props instanceof UnixSocketIPCProperties)) {
             throw new IOException("Unexpected IPC properties for 'socket' type");
         }
         this.socketProps = (UnixSocketIPCProperties) props;
         this.sockHelper = sockHelper;
+        this.userUtils = userUtils;
     }
     
     @Override
@@ -77,7 +82,8 @@ public class UnixSocketTransportImpl implements ClientTransport {
         }
         
         // Get subdirectory for current user
-        String username = sockHelper.getUsername();
+        UserPrincipal currentUser = userUtils.getCurrentUser();
+        String username = currentUser.getName();
         File socketFile = socketProps.getSocketFile(name, username);
         if (!socketFile.exists()) {
             throw new IOException("IPC server with name \"" + name + "\" does not exist");
@@ -104,10 +110,6 @@ public class UnixSocketTransportImpl implements ClientTransport {
         
         File getFile(File socketDir, String name) {
             return new File(socketDir, name);
-        }
-        
-        String getUsername() {
-            return System.getProperty("user.name");
         }
     }
 

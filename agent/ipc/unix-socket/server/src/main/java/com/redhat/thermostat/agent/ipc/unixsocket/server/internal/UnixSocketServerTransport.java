@@ -40,7 +40,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -53,7 +52,6 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
-import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -72,6 +70,7 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 import com.redhat.thermostat.agent.ipc.server.ServerTransport;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCProperties;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UserPrincipalUtils;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class UnixSocketServerTransport implements ServerTransport {
@@ -108,6 +107,7 @@ class UnixSocketServerTransport implements ServerTransport {
     private final FileUtils fileUtils;
     private final ChannelUtils channelUtils;
     private final ThreadCreator threadCreator;
+    private final UserPrincipalUtils userUtils;
     
     private UnixSocketIPCProperties props;
     private AcceptThread acceptThread;
@@ -117,11 +117,11 @@ class UnixSocketServerTransport implements ServerTransport {
     
     UnixSocketServerTransport(SelectorProvider selectorProvider) {
         this(selectorProvider, Executors.newFixedThreadPool(determineDefaultThreadPoolSize(), new CountingThreadFactory()), 
-                new FilenameValidator(), new FileUtils(), new ThreadCreator(), new ChannelUtils());
+                new FilenameValidator(), new FileUtils(), new ThreadCreator(), new ChannelUtils(), new UserPrincipalUtils());
     }
     
     UnixSocketServerTransport(SelectorProvider selectorProvider, ExecutorService execService, FilenameValidator validator, 
-            FileUtils fileUtils, ThreadCreator threadCreator, ChannelUtils channelCreator) {
+            FileUtils fileUtils, ThreadCreator threadCreator, ChannelUtils channelCreator, UserPrincipalUtils userUtils) {
         this.selectorProvider = selectorProvider;
         this.sockets = new HashMap<>();
         this.validator = validator;
@@ -129,6 +129,7 @@ class UnixSocketServerTransport implements ServerTransport {
         this.fileUtils = fileUtils;
         this.channelUtils = channelCreator;
         this.threadCreator = threadCreator;
+        this.userUtils = userUtils;
     }
     
     @Override
@@ -140,7 +141,7 @@ class UnixSocketServerTransport implements ServerTransport {
         this.props = (UnixSocketIPCProperties) props;
         
         // Get UserPrincipal for currently logged-in user
-        this.currentUser = getCurrentUser();
+        this.currentUser = userUtils.getCurrentUser();
         
         // Prepare socket directory with strict permissions, which will contain the socket file when bound
         File sockDirFile = ((UnixSocketIPCProperties) props).getSocketDirectory();
@@ -271,16 +272,6 @@ class UnixSocketServerTransport implements ServerTransport {
         }
     }
     
-    private UserPrincipal getCurrentUser() throws IOException {
-        String username = fileUtils.getUsername();
-        UserPrincipalLookupService lookup = fileUtils.getUserPrincipalLookupService();
-        UserPrincipal principal = lookup.lookupPrincipalByName(username);
-        if (principal == null) {
-            throw new IOException("No Principal found for user: " + username);
-        }
-        return principal;
-    }
-
     private void prepareSocketDir(Path path) throws IOException {
         Path parent = path.getParent();
         if (parent != null) {
@@ -418,14 +409,6 @@ class UnixSocketServerTransport implements ServerTransport {
         Path walkFileTree(Path start, Set<FileVisitOption> options, int maxDepth, 
                 FileVisitor<? super Path> visitor) throws IOException {
             return Files.walkFileTree(start, options, maxDepth, visitor);
-        }
-        
-        UserPrincipalLookupService getUserPrincipalLookupService() {
-            return FileSystems.getDefault().getUserPrincipalLookupService();
-        }
-        
-        String getUsername() {
-            return System.getProperty("user.name");
         }
         
         UserPrincipal getOwner(Path path) throws IOException {

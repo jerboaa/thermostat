@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -55,6 +56,7 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.unixsocket.client.internal.UnixSocketTransportImpl.SocketHelper;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.ThermostatLocalSocketChannelImpl;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCProperties;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UserPrincipalUtils;
 
 public class UnixSocketTransportImplTest {
     
@@ -65,6 +67,7 @@ public class UnixSocketTransportImplTest {
     private SocketHelper sockHelper;
     private UnixSocketMessageChannel messageChannel;
     private UnixSocketIPCProperties props;
+    private UserPrincipalUtils userUtils;
 
     @Before
     public void setUp() throws Exception {
@@ -77,7 +80,10 @@ public class UnixSocketTransportImplTest {
         ThermostatLocalSocketChannelImpl sockChannel = mock(ThermostatLocalSocketChannelImpl.class);
         when(sockHelper.openSocketChannel(eq(SERVER_NAME), eq(socketFile))).thenReturn(sockChannel);
         when(sockHelper.createMessageChannel(sockChannel)).thenReturn(messageChannel);
-        when(sockHelper.getUsername()).thenReturn(USERNAME);
+        userUtils = mock(UserPrincipalUtils.class);
+        UserPrincipal currentUser = mock(UserPrincipal.class);
+        when(currentUser.getName()).thenReturn(USERNAME);
+        when(userUtils.getCurrentUser()).thenReturn(currentUser);
         
         props = mock(UnixSocketIPCProperties.class);
         when(props.getSocketDirectory()).thenReturn(socketDir);
@@ -86,7 +92,7 @@ public class UnixSocketTransportImplTest {
 
     @Test
     public void testConnectToServer() throws Exception {
-        UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper);
+        UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper, userUtils);
         IPCMessageChannel result = service.connect(SERVER_NAME);
         assertEquals(messageChannel, result);
         verify(socketDir).exists();
@@ -97,13 +103,13 @@ public class UnixSocketTransportImplTest {
     public void testBadProperties() throws Exception {
         // Not UnixSocketIPCProperties
         IPCProperties props = mock(IPCProperties.class);
-        new UnixSocketTransportImpl(props, sockHelper);
+        new UnixSocketTransportImpl(props, sockHelper, userUtils);
     }
     
     @Test
     public void testConnectToServerDirNotExist() throws Exception {
         when(socketDir.exists()).thenReturn(false);
-        UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper);
+        UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper, userUtils);
         
         try {
             service.connect(SERVER_NAME);
@@ -118,7 +124,7 @@ public class UnixSocketTransportImplTest {
     @Test
     public void testConnectToServerFileNotExist() throws Exception {
         when(socketFile.exists()).thenReturn(false);
-        UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper);
+        UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper, userUtils);
         
         try {
             service.connect(SERVER_NAME);
@@ -133,7 +139,7 @@ public class UnixSocketTransportImplTest {
     @Test
     public void testConnectToServerBadSocket() throws Exception {
         when(sockHelper.openSocketChannel(SERVER_NAME, socketFile)).thenThrow(new IOException());
-        UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper);
+        UnixSocketTransportImpl service = new UnixSocketTransportImpl(props, sockHelper, userUtils);
         
         try {
             service.connect(SERVER_NAME);

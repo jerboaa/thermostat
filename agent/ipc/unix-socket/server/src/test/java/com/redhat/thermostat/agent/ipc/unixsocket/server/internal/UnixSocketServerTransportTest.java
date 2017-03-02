@@ -46,9 +46,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +62,6 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
-import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -76,6 +75,7 @@ import com.redhat.thermostat.agent.ipc.common.internal.IPCProperties;
 import com.redhat.thermostat.agent.ipc.common.internal.IPCType;
 import com.redhat.thermostat.agent.ipc.server.ThermostatIPCCallbacks;
 import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UnixSocketIPCProperties;
+import com.redhat.thermostat.agent.ipc.unixsocket.common.internal.UserPrincipalUtils;
 import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.UnixSocketServerTransport.ChannelUtils;
 import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.UnixSocketServerTransport.FileUtils;
 import com.redhat.thermostat.agent.ipc.unixsocket.server.internal.UnixSocketServerTransport.ThreadCreator;
@@ -101,7 +101,7 @@ public class UnixSocketServerTransportTest {
     private ChannelUtils channelUtils;
     private ThermostatLocalServerSocketChannelImpl channel;
     private UnixSocketIPCProperties props;
-    private UserPrincipalLookupService lookup;
+    private UserPrincipalUtils userUtils;
     private UserPrincipal currentUser;
 
     @SuppressWarnings("unchecked")
@@ -133,12 +133,10 @@ public class UnixSocketServerTransportTest {
         fileAttr = mock(FileAttribute.class);
         when(fileUtils.toFileAttribute(any(Set.class))).thenReturn(fileAttr);
         
-        lookup = mock(UserPrincipalLookupService.class);
-        when(fileUtils.getUserPrincipalLookupService()).thenReturn(lookup);
-        when(fileUtils.getUsername()).thenReturn(USERNAME);
+        userUtils = mock(UserPrincipalUtils.class);
         currentUser = mock(UserPrincipal.class);
         when(currentUser.getName()).thenReturn(USERNAME);
-        when(lookup.lookupPrincipalByName(USERNAME)).thenReturn(currentUser);
+        when(userUtils.getCurrentUser()).thenReturn(currentUser);
         when(fileUtils.getOwner(socketDirPath)).thenReturn(currentUser);
         when(fileUtils.getOwner(ownerDirPath)).thenReturn(currentUser);
         
@@ -159,7 +157,7 @@ public class UnixSocketServerTransportTest {
         when(channelUtils.createServerSocketChannel(SERVER_NAME, socketPath, callbacks, props, selector)).thenReturn(channel);
         
         transport = new UnixSocketServerTransport(provider, execService, validator, fileUtils, 
-                threadCreator, channelUtils);
+                threadCreator, channelUtils, userUtils);
     }
     
     @Test
@@ -176,7 +174,7 @@ public class UnixSocketServerTransportTest {
         IPCProperties badProps = mock(IPCProperties.class);
         when(badProps.getType()).thenReturn(IPCType.UNKNOWN);
         transport = new UnixSocketServerTransport(provider, execService, validator, fileUtils, 
-                threadCreator, channelUtils);
+                threadCreator, channelUtils, userUtils);
         transport.start(badProps);
     }
     
@@ -184,7 +182,7 @@ public class UnixSocketServerTransportTest {
     public void testInitBadPath() throws Exception {
         when(socketDirPath.normalize()).thenThrow(new InvalidPathException("TEST", "TEST"));
         transport = new UnixSocketServerTransport(provider, execService, validator, fileUtils, 
-                threadCreator, channelUtils);
+                threadCreator, channelUtils, userUtils);
         transport.start(props);
     }
     
@@ -276,12 +274,6 @@ public class UnixSocketServerTransportTest {
     @Test(expected=IOException.class)
     public void testStartOwnerCheckNullOwner() throws Exception {
         when(fileUtils.getOwner(socketDirPath)).thenReturn(null);
-        transport.start(props);
-    }
-    
-    @Test(expected=IOException.class)
-    public void testStartOwnerCheckNullLookup() throws Exception {
-        when(lookup.lookupPrincipalByName(USERNAME)).thenReturn(null);
         transport.start(props);
     }
     

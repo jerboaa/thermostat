@@ -98,17 +98,6 @@
              so we override parent pom's configuration -->
         <configuration combine.self="override" />
       </plugin>
-      <!-- This is a dependency of the Byteman helper and that needs source
-           level JDK 6 in order to be able to use the helper for JVMs running
-           on JDK 6. -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 
