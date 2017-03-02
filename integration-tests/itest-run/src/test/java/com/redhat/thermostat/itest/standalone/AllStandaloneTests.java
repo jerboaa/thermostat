@@ -44,6 +44,7 @@ import com.redhat.thermostat.itest.CliTest;
 import com.redhat.thermostat.itest.StorageConnectionTest;
 import com.redhat.thermostat.itest.StorageTest;
 import com.redhat.thermostat.itest.UserPluginsTest;
+import com.redhat.thermostat.itest.UsernamePropertyTest;
 import com.redhat.thermostat.itest.VmCommandsTest;
 
 
@@ -96,6 +97,7 @@ import com.redhat.thermostat.itest.VmCommandsTest;
     StorageTest.class,
     VmCommandsTest.class,
     UserPluginsTest.class,
+    UsernamePropertyTest.class,
     AllCommandsResolvableTest.class
 })
 public class AllStandaloneTests {
