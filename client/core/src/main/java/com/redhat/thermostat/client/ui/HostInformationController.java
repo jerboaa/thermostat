@@ -48,8 +48,6 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.UIPluginInfo;
-import com.redhat.thermostat.common.OrderedComparator;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostInformationController implements ContentProvider {
@@ -100,7 +98,7 @@ public class HostInformationController implements ContentProvider {
             dynamicProvider.forEach(ref, action);
         }
 
-        Collections.sort(plugins, new OrderedComparator<UIPluginInfo>());
+        Collections.sort(plugins, new PluginInfoComparator<UIPluginInfo>());
 
         view.addChildViews(plugins);
     }

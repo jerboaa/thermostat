@@ -54,6 +54,7 @@ import com.redhat.thermostat.common.portability.PortableHostImpl;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.OS;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.cpu.common.Constants;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
@@ -76,7 +77,7 @@ public class VmCpuBackend extends VmPollingBackend {
 
     @Override
     public int getOrderValue() {
-        return ORDER_CPU_GROUP + 50;
+        return Constants.ORDER;
     }
 
     private static class VmCpuBackendAction implements VmPollingAction {

@@ -34,29 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.vm.gc.common;
 
-import java.util.Comparator;
+import com.redhat.thermostat.common.Ordered;
 
+public class Constants {
 
-public class OrderedComparator<T extends Ordered> implements Comparator<T> {
+    public static final int ORDER = Ordered.ORDER_MEMORY_GROUP + 20;
 
-    @Override
-    public int compare(T o1, T o2) {
-        int result = o1.getOrderValue() - o2.getOrderValue();
-        // Break ties using class name
-        if (result == 0) {
-            result = getName(o1).compareTo(getName(o2));
-        }
-        return result;
-    }
-    
-    /*
-     * Extracted for testing purposes.
-     */
-    protected String getName(T object) {
-        return object.getClass().getName();
+    private Constants() {
+        throw new AssertionError("Do not instantiate this");
     }
 
 }
-

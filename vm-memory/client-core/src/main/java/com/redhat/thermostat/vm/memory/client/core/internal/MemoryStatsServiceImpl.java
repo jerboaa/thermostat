@@ -49,12 +49,12 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsService;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
+import com.redhat.thermostat.vm.memory.common.Constants;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
 public class MemoryStatsServiceImpl implements MemoryStatsService {
-    
-    private static final int ORDER = ORDER_MEMORY_GROUP + 40;
+
     private Filter<VmRef> filter = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -93,7 +93,7 @@ public class MemoryStatsServiceImpl implements MemoryStatsService {
 
     @Override
     public int getOrderValue() {
-        return ORDER;
+        return Constants.ORDER;
     }
 }
 

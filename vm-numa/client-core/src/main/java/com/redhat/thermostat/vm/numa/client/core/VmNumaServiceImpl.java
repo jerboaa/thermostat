@@ -48,11 +48,11 @@ import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.numa.client.core.internal.VmNumaController;
+import com.redhat.thermostat.vm.numa.common.Constants;
 import com.redhat.thermostat.vm.numa.common.VmNumaDAO;
 
 public class VmNumaServiceImpl implements VmNumaService {
 
-    private static final int ORDER = ORDER_MEMORY_GROUP;
     private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -85,6 +85,6 @@ public class VmNumaServiceImpl implements VmNumaService {
 
     @Override
     public int getOrderValue() {
-        return ORDER;
+        return Constants.ORDER;
     }
 }

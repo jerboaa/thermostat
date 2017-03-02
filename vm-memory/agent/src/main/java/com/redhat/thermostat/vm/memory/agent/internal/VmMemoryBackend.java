@@ -41,6 +41,7 @@ import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.memory.common.Constants;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmTlabStatDAO;
 
@@ -62,7 +63,7 @@ public class VmMemoryBackend extends VmListenerBackend {
 
     @Override
     public int getOrderValue() {
-        return ORDER_MEMORY_GROUP + 40;
+        return Constants.ORDER;
     }
 
     @Override

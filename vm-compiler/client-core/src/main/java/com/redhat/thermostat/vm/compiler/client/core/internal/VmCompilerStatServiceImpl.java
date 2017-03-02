@@ -46,11 +46,11 @@ import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatService;
 import com.redhat.thermostat.vm.compiler.client.core.VmCompilerStatViewProvider;
+import com.redhat.thermostat.vm.compiler.common.Constants;
 import com.redhat.thermostat.vm.compiler.common.VmCompilerStatDao;
 
 public class VmCompilerStatServiceImpl implements VmCompilerStatService {
 
-    private static final int ORDER = ORDER_CODE_GROUP;
     private Filter<VmRef> filter = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -80,7 +80,7 @@ public class VmCompilerStatServiceImpl implements VmCompilerStatService {
 
     @Override
     public int getOrderValue() {
-        return ORDER;
+        return Constants.ORDER;
     }
 }
 

@@ -48,7 +48,6 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIPluginInfo;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmInformationController implements ContentProvider {
@@ -104,7 +103,7 @@ public class VmInformationController implements ContentProvider {
             dynamicProvider.forEach(vmRef, action);
         }
 
-        Collections.sort(plugins, new OrderedComparator<UIPluginInfo>());
+        Collections.sort(plugins, new PluginInfoComparator<UIPluginInfo>());
 
         view.addChildViews(plugins);
 

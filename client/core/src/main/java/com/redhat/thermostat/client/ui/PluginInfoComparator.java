@@ -34,29 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.client.ui;
 
-import java.util.Comparator;
+import com.redhat.thermostat.client.core.views.UIPluginInfo;
+import com.redhat.thermostat.common.OrderedComparator;
 
-
-public class OrderedComparator<T extends Ordered> implements Comparator<T> {
+class PluginInfoComparator<T extends UIPluginInfo> extends OrderedComparator<T> {
 
     @Override
-    public int compare(T o1, T o2) {
-        int result = o1.getOrderValue() - o2.getOrderValue();
-        // Break ties using class name
-        if (result == 0) {
-            result = getName(o1).compareTo(getName(o2));
-        }
-        return result;
-    }
-    
-    /*
-     * Extracted for testing purposes.
-     */
     protected String getName(T object) {
-        return object.getClass().getName();
+        return object.getLocalizedName().getContents();
     }
 
 }
-

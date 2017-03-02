@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.cpu.agent.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -61,6 +62,7 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.cpu.common.Constants;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
@@ -178,6 +180,7 @@ public class VmCpuBackendTest {
 
         assertTrue(orderValue > Ordered.ORDER_CPU_GROUP);
         assertTrue(orderValue < Ordered.ORDER_MEMORY_GROUP);
+        assertEquals(orderValue, Constants.ORDER);
     }
 }
 

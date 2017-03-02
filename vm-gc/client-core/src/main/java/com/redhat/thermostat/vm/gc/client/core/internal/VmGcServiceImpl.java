@@ -49,12 +49,12 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
+import com.redhat.thermostat.vm.gc.common.Constants;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class VmGcServiceImpl implements VmGcService {
-    
-    private static final int ORDER = ORDER_MEMORY_GROUP;
+
     private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -94,7 +94,7 @@ public class VmGcServiceImpl implements VmGcService {
 
     @Override
     public int getOrderValue() {
-        return ORDER;
+        return Constants.ORDER;
     }
 
 }

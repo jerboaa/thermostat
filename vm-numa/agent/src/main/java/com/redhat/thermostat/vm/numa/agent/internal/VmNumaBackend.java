@@ -50,6 +50,7 @@ import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.numa.common.Constants;
 import com.redhat.thermostat.vm.numa.common.VmNumaDAO;
 import com.redhat.thermostat.vm.numa.common.VmNumaStat;
 
@@ -70,7 +71,7 @@ public class VmNumaBackend extends VmPollingBackend {
 
     @Override
     public int getOrderValue() {
-        return ORDER_MEMORY_GROUP;
+        return Constants.ORDER;
     }
 
     private static class VmNumaBackendAction implements VmPollingAction {

@@ -46,11 +46,11 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuService;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
+import com.redhat.thermostat.vm.cpu.common.Constants;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
 public class VmCpuServiceImpl implements VmCpuService {
-    
-    private static final int ORDER = ORDER_CPU_GROUP;
+
     private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -81,7 +81,7 @@ public class VmCpuServiceImpl implements VmCpuService {
 
     @Override
     public int getOrderValue() {
-        return ORDER;
+        return Constants.ORDER;
     }
 
 }

@@ -34,65 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.client.ui;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
-public class OrderedComparatorTest {
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.views.UIPluginInfo;
+import com.redhat.thermostat.client.ui.PluginInfo;
+import com.redhat.thermostat.client.ui.PluginInfoComparator;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
-    @Test
-    public void testServiceOrderTie() {
-        int[] orderValues = { 45, 20, 0, 90, 20 };
+public class PluginInfoComparatorTest {
 
-        final List<Ordered> services = mockServices(orderValues);
-        
-        // Override the getName method to give predetermined class names to
-        // the services with equal order value
-        OrderedComparator<Ordered> comparator = new OrderedComparator<Ordered>() {
-            @Override
-            protected String getName(Ordered object) {
-                String result;
-                if (object.equals(services.get(1))) {
-                    result = "TheirService";
-                }
-                else if (object.equals(services.get(4))) {
-                    result = "MyService";
-                }
-                else {
-                    result = super.getName(object); 
-                }
-                return result;
-            }
-        };
-        
-        List<Ordered> sorted = new ArrayList<>(services);
-        Collections.sort(sorted, comparator);
-        
-        // Ensure MyService comes before TheirService
-        assertEquals(services.get(2), sorted.get(0));
-        assertEquals(services.get(4), sorted.get(1));
-        assertEquals(services.get(1), sorted.get(2));
-        assertEquals(services.get(0), sorted.get(3));
-        assertEquals(services.get(3), sorted.get(4));
+    private List<UIPluginInfo> plugins;
+    private int[] orderValues = {240, 200, 200, 120, 100, 0};
+    private String[] pluginNames = {"Memory", "NUMA", "GC", "Profiler", "CPU", "Overview"};
+
+    @Before
+    public void setUp() {
+        createPluginInfos();
     }
 
-    private List<Ordered> mockServices(int[] orderValues) {
-        List<Ordered> services = new ArrayList<>();
-        for (int value : orderValues) {
-            Ordered service = mock(Ordered.class);
-            when(service.getOrderValue()).thenReturn(value);
-            services.add(service);
+    @Test
+    public void testPluginOrder() {
+        Collections.sort(plugins, new PluginInfoComparator<UIPluginInfo>());
+        assertEquals(plugins.get(0).getLocalizedName().getContents(), "Overview");
+        assertEquals(plugins.get(1).getLocalizedName().getContents(), "CPU");
+        assertEquals(plugins.get(2).getLocalizedName().getContents(), "Profiler");
+        assertEquals(plugins.get(3).getOrderValue(), plugins.get(4).getOrderValue());
+        assertEquals(plugins.get(3).getLocalizedName().getContents(), "GC");
+        assertEquals(plugins.get(4).getLocalizedName().getContents(), "NUMA");
+        assertEquals(plugins.get(5).getLocalizedName().getContents(), "Memory");
+    }
+
+    private void createPluginInfos() {
+        plugins = new ArrayList<>();
+        for (int i = 0; i < pluginNames.length; i++) {
+            plugins.add(new PluginInfo(new LocalizedString(pluginNames[i]), mock(UIComponent.class), orderValues[i]));
         }
-        return services;
     }
 
 }
-
