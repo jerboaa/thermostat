@@ -60,6 +60,11 @@ function __init {
     USER_THERMOSTAT_HOME="$TARGET/bash-completion-test-user-home"
     echo "Exporting custom home..."
     export USER_THERMOSTAT_HOME
+    # Unset THERMOSTAT_HOME if externally defined
+    if [ ! -z ${THERMOSTAT_HOME} ]; then
+      echo "Unsetting THERMOSTAT_HOME=${THERMOSTAT_HOME} for sake of testing ..."
+      unset THERMOSTAT_HOME
+    fi
     echo "Checking that help works..."
     "${TARGET}/image/bin/thermostat" help >/dev/null
 
